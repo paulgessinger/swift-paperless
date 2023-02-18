@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import Combine
 import SwiftUI
 
 #if os(macOS)
@@ -114,7 +115,7 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
     func getImage() async -> UIImage? {
         guard let url = url else { return nil }
 
-        print("Load image at \(url)")
+//        print("Load image at \(url)")
 
         var request = URLRequest(url: url)
         request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
@@ -185,6 +186,7 @@ struct DocumentCell: View {
 }
 
 struct DocumentDetailView: View {
+    @State private var editing = false
     @Binding var document: Document
 
     var body: some View {
@@ -219,6 +221,52 @@ struct DocumentDetailView: View {
                 }
 
             }.padding()
+        }.toolbar {
+            Button("Edit") {
+                editing.toggle()
+            }.sheet(isPresented: $editing) {
+                DocumentEditView(document: $document)
+            }
+        }
+    }
+}
+
+struct DocumentEditView: View {
+    @Environment(\.dismiss) var dismiss
+
+    @Binding var documentBinding: Document
+
+    @State var document: Document
+    @State var modified: Bool = false
+
+    init(document: Binding<Document>) {
+        self._documentBinding = document
+        self._document = State(initialValue: document.wrappedValue)
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section {
+                    TextField("Title", text: $document.title) {}
+                    DatePicker("Created date", selection: $document.created, displayedComponents: .date)
+                }
+            }.toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        documentBinding = document
+                        // @TODO: Kick off API call to save the document
+                        dismiss()
+                    }.disabled(!modified)
+                }
+            }.onChange(of: document) { _ in
+                modified = true
+            }
         }
     }
 }
