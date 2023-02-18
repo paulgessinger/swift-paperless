@@ -13,146 +13,9 @@ import Cocoa
 typealias UIImage = NSImage
 #endif
 
-let API_TOKEN = "***REMOVED***"
-let API_BASE_URL = "https://***REMOVED***/api/"
-
-struct DocumentResponse: Codable {
-    var count: UInt
-    var next: String?
-    var previous: String?
-    var results: [Document]
-}
-
-struct Document: Codable, Identifiable, Equatable, Hashable {
-    var id: UInt
-    var added: String
-    var title: String
-    var documentType = "Document"
-    var correspondent = "Person"
-
-    var created: Date
-
-    private enum CodingKeys: String, CodingKey {
-        case id, added, title, created
-    }
-}
-
-func getDocuments(page: UInt) async -> DocumentResponse? {
-    let urlStr = API_BASE_URL + "documents/?page=\(page)"
-    print(urlStr)
-    guard let url = URL(string: urlStr) else {
-        fatalError("Invalid URL")
-    }
-
-//    print("Go getDocuments")
-
-    var request = URLRequest(url: url)
-    request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-    do {
-        let (data, _) = try await URLSession.shared.data(for: request)
-
-//        print(String(decoding: data, as: UTF8.self))
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(DocumentResponse.self, from: data)
-//        print(decoded)
-
-        return decoded
-    }
-    catch {
-        print("Invalid data")
-        return nil
-    }
-}
-
-@MainActor
-class DocumentStore: ObservableObject {
-    @Published var documents: [Document] = []
-    @Published private(set) var isLoading = false
-
-    private var hasNextPage = true
-    private(set) var currentPage: UInt = 1
-
-    func fetchDocuments() async {
-        if !hasNextPage { return }
-
-        isLoading = true
-        guard let response = await getDocuments(page: currentPage) else {
-            return
-        }
-
-        documents += response.results
-
-        if response.next != nil {
-            currentPage += 1
-        }
-        else {
-            hasNextPage = false
-        }
-
-        isLoading = false
-    }
-}
-
-struct AuthAsyncImage<Content: View, Placeholder: View>: View {
-    @State var uiImage: UIImage?
-
-    let url: URL?
-    let content: (Image) -> Content
-    let placeholder: () -> Placeholder
-
-    init(
-        url: URL?, @ViewBuilder content: @escaping (Image) -> Content,
-        @ViewBuilder placeholder: @escaping () -> Placeholder
-    ) {
-        self.url = url
-        self.content = content
-        self.placeholder = placeholder
-    }
-
-    func getImage() async -> UIImage? {
-        guard let url = url else { return nil }
-
-//        print("Load image at \(url)")
-
-        var request = URLRequest(url: url)
-        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                fatalError("Did not get good response for image")
-            }
-
-//            try await Task.sleep(for: .seconds(2))
-
-            return UIImage(data: data)
-        }
-        catch { return nil }
-    }
-
-    var body: some View {
-        if let uiImage = uiImage {
-#if os(macOS)
-            content(Image(nsImage: uiImage))
-#else
-            content(Image(uiImage: uiImage))
-#endif
-        }
-        else {
-            placeholder().task {
-                let image = await getImage()
-                withAnimation {
-                    self.uiImage = image
-                }
-            }
-        }
-    }
-}
-
 struct DocumentCell: View {
+    @EnvironmentObject var store: DocumentStore
+
     let document: Document
 
     var body: some View {
@@ -171,13 +34,18 @@ struct DocumentCell: View {
             .frame(width: 150, height: 150)
             VStack(alignment: .leading) {
                 Group {
-                    Text("\(document.correspondent): ").bold()
-                        + Text("\(document.title) ")
+                    let title = Text("\(document.title) ")
+                    if let cId = document.correspondent, let correspondent = store.correspondents[cId] {
+                        Text("\(correspondent.name): ").bold() + title
+                    }
+                    else {
+                        title
+                    }
                 }
-                Text("\(document.documentType) ")
-                    .font(.subheadline)
-                    .foregroundColor(Color.orange)
-                    .bold()
+//                Text("\(document.documentType) ")
+//                    .font(.subheadline)
+//                    .foregroundColor(Color.orange)
+//                    .bold()
 
                 Text(document.created, style: .date)
             }
@@ -186,6 +54,8 @@ struct DocumentCell: View {
 }
 
 struct DocumentDetailView: View {
+    @EnvironmentObject var store: DocumentStore
+
     @State private var editing = false
     @Binding var document: Document
 
@@ -193,13 +63,22 @@ struct DocumentDetailView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 Group {
-                    Text("\(document.correspondent): ").font(.title).bold()
-                        + Text("\(document.title) ").font(.title)
+//                    Text("\(document.correspondent): ").font(.title).bold()
+//                        + Text("\(document.title) ").font(.title)
+
+                    let title = Text("\(document.title) ").font(.title)
+                    if let cId = document.correspondent, let correspondent = store.correspondents[cId] {
+                        Text("\(correspondent.name): ").font(.title).bold() + title
+                    }
+                    else {
+                        title
+                    }
                 }
-                Text("\(document.documentType) ")
-                    .font(.headline)
-                    .foregroundColor(.orange)
-                    .bold()
+
+//                Text("\(document.documentType) ")
+//                    .font(.headline)
+//                    .foregroundColor(.orange)
+//                    .bold()
 
                 Text(document.created, style: .date)
 
@@ -306,9 +185,11 @@ struct ContentView: View {
 //            }
             .navigationTitle("Documents")
             .task {
+                // @TODO: Make HTTP requests concurrently
+                await store.fetchCorrespondents()
                 await store.fetchDocuments()
             }
-        }
+        }.environmentObject(store)
     }
 }
 

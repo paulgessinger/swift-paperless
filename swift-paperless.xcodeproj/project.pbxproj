@@ -14,6 +14,9 @@
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
+		7AF6688729A137EA0016BC31 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Networking.swift */; };
+		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
+		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +48,9 @@
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITests.swift; sourceTree = "<group>"; };
 		7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		7AF6688629A137EA0016BC31 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
+		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +106,9 @@
 				7A5482B2299AD56E00D5061E /* Assets.xcassets */,
 				7A5482B4299AD56E00D5061E /* swift_paperless.entitlements */,
 				7A5482B5299AD56E00D5061E /* Preview Content */,
+				7AF6688629A137EA0016BC31 /* Networking.swift */,
+				7AF6688829A138330016BC31 /* Model.swift */,
+				7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -259,8 +268,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
+				7AF6688729A137EA0016BC31 /* Networking.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* ContentView.swift in Sources */,
 				7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */,
+				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
