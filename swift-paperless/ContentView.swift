@@ -68,13 +68,13 @@ func getDocuments(page: UInt) async -> DocumentResponse? {
 
 @MainActor
 class DocumentStore: ObservableObject {
-    @Published private(set) var documents: [Document] = []
+    @Published var documents: [Document] = []
     @Published private(set) var isLoading = false
 
     private var hasNextPage = true
     private(set) var currentPage: UInt = 1
 
-    func fetch() async {
+    func fetchDocuments() async {
         if !hasNextPage { return }
 
         isLoading = true
@@ -125,6 +125,8 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
                 fatalError("Did not get good response for image")
             }
 
+//            try await Task.sleep(for: .seconds(2))
+
             return UIImage(data: data)
         }
         catch { return nil }
@@ -140,7 +142,10 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
         }
         else {
             placeholder().task {
-                self.uiImage = await getImage()
+                let image = await getImage()
+                withAnimation {
+                    self.uiImage = image
+                }
             }
         }
     }
@@ -170,7 +175,7 @@ struct DocumentCell: View {
                 }
                 Text("\(document.documentType) ")
                     .font(.subheadline)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.orange)
                     .bold()
 
                 Text(document.created, style: .date)
@@ -180,7 +185,7 @@ struct DocumentCell: View {
 }
 
 struct DocumentDetailView: View {
-    let document: Document
+    @Binding var document: Document
 
     var body: some View {
         ScrollView {
@@ -191,27 +196,25 @@ struct DocumentDetailView: View {
                 }
                 Text("\(document.documentType) ")
                     .font(.headline)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.orange)
                     .bold()
 
                 Text(document.created, style: .date)
 
                 GeometryReader { geometry in
-                    HStack {
-//                        Spacer()
-                        AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
-                            image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: geometry.size.width, alignment: .top)
-                                //                            .cornerRadius(5)
-                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-                        } placeholder: {
-                            Rectangle().fill(.gray).scaledToFit().overlay(ProgressView())
+                    AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
+                        image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.width, alignment: .top)
+                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                    } placeholder: {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
                         }
-                        .frame(width: geometry.size.width)
-//                        Spacer()
                     }
                 }
 
@@ -223,36 +226,39 @@ struct DocumentDetailView: View {
 struct ContentView: View {
     @StateObject private var store = DocumentStore()
 
-    @State private var navPath = NavigationPath()
+//    @State private var navPath = NavigationPath()
 
     var body: some View {
-        NavigationStack(path: $navPath) {
+        NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading) {
-                    ForEach(store.documents, id: \.id) { document in
-                        NavigationLink(value: document) {
+                    ForEach($store.documents, id: \.id) { $document in
+                        NavigationLink(destination: {
+                            DocumentDetailView(document: $document)
+                                .navigationBarTitleDisplayMode(.inline)
+                        }, label: {
                             DocumentCell(document: document).task {
                                 if document == store.documents.last {
-                                    await store.fetch()
+                                    await store.fetchDocuments()
                                 }
                             }
-                        }.buttonStyle(.plain)
+                        })
+                        .buttonStyle(.plain)
                     }.padding()
                 }
+                .animation(.default, value: store.documents)
 
                 if store.isLoading && store.currentPage == 1 {
                     ProgressView()
                 }
             }
-            .navigationDestination(for: Document.self) { document in
-                DocumentDetailView(document: document)
-                    .navigationBarTitleDisplayMode(.inline)
-//                    .navigationTitle(document.title)
-//                    .navigationBarTitle(document.title)
-            }
+//            .navigationDestination(for: Document.self) { document in
+//                DocumentDetailView(document: document)
+//                    .navigationBarTitleDisplayMode(.inline)
+//            }
             .navigationTitle("Documents")
             .task {
-                await store.fetch()
+                await store.fetchDocuments()
             }
         }
     }
