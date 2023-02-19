@@ -33,6 +33,7 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
 
         do {
             let (data, res) = try await URLSession.shared.data(for: request)
+
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
                 fatalError("Did not get good response for image")
             }

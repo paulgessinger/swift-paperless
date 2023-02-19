@@ -7,6 +7,13 @@
 
 import Foundation
 
+protocol APIListResponse {
+    associatedtype ObjectType: Identifiable
+
+    var results: [ObjectType] { get }
+    var next: URL? { get }
+}
+
 struct Document: Codable, Identifiable, Equatable, Hashable {
     var id: UInt
     var added: String
@@ -16,14 +23,14 @@ struct Document: Codable, Identifiable, Equatable, Hashable {
     var created: Date
 }
 
-struct DocumentResponse: Decodable {
+struct DocumentResponse: Decodable, APIListResponse {
     var count: UInt
-    var next: String?
+    var next: URL?
     var previous: String?
     var results: [Document]
 }
 
-struct Correspondent: Codable {
+struct Correspondent: Codable, Identifiable {
     var id: UInt
     var documentCount: UInt
     var isInsensitive: Bool
@@ -33,11 +40,24 @@ struct Correspondent: Codable {
     var slug: String
 }
 
-struct CorrespondentResponse: Decodable {
+struct CorrespondentResponse: Decodable, APIListResponse {
     var count: UInt
     var next: URL?
     var previous: URL?
     var results: [Correspondent]
+}
+
+struct DocumentType: Codable, Identifiable {
+    var id: UInt
+    var name: String
+    var slug: String
+}
+
+struct DocumentTypeResponse: Decodable, APIListResponse {
+    var count: UInt
+    var next: URL?
+    var previous: URL?
+    var results: [DocumentType]
 }
 
 @MainActor
@@ -45,10 +65,18 @@ class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
     @Published private(set) var isLoading = false
 
-    @Published var correspondents: [UInt: Correspondent] = [:]
+    private var correspondents: [UInt: Correspondent] = [:]
+    private var documentTypes: [UInt: DocumentType] = [:]
 
     private var hasNextPage = true
     private(set) var currentPage: UInt = 1
+
+    let decoder: JSONDecoder = .init()
+
+    init() {
+        decoder.dateDecodingStrategy = .iso8601
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+    }
 
     func fetchDocuments() async {
         if !hasNextPage { return }
@@ -69,23 +97,34 @@ class DocumentStore: ObservableObject {
         isLoading = false
     }
 
-    func fetchCorrespondents() async {
-        guard var url = URL(string: API_BASE_URL + "correspondents/") else {
+    func authRequest(url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
+
+        return request
+    }
+
+    func fetchAllCorrespondents() async {
+        await fetchAll(CorrespondentResponse.self,
+                       path: "correspondents", collection: \.correspondents)
+    }
+
+    private func fetchAll<T>(_ type: T.Type, path: String,
+                             collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T.ObjectType]>) async
+        where T: Decodable, T: APIListResponse, T.ObjectType.ID == UInt
+    {
+        guard var url = URL(string: API_BASE_URL + "\(path)/") else {
             return
         }
         while true {
             do {
-                var request = URLRequest(url: url)
-                request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
+                let request = authRequest(url: url)
                 let (data, _) = try await URLSession.shared.data(for: request)
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                let decoded = try decoder.decode(CorrespondentResponse.self, from: data)
+                let decoded = try decoder.decode(type, from: data)
 
-                for c in decoded.results {
-                    correspondents[c.id] = c
+                for element in decoded.results {
+                    self[keyPath: collection][element.id] = element
                 }
 
                 if let next = decoded.next {
@@ -98,5 +137,67 @@ class DocumentStore: ObservableObject {
                 break
             }
         }
+    }
+
+    func fetchAllDocumentTypes() async {
+        await fetchAll(DocumentTypeResponse.self,
+                       path: "document_types", collection: \.documentTypes)
+    }
+
+    private func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? {
+        guard let url = URL(string: API_BASE_URL + "\(path)/\(id)/") else {
+            return nil
+        }
+
+        print(url)
+
+        let request = authRequest(url: url)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if (response as? HTTPURLResponse)?.statusCode != 200 {
+                print("Getting correspondent: Status was not 200")
+                return nil
+            }
+
+//            print(String(decoding: data, as: UTF8.self))
+
+            let correspondent = try decoder.decode(type, from: data)
+            return correspondent
+        } catch {
+            print("Error getting \(type) with id \(id): \(error)")
+            return nil
+        }
+    }
+
+    private func getSingleCached<T>(
+        _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
+    ) async -> T? where T: Decodable {
+        if let element = self[keyPath: cache][id] {
+//            print("Cached correspondent \(id) (cache size: \(self[keyPath: cache].count))")
+            return element
+        }
+
+//        print("Cache size: \(self[keyPath: cache].count)")
+
+//        print("Loading correspondent \(id)")
+
+        guard let element = await getSingle(type, id: id, path: path) else {
+            return nil
+        }
+
+        self[keyPath: cache][id] = element
+        return element
+    }
+
+    func getCorrespondent(id: UInt) async -> Correspondent? {
+        return await getSingleCached(Correspondent.self, id: id,
+                                     path: "correspondents", cache: \.correspondents)
+    }
+
+    func getDocumentType(id: UInt) async -> DocumentType? {
+        return await getSingleCached(DocumentType.self, id: id,
+                                     path: "document_types", cache: \.documentTypes)
     }
 }
