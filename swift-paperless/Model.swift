@@ -63,10 +63,10 @@ struct DocumentTypeResponse: Decodable, APIListResponse {
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
-    @Published private(set) var isLoading = false
+    @Published var isLoading = false
 
-    private var correspondents: [UInt: Correspondent] = [:]
-    private var documentTypes: [UInt: DocumentType] = [:]
+    private(set) var correspondents: [UInt: Correspondent] = [:]
+    private(set) var documentTypes: [UInt: DocumentType] = [:]
 
     private var hasNextPage = true
     private(set) var currentPage: UInt = 1
@@ -76,6 +76,14 @@ class DocumentStore: ObservableObject {
     init() {
         decoder.dateDecodingStrategy = .iso8601
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+    }
+
+    func clear() {
+        documents = []
+        correspondents = [:]
+        documentTypes = [:]
+        hasNextPage = true
+        currentPage = 1
     }
 
     func fetchDocuments() async {
@@ -199,5 +207,9 @@ class DocumentStore: ObservableObject {
     func getDocumentType(id: UInt) async -> DocumentType? {
         return await getSingleCached(DocumentType.self, id: id,
                                      path: "document_types", cache: \.documentTypes)
+    }
+
+    func getDocument(id: UInt) async -> Document? {
+        return await getSingle(Document.self, id: id, path: "documents")
     }
 }
