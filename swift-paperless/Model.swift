@@ -60,6 +60,13 @@ struct DocumentTypeResponse: Decodable, APIListResponse {
     var results: [DocumentType]
 }
 
+func authRequest(url: URL) -> URLRequest {
+    var request = URLRequest(url: url)
+    request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
+
+    return request
+}
+
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
@@ -103,13 +110,6 @@ class DocumentStore: ObservableObject {
         }
 
         isLoading = false
-    }
-
-    func authRequest(url: URL) -> URLRequest {
-        var request = URLRequest(url: url)
-        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-        return request
     }
 
     func fetchAllCorrespondents() async {

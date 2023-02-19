@@ -6,6 +6,7 @@
 //
 
 import Combine
+import QuickLook
 import SwiftUI
 
 #if os(macOS)
@@ -91,6 +92,9 @@ struct DocumentDetailView: View {
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
 
+    @State private var previewUrl: URL?
+    @State private var previewLoading = false
+
     func loadData() async {
         correspondent = nil
         documentType = nil
@@ -126,20 +130,41 @@ struct DocumentDetailView: View {
                 Text(document.created, style: .date)
 
                 GeometryReader { geometry in
-                    AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
-                        image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geometry.size.width, alignment: .top)
-                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-                    } placeholder: {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
+                    Button(action: {
+                        Task {
+                            if previewLoading {
+                                return
+                            }
+                            previewLoading = true
+                            previewUrl = await getPreviewImage(documentID: document.id)
+                            previewLoading = false
+                        }
+                    }) {
+                        AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
+                            image in
+                            ZStack {
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: geometry.size.width, alignment: .top)
+                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                                    .opacity(previewLoading ? 0.6 : 1.0)
+
+                                if previewLoading {
+                                    ProgressView()
+                                }
+                            }.animation(.default, value: previewLoading)
+
+                        } placeholder: {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                Spacer()
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
+                    .quickLookPreview($previewUrl)
                 }
 
             }.padding()
@@ -326,7 +351,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showFilterModal) { FilterView() }
             .task {
-                await load()
+                if store.currentPage == 1 {
+                    await load()
+                }
             }
             .refreshable {
                 Task {
