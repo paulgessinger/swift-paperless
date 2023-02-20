@@ -292,22 +292,45 @@ struct FilterView: View {
     }
 }
 
+class DebounceObject: ObservableObject {
+    @Published var text: String = ""
+    @Published var debouncedText: String = ""
+    private var tasks = Set<AnyCancellable>()
+
+    init(delay: TimeInterval = 0.5) {
+        $text
+            .removeDuplicates()
+            .debounce(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] value in
+                self?.debouncedText = value
+            })
+            .store(in: &tasks)
+    }
+}
+
 struct ContentView: View {
     @StateObject private var store = DocumentStore()
 
 //    @State private var navPath = NavigationPath()
 
-    @State var searchText: String = ""
+    @State var lastSearchString: String?
+    @StateObject var searchDebounce = DebounceObject()
 
     @State var showFilterModal: Bool = false
 
-    func load() async {
+    @State var searchSuggestions: [String] = []
+
+    func loadInitial() async {
         store.isLoading = true
         // @TODO: Make HTTP requests concurrently
         async let _ = await store.fetchAllCorrespondents()
         async let _ = await store.fetchAllDocumentTypes()
-        await store.fetchDocuments()
+        await store.fetchDocuments(searchText: searchDebounce.debouncedText == "" ? nil : searchDebounce.debouncedText, clear: true)
         store.isLoading = false
+    }
+
+    func loadNextPage() async {
+        await store.fetchDocuments(searchText: searchDebounce.debouncedText == "" ? nil : searchDebounce.debouncedText, clear: false)
     }
 
     var body: some View {
@@ -321,7 +344,7 @@ struct ContentView: View {
                         }, label: {
                             DocumentCell(document: document).task {
                                 if document == store.documents.last {
-                                    await store.fetchDocuments()
+                                    await loadNextPage()
                                 }
                             }
                         })
@@ -331,7 +354,7 @@ struct ContentView: View {
 //                        .listRowSeparatorTint(.clear)
 //                        .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0))
                     }
-                }
+                }.opacity(store.isLoading ? 0.5 : 1.0)
             }
             .animation(.default, value: store.documents)
 //                if store.isLoading && store.currentPage == 1 {
@@ -351,19 +374,56 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showFilterModal) { FilterView() }
             .task {
-                if store.currentPage == 1 {
-                    await load()
+                if store.currentPage == 1 && store.documents.isEmpty {
+                    await loadInitial()
                 }
             }
             .refreshable {
                 Task {
-                    store.clear()
-                    await load()
+                    await loadInitial()
                 }
             }
             .navigationTitle("Documents")
 //            .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, placement: .automatic)
+            .searchable(text: $searchDebounce.text, placement: .automatic, suggestions: {
+                ForEach(searchSuggestions, id: \.self) { v in
+                    Text(v).searchCompletion(v)
+                }
+            })
+            .onChange(of: searchDebounce.text) { value in
+                if value == "" {
+                    searchSuggestions = []
+
+                    if let last = lastSearchString {
+                        if last.lowercased() != searchDebounce.debouncedText.lowercased() {
+                            searchDebounce.debouncedText = ""
+                        }
+                    }
+                }
+            }
+            .onChange(of: searchDebounce.debouncedText) { _ in
+                if searchDebounce.debouncedText == "" {
+                    searchSuggestions = []
+                }
+                else {
+                    Task {
+                        searchSuggestions = await getSearchCompletion(term: searchDebounce.debouncedText)
+                    }
+                }
+                if let last = lastSearchString {
+                    if last.lowercased() == searchDebounce.debouncedText.lowercased() {
+                        // skip search as it's the same as before
+                        return
+                    }
+                }
+
+                Task {
+                    store.isLoading = true
+                    await loadInitial()
+                    lastSearchString = searchDebounce.debouncedText
+                    store.isLoading = false
+                }
+            }
         }
         .environmentObject(store)
     }

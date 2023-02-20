@@ -17,11 +17,27 @@ struct Endpoint {
 }
 
 extension Endpoint {
-    static func documents(page: UInt) -> Endpoint {
+    static func documents(page: UInt, query: String? = nil) -> Endpoint {
+        var queryItems = [
+            URLQueryItem(name: "page", value: String(page)),
+        ]
+
+        if let query = query {
+            queryItems.append(URLQueryItem(name: "query", value: query))
+        }
+
         return Endpoint(
-            path: "api/documents",
+            path: "/api/documents/",
+            queryItems: queryItems
+        )
+    }
+
+    static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
+        return Endpoint(
+            path: "/api/search/autocomplete/",
             queryItems: [
-                URLQueryItem(name: "page", value: String(page)),
+                URLQueryItem(name: "term", value: term),
+                URLQueryItem(name: "limit", value: String(limit)),
             ]
         )
     }
@@ -36,9 +52,8 @@ extension Endpoint {
     }
 }
 
-func getDocuments(page: UInt) async -> DocumentResponse? {
-//    guard let url = Endpoint.documents(page: page).url else {
-    guard let url = URL(string: "\(API_BASE_URL)documents/?page=\(page)") else {
+func getDocuments(page: UInt, query: String? = nil) async -> DocumentResponse? {
+    guard let url = Endpoint.documents(page: page, query: query).url else {
         fatalError("Invalid URL")
     }
 
@@ -105,5 +120,28 @@ func getPreviewImage(documentID: UInt) async -> URL? {
     } catch {
         print(error)
         return nil
+    }
+}
+
+func getSearchCompletion(term: String, limit: UInt = 10) async -> [String] {
+    guard let url = Endpoint.searchAutocomplete(term: term, limit: limit).url else {
+        fatalError("Invalid URL")
+    }
+
+    let request = authRequest(url: url)
+
+    do {
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if (response as? HTTPURLResponse)?.statusCode != 200 {
+            print("Getting image: Status was not 200")
+            return []
+        }
+
+        return try decoder.decode([String].self, from: data)
+
+    } catch {
+        print(error)
+        return []
     }
 }

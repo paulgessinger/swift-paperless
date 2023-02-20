@@ -67,6 +67,14 @@ func authRequest(url: URL) -> URLRequest {
     return request
 }
 
+let decoder: JSONDecoder = {
+    var d = JSONDecoder()
+    d.dateDecodingStrategy = .iso8601
+    d.keyDecodingStrategy = .convertFromSnakeCase
+    return d
+
+}()
+
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
@@ -93,23 +101,28 @@ class DocumentStore: ObservableObject {
         currentPage = 1
     }
 
-    func fetchDocuments() async {
-        if !hasNextPage { return }
+    func fetchDocuments(searchText: String? = nil, clear: Bool = false) async {
+        if !hasNextPage && !clear { return }
 
-        isLoading = true
-        guard let response = await getDocuments(page: currentPage) else {
+        if clear {
+            currentPage = 1
+        }
+
+        guard let response = await getDocuments(page: currentPage, query: searchText) else {
             return
         }
 
-        documents += response.results
+        if clear {
+            documents = response.results
+        } else {
+            documents += response.results
+        }
 
         if response.next != nil {
             currentPage += 1
         } else {
             hasNextPage = false
         }
-
-        isLoading = false
     }
 
     func fetchAllCorrespondents() async {
