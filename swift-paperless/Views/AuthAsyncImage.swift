@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+#if os(macOS)
+import Cocoa
+typealias UIImage = NSImage
+#endif
+
 struct AuthAsyncImage<Content: View, Placeholder: View>: View {
     @State var uiImage: UIImage?
 

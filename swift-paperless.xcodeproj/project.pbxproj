@@ -8,12 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */; };
-		7A5482B1299AD56C00D5061E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482B0299AD56C00D5061E /* ContentView.swift */; };
+		7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482B0299AD56C00D5061E /* DocumentView.swift */; };
 		7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B2299AD56E00D5061E /* Assets.xcassets */; };
 		7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */; };
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
+		7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
+		7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */; };
+		7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
+		7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
+		7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8229A68A4F008E8F79 /* FilterView.swift */; };
 		7AF6688729A137EA0016BC31 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Networking.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
@@ -39,7 +44,7 @@
 /* Begin PBXFileReference section */
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessApp.swift; sourceTree = "<group>"; };
-		7A5482B0299AD56C00D5061E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7A5482B0299AD56C00D5061E /* DocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentView.swift; sourceTree = "<group>"; };
 		7A5482B2299AD56E00D5061E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7A5482B4299AD56E00D5061E /* swift_paperless.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_paperless.entitlements; sourceTree = "<group>"; };
 		7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -48,6 +53,11 @@
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITests.swift; sourceTree = "<group>"; };
 		7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentCell.swift; sourceTree = "<group>"; };
+		7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailView.swift; sourceTree = "<group>"; };
+		7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEditView.swift; sourceTree = "<group>"; };
+		7AF04B8029A68A20008E8F79 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		7AF04B8229A68A4F008E8F79 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
 		7AF6688629A137EA0016BC31 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
@@ -101,14 +111,14 @@
 		7A5482AD299AD56C00D5061E /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
+				7AF04B7929A6898C008E8F79 /* Views */,
 				7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */,
-				7A5482B0299AD56C00D5061E /* ContentView.swift */,
 				7A5482B2299AD56E00D5061E /* Assets.xcassets */,
 				7A5482B4299AD56E00D5061E /* swift_paperless.entitlements */,
 				7A5482B5299AD56E00D5061E /* Preview Content */,
 				7AF6688629A137EA0016BC31 /* Networking.swift */,
 				7AF6688829A138330016BC31 /* Model.swift */,
-				7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */,
+				7AF04B8029A68A20008E8F79 /* Utilities.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -136,6 +146,19 @@
 				7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */,
 			);
 			path = "swift-paperlessUITests";
+			sourceTree = "<group>";
+		};
+		7AF04B7929A6898C008E8F79 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7A5482B0299AD56C00D5061E /* DocumentView.swift */,
+				7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */,
+				7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */,
+				7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */,
+				7AF04B8229A68A4F008E8F79 /* FilterView.swift */,
+				7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -268,10 +291,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */,
+				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* Networking.swift in Sources */,
-				7A5482B1299AD56C00D5061E /* ContentView.swift in Sources */,
+				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
+				7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */,
+				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */,
+				7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */,
 				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

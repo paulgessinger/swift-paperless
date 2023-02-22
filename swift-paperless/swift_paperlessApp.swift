@@ -11,7 +11,7 @@ import SwiftUI
 struct swift_paperlessApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            DocumentView()
         }
     }
 }

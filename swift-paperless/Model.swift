@@ -75,6 +75,10 @@ let decoder: JSONDecoder = {
 
 }()
 
+//struct Documents : AsyncSequence {
+//
+//}
+
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
