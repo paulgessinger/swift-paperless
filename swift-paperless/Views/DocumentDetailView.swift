@@ -93,6 +93,13 @@ struct DocumentDetailView: View {
 
             }.padding()
         }
+        .refreshable {
+//            Task {
+            if let document = await store.getDocument(id: document.id) {
+                self.document = document
+            }
+//            }
+        }
         .toolbar {
             Button("Edit") {
                 editing.toggle()
@@ -104,12 +111,5 @@ struct DocumentDetailView: View {
 //            Text.titleCorrespondent(value: correspondent)
 //                + Text("\(document.title)")
 //        )
-        .refreshable {
-//            Task {
-            if let document = await store.getDocument(id: document.id) {
-                self.document = document
-            }
-//            }
-        }
     }
 }

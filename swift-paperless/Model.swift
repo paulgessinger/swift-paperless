@@ -75,58 +75,84 @@ let decoder: JSONDecoder = {
 
 }()
 
-//struct Documents : AsyncSequence {
+// struct Documents : AsyncSequence {
 //
-//}
+// }
+
+struct FilterState: Equatable {
+    var correspondent: UInt?
+    var documentType: UInt?
+    var searchText: String?
+}
 
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
-    @Published var isLoading = false
+//    @Published private(set) var isLoading = false
 
     private(set) var correspondents: [UInt: Correspondent] = [:]
     private(set) var documentTypes: [UInt: DocumentType] = [:]
 
-    private var hasNextPage = true
-    private(set) var currentPage: UInt = 1
+    private var nextPage: URL?
+
+    private(set) var filterState = FilterState()
+    private var clearNext = false
 
     let decoder: JSONDecoder = .init()
 
     init() {
         decoder.dateDecodingStrategy = .iso8601
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+//        nextPage = Endpoint.documents(page: 1).url
+        resetPage()
     }
 
-    func clear() {
-        documents = []
-        correspondents = [:]
-        documentTypes = [:]
-        hasNextPage = true
-        currentPage = 1
+//    func clear() {
+//        documents = []
+//        correspondents = [:]
+//        documentTypes = [:]
+//        hasNextPage = true
+//        currentPage = 1
+//    }
+
+    func resetPage() {
+        nextPage = Endpoint.documents(page: 1, query: filterState.searchText).url
+        clearNext = true
     }
 
-    func fetchDocuments(searchText: String? = nil, clear: Bool = false) async {
-        if !hasNextPage && !clear { return }
+    func setFilterState(to filterState: FilterState) {
+        self.filterState = filterState
 
-        if clear {
-            currentPage = 1
+        resetPage()
+    }
+//
+//    func withLoading(action: () -> Void) {
+//        isLoading = true
+//        Task {
+//            try await Task.sleep(for: .seconds(5))
+//        }
+//        action()
+//        isLoading = false
+//    }
+
+    func fetchDocuments() async {
+        guard let url = nextPage else {
+            return // no next page
         }
 
-        guard let response = await getDocuments(page: currentPage, query: searchText) else {
+        print("get docs \(url)")
+        guard let response = await getDocuments(url: url) else {
             return
         }
 
-        if clear {
+        if clearNext {
             documents = response.results
         } else {
             documents += response.results
         }
-
-        if response.next != nil {
-            currentPage += 1
-        } else {
-            hasNextPage = false
-        }
+        clearNext = false
+        nextPage = response.next
     }
 
     func fetchAllCorrespondents() async {
@@ -158,7 +184,8 @@ class DocumentStore: ObservableObject {
                     break
                 }
 
-            } catch { print(error)
+            } catch {
+                print(error)
                 break
             }
         }
@@ -174,7 +201,7 @@ class DocumentStore: ObservableObject {
             return nil
         }
 
-        print(url)
+//        print(url)
 
         let request = authRequest(url: url)
 

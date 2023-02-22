@@ -52,12 +52,12 @@ extension Endpoint {
     }
 }
 
-func getDocuments(page: UInt, query: String? = nil) async -> DocumentResponse? {
-    guard let url = Endpoint.documents(page: page, query: query).url else {
-        fatalError("Invalid URL")
-    }
+func getDocuments(url: URL) async -> DocumentResponse? {
+//    guard let url = Endpoint.documents(page: page, query: query).url else {
+//        fatalError("Invalid URL")
+//    }
 
-    print(url)
+//    print(url)
 //    print("Go getDocuments")
 
     var request = URLRequest(url: url)
@@ -85,7 +85,7 @@ func getPreviewImage(documentID: UInt) async -> URL? {
         return nil
     }
 
-    print(url)
+//    print(url)
 
     let request = authRequest(url: url)
 
