@@ -66,12 +66,29 @@ func getDocuments(url: URL) async -> DocumentResponse? {
     do {
         let (data, _) = try await URLSession.shared.data(for: request)
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let decoded = try decoder.decode(DocumentResponse.self, from: data)
-
-        return decoded
+        do {
+            let decoded = try decoder.decode(DocumentResponse.self, from: data)
+            return decoded
+        } catch let DecodingError.dataCorrupted(context) {
+            print(context)
+            return nil
+        } catch let DecodingError.keyNotFound(key, context) {
+            print("Key '\(key)' not found:", context.debugDescription)
+            print("codingPath:", context.codingPath)
+            return nil
+        } catch let DecodingError.valueNotFound(value, context) {
+            print("Value '\(value)' not found:", context.debugDescription)
+            print("codingPath:", context.codingPath)
+            return nil
+        } catch let DecodingError.typeMismatch(type, context) {
+            print("Type '\(type)' mismatch:", context.debugDescription)
+            print("codingPath:", context.codingPath)
+            return nil
+        } catch {
+            print(String(decoding: data, as: UTF8.self))
+            print(error)
+            return nil
+        }
     } catch {
         print(error)
         return nil

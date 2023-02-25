@@ -67,12 +67,32 @@ func authRequest(url: URL) -> URLRequest {
     return request
 }
 
+enum DateDecodingError: Error {
+    case invalidDate(string: String)
+}
+
 let decoder: JSONDecoder = {
-    var d = JSONDecoder()
-    d.dateDecodingStrategy = .iso8601
+    let d = JSONDecoder()
+    d.dateDecodingStrategy = .custom { decoder -> Date in
+        let container = try decoder.singleValueContainer()
+        let dateStr = try container.decode(String.self)
+
+        let iso = ISO8601DateFormatter()
+        if let res = iso.date(from: dateStr) {
+            return res
+        }
+
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZZZZZ"
+
+        guard let res = df.date(from: dateStr) else {
+            throw DateDecodingError.invalidDate(string: dateStr)
+        }
+
+        return res
+    }
     d.keyDecodingStrategy = .convertFromSnakeCase
     return d
-
 }()
 
 // struct Documents : AsyncSequence {
@@ -96,14 +116,8 @@ class DocumentStore: ObservableObject {
     private var nextPage: URL?
 
     private(set) var filterState = FilterState()
-    private var clearNext = false
-
-    let decoder: JSONDecoder = .init()
 
     init() {
-        decoder.dateDecodingStrategy = .iso8601
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-
 //        nextPage = Endpoint.documents(page: 1).url
         resetPage()
     }
@@ -118,7 +132,6 @@ class DocumentStore: ObservableObject {
 
     func resetPage() {
         nextPage = Endpoint.documents(page: 1, query: filterState.searchText).url
-        clearNext = true
     }
 
     func setFilterState(to filterState: FilterState) {
@@ -126,6 +139,7 @@ class DocumentStore: ObservableObject {
 
         resetPage()
     }
+
 //
 //    func withLoading(action: () -> Void) {
 //        isLoading = true
@@ -136,9 +150,15 @@ class DocumentStore: ObservableObject {
 //        isLoading = false
 //    }
 
-    func fetchDocuments() async {
-        guard let url = nextPage else {
+    func fetchDocuments(clear: Bool) async {
+//        if clear {
+//            resetPage()
+//        }
+        guard var url = nextPage else {
             return // no next page
+        }
+        if clear {
+            url = Endpoint.documents(page: 1, query: filterState.searchText).url!
         }
 
         print("get docs \(url)")
@@ -146,12 +166,11 @@ class DocumentStore: ObservableObject {
             return
         }
 
-        if clearNext {
+        if clear {
             documents = response.results
         } else {
             documents += response.results
         }
-        clearNext = false
         nextPage = response.next
     }
 
