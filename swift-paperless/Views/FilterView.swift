@@ -13,8 +13,13 @@ struct FilterView: View {
     @EnvironmentObject var store: DocumentStore
 
     @State var filterState: FilterState = .init()
+    @State var modified: Bool = false
 
-    init() {}
+//    @Binding var filterState: FilterState
+
+    init(filterState: FilterState) {
+        self._filterState = State(initialValue: filterState)
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,9 +27,10 @@ struct FilterView: View {
                 Section {
                     Picker(selection: $filterState.correspondent,
                            content: {
-                               Text("None").tag(nil as UInt?)
+                               Text("Any").tag(FilterState.Filter.any)
+                               Text("Not Assigned").tag(FilterState.Filter.notAssigned)
                                ForEach(store.correspondents.sorted { $0.value.name < $1.value.name }, id: \.value.id) { _, c in
-                                   Text("\(c.name)").tag(c.id as UInt?)
+                                   Text("\(c.name)").tag(FilterState.Filter.only(id: c.id))
                                }
                            },
                            label: {
@@ -32,9 +38,10 @@ struct FilterView: View {
                            })
 
                     Picker("Document type", selection: $filterState.documentType) {
-                        Text("None").tag(nil as UInt?)
+                        Text("Any").tag(FilterState.Filter.any)
+                        Text("Not Assigned").tag(FilterState.Filter.notAssigned)
                         ForEach(store.documentTypes.sorted { $0.value.name < $1.value.name }, id: \.value.id) { _, c in
-                            Text("\(c.name)").tag(c.id as UInt?)
+                            Text("\(c.name)").tag(FilterState.Filter.only(id: c.id))
                         }
                     }
                 }
@@ -44,19 +51,33 @@ struct FilterView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Clear", role: .cancel) {
+                        store.filterState = FilterState()
                         dismiss()
                     }
                 }
+
+                if modified {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Discard") {
+                            filterState = store.filterState
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         print("Store")
-                        store.setFilterState(to: filterState)
+//                        store.setFilterState(to: filterState)
+//                        outputFilterState = filterState
+                        store.filterState = filterState
                         dismiss()
                     }.bold()
                 }
             }
-        }.onAppear {
-            self.filterState = store.filterState
+            .onChange(of: filterState) { _ in
+                modified = filterState != store.filterState
+            }
+            .interactiveDismissDisabled(modified)
         }
     }
 }

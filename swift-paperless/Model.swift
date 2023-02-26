@@ -100,9 +100,28 @@ let decoder: JSONDecoder = {
 // }
 
 struct FilterState: Equatable {
-    var correspondent: UInt?
-    var documentType: UInt?
-    var searchText: String?
+    enum Filter: Equatable, Hashable {
+        case any
+        case notAssigned
+        case only(id: UInt)
+    }
+
+    // @TODO: Model "Not Assigned"
+    var correspondent: Filter = .any
+    // @TODO: Model "Not Assigned"
+    var documentType: Filter = .any
+
+    private var query: String?
+    var searchText: String? {
+        get { query }
+        set(value) {
+            query = value == "" ? nil : value
+        }
+    }
+
+    var filtering: Bool {
+        return documentType != .any || correspondent != .any
+    }
 }
 
 @MainActor
@@ -115,7 +134,7 @@ class DocumentStore: ObservableObject {
 
     private var nextPage: URL?
 
-    private(set) var filterState = FilterState()
+    @Published var filterState = FilterState()
 
     func clearDocuments() {
         documents = []
@@ -135,14 +154,13 @@ class DocumentStore: ObservableObject {
 //    }
 
     func resetPage() {
-        nextPage = Endpoint.documents(page: 1, query: filterState.searchText).url
+        nextPage = Endpoint.documents(page: 1, filter: filterState).url
     }
 
-    func setFilterState(to filterState: FilterState) {
-        self.filterState = filterState
-
-        resetPage()
-    }
+//    func setFilterState(to filterState: FilterState) {
+//        self.filterState = filterState
+    ////        resetPage()
+//    }
 
 //
 //    func withLoading(action: () -> Void) {
@@ -158,11 +176,14 @@ class DocumentStore: ObservableObject {
 //        if clear {
 //            resetPage()
 //        }
-        guard var url = nextPage else {
-            return // no next page
-        }
         if clear {
-            url = Endpoint.documents(page: 1, query: filterState.searchText).url!
+            nextPage = Endpoint.documents(page: 1, filter: filterState).url!
+            documents = []
+        }
+
+        guard let url = nextPage else {
+            print("Have no next page")
+            return // no next page
         }
 
         print("get docs \(url)")

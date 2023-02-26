@@ -17,13 +17,33 @@ struct Endpoint {
 }
 
 extension Endpoint {
-    static func documents(page: UInt, query: String? = nil) -> Endpoint {
+    static func documents(page: UInt, filter: FilterState = FilterState()) -> Endpoint {
         var queryItems = [
             URLQueryItem(name: "page", value: String(page)),
         ]
 
-        if let query = query {
+        if let query = filter.searchText {
             queryItems.append(URLQueryItem(name: "query", value: query))
+        }
+
+//        if case let .notAssigned = filter.correspondent {
+//            queryItems.append(URLQueryItem(name: "correspondent__id", value: "isnull"))
+//        }
+
+        switch filter.correspondent {
+        case .any: break
+        case .notAssigned:
+            queryItems.append(URLQueryItem(name: "correspondent__isnull", value: "1"))
+        case let .only(id):
+            queryItems.append(URLQueryItem(name: "correspondent__id", value: String(id)))
+        }
+
+        switch filter.documentType {
+        case .any: break
+        case .notAssigned:
+            queryItems.append(URLQueryItem(name: "document_type__isnull", value: "1"))
+        case let .only(id):
+            queryItems.append(URLQueryItem(name: "document_type__id", value: String(id)))
         }
 
         return Endpoint(
