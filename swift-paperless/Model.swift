@@ -308,4 +308,14 @@ class DocumentStore: ObservableObject {
     func getTag(id: UInt) async -> Tag? {
         return await getSingleCached(Tag.self, id: id, path: "tags", cache: \.tags)
     }
+
+    func getTags(_ ids: [UInt]) async -> [Tag] {
+        var tags: [Tag] = []
+        for id in ids {
+            if let tag = await getTag(id: id) {
+                tags.append(tag)
+            }
+        }
+        return tags
+    }
 }

@@ -53,6 +53,8 @@ struct DocumentDetailView: View {
 
                 Text(document.created, style: .date)
 
+                TagsView(tagIDs: document.tags)
+
                 GeometryReader { geometry in
                     Button(action: {
                         Task {

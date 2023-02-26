@@ -185,7 +185,6 @@ struct DocumentView: View {
                             })
                             .padding()
                             .foregroundColor(.white)
-//                            .background(Color.blue)
                             .background(LinearGradient(colors: [
                                     Color.blue, Color(uiColor: .blue.darker())
                                 ],
@@ -196,23 +195,25 @@ struct DocumentView: View {
                         .padding()
                     }
                 }
-            }
-        }
-        .searchable(text: $searchDebounce.text,
-                    placement: .automatic) {
-            ForEach(searchSuggestions, id: \.self) { v in
-                Text(v).searchCompletion(v)
-            }
-        }
-        .onSubmit(of: .search) {
-            print("Search submit: \(searchDebounce.text)")
-            if searchDebounce.text == store.filterState.searchText {
-                return
-            }
-//            scrollToTop(scrollView: scrollView)
-            Task {
-                store.filterState.searchText = searchDebounce.text
-                await load(clear: true)
+
+                .searchable(text: $searchDebounce.text,
+                            placement: .automatic) {
+                    ForEach(searchSuggestions, id: \.self) { v in
+                        Text(v).searchCompletion(v)
+                    }
+                }
+
+                .onSubmit(of: .search) {
+                    print("Search submit: \(searchDebounce.text)")
+                    if searchDebounce.text == store.filterState.searchText {
+                        return
+                    }
+                    //            scrollToTop(scrollView: scrollView)
+                    Task {
+                        store.filterState.searchText = searchDebounce.text
+                        await load(clear: true)
+                    }
+                }
             }
         }
 
