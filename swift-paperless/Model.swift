@@ -6,13 +6,7 @@
 //
 
 import Foundation
-
-protocol APIListResponse {
-    associatedtype ObjectType: Identifiable
-
-    var results: [ObjectType] { get }
-    var next: URL? { get }
-}
+import SwiftUI
 
 struct Document: Codable, Identifiable, Equatable, Hashable {
     var id: UInt
@@ -21,13 +15,7 @@ struct Document: Codable, Identifiable, Equatable, Hashable {
     var documentType: UInt?
     var correspondent: UInt?
     var created: Date
-}
-
-struct DocumentResponse: Decodable, APIListResponse {
-    var count: UInt
-    var next: URL?
-    var previous: String?
-    var results: [Document]
+    var tags: [UInt]
 }
 
 struct Correspondent: Codable, Identifiable {
@@ -40,31 +28,35 @@ struct Correspondent: Codable, Identifiable {
     var slug: String
 }
 
-struct CorrespondentResponse: Decodable, APIListResponse {
-    var count: UInt
-    var next: URL?
-    var previous: URL?
-    var results: [Correspondent]
-}
-
 struct DocumentType: Codable, Identifiable {
     var id: UInt
     var name: String
     var slug: String
 }
 
-struct DocumentTypeResponse: Decodable, APIListResponse {
+struct Tag: Codable, Identifiable {
+    var id: UInt
+    var isInboxTag: Bool
+    var name: String
+    var slug: String
+    @HexColor var color: Color
+    @HexColor var textColor: Color
+}
+
+protocol ListResponseProtocol {
+    associatedtype ObjectType: Identifiable
+
+    var results: [ObjectType] { get }
+    var next: URL? { get }
+}
+
+struct ListResponse<Element>: Decodable, ListResponseProtocol
+    where Element: Decodable, Element: Identifiable
+{
     var count: UInt
     var next: URL?
     var previous: URL?
-    var results: [DocumentType]
-}
-
-func authRequest(url: URL) -> URLRequest {
-    var request = URLRequest(url: url)
-    request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-    return request
+    var results: [Element]
 }
 
 enum DateDecodingError: Error {
@@ -131,6 +123,7 @@ class DocumentStore: ObservableObject {
 
     private(set) var correspondents: [UInt: Correspondent] = [:]
     private(set) var documentTypes: [UInt: DocumentType] = [:]
+    private(set) var tags: [UInt: Tag] = [:]
 
     private var nextPage: URL?
 
@@ -142,7 +135,13 @@ class DocumentStore: ObservableObject {
 
     init() {
 //        nextPage = Endpoint.documents(page: 1).url
-        resetPage()
+//        resetPage()
+
+        Task {
+            async let _ = await fetchAllTags()
+            async let _ = await fetchAllCorrespondents()
+            async let _ = await fetchAllDocumentTypes()
+        }
     }
 
 //    func clear() {
@@ -200,20 +199,30 @@ class DocumentStore: ObservableObject {
     }
 
     func fetchAllCorrespondents() async {
-        await fetchAll(CorrespondentResponse.self,
+        await fetchAll(ListResponse<Correspondent>.self,
                        path: "correspondents", collection: \.correspondents)
+    }
+
+    func fetchAllDocumentTypes() async {
+        await fetchAll(ListResponse<DocumentType>.self,
+                       path: "document_types", collection: \.documentTypes)
+    }
+
+    func fetchAllTags() async {
+        await fetchAll(ListResponse<Tag>.self,
+                       path: "tags", collection: \.tags)
     }
 
     private func fetchAll<T>(_ type: T.Type, path: String,
                              collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T.ObjectType]>) async
-        where T: Decodable, T: APIListResponse, T.ObjectType.ID == UInt
+        where T: Decodable, T: ListResponseProtocol, T.ObjectType.ID == UInt
     {
         guard var url = URL(string: API_BASE_URL + "\(path)/") else {
             return
         }
         while true {
             do {
-                let request = authRequest(url: url)
+                let request = URLRequest.common(url: url)
                 let (data, _) = try await URLSession.shared.data(for: request)
 
                 let decoded = try decoder.decode(type, from: data)
@@ -235,11 +244,6 @@ class DocumentStore: ObservableObject {
         }
     }
 
-    func fetchAllDocumentTypes() async {
-        await fetchAll(DocumentTypeResponse.self,
-                       path: "document_types", collection: \.documentTypes)
-    }
-
     private func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? {
         guard let url = URL(string: API_BASE_URL + "\(path)/\(id)/") else {
             return nil
@@ -247,7 +251,7 @@ class DocumentStore: ObservableObject {
 
 //        print(url)
 
-        let request = authRequest(url: url)
+        let request = URLRequest.common(url: url)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -299,5 +303,9 @@ class DocumentStore: ObservableObject {
 
     func getDocument(id: UInt) async -> Document? {
         return await getSingle(Document.self, id: id, path: "documents")
+    }
+
+    func getTag(id: UInt) async -> Tag? {
+        return await getSingleCached(Tag.self, id: id, path: "tags", cache: \.tags)
     }
 }

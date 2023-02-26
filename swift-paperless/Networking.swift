@@ -72,7 +72,7 @@ extension Endpoint {
     }
 }
 
-func getDocuments(url: URL) async -> DocumentResponse? {
+func getDocuments(url: URL) async -> ListResponse<Document>? {
 //    guard let url = Endpoint.documents(page: page, query: query).url else {
 //        fatalError("Invalid URL")
 //    }
@@ -87,7 +87,7 @@ func getDocuments(url: URL) async -> DocumentResponse? {
         let (data, _) = try await URLSession.shared.data(for: request)
 
         do {
-            let decoded = try decoder.decode(DocumentResponse.self, from: data)
+            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
             return decoded
         } catch let DecodingError.dataCorrupted(context) {
             print(context)
@@ -124,7 +124,7 @@ func getPreviewImage(documentID: UInt) async -> URL? {
 
 //    print(url)
 
-    let request = authRequest(url: url)
+    let request = URLRequest.common(url: url)
 
     do {
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -165,7 +165,7 @@ func getSearchCompletion(term: String, limit: UInt = 10) async -> [String] {
         fatalError("Invalid URL")
     }
 
-    let request = authRequest(url: url)
+    let request = URLRequest.common(url: url)
 
     do {
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -180,5 +180,14 @@ func getSearchCompletion(term: String, limit: UInt = 10) async -> [String] {
     } catch {
         print(error)
         return []
+    }
+}
+
+extension URLRequest {
+    static func common(url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
+        return request
     }
 }

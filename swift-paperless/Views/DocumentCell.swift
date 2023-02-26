@@ -6,6 +6,35 @@
 //
 
 import SwiftUI
+import WrappingStack
+
+struct TagView: View {
+    @EnvironmentObject var store: DocumentStore
+
+    @State var tag: Tag?
+
+    var tagID: UInt
+
+    var body: some View {
+        Group {
+            if let tag = tag {
+                Text("\(tag.name)")
+                    .fixedSize(horizontal: true, vertical: false)
+                    .font(.body)
+                    .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                    .background(tag.color)
+                    .foregroundColor(tag.textColor)
+                    .clipShape(Capsule())
+            }
+            else {
+                ProgressView()
+            }
+        }
+        .task {
+            tag = await store.getTag(id: tagID)
+        }
+    }
+}
 
 struct DocumentCell: View {
     @EnvironmentObject var store: DocumentStore
@@ -47,6 +76,17 @@ struct DocumentCell: View {
                     .foregroundColor(Color.orange)
 
                 Text(document.created, style: .date)
+
+                WrappingHStack(id: \.self,
+                               alignment: .leading,
+                               horizontalSpacing: 5,
+                               verticalSpacing: 5) {
+                    ForEach(document.tags, id: \.self) { tag in
+                        TagView(tagID: tag)
+                    }
+                }
+                .frame(width: 50)
+//                .background(Color.red)
             }
         }
     }

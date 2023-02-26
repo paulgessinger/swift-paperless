@@ -38,8 +38,6 @@ struct DocumentView: View {
 
     func load(clear: Bool, setLoading _setLoading: Bool = true) async {
         if _setLoading { await setLoading(to: true) }
-        async let _ = await store.fetchAllCorrespondents()
-        async let _ = await store.fetchAllDocumentTypes()
         print("Load: \(store.filterState)")
         await store.fetchDocuments(clear: clear)
         print("Load complete")
@@ -82,115 +80,121 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollView in
-                ScrollView {
-                    if isLoading {
-                        ProgressView()
-                            .padding(15)
-                            .scaleEffect(2)
-                            .transition(.opacity)
-                    }
-                    LazyVStack(alignment: .leading) {
-                        ForEach($store.documents, id: \.id) { $document in
-                            NavigationLink(destination: {
-                                DocumentDetailView(document: $document)
-                                    .navigationBarTitleDisplayMode(.inline)
-                            }, label: {
-                                DocumentCell(document: document).task {
-                                    let index = store.documents.firstIndex { $0 == document }
-                                    if index == store.documents.count - 10 {
-//                                    if document == store.documents.last {
-                                        Task {
-                                            await load(clear: false, setLoading: false)
+                ZStack(alignment: .bottomTrailing) {
+                    ScrollView {
+                        if isLoading {
+                            ProgressView()
+                                .padding(15)
+                                .scaleEffect(2)
+                                .transition(.opacity)
+                        }
+                        LazyVStack(alignment: .leading) {
+                            ForEach($store.documents, id: \.id) { $document in
+                                NavigationLink(destination: {
+                                    DocumentDetailView(document: $document)
+                                        .navigationBarTitleDisplayMode(.inline)
+                                }, label: {
+                                    DocumentCell(document: document).task {
+                                        let index = store.documents.firstIndex { $0 == document }
+                                        if index == store.documents.count - 10 {
+                                            //                                    if document == store.documents.last {
+                                            Task {
+                                                await load(clear: false, setLoading: false)
+                                            }
                                         }
                                     }
-                                }
-                                .contentShape(Rectangle())
-                            })
-                            .buttonStyle(.plain)
-                            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                                    .contentShape(Rectangle())
+                                })
+                                .buttonStyle(.plain)
+                                .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                            }
+                        }
+                        if store.documents.isEmpty && !isLoading && !initialLoad {
+                            Text("No documents found")
+                                .foregroundColor(.gray)
+                                .transition(.opacity)
                         }
                     }
-                    if store.documents.isEmpty && !isLoading && !initialLoad {
-                        Text("No documents found")
-                            .foregroundColor(.gray)
-                            .transition(.opacity)
-                    }
-                }
-                .clipped()
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: { showFilterModal.toggle() }) {
-                            Label("Filter", systemImage:
-                                store.filterState.filtering ?
-                                    "line.3.horizontal.decrease.circle.fill" :
-                                    "line.3.horizontal.decrease.circle")
-                        }
-                    }
-                }
-                .navigationTitle("Documents")
 
-                .refreshable {
-                    Task {
-                        await load(clear: true)
-                    }
-                }
-
-                .animation(.default, value: store.documents)
-
-                .sheet(isPresented: $showFilterModal, onDismiss: {
-//                    if filterState != store.filterState {
-//                        print("Filter updated \(filterState)")
-//                        Task {
-//                            store.filterState = filterState
-//                            scrollToTop(scrollView: scrollView)
-//                        }
-//                    }
-//                    else {
-//                        print("Filter state not updated")
-//                    }
-                }) {
-                    FilterView(filterState: store.filterState)
-                        .environmentObject(store)
-                }
-
-                .onChange(of: store.filterState) { _ in
-                    print("Filter updated \(store.filterState)")
-                    Task {
-                        store.clearDocuments()
-                        await load(clear: true)
-                    }
-                }
-
-                .task {
-                    if initialLoad {
-                        await load(clear: true)
-                        initialLoad = false
-                    }
-                }
-
-                .onChange(of: searchDebounce.debouncedText) { _ in
-                    if searchDebounce.debouncedText == "" {
-                        scrollToTop(scrollView: scrollView)
-                    }
-                    Task {
-                        await updateSearchCompletion()
-
-                        print("Change search to \(searchDebounce.debouncedText)")
-
-                        if searchDebounce.debouncedText == "" {
-                            store.filterState.searchText = nil
+                    .refreshable {
+                        Task {
                             await load(clear: true)
                         }
                     }
-                }
 
-                SearchFilterBar {
-                    Button(action: { showFilterModal.toggle() }) {
-                        Label("Filter", systemImage:
-                            store.filterState.filtering ?
-                                "line.3.horizontal.decrease.circle.fill" :
-                                "line.3.horizontal.decrease.circle")
-                    }.padding(10)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: { showFilterModal.toggle() }) {
+                                Label("Filter", systemImage:
+                                    store.filterState.filtering ?
+                                        "line.3.horizontal.decrease.circle.fill" :
+                                        "line.3.horizontal.decrease.circle")
+                            }
+                        }
+                    }
+                    .navigationTitle("Documents")
+
+                    .animation(.default, value: store.documents)
+
+                    .sheet(isPresented: $showFilterModal, onDismiss: {}) {
+                        FilterView(filterState: store.filterState)
+                            .environmentObject(store)
+                    }
+
+                    .onChange(of: store.filterState) { _ in
+                        print("Filter updated \(store.filterState)")
+                        Task {
+                            store.clearDocuments()
+                            await load(clear: true)
+                        }
+                    }
+
+                    .task {
+                        if initialLoad {
+                            await load(clear: true)
+                            initialLoad = false
+                        }
+                    }
+
+                    .onChange(of: searchDebounce.debouncedText) { _ in
+                        if searchDebounce.debouncedText == "" {
+                            scrollToTop(scrollView: scrollView)
+                        }
+                        Task {
+                            await updateSearchCompletion()
+
+                            print("Change search to \(searchDebounce.debouncedText)")
+
+                            if searchDebounce.debouncedText == "" {
+                                store.filterState.searchText = nil
+                                await load(clear: true)
+                            }
+                        }
+                    }
+
+                    SearchFilterBar {
+                        Button(action: { showFilterModal.toggle() }) {
+                            Label(title: { Text("Filter") }, icon: {
+                                Image(systemName: store.filterState.filtering ?
+                                    "line.3.horizontal.decrease.circle.fill" :
+                                    "line.3.horizontal.decrease.circle"
+                                )
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                            })
+                            .padding()
+                            .foregroundColor(.white)
+//                            .background(Color.blue)
+                            .background(LinearGradient(colors: [
+                                    Color.blue, Color(uiColor: .blue.darker())
+                                ],
+                                startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .clipShape(Capsule())
+                            .shadow(radius: 5)
+                        }
+                        .padding()
+                    }
                 }
             }
         }

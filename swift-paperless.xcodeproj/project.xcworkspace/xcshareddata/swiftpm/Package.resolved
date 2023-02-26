@@ -8,6 +8,15 @@
         "revision" : "e67f3d2240440d9f892a382ae08cacc86f37625d",
         "version" : "0.0.6"
       }
+    },
+    {
+      "identity" : "swiftui-wrapping-stack",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/diniska/swiftui-wrapping-stack",
+      "state" : {
+        "revision" : "1e6b0fffe902cf3ffc102af5e7c0c4767cbc09e0",
+        "version" : "1.1.0"
+      }
     }
   ],
   "version" : 2
