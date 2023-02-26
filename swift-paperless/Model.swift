@@ -134,9 +134,6 @@ class DocumentStore: ObservableObject {
     }
 
     init() {
-//        nextPage = Endpoint.documents(page: 1).url
-//        resetPage()
-
         Task {
             async let _ = await fetchAllTags()
             async let _ = await fetchAllCorrespondents()
@@ -144,37 +141,11 @@ class DocumentStore: ObservableObject {
         }
     }
 
-//    func clear() {
-//        documents = []
-//        correspondents = [:]
-//        documentTypes = [:]
-//        hasNextPage = true
-//        currentPage = 1
-//    }
-
     func resetPage() {
         nextPage = Endpoint.documents(page: 1, filter: filterState).url
     }
 
-//    func setFilterState(to filterState: FilterState) {
-//        self.filterState = filterState
-    ////        resetPage()
-//    }
-
-//
-//    func withLoading(action: () -> Void) {
-//        isLoading = true
-//        Task {
-//            try await Task.sleep(for: .seconds(5))
-//        }
-//        action()
-//        isLoading = false
-//    }
-
     func fetchDocuments(clear: Bool) async {
-//        if clear {
-//            resetPage()
-//        }
         if clear {
             nextPage = Endpoint.documents(page: 1, filter: filterState).url!
             documents = []
@@ -249,8 +220,6 @@ class DocumentStore: ObservableObject {
             return nil
         }
 
-//        print(url)
-
         let request = URLRequest.common(url: url)
 
         do {
@@ -260,8 +229,6 @@ class DocumentStore: ObservableObject {
                 print("Getting correspondent: Status was not 200")
                 return nil
             }
-
-//            print(String(decoding: data, as: UTF8.self))
 
             let correspondent = try decoder.decode(type, from: data)
             return correspondent
@@ -275,13 +242,8 @@ class DocumentStore: ObservableObject {
         _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
     ) async -> T? where T: Decodable {
         if let element = self[keyPath: cache][id] {
-//            print("Cached correspondent \(id) (cache size: \(self[keyPath: cache].count))")
             return element
         }
-
-//        print("Cache size: \(self[keyPath: cache].count)")
-
-//        print("Loading correspondent \(id)")
 
         guard let element = await getSingle(type, id: id, path: path) else {
             return nil
