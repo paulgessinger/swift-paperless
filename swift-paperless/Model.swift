@@ -117,6 +117,10 @@ class DocumentStore: ObservableObject {
 
     private(set) var filterState = FilterState()
 
+    func clearDocuments() {
+        documents = []
+    }
+
     init() {
 //        nextPage = Endpoint.documents(page: 1).url
         resetPage()

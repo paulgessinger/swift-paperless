@@ -7,13 +7,11 @@
 
 import Combine
 import QuickLook
-import Semaphore
 import SwiftUI
 
 struct DocumentView: View {
     @StateObject private var store = DocumentStore()
 
-//    @State var lastSearchString: String?
     @StateObject var searchDebounce = DebounceObject(delay: 0.1)
 
     @State var showFilterModal: Bool = false
@@ -23,8 +21,6 @@ struct DocumentView: View {
     @State var initialLoad = true
 
     @State var isLoading = false
-
-    let searchSemaphore = AsyncSemaphore(value: 1)
 
     func load(clear: Bool) async {
         async let _ = await store.fetchAllCorrespondents()
@@ -44,160 +40,136 @@ struct DocumentView: View {
     }
 
     func handleSearch(query: String) async {
-//        await searchSemaphore.wait()
-//        defer { searchSemaphore.signal() }
-
-//        if let last = lastSearchString {
-//            if last.lowercased() == searchDebounce.debouncedText.lowercased() {
-//                // skip search as it's the same as before
-//                return
-//            }
-//        }
-
         var filterState = store.filterState
         filterState.searchText = query == "" ? nil : query
         store.setFilterState(to: filterState)
 
-        isLoading = true
+        await setLoading(to: true)
         await load(clear: true)
-        isLoading = false
+        await setLoading(to: false)
+    }
+
+    func setLoading(to value: Bool) async {
+        withAnimation {
+            isLoading = value
+        }
     }
 
     var body: some View {
         NavigationStack {
-//            ScrollViewReader { _ in
-            ScrollView {
-                if isLoading {
-                    ProgressView()
-                }
-//                EmptyView().id("documentsTop")
-                // @TODO: Maybe switch back to list
-                // Normal VStack doesn't work because it renders everything at once (instant paging)
-                LazyVStack(alignment: .leading) {
-                    ForEach($store.documents, id: \.id) { $document in
-                        NavigationLink(destination: {
-                            DocumentDetailView(document: $document)
-                                .navigationBarTitleDisplayMode(.inline)
-                        }, label: {
-                            DocumentCell(document: document).task {
-                                let index = store.documents.firstIndex { $0 == document }
-                                if index == store.documents.count - 10 {
+            ScrollViewReader { scrollView in
+                ScrollView {
+                    if isLoading {
+                        ProgressView()
+                            .padding(15)
+                            .scaleEffect(2)
+                            .transition(.opacity)
+                    }
+                    LazyVStack(alignment: .leading) {
+                        ForEach($store.documents, id: \.id) { $document in
+                            NavigationLink(destination: {
+                                DocumentDetailView(document: $document)
+                                    .navigationBarTitleDisplayMode(.inline)
+                            }, label: {
+                                DocumentCell(document: document).task {
+                                    let index = store.documents.firstIndex { $0 == document }
+                                    if index == store.documents.count - 10 {
 //                                    if document == store.documents.last {
-                                    Task {
-                                        await load(clear: false)
+                                        Task {
+                                            await load(clear: false)
+                                        }
                                     }
                                 }
-                            }
-                        })
-                        .buttonStyle(.plain)
-                        .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-                        //                        .listRowBackground(Color.clear)
-                        //                        .listRowSeparatorTint(.clear)
-                        //                        .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0))
-                    }
-                }.opacity(isLoading ? 0.5 : 1.0)
-            }
-            //                if store.isLoading && store.currentPage == 1 {
-            //                    ProgressView()
-            //                }
-            .toolbar {
-                //                ToolbarItem(placement: .principal) {
-                //                    Text("Hi")
-                //                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showFilterModal.toggle() }) {
-                        Label("Filter", systemImage:
-                            //                            "line.3.horizontal.decrease.circle.fill" :
-                            "line.3.horizontal.decrease.circle")
+                            })
+                            .buttonStyle(.plain)
+                            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                        }
                     }
                 }
-            }
-            .navigationTitle("Documents")
-
-            .refreshable {
-//                    scrollView.scrollTo("documentsTop")
-                isLoading = true
-                Task {
-                    await load(clear: true)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showFilterModal.toggle() }) {
+                            Label("Filter", systemImage:
+                                //                            "line.3.horizontal.decrease.circle.fill" :
+                                "line.3.horizontal.decrease.circle")
+                        }
+                    }
                 }
-                isLoading = false
-            }
+                .navigationTitle("Documents")
 
-            .searchable(text: $searchDebounce.text, placement: .automatic) {
-                ForEach(searchSuggestions, id: \.self) { v in
-                    Text(v).searchCompletion(v)
+                .refreshable {
+                    Task {
+                        await setLoading(to: true)
+                        await load(clear: true)
+                        await setLoading(to: false)
+                    }
                 }
-            }
 
-            .animation(.default, value: store.documents)
+                .searchable(text: $searchDebounce.text, placement: .automatic) {
+                    ForEach(searchSuggestions, id: \.self) { v in
+                        Text(v).searchCompletion(v)
+                    }
+                }
 
-            .onSubmit(of: .search) {
-                print("Search submit: \(searchDebounce.text)")
-                if searchDebounce.text == store.filterState.searchText {
-                    return
-                }
-                withAnimation {
-//                        scrollView.scrollTo("documentsTop")
-                }
-                Task {
-                    await handleSearch(query: searchDebounce.text)
-                }
-            }
+                .animation(.default, value: store.documents)
 
-            .sheet(isPresented: $showFilterModal, onDismiss: {
-                print("Filter updated \(store.filterState)")
+                .onSubmit(of: .search) {
+                    print("Search submit: \(searchDebounce.text)")
+                    if searchDebounce.text == store.filterState.searchText {
+                        return
+                    }
+                    if store.documents.count > 0 {
+                        withAnimation {
+                            scrollView.scrollTo(store.documents[0].id, anchor: .top)
+                        }
+                        store.clearDocuments()
+                    }
+                    Task {
+                        await handleSearch(query: searchDebounce.text)
+                    }
+                }
+
+                .sheet(isPresented: $showFilterModal, onDismiss: {
+                    print("Filter updated \(store.filterState)")
 //                    scrollView.scrollTo("documentsTop")
 //                    Task {
 //                        await load(clear: true)
 //                    }
-            }) {
-                FilterView()
-                    .environmentObject(store)
-            }
-
-            .task {
-                if initialLoad {
-                    initialLoad = false
-                    await load(clear: true)
+                }) {
+                    FilterView()
+                        .environmentObject(store)
                 }
-            }
 
-//                .onChange(of: searchDebounce.text) { value in
-//                    if value == "" {
-//                        searchSuggestions = []
-//
-//                        if let last = lastSearchString {
-//                            if last.lowercased() != searchDebounce.debouncedText.lowercased() {
-//                                searchDebounce.debouncedText = ""
-//                            }
-//                        }
-//                    }
-//                }
-
-            .onChange(of: searchDebounce.debouncedText) { _ in
-                if searchDebounce.debouncedText == "" {
-                    withAnimation {
-//                            scrollView.scrollTo("documentsTop")
+                .task {
+                    if initialLoad {
+                        initialLoad = false
+                        await setLoading(to: true)
+                        await load(clear: true)
+                        await setLoading(to: false)
                     }
                 }
-                Task {
-                    await updateSearchCompletion()
 
-                    print("Change search to \(searchDebounce.debouncedText)")
-
+                .onChange(of: searchDebounce.debouncedText) { _ in
                     if searchDebounce.debouncedText == "" {
-                        await handleSearch(query: "")
-//                            await load(clear: true)
+                        if store.documents.count > 0 {
+                            withAnimation {
+                                scrollView.scrollTo(store.documents[0].id, anchor: .top)
+                            }
+
+                            store.clearDocuments()
+                        }
+                    }
+                    Task {
+                        await updateSearchCompletion()
+
+                        print("Change search to \(searchDebounce.debouncedText)")
+
+                        if searchDebounce.debouncedText == "" {
+                            await handleSearch(query: "")
+                        }
                     }
                 }
-
-//                    print("initiate search for \(searchDebounce.debouncedText)")
-//                    scrollView.scrollTo("documentsTop")
-//                    Task {
-//                        await handleSearch()
-//                    }
             }
-//            }
         }
         .environmentObject(store)
     }
