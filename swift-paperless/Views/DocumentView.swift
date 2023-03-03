@@ -21,6 +21,20 @@ struct SearchFilterBar<Content: View>: View {
     }
 }
 
+struct PillButton: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .foregroundColor(.white)
+            .background(LinearGradient(colors: [
+                    Color.blue, Color(uiColor: .blue.darker())
+                ],
+                startPoint: .topLeading, endPoint: .bottomTrailing))
+            .clipShape(Capsule())
+            .shadow(radius: 5)
+    }
+}
+
 struct DocumentView: View {
     @StateObject private var store = DocumentStore()
 
@@ -123,22 +137,26 @@ struct DocumentView: View {
                     }
 
                     .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(action: { showFilterModal.toggle() }) {
-                                Label("Filter", systemImage:
-                                    store.filterState.filtering ?
-                                        "line.3.horizontal.decrease.circle.fill" :
-                                        "line.3.horizontal.decrease.circle")
-                            }
-                        }
+//                        ToolbarItem(placement: .navigationBarTrailing) {
+//                            Button(action: { showFilterModal.toggle() }) {
+//                                Label("Filter", systemImage:
+//                                    store.filterState.filtering ?
+//                                        "line.3.horizontal.decrease.circle.fill" :
+//                                        "line.3.horizontal.decrease.circle")
+//                            }
+//                        }
                     }
                     .navigationTitle("Documents")
 
                     .animation(.default, value: store.documents)
 
                     .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                        FilterView(filterState: store.filterState)
+                        FilterView(filterState: store.filterState,
+                                   correspondents: store.correspondents,
+                                   documentTypes: store.documentTypes,
+                                   tags: store.tags)
                             .environmentObject(store)
+                            .presentationDetents([.large, .medium])
                     }
 
                     .onChange(of: store.filterState) { _ in
@@ -172,28 +190,21 @@ struct DocumentView: View {
                         }
                     }
 
-                    SearchFilterBar {
-                        Button(action: { showFilterModal.toggle() }) {
-                            Label(title: { Text("Filter") }, icon: {
-                                Image(systemName: store.filterState.filtering ?
-                                    "line.3.horizontal.decrease.circle.fill" :
-                                    "line.3.horizontal.decrease.circle"
-                                )
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                            })
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(LinearGradient(colors: [
-                                    Color.blue, Color(uiColor: .blue.darker())
-                                ],
-                                startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .clipShape(Capsule())
-                            .shadow(radius: 5)
-                        }
-                        .padding()
+//                    SearchFilterBar {
+                    Button(action: { showFilterModal.toggle() }) {
+                        Label(title: { Text("Filter") }, icon: {
+                            Image(systemName: store.filterState.filtering ?
+                                "line.3.horizontal.decrease.circle.fill" :
+                                "line.3.horizontal.decrease.circle"
+                            )
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                        })
+                        .modifier(PillButton())
                     }
+                    .padding()
+//                    }
                 }
 
                 .searchable(text: $searchDebounce.text,
@@ -218,5 +229,14 @@ struct DocumentView: View {
         }
 
         .environmentObject(store)
+    }
+}
+
+struct DocumentView_Previews: PreviewProvider {
+    static let store = DocumentStore()
+
+    static var previews: some View {
+        DocumentView()
+            .environmentObject(store)
     }
 }

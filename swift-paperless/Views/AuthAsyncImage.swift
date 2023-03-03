@@ -15,39 +15,17 @@ typealias UIImage = NSImage
 struct AuthAsyncImage<Content: View, Placeholder: View>: View {
     @State var uiImage: UIImage?
 
-    let url: URL?
+    let getImage: () async -> (Bool, UIImage?)
     let content: (Image) -> Content
     let placeholder: () -> Placeholder
 
     init(
-        url: URL?, @ViewBuilder content: @escaping (Image) -> Content,
+        image: @escaping () async -> (Bool, UIImage?), @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
-        self.url = url
+        self.getImage = image
         self.content = content
         self.placeholder = placeholder
-    }
-
-    func getImage() async -> UIImage? {
-        guard let url = url else { return nil }
-
-//        print("Load image at \(url)")
-
-        var request = URLRequest(url: url)
-        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                fatalError("Did not get good response for image")
-            }
-
-//            try await Task.sleep(for: .seconds(2))
-
-            return UIImage(data: data)
-        }
-        catch { return nil }
     }
 
     var body: some View {
@@ -60,9 +38,12 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
         }
         else {
             placeholder().task {
-                let image = await getImage()
-                withAnimation {
-                    self.uiImage = image
+                let (cached, image) = await getImage()
+                if cached { self.uiImage = image }
+                else {
+                    withAnimation {
+                        self.uiImage = image
+                    }
                 }
             }
         }

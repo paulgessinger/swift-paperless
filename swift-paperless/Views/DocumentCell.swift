@@ -15,10 +15,13 @@ struct DocumentCell: View {
 
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
+    @State private var tags: [Tag] = []
 
     var body: some View {
         HStack(alignment: .top) {
-            AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
+            AuthAsyncImage(image: {
+                await store.getImage(document: document)
+            }) {
                 image in
                 image
                     .resizable()
@@ -49,8 +52,26 @@ struct DocumentCell: View {
 
                 Text(document.created, style: .date)
 
-                TagsView(tagIDs: document.tags)
+                TagsView(tags: tags)
+                    .task {
+                        tags = await store.getTags(document.tags)
+                    }
             }
         }
+    }
+}
+
+struct DocumentCell_Previews: PreviewProvider {
+    static let store = DocumentStore()
+
+    static var document: Document = .init(id: 1689, added: "Hi",
+                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+                                          documentType: 2, correspondent: 2,
+                                          created: Date.now, tags: [1, 2])
+
+    static var previews: some View {
+        DocumentCell(document: document)
+            .padding()
+            .environmentObject(store)
     }
 }

@@ -47,10 +47,14 @@ struct TagView: View {
 }
 
 struct TagsView: View {
-    @EnvironmentObject var store: DocumentStore
+    var tags: [Tag]
 
-    var tagIDs: [UInt]
-    @State var tags: [Tag] = []
+    var action: (Tag) -> ()
+
+    init(tags: [Tag], action: @escaping (Tag) -> () = { _ in }) {
+        self.tags = tags
+        self.action = action
+    }
 
     var body: some View {
         VStack {
@@ -59,15 +63,10 @@ struct TagsView: View {
                            horizontalSpacing: 5,
                            verticalSpacing: 5) {
                 ForEach(tags, id: \.id) { tag in
-                    TagView(tag: tag)
+                    TagView(tag: tag).onTapGesture {
+                        action(tag)
+                    }
                 }
-            }
-//            .frame(width: geo.size.width)
-//            .background(Color.red)
-        }
-        .task {
-            if tags.isEmpty {
-                tags = await store.getTags(tagIDs)
             }
         }
     }
@@ -103,7 +102,7 @@ struct TagView_Previews: PreviewProvider {
                 GeometryReader { geo in
                     ZStack {
                         Rectangle().fill(.blue)
-                        TagsView(tagIDs: [1, 2, 66, 71])
+                        TagsView(tags: tags)
                     }.frame(width: geo.size.width * fractions[i])
                 }
             }

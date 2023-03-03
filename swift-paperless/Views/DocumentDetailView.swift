@@ -18,6 +18,7 @@ struct DocumentDetailView: View {
 
     @State private var previewUrl: URL?
     @State private var previewLoading = false
+    @State private var tags: [Tag] = []
 
     func loadData() async {
         correspondent = nil
@@ -53,54 +54,58 @@ struct DocumentDetailView: View {
 
                 Text(document.created, style: .date)
 
-                TagsView(tagIDs: document.tags)
+                TagsView(tags: tags)
+                    .task {
+                        tags = await store.getTags(document.tags)
+                    }
 
-                GeometryReader { geometry in
-                    Button(action: {
-                        Task {
-                            if previewLoading {
-                                return
-                            }
-                            previewLoading = true
-                            previewUrl = await getPreviewImage(documentID: document.id)
-                            previewLoading = false
+                Button(action: {
+                    Task {
+                        if previewLoading {
+                            return
                         }
+                        previewLoading = true
+                        previewUrl = await getPreviewImage(documentID: document.id)
+                        previewLoading = false
+                    }
+                }) {
+                    AuthAsyncImage(image: {
+                        await store.getImage(document: document)
                     }) {
-                        AuthAsyncImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/")) {
-                            image in
+                        image in
+                        VStack {
                             ZStack {
                                 image
                                     .resizable()
-                                    .scaledToFill()
-                                    .frame(width: geometry.size.width, alignment: .top)
                                     .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                                    .scaledToFill()
                                     .opacity(previewLoading ? 0.6 : 1.0)
 
                                 if previewLoading {
                                     ProgressView()
                                 }
-                            }.animation(.default, value: previewLoading)
-
-                        } placeholder: {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                Spacer()
                             }
+                            .animation(.default, value: previewLoading)
+                        }
+
+                    } placeholder: {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
                         }
                     }
-                    .buttonStyle(.plain)
-                    .quickLookPreview($previewUrl)
                 }
-
-            }.padding()
+                .buttonStyle(.plain)
+                .quickLookPreview($previewUrl)
+            }
+            .padding()
         }
         .refreshable {
-//            Task {
             if let document = await store.getDocument(id: document.id) {
                 self.document = document
             }
-//            }
         }
         .toolbar {
             Button("Edit") {
@@ -109,9 +114,19 @@ struct DocumentDetailView: View {
                 DocumentEditView(document: $document)
             }
         }
-//        .navigationTitle(
-//            Text.titleCorrespondent(value: correspondent)
-//                + Text("\(document.title)")
-//        )
+    }
+}
+
+struct DocumentDetailsView_Previews: PreviewProvider {
+    static let store = DocumentStore()
+
+    static var document: Document = .init(id: 1689, added: "Hi",
+                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+                                          documentType: 2, correspondent: 2,
+                                          created: Date.now, tags: [1, 2])
+
+    static var previews: some View {
+        DocumentDetailView(document: .constant(document))
+            .environmentObject(store)
     }
 }

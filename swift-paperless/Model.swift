@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OrderedCollections
 import SwiftUI
 
 struct Document: Codable, Identifiable, Equatable, Hashable {
@@ -41,6 +42,16 @@ struct Tag: Codable, Identifiable {
     var slug: String
     @HexColor var color: Color
     @HexColor var textColor: Color
+}
+
+extension Tag: Equatable, Hashable {
+    static func == (lhs: Tag, rhs: Tag) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 protocol ListResponseProtocol {
@@ -98,10 +109,15 @@ struct FilterState: Equatable {
         case only(id: UInt)
     }
 
-    // @TODO: Model "Not Assigned"
+    enum Tag: Equatable, Hashable {
+        case any
+        case notAssigned
+        case only(ids: [UInt])
+    }
+
     var correspondent: Filter = .any
-    // @TODO: Model "Not Assigned"
     var documentType: Filter = .any
+    var tags: Tag = .any
 
     private var query: String?
     var searchText: String? {
@@ -128,6 +144,9 @@ class DocumentStore: ObservableObject {
     private var nextPage: URL?
 
     @Published var filterState = FilterState()
+
+    private var thumbnailCache: OrderedDictionary<Document, UIImage> = [:]
+    static let maxThumbnailCacheSize = 100
 
     func clearDocuments() {
         documents = []
@@ -279,5 +298,41 @@ class DocumentStore: ObservableObject {
             }
         }
         return tags
+    }
+
+    func getImage(document: Document) async -> (Bool, UIImage?) {
+        // @TODO: Add limited size caching
+        if let image = thumbnailCache[document] {
+            return (true, image)
+        }
+
+        let image = await getImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/"))
+
+        thumbnailCache[document] = image
+        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
+            thumbnailCache.removeFirst(DocumentStore.maxThumbnailCacheSize - thumbnailCache.count)
+        }
+        return (false, image)
+    }
+
+    func getImage(url: URL?) async -> UIImage? {
+        guard let url = url else { return nil }
+
+//        print("Load image at \(url)")
+
+        var request = URLRequest(url: url)
+        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                fatalError("Did not get good response for image")
+            }
+
+//            try await Task.sleep(for: .seconds(2))
+
+            return UIImage(data: data)
+        } catch { return nil }
     }
 }

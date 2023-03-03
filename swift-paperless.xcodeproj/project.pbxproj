@@ -18,6 +18,7 @@
 		7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C138B29ABC35E00D71F51 /* ColorHex.swift */; };
 		7A5C138F29ABD13100D71F51 /* WrappingStack in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138E29ABD13100D71F51 /* WrappingStack */; };
 		7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C139029ABFC3F00D71F51 /* TagView.swift */; };
+		7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9AA03929AD39F300A55529 /* OrderedCollections */; };
 		7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
 		7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */; };
 		7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
@@ -76,6 +77,7 @@
 			files = (
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A5C138F29ABD13100D71F51 /* WrappingStack in Frameworks */,
+				7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -190,6 +192,7 @@
 			packageProductDependencies = (
 				7A5C138929AA7E2F00D71F51 /* Semaphore */,
 				7A5C138E29ABD13100D71F51 /* WrappingStack */,
+				7A9AA03929AD39F300A55529 /* OrderedCollections */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -266,6 +269,7 @@
 			packageReferences = (
 				7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */,
 				7A5C138D29ABD13100D71F51 /* XCRemoteSwiftPackageReference "swiftui-wrapping-stack" */,
+				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -694,6 +698,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -706,6 +718,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A5C138D29ABD13100D71F51 /* XCRemoteSwiftPackageReference "swiftui-wrapping-stack" */;
 			productName = WrappingStack;
+		};
+		7A9AA03929AD39F300A55529 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
