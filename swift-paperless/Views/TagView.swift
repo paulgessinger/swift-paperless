@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.02.23.
 //
 
+import Flow
 import SwiftUI
 import WrappingStack
 
@@ -57,17 +58,15 @@ struct TagsView: View {
     }
 
     var body: some View {
-        VStack {
-            WrappingHStack(id: \.id,
-                           alignment: .leading,
-                           horizontalSpacing: 5,
-                           verticalSpacing: 5) {
+        HStack {
+            HFlow {
                 ForEach(tags, id: \.id) { tag in
                     TagView(tag: tag).onTapGesture {
                         action(tag)
                     }
                 }
             }
+            Spacer()
         }
     }
 }

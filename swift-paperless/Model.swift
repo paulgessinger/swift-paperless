@@ -302,16 +302,16 @@ class DocumentStore: ObservableObject {
 
     func getImage(document: Document) async -> (Bool, UIImage?) {
         // @TODO: Add limited size caching
-        if let image = thumbnailCache[document] {
-            return (true, image)
-        }
+//        if let image = thumbnailCache[document] {
+//            return (true, image)
+//        }
 
         let image = await getImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/"))
 
-        thumbnailCache[document] = image
-        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
-            thumbnailCache.removeFirst(DocumentStore.maxThumbnailCacheSize - thumbnailCache.count)
-        }
+//        thumbnailCache[document] = image
+//        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
+//            thumbnailCache.removeFirst(DocumentStore.maxThumbnailCacheSize - thumbnailCache.count)
+//        }
         return (false, image)
     }
 

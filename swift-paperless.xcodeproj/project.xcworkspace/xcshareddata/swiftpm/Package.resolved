@@ -19,11 +19,11 @@
       }
     },
     {
-      "identity" : "swiftui-wrapping-stack",
+      "identity" : "swiftui-flow",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/diniska/swiftui-wrapping-stack",
+      "location" : "https://github.com/tevelee/SwiftUI-Flow",
       "state" : {
-        "revision" : "1e6b0fffe902cf3ffc102af5e7c0c4767cbc09e0",
+        "revision" : "76c03c9fa9fa0e5470cb6d8f2da17466b2efd63d",
         "version" : "1.1.0"
       }
     }

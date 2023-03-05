@@ -122,6 +122,11 @@ struct DocumentView: View {
                                 })
                                 .buttonStyle(.plain)
                                 .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+
+                                if document != store.documents.last {
+                                    Divider()
+                                        .padding(.horizontal)
+                                }
                             }
                         }
                         if store.documents.isEmpty && !isLoading && !initialLoad {

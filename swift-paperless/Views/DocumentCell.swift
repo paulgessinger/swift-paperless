@@ -26,13 +26,14 @@ struct DocumentCell: View {
                 image
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 150, height: 150, alignment: .top)
-                    .cornerRadius(5)
-                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                    .frame(width: 100, height: 100, alignment: .top)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(.gray, lineWidth: 1))
             } placeholder: {
                 Rectangle().fill(.gray).scaledToFit().overlay(ProgressView())
             }
-            .frame(width: 150, height: 150)
+            .frame(width: 100, height: 100)
             VStack(alignment: .leading) {
                 Group {
                     Text.titleCorrespondent(value: correspondent)
@@ -55,8 +56,11 @@ struct DocumentCell: View {
                 TagsView(tags: tags)
                     .task {
                         tags = await store.getTags(document.tags)
-                    }
+                    }.padding(0)
             }
+            .padding(.horizontal, 5)
+
+//            Image(systemName: "chevron.right")
         }
     }
 }
@@ -64,14 +68,24 @@ struct DocumentCell: View {
 struct DocumentCell_Previews: PreviewProvider {
     static let store = DocumentStore()
 
-    static var document: Document = .init(id: 1689, added: "Hi",
-                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-                                          documentType: 2, correspondent: 2,
-                                          created: Date.now, tags: [1, 2])
+    static var documents: [Document] = [
+        .init(id: 1689, added: "Hi",
+              title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+              documentType: 2, correspondent: 2,
+              created: Date.now, tags: [1, 2]),
+        .init(id: 1688, added: "Hi",
+              title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+              documentType: 2, correspondent: 2,
+              created: Date.now, tags: []),
+    ]
 
     static var previews: some View {
-        DocumentCell(document: document)
-            .padding()
-            .environmentObject(store)
+        VStack {
+            ForEach(documents, id: \.id) { document in
+                DocumentCell(document: document)
+                    .padding()
+            }
+        }
+        .environmentObject(store)
     }
 }

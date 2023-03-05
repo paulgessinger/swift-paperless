@@ -7,6 +7,35 @@
 
 import SwiftUI
 
+struct SearchBarView: View {
+    @Binding var text: String
+
+    var body: some View {
+        HStack {
+            Label("Search", systemImage: "magnifyingglass")
+                .labelStyle(.iconOnly)
+            TextField("Search", text: $text)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 10)
+            if !text.isEmpty {
+                Spacer()
+                Label("Clear", systemImage: "xmark.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .foregroundColor(.gray)
+                    .onTapGesture {
+                        text = ""
+                    }
+            }
+        }
+        .padding(.horizontal, 10)
+        .background(
+            Rectangle()
+                .fill(Color(uiColor: .systemGroupedBackground))
+                .cornerRadius(10)
+        )
+    }
+}
+
 struct TagSelectionView: View {
     var tags: [UInt: Tag]
     @Binding var selectedTags: FilterState.Tag
@@ -62,28 +91,7 @@ struct TagSelectionView: View {
 
                 // MARK: - Search bar
 
-                HStack {
-                    Label("Search", systemImage: "magnifyingglass")
-                        .labelStyle(.iconOnly)
-                    TextField("Search", text: $searchDebounce.text)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 10)
-                    if !searchDebounce.debouncedText.isEmpty {
-                        Spacer()
-                        Label("Clear", systemImage: "xmark.circle.fill")
-                            .labelStyle(.iconOnly)
-                            .foregroundColor(.gray)
-                            .onTapGesture {
-                                searchDebounce.text = ""
-                            }
-                    }
-                }
-                .padding(.horizontal, 10)
-                .background(
-                    Rectangle()
-                        .fill(Color(uiColor: .systemGroupedBackground))
-                        .cornerRadius(10)
-                )
+                SearchBarView(text: $searchDebounce.debouncedText)
             }
             .transition(.opacity)
             .padding(.horizontal)
@@ -159,7 +167,7 @@ struct TagSelectionView: View {
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )
-            .animation(.linear, value: searchDebounce.debouncedText)
+//            .animation(.linear, value: searchDebounce.debouncedText)
         }
     }
 }
