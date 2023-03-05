@@ -15,6 +15,8 @@ protocol Pickable {
 extension Correspondent: Pickable {}
 extension DocumentType: Pickable {}
 
+// MARK: - CommonPicker
+
 struct CommonPicker: View {
     @Binding var selection: FilterState.Filter
     var elements: [(UInt, String)]
@@ -31,10 +33,6 @@ struct CommonPicker: View {
                     .labelStyle(.iconOnly)
             }
         }
-//        .contentShape(Rectangle())
-//        .onTapGesture {
-//            selection = value
-//        }
     }
 
     var body: some View {
@@ -50,6 +48,42 @@ struct CommonPicker: View {
         }
     }
 }
+
+struct DocumentTypeView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore()
+    @State static var filterState = FilterState()
+
+    static var previews: some View {
+        HStack {
+            CommonPicker(
+                selection: $filterState.documentType,
+                elements: PreviewModel.documentTypes.sorted {
+                    $0.value.name < $1.value.name
+                }.map { ($0.value.id, $0.value.name) }
+            )
+        }
+        .environmentObject(store)
+    }
+}
+
+struct CorrespondentView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore()
+    @State static var filterState = FilterState()
+
+    static var previews: some View {
+        HStack {
+            CommonPicker(
+                selection: $filterState.correspondent,
+                elements: PreviewModel.correspondents.sorted {
+                    $0.value.name < $1.value.name
+                }.map { ($0.value.id, $0.value.name) }
+            )
+        }
+        .environmentObject(store)
+    }
+}
+
+// MARK: - FilterView
 
 struct FilterView: View {
     @Environment(\.dismiss) var dismiss
@@ -87,33 +121,20 @@ struct FilterView: View {
         NavigationStack {
             GeometryReader { geo in
                 VStack(alignment: .center) {
-//                Label(title: { Text("Filter") }, icon: {
-//                    Image(systemName: store.filterState.filtering ?
-//                        "line.3.horizontal.decrease.circle.fill" :
-//                        "line.3.horizontal.decrease.circle"
-//                    )
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: 20, height: 20)
-//                })
-//                .modifier(PillButton())
-
                     Picker("Tab", selection: $activeTab) {
+                        Label("Tag", systemImage: "tag.fill")
+                            .labelStyle(.iconOnly)
+                            .tag(Active.tag)
                         Label("Correspondent", systemImage: "person.fill")
                             .labelStyle(.iconOnly)
                             .tag(Active.correspondent)
                         Label("Document type", systemImage: "doc.fill")
                             .labelStyle(.iconOnly)
                             .tag(Active.documentType)
-                        Label("Tag", systemImage: "tag.fill")
-                            .labelStyle(.iconOnly)
-                            .tag(Active.tag)
                     }
                     .frame(width: 0.6 * geo.size.width)
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
-//                Spacer()
-//                .padding(EdgeInsets(top: 30, leading: 20, bottom: 20, trailing: 20))
 
                     Group {
                         if activeTab == .correspondent {
@@ -147,132 +168,16 @@ struct FilterView: View {
                             }
                         }
 
-//                        if modified {
-//                            ToolbarItem(placement: .navigationBarTrailing) {
-//                                Button("Discard") {
-//                                    filterState = store.filterState
-//                                }
-//                            }
-//                        }
-
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") {
-//                                print("Store")
-//                                store.filterState = filterState
                                 dismiss()
                             }.bold()
                         }
                     }
-//                    .onChange(of: filterState) { _ in
-//                        modified = filterState != store.filterState
-//                    }
                 }
                 .frame(width: geo.size.width)
             }
             .interactiveDismissDisabled(modified)
-        }
-    }
-}
-
-struct TagSelectionView: View {
-    var tags: [UInt: Tag]
-
-//    @State var selectedTags: [UInt] = []
-    @Binding var selectedTags: FilterState.Tag
-
-    func row<Content: View>(action: @escaping () -> (),
-                            active: Bool,
-                            @ViewBuilder content: () -> Content) -> some View
-    {
-        HStack {
-            Button(action: { withAnimation { action() }}, label: content)
-                .foregroundColor(.primary)
-            Spacer()
-            if active {
-                Label("Active", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
-            }
-        }
-    }
-
-    var body: some View {
-        VStack {
-            if case var .only(ids) = selectedTags {
-                VStack {
-//                    HStack {
-//                        Text("Selected".uppercased())
-//                            .foregroundColor(.gray)
-//                        Spacer()
-//                    }
-
-                    TagsView(tags: ids.compactMap { tags[$0] }) { tag in
-                        let _ = withAnimation {
-                            if let i = ids.firstIndex(of: tag.id) {
-                                ids.remove(at: i)
-                            }
-                            selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                        }
-                    }
-                    .padding(10)
-                    .background(
-                        Rectangle()
-                            .fill(Color(uiColor: .systemGroupedBackground))
-                            .cornerRadius(10)
-                    )
-                }
-                .transition(.opacity)
-                .padding(.horizontal)
-                .padding(.vertical, 2)
-            }
-
-            Spacer()
-            Form {
-                Section {
-                    row(action: {
-                        selectedTags = .any
-                    }, active: selectedTags == .any, content: {
-                        Text("Any")
-                    })
-
-                    row(action: {
-                        selectedTags = .notAssigned
-                    }, active: selectedTags == .notAssigned, content: {
-                        Text("Not assigned")
-                    })
-                }
-                ForEach(tags.sorted { $0.value.name < $1.value.name }, id: \.value.id) { _, tag in
-                    HStack {
-                        Button(action: {
-                            withAnimation {
-                                switch selectedTags {
-                                case .any, .notAssigned:
-                                    selectedTags = .only(ids: [tag.id])
-                                case var .only(ids):
-                                    if let i = ids.firstIndex(of: tag.id) {
-                                        ids.remove(at: i)
-                                    }
-                                    else {
-                                        ids.append(tag.id)
-                                    }
-
-                                    selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                                }
-                            }
-                        }) {
-                            TagView(tag: tag)
-                        }
-
-                        Spacer()
-
-                        if case let .only(ids) = selectedTags {
-                            if ids.contains(tag.id) {
-                                Label("Active", systemImage: "checkmark")
-                                    .labelStyle(.iconOnly)
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -323,14 +228,5 @@ struct FilterView_Previews: PreviewProvider {
             )
         }
         .environmentObject(store)
-    }
-}
-
-struct TagSelectView_Previews: PreviewProvider {
-    @State static var filterState = FilterState()
-
-    static var previews: some View {
-        TagSelectionView(tags: PreviewModel.tags,
-                         selectedTags: $filterState.tags)
     }
 }

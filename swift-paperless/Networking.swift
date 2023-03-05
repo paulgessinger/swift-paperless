@@ -46,6 +46,16 @@ extension Endpoint {
             queryItems.append(URLQueryItem(name: "document_type__id", value: String(id)))
         }
 
+        switch filter.tags {
+        case .any: break
+        case .notAssigned:
+            queryItems.append(URLQueryItem(name: "is_tagged", value: "0"))
+        case let .only(ids):
+            queryItems.append(
+                URLQueryItem(name: "tags__id__all",
+                             value: ids.map { String($0) }.joined(separator: ",")))
+        }
+
         return Endpoint(
             path: "/api/documents/",
             queryItems: queryItems

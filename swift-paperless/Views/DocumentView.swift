@@ -24,7 +24,8 @@ struct SearchFilterBar<Content: View>: View {
 struct PillButton: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
             .foregroundColor(.white)
             .background(LinearGradient(colors: [
                     Color.blue, Color(uiColor: .blue.darker())
@@ -156,7 +157,7 @@ struct DocumentView: View {
                                    documentTypes: store.documentTypes,
                                    tags: store.tags)
                             .environmentObject(store)
-                            .presentationDetents([.large, .medium])
+//                            .presentationDetents([.large, .medium])
                     }
 
                     .onChange(of: store.filterState) { _ in
@@ -191,7 +192,13 @@ struct DocumentView: View {
                     }
 
 //                    SearchFilterBar {
-                    Button(action: { showFilterModal.toggle() }) {
+                    Button(action: {
+                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                        impactMed.impactOccurred()
+
+                        showFilterModal.toggle()
+
+                    }) {
                         Label(title: { Text("Filter") }, icon: {
                             Image(systemName: store.filterState.filtering ?
                                 "line.3.horizontal.decrease.circle.fill" :
