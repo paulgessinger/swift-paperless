@@ -190,24 +190,24 @@ class DocumentStore: ObservableObject {
 
     func fetchAllCorrespondents() async {
         await fetchAll(ListResponse<Correspondent>.self,
-                       path: "correspondents", collection: \.correspondents)
+                       endpoint: Endpoint.correspondents(), collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async {
         await fetchAll(ListResponse<DocumentType>.self,
-                       path: "document_types", collection: \.documentTypes)
+                       endpoint: Endpoint.documentTypes(), collection: \.documentTypes)
     }
 
     func fetchAllTags() async {
         await fetchAll(ListResponse<Tag>.self,
-                       path: "tags", collection: \.tags)
+                       endpoint: Endpoint.tags(), collection: \.tags)
     }
 
-    private func fetchAll<T>(_ type: T.Type, path: String,
+    private func fetchAll<T>(_ type: T.Type, endpoint: Endpoint,
                              collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T.ObjectType]>) async
         where T: Decodable, T: ListResponseProtocol, T.ObjectType.ID == UInt
     {
-        guard var url = URL(string: API_BASE_URL + "\(path)/") else {
+        guard var url = endpoint.url else {
             return
         }
         while true {

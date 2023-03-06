@@ -20,6 +20,8 @@ struct DocumentDetailView: View {
     @State private var previewLoading = false
     @State private var tags: [Tag] = []
 
+    @State private var relatedDocuments: [Document]? = nil
+
     func loadData() async {
         correspondent = nil
         documentType = nil
@@ -59,6 +61,8 @@ struct DocumentDetailView: View {
                         tags = await store.getTags(document.tags)
                     }
 
+                Divider()
+
                 Button(action: {
                     Task {
                         if previewLoading {
@@ -70,7 +74,11 @@ struct DocumentDetailView: View {
                     }
                 }) {
                     AuthAsyncImage(image: {
-                        await store.getImage(document: document)
+                        do {
+                            try await Task.sleep(for: .seconds(0.5))
+                        }
+                        catch {}
+                        return await store.getImage(document: document)
                     }) {
                         image in
                         VStack {
@@ -86,7 +94,7 @@ struct DocumentDetailView: View {
                                     ProgressView()
                                 }
                             }
-                            .animation(.default, value: previewLoading)
+//                            .animation(.default, value: previewLoading)
                         }
 
                     } placeholder: {
@@ -95,13 +103,39 @@ struct DocumentDetailView: View {
                             ProgressView()
                             Spacer()
                         }
+                        .frame(height: 400)
                     }
                 }
                 .buttonStyle(.plain)
                 .quickLookPreview($previewUrl)
+
+                if let related = relatedDocuments {
+                    Group {
+                        Divider()
+                        HStack {
+                            Spacer()
+                            Text("Related documents")
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
+                        ForEach(related) { _ in Text("Doc") }
+                    }
+                    .transition(
+                        .opacity.combined(with: .move(edge: .bottom)))
+                }
             }
             .padding()
         }
+        .task {
+            do {
+                try await Task.sleep(for: .seconds(2))
+                withAnimation {
+                    relatedDocuments = []
+                }
+            }
+            catch {}
+        }
+
         .refreshable {
             if let document = await store.getDocument(id: document.id) {
                 self.document = document

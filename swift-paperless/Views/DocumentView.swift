@@ -24,11 +24,12 @@ struct SearchFilterBar<Content: View>: View {
 struct PillButton: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 15)
             .foregroundColor(.white)
             .background(LinearGradient(colors: [
-                    Color.blue, Color(uiColor: .blue.darker())
+                    Color(uiColor: UIColor(.accentColor).ligher()),
+                    Color.accentColor
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing))
             .clipShape(Capsule())
@@ -100,7 +101,7 @@ struct DocumentView: View {
                         if isLoading {
                             ProgressView()
                                 .padding(15)
-                                .scaleEffect(2)
+                                .scaleEffect(1)
                                 .transition(.opacity)
                         }
                         LazyVStack(alignment: .leading) {
@@ -211,8 +212,9 @@ struct DocumentView: View {
                             )
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 20, height: 20)
+                            .frame(width: 25, height: 25)
                         })
+                        .labelStyle(.iconOnly)
                         .modifier(PillButton())
                     }
                     .padding()

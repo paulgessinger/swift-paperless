@@ -72,6 +72,19 @@ extension Endpoint {
         )
     }
 
+    static func correspondents() -> Endpoint {
+        return Endpoint(path: "/api/correspondents/",
+                        queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+    }
+
+    static func documentTypes() -> Endpoint {
+        return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+    }
+
+    static func tags() -> Endpoint {
+        return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+    }
+
     var url: URL? {
         var components = URLComponents()
         components.scheme = "https"

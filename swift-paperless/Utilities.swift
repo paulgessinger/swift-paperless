@@ -28,7 +28,9 @@ class DebounceObject: ObservableObject {
 extension Text {
     static func titleCorrespondent(value: Correspondent?) -> Text {
         if let correspondent = value {
-            return Text("\(correspondent.name): ").bold().foregroundColor(.blue)
+            return Text("\(correspondent.name): ")
+//                .bold()
+                .foregroundColor(.accentColor)
         }
         else {
             return Text("")
@@ -37,7 +39,9 @@ extension Text {
 
     static func titleDocumentType(value: DocumentType?) -> Text {
         if let documentType = value {
-            return Text("\(documentType.name)").bold().foregroundColor(.orange)
+            return Text("\(documentType.name)")
+//                .bold()
+                .foregroundColor(.orange)
         }
         else {
             return Text("")

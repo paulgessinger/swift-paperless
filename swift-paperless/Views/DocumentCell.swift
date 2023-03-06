@@ -16,6 +16,7 @@ struct DocumentCell: View {
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
     @State private var tags: [Tag] = []
+    @State private var isLoading = false
 
     var body: some View {
         HStack(alignment: .top) {
@@ -31,36 +32,58 @@ struct DocumentCell: View {
                     .overlay(RoundedRectangle(cornerRadius: 10)
                         .stroke(.gray, lineWidth: 1))
             } placeholder: {
-                Rectangle().fill(.gray).scaledToFit().overlay(ProgressView())
+                Rectangle()
+                    .fill(.gray)
+                    .cornerRadius(10)
+                    .scaledToFit()
+                    .overlay(ProgressView())
             }
             .frame(width: 100, height: 100)
-            VStack(alignment: .leading) {
-                Group {
-                    Text.titleCorrespondent(value: correspondent)
-                        + Text("\(document.title)")
-                }.task {
-                    if let cId = document.correspondent {
-                        correspondent = await store.getCorrespondent(id: cId)
+
+            if !isLoading {
+                VStack(alignment: .leading) {
+                    Group {
+                        if let corr = correspondent {
+                            Text("\(corr.name):")
+                                .foregroundColor(.accentColor)
+                            //                            .transition(.opacity)
+                        }
+                        Text("\(document.title)").bold()
+                    }
+                    if let type = documentType {
+                        Text(type.name)
+                            .foregroundColor(Color.orange)
                     }
 
-                    if let dId = document.documentType {
-                        documentType = await store.getDocumentType(id: dId)
-                    }
+                    Text(document.created, style: .date)
+
+                    TagsView(tags: tags)
+                        .padding(0)
+                    //                    .transition(.opacity)
                 }
-
-                Text.titleDocumentType(value: documentType)
-                    .foregroundColor(Color.orange)
-
-                Text(document.created, style: .date)
-
-                TagsView(tags: tags)
-                    .task {
-                        tags = await store.getTags(document.tags)
-                    }.padding(0)
+                .padding(.horizontal, 5)
+                .transition(.opacity)
             }
-            .padding(.horizontal, 5)
+            else {
+                Spacer()
+            }
 
 //            Image(systemName: "chevron.right")
+        }
+        .task {
+            isLoading = true
+            async let tagResult = store.getTags(document.tags)
+            async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
+            async let typeResult = document.documentType == nil ? nil : store.getDocumentType(id: document.documentType!)
+
+            let results = await (tagResult, corrResult, typeResult)
+
+            tags = results.0
+            correspondent = results.1
+            documentType = results.2
+            withAnimation {
+                isLoading = false
+            }
         }
     }
 }

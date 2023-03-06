@@ -50,9 +50,9 @@ struct TagView: View {
 struct TagsView: View {
     var tags: [Tag]
 
-    var action: (Tag) -> ()
+    var action: ((Tag) -> ())?
 
-    init(tags: [Tag], action: @escaping (Tag) -> () = { _ in }) {
+    init(tags: [Tag], action: ((Tag) -> ())? = nil) {
         self.tags = tags
         self.action = action
     }
@@ -61,9 +61,14 @@ struct TagsView: View {
         HStack {
             HFlow {
                 ForEach(tags, id: \.id) { tag in
-                    TagView(tag: tag).onTapGesture {
-                        action(tag)
+                    let v = TagView(tag: tag)
+
+                    if let action = action {
+                        v.onTapGesture {
+                            action(tag)
+                        }
                     }
+                    v
                 }
             }
             Spacer()

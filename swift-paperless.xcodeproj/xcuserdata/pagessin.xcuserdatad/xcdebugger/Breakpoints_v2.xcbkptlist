@@ -14,10 +14,10 @@
             filePath = "swift-paperless/Utilities.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "115"
-            endingLineNumber = "115"
-            landmarkName = "hex"
-            landmarkType = "24">
+            startingLineNumber = "119"
+            endingLineNumber = "119"
+            landmarkName = "Color"
+            landmarkType = "21">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -30,8 +30,8 @@
             filePath = "swift-paperless/Utilities.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "112"
-            endingLineNumber = "112"
+            startingLineNumber = "116"
+            endingLineNumber = "116"
             landmarkName = "hex"
             landmarkType = "24">
          </BreakpointContent>

@@ -48,6 +48,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessApp.swift; sourceTree = "<group>"; };
 		7A5482B0299AD56C00D5061E /* DocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentView.swift; sourceTree = "<group>"; };
@@ -123,6 +124,7 @@
 		7A5482AD299AD56C00D5061E /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
+				7A256CEE29B6828D00BADEB8 /* Info.plist */,
 				7AF04B7929A6898C008E8F79 /* Views */,
 				7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */,
 				7A5482B2299AD56E00D5061E /* Assets.xcassets */,
@@ -488,6 +490,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "swift-paperless/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -528,6 +532,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "swift-paperless/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

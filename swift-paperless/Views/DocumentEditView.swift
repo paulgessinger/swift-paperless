@@ -53,6 +53,15 @@ struct DocumentEditView: View {
                             Text("\(c.name)").tag(c.id)
                         }
                     }
+
+                    NavigationLink(destination: {
+                        Text("SELECT!")
+                    }) {
+                        TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                            .contentShape(Rectangle())
+                    }
+                    .background(Color.red)
+                    .contentShape(Rectangle())
                 }
             }.toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -61,7 +70,7 @@ struct DocumentEditView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Save") {
                         documentBinding = document
                         // @TODO: Kick off API call to save the document
                         dismiss()
@@ -82,5 +91,22 @@ struct DocumentEditView: View {
                 async let _ = await store.fetchAllDocumentTypes()
             }
         }
+    }
+}
+
+struct DocumentEditView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore()
+
+    static var document: Document = .init(id: 1689, added: "Hi",
+                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+                                          documentType: 2, correspondent: 2,
+                                          created: Date.now, tags: [75, 66])
+
+    static var previews: some View {
+        Group {
+            DocumentEditView(document: .constant(document))
+        }
+        .task { await store.fetchAllTags() }
+        .environmentObject(store)
     }
 }
