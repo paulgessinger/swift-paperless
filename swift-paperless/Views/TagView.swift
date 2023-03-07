@@ -61,14 +61,14 @@ struct TagsView: View {
         HStack {
             HFlow {
                 ForEach(tags, id: \.id) { tag in
-                    let v = TagView(tag: tag)
-
                     if let action = action {
-                        v.onTapGesture {
+                        TagView(tag: tag).onTapGesture {
                             action(tag)
                         }
                     }
-                    v
+                    else {
+                        TagView(tag: tag)
+                    }
                 }
             }
             Spacer()
