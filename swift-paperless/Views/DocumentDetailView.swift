@@ -31,6 +31,7 @@ struct DocumentDetailView: View {
         if let dId = document.documentType {
             documentType = await store.getDocumentType(id: dId)
         }
+        tags = await store.getTags(document.tags)
     }
 
     var body: some View {
@@ -57,9 +58,6 @@ struct DocumentDetailView: View {
                 Text(document.created, style: .date)
 
                 TagsView(tags: tags)
-                    .task {
-                        tags = await store.getTags(document.tags)
-                    }
 
                 Divider()
 

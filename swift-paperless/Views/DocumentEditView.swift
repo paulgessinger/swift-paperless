@@ -10,19 +10,25 @@ import SwiftUI
 struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
-    @EnvironmentObject var store: DocumentStore
+    @EnvironmentObject private var store: DocumentStore
 
-    @Binding var documentBinding: Document
+    @Binding private var documentBinding: Document
 
-    @State var document: Document
-    @State var modified: Bool = false
+    @State private var document: Document
+    @State private var modified: Bool = false
 
-    @State var correspondentID: UInt = 0
-    @State var documentTypeID: UInt = 0
+    @State private var correspondentID: UInt = 0
+    @State private var documentTypeID: UInt = 0
+
+    @State private var selectedTags = FilterState.Tag.notAssigned
 
     init(document: Binding<Document>) {
         self._documentBinding = document
         self._document = State(initialValue: document.wrappedValue)
+
+        if !self.document.tags.isEmpty {
+            self._selectedTags = State(initialValue: .only(ids: self.document.tags))
+        }
 
         if let c = document.correspondent.wrappedValue {
             self._correspondentID = State(initialValue: c)
@@ -55,12 +61,14 @@ struct DocumentEditView: View {
                     }
 
                     NavigationLink(destination: {
-                        Text("SELECT!")
+                        TagSelectionView(tags: store.tags,
+                                         selectedTags: $selectedTags,
+                                         filterMode: false)
+                            .navigationTitle("Tags")
                     }) {
                         TagsView(tags: document.tags.compactMap { store.tags[$0] })
                             .contentShape(Rectangle())
                     }
-                    .background(Color.red)
                     .contentShape(Rectangle())
                 }
             }.toolbar {
@@ -71,6 +79,7 @@ struct DocumentEditView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
+                        print(document)
                         documentBinding = document
                         // @TODO: Kick off API call to save the document
                         dismiss()
@@ -78,17 +87,32 @@ struct DocumentEditView: View {
                     .bold()
                     .disabled(!modified)
                 }
-
-            }.onChange(of: document) { _ in
+            }
+            .onChange(of: document) { _ in
                 modified = true
-            }.onChange(of: correspondentID) { value in
+            }
+            .onChange(of: correspondentID) { value in
                 document.correspondent = value > 0 ? value : nil
-            }.onChange(of: documentTypeID) { value in
+            }
+            .onChange(of: documentTypeID) { value in
                 document.documentType = value > 0 ? value : nil
             }
+            .onChange(of: selectedTags) { value in
+                print("on change")
+                switch value {
+                case .any:
+                    print("Invalid selected tags .any: this should not happen")
+                case .notAssigned:
+                    document.tags = []
+                case .only(let ids):
+                    document.tags = ids
+                }
+            }
+
             .task {
                 async let _ = await store.fetchAllCorrespondents()
                 async let _ = await store.fetchAllDocumentTypes()
+                async let _ = await store.fetchAllTags()
             }
         }
     }
@@ -100,7 +124,7 @@ struct DocumentEditView_Previews: PreviewProvider {
     static var document: Document = .init(id: 1689, added: "Hi",
                                           title: "Official ESTA Application Website, U.S. Customs and Border Protection",
                                           documentType: 2, correspondent: 2,
-                                          created: Date.now, tags: [75, 66])
+                                          created: Date.now, tags: [75, 66, 65, 64])
 
     static var previews: some View {
         Group {

@@ -16,6 +16,8 @@ struct DocumentCell: View {
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
     @State private var tags: [Tag] = []
+
+    @State private var initial = true
     @State private var isLoading = false
 
     var body: some View {
@@ -71,6 +73,10 @@ struct DocumentCell: View {
 //            Image(systemName: "chevron.right")
         }
         .task {
+            if !initial {
+                return
+            }
+            initial = false
             isLoading = true
             async let tagResult = store.getTags(document.tags)
             async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
