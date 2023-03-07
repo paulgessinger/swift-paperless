@@ -68,6 +68,7 @@ struct TagsView: View {
                             action(tag)
                         }
                     }
+                    v
                 }
             }
             Spacer()
