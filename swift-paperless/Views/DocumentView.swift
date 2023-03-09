@@ -110,16 +110,17 @@ struct DocumentView: View {
                                     DocumentDetailView(document: $document)
                                         .navigationBarTitleDisplayMode(.inline)
                                 }, label: {
-                                    DocumentCell(document: document).task {
-                                        let index = store.documents.firstIndex { $0 == document }
-                                        if index == store.documents.count - 10 {
-                                            //                                    if document == store.documents.last {
-                                            Task {
-                                                await load(clear: false, setLoading: false)
+                                    DocumentCell(document: document)
+                                        .task {
+                                            let index = store.documents.firstIndex { $0 == document }
+                                            if index == store.documents.count - 10 {
+                                                //                                    if document == store.documents.last {
+                                                Task {
+                                                    await load(clear: false, setLoading: false)
+                                                }
                                             }
                                         }
-                                    }
-                                    .contentShape(Rectangle())
+                                        .contentShape(Rectangle())
                                 })
                                 .buttonStyle(.plain)
                                 .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))

@@ -180,11 +180,11 @@ class DocumentStore: ObservableObject {
             return
         }
 
-        if clear {
-            documents = response.results
-        } else {
-            documents += response.results
-        }
+//        if clear {
+//            documents = response.results
+//        } else {
+        documents += response.results
+//        }
         nextPage = response.next
     }
 

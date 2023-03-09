@@ -11,7 +11,7 @@ import WrappingStack
 struct DocumentCell: View {
     @EnvironmentObject var store: DocumentStore
 
-    let document: Document
+    var document: Document
 
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
@@ -19,6 +19,26 @@ struct DocumentCell: View {
 
     @State private var initial = true
     @State private var isLoading = false
+
+    func load() async {
+//            if !initial {
+//                return
+//            }
+//            initial = false
+//            isLoading = true
+        async let tagResult = store.getTags(document.tags)
+        async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
+        async let typeResult = document.documentType == nil ? nil : store.getDocumentType(id: document.documentType!)
+
+        let results = await (tagResult, corrResult, typeResult)
+
+        tags = results.0
+        correspondent = results.1
+        documentType = results.2
+//            withAnimation {
+//                isLoading = false
+//            }
+    }
 
     var body: some View {
         HStack(alignment: .top) {
@@ -73,23 +93,7 @@ struct DocumentCell: View {
 //            Image(systemName: "chevron.right")
         }
         .task {
-            if !initial {
-                return
-            }
-            initial = false
-            isLoading = true
-            async let tagResult = store.getTags(document.tags)
-            async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
-            async let typeResult = document.documentType == nil ? nil : store.getDocumentType(id: document.documentType!)
-
-            let results = await (tagResult, corrResult, typeResult)
-
-            tags = results.0
-            correspondent = results.1
-            documentType = results.2
-            withAnimation {
-                isLoading = false
-            }
+            await load()
         }
     }
 }

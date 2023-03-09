@@ -77,7 +77,12 @@ struct TagSelectionView: View {
                             if let i = ids.firstIndex(of: tag.id) {
                                 ids.remove(at: i)
                             }
-                            selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                            if filterMode {
+                                selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                            }
+                            else {
+                                selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                            }
                         }
                     }
                     .padding(10)

@@ -21,6 +21,8 @@ struct CommonPicker: View {
     @Binding var selection: FilterState.Filter
     var elements: [(UInt, String)]
 
+    var filterMode = true
+
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
     func row(_ label: String, value: FilterState.Filter) -> some View {
@@ -55,8 +57,10 @@ struct CommonPicker: View {
                 .padding(.vertical, 2)
             Form {
                 Section {
-                    row("Any", value: FilterState.Filter.any)
-                    row("Not assigned", value: FilterState.Filter.notAssigned)
+                    if filterMode {
+                        row("Any", value: FilterState.Filter.any)
+                    }
+                    row(filterMode ? "Not assigned" : "None", value: FilterState.Filter.notAssigned)
                 }
                 Section {
                     ForEach(elements.filter { filter(name: $0.1) },

@@ -17,26 +17,31 @@ struct DocumentEditView: View {
     @State private var document: Document
     @State private var modified: Bool = false
 
-    @State private var correspondentID: UInt = 0
-    @State private var documentTypeID: UInt = 0
-
-    @State private var selectedTags = FilterState.Tag.notAssigned
+    @State private var selectedState = FilterState()
 
     init(document: Binding<Document>) {
         self._documentBinding = document
         self._document = State(initialValue: document.wrappedValue)
 
+        var filter = FilterState()
+
+        filter.tags = .notAssigned
+        filter.correspondent = .notAssigned
+        filter.documentType = .notAssigned
+
         if !self.document.tags.isEmpty {
-            self._selectedTags = State(initialValue: .only(ids: self.document.tags))
+            filter.tags = .only(ids: self.document.tags)
         }
 
-        if let c = document.correspondent.wrappedValue {
-            self._correspondentID = State(initialValue: c)
+        if let corr = self.document.correspondent {
+            filter.correspondent = .only(id: corr)
         }
 
-        if let d = document.documentType.wrappedValue {
-            self._documentTypeID = State(initialValue: d)
+        if let dt = self.document.documentType {
+            filter.documentType = .only(id: dt)
         }
+
+        self._selectedState = State(initialValue: filter)
     }
 
     var body: some View {
@@ -47,27 +52,75 @@ struct DocumentEditView: View {
                     DatePicker("Created date", selection: $document.created, displayedComponents: .date)
                 }
                 Section {
-                    Picker("Correspondent", selection: $correspondentID) {
-                        Text("None").tag(UInt(0))
-                        ForEach(store.correspondents.sorted { $0.value.name < $1.value.name }, id: \.value.id) { _, c in
-                            Text("\(c.name)").tag(c.id)
+                    NavigationLink(destination: {
+                        CommonPicker(
+                            selection: $selectedState.correspondent,
+                            elements: store.correspondents.sorted {
+                                $0.value.name < $1.value.name
+                            }.map { ($0.value.id, $0.value.name) },
+                            filterMode: false
+                        )
+                    }) {
+                        HStack {
+                            Text("Correspondent")
+                            Spacer()
+                            Group { () -> Text in
+                                var label = "None"
+                                switch selectedState.correspondent {
+                                case .any:
+                                    print("Selected 'any' correspondent, this should not happen")
+                                case .notAssigned:
+                                    break
+                                case .only(let id):
+                                    label = store.correspondents[id]?.name ?? "None"
+                                }
+                                return Text(label)
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
-                    Picker("Document type", selection: $documentTypeID) {
-                        Text("None").tag(UInt(0))
-                        ForEach(store.documentTypes.sorted { $0.value.name < $1.value.name }, id: \.value.id) { _, c in
-                            Text("\(c.name)").tag(c.id)
+
+                    NavigationLink(destination: {
+                        CommonPicker(
+                            selection: $selectedState.documentType,
+                            elements: store.documentTypes.sorted {
+                                $0.value.name < $1.value.name
+                            }.map { ($0.value.id, $0.value.name) },
+                            filterMode: false
+                        )
+                    }) {
+                        HStack {
+                            Text("Document type")
+                            Spacer()
+                            Group { () -> Text in
+                                var label = "None"
+                                switch selectedState.documentType {
+                                case .any:
+                                    print("Selected 'any' document type, this should not happen")
+                                case .notAssigned:
+                                    break
+                                case .only(let id):
+                                    label = store.documentTypes[id]?.name ?? "None"
+                                }
+                                return Text(label)
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
 
                     NavigationLink(destination: {
                         TagSelectionView(tags: store.tags,
-                                         selectedTags: $selectedTags,
+                                         selectedTags: $selectedState.tags,
                                          filterMode: false)
                             .navigationTitle("Tags")
                     }) {
-                        TagsView(tags: document.tags.compactMap { store.tags[$0] })
-                            .contentShape(Rectangle())
+                        if document.tags.isEmpty {
+                            Text("No tags")
+                        }
+                        else {
+                            TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                                .contentShape(Rectangle())
+                        }
                     }
                     .contentShape(Rectangle())
                 }
@@ -91,21 +144,32 @@ struct DocumentEditView: View {
             .onChange(of: document) { _ in
                 modified = true
             }
-            .onChange(of: correspondentID) { value in
-                document.correspondent = value > 0 ? value : nil
-            }
-            .onChange(of: documentTypeID) { value in
-                document.documentType = value > 0 ? value : nil
-            }
-            .onChange(of: selectedTags) { value in
-                print("on change")
-                switch value {
+            .onChange(of: selectedState) { value in
+                switch value.tags {
                 case .any:
                     print("Invalid selected tags .any: this should not happen")
                 case .notAssigned:
                     document.tags = []
                 case .only(let ids):
                     document.tags = ids
+                }
+
+                switch value.correspondent {
+                case .any:
+                    print("Invalid selected correspondent .any: this should not happen")
+                case .notAssigned:
+                    document.correspondent = nil
+                case .only(let ids):
+                    document.correspondent = ids
+                }
+
+                switch value.documentType {
+                case .any:
+                    print("Invalid selected document type .any: this should not happen")
+                case .notAssigned:
+                    document.documentType = nil
+                case .only(let ids):
+                    document.documentType = ids
                 }
             }
 
