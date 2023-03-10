@@ -62,6 +62,10 @@ extension Endpoint {
         )
     }
 
+    static func document(id: UInt) -> Endpoint {
+        return Endpoint(path: "/api/documents/\(id)/", queryItems: [])
+    }
+
     static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
         return Endpoint(
             path: "/api/search/autocomplete/",

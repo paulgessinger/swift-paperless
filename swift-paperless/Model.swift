@@ -9,7 +9,7 @@ import Foundation
 import OrderedCollections
 import SwiftUI
 
-struct Document: Codable, Identifiable, Equatable, Hashable {
+struct Document: Identifiable, Equatable, Hashable {
     var id: UInt
     var added: String
     var title: String
@@ -17,6 +17,21 @@ struct Document: Codable, Identifiable, Equatable, Hashable {
     var correspondent: UInt?
     var created: Date
     var tags: [UInt]
+    var storagePath: String?
+}
+
+extension Document: Codable {
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(added, forKey: .added)
+        try container.encode(title, forKey: .title)
+        try container.encode(documentType, forKey: .documentType)
+        try container.encode(correspondent, forKey: .correspondent)
+        try container.encode(created, forKey: .created)
+        try container.encode(tags, forKey: .tags)
+        try container.encode(storagePath, forKey: .storagePath)
+    }
 }
 
 struct Correspondent: Codable, Identifiable {
@@ -72,6 +87,11 @@ struct ListResponse<Element>: Decodable, ListResponseProtocol
 
 enum DateDecodingError: Error {
     case invalidDate(string: String)
+}
+
+enum APIError: Error {
+    case encodingFailed
+    case putFailed
 }
 
 let decoder: JSONDecoder = {
@@ -164,6 +184,26 @@ class DocumentStore: ObservableObject {
         nextPage = Endpoint.documents(page: 1, filter: filterState).url
     }
 
+    func updateDocument(_ document: Document) async throws {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        encoder.dateEncodingStrategy = .iso8601
+        let json = try encoder.encode(document)
+
+        var request = URLRequest.common(url: Endpoint.document(id: document.id).url!)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = json
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
+            print("Saving document: Status was not 200 but \(statusCode)")
+            print(String(data: data, encoding: .utf8)!)
+            throw APIError.putFailed
+        }
+    }
+
     func fetchDocuments(clear: Bool) async {
         if clear {
             nextPage = Endpoint.documents(page: 1, filter: filterState).url!
@@ -175,7 +215,6 @@ class DocumentStore: ObservableObject {
             return // no next page
         }
 
-        print("get docs \(url)")
         guard let response = await getDocuments(url: url) else {
             return
         }

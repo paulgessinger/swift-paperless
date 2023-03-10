@@ -148,7 +148,12 @@ struct TagSelectionView: View {
                                         ids.append(tag.id)
                                     }
 
-                                    selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                                    if filterMode {
+                                        selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                                    }
+                                    else {
+                                        selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                                    }
                                 }
                             }
                         }) {

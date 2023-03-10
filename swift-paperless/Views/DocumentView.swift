@@ -54,9 +54,7 @@ struct DocumentView: View {
 
     func load(clear: Bool, setLoading _setLoading: Bool = true) async {
         if _setLoading { await setLoading(to: true) }
-        print("Load: \(store.filterState)")
         await store.fetchDocuments(clear: clear)
-        print("Load complete")
         if _setLoading { await setLoading(to: false) }
     }
 

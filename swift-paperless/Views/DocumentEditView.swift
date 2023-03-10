@@ -116,8 +116,7 @@ struct DocumentEditView: View {
                     }) {
                         if document.tags.isEmpty {
                             Text("No tags")
-                        }
-                        else {
+                        } else {
                             TagsView(tags: document.tags.compactMap { store.tags[$0] })
                                 .contentShape(Rectangle())
                         }
@@ -132,9 +131,15 @@ struct DocumentEditView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        print(document)
                         documentBinding = document
-                        // @TODO: Kick off API call to save the document
+                        Task {
+                            do {
+                                try await store.updateDocument(document)
+                            } catch {
+                                print(error)
+                                fatalError("Failed saving")
+                            }
+                        }
                         dismiss()
                     }
                     .bold()
