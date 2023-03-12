@@ -11,6 +11,7 @@ struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var navCoordinator: NavigationCoordinator
 
     @Binding private var documentBinding: Document
 
@@ -18,6 +19,10 @@ struct DocumentEditView: View {
     @State private var modified: Bool = false
 
     @State private var selectedState = FilterState()
+    @State private var showDeleteConfirmation = false
+
+    @State private var error = ""
+    @State private var showError = false
 
     init(document: Binding<Document>) {
         self._documentBinding = document
@@ -123,7 +128,40 @@ struct DocumentEditView: View {
                     }
                     .contentShape(Rectangle())
                 }
-            }.toolbar {
+
+                Section {
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Delete")
+                            Spacer()
+                        }
+                    }
+                    .foregroundColor(Color.red)
+                    .bold()
+
+                    .alert("Delete document \(document.title)", isPresented: $showDeleteConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Delete", role: .destructive) {
+                            Task {
+                                do {
+                                    try await store.deleteDocument(document)
+                                    dismiss()
+                                    navCoordinator.popToRoot()
+                                } catch {
+                                    self.error = "\(error)"
+                                    showError = true
+                                }
+                            }
+                        }
+                    }
+
+                    .alert(error, isPresented: $showError) {}
+                }
+            }
+            .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel", role: .cancel) {
                         dismiss()

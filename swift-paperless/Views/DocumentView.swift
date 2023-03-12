@@ -28,12 +28,25 @@ struct PillButton: ViewModifier {
             .padding(.vertical, 15)
             .foregroundColor(.white)
             .background(LinearGradient(colors: [
-                    Color(uiColor: UIColor(.accentColor).ligher()),
+                    Color(uiColor: UIColor(Color("AccentColor")).ligher()),
                     Color.accentColor
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing))
             .clipShape(Capsule())
             .shadow(radius: 5)
+    }
+}
+
+enum NavigationState: Equatable, Hashable {
+    case root
+    case detail(documentId: UInt)
+}
+
+class NavigationCoordinator: ObservableObject {
+    @Published var path = NavigationPath()
+
+    func popToRoot() {
+        path.removeLast(path.count)
     }
 }
 
@@ -52,9 +65,15 @@ struct DocumentView: View {
 
     @State var filterState = FilterState()
 
+    @StateObject var navCoordinator = NavigationCoordinator()
+
     func load(clear: Bool, setLoading _setLoading: Bool = true) async {
         if _setLoading { await setLoading(to: true) }
+//        _ = withAnimation {
+//            Task {
         await store.fetchDocuments(clear: clear)
+//            }
+//        }
         if _setLoading { await setLoading(to: false) }
     }
 
@@ -91,8 +110,24 @@ struct DocumentView: View {
         }
     }
 
+    func navigationDestinations(value: NavigationState) -> some View {
+        switch value {
+        case let .detail(id):
+            for i in 0 ..< store.documents.count {
+                let doc = $store.documents[i]
+                if doc.id == id {
+                    return AnyView(DocumentDetailView(document: doc)
+                        .navigationBarTitleDisplayMode(.inline))
+                }
+            }
+            fatalError("Logic error")
+        default:
+            return AnyView(Text("NOPE"))
+        }
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navCoordinator.path) {
             ScrollViewReader { scrollView in
                 ZStack(alignment: .bottomTrailing) {
                     ScrollView {
@@ -104,10 +139,9 @@ struct DocumentView: View {
                         }
                         LazyVStack(alignment: .leading) {
                             ForEach($store.documents, id: \.id) { $document in
-                                NavigationLink(destination: {
-                                    DocumentDetailView(document: $document)
-                                        .navigationBarTitleDisplayMode(.inline)
-                                }, label: {
+                                Button(action: {
+                                    navCoordinator.path.append(NavigationState.detail(documentId: document.id))
+                                }) {
                                     DocumentCell(document: document)
                                         .task {
                                             let index = store.documents.firstIndex { $0 == document }
@@ -119,7 +153,8 @@ struct DocumentView: View {
                                             }
                                         }
                                         .contentShape(Rectangle())
-                                })
+                                }
+
                                 .buttonStyle(.plain)
                                 .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
 
@@ -135,6 +170,9 @@ struct DocumentView: View {
                                 .transition(.opacity)
                         }
                     }
+
+                    // @TODO: This breaks 'refreshable' animation
+                    .navigationDestination(for: NavigationState.self, destination: navigationDestinations)
 
                     .refreshable {
                         Task {
@@ -240,8 +278,8 @@ struct DocumentView: View {
                 }
             }
         }
-
         .environmentObject(store)
+        .environmentObject(navCoordinator)
     }
 }
 

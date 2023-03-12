@@ -7,6 +7,7 @@
 
 import Foundation
 import OrderedCollections
+import Semaphore
 import SwiftUI
 
 struct Document: Identifiable, Equatable, Hashable {
@@ -66,6 +67,12 @@ struct Tag: Codable, Identifiable {
     var slug: String
     @HexColor var color: Color
     @HexColor var textColor: Color
+
+    static func placeholder(_ length: Int) -> Tag {
+        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        let name = String((0 ..< length).map { _ in letters.randomElement()! })
+        return .init(id: 0, isInboxTag: false, name: name, slug: "", color: Color.systemGroupedBackground, textColor: .white)
+    }
 }
 
 extension Tag: Equatable, Hashable {
@@ -101,6 +108,7 @@ enum DateDecodingError: Error {
 enum APIError: Error {
     case encodingFailed
     case putFailed
+    case deleteFailed
 }
 
 let decoder: JSONDecoder = {
@@ -177,6 +185,8 @@ class DocumentStore: ObservableObject {
     private var thumbnailCache: OrderedDictionary<Document, UIImage> = [:]
     static let maxThumbnailCacheSize = 100
 
+    let semaphore = AsyncSemaphore(value: 1)
+
     func clearDocuments() {
         documents = []
     }
@@ -213,10 +223,33 @@ class DocumentStore: ObservableObject {
         }
     }
 
+    func deleteDocument(_ document: Document) async throws {
+        var request = URLRequest.common(url: Endpoint.document(id: document.id).url!)
+        request.httpMethod = "DELETE"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 204 {
+            print("Delete document: Status was not 204 but \(statusCode)")
+            print(String(data: data, encoding: .utf8)!)
+            throw APIError.deleteFailed
+        }
+
+        for i in 0 ..< documents.count {
+            if documents[i].id == document.id {
+                documents.remove(at: i)
+                break
+            }
+        }
+    }
+
     func fetchDocuments(clear: Bool) async {
+        await semaphore.wait()
+        defer { semaphore.signal() }
+
         if clear {
             nextPage = Endpoint.documents(page: 1, filter: filterState).url!
-            documents = []
+//            documents = []
         }
 
         guard let url = nextPage else {
@@ -228,11 +261,11 @@ class DocumentStore: ObservableObject {
             return
         }
 
-//        if clear {
-//            documents = response.results
-//        } else {
-        documents += response.results
-//        }
+        if clear {
+            documents = response.results
+        } else {
+            documents += response.results
+        }
         nextPage = response.next
     }
 

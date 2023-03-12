@@ -11,6 +11,7 @@ import WrappingStack
 
 struct TagView: View {
     @EnvironmentObject var store: DocumentStore
+    @Environment(\.redactionReasons) var redactionReasons
 
     @State var tag: Tag?
 
@@ -30,10 +31,12 @@ struct TagView: View {
                 Text("\(tag.name)")
                     .fixedSize(horizontal: true, vertical: false)
                     .font(.body)
+                    .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
                     .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
                     .background(tag.color)
                     .foregroundColor(tag.textColor)
                     .clipShape(Capsule())
+                    .unredacted()
             }
             else {
                 ProgressView()
@@ -49,25 +52,37 @@ struct TagView: View {
 
 struct TagsView: View {
     var tags: [Tag]
-
     var action: ((Tag) -> ())?
+
+    @Environment(\.redactionReasons) var redactionReasons
 
     init(tags: [Tag], action: ((Tag) -> ())? = nil) {
         self.tags = tags
         self.action = action
     }
 
+    init() {
+        self.tags = []
+    }
+
     var body: some View {
         HStack {
             HFlow {
-                ForEach(tags, id: \.id) { tag in
-                    if let action = action {
-                        TagView(tag: tag).onTapGesture {
-                            action(tag)
-                        }
+                if redactionReasons.contains(.placeholder) {
+                    ForEach([4, 6, 5], id: \.self) { v in
+                        TagView(tag: .placeholder(v))
                     }
-                    else {
-                        TagView(tag: tag)
+                }
+                else {
+                    ForEach(tags, id: \.id) { tag in
+                        if let action = action {
+                            TagView(tag: tag).onTapGesture {
+                                action(tag)
+                            }
+                        }
+                        else {
+                            TagView(tag: tag)
+                        }
                     }
                 }
             }
@@ -95,21 +110,25 @@ struct TagView_Previews: PreviewProvider {
             textColor: Color.white),
     ]
 
-    static let fractions = [1.0, 0.8, 0.6, 0.4, 0.2]
+    static let fractions = [1.0, 0.8, 0.4, 0.2]
 
     static let store = DocumentStore()
 
     static var previews: some View {
-        VStack {
-            Spacer()
-            ForEach(0 ..< fractions.count, id: \.self) { i in
-                GeometryReader { geo in
-                    ZStack {
-                        Rectangle().fill(.blue)
-                        TagsView(tags: tags)
-                    }.frame(width: geo.size.width * fractions[i])
-                }
-            }
+        VStack(alignment: .leading) {
+//            ForEach(0 ..< fractions.count, id: \.self) { i in
+//                HStack {
+//                    GeometryReader { geo in
+//                        ZStack {
+//                            Rectangle().fill(.blue)
+//                            TagsView(tags: tags)
+//                        }
+//                        .frame(width: geo.size.width * fractions[i])
+//                    }
+//                }
+//            }
+            TagsView()
+                .redacted(reason: .placeholder)
         }
         .environmentObject(store)
     }

@@ -15,29 +15,27 @@ struct DocumentCell: View {
 
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
-    @State private var tags: [Tag] = []
+    @State private var tags: [Tag]? = nil
 
     @State private var initial = true
     @State private var isLoading = false
 
+    @Namespace private var animation
+
     func load() async {
-//            if !initial {
-//                return
-//            }
-//            initial = false
-//            isLoading = true
+        isLoading = true
         async let tagResult = store.getTags(document.tags)
         async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
         async let typeResult = document.documentType == nil ? nil : store.getDocumentType(id: document.documentType!)
 
         let results = await (tagResult, corrResult, typeResult)
 
-        tags = results.0
-        correspondent = results.1
-        documentType = results.2
-//            withAnimation {
-//                isLoading = false
-//            }
+        withAnimation {
+            tags = results.0
+            correspondent = results.1
+            documentType = results.2
+            isLoading = false
+        }
     }
 
     var body: some View {
@@ -62,35 +60,42 @@ struct DocumentCell: View {
             }
             .frame(width: 100, height: 100)
 
-            if !isLoading {
-                VStack(alignment: .leading) {
-                    Group {
-                        if let corr = correspondent {
-                            Text("\(corr.name):")
-                                .foregroundColor(.accentColor)
-                            //                            .transition(.opacity)
-                        }
-                        Text("\(document.title)").bold()
-                    }
-                    if let type = documentType {
-                        Text(type.name)
-                            .foregroundColor(Color.orange)
-                    }
-
-                    Text(document.created, style: .date)
-
-                    TagsView(tags: tags)
-                        .padding(0)
-                    //                    .transition(.opacity)
+            VStack(alignment: .leading) {
+                if isLoading || correspondent != nil {
+                    let corr = correspondent?.name ?? "      "
+                    Text("\(corr):")
+                        .foregroundColor(.accentColor)
+                        .redacted(reason: correspondent == nil ? .placeholder : [])
+                        .id("correspondent")
                 }
-                .padding(.horizontal, 5)
-                .transition(.opacity)
-            }
-            else {
-                Spacer()
-            }
+                Text("\(document.title)").bold()
 
-//            Image(systemName: "chevron.right")
+                if let name = documentType?.name {
+                    Text(name)
+                        .fixedSize()
+                        .foregroundColor(Color.orange)
+                        .transition(.opacity)
+//                        .id("documentType")
+//                        .matchedGeometryEffect(id: "documentType", in: animation)
+                }
+                else if isLoading {
+                    Text(" BLUBB ")
+                        .fixedSize()
+                        .foregroundColor(Color.orange)
+                        .redacted(reason: documentType == nil ? .placeholder : [])
+                        .transition(.opacity)
+//                        .id("documentType_redacted")
+//                        .matchedGeometryEffect(id: "documentType", in: animation)
+                }
+
+                Text(document.created, style: .date)
+
+                TagsView(tags: tags ?? [])
+                    .redacted(reason: documentType == nil ? .placeholder : [])
+                    .padding(0)
+                    .transition(.opacity)
+            }
+            .padding(.horizontal, 5)
         }
         .task {
             await load()
@@ -102,14 +107,14 @@ struct DocumentCell_Previews: PreviewProvider {
     static let store = DocumentStore()
 
     static var documents: [Document] = [
-        .init(id: 1689,
+        .init(id: 1715,
               title: "Official ESTA Application Website, U.S. Customs and Border Protection",
               documentType: 2, correspondent: 2,
               created: Date.now, tags: [1, 2]),
-        .init(id: 1688,
+        .init(id: 1714,
               title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-              documentType: 2, correspondent: 2,
-              created: Date.now, tags: []),
+              documentType: 1, correspondent: nil,
+              created: Date.now, tags: [1, 2]),
     ]
 
     static var previews: some View {
@@ -118,6 +123,7 @@ struct DocumentCell_Previews: PreviewProvider {
                 DocumentCell(document: document)
                     .padding()
             }
+            Spacer()
         }
         .environmentObject(store)
     }
