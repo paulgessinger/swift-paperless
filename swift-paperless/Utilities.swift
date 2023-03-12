@@ -136,3 +136,30 @@ extension HexColor: Codable {
         try container.encode(wrappedValue.hex)
     }
 }
+
+extension Color {
+    static let systemBackground = Color(UIColor.systemBackground)
+    static let systemGroupedBackground = Color(UIColor.systemGroupedBackground)
+//    static func systemBackground() -> Color {
+//        return Color(UIColor.systemBackground)
+//    }
+//
+//    static func systemGroupedBackground() -> Color {
+//        return Color(UIColor.systemGroupedBackground)
+//    }
+}
+
+extension Bundle {
+    var icon: Image? {
+        if let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+           let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+           let lastIcon = iconFiles.last
+        {
+            if let uiImage = UIImage(named: lastIcon) {
+                return Image(uiImage: uiImage)
+            }
+        }
+        return nil
+    }
+}

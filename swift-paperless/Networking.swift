@@ -89,6 +89,10 @@ extension Endpoint {
         return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
     }
 
+    static func createDocument() -> Endpoint {
+        return Endpoint(path: "/api/documents/post_document/", queryItems: [])
+    }
+
     var url: URL? {
         var components = URLComponents()
         components.scheme = "https"

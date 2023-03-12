@@ -15,64 +15,6 @@ protocol Pickable {
 extension Correspondent: Pickable {}
 extension DocumentType: Pickable {}
 
-// MARK: - CommonPicker
-
-struct CommonPicker: View {
-    @Binding var selection: FilterState.Filter
-    var elements: [(UInt, String)]
-
-    var filterMode = true
-
-    @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
-
-    func row(_ label: String, value: FilterState.Filter) -> some View {
-        return HStack {
-            Button(action: { selection = value }) {
-                Text(label)
-            }
-            .foregroundColor(.primary)
-            Spacer()
-            if selection == value {
-                Label("Active", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
-            }
-        }
-    }
-
-    private func filter(name: String) -> Bool {
-        if searchDebounce.debouncedText.isEmpty { return true }
-        if let _ = name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
-            return true
-        }
-        else {
-            return false
-        }
-    }
-
-    var body: some View {
-        VStack {
-            SearchBarView(text: $searchDebounce.debouncedText)
-                .transition(.opacity)
-                .padding(.horizontal)
-                .padding(.vertical, 2)
-            Form {
-                Section {
-                    if filterMode {
-                        row("Any", value: FilterState.Filter.any)
-                    }
-                    row(filterMode ? "Not assigned" : "None", value: FilterState.Filter.notAssigned)
-                }
-                Section {
-                    ForEach(elements.filter { filter(name: $0.1) },
-                            id: \.0) { id, name in
-                        row(name, value: FilterState.Filter.only(id: id))
-                    }
-                }
-            }
-        }
-    }
-}
-
 struct DocumentTypeView_Previews: PreviewProvider {
     @StateObject static var store = DocumentStore()
     @State static var filterState = FilterState()
@@ -204,39 +146,6 @@ struct FilterView: View {
             .interactiveDismissDisabled(modified)
         }
     }
-}
-
-enum PreviewModel {
-    static let correspondents: [UInt: Correspondent] = [
-        1: Correspondent(id: 1, documentCount: 0, isInsensitive: false, name: "Corr 1", slug: "corr-1"),
-        2: Correspondent(id: 2, documentCount: 0, isInsensitive: false, name: "Corr 2", slug: "corr-2")
-    ]
-
-    static let documentTypes: [UInt: DocumentType] = [
-        1: DocumentType(id: 1, name: "Type A", slug: "type-a"),
-        2: DocumentType(id: 2, name: "Type B", slug: "type-b")
-    ]
-
-    static let tags: [UInt: Tag] = {
-        var out: [UInt: Tag] = [:]
-        let colors: [Color] = [
-            .red,
-            .blue,
-            .gray,
-            .green,
-            .yellow,
-            .orange,
-            .brown,
-            .indigo,
-            .cyan,
-            .mint
-        ]
-
-        for i in 1 ... 20 {
-            out[UInt(i)] = Tag(id: UInt(i), isInboxTag: false, name: "Tag \(i)", slug: "tag-\(i)", color: colors[i % colors.count], textColor: Color.white)
-        }
-        return out
-    }()
 }
 
 struct FilterView_Previews: PreviewProvider {

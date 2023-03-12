@@ -20,7 +20,8 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
     let placeholder: () -> Placeholder
 
     init(
-        image: @escaping () async -> (Bool, UIImage?), @ViewBuilder content: @escaping (Image) -> Content,
+        image: @escaping () async -> (Bool, UIImage?),
+        @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.getImage = image

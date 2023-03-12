@@ -102,11 +102,11 @@ struct DocumentCell_Previews: PreviewProvider {
     static let store = DocumentStore()
 
     static var documents: [Document] = [
-        .init(id: 1689, added: "Hi",
+        .init(id: 1689,
               title: "Official ESTA Application Website, U.S. Customs and Border Protection",
               documentType: 2, correspondent: 2,
               created: Date.now, tags: [1, 2]),
-        .init(id: 1688, added: "Hi",
+        .init(id: 1688,
               title: "Official ESTA Application Website, U.S. Customs and Border Protection",
               documentType: 2, correspondent: 2,
               created: Date.now, tags: []),

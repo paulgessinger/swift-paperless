@@ -11,13 +11,22 @@ import SwiftUI
 
 struct Document: Identifiable, Equatable, Hashable {
     var id: UInt
-    var added: String
     var title: String
     var documentType: UInt?
     var correspondent: UInt?
     var created: Date
     var tags: [UInt]
-    var storagePath: String?
+
+    private(set) var added: String? = nil
+    private(set) var storagePath: String? = nil
+}
+
+struct ProtoDocument: Codable {
+    var title: String = ""
+    var documentType: UInt? = nil
+    var correspondent: UInt? = nil
+    var tags: [UInt] = []
+    var created: Date = .now
 }
 
 extension Document: Codable {
@@ -157,9 +166,9 @@ class DocumentStore: ObservableObject {
     @Published var documents: [Document] = []
 //    @Published private(set) var isLoading = false
 
-    private(set) var correspondents: [UInt: Correspondent] = [:]
-    private(set) var documentTypes: [UInt: DocumentType] = [:]
-    private(set) var tags: [UInt: Tag] = [:]
+    @Published private(set) var correspondents: [UInt: Correspondent] = [:]
+    @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
+    @Published private(set) var tags: [UInt: Tag] = [:]
 
     private var nextPage: URL?
 
@@ -240,6 +249,13 @@ class DocumentStore: ObservableObject {
     func fetchAllTags() async {
         await fetchAll(ListResponse<Tag>.self,
                        endpoint: Endpoint.tags(), collection: \.tags)
+    }
+
+    func fetchAll() async {
+        async let c: () = fetchAllCorrespondents()
+        async let d: () = fetchAllDocumentTypes()
+        async let t: () = fetchAllTags()
+        _ = await (c, d, t)
     }
 
     private func fetchAll<T>(_ type: T.Type, endpoint: Endpoint,

@@ -173,13 +173,6 @@ struct DocumentView: View {
                         }
                     }
 
-                    .task {
-                        if initialLoad {
-                            await load(clear: true)
-                            initialLoad = false
-                        }
-                    }
-
                     .onChange(of: searchDebounce.debouncedText) { _ in
                         if searchDebounce.debouncedText == "" {
                             scrollToTop(scrollView: scrollView)
@@ -218,6 +211,13 @@ struct DocumentView: View {
                     }
                     .padding()
 //                    }
+                }
+
+                .task {
+                    if initialLoad {
+                        await load(clear: true)
+                        initialLoad = false
+                    }
                 }
 
                 .searchable(text: $searchDebounce.text,

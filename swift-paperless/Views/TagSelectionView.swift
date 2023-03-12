@@ -7,35 +7,6 @@
 
 import SwiftUI
 
-struct SearchBarView: View {
-    @Binding var text: String
-
-    var body: some View {
-        HStack {
-            Label("Search", systemImage: "magnifyingglass")
-                .labelStyle(.iconOnly)
-            TextField("Search", text: $text)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 10)
-            if !text.isEmpty {
-                Spacer()
-                Label("Clear", systemImage: "xmark.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .foregroundColor(.gray)
-                    .onTapGesture {
-                        text = ""
-                    }
-            }
-        }
-        .padding(.horizontal, 10)
-        .background(
-            Rectangle()
-                .fill(Color(uiColor: .systemGroupedBackground))
-                .cornerRadius(10)
-        )
-    }
-}
-
 struct TagSelectionView: View {
     var tags: [UInt: Tag]
     @Binding var selectedTags: FilterState.Tag
@@ -88,7 +59,7 @@ struct TagSelectionView: View {
                     .padding(10)
                     .background(
                         Rectangle()
-                            .fill(Color(uiColor: .systemGroupedBackground))
+                            .fill(Color.systemGroupedBackground)
                             .cornerRadius(10)
                     )
                     .padding(.bottom, 5)
