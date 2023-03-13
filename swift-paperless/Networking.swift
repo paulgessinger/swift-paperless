@@ -7,9 +7,29 @@
 
 import Foundation
 
-let API_TOKEN = "***REMOVED***"
-let API_BASE_URL = "https://***REMOVED***/api/"
-let API_HOST = "***REMOVED***"
+private func getCredentials(key: String) -> String {
+    guard let path = Bundle.main.path(forResource: "Credentials", ofType: "plist") else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    guard let nsDictionary = NSDictionary(contentsOfFile: path) else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    guard let value = nsDictionary[key] as? String else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    return value
+}
+
+var API_TOKEN: String {
+    return getCredentials(key: "API_TOKEN")
+}
+
+var API_HOST: String {
+    return getCredentials(key: "API_HOST")
+}
 
 struct Endpoint {
     let path: String
@@ -148,7 +168,7 @@ func getDocuments(url: URL) async -> ListResponse<Document>? {
 
 func getPreviewImage(documentID: UInt) async -> URL? {
     guard let url =
-        URL(string: "\(API_BASE_URL)documents/\(documentID)/download/")
+        URL(string: "https://\(API_HOST)/api/documents/\(documentID)/download/")
     else {
         return nil
     }

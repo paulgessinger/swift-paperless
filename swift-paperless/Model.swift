@@ -323,7 +323,7 @@ class DocumentStore: ObservableObject {
     }
 
     private func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? {
-        guard let url = URL(string: API_BASE_URL + "\(path)/\(id)/") else {
+        guard let url = URL(string: "https://\(API_HOST)/api/\(path)/\(id)/") else {
             return nil
         }
 
@@ -394,7 +394,7 @@ class DocumentStore: ObservableObject {
 //            return (true, image)
 //        }
 
-        let image = await getImage(url: URL(string: "\(API_BASE_URL)documents/\(document.id)/thumb/"))
+        let image = await getImage(url: URL(string: "https://\(API_HOST)/api/documents/\(document.id)/thumb/"))
 
 //        thumbnailCache[document] = image
 //        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
