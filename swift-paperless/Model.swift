@@ -243,6 +243,20 @@ class DocumentStore: ObservableObject {
         }
     }
 
+    func documentBinding(id: UInt) -> Binding<Document> {
+        for i in 0 ..< documents.count {
+            if id == documents[i].id {
+                let binding: Binding<Document> = .init(get: {
+                    self.documents[i]
+                }, set: {
+                    self.documents[i] = $0
+                })
+                return binding
+            }
+        }
+        fatalError("INVALID")
+    }
+
     func fetchDocuments(clear: Bool) async {
         await semaphore.wait()
         defer { semaphore.signal() }

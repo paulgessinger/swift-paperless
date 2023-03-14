@@ -11,7 +11,7 @@ struct DocumentDetailView: View {
     @EnvironmentObject var store: DocumentStore
 
     @State private var editing = false
-    @Binding var document: Document
+    @State var document: Document
 
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
@@ -21,6 +21,10 @@ struct DocumentDetailView: View {
     @State private var tags: [Tag] = []
 
     @State private var relatedDocuments: [Document]? = nil
+
+    init(document: Document) {
+        self._document = State(initialValue: document)
+    }
 
     func loadData() async {
         correspondent = nil
@@ -92,7 +96,7 @@ struct DocumentDetailView: View {
                                     ProgressView()
                                 }
                             }
-//                            .animation(.default, value: previewLoading)
+                            //                            .animation(.default, value: previewLoading)
                         }
 
                     } placeholder: {
@@ -135,9 +139,9 @@ struct DocumentDetailView: View {
         }
 
         .refreshable {
-            if let document = await store.getDocument(id: document.id) {
-                self.document = document
-            }
+//            if let document = await store.getDocument(id: document.id) {
+//                self.document = document
+//            }
         }
         .toolbar {
             Button("Edit") {
@@ -149,16 +153,16 @@ struct DocumentDetailView: View {
     }
 }
 
-struct DocumentDetailsView_Previews: PreviewProvider {
-    static let store = DocumentStore()
-
-    static var document: Document = .init(id: 1689,
-                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-                                          documentType: 2, correspondent: 2,
-                                          created: Date.now, tags: [1, 2])
-
-    static var previews: some View {
-        DocumentDetailView(document: .constant(document))
-            .environmentObject(store)
-    }
-}
+// struct DocumentDetailsView_Previews: PreviewProvider {
+//    static let store = DocumentStore()
+//
+//    static var document: Document = .init(id: 1689,
+//                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
+//                                          documentType: 2, correspondent: 2,
+//                                          created: Date.now, tags: [1, 2])
+//
+//    static var previews: some View {
+//        DocumentDetailView(document: .constant(document))
+//            .environmentObject(store)
+//    }
+// }

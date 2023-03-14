@@ -39,7 +39,7 @@ struct PillButton: ViewModifier {
 
 enum NavigationState: Equatable, Hashable {
     case root
-    case detail(documentId: UInt)
+    case detail(document: Document)
 }
 
 class NavigationCoordinator: ObservableObject {
@@ -65,7 +65,7 @@ struct DocumentView: View {
 
     @State var filterState = FilterState()
 
-    @StateObject var navCoordinator = NavigationCoordinator()
+    @State var path = NavigationPath()
 
     func load(clear: Bool, setLoading _setLoading: Bool = true) async {
         if _setLoading { await setLoading(to: true) }
@@ -110,24 +110,24 @@ struct DocumentView: View {
         }
     }
 
-    func navigationDestinations(value: NavigationState) -> some View {
-        switch value {
-        case let .detail(id):
-            for i in 0 ..< store.documents.count {
-                let doc = $store.documents[i]
-                if doc.id == id {
-                    return AnyView(DocumentDetailView(document: doc)
-                        .navigationBarTitleDisplayMode(.inline))
-                }
-            }
-            fatalError("Logic error")
-        default:
-            return AnyView(Text("NOPE"))
-        }
-    }
+//    func navigationDestinations(value: NavigationState) -> some View {
+//        switch value {
+//        case let .detail(id):
+//            for i in 0 ..< store.documents.count {
+//                let doc = $store.documents[i]
+//                if doc.id == id {
+//                    return AnyView(DocumentDetailView(document: doc)
+//                        .navigationBarTitleDisplayMode(.inline))
+//                }
+//            }
+//            fatalError("Logic error")
+//        default:
+//            return AnyView(Text("NOPE"))
+//        }
+//    }
 
     var body: some View {
-        NavigationStack(path: $navCoordinator.path) {
+        NavigationStack(path: $path) {
             ScrollViewReader { scrollView in
                 ZStack(alignment: .bottomTrailing) {
                     ScrollView {
@@ -139,9 +139,9 @@ struct DocumentView: View {
                         }
                         LazyVStack(alignment: .leading) {
                             ForEach($store.documents, id: \.id) { $document in
-                                Button(action: {
-                                    navCoordinator.path.append(NavigationState.detail(documentId: document.id))
-                                }) {
+                                NavigationLink(value:
+                                    NavigationState.detail(document: document)
+                                ) {
                                     DocumentCell(document: document)
                                         .task {
                                             let index = store.documents.firstIndex { $0 == document }
@@ -172,7 +172,12 @@ struct DocumentView: View {
                     }
 
                     // @TODO: This breaks 'refreshable' animation
-                    .navigationDestination(for: NavigationState.self, destination: navigationDestinations)
+                    .navigationDestination(for: NavigationState.self, destination: { nav in
+                        if case let .detail(doc) = nav {
+                            DocumentDetailView(document: doc)
+                                .navigationBarTitleDisplayMode(.inline)
+                        }
+                    })
 
                     .refreshable {
                         Task {
@@ -279,7 +284,6 @@ struct DocumentView: View {
             }
         }
         .environmentObject(store)
-        .environmentObject(navCoordinator)
     }
 }
 
