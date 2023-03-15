@@ -140,6 +140,7 @@ extension HexColor: Codable {
 extension Color {
     static let systemBackground = Color(UIColor.systemBackground)
     static let systemGroupedBackground = Color(UIColor.systemGroupedBackground)
+    static let secondarySystemGroupedBackground = Color(UIColor.secondarySystemGroupedBackground)
 //    static func systemBackground() -> Color {
 //        return Color(UIColor.systemBackground)
 //    }
@@ -161,5 +162,23 @@ extension Bundle {
             }
         }
         return nil
+    }
+}
+
+struct ColorPalette_Previews: PreviewProvider {
+    static let colors: [Color] = [
+        .red,
+        .systemBackground,
+        .systemGroupedBackground,
+        .secondarySystemGroupedBackground
+    ]
+
+    static var previews: some View {
+        VStack {
+            ForEach(colors, id: \.self) {
+                color in
+                Rectangle().fill(color)
+            }
+        }
     }
 }

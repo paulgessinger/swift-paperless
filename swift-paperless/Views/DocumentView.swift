@@ -43,7 +43,7 @@ enum NavigationState: Equatable, Hashable {
 }
 
 class NavigationCoordinator: ObservableObject {
-    @Published var path = NavigationPath()
+    var path = NavigationPath()
 
     func popToRoot() {
         path.removeLast(path.count)
@@ -55,6 +55,8 @@ struct DocumentView: View {
 
     @StateObject var searchDebounce = DebounceObject(delay: 0.1)
 
+    @State var documents: [Document] = []
+
     @State var showFilterModal: Bool = false
 
     @State var searchSuggestions: [String] = []
@@ -65,16 +67,26 @@ struct DocumentView: View {
 
     @State var filterState = FilterState()
 
-    @State var path = NavigationPath()
+    @StateObject var nav = NavigationCoordinator()
 
-    func load(clear: Bool, setLoading _setLoading: Bool = true) async {
-        if _setLoading { await setLoading(to: true) }
-//        _ = withAnimation {
-//            Task {
-        await store.fetchDocuments(clear: clear)
-//            }
-//        }
-        if _setLoading { await setLoading(to: false) }
+    func load(clear: Bool) async {
+        async let x: () = store.fetchAll()
+        guard let new = await store.fetchDocuments(clear: clear) else {
+            return
+        }
+
+        await x
+
+        if clear {
+            withAnimation {
+                documents = new
+            }
+        }
+        else {
+            withAnimation {
+                documents += new
+            }
+        }
     }
 
     func updateSearchCompletion() async {
@@ -91,76 +103,55 @@ struct DocumentView: View {
         filterState.searchText = query == "" ? nil : query
         store.filterState = filterState
 
-        await setLoading(to: true)
+        isLoading = true
         await load(clear: true)
-        await setLoading(to: false)
-    }
-
-    func setLoading(to value: Bool) async {
-        withAnimation {
-            isLoading = value
-        }
+        isLoading = false
     }
 
     func scrollToTop(scrollView: ScrollViewProxy) {
         if store.documents.count > 0 {
             withAnimation {
-                scrollView.scrollTo(store.documents[0].id, anchor: .top)
+                scrollView.scrollTo(documents[0].id, anchor: .top)
             }
         }
     }
 
-//    func navigationDestinations(value: NavigationState) -> some View {
-//        switch value {
-//        case let .detail(id):
-//            for i in 0 ..< store.documents.count {
-//                let doc = $store.documents[i]
-//                if doc.id == id {
-//                    return AnyView(DocumentDetailView(document: doc)
-//                        .navigationBarTitleDisplayMode(.inline))
-//                }
-//            }
-//            fatalError("Logic error")
-//        default:
-//            return AnyView(Text("NOPE"))
-//        }
-//    }
-
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack(path: $nav.path) {
             ScrollViewReader { scrollView in
                 ZStack(alignment: .bottomTrailing) {
                     ScrollView {
-                        if isLoading {
-                            ProgressView()
-                                .padding(15)
-                                .scaleEffect(1)
-                                .transition(.opacity)
-                        }
+//                        if isLoading {
+//                            ProgressView()
+//                                .padding(15)
+//                                .scaleEffect(1)
+//                                .transition(.opacity)
+//                        }
                         LazyVStack(alignment: .leading) {
-                            ForEach($store.documents, id: \.id) { $document in
-                                NavigationLink(value:
-                                    NavigationState.detail(document: document)
-                                ) {
-                                    DocumentCell(document: document)
-                                        .task {
-                                            let index = store.documents.firstIndex { $0 == document }
-                                            if index == store.documents.count - 10 {
-                                                //                                    if document == store.documents.last {
-                                                Task {
-                                                    await load(clear: false, setLoading: false)
+                            ForEach(documents, id: \.id) { document in
+                                if let document = store.documents[document.id] {
+                                    NavigationLink(value:
+                                        NavigationState.detail(document: document)
+                                    ) {
+                                        DocumentCell(document: store.documents[document.id]!)
+                                            .task {
+                                                let index = documents.firstIndex { $0 == document }
+                                                if index == documents.count - 10 {
+                                                    Task {
+                                                        await load(clear: false)
+                                                    }
                                                 }
                                             }
-                                        }
-                                        .contentShape(Rectangle())
-                                }
+                                            .contentShape(Rectangle())
+                                    }
 
-                                .buttonStyle(.plain)
-                                .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                                    .buttonStyle(.plain)
+                                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
 
-                                if document != store.documents.last {
-                                    Divider()
-                                        .padding(.horizontal)
+                                    if document != documents.last {
+                                        Divider()
+                                            .padding(.horizontal)
+                                    }
                                 }
                             }
                         }
@@ -171,7 +162,6 @@ struct DocumentView: View {
                         }
                     }
 
-                    // @TODO: This breaks 'refreshable' animation
                     .navigationDestination(for: NavigationState.self, destination: { nav in
                         if case let .detail(doc) = nav {
                             DocumentDetailView(document: doc)
@@ -179,33 +169,50 @@ struct DocumentView: View {
                         }
                     })
 
-                    .refreshable {
-                        Task {
-                            await load(clear: true)
-                        }
-                    }
+                    // @TODO: Refresh animation here is broken :(
+//                    .refreshable {
+//                        Task {
+//                            await load(clear: true)
+//                        }
+//                    }
 
                     .toolbar {
-//                        ToolbarItem(placement: .navigationBarTrailing) {
-//                            Button(action: { showFilterModal.toggle() }) {
-//                                Label("Filter", systemImage:
-//                                    store.filterState.filtering ?
-//                                        "line.3.horizontal.decrease.circle.fill" :
-//                                        "line.3.horizontal.decrease.circle")
-//                            }
-//                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Group {
+                                if isLoading {
+                                    ProgressView()
+                                        .transition(.scale)
+                                }
+                                else {
+                                    Button(action: {
+                                        Task {
+                                            isLoading = true
+                                            await load(clear: true)
+                                            isLoading = false
+                                        }
+                                    }) {
+                                        Label("Reload", systemImage: "arrow.counterclockwise")
+                                    }
+                                    .transition(.scale)
+                                }
+                            }
+                            .animation(.default, value: isLoading)
+                        }
                     }
                     .navigationTitle("Documents")
 
                     .animation(.default, value: store.documents)
 
                     .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                        FilterView(filterState: store.filterState,
-                                   correspondents: store.correspondents,
+                        FilterView(correspondents: store.correspondents,
                                    documentTypes: store.documentTypes,
                                    tags: store.tags)
                             .environmentObject(store)
 //                            .presentationDetents([.large, .medium])
+                    }
+
+                    .onChange(of: store.documents) { _ in
+                        documents = documents.compactMap { store.documents[$0.id] }
                     }
 
                     .onChange(of: store.filterState) { _ in
@@ -232,7 +239,6 @@ struct DocumentView: View {
                         }
                     }
 
-//                    SearchFilterBar {
                     Button(action: {
                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                         impactMed.impactOccurred()
@@ -253,12 +259,13 @@ struct DocumentView: View {
                         .modifier(PillButton())
                     }
                     .padding()
-//                    }
                 }
 
                 .task {
                     if initialLoad {
+                        isLoading = true
                         await load(clear: true)
+                        isLoading = false
                         initialLoad = false
                     }
                 }
@@ -284,6 +291,7 @@ struct DocumentView: View {
             }
         }
         .environmentObject(store)
+        .environmentObject(nav)
     }
 }
 

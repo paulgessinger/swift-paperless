@@ -56,8 +56,6 @@ struct FilterView: View {
 
     @EnvironmentObject var store: DocumentStore
 
-    @State var filterState: FilterState = .init()
-
     @State private var modified: Bool = false
 
     private var correspondents: [UInt: Correspondent]
@@ -71,16 +69,18 @@ struct FilterView: View {
     }
 
     @State var activeTab = Active.tag
+    @State var showClear = false
 
-    init(filterState: FilterState,
-         correspondents: [UInt: Correspondent],
+    init(correspondents: [UInt: Correspondent],
          documentTypes: [UInt: DocumentType],
          tags: [UInt: Tag])
     {
-        self._filterState = State(initialValue: filterState)
         self.correspondents = correspondents
         self.documentTypes = documentTypes
         self.tags = tags
+//        if store.filterState != FilterState() {
+//            self._showClear = State(initialValue: true)
+//        }
     }
 
     var body: some View {
@@ -126,11 +126,20 @@ struct FilterView: View {
                     }
                     .navigationTitle("Filter")
                     .navigationBarTitleDisplayMode(.inline)
+
+                    .onChange(of: store.filterState) { value in
+                        DispatchQueue.main.async {
+                            showClear = value != FilterState()
+                        }
+                    }
+
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Clear", role: .cancel) {
-                                store.filterState = FilterState()
-                                dismiss()
+                            if showClear {
+                                Button("Clear") {
+                                    store.filterState = FilterState()
+                                    dismiss()
+                                }
                             }
                         }
 
@@ -154,7 +163,7 @@ struct FilterView_Previews: PreviewProvider {
     static var previews: some View {
         HStack {
             FilterView(
-                filterState: store.filterState,
+                //                filterState: store.filterState,
                 correspondents: PreviewModel.correspondents,
                 documentTypes: PreviewModel.documentTypes,
                 tags: PreviewModel.tags

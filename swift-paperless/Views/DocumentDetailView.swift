@@ -22,20 +22,16 @@ struct DocumentDetailView: View {
 
     @State private var relatedDocuments: [Document]? = nil
 
-    init(document: Document) {
-        self._document = State(initialValue: document)
-    }
-
     func loadData() async {
         correspondent = nil
         documentType = nil
         if let cId = document.correspondent {
-            correspondent = await store.getCorrespondent(id: cId)
+            correspondent = await store.getCorrespondent(id: cId)?.1
         }
         if let dId = document.documentType {
-            documentType = await store.getDocumentType(id: dId)
+            documentType = await store.getDocumentType(id: dId)?.1
         }
-        tags = await store.getTags(document.tags)
+        (_, tags) = await store.getTags(document.tags)
     }
 
     var body: some View {
@@ -138,6 +134,15 @@ struct DocumentDetailView: View {
             catch {}
         }
 
+        .onChange(of: store.documents) { _ in
+            if let document = store.documents[document.id] {
+                self.document = document
+            }
+//            else {
+//                print("Document in detail view went away")
+//            }
+        }
+
         .refreshable {
 //            if let document = await store.getDocument(id: document.id) {
 //                self.document = document
@@ -147,7 +152,7 @@ struct DocumentDetailView: View {
             Button("Edit") {
                 editing.toggle()
             }.sheet(isPresented: $editing) {
-                DocumentEditView(document: $document)
+                DocumentEditView(document: document)
             }
         }
     }

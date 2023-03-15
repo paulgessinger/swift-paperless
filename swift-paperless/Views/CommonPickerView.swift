@@ -59,6 +59,12 @@ struct CommonPicker: View {
                     }
                 }
             }
+            .overlay(
+                Rectangle()
+                    .fill(.gray)
+                    .frame(maxWidth: .infinity, maxHeight: 1),
+                alignment: .top
+            )
         }
     }
 }

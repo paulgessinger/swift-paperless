@@ -28,12 +28,44 @@ struct DocumentCell: View {
         async let corrResult = document.correspondent == nil ? nil : store.getCorrespondent(id: document.correspondent!)
         async let typeResult = document.documentType == nil ? nil : store.getDocumentType(id: document.documentType!)
 
-        let results = await (tagResult, corrResult, typeResult)
+        let (tagR, corrR, typeR) = await (tagResult, corrResult, typeResult)
+
+        if let (cached, corr) = corrR {
+            if cached {
+                correspondent = corr
+            }
+            else {
+                withAnimation {
+                    correspondent = corr
+                }
+            }
+        }
+
+        if let (cached, type) = typeR {
+            if cached {
+                documentType = type
+            }
+            else {
+                withAnimation {
+                    documentType = type
+                }
+            }
+        }
+
+        let (cached, tags) = tagR
+        if cached {
+            self.tags = tags
+        }
+        else {
+            withAnimation {
+                self.tags = tags
+            }
+        }
 
         withAnimation {
-            tags = results.0
-            correspondent = results.1
-            documentType = results.2
+//            tags = tagR
+//            correspondent = corrR?.1
+//            documentType = typeR?.1
             isLoading = false
         }
     }

@@ -171,7 +171,7 @@ struct FilterState: Equatable {
 
 @MainActor
 class DocumentStore: ObservableObject {
-    @Published var documents: [Document] = []
+    @Published var documents: [UInt: Document] = [:]
 //    @Published private(set) var isLoading = false
 
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
@@ -188,7 +188,7 @@ class DocumentStore: ObservableObject {
     let semaphore = AsyncSemaphore(value: 1)
 
     func clearDocuments() {
-        documents = []
+        documents = [:]
     }
 
     init() {
@@ -204,6 +204,8 @@ class DocumentStore: ObservableObject {
     }
 
     func updateDocument(_ document: Document) async throws {
+        documents[document.id] = document
+
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
@@ -235,29 +237,25 @@ class DocumentStore: ObservableObject {
             throw APIError.deleteFailed
         }
 
-        for i in 0 ..< documents.count {
-            if documents[i].id == document.id {
-                documents.remove(at: i)
-                break
-            }
-        }
+        documents.removeValue(forKey: document.id)
     }
 
     func documentBinding(id: UInt) -> Binding<Document> {
-        for i in 0 ..< documents.count {
-            if id == documents[i].id {
-                let binding: Binding<Document> = .init(get: {
-                    self.documents[i]
-                }, set: {
-                    self.documents[i] = $0
-                })
-                return binding
-            }
-        }
-        fatalError("INVALID")
+//        for i in 0 ..< documents.count {
+//            if id == documents[i].id {
+//                let binding: Binding<Document> = .init(get: {
+//                    self.documents[i]
+//                }, set: {
+//                    self.documents[i] = $0
+//                })
+//                return binding
+//            }
+//        }
+        let binding: Binding<Document> = .init(get: { self.documents[id]! }, set: { self.documents[id] = $0 })
+        return binding
     }
 
-    func fetchDocuments(clear: Bool) async {
+    func fetchDocuments(clear: Bool) async -> [Document]? {
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -268,19 +266,25 @@ class DocumentStore: ObservableObject {
 
         guard let url = nextPage else {
             print("Have no next page")
-            return // no next page
+            return nil // no next page
         }
 
         guard let response = await getDocuments(url: url) else {
-            return
+            return nil
         }
 
-        if clear {
-            documents = response.results
-        } else {
-            documents += response.results
+//        if clear {
+//            documents = response.results
+//        } else {
+//            documents += response.results
+//        }
+
+        for doc in response.results {
+            documents[doc.id] = doc
         }
+
         nextPage = response.next
+        return response.results
     }
 
     func fetchAllCorrespondents() async {
@@ -361,9 +365,9 @@ class DocumentStore: ObservableObject {
 
     private func getSingleCached<T>(
         _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
-    ) async -> T? where T: Decodable {
+    ) async -> (Bool, T)? where T: Decodable {
         if let element = self[keyPath: cache][id] {
-            return element
+            return (true, element)
         }
 
         guard let element = await getSingle(type, id: id, path: path) else {
@@ -371,15 +375,15 @@ class DocumentStore: ObservableObject {
         }
 
         self[keyPath: cache][id] = element
-        return element
+        return (false, element)
     }
 
-    func getCorrespondent(id: UInt) async -> Correspondent? {
+    func getCorrespondent(id: UInt) async -> (Bool, Correspondent)? {
         return await getSingleCached(Correspondent.self, id: id,
                                      path: "correspondents", cache: \.correspondents)
     }
 
-    func getDocumentType(id: UInt) async -> DocumentType? {
+    func getDocumentType(id: UInt) async -> (Bool, DocumentType)? {
         return await getSingleCached(DocumentType.self, id: id,
                                      path: "document_types", cache: \.documentTypes)
     }
@@ -388,18 +392,20 @@ class DocumentStore: ObservableObject {
         return await getSingle(Document.self, id: id, path: "documents")
     }
 
-    func getTag(id: UInt) async -> Tag? {
+    func getTag(id: UInt) async -> (Bool, Tag)? {
         return await getSingleCached(Tag.self, id: id, path: "tags", cache: \.tags)
     }
 
-    func getTags(_ ids: [UInt]) async -> [Tag] {
+    func getTags(_ ids: [UInt]) async -> (Bool, [Tag]) {
         var tags: [Tag] = []
+        var allCached = true
         for id in ids {
-            if let tag = await getTag(id: id) {
+            if let (cached, tag) = await getTag(id: id) {
                 tags.append(tag)
+                allCached = allCached && cached
             }
         }
-        return tags
+        return (allCached, tags)
     }
 
     func getImage(document: Document) async -> (Bool, UIImage?) {

@@ -11,9 +11,7 @@ struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var navCoordinator: NavigationCoordinator
-
-    @Binding private var documentBinding: Document
+    @EnvironmentObject private var nav: NavigationCoordinator
 
     @State private var document: Document
     @State private var modified: Bool = false
@@ -23,10 +21,10 @@ struct DocumentEditView: View {
 
     @State private var error = ""
     @State private var showError = false
+    @State private var deleted = false
 
-    init(document: Binding<Document>) {
-        self._documentBinding = document
-        self._document = State(initialValue: document.wrappedValue)
+    init(document: Document) {
+        self._document = State(initialValue: document)
 
         var filter = FilterState()
 
@@ -135,7 +133,14 @@ struct DocumentEditView: View {
                     }) {
                         HStack {
                             Spacer()
-                            Text("Delete")
+                            if !deleted {
+                                Text("Delete")
+                            } else {
+                                HStack {
+                                    Text("Deleted")
+                                    Image(systemName: "checkmark.circle.fill")
+                                }
+                            }
                             Spacer()
                         }
                     }
@@ -145,14 +150,23 @@ struct DocumentEditView: View {
                     .alert("Delete document \(document.title)", isPresented: $showDeleteConfirmation) {
                         Button("Cancel", role: .cancel) {}
                         Button("Delete", role: .destructive) {
-                            Task {
-                                do {
-                                    try await store.deleteDocument(document)
-                                    dismiss()
-                                    navCoordinator.popToRoot()
-                                } catch {
-                                    self.error = "\(error)"
-                                    showError = true
+                            DispatchQueue.main.async {
+                                Task {
+                                    do {
+                                        try await store.deleteDocument(document)
+                                        deleted = true
+                                        let impact = UIImpactFeedbackGenerator(style: .rigid)
+                                        impact.impactOccurred()
+                                        try await Task.sleep(for: .seconds(0.2))
+                                        dismiss()
+//                                    do {
+//                                        try await Task.sleep(for: .seconds(0.2))
+//                                    } catch {}
+                                        nav.popToRoot()
+                                    } catch {
+                                        self.error = "\(error)"
+                                        showError = true
+                                    }
                                 }
                             }
                         }
@@ -169,7 +183,6 @@ struct DocumentEditView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        documentBinding = document
                         Task {
                             do {
                                 try await store.updateDocument(document)
@@ -235,7 +248,7 @@ struct DocumentEditView_Previews: PreviewProvider {
 
     static var previews: some View {
         Group {
-            DocumentEditView(document: .constant(document))
+            DocumentEditView(document: document)
         }
         .task { await store.fetchAllTags() }
         .environmentObject(store)

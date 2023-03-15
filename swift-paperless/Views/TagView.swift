@@ -44,7 +44,9 @@ struct TagView: View {
         }
         .task {
             if let tagID = tagID {
-                tag = await store.getTag(id: tagID)
+                if let (_, tag) = await store.getTag(id: tagID) {
+                    self.tag = tag
+                }
             }
         }
     }
