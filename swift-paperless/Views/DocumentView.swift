@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import AsyncAlgorithms
 import Combine
 import QuickLook
 import SwiftUI
@@ -87,9 +88,7 @@ struct DocumentView: View {
 
     func load(clear: Bool) async {
         async let x: () = store.fetchAll()
-        guard let new = await store.fetchDocuments(clear: clear) else {
-            return
-        }
+        let new = await store.fetchDocuments(clear: clear)
 
         await x
 
@@ -103,6 +102,7 @@ struct DocumentView: View {
                 documents += new
             }
         }
+//        print("\(documents.count)")
     }
 
     func updateSearchCompletion() async {
@@ -145,33 +145,36 @@ struct DocumentView: View {
 //                        }
                         LazyVStack(alignment: .leading) {
                             ForEach(documents, id: \.id) { document in
-                                if let document = store.documents[document.id] {
-                                    NavigationLink(value:
-                                        NavigationState.detail(document: document)
-                                    ) {
-                                        DocumentCell(document: store.documents[document.id]!)
-                                            .task {
-                                                let index = documents.firstIndex { $0 == document }
-                                                if index == documents.count - 10 {
+//                                if let document = store.documents[document.id] {
+                                NavigationLink(value:
+                                    NavigationState.detail(document: document)
+                                ) {
+                                    // @TODO: Switch back to document from store
+                                    //                                        DocumentCell(document: store.documents[document.id]!)
+                                    DocumentCell(document: document)
+                                        .task {
+                                            if let index = documents.firstIndex(where: { $0 == document }) {
+                                                if index >= documents.count - 10 {
                                                     Task {
                                                         await load(clear: false)
                                                     }
                                                 }
                                             }
-                                            .contentShape(Rectangle())
-                                    }
-
-                                    .buttonStyle(.plain)
-                                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-
-                                    if document != documents.last {
-                                        Divider()
-                                            .padding(.horizontal)
-                                    }
+                                        }
+                                        .contentShape(Rectangle())
                                 }
+
+                                .buttonStyle(.plain)
+                                .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+
+                                if document != documents.last {
+                                    Divider()
+                                        .padding(.horizontal)
+                                }
+//                                }
                             }
                         }
-                        if store.documents.isEmpty && !isLoading && !initialLoad {
+                        if documents.isEmpty && !isLoading && !initialLoad {
                             Text("No documents found")
                                 .foregroundColor(.gray)
                                 .transition(.opacity)

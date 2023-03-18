@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 18.02.23.
 //
 
+import AsyncAlgorithms
 import Foundation
 import OrderedCollections
 import Semaphore
@@ -166,18 +167,13 @@ struct FilterState: Equatable {
 @MainActor
 class DocumentStore: ObservableObject {
     @Published var documents: [UInt: Document] = [:]
-//    @Published private(set) var isLoading = false
-
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
     @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
     @Published private(set) var tags: [UInt: Tag] = [:]
 
-    private var nextPage: URL?
-
     @Published var filterState = FilterState()
 
-    private var thumbnailCache: OrderedDictionary<Document, UIImage> = [:]
-    static let maxThumbnailCacheSize = 100
+    var documentSource: any DocumentSource
 
     let semaphore = AsyncSemaphore(value: 1)
 
@@ -189,16 +185,13 @@ class DocumentStore: ObservableObject {
 
     init(repository: Repository) {
         self.repository = repository
+        documentSource = repository.documents(filter: FilterState())
 
         Task {
             async let _ = await fetchAllTags()
             async let _ = await fetchAllCorrespondents()
             async let _ = await fetchAllDocumentTypes()
         }
-    }
-
-    func resetPage() {
-        nextPage = repository.url(Endpoint.documents(page: 1, filter: filterState))
     }
 
     func updateDocument(_ document: Document) async throws {
@@ -216,36 +209,25 @@ class DocumentStore: ObservableObject {
         return binding
     }
 
-    func fetchDocuments(clear: Bool) async -> [Document]? {
+    func fetchDocuments(clear: Bool, pageSize: UInt = 10) async -> [Document] {
         await semaphore.wait()
         defer { semaphore.signal() }
 
         if clear {
-            nextPage = repository.url(Endpoint.documents(page: 1, filter: filterState))!
-//            documents = []
+            documentSource = repository.documents(filter: filterState)
         }
 
-        guard let url = nextPage else {
-            print("Have no next page")
-            return nil // no next page
+        let result = await documentSource.fetch(limit: pageSize)
+//        do {
+//            try await documentSequence.next()
+//        } catch {}
+//        documentSequence.prefix(1)
+//        let result: [Document] = await Array(documentSequence.prefix(Int(pageSize)))
+        for document in result {
+            documents[document.id] = document
         }
 
-        guard let response = await repository.getDocuments(url: url) else {
-            return nil
-        }
-
-//        if clear {
-//            documents = response.results
-//        } else {
-//            documents += response.results
-//        }
-
-        for doc in response.results {
-            documents[doc.id] = doc
-        }
-
-        nextPage = response.next
-        return response.results
+        return result
     }
 
     func fetchAllCorrespondents() async {

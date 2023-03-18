@@ -13,7 +13,7 @@
 		7A4AA8F429BDEAFA00D845A2 /* AttachmentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */; };
 		7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */; };
 		7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
-		7A4AA8FF29BE042700D845A2 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Networking.swift */; };
+		7A4AA8FF29BE042700D845A2 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
 		7A4AA90029BE042700D845A2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7A4AA90329BE048800D845A2 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA90229BE048800D845A2 /* Flow */; };
 		7A4AA90529BE048C00D845A2 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA90429BE048C00D845A2 /* OrderedCollections */; };
@@ -44,6 +44,10 @@
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9AA03929AD39F300A55529 /* OrderedCollections */; };
+		7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */; };
+		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
+		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
+		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7ACABE8229BF5B9800D5915F /* Credentials.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7ACABE8129BF5B9800D5915F /* Credentials.plist */; };
 		7ACABE8329BF5B9800D5915F /* Credentials.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7ACABE8129BF5B9800D5915F /* Credentials.plist */; };
 		7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
@@ -51,7 +55,7 @@
 		7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
 		7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
 		7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8229A68A4F008E8F79 /* FilterView.swift */; };
-		7AF6688729A137EA0016BC31 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Networking.swift */; };
+		7AF6688729A137EA0016BC31 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
 /* End PBXBuildFile section */
@@ -120,13 +124,14 @@
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
+		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		7ACABE8129BF5B9800D5915F /* Credentials.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Credentials.plist; sourceTree = "<group>"; };
 		7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentCell.swift; sourceTree = "<group>"; };
 		7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailView.swift; sourceTree = "<group>"; };
 		7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEditView.swift; sourceTree = "<group>"; };
 		7AF04B8029A68A20008E8F79 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		7AF04B8229A68A4F008E8F79 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
-		7AF6688629A137EA0016BC31 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
+		7AF6688629A137EA0016BC31 /* Api.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Api.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -139,6 +144,7 @@
 				7A4AA90529BE048C00D845A2 /* OrderedCollections in Frameworks */,
 				7A4AA90329BE048800D845A2 /* Flow in Frameworks */,
 				7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */,
+				7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,6 +155,7 @@
 				7A68F0B329B4B94B00878223 /* Flow in Frameworks */,
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */,
+				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,15 +222,14 @@
 			children = (
 				7A256CEE29B6828D00BADEB8 /* Info.plist */,
 				7AF04B7929A6898C008E8F79 /* Views */,
+				7AB060DC29C6621E004E6C63 /* Networking */,
 				7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */,
 				7A5482B2299AD56E00D5061E /* Assets.xcassets */,
 				7A5482B4299AD56E00D5061E /* swift_paperless.entitlements */,
 				7A5482B5299AD56E00D5061E /* Preview Content */,
-				7AF6688629A137EA0016BC31 /* Networking.swift */,
 				7AF6688829A138330016BC31 /* Model.swift */,
 				7AF04B8029A68A20008E8F79 /* Utilities.swift */,
 				7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */,
-				7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -253,6 +259,16 @@
 				7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */,
 			);
 			path = "swift-paperlessUITests";
+			sourceTree = "<group>";
+		};
+		7AB060DC29C6621E004E6C63 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				7AF6688629A137EA0016BC31 /* Api.swift */,
+				7AB060DD29C6623F004E6C63 /* Repository.swift */,
+				7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */,
+			);
+			path = Networking;
 			sourceTree = "<group>";
 		};
 		7AF04B7929A6898C008E8F79 /* Views */ = {
@@ -293,6 +309,7 @@
 				7A4AA90229BE048800D845A2 /* Flow */,
 				7A4AA90429BE048C00D845A2 /* OrderedCollections */,
 				7A4AA91929BE730B00D845A2 /* Semaphore */,
+				7AB060DA29C62395004E6C63 /* AsyncAlgorithms */,
 			);
 			productName = ShareExtension;
 			productReference = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */;
@@ -317,6 +334,7 @@
 				7A5C138929AA7E2F00D71F51 /* Semaphore */,
 				7A9AA03929AD39F300A55529 /* OrderedCollections */,
 				7A68F0B229B4B94B00878223 /* Flow */,
+				7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -397,6 +415,7 @@
 				7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */,
 				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
+				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -455,6 +474,7 @@
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
+				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
 				7A4AA90D29BE1FC700D845A2 /* SearchBarView.swift in Sources */,
 				7A4AA91529BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A4AA91229BE202800D845A2 /* PreviewModel.swift in Sources */,
@@ -462,7 +482,7 @@
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
-				7A4AA8FF29BE042700D845A2 /* Networking.swift in Sources */,
+				7A4AA8FF29BE042700D845A2 /* Api.swift in Sources */,
 				7A4AA90F29BE1FEB00D845A2 /* TagView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -477,11 +497,12 @@
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
-				7AF6688729A137EA0016BC31 /* Networking.swift in Sources */,
+				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
 				7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */,
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7A4AA8F429BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
+				7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */,
 				7A4AA90929BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A4AA91729BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
 				7A4AA90C29BE1FC700D845A2 /* SearchBarView.swift in Sources */,
@@ -961,6 +982,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -993,6 +1022,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
+		7AB060DA29C62395004E6C63 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

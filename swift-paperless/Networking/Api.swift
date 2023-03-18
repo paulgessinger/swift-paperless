@@ -100,28 +100,6 @@ extension Endpoint {
     }
 }
 
-protocol Repository {
-    func updateDocument(_ document: Document) async throws
-    func deleteDocument(_ document: Document) async throws
-    func createDocument(_ document: ProtoDocument, file: URL) async throws
-
-    func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T?
-
-    // @TODO: Remove UIImage
-    func getImage(document: Document) async -> (Bool, UIImage?)
-    func getImage(url: URL?) async -> UIImage?
-
-    // @TODO: Refactor to make generic
-    func getDocuments(url: URL) async -> ListResponse<Document>?
-
-    func getPreviewImage(documentID: UInt) async -> URL?
-    func getSearchCompletion(term: String, limit: UInt) async -> [String]
-
-    // @TODO: Remove this, shouldn't be in protocol
-    func request(url: URL) -> URLRequest
-    func url(_ endpoint: Endpoint) -> URL?
-}
-
 enum APIError: Error {
     case encodingFailed
     case putFailed
@@ -129,26 +107,76 @@ enum APIError: Error {
     case postError(status: Int, body: String)
 }
 
-class NullRepository: Repository {
-    func updateDocument(_ document: Document) async throws {}
-    func deleteDocument(_ document: Document) async throws {}
-    func createDocument(_ document: ProtoDocument, file: URL) async throws {}
-    func getDocuments(url: URL) async -> ListResponse<Document>? { return nil }
-    func getPreviewImage(documentID: UInt) async -> URL? { return nil }
-    func getSearchCompletion(term: String, limit: UInt) async -> [String] { return [] }
+class ApiDocumentSequence: AsyncSequence, AsyncIteratorProtocol {
+    typealias Element = Document
 
-    func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? { return nil }
+    private var nextPage: URL?
+    private let repository: ApiRepository
 
-    func getImage(document: Document) async -> (Bool, UIImage?) { return (false, nil) }
+    private var buffer: [Document]?
+    private var bufferIndex = 0
 
-    func getImage(url: URL?) async -> UIImage? { return nil }
-
-    // @TODO: Remove this, shouldn't be in protocol
-    func request(url: URL) -> URLRequest {
-        return URLRequest(url: URL(string: "http://example.com")!)
+    init(repository: ApiRepository, url: URL) {
+        self.repository = repository
+        nextPage = url
     }
 
-    func url(_ endpoint: Endpoint) -> URL? { return nil }
+    func boop() {
+        print("BOOP")
+    }
+
+    func next() async -> Document? {
+        guard !Task.isCancelled else {
+            return nil
+        }
+
+        // if we have a current page loaded, return next element from that
+        if let buffer = buffer, bufferIndex < buffer.count {
+            defer { bufferIndex += 1 }
+            return buffer[bufferIndex]
+        }
+
+        guard let url = nextPage else {
+            return nil
+        }
+
+        do {
+//            print(url)
+            let request = repository.request(url: url)
+            let (data, _) = try await URLSession.shared.data(for: request)
+
+            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+
+            guard !decoded.results.isEmpty else {
+                return nil
+            }
+
+            nextPage = decoded.next
+            buffer = decoded.results
+            bufferIndex = 1 // set to one because we return the first element immediately
+            return decoded.results[0]
+
+        } catch {
+            print(error)
+            return nil
+        }
+    }
+
+    func makeAsyncIterator() -> ApiDocumentSequence {
+        return self
+    }
+}
+
+class ApiDocumentSource: DocumentSource {
+    var sequence: ApiDocumentSequence
+
+    init(sequence: ApiDocumentSequence) {
+        self.sequence = sequence
+    }
+
+    func fetch(limit: UInt) async -> [Document] {
+        return await Array(sequence.prefix(Int(limit)))
+    }
 }
 
 class ApiRepository: Repository {
@@ -163,6 +191,8 @@ class ApiRepository: Repository {
     func url(_ endpoint: Endpoint) -> URL? {
         return endpoint.url(host: apiHost)
     }
+
+    func boop() {}
 
     func updateDocument(_ document: Document) async throws {
         let encoder = JSONEncoder()
@@ -237,6 +267,10 @@ class ApiRepository: Repository {
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
         return request
+    }
+
+    func documents(filter: FilterState) -> any DocumentSource {
+        return ApiDocumentSource(sequence: ApiDocumentSequence(repository: self, url: url(Endpoint.documents(page: 1, filter: filter))!))
     }
 
     func getDocuments(url: URL) async -> ListResponse<Document>? {
