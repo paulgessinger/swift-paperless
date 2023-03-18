@@ -163,7 +163,7 @@ class ShareViewController: UIViewController {
 struct ShareView: View {
     @ObservedObject var attachmentManager: AttachmentManager
 
-    @StateObject private var store = DocumentStore()
+    @StateObject private var store = DocumentStore(repository: NullRepository())
 
     var callback: () -> Void
 

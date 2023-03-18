@@ -73,7 +73,7 @@ struct DocumentCell: View {
     var body: some View {
         HStack(alignment: .top) {
             AuthAsyncImage(image: {
-                await store.getImage(document: document)
+                await store.repository.getImage(document: document)
             }) {
                 image in
                 image
@@ -136,7 +136,7 @@ struct DocumentCell: View {
 }
 
 struct DocumentCell_Previews: PreviewProvider {
-    static let store = DocumentStore()
+    static let store = DocumentStore(repository: NullRepository())
 
     static var documents: [Document] = [
         .init(id: 1715,

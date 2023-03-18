@@ -105,12 +105,6 @@ enum DateDecodingError: Error {
     case invalidDate(string: String)
 }
 
-enum APIError: Error {
-    case encodingFailed
-    case putFailed
-    case deleteFailed
-}
-
 let decoder: JSONDecoder = {
     let d = JSONDecoder()
     d.dateDecodingStrategy = .custom { decoder -> Date in
@@ -187,11 +181,15 @@ class DocumentStore: ObservableObject {
 
     let semaphore = AsyncSemaphore(value: 1)
 
+    let repository: Repository
+
     func clearDocuments() {
         documents = [:]
     }
 
-    init() {
+    init(repository: Repository) {
+        self.repository = repository
+
         Task {
             async let _ = await fetchAllTags()
             async let _ = await fetchAllCorrespondents()
@@ -200,57 +198,20 @@ class DocumentStore: ObservableObject {
     }
 
     func resetPage() {
-        nextPage = Endpoint.documents(page: 1, filter: filterState).url
+        nextPage = repository.url(Endpoint.documents(page: 1, filter: filterState))
     }
 
     func updateDocument(_ document: Document) async throws {
         documents[document.id] = document
-
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        encoder.dateEncodingStrategy = .iso8601
-        let json = try encoder.encode(document)
-
-        var request = URLRequest.common(url: Endpoint.document(id: document.id).url!)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = json
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-            print("Saving document: Status was not 200 but \(statusCode)")
-            print(String(data: data, encoding: .utf8)!)
-            throw APIError.putFailed
-        }
+        try await repository.updateDocument(document)
     }
 
     func deleteDocument(_ document: Document) async throws {
-        var request = URLRequest.common(url: Endpoint.document(id: document.id).url!)
-        request.httpMethod = "DELETE"
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 204 {
-            print("Delete document: Status was not 204 but \(statusCode)")
-            print(String(data: data, encoding: .utf8)!)
-            throw APIError.deleteFailed
-        }
-
+        try await repository.deleteDocument(document)
         documents.removeValue(forKey: document.id)
     }
 
     func documentBinding(id: UInt) -> Binding<Document> {
-//        for i in 0 ..< documents.count {
-//            if id == documents[i].id {
-//                let binding: Binding<Document> = .init(get: {
-//                    self.documents[i]
-//                }, set: {
-//                    self.documents[i] = $0
-//                })
-//                return binding
-//            }
-//        }
         let binding: Binding<Document> = .init(get: { self.documents[id]! }, set: { self.documents[id] = $0 })
         return binding
     }
@@ -260,7 +221,7 @@ class DocumentStore: ObservableObject {
         defer { semaphore.signal() }
 
         if clear {
-            nextPage = Endpoint.documents(page: 1, filter: filterState).url!
+            nextPage = repository.url(Endpoint.documents(page: 1, filter: filterState))!
 //            documents = []
         }
 
@@ -269,7 +230,7 @@ class DocumentStore: ObservableObject {
             return nil // no next page
         }
 
-        guard let response = await getDocuments(url: url) else {
+        guard let response = await repository.getDocuments(url: url) else {
             return nil
         }
 
@@ -313,12 +274,12 @@ class DocumentStore: ObservableObject {
                              collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T.ObjectType]>) async
         where T: Decodable, T: ListResponseProtocol, T.ObjectType.ID == UInt
     {
-        guard var url = endpoint.url else {
+        guard var url = repository.url(endpoint) else {
             return
         }
         while true {
             do {
-                let request = URLRequest.common(url: url)
+                let request = repository.request(url: url)
                 let (data, _) = try await URLSession.shared.data(for: request)
 
                 let decoded = try decoder.decode(type, from: data)
@@ -340,29 +301,6 @@ class DocumentStore: ObservableObject {
         }
     }
 
-    private func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? {
-        guard let url = URL(string: "https://\(API_HOST)/api/\(path)/\(id)/") else {
-            return nil
-        }
-
-        let request = URLRequest.common(url: url)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Getting correspondent: Status was not 200")
-                return nil
-            }
-
-            let correspondent = try decoder.decode(type, from: data)
-            return correspondent
-        } catch {
-            print("Error getting \(type) with id \(id): \(error)")
-            return nil
-        }
-    }
-
     private func getSingleCached<T>(
         _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
     ) async -> (Bool, T)? where T: Decodable {
@@ -370,7 +308,7 @@ class DocumentStore: ObservableObject {
             return (true, element)
         }
 
-        guard let element = await getSingle(type, id: id, path: path) else {
+        guard let element = await repository.getSingle(type, id: id, path: path) else {
             return nil
         }
 
@@ -389,7 +327,7 @@ class DocumentStore: ObservableObject {
     }
 
     func getDocument(id: UInt) async -> Document? {
-        return await getSingle(Document.self, id: id, path: "documents")
+        return await repository.getSingle(Document.self, id: id, path: "documents")
     }
 
     func getTag(id: UInt) async -> (Bool, Tag)? {
@@ -406,41 +344,5 @@ class DocumentStore: ObservableObject {
             }
         }
         return (allCached, tags)
-    }
-
-    func getImage(document: Document) async -> (Bool, UIImage?) {
-        // @TODO: Add limited size caching
-//        if let image = thumbnailCache[document] {
-//            return (true, image)
-//        }
-
-        let image = await getImage(url: URL(string: "https://\(API_HOST)/api/documents/\(document.id)/thumb/"))
-
-//        thumbnailCache[document] = image
-//        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
-//            thumbnailCache.removeFirst(DocumentStore.maxThumbnailCacheSize - thumbnailCache.count)
-//        }
-        return (false, image)
-    }
-
-    func getImage(url: URL?) async -> UIImage? {
-        guard let url = url else { return nil }
-
-//        print("Load image at \(url)")
-
-        var request = URLRequest(url: url)
-        request.setValue("Token \(API_TOKEN)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                fatalError("Did not get good response for image")
-            }
-
-//            try await Task.sleep(for: .seconds(2))
-
-            return UIImage(data: data)
-        } catch { return nil }
     }
 }

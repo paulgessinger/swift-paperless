@@ -50,8 +50,24 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
+private func getCredentials(key: String) -> String {
+    guard let path = Bundle.main.path(forResource: "Credentials", ofType: "plist") else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    guard let nsDictionary = NSDictionary(contentsOfFile: path) else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    guard let value = nsDictionary[key] as? String else {
+        fatalError("Unable to load credentials plist")
+    }
+
+    return value
+}
+
 struct DocumentView: View {
-    @StateObject private var store = DocumentStore()
+    @StateObject private var store = DocumentStore(repository: ApiRepository(apiHost: getCredentials(key: "API_HOST"), apiToken: getCredentials(key: "API_TOKEN")))
 
     @StateObject var searchDebounce = DebounceObject(delay: 0.1)
 
@@ -94,7 +110,7 @@ struct DocumentView: View {
             searchSuggestions = []
         }
         else {
-            searchSuggestions = await getSearchCompletion(term: searchDebounce.debouncedText)
+            searchSuggestions = await store.repository.getSearchCompletion(term: searchDebounce.debouncedText, limit: 10)
         }
     }
 
@@ -296,7 +312,7 @@ struct DocumentView: View {
 }
 
 struct DocumentView_Previews: PreviewProvider {
-    static let store = DocumentStore()
+    static let store = DocumentStore(repository: NullRepository())
 
     static var previews: some View {
         DocumentView()

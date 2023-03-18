@@ -114,7 +114,7 @@ struct TagView_Previews: PreviewProvider {
 
     static let fractions = [1.0, 0.8, 0.4, 0.2]
 
-    static let store = DocumentStore()
+    static let store = DocumentStore(repository: NullRepository())
 
     static var previews: some View {
         VStack(alignment: .leading) {

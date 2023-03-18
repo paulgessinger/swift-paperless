@@ -239,7 +239,7 @@ struct DocumentEditView: View {
 }
 
 struct DocumentEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore()
+    @StateObject static var store = DocumentStore(repository: NullRepository())
 
     static var document: Document = .init(id: 1689,
                                           title: "Official ESTA Application Website, U.S. Customs and Border Protection",

@@ -16,7 +16,7 @@ extension Correspondent: Pickable {}
 extension DocumentType: Pickable {}
 
 struct DocumentTypeView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore()
+    @StateObject static var store = DocumentStore(repository: NullRepository())
     @State static var filterState = FilterState()
 
     static var previews: some View {
@@ -33,7 +33,7 @@ struct DocumentTypeView_Previews: PreviewProvider {
 }
 
 struct CorrespondentView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore()
+    @StateObject static var store = DocumentStore(repository: NullRepository())
     @State static var filterState = FilterState()
 
     static var previews: some View {
@@ -158,7 +158,7 @@ struct FilterView: View {
 }
 
 struct FilterView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore()
+    @StateObject static var store = DocumentStore(repository: NullRepository())
 
     static var previews: some View {
         HStack {

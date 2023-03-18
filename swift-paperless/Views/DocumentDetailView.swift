@@ -67,7 +67,7 @@ struct DocumentDetailView: View {
                             return
                         }
                         previewLoading = true
-                        previewUrl = await getPreviewImage(documentID: document.id)
+                        previewUrl = await store.repository.getPreviewImage(documentID: document.id)
                         previewLoading = false
                     }
                 }) {
@@ -76,7 +76,7 @@ struct DocumentDetailView: View {
                             try await Task.sleep(for: .seconds(0.5))
                         }
                         catch {}
-                        return await store.getImage(document: document)
+                        return await store.repository.getImage(document: document)
                     }) {
                         image in
                         VStack {
@@ -144,9 +144,9 @@ struct DocumentDetailView: View {
         }
 
         .refreshable {
-//            if let document = await store.getDocument(id: document.id) {
-//                self.document = document
-//            }
+            if let document = await store.getDocument(id: document.id) {
+                self.document = document
+            }
         }
         .toolbar {
             Button("Edit") {

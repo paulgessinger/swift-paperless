@@ -46,43 +46,20 @@ struct CreateDocumentView: View {
             return
         }
 
-        var request = URLRequest.common(url: Endpoint.createDocument().url!)
-
-        let mp = MultiPartFormDataRequest()
-        mp.add(name: "title", string: document.title)
-
-        if let corr = document.correspondent {
-            mp.add(name: "correspondent", string: String(corr))
-        }
-
-        if let dt = document.documentType {
-            mp.add(name: "document_type", string: String(dt))
-        }
-
-        for tag in document.tags {
-            mp.add(name: "tags", string: String(tag))
-        }
-
         do {
-            try mp.add(name: "document", url: url)
+            try await store.repository.createDocument(document, file: url)
         }
         catch {
-            setError("Unable to make request:\n\(error)")
-        }
-        mp.addTo(request: &request)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                setError("StatusCode \(hres.statusCode)\n\(body)")
+            switch error {
+            case MultiPartFormDataError.noMimeType:
+                setError("Invalid mime type")
+            case MultiPartFormDataError.notAFile:
+                setError("Not a file")
+            case APIError.postError(let status, let body):
+                setError("Post error code \(status):\n\(body)")
+            default:
+                setError(String(describing: error))
             }
-        }
-        catch {
-            print("Error uploading: \(error)")
-            setError(String(describing: error))
         }
 
         withAnimation {
