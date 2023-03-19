@@ -194,6 +194,8 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
     private var buffer: [Element]?
     private var bufferIndex = 0
 
+    private(set) var hasMore = true
+
     init(repository: ApiRepository, url: URL) {
         self.repository = repository
         nextPage = url
@@ -211,19 +213,25 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         guard let url = nextPage else {
+            hasMore = false
             return nil
         }
 
         do {
-//            print(url)
             let request = repository.request(url: url)
             let (data, _) = try await URLSession.shared.data(for: request)
 
             let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
 
             guard !decoded.results.isEmpty else {
+                hasMore = false
                 return nil
             }
+
+//            if Element.self is Document.Type {
+//                print(url)
+//                print("Got \(decoded.results.count)")
+//            }
 
             nextPage = decoded.next
 //            print("next: \(nextPage)")
@@ -254,6 +262,8 @@ class ApiDocumentSource: DocumentSource {
     func fetch(limit: UInt) async -> [Document] {
         return await Array(sequence.prefix(Int(limit)))
     }
+
+    func hasMore() async -> Bool { sequence.hasMore }
 }
 
 class ApiRepository: Repository {

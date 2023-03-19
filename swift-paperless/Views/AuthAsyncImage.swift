@@ -35,13 +35,13 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
         }
         else {
             placeholder().task {
-                let (cached, image) = await getImage()
-                if cached { self.image = image }
-                else {
-                    withAnimation {
-                        self.image = image
-                    }
+                let (_, image) = await getImage()
+//                if cached { self.image = image }
+//                else {
+                withAnimation {
+                    self.image = image
                 }
+//                }
             }
         }
     }

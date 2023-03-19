@@ -82,6 +82,8 @@ struct DocumentView: View {
 
     @State var isLoading = false
 
+    @State var loadingMore = false
+
     @State var filterState = FilterState()
 
     @StateObject var nav = NavigationCoordinator()
@@ -131,54 +133,64 @@ struct DocumentView: View {
         }
     }
 
+    func cell(document: Document) -> some View {
+        Group {
+            NavigationLink(value:
+                NavigationState.detail(document: document)
+            ) {
+                DocumentCell(document: document)
+                    .contentShape(Rectangle())
+            }
+
+            .buttonStyle(.plain)
+            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+
+            if document != documents.last {
+                Divider()
+                    .padding(.horizontal)
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             ZStack(alignment: .bottomTrailing) {
                 ScrollView {
-                    LazyVStack(alignment: .leading) {
-                        HStack { Spacer() }.frame(height: 1) // Somehow I need this so the elements don't fly in from the top
-                        ForEach(documents, id: \.self) { document in
-                            if let document = store.documents[document.id] {
-                                NavigationLink(value:
-                                    NavigationState.detail(document: document)
-                                ) {
-                                    DocumentCell(document: document)
-                                        .task {
-                                            if let index = documents.firstIndex(where: { $0 == document }) {
-                                                if index >= documents.count - 10 {
-                                                    Task {
-                                                        await load(clear: false)
-                                                    }
+                    VStack(alignment: .leading) {
+                        ForEach(documents.prefix(100)) { document in
+                            cell(document: document)
+                        }
+                        LazyVStack(alignment: .leading) {
+                            ForEach(documents.dropFirst(100)) { document in
+                                cell(document: document)
+                                    .task {
+                                        let hasMore = await store.hasMoreDocuments()
+                                        print("Check more: has: \(hasMore), #doc \(documents.count)")
+                                        if let index = documents.firstIndex(where: { $0 == document }) {
+                                            if index >= documents.count - 10 && !loadingMore && hasMore {
+                                                print("LOAD MORE")
+                                                Task {
+                                                    loadingMore = true
+                                                    await load(clear: false)
+                                                    loadingMore = false
                                                 }
                                             }
                                         }
-                                        .contentShape(Rectangle())
-                                }
-
-                                .buttonStyle(.plain)
-                                .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-
-                                if document != documents.last {
-                                    Divider()
-                                        .padding(.horizontal)
-                                }
+                                    }
                             }
                         }
-                    }
-                    .frame(
-                        minWidth: 0,
-                        maxWidth: .infinity,
-                        minHeight: 0,
-                        maxHeight: .infinity,
-                        alignment: .topLeading
-                    )
 
-                    if !isLoading && !initialLoad {
-                        Divider().padding()
-                        let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
-                        Text(text)
-                            .foregroundColor(.gray)
-                            .transition(.opacity)
+                        if !isLoading && !initialLoad {
+                            Divider().padding()
+                            HStack {
+                                Spacer()
+                                let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
+                                Text(text)
+                                    .foregroundColor(.gray)
+                                    .transition(.opacity)
+                                Spacer()
+                            }
+                        }
                     }
                 }
 
@@ -189,12 +201,12 @@ struct DocumentView: View {
                     }
                 })
 
-                // @TODO: Refresh animation here is broken :(
-//                    .refreshable {
-//                        Task {
-//                            await load(clear: true)
-//                        }
+//            // @TODO: Refresh animation here is broken :(
+//                .refreshable {
+//                    Task {
+//                        await load(clear: true)
 //                    }
+//                }
 
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -226,7 +238,7 @@ struct DocumentView: View {
                                documentTypes: store.documentTypes,
                                tags: store.tags)
                         .environmentObject(store)
-//                            .presentationDetents([.large, .medium])
+                    //                            .presentationDetents([.large, .medium])
                 }
 
                 .onChange(of: store.documents) { _ in
@@ -235,7 +247,7 @@ struct DocumentView: View {
 
                 .onChange(of: store.filterState) { _ in
                     print("Filter updated \(store.filterState)")
-//                    DispatchQueue.main.async {
+                    //                    DispatchQueue.main.async {
                     Task {
                         // wait for a short bit while the modal is still
                         // open to let the animation finish
@@ -244,12 +256,12 @@ struct DocumentView: View {
                         }
                         await load(clear: true)
                     }
-//                    }
+                    //                    }
                 }
 
                 .onChange(of: searchDebounce.debouncedText) { _ in
                     if searchDebounce.debouncedText == "" {
-//                            scrollToTop(scrollView: scrollView)
+                        //                            scrollToTop(scrollView: scrollView)
                     }
                     Task {
                         await updateSearchCompletion()

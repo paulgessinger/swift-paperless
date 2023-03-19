@@ -48,8 +48,10 @@ class NullRepository: Repository {
 // - MARK: DocumentSource
 protocol DocumentSource {
     func fetch(limit: UInt) async -> [Document]
+    func hasMore() async -> Bool
 }
 
 class NullDocumentSource: DocumentSource {
     func fetch(limit: UInt) async -> [Document] { return [] }
+    func hasMore() async -> Bool { return false }
 }

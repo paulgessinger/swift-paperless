@@ -179,6 +179,10 @@ class DocumentStore: ObservableObject {
         return result
     }
 
+    func hasMoreDocuments() async -> Bool {
+        return await documentSource.hasMore()
+    }
+
     func fetchAllCorrespondents() async {
         await fetchAll(Correspondent.self,
                        collection: \.correspondents)
