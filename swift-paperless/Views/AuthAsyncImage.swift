@@ -13,14 +13,14 @@ typealias UIImage = NSImage
 #endif
 
 struct AuthAsyncImage<Content: View, Placeholder: View>: View {
-    @State var uiImage: UIImage?
+    @State var image: Image?
 
-    let getImage: () async -> (Bool, UIImage?)
+    let getImage: () async -> (Bool, Image?)
     let content: (Image) -> Content
     let placeholder: () -> Placeholder
 
     init(
-        image: @escaping () async -> (Bool, UIImage?),
+        image: @escaping () async -> (Bool, Image?),
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
@@ -30,20 +30,16 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
     }
 
     var body: some View {
-        if let uiImage = uiImage {
-#if os(macOS)
-            content(Image(nsImage: uiImage))
-#else
-            content(Image(uiImage: uiImage))
-#endif
+        if let image = image {
+            content(image)
         }
         else {
             placeholder().task {
                 let (cached, image) = await getImage()
-                if cached { self.uiImage = image }
+                if cached { self.image = image }
                 else {
                     withAnimation {
-                        self.uiImage = image
+                        self.image = image
                     }
                 }
             }

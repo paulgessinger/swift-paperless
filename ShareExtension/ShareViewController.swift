@@ -9,26 +9,6 @@ import Social
 import SwiftUI
 import UIKit
 
-// @TODO: Put this into a dispatch queue
-private func pdfPreview(url: URL) -> Image? {
-    guard let doc = CGPDFDocument(url as CFURL) else { return nil }
-    guard let page = doc.page(at: 1) else { return nil }
-
-    let rect = page.getBoxRect(.mediaBox)
-    let renderer = UIGraphicsImageRenderer(size: rect.size)
-    let img = renderer.image { ctx in
-        UIColor.white.set()
-        ctx.fill(rect)
-
-        ctx.cgContext.translateBy(x: 0, y: rect.size.height)
-        ctx.cgContext.scaleBy(x: 1, y: -1.0)
-
-        ctx.cgContext.drawPDFPage(page)
-    }
-
-    return Image(uiImage: img)
-}
-
 @MainActor private func makePreviewImage() async -> Image? {
     let renderer = ImageRenderer(content:
         ZStack {

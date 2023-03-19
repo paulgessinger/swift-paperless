@@ -11,7 +11,7 @@ import OrderedCollections
 import Semaphore
 import SwiftUI
 
-struct Document: Identifiable, Equatable, Hashable {
+struct Document: Identifiable, Equatable, Hashable, Model {
     var id: UInt
     var title: String
     var documentType: UInt?
@@ -45,7 +45,7 @@ extension Document: Codable {
     }
 }
 
-struct Correspondent: Codable, Identifiable {
+struct Correspondent: Codable, Identifiable, Model {
     var id: UInt
     var documentCount: UInt
     var isInsensitive: Bool
@@ -55,13 +55,13 @@ struct Correspondent: Codable, Identifiable {
     var slug: String
 }
 
-struct DocumentType: Codable, Identifiable {
+struct DocumentType: Codable, Identifiable, Model {
     var id: UInt
     var name: String
     var slug: String
 }
 
-struct Tag: Codable, Identifiable {
+struct Tag: Codable, Identifiable, Model {
     var id: UInt
     var isInboxTag: Bool
     var name: String
@@ -85,54 +85,6 @@ extension Tag: Equatable, Hashable {
         hasher.combine(id)
     }
 }
-
-protocol ListResponseProtocol {
-    associatedtype ObjectType: Identifiable
-
-    var results: [ObjectType] { get }
-    var next: URL? { get }
-}
-
-struct ListResponse<Element>: Decodable, ListResponseProtocol
-    where Element: Decodable, Element: Identifiable
-{
-    var count: UInt
-    var next: URL?
-    var previous: URL?
-    var results: [Element]
-}
-
-enum DateDecodingError: Error {
-    case invalidDate(string: String)
-}
-
-let decoder: JSONDecoder = {
-    let d = JSONDecoder()
-    d.dateDecodingStrategy = .custom { decoder -> Date in
-        let container = try decoder.singleValueContainer()
-        let dateStr = try container.decode(String.self)
-
-        let iso = ISO8601DateFormatter()
-        if let res = iso.date(from: dateStr) {
-            return res
-        }
-
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZZZZZ"
-
-        guard let res = df.date(from: dateStr) else {
-            throw DateDecodingError.invalidDate(string: dateStr)
-        }
-
-        return res
-    }
-    d.keyDecodingStrategy = .convertFromSnakeCase
-    return d
-}()
-
-// struct Documents : AsyncSequence {
-//
-// }
 
 struct FilterState: Equatable {
     enum Filter: Equatable, Hashable {
@@ -209,7 +161,7 @@ class DocumentStore: ObservableObject {
         return binding
     }
 
-    func fetchDocuments(clear: Bool, pageSize: UInt = 10) async -> [Document] {
+    func fetchDocuments(clear: Bool, pageSize: UInt = 30) async -> [Document] {
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -218,31 +170,28 @@ class DocumentStore: ObservableObject {
         }
 
         let result = await documentSource.fetch(limit: pageSize)
-//        do {
-//            try await documentSequence.next()
-//        } catch {}
-//        documentSequence.prefix(1)
-//        let result: [Document] = await Array(documentSequence.prefix(Int(pageSize)))
+        var copy = documents
         for document in result {
-            documents[document.id] = document
+            copy[document.id] = document
         }
+        documents = copy
 
         return result
     }
 
     func fetchAllCorrespondents() async {
-        await fetchAll(ListResponse<Correspondent>.self,
-                       endpoint: Endpoint.correspondents(), collection: \.correspondents)
+        await fetchAll(Correspondent.self,
+                       collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async {
-        await fetchAll(ListResponse<DocumentType>.self,
-                       endpoint: Endpoint.documentTypes(), collection: \.documentTypes)
+        await fetchAll(DocumentType.self,
+                       collection: \.documentTypes)
     }
 
     func fetchAllTags() async {
-        await fetchAll(ListResponse<Tag>.self,
-                       endpoint: Endpoint.tags(), collection: \.tags)
+        await fetchAll(Tag.self,
+                       collection: \.tags)
     }
 
     func fetchAll() async {
@@ -252,45 +201,25 @@ class DocumentStore: ObservableObject {
         _ = await (c, d, t)
     }
 
-    private func fetchAll<T>(_ type: T.Type, endpoint: Endpoint,
-                             collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T.ObjectType]>) async
-        where T: Decodable, T: ListResponseProtocol, T.ObjectType.ID == UInt
+    private func fetchAll<T>(_ type: T.Type,
+                             collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>) async
+        where T: Decodable, T: Identifiable, T.ID == UInt, T: Model
     {
-        guard var url = repository.url(endpoint) else {
-            return
+        var copy = self[keyPath: collection]
+        for element in await repository.all(T.self) {
+            copy[element.id] = element
         }
-        while true {
-            do {
-                let request = repository.request(url: url)
-                let (data, _) = try await URLSession.shared.data(for: request)
-
-                let decoded = try decoder.decode(type, from: data)
-
-                for element in decoded.results {
-                    self[keyPath: collection][element.id] = element
-                }
-
-                if let next = decoded.next {
-                    url = next
-                } else {
-                    break
-                }
-
-            } catch {
-                print(error)
-                break
-            }
-        }
+        self[keyPath: collection] = copy
     }
 
     private func getSingleCached<T>(
         _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
-    ) async -> (Bool, T)? where T: Decodable {
+    ) async -> (Bool, T)? where T: Decodable, T: Model {
         if let element = self[keyPath: cache][id] {
             return (true, element)
         }
 
-        guard let element = await repository.getSingle(type, id: id, path: path) else {
+        guard let element = await repository.get(type, id: id, path: path) else {
             return nil
         }
 
@@ -309,7 +238,7 @@ class DocumentStore: ObservableObject {
     }
 
     func getDocument(id: UInt) async -> Document? {
-        return await repository.getSingle(Document.self, id: id, path: "documents")
+        return await repository.get(Document.self, id: id, path: "documents")
     }
 
     func getTag(id: UInt) async -> (Bool, Tag)? {

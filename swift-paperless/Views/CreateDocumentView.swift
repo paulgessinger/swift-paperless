@@ -55,7 +55,7 @@ struct CreateDocumentView: View {
                 setError("Invalid mime type")
             case MultiPartFormDataError.notAFile:
                 setError("Not a file")
-            case APIError.postError(let status, let body):
+            case ApiError.postError(let status, let body):
                 setError("Post error code \(status):\n\(body)")
             default:
                 setError(String(describing: error))

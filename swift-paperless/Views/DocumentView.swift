@@ -87,10 +87,10 @@ struct DocumentView: View {
     @StateObject var nav = NavigationCoordinator()
 
     func load(clear: Bool) async {
-        async let x: () = store.fetchAll()
+//        if clear {
+//            await store.fetchAll()
+//        }
         let new = await store.fetchDocuments(clear: clear)
-
-        await x
 
         if clear {
             withAnimation {
@@ -102,7 +102,6 @@ struct DocumentView: View {
                 documents += new
             }
         }
-//        print("\(documents.count)")
     }
 
     func updateSearchCompletion() async {
@@ -134,23 +133,15 @@ struct DocumentView: View {
 
     var body: some View {
         NavigationStack(path: $nav.path) {
-            ScrollViewReader { scrollView in
-                ZStack(alignment: .bottomTrailing) {
-                    ScrollView {
-//                        if isLoading {
-//                            ProgressView()
-//                                .padding(15)
-//                                .scaleEffect(1)
-//                                .transition(.opacity)
-//                        }
-                        LazyVStack(alignment: .leading) {
-                            ForEach(documents, id: \.id) { document in
-//                                if let document = store.documents[document.id] {
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    LazyVStack(alignment: .leading) {
+                        HStack { Spacer() }.frame(height: 1) // Somehow I need this so the elements don't fly in from the top
+                        ForEach(documents, id: \.self) { document in
+                            if let document = store.documents[document.id] {
                                 NavigationLink(value:
                                     NavigationState.detail(document: document)
                                 ) {
-                                    // @TODO: Switch back to document from store
-                                    //                                        DocumentCell(document: store.documents[document.id]!)
                                     DocumentCell(document: document)
                                         .task {
                                             if let index = documents.firstIndex(where: { $0 == document }) {
@@ -171,141 +162,154 @@ struct DocumentView: View {
                                     Divider()
                                         .padding(.horizontal)
                                 }
-//                                }
                             }
                         }
-                        if documents.isEmpty && !isLoading && !initialLoad {
-                            Text("No documents found")
-                                .foregroundColor(.gray)
-                                .transition(.opacity)
-                        }
                     }
+                    .frame(
+                        minWidth: 0,
+                        maxWidth: .infinity,
+                        minHeight: 0,
+                        maxHeight: .infinity,
+                        alignment: .topLeading
+                    )
 
-                    .navigationDestination(for: NavigationState.self, destination: { nav in
-                        if case let .detail(doc) = nav {
-                            DocumentDetailView(document: doc)
-                                .navigationBarTitleDisplayMode(.inline)
-                        }
-                    })
+                    if !isLoading && !initialLoad {
+                        Divider().padding()
+                        let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
+                        Text(text)
+                            .foregroundColor(.gray)
+                            .transition(.opacity)
+                    }
+                }
 
-                    // @TODO: Refresh animation here is broken :(
+                .navigationDestination(for: NavigationState.self, destination: { nav in
+                    if case let .detail(doc) = nav {
+                        DocumentDetailView(document: doc)
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                })
+
+                // @TODO: Refresh animation here is broken :(
 //                    .refreshable {
 //                        Task {
 //                            await load(clear: true)
 //                        }
 //                    }
 
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Group {
-                                if isLoading {
-                                    ProgressView()
-                                        .transition(.scale)
-                                }
-                                else {
-                                    Button(action: {
-                                        Task {
-                                            isLoading = true
-                                            await load(clear: true)
-                                            isLoading = false
-                                        }
-                                    }) {
-                                        Label("Reload", systemImage: "arrow.counterclockwise")
-                                    }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Group {
+                            if isLoading {
+                                ProgressView()
                                     .transition(.scale)
-                                }
                             }
-                            .animation(.default, value: isLoading)
+                            else {
+                                Button(action: {
+                                    Task {
+                                        isLoading = true
+                                        await load(clear: true)
+                                        isLoading = false
+                                    }
+                                }) {
+                                    Label("Reload", systemImage: "arrow.counterclockwise")
+                                }
+                                .transition(.scale)
+                            }
                         }
+                        .animation(.default, value: isLoading)
                     }
-                    .navigationTitle("Documents")
+                }
+                .navigationTitle("Documents")
 
-                    .animation(.default, value: store.documents)
-
-                    .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                        FilterView(correspondents: store.correspondents,
-                                   documentTypes: store.documentTypes,
-                                   tags: store.tags)
-                            .environmentObject(store)
+                .sheet(isPresented: $showFilterModal, onDismiss: {}) {
+                    FilterView(correspondents: store.correspondents,
+                               documentTypes: store.documentTypes,
+                               tags: store.tags)
+                        .environmentObject(store)
 //                            .presentationDetents([.large, .medium])
-                    }
+                }
 
-                    .onChange(of: store.documents) { _ in
-                        documents = documents.compactMap { store.documents[$0.id] }
-                    }
+                .onChange(of: store.documents) { _ in
+                    documents = documents.compactMap { store.documents[$0.id] }
+                }
 
-                    .onChange(of: store.filterState) { _ in
-                        print("Filter updated \(store.filterState)")
-                        Task {
-                            store.clearDocuments()
+                .onChange(of: store.filterState) { _ in
+                    print("Filter updated \(store.filterState)")
+//                    DispatchQueue.main.async {
+                    Task {
+                        // wait for a short bit while the modal is still
+                        // open to let the animation finish
+                        if showFilterModal {
+                            do { try await Task.sleep(for: .seconds(0.5)) } catch {}
+                        }
+                        await load(clear: true)
+                    }
+//                    }
+                }
+
+                .onChange(of: searchDebounce.debouncedText) { _ in
+                    if searchDebounce.debouncedText == "" {
+//                            scrollToTop(scrollView: scrollView)
+                    }
+                    Task {
+                        await updateSearchCompletion()
+
+                        print("Change search to \(searchDebounce.debouncedText)")
+
+                        if searchDebounce.debouncedText == "" {
+                            store.filterState.searchText = nil
                             await load(clear: true)
                         }
                     }
-
-                    .onChange(of: searchDebounce.debouncedText) { _ in
-                        if searchDebounce.debouncedText == "" {
-                            scrollToTop(scrollView: scrollView)
-                        }
-                        Task {
-                            await updateSearchCompletion()
-
-                            print("Change search to \(searchDebounce.debouncedText)")
-
-                            if searchDebounce.debouncedText == "" {
-                                store.filterState.searchText = nil
-                                await load(clear: true)
-                            }
-                        }
-                    }
-
-                    Button(action: {
-                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                        impactMed.impactOccurred()
-
-                        showFilterModal.toggle()
-
-                    }) {
-                        Label(title: { Text("Filter") }, icon: {
-                            Image(systemName: store.filterState.filtering ?
-                                "line.3.horizontal.decrease.circle.fill" :
-                                "line.3.horizontal.decrease.circle"
-                            )
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 25, height: 25)
-                        })
-                        .labelStyle(.iconOnly)
-                        .modifier(PillButton())
-                    }
-                    .padding()
                 }
 
-                .task {
-                    if initialLoad {
-                        isLoading = true
-                        await load(clear: true)
-                        isLoading = false
-                        initialLoad = false
-                    }
-                }
+                Button(action: {
+                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                    impactMed.impactOccurred()
 
-                .searchable(text: $searchDebounce.text,
-                            placement: .automatic) {
-                    ForEach(searchSuggestions, id: \.self) { v in
-                        Text(v).searchCompletion(v)
-                    }
-                }
+                    showFilterModal.toggle()
 
-                .onSubmit(of: .search) {
-                    print("Search submit: \(searchDebounce.text)")
-                    if searchDebounce.text == store.filterState.searchText {
-                        return
-                    }
-                    //            scrollToTop(scrollView: scrollView)
-                    Task {
-                        store.filterState.searchText = searchDebounce.text
-                        await load(clear: true)
-                    }
+                }) {
+                    Label(title: { Text("Filter") }, icon: {
+                        Image(systemName: store.filterState.filtering ?
+                            "line.3.horizontal.decrease.circle.fill" :
+                            "line.3.horizontal.decrease.circle"
+                        )
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 25, height: 25)
+                    })
+                    .labelStyle(.iconOnly)
+                    .modifier(PillButton())
+                }
+                .padding()
+            }
+
+            .task {
+                if initialLoad {
+                    isLoading = true
+                    await load(clear: true)
+                    isLoading = false
+                    initialLoad = false
+                }
+            }
+
+            .searchable(text: $searchDebounce.text,
+                        placement: .automatic) {
+                ForEach(searchSuggestions, id: \.self) { v in
+                    Text(v).searchCompletion(v)
+                }
+            }
+
+            .onSubmit(of: .search) {
+                print("Search submit: \(searchDebounce.text)")
+                if searchDebounce.text == store.filterState.searchText {
+                    return
+                }
+                //            scrollToTop(scrollView: scrollView)
+                Task {
+                    store.filterState.searchText = searchDebounce.text
+                    await load(clear: true)
                 }
             }
         }

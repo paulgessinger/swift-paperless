@@ -17,7 +17,7 @@ struct CommonPicker: View {
 
     func row(_ label: String, value: FilterState.Filter) -> some View {
         return HStack {
-            Button(action: { selection = value }) {
+            Button(action: { Task { selection = value } }) {
                 Text(label)
             }
             .foregroundColor(.primary)

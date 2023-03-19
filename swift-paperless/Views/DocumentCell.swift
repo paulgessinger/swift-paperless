@@ -73,7 +73,7 @@ struct DocumentCell: View {
     var body: some View {
         HStack(alignment: .top) {
             AuthAsyncImage(image: {
-                await store.repository.getImage(document: document)
+                await store.repository.thumbnail(document: document)
             }) {
                 image in
                 image

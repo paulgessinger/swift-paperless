@@ -78,9 +78,6 @@ struct FilterView: View {
         self.correspondents = correspondents
         self.documentTypes = documentTypes
         self.tags = tags
-//        if store.filterState != FilterState() {
-//            self._showClear = State(initialValue: true)
-//        }
     }
 
     var body: some View {
@@ -135,12 +132,11 @@ struct FilterView: View {
 
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            if showClear {
-                                Button("Clear") {
-                                    store.filterState = FilterState()
-                                    dismiss()
-                                }
+                            Button("Clear") {
+                                store.filterState = FilterState()
+                                dismiss()
                             }
+                            .opacity(showClear ? 1 : 0)
                         }
 
                         ToolbarItem(placement: .navigationBarTrailing) {
@@ -153,6 +149,9 @@ struct FilterView: View {
                 .frame(width: geo.size.width)
             }
             .interactiveDismissDisabled(modified)
+        }
+        .task {
+            self.showClear = store.filterState != FilterState()
         }
     }
 }

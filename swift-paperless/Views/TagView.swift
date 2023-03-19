@@ -7,7 +7,6 @@
 
 import Flow
 import SwiftUI
-import WrappingStack
 
 struct TagView: View {
     @EnvironmentObject var store: DocumentStore

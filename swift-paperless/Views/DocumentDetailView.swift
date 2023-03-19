@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+private enum DownloadState {
+    case initial
+    case loading
+    case loaded(URL)
+    case ready(URL, Image)
+    case error
+}
+
 struct DocumentDetailView: View {
     @EnvironmentObject var store: DocumentStore
 
@@ -16,13 +24,14 @@ struct DocumentDetailView: View {
     @State private var correspondent: Correspondent?
     @State private var documentType: DocumentType?
 
+    @State private var download: DownloadState = .initial
     @State private var previewUrl: URL?
-    @State private var previewLoading = false
+
     @State private var tags: [Tag] = []
 
     @State private var relatedDocuments: [Document]? = nil
 
-    func loadData() async {
+    private func loadData() async {
         correspondent = nil
         documentType = nil
         if let cId = document.correspondent {
@@ -32,6 +41,28 @@ struct DocumentDetailView: View {
             documentType = await store.getDocumentType(id: dId)?.1
         }
         (_, tags) = await store.getTags(document.tags)
+    }
+
+    private func loadDocument() async {
+        switch download {
+        case .initial:
+            download = .loading
+            guard let url = await store.repository.download(documentID: document.id) else {
+                download = .error
+                return
+            }
+            download = .loaded(url)
+            guard let image = pdfPreview(url: url) else {
+                download = .error
+                return
+            }
+            withAnimation {
+                download = .ready(url, image)
+            }
+
+        default:
+            break
+        }
     }
 
     var body: some View {
@@ -63,22 +94,28 @@ struct DocumentDetailView: View {
 
                 Button(action: {
                     Task {
-                        if previewLoading {
-                            return
+                        if case let .ready(url, _) = download {
+                            previewUrl = url
                         }
-                        previewLoading = true
-                        previewUrl = await store.repository.getPreviewImage(documentID: document.id)
-                        previewLoading = false
                     }
                 }) {
-                    AuthAsyncImage(image: {
-                        do {
-                            try await Task.sleep(for: .seconds(0.5))
+                    switch download {
+                    case .loading, .initial, .loaded:
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
                         }
-                        catch {}
-                        return await store.repository.getImage(document: document)
-                    }) {
-                        image in
+                        .frame(height: 400)
+                    case .error:
+                        HStack {
+                            Spacer()
+                            Text("Error")
+                            Spacer()
+                        }
+                        .frame(height: 400)
+
+                    case let .ready(_, image):
                         VStack {
                             ZStack {
                                 image
@@ -86,22 +123,8 @@ struct DocumentDetailView: View {
                                     .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
                                     .clipShape(RoundedRectangle(cornerRadius: 5))
                                     .scaledToFill()
-                                    .opacity(previewLoading ? 0.6 : 1.0)
-
-                                if previewLoading {
-                                    ProgressView()
-                                }
                             }
-                            //                            .animation(.default, value: previewLoading)
                         }
-
-                    } placeholder: {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
-                        }
-                        .frame(height: 400)
                     }
                 }
                 .buttonStyle(.plain)
@@ -125,6 +148,8 @@ struct DocumentDetailView: View {
             .padding()
         }
         .task {
+            await loadDocument()
+
             do {
                 try await Task.sleep(for: .seconds(2))
                 withAnimation {

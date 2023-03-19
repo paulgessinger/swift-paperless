@@ -44,15 +44,17 @@ struct TagSelectionView: View {
             VStack {
                 if case var .only(ids) = selectedTags {
                     TagsView(tags: ids.compactMap { tags[$0] }) { tag in
-                        let _ = withAnimation {
-                            if let i = ids.firstIndex(of: tag.id) {
-                                ids.remove(at: i)
-                            }
-                            if filterMode {
-                                selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                            }
-                            else {
-                                selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                        Task {
+                            withAnimation {
+                                if let i = ids.firstIndex(of: tag.id) {
+                                    ids.remove(at: i)
+                                }
+                                if filterMode {
+                                    selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                                }
+                                else {
+                                    selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                                }
                             }
                         }
                     }
@@ -79,13 +81,13 @@ struct TagSelectionView: View {
                 Section {
                     if filterMode {
                         row(action: {
-                            selectedTags = .any
+                            Task { withAnimation { selectedTags = .any }}
                         }, active: selectedTags == .any, content: {
                             Text("Any")
                         })
 
                         row(action: {
-                            selectedTags = .notAssigned
+                            Task { withAnimation { selectedTags = .notAssigned }}
                         }, active: selectedTags == .notAssigned, content: {
                             Text("Not assigned")
                         })
@@ -93,7 +95,7 @@ struct TagSelectionView: View {
                     else {
                         // Repurpose not assigned to mean: no tags assigned
                         row(action: {
-                            selectedTags = .notAssigned
+                            Task { withAnimation { selectedTags = .notAssigned }}
                         }, active: selectedTags == .notAssigned, content: {
                             Text("None")
                         })
@@ -107,23 +109,25 @@ struct TagSelectionView: View {
                 ) { _, tag in
                     HStack {
                         Button(action: {
-                            withAnimation {
-                                switch selectedTags {
-                                case .any, .notAssigned:
-                                    selectedTags = .only(ids: [tag.id])
-                                case var .only(ids):
-                                    if let i = ids.firstIndex(of: tag.id) {
-                                        ids.remove(at: i)
-                                    }
-                                    else {
-                                        ids.append(tag.id)
-                                    }
+                            Task {
+                                withAnimation {
+                                    switch selectedTags {
+                                    case .any, .notAssigned:
+                                        selectedTags = .only(ids: [tag.id])
+                                    case var .only(ids):
+                                        if let i = ids.firstIndex(of: tag.id) {
+                                            ids.remove(at: i)
+                                        }
+                                        else {
+                                            ids.append(tag.id)
+                                        }
 
-                                    if filterMode {
-                                        selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                                    }
-                                    else {
-                                        selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                                        if filterMode {
+                                            selectedTags = ids.isEmpty ? .any : .only(ids: ids)
+                                        }
+                                        else {
+                                            selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
+                                        }
                                     }
                                 }
                             }

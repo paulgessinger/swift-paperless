@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import UIKit
 
 struct Endpoint {
@@ -63,6 +64,14 @@ extension Endpoint {
         return Endpoint(path: "/api/documents/\(id)/", queryItems: [])
     }
 
+    static func thumbnail(documentId: UInt) -> Endpoint {
+        return Endpoint(path: "/api/documents/\(documentId)/thumb/", queryItems: [])
+    }
+
+    static func download(documentId: UInt) -> Endpoint {
+        return Endpoint(path: "/api/documents/\(documentId)/download/", queryItems: [])
+    }
+
     static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
         return Endpoint(
             path: "/api/search/autocomplete/",
@@ -75,19 +84,53 @@ extension Endpoint {
 
     static func correspondents() -> Endpoint {
         return Endpoint(path: "/api/correspondents/",
-                        queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func documentTypes() -> Endpoint {
-        return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+        return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func tags() -> Endpoint {
-        return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "per_page", value: String(100000))])
+        return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createDocument() -> Endpoint {
         return Endpoint(path: "/api/documents/post_document/", queryItems: [])
+    }
+
+    static func listAll<T>(_ type: T.Type) -> Endpoint where T: Model {
+        switch type {
+        case is Correspondent.Type:
+            return correspondents()
+        case is DocumentType.Type:
+            return documentTypes()
+        case is Tag.Type:
+            return tags()
+        case is Document.Type:
+            return documents(page: 1, filter: FilterState())
+        default:
+            fatalError("Invalid type")
+        }
+    }
+
+    static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
+        var segment = ""
+        switch type {
+        case is Correspondent.Type:
+            segment = "correspondents"
+        case is DocumentType.Type:
+            segment = "document_types"
+        case is Tag.Type:
+            segment = "tags"
+        case is Document.Type:
+            return document(id: id)
+        default:
+            fatalError("Invalid type")
+        }
+
+        return Endpoint(path: "/api/\(segment)/\(id)/",
+                        queryItems: [])
     }
 
     func url(host: String) -> URL? {
@@ -100,20 +143,55 @@ extension Endpoint {
     }
 }
 
-enum APIError: Error {
+private struct ListResponse<Element>: Decodable
+    where Element: Decodable
+{
+    var count: UInt
+    var next: URL?
+    var previous: URL?
+    var results: [Element]
+}
+
+enum DateDecodingError: Error {
+    case invalidDate(string: String)
+}
+
+private let decoder: JSONDecoder = {
+    let d = JSONDecoder()
+    d.dateDecodingStrategy = .custom { decoder -> Date in
+        let container = try decoder.singleValueContainer()
+        let dateStr = try container.decode(String.self)
+
+        let iso = ISO8601DateFormatter()
+        if let res = iso.date(from: dateStr) {
+            return res
+        }
+
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZZZZZ"
+
+        guard let res = df.date(from: dateStr) else {
+            throw DateDecodingError.invalidDate(string: dateStr)
+        }
+
+        return res
+    }
+    d.keyDecodingStrategy = .convertFromSnakeCase
+    return d
+}()
+
+enum ApiError: Error {
     case encodingFailed
     case putFailed
     case deleteFailed
     case postError(status: Int, body: String)
 }
 
-class ApiDocumentSequence: AsyncSequence, AsyncIteratorProtocol {
-    typealias Element = Document
-
+class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
     private var nextPage: URL?
     private let repository: ApiRepository
 
-    private var buffer: [Document]?
+    private var buffer: [Element]?
     private var bufferIndex = 0
 
     init(repository: ApiRepository, url: URL) {
@@ -121,11 +199,7 @@ class ApiDocumentSequence: AsyncSequence, AsyncIteratorProtocol {
         nextPage = url
     }
 
-    func boop() {
-        print("BOOP")
-    }
-
-    func next() async -> Document? {
+    func next() async -> Element? {
         guard !Task.isCancelled else {
             return nil
         }
@@ -145,13 +219,14 @@ class ApiDocumentSequence: AsyncSequence, AsyncIteratorProtocol {
             let request = repository.request(url: url)
             let (data, _) = try await URLSession.shared.data(for: request)
 
-            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+            let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
 
             guard !decoded.results.isEmpty else {
                 return nil
             }
 
             nextPage = decoded.next
+//            print("next: \(nextPage)")
             buffer = decoded.results
             bufferIndex = 1 // set to one because we return the first element immediately
             return decoded.results[0]
@@ -162,15 +237,17 @@ class ApiDocumentSequence: AsyncSequence, AsyncIteratorProtocol {
         }
     }
 
-    func makeAsyncIterator() -> ApiDocumentSequence {
+    func makeAsyncIterator() -> ApiSequence {
         return self
     }
 }
 
 class ApiDocumentSource: DocumentSource {
-    var sequence: ApiDocumentSequence
+    typealias DocumentSequence = ApiSequence<Document>
 
-    init(sequence: ApiDocumentSequence) {
+    var sequence: DocumentSequence
+
+    init(sequence: DocumentSequence) {
         self.sequence = sequence
     }
 
@@ -188,11 +265,9 @@ class ApiRepository: Repository {
         self.apiToken = apiToken
     }
 
-    func url(_ endpoint: Endpoint) -> URL? {
-        return endpoint.url(host: apiHost)
+    func url(_ endpoint: Endpoint) -> URL {
+        return endpoint.url(host: apiHost)!
     }
-
-    func boop() {}
 
     func updateDocument(_ document: Document) async throws {
         let encoder = JSONEncoder()
@@ -200,7 +275,7 @@ class ApiRepository: Repository {
         encoder.dateEncodingStrategy = .iso8601
         let json = try encoder.encode(document)
 
-        var request = request(url: url(Endpoint.document(id: document.id))!)
+        var request = request(.document(id: document.id))
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = json
@@ -210,12 +285,12 @@ class ApiRepository: Repository {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
             print("Saving document: Status was not 200 but \(statusCode)")
             print(String(data: data, encoding: .utf8)!)
-            throw APIError.putFailed
+            throw ApiError.putFailed
         }
     }
 
     func createDocument(_ document: ProtoDocument, file: URL) async throws {
-        var request = request(url: url(Endpoint.createDocument())!)
+        var request = request(.createDocument())
 
         let mp = MultiPartFormDataRequest()
         mp.add(name: "title", string: document.title)
@@ -241,7 +316,7 @@ class ApiRepository: Repository {
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
 
-                throw APIError.postError(status: hres.statusCode, body: body)
+                throw ApiError.postError(status: hres.statusCode, body: body)
             }
         } catch {
             print("Error uploading: \(error)")
@@ -250,7 +325,7 @@ class ApiRepository: Repository {
     }
 
     func deleteDocument(_ document: Document) async throws {
-        var request = request(url: url(Endpoint.document(id: document.id))!)
+        var request = request(.document(id: document.id))
         request.httpMethod = "DELETE"
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -258,67 +333,29 @@ class ApiRepository: Repository {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 204 {
             print("Delete document: Status was not 204 but \(statusCode)")
             print(String(data: data, encoding: .utf8)!)
-            throw APIError.deleteFailed
+            throw ApiError.deleteFailed
         }
     }
 
-    func request(url: URL) -> URLRequest {
+    fileprivate func request(url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
         return request
     }
 
+    fileprivate func request(_ endpoint: Endpoint) -> URLRequest {
+        request(url: url(endpoint))
+    }
+
     func documents(filter: FilterState) -> any DocumentSource {
-        return ApiDocumentSource(sequence: ApiDocumentSequence(repository: self, url: url(Endpoint.documents(page: 1, filter: filter))!))
+        return ApiDocumentSource(
+            sequence: ApiSequence<Document>(repository: self,
+                                            url: url(.documents(page: 1, filter: filter))))
     }
 
-    func getDocuments(url: URL) async -> ListResponse<Document>? {
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, _) = try await URLSession.shared.data(for: request)
-
-            do {
-                let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
-                return decoded
-            } catch let DecodingError.dataCorrupted(context) {
-                print(context)
-                return nil
-            } catch let DecodingError.keyNotFound(key, context) {
-                print("Key '\(key)' not found:", context.debugDescription)
-                print("codingPath:", context.codingPath)
-                return nil
-            } catch let DecodingError.valueNotFound(value, context) {
-                print("Value '\(value)' not found:", context.debugDescription)
-                print("codingPath:", context.codingPath)
-                return nil
-            } catch let DecodingError.typeMismatch(type, context) {
-                print("Type '\(type)' mismatch:", context.debugDescription)
-                print("codingPath:", context.codingPath)
-                return nil
-            } catch {
-                print(String(decoding: data, as: UTF8.self))
-                print(error)
-                return nil
-            }
-        } catch {
-            print(error)
-            return nil
-        }
-    }
-
-    func getPreviewImage(documentID: UInt) async -> URL? {
-        guard let url =
-            URL(string: "https://\(apiHost)/api/documents/\(documentID)/download/")
-        else {
-            return nil
-        }
-
-//    print(url)
-
-        let request = request(url: url)
+    func download(documentID: UInt) async -> URL? {
+        let request = request(.download(documentId: documentID))
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -355,11 +392,7 @@ class ApiRepository: Repository {
     }
 
     func getSearchCompletion(term: String, limit: UInt = 10) async -> [String] {
-        guard let url = url(Endpoint.searchAutocomplete(term: term, limit: limit)) else {
-            fatalError("Invalid URL")
-        }
-
-        let request = request(url: url)
+        let request = request(.searchAutocomplete(term: term, limit: limit))
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -377,12 +410,8 @@ class ApiRepository: Repository {
         }
     }
 
-    func getSingle<T: Decodable>(_ type: T.Type, id: UInt, path: String) async -> T? {
-        guard let url = URL(string: "https://\(apiHost)/api/\(path)/\(id)/") else {
-            return nil
-        }
-
-        let request = request(url: url)
+    func get<T: Decodable & Model>(_ type: T.Type, id: UInt, path: String) async -> T? {
+        let request = request(.single(T.self, id: id))
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -400,22 +429,18 @@ class ApiRepository: Repository {
         }
     }
 
-    func getImage(document: Document) async -> (Bool, UIImage?) {
-        // @TODO: Add limited size caching
-//        if let image = thumbnailCache[document] {
-//            return (true, image)
-//        }
+    func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
+        let sequence = ApiSequence<T>(repository: self,
+                                      url: url(.listAll(T.self)))
+        return await Array(sequence)
+    }
 
-        let image = await getImage(url: URL(string: "https://\(apiHost)/api/documents/\(document.id)/thumb/"))
-
-//        thumbnailCache[document] = image
-//        if thumbnailCache.count > DocumentStore.maxThumbnailCacheSize {
-//            thumbnailCache.removeFirst(DocumentStore.maxThumbnailCacheSize - thumbnailCache.count)
-//        }
+    func thumbnail(document: Document) async -> (Bool, Image?) {
+        let image = await getImage(url: url(Endpoint.thumbnail(documentId: document.id)))
         return (false, image)
     }
 
-    func getImage(url: URL?) async -> UIImage? {
+    private func getImage(url: URL?) async -> Image? {
         guard let url = url else { return nil }
 
 //        print("Load image at \(url)")
@@ -432,7 +457,8 @@ class ApiRepository: Repository {
 
 //            try await Task.sleep(for: .seconds(2))
 
-            return UIImage(data: data)
+            guard let uiImage = UIImage(data: data) else { return nil }
+            return Image(uiImage: uiImage)
         } catch { return nil }
     }
 }
