@@ -143,6 +143,8 @@ class ShareViewController: UIViewController {
 struct ShareView: View {
     @ObservedObject var attachmentManager: AttachmentManager
 
+    @StateObject private var manager = ConnectionManager()
+
     @StateObject private var store = DocumentStore(repository: NullRepository())
 
     var callback: () -> Void
@@ -153,10 +155,31 @@ struct ShareView: View {
     }
 
     var body: some View {
-        CreateDocumentView(
-            attachmentManager: attachmentManager,
-            callback: callback)
-            .environmentObject(store)
-            .accentColor(Color("AccentColor"))
+        Group {
+            if manager.state == .valid {
+                CreateDocumentView(
+                    attachmentManager: attachmentManager,
+                    callback: callback
+                )
+                .environmentObject(store)
+                .accentColor(Color("AccentColor"))
+            }
+            else if manager.state == .invalid {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("Please log in using the app first!")
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .task {
+            await manager.check()
+        }
     }
 }

@@ -125,11 +125,11 @@ class DocumentStore: ObservableObject {
 
     @Published var filterState = FilterState()
 
-    var documentSource: any DocumentSource
+    private var documentSource: any DocumentSource
 
     let semaphore = AsyncSemaphore(value: 1)
 
-    let repository: Repository
+    private(set) var repository: Repository
 
     func clearDocuments() {
         documents = [:]
@@ -144,6 +144,10 @@ class DocumentStore: ObservableObject {
             async let _ = await fetchAllCorrespondents()
             async let _ = await fetchAllDocumentTypes()
         }
+    }
+
+    func set(repository: Repository) {
+        self.repository = repository
     }
 
     func updateDocument(_ document: Document) async throws {

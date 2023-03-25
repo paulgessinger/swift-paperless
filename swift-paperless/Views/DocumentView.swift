@@ -51,24 +51,9 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
-private func getCredentials(key: String) -> String {
-    guard let path = Bundle.main.path(forResource: "Credentials", ofType: "plist") else {
-        fatalError("Unable to load credentials plist")
-    }
-
-    guard let nsDictionary = NSDictionary(contentsOfFile: path) else {
-        fatalError("Unable to load credentials plist")
-    }
-
-    guard let value = nsDictionary[key] as? String else {
-        fatalError("Unable to load credentials plist")
-    }
-
-    return value
-}
-
 struct DocumentView: View {
-    @StateObject private var store = DocumentStore(repository: ApiRepository(apiHost: getCredentials(key: "API_HOST"), apiToken: getCredentials(key: "API_TOKEN")))
+    @EnvironmentObject var store: DocumentStore
+    @EnvironmentObject var connectionManager: ConnectionManager
 
     @StateObject var searchDebounce = DebounceObject(delay: 0.1)
 
@@ -157,11 +142,11 @@ struct DocumentView: View {
             ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     VStack(alignment: .leading) {
-                        ForEach(documents.prefix(100)) { document in
+                        ForEach(documents.prefix(100).compactMap { store.documents[$0.id] }) { document in
                             cell(document: document)
                         }
                         LazyVStack(alignment: .leading) {
-                            ForEach(documents.dropFirst(100)) { document in
+                            ForEach(documents.dropFirst(100).compactMap { store.documents[$0.id] }) { document in
                                 cell(document: document)
                                     .task {
                                         let hasMore = await store.hasMoreDocuments()
@@ -209,6 +194,11 @@ struct DocumentView: View {
 //                }
 
                 .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Logout") {
+                            connectionManager.logout()
+                        }
+                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Group {
                             if isLoading {
@@ -325,7 +315,6 @@ struct DocumentView: View {
                 }
             }
         }
-        .environmentObject(store)
         .environmentObject(nav)
     }
 }

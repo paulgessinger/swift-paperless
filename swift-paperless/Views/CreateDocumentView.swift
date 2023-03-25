@@ -60,6 +60,7 @@ struct CreateDocumentView: View {
             default:
                 setError(String(describing: error))
             }
+            return
         }
 
         withAnimation {
@@ -242,11 +243,7 @@ struct CreateDocumentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    HStack {
-                        Image(systemName: "leaf.fill")
-                            .foregroundColor(.accentColor)
-                        Text("Paperless")
-                    }
+                    LogoView()
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {

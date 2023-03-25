@@ -267,12 +267,18 @@ class ApiDocumentSource: DocumentSource {
 }
 
 class ApiRepository: Repository {
-    let apiHost: String
-    let apiToken: String
+    private let connection: Connection
 
-    init(apiHost: String, apiToken: String) {
-        self.apiHost = apiHost
-        self.apiToken = apiToken
+    init(connection: Connection) {
+        self.connection = connection
+    }
+
+    private var apiHost: String {
+        connection.host
+    }
+
+    private var apiToken: String {
+        connection.token
     }
 
     func url(_ endpoint: Endpoint) -> URL {

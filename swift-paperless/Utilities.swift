@@ -14,7 +14,8 @@ class DebounceObject: ObservableObject {
     @Published var debouncedText: String = ""
     private var tasks = Set<AnyCancellable>()
 
-    init(delay: TimeInterval = 0.5) {
+    init(value: String = "", delay: TimeInterval = 0.5) {
+        text = value
         $text
             .removeDuplicates()
             .debounce(for: .seconds(delay), scheduler: DispatchQueue.main)

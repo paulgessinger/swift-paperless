@@ -48,8 +48,11 @@
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
-		7ACABE8229BF5B9800D5915F /* Credentials.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7ACABE8129BF5B9800D5915F /* Credentials.plist */; };
-		7ACABE8329BF5B9800D5915F /* Credentials.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7ACABE8129BF5B9800D5915F /* Credentials.plist */; };
+		7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
+		7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691129CF80F600414BA7 /* LogoView.swift */; };
+		7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691129CF80F600414BA7 /* LogoView.swift */; };
+		7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691429CF967900414BA7 /* ConnectionManager.swift */; };
+		7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691429CF967900414BA7 /* ConnectionManager.swift */; };
 		7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
 		7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */; };
 		7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
@@ -125,7 +128,10 @@
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
-		7ACABE8129BF5B9800D5915F /* Credentials.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Credentials.plist; sourceTree = "<group>"; };
+		7AEF690F29CF7FA800414BA7 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		7AEF691129CF80F600414BA7 /* LogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoView.swift; sourceTree = "<group>"; };
+		7AEF691429CF967900414BA7 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
+		7AEF691729CFA2BA00414BA7 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentCell.swift; sourceTree = "<group>"; };
 		7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailView.swift; sourceTree = "<group>"; };
 		7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEditView.swift; sourceTree = "<group>"; };
@@ -179,6 +185,7 @@
 		7A4AA8E529BB969400D845A2 /* ShareExtension */ = {
 			isa = PBXGroup;
 			children = (
+				7AEF691729CFA2BA00414BA7 /* ShareExtension.entitlements */,
 				7A4AA8E629BB969400D845A2 /* ShareViewController.swift */,
 				7A4AA8E829BB969400D845A2 /* MainInterface.storyboard */,
 				7A4AA8EB29BB969400D845A2 /* Info.plist */,
@@ -196,7 +203,6 @@
 		7A5482A2299AD56C00D5061E = {
 			isa = PBXGroup;
 			children = (
-				7ACABE8129BF5B9800D5915F /* Credentials.plist */,
 				7A5482AD299AD56C00D5061E /* swift-paperless */,
 				7A5482BF299AD56E00D5061E /* swift-paperlessTests */,
 				7A5482C9299AD56E00D5061E /* swift-paperlessUITests */,
@@ -230,6 +236,7 @@
 				7AF6688829A138330016BC31 /* Model.swift */,
 				7AF04B8029A68A20008E8F79 /* Utilities.swift */,
 				7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */,
+				7AEF691429CF967900414BA7 /* ConnectionManager.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -285,6 +292,8 @@
 				7A4AA90829BE1F7F00D845A2 /* CommonPickerView.swift */,
 				7A4AA90B29BE1FC700D845A2 /* SearchBarView.swift */,
 				7A4AA91329BE22C300D845A2 /* CreateDocumentView.swift */,
+				7AEF690F29CF7FA800414BA7 /* LoginView.swift */,
+				7AEF691129CF80F600414BA7 /* LogoView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -434,7 +443,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7ACABE8329BF5B9800D5915F /* Credentials.plist in Resources */,
 				7A4AA90629BE186A00D845A2 /* Assets.xcassets in Resources */,
 				7A4AA8EA29BB969400D845A2 /* MainInterface.storyboard in Resources */,
 			);
@@ -444,7 +452,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7ACABE8229BF5B9800D5915F /* Credentials.plist in Resources */,
 				7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */,
 				7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */,
 			);
@@ -481,7 +488,9 @@
 				7A4AA91829BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
+				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
+				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
 				7A4AA8FF29BE042700D845A2 /* Api.swift in Sources */,
 				7A4AA90F29BE1FEB00D845A2 /* TagView.swift in Sources */,
 			);
@@ -495,10 +504,12 @@
 				7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */,
 				7A4AA91429BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
+				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
+				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */,
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7A4AA8F429BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
@@ -509,6 +520,7 @@
 				7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */,
 				7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */,
 				7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */,
+				7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */,
 				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -566,6 +578,7 @@
 		7A4AA8F029BB969500D845A2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -594,6 +607,7 @@
 		7A4AA8F129BB969500D845A2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
