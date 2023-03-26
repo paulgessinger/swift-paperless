@@ -26,6 +26,28 @@ class DebounceObject: ObservableObject {
     }
 }
 
+class ThrottleObject<T: Equatable>: ObservableObject {
+    @Published var value: T
+    @Published var throttledValue: T
+
+    var publisher = PassthroughSubject<T, Never>()
+
+    private var tasks = Set<AnyCancellable>()
+
+    init(value: T, delay: TimeInterval = 0.5) {
+        self.value = value
+        throttledValue = value
+        $value
+//            .removeDuplicates()
+            .throttle(for: .seconds(delay), scheduler: DispatchQueue.main, latest: true)
+            .sink(receiveValue: { [weak self] value in
+                self?.throttledValue = value
+                self?.publisher.send(value)
+            })
+            .store(in: &tasks)
+    }
+}
+
 extension Text {
     static func titleCorrespondent(value: Correspondent?) -> Text {
         if let correspondent = value {

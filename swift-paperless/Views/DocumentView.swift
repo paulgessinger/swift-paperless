@@ -5,10 +5,11 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
-import AsyncAlgorithms
 import Combine
 import QuickLook
 import SwiftUI
+
+import AsyncAlgorithms
 
 struct SearchFilterBar<Content: View>: View {
     @Environment(\.isSearching) private var isSearching
@@ -71,12 +72,14 @@ struct DocumentView: View {
 
     @State var filterState = FilterState()
 
+    @State var refreshRequested = false
+
     @StateObject var nav = NavigationCoordinator()
 
     func load(clear: Bool) async {
-//        if clear {
-//            await store.fetchAll()
-//        }
+        if clear {
+            await store.fetchAll()
+        }
         let new = await store.fetchDocuments(clear: clear)
 
         if clear {
@@ -137,10 +140,12 @@ struct DocumentView: View {
         }
     }
 
+    @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.1)
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             ZStack(alignment: .bottomTrailing) {
-                ScrollView {
+                OffsetObservingScrollView(offset: $scrollOffset.value) {
                     VStack(alignment: .leading) {
                         ForEach(documents.prefix(100).compactMap { store.documents[$0.id] }) { document in
                             cell(document: document)
@@ -186,39 +191,55 @@ struct DocumentView: View {
                     }
                 })
 
-//            // @TODO: Refresh animation here is broken :(
-//                .refreshable {
-//                    Task {
-//                        await load(clear: true)
-//                    }
-//                }
+                .refreshable {
+                    // @TODO: Refresh animation here is broken if this modifies state that triggers rerender
+                    if isLoading { return }
+                    refreshRequested = true
+                }
 
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Logout") {
-                            connectionManager.logout()
+                // Decoupled refresh when scroll is back
+                .onReceive(scrollOffset.publisher) { offset in
+                    if offset.y >= -0.0 && refreshRequested {
+                        refreshRequested = false
+                        Task {
+                            isLoading = true
+                            await load(clear: true)
+                            isLoading = false
                         }
                     }
+                }
+
+                .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button("Logout") {
+                                connectionManager.logout()
+                            }
+                        } label: {
+                            Label("Menu", systemImage: "ellipsis.circle")
+                                .labelStyle(.iconOnly)
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarLeading) {
                         Group {
                             if isLoading {
                                 ProgressView()
                                     .transition(.scale)
                             }
-                            else {
-                                Button(action: {
-                                    Task {
-                                        isLoading = true
-                                        await load(clear: true)
-                                        isLoading = false
-                                    }
-                                }) {
-                                    Label("Reload", systemImage: "arrow.counterclockwise")
-                                }
-                                .transition(.scale)
-                            }
+//                            else {
+//                                Button(action: {
+//                                    Task {
+//                                        isLoading = true
+//                                        await load(clear: true)
+//                                        isLoading = false
+//                                    }
+//                                }) {
+//                                    Label("Reload", systemImage: "arrow.counterclockwise")
+//                                }
+//                                .transition(.scale)
+//                            }
                         }
-                        .animation(.default, value: isLoading)
+//                        .animation(.default, value: isLoading)
                     }
                 }
                 .navigationTitle("Documents")

@@ -108,10 +108,17 @@ struct LoginView: View {
     }
 
     private func login() async -> Bool {
+        var host = url.text
+        if host.starts(with: "https://") {
+            host.removeFirst("https://".count)
+        }
+
+        print(host)
+
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
-            guard let url = deriveUrl(string: url.text, suffix: "token/") else {
+            guard let url = deriveUrl(string: host, suffix: "token/") else {
                 print("Error making URL for logging in")
                 return false
             }
@@ -137,7 +144,7 @@ struct LoginView: View {
 
             try await Task.sleep(for: .seconds(0.5))
 
-            try connectionManager.set(Connection(host: self.url.text, token: tokenResponse.token))
+            try connectionManager.set(Connection(host: host, token: tokenResponse.token))
             return true
 
         } catch {

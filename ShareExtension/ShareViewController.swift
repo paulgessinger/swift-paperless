@@ -180,6 +180,9 @@ struct ShareView: View {
         }
         .task {
             await manager.check()
+            if let conn = manager.connection {
+                store.set(repository: ApiRepository(connection: conn))
+            }
         }
     }
 }
