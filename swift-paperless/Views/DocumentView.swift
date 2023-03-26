@@ -212,9 +212,18 @@ struct DocumentView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
-                            Button("Logout") {
+                            Button {
                                 connectionManager.logout()
+                            } label: {
+                                Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
                             }
+
+                            Button {
+                                //
+                            } label: {
+                                Label("Settings", systemImage: "gear")
+                            }
+
                         } label: {
                             Label("Menu", systemImage: "ellipsis.circle")
                                 .labelStyle(.iconOnly)

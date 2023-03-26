@@ -188,17 +188,17 @@ class DocumentStore: ObservableObject {
     }
 
     func fetchAllCorrespondents() async {
-        await fetchAll(Correspondent.self,
+        await fetchAll(elements: await repository.correspondents(),
                        collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async {
-        await fetchAll(DocumentType.self,
+        await fetchAll(elements: await repository.documentTypes(),
                        collection: \.documentTypes)
     }
 
     func fetchAllTags() async {
-        await fetchAll(Tag.self,
+        await fetchAll(elements: await repository.tags(),
                        collection: \.tags)
     }
 
@@ -209,25 +209,28 @@ class DocumentStore: ObservableObject {
         _ = await (c, d, t)
     }
 
-    private func fetchAll<T>(_ type: T.Type,
+    private func fetchAll<T>(elements: [T],
                              collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>) async
         where T: Decodable, T: Identifiable, T.ID == UInt, T: Model
     {
         var copy = self[keyPath: collection]
-        for element in await repository.all(T.self) {
+
+        for element in elements {
             copy[element.id] = element
         }
+
         self[keyPath: collection] = copy
     }
 
     private func getSingleCached<T>(
-        _ type: T.Type, id: UInt, path: String, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
+        //        _ type: T.Type,
+        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
     ) async -> (Bool, T)? where T: Decodable, T: Model {
         if let element = self[keyPath: cache][id] {
             return (true, element)
         }
 
-        guard let element = await repository.get(type, id: id, path: path) else {
+        guard let element = await get(id) else {
             return nil
         }
 
@@ -236,21 +239,22 @@ class DocumentStore: ObservableObject {
     }
 
     func getCorrespondent(id: UInt) async -> (Bool, Correspondent)? {
-        return await getSingleCached(Correspondent.self, id: id,
-                                     path: "correspondents", cache: \.correspondents)
+        return await getSingleCached(get: { await repository.correspondent(id: $0) }, id: id,
+                                     cache: \.correspondents)
     }
 
     func getDocumentType(id: UInt) async -> (Bool, DocumentType)? {
-        return await getSingleCached(DocumentType.self, id: id,
-                                     path: "document_types", cache: \.documentTypes)
+        return await getSingleCached(get: { await repository.documentTypes(id: $0) }, id: id,
+                                     cache: \.documentTypes)
     }
 
     func getDocument(id: UInt) async -> Document? {
-        return await repository.get(Document.self, id: id, path: "documents")
+        return await repository.document(id: id)
     }
 
     func getTag(id: UInt) async -> (Bool, Tag)? {
-        return await getSingleCached(Tag.self, id: id, path: "tags", cache: \.tags)
+        return await getSingleCached(get: { await repository.tag(id: $0) }, id: id,
+                                     cache: \.tags)
     }
 
     func getTags(_ ids: [UInt]) async -> (Bool, [Tag]) {

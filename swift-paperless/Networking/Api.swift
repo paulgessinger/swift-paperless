@@ -138,7 +138,7 @@ extension Endpoint {
         components.scheme = "https"
         components.host = host
         components.path = path
-        components.queryItems = queryItems
+        components.queryItems = queryItems.isEmpty ? nil : queryItems
         return components.url
     }
 }
@@ -426,7 +426,7 @@ class ApiRepository: Repository {
         }
     }
 
-    func get<T: Decodable & Model>(_ type: T.Type, id: UInt, path: String) async -> T? {
+    private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
         let request = request(.single(T.self, id: id))
 
         do {
@@ -445,11 +445,22 @@ class ApiRepository: Repository {
         }
     }
 
-    func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
+    private func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
         let sequence = ApiSequence<T>(repository: self,
                                       url: url(.listAll(T.self)))
         return await Array(sequence)
     }
+
+    func tag(id: UInt) async -> Tag? { return await get(Tag.self, id: id) }
+    func tags() async -> [Tag] { return await all(Tag.self) }
+
+    func correspondent(id: UInt) async -> Correspondent? { return await get(Correspondent.self, id: id) }
+    func correspondents() async -> [Correspondent] { return await all(Correspondent.self) }
+
+    func documentTypes(id: UInt) async -> DocumentType? { return await get(DocumentType.self, id: id) }
+    func documentTypes() async -> [DocumentType] { return await all(DocumentType.self) }
+
+    func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }
 
     func thumbnail(document: Document) async -> (Bool, Image?) {
         let image = await getImage(url: url(Endpoint.thumbnail(documentId: document.id)))

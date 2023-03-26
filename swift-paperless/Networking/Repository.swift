@@ -15,9 +15,16 @@ protocol Repository {
     func deleteDocument(_ document: Document) async throws
     func createDocument(_ document: ProtoDocument, file: URL) async throws
 
-    func get<T: Decodable & Model>(_ type: T.Type, id: UInt, path: String) async -> T?
-    func all<T: Decodable & Model>(_ type: T.Type) async -> [T]
+    func tag(id: UInt) async -> Tag?
+    func tags() async -> [Tag]
 
+    func correspondent(id: UInt) async -> Correspondent?
+    func correspondents() async -> [Correspondent]
+
+    func documentTypes(id: UInt) async -> DocumentType?
+    func documentTypes() async -> [DocumentType]
+
+    func document(id: UInt) async -> Document?
     func documents(filter: FilterState) -> any DocumentSource
 
     // @TODO: Remove UIImage
@@ -35,9 +42,16 @@ class NullRepository: Repository {
     func download(documentID: UInt) async -> URL? { return nil }
     func getSearchCompletion(term: String, limit: UInt) async -> [String] { return [] }
 
-    func all<T: Decodable & Model>(_ type: T.Type) async -> [T] { return [] }
-    func get<T: Decodable & Model>(_ type: T.Type, id: UInt, path: String) async -> T? { return nil }
+    func tag(id: UInt) async -> Tag? { return nil }
+    func tags() async -> [Tag] { return [] }
 
+    func correspondent(id: UInt) async -> Correspondent? { return nil }
+    func correspondents() async -> [Correspondent] { return [] }
+
+    func documentTypes(id: UInt) async -> DocumentType? { return nil }
+    func documentTypes() async -> [DocumentType] { return [] }
+
+    func document(id: UInt) async -> Document? { return nil }
     func documents(filter: FilterState) -> any DocumentSource {
         return NullDocumentSource()
     }

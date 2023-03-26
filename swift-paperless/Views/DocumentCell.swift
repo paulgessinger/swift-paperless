@@ -189,21 +189,11 @@ struct DocumentCell: View {
     }
 }
 
-struct DocumentCell_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: NullRepository())
+private struct HelperView: View {
+    @EnvironmentObject var store: DocumentStore
+    @State var documents = [Document]()
 
-    static var documents: [Document] = [
-        .init(id: 1715,
-              title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-              documentType: 2, correspondent: 2,
-              created: Date.now, tags: [1, 2]),
-        .init(id: 1714,
-              title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-              documentType: 1, correspondent: nil,
-              created: Date.now, tags: [1, 2]),
-    ]
-
-    static var previews: some View {
+    var body: some View {
         VStack {
             ForEach(documents, id: \.id) { document in
                 DocumentCell(document: document)
@@ -211,6 +201,17 @@ struct DocumentCell_Previews: PreviewProvider {
             }
             Spacer()
         }
-        .environmentObject(store)
+        .task {
+            documents = await store.fetchDocuments(clear: false)
+        }
+    }
+}
+
+struct DocumentCell_Previews: PreviewProvider {
+    static let store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        HelperView()
+            .environmentObject(store)
     }
 }
