@@ -21,7 +21,7 @@ protocol Repository {
     func correspondent(id: UInt) async -> Correspondent?
     func correspondents() async -> [Correspondent]
 
-    func documentTypes(id: UInt) async -> DocumentType?
+    func documentType(id: UInt) async -> DocumentType?
     func documentTypes() async -> [DocumentType]
 
     func document(id: UInt) async -> Document?
@@ -48,7 +48,7 @@ class NullRepository: Repository {
     func correspondent(id: UInt) async -> Correspondent? { return nil }
     func correspondents() async -> [Correspondent] { return [] }
 
-    func documentTypes(id: UInt) async -> DocumentType? { return nil }
+    func documentType(id: UInt) async -> DocumentType? { return nil }
     func documentTypes() async -> [DocumentType] { return [] }
 
     func document(id: UInt) async -> Document? { return nil }

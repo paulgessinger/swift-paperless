@@ -15,15 +15,38 @@ protocol Pickable {
 extension Correspondent: Pickable {}
 extension DocumentType: Pickable {}
 
+private struct PreviewHelper<Content: View>: View {
+    @EnvironmentObject var store: DocumentStore
+    @State var loaded = false
+
+    let content: (DocumentStore) -> Content
+
+    init(@ViewBuilder content: @escaping (DocumentStore) -> Content) {
+        self.content = content
+    }
+
+    var body: some View {
+        VStack {
+            if loaded {
+                content(store)
+            }
+        }
+        .task {
+            await store.fetchAll()
+            loaded = true
+        }
+    }
+}
+
 struct DocumentTypeView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: NullRepository())
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
     @State static var filterState = FilterState()
 
     static var previews: some View {
-        HStack {
+        PreviewHelper { store in
             CommonPicker(
                 selection: $filterState.documentType,
-                elements: PreviewModel.documentTypes.sorted {
+                elements: store.documentTypes.sorted {
                     $0.value.name < $1.value.name
                 }.map { ($0.value.id, $0.value.name) }
             )
@@ -33,14 +56,14 @@ struct DocumentTypeView_Previews: PreviewProvider {
 }
 
 struct CorrespondentView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: NullRepository())
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
     @State static var filterState = FilterState()
 
     static var previews: some View {
-        HStack {
+        PreviewHelper { store in
             CommonPicker(
                 selection: $filterState.correspondent,
-                elements: PreviewModel.correspondents.sorted {
+                elements: store.correspondents.sorted {
                     $0.value.name < $1.value.name
                 }.map { ($0.value.id, $0.value.name) }
             )
@@ -58,10 +81,6 @@ struct FilterView: View {
 
     @State private var modified: Bool = false
 
-    private var correspondents: [UInt: Correspondent]
-    private var documentTypes: [UInt: DocumentType]
-    private var tags: [UInt: Tag]
-
     enum Active {
         case correspondent
         case documentType
@@ -70,15 +89,6 @@ struct FilterView: View {
 
     @State var activeTab = Active.tag
     @State var showClear = false
-
-    init(correspondents: [UInt: Correspondent],
-         documentTypes: [UInt: DocumentType],
-         tags: [UInt: Tag])
-    {
-        self.correspondents = correspondents
-        self.documentTypes = documentTypes
-        self.tags = tags
-    }
 
     var body: some View {
         NavigationStack {
@@ -103,7 +113,7 @@ struct FilterView: View {
                         if activeTab == .correspondent {
                             CommonPicker(
                                 selection: $store.filterState.correspondent,
-                                elements: correspondents.sorted {
+                                elements: store.correspondents.sorted {
                                     $0.value.name < $1.value.name
                                 }.map { ($0.value.id, $0.value.name) }
                             )
@@ -111,13 +121,13 @@ struct FilterView: View {
                         else if activeTab == .documentType {
                             CommonPicker(
                                 selection: $store.filterState.documentType,
-                                elements: documentTypes.sorted {
+                                elements: store.documentTypes.sorted {
                                     $0.value.name < $1.value.name
                                 }.map { ($0.value.id, $0.value.name) }
                             )
                         }
                         else if activeTab == .tag {
-                            TagSelectionView(tags: tags,
+                            TagSelectionView(tags: store.tags,
                                              selectedTags: $store.filterState.tags)
                         }
                     }
@@ -157,16 +167,11 @@ struct FilterView: View {
 }
 
 struct FilterView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: NullRepository())
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
 
     static var previews: some View {
-        HStack {
-            FilterView(
-                //                filterState: store.filterState,
-                correspondents: PreviewModel.correspondents,
-                documentTypes: PreviewModel.documentTypes,
-                tags: PreviewModel.tags
-            )
+        VStack {
+            FilterView()
         }
         .environmentObject(store)
     }

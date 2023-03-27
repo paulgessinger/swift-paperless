@@ -195,7 +195,7 @@ private struct HelperView: View {
 
     var body: some View {
         VStack {
-            ForEach(documents, id: \.id) { document in
+            ForEach(documents.prefix(5), id: \.id) { document in
                 DocumentCell(document: document)
                     .padding()
             }

@@ -244,11 +244,11 @@ class DocumentStore: ObservableObject {
     }
 
     func getDocumentType(id: UInt) async -> (Bool, DocumentType)? {
-        return await getSingleCached(get: { await repository.documentTypes(id: $0) }, id: id,
+        return await getSingleCached(get: { await repository.documentType(id: $0) }, id: id,
                                      cache: \.documentTypes)
     }
 
-    func getDocument(id: UInt) async -> Document? {
+    func document(id: UInt) async -> Document? {
         return await repository.document(id: id)
     }
 

@@ -254,9 +254,7 @@ struct DocumentView: View {
                 .navigationTitle("Documents")
 
                 .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                    FilterView(correspondents: store.correspondents,
-                               documentTypes: store.documentTypes,
-                               tags: store.tags)
+                    FilterView()
                         .environmentObject(store)
                     //                            .presentationDetents([.large, .medium])
                 }
@@ -327,7 +325,8 @@ struct DocumentView: View {
             }
 
             .searchable(text: $searchDebounce.text,
-                        placement: .automatic) {
+                        placement: .automatic)
+            {
                 ForEach(searchSuggestions, id: \.self) { v in
                     Text(v).searchCompletion(v)
                 }
@@ -350,7 +349,7 @@ struct DocumentView: View {
 }
 
 struct DocumentView_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: NullRepository())
+    static let store = DocumentStore(repository: PreviewRepository())
 
     static var previews: some View {
         DocumentView()

@@ -457,7 +457,7 @@ class ApiRepository: Repository {
     func correspondent(id: UInt) async -> Correspondent? { return await get(Correspondent.self, id: id) }
     func correspondents() async -> [Correspondent] { return await all(Correspondent.self) }
 
-    func documentTypes(id: UInt) async -> DocumentType? { return await get(DocumentType.self, id: id) }
+    func documentType(id: UInt) async -> DocumentType? { return await get(DocumentType.self, id: id) }
     func documentTypes() async -> [DocumentType] { return await all(DocumentType.self) }
 
     func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }

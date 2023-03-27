@@ -110,7 +110,10 @@ struct DocumentDetailView: View {
                     case .error:
                         HStack {
                             Spacer()
-                            Text("Error")
+                            Label("Unable to load preview", systemImage: "eye.slash")
+                                .labelStyle(.iconOnly)
+                                .imageScale(.large)
+
                             Spacer()
                         }
                         .frame(height: 400)
@@ -169,7 +172,7 @@ struct DocumentDetailView: View {
         }
 
         .refreshable {
-            if let document = await store.getDocument(id: document.id) {
+            if let document = await store.document(id: document.id) {
                 self.document = document
             }
         }
@@ -183,16 +186,27 @@ struct DocumentDetailView: View {
     }
 }
 
-// struct DocumentDetailsView_Previews: PreviewProvider {
-//    static let store = DocumentStore()
-//
-//    static var document: Document = .init(id: 1689,
-//                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-//                                          documentType: 2, correspondent: 2,
-//                                          created: Date.now, tags: [1, 2])
-//
-//    static var previews: some View {
-//        DocumentDetailView(document: .constant(document))
-//            .environmentObject(store)
-//    }
-// }
+private struct PreviewHelper: View {
+    @EnvironmentObject var store: DocumentStore
+    @State var document: Document?
+
+    var body: some View {
+        VStack {
+            if let document = document {
+                DocumentDetailView(document: document)
+            }
+        }
+        .task {
+            document = await store.document(id: 1)
+        }
+    }
+}
+
+struct DocumentDetailsView_Previews: PreviewProvider {
+    static let store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        PreviewHelper()
+            .environmentObject(store)
+    }
+}

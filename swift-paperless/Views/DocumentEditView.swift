@@ -238,19 +238,27 @@ struct DocumentEditView: View {
     }
 }
 
-struct DocumentEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: NullRepository())
+private struct PreviewHelper: View {
+    @EnvironmentObject var store: DocumentStore
+    @State var document: Document?
 
-    static var document: Document = .init(id: 1689,
-                                          title: "Official ESTA Application Website, U.S. Customs and Border Protection",
-                                          documentType: 2, correspondent: 2,
-                                          created: Date.now, tags: [75, 66, 65, 64])
+    var body: some View {
+        VStack {
+            if let document = document {
+                DocumentEditView(document: document)
+            }
+        }
+        .task {
+            document = await store.document(id: 1)
+        }
+    }
+}
+
+struct DocumentEditView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
 
     static var previews: some View {
-        Group {
-            DocumentEditView(document: document)
-        }
-        .task { await store.fetchAllTags() }
-        .environmentObject(store)
+        PreviewHelper()
+            .environmentObject(store)
     }
 }
