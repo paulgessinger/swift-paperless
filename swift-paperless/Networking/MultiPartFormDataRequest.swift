@@ -8,6 +8,14 @@
 import Foundation
 import UniformTypeIdentifiers
 
+private extension NSMutableData {
+    func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
+        }
+    }
+}
+
 enum MultiPartFormDataError: Error {
     case notAFile(url: URL)
     case noMimeType

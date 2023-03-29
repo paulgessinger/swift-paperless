@@ -42,6 +42,7 @@ struct PillButton: ViewModifier {
 enum NavigationState: Equatable, Hashable {
     case root
     case detail(document: Document)
+    case settings
 }
 
 class NavigationCoordinator: ObservableObject {
@@ -53,28 +54,25 @@ class NavigationCoordinator: ObservableObject {
 }
 
 struct DocumentView: View {
-    @EnvironmentObject var store: DocumentStore
-    @EnvironmentObject var connectionManager: ConnectionManager
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var connectionManager: ConnectionManager
 
-    @StateObject var searchDebounce = DebounceObject(delay: 0.1)
+    @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+    @StateObject private var nav = NavigationCoordinator()
 
-    @State var documents: [Document] = []
-
-    @State var showFilterModal: Bool = false
-
-    @State var searchSuggestions: [String] = []
-
-    @State var initialLoad = true
-
-    @State var isLoading = false
-
-    @State var loadingMore = false
-
-    @State var filterState = FilterState()
-
-    @State var refreshRequested = false
-
-    @StateObject var nav = NavigationCoordinator()
+    @State private var documents: [Document] = []
+    @State private var showFilterModal = false
+    @State private var searchSuggestions: [String] = []
+    @State private var initialLoad = true
+    @State private var isLoading = false
+    @State private var loadingMore = false
+    @State private var filterState = FilterState()
+    @State private var refreshRequested = false
+    @State private var showFileImporter = false
+    @State var showCreateModal = false
+    @State var importUrl: URL?
+    @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.1)
+    @State private var error: String?
 
     func load(clear: Bool) async {
         if clear {
@@ -113,14 +111,6 @@ struct DocumentView: View {
         isLoading = false
     }
 
-    func scrollToTop(scrollView: ScrollViewProxy) {
-        if store.documents.count > 0 {
-            withAnimation {
-                scrollView.scrollTo(documents[0].id, anchor: .top)
-            }
-        }
-    }
-
     func cell(document: Document) -> some View {
         Group {
             NavigationLink(value:
@@ -140,7 +130,56 @@ struct DocumentView: View {
         }
     }
 
-    @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.1)
+    func importFile(result: Result<[URL], Error>) {
+        do {
+            guard let selectedFile: URL = try result.get().first else { return }
+            if selectedFile.startAccessingSecurityScopedResource() {
+                defer { selectedFile.stopAccessingSecurityScopedResource() }
+
+                let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
+
+                if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
+                    try FileManager.default.removeItem(at: temporaryFileURL)
+                }
+                try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
+
+                importUrl = temporaryFileURL
+                showFileImporter = false
+                showCreateModal = true
+            }
+            else {
+                print("Access denied")
+                error = "Cannot access selected file"
+                // Handle denied access
+            }
+        }
+        catch {
+            // Handle failure.
+            print("Unable to read file contents")
+            print(error.localizedDescription)
+            self.error = "Unable to read file contents: \(error.localizedDescription)"
+        }
+    }
+
+    @ViewBuilder
+    func navigationDestinations(nav: NavigationState) -> some View {
+        switch nav {
+        case .detail(let doc):
+            DocumentDetailView(document: doc)
+                .navigationBarTitleDisplayMode(.inline)
+        case .settings:
+            VStack {
+                Label("Settings", systemImage: "gear")
+                    .labelStyle(.iconOnly)
+                    .imageScale(.large)
+                    .navigationTitle("Settings")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        default:
+            fatalError()
+        }
+    }
 
     var body: some View {
         NavigationStack(path: $nav.path) {
@@ -184,12 +223,8 @@ struct DocumentView: View {
                     }
                 }
 
-                .navigationDestination(for: NavigationState.self, destination: { nav in
-                    if case let .detail(doc) = nav {
-                        DocumentDetailView(document: doc)
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
-                })
+                .navigationDestination(for: NavigationState.self,
+                                       destination: navigationDestinations)
 
                 .refreshable {
                     // @TODO: Refresh animation here is broken if this modifies state that triggers rerender
@@ -211,6 +246,13 @@ struct DocumentView: View {
 
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showFileImporter = true
+                        } label: {
+                            Label("Add", systemImage: "plus")
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
                             Button {
                                 connectionManager.logout()
@@ -218,9 +260,7 @@ struct DocumentView: View {
                                 Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
                             }
 
-                            Button {
-                                //
-                            } label: {
+                            NavigationLink(value: NavigationState.settings) {
                                 Label("Settings", systemImage: "gear")
                             }
 
@@ -235,20 +275,7 @@ struct DocumentView: View {
                                 ProgressView()
                                     .transition(.scale)
                             }
-//                            else {
-//                                Button(action: {
-//                                    Task {
-//                                        isLoading = true
-//                                        await load(clear: true)
-//                                        isLoading = false
-//                                    }
-//                                }) {
-//                                    Label("Reload", systemImage: "arrow.counterclockwise")
-//                                }
-//                                .transition(.scale)
-//                            }
                         }
-//                        .animation(.default, value: isLoading)
                     }
                 }
                 .navigationTitle("Documents")
@@ -256,8 +283,32 @@ struct DocumentView: View {
                 .sheet(isPresented: $showFilterModal, onDismiss: {}) {
                     FilterView()
                         .environmentObject(store)
-                    //                            .presentationDetents([.large, .medium])
                 }
+
+                .fileImporter(isPresented: $showFileImporter,
+                              allowedContentTypes: [.pdf],
+                              allowsMultipleSelection: false,
+                              onCompletion: importFile)
+
+                .sheet(isPresented: $showCreateModal, onDismiss: {}) {
+                    CreateDocumentView(
+                        sourceUrl: importUrl!,
+                        callback: {
+                            showCreateModal = false
+                        },
+                        title: {
+                            Text("Add document")
+                        }
+                    )
+                    .environmentObject(store)
+                }
+
+                .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
+                    value in
+                    if !value {
+                        error = nil
+                    }
+                })) {}
 
                 .onChange(of: store.documents) { _ in
                     documents = documents.compactMap { store.documents[$0.id] }
@@ -265,7 +316,6 @@ struct DocumentView: View {
 
                 .onChange(of: store.filterState) { _ in
                     print("Filter updated \(store.filterState)")
-                    //                    DispatchQueue.main.async {
                     Task {
                         // wait for a short bit while the modal is still
                         // open to let the animation finish
@@ -274,13 +324,9 @@ struct DocumentView: View {
                         }
                         await load(clear: true)
                     }
-                    //                    }
                 }
 
                 .onChange(of: searchDebounce.debouncedText) { _ in
-                    if searchDebounce.debouncedText == "" {
-                        //                            scrollToTop(scrollView: scrollView)
-                    }
                     Task {
                         await updateSearchCompletion()
 
@@ -337,7 +383,6 @@ struct DocumentView: View {
                 if searchDebounce.text == store.filterState.searchText {
                     return
                 }
-                //            scrollToTop(scrollView: scrollView)
                 Task {
                     store.filterState.searchText = searchDebounce.text
                     await load(clear: true)

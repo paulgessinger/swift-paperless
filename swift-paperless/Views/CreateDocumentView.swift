@@ -8,46 +8,46 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-extension NSMutableData {
-    func append(_ string: String) {
-        if let data = string.data(using: .utf8) {
-            append(data)
-        }
-    }
-}
-
-struct CreateDocumentView: View {
-    enum Status {
+struct CreateDocumentView<Title: View>: View {
+    private enum Status {
         case none
         case uploading
         case complete
         case error
     }
 
-    @ObservedObject var attachmentManager: AttachmentManager
+    var sourceUrl: URL
+    private var title: () -> Title
+
     @EnvironmentObject private var store: DocumentStore
 
     @State private var document = ProtoDocument()
     @State private var selectedState = FilterState()
     @State private var status = Status.none
 
+    @State private var previewImage: Image?
+
     @State private var error: String = ""
     @State private var showingError = false
 
-    var callback: (() -> Void)?
+    var callback: () -> Void
 
     func setError(_ value: String) {
         error = value
         showingError = true
     }
 
-    func upload() async {
-        guard let url = attachmentManager.documentUrl else {
-            return
-        }
+    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
+        sourceUrl = url
+        _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
+        _selectedState = State(initialValue: FilterState(correspondent: .notAssigned, documentType: .notAssigned))
+        self.title = title
+        self.callback = callback
+    }
 
+    func upload() async {
         do {
-            try await store.repository.createDocument(document, file: url)
+            try await store.repository.createDocument(document, file: sourceUrl)
         }
         catch {
             switch error {
@@ -75,7 +75,7 @@ struct CreateDocumentView: View {
         }
         catch {}
 
-        callback?()
+        callback()
     }
 
     var body: some View {
@@ -83,39 +83,29 @@ struct CreateDocumentView: View {
 //            Divider()
         NavigationStack {
             VStack {
-                if attachmentManager.isLoading {
-                    ProgressView()
-                }
-                else {
-                    if let error = attachmentManager.error {
-                        Text(String(describing: error))
-                    }
-                    else {
-                        HStack {
-                            Group {
-                                if let preview = attachmentManager.previewImage {
-                                    preview
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100, alignment: .top)
-                                        .cornerRadius(10)
-                                }
-                                else {
-                                    Rectangle()
-                                        .fill(Color.systemGroupedBackground)
-                                        .frame(width: 100, height: 100)
-                                        .cornerRadius(10)
-                                }
-                            }
-                            .overlay(RoundedRectangle(cornerRadius: 10)
-                                .stroke(.gray, lineWidth: 1))
-
-                            Text(document.title)
-                            Spacer()
+                HStack {
+                    Group {
+                        if let preview = previewImage {
+                            preview
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 100, height: 100, alignment: .top)
+                                .cornerRadius(10)
                         }
-                        .padding()
+                        else {
+                            Rectangle()
+                                .fill(Color.systemGroupedBackground)
+                                .frame(width: 100, height: 100)
+                                .cornerRadius(10)
+                        }
                     }
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(.gray, lineWidth: 1))
+
+                    Text(document.title)
+                    Spacer()
                 }
+                .padding()
                 Spacer()
 
                 Form {
@@ -197,11 +187,6 @@ struct CreateDocumentView: View {
                         .contentShape(Rectangle())
                     }
                 }
-                .onChange(of: attachmentManager.documentUrl) { url in
-                    if let url = url, document.title.isEmpty {
-                        document.title = url.lastPathComponent
-                    }
-                }
 
                 .onChange(of: selectedState.correspondent) { value in
                     switch value {
@@ -243,24 +228,28 @@ struct CreateDocumentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    LogoView()
+                    title()
+//                    switch title {
+//                    case .logo:
+//                        LogoView()
+//                    case .text(let value):
+//                        Text(value)
+//                    }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     switch status {
                     case .none:
-                        if !attachmentManager.isLoading {
-                            Button("Save") {
-                                Task {
-                                    withAnimation {
-                                        status = .uploading
-                                    }
-
-                                    await upload()
+                        Button("Save") {
+                            Task {
+                                withAnimation {
+                                    status = .uploading
                                 }
+
+                                await upload()
                             }
-                            .transition(.opacity)
                         }
+                        .transition(.opacity)
 
                     case .uploading:
                         ProgressView()
@@ -277,6 +266,7 @@ struct CreateDocumentView: View {
                 }
             }
             .task {
+                previewImage = pdfPreview(url: sourceUrl)
                 await store.fetchAll()
             }
         }

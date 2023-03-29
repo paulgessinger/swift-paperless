@@ -103,6 +103,12 @@ struct FilterState: Equatable {
     var documentType: Filter = .any
     var tags: Tag = .any
 
+    init(correspondent: Filter = .any, documentType: Filter = .any, tags: Tag = .any) {
+        self.correspondent = correspondent
+        self.documentType = documentType
+        self.tags = tags
+    }
+
     private var query: String?
     var searchText: String? {
         get { query }

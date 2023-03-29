@@ -81,26 +81,6 @@ private extension AttachmentManager {
                 fatalError("Got preview, I don't actually know what to do now")
             }
 
-//            guard let sc = sc else {
-//                return
-//            }
-//
-//            switch sc {
-//            case let data as NSData:
-//                self.add("NSData")
-//            case let url as NSURL:
-//                self.add("NSURL")
-//            #if os(iOS)
-//                case let image as UIImage:
-//                    self.add("UIImage")
-//            #elseif os(macOS)
-//                case let image as NSImage:
-//                    self.add("NSImage")
-//            #endif
-//            default:
-//                self.add("Unknown preview type: \(type(of: sc))")
-//            }
-
         })
     }
 }
@@ -143,9 +123,12 @@ class ShareViewController: UIViewController {
 struct ShareView: View {
     @ObservedObject var attachmentManager: AttachmentManager
 
-    @StateObject private var manager = ConnectionManager()
+    @StateObject private var connectionManager = ConnectionManager()
 
     @StateObject private var store = DocumentStore(repository: NullRepository())
+
+    @State private var error: String = ""
+    @State private var showingError = false
 
     var callback: () -> Void
 
@@ -156,15 +139,21 @@ struct ShareView: View {
 
     var body: some View {
         Group {
-            if manager.state == .valid {
-                CreateDocumentView(
-                    attachmentManager: attachmentManager,
-                    callback: callback
-                )
-                .environmentObject(store)
-                .accentColor(Color("AccentColor"))
+            if self.connectionManager.state == .valid {
+                if let error = attachmentManager.error {
+                    Text(String(describing: error))
+                }
+
+                if let url = attachmentManager.documentUrl {
+                    CreateDocumentView(
+                        sourceUrl: url,
+                        callback: self.callback
+                    )
+                    .environmentObject(self.store)
+                    .accentColor(Color("AccentColor"))
+                }
             }
-            else if manager.state == .invalid {
+            else if self.connectionManager.state == .invalid {
                 VStack {
                     Spacer()
                     HStack {
@@ -178,11 +167,21 @@ struct ShareView: View {
                 }
             }
         }
+        .alert("\(self.error)", isPresented: self.$showingError) {
+            Button("Ok", role: .cancel) {}
+        }
+
         .task {
-            await manager.check()
-            if let conn = manager.connection {
-                store.set(repository: ApiRepository(connection: conn))
+            await self.connectionManager.check()
+            if let conn = connectionManager.connection {
+                self.store.set(repository: ApiRepository(connection: conn))
             }
+        }
+
+        .onChange(of: self.attachmentManager.documentUrl) { _ in
+//            if let url = url, document.title.isEmpty {
+//                document.title = url.lastPathComponent
+//            }
         }
     }
 }
