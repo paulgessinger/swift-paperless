@@ -150,6 +150,7 @@ struct DocumentCell: View {
                     .overlay(ProgressView())
             }
             .frame(width: 100, height: 100)
+            .shadow(color: Color("ImageShadow"), radius: 5)
 
             VStack(alignment: .leading) {
                 if let name = correspondent.name() {

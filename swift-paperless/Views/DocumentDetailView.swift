@@ -119,15 +119,12 @@ struct DocumentDetailView: View {
                         .frame(height: 400)
 
                     case let .ready(_, image):
-                        VStack {
-                            ZStack {
-                                image
-                                    .resizable()
-                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                                    .scaledToFill()
-                            }
-                        }
+                        image
+                            .resizable()
+                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                            .clipShape(RoundedRectangle(cornerRadius: 5))
+                            .scaledToFill()
+                            .shadow(color: Color(white: 0.9), radius: 5)
                     }
                 }
                 .buttonStyle(.plain)

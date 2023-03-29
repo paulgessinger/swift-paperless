@@ -54,14 +54,15 @@ struct CommonPicker: View {
                 }
                 Section {
                     ForEach(elements.filter { filter(name: $0.1) },
-                            id: \.0) { id, name in
+                            id: \.0)
+                    { id, name in
                         row(name, value: FilterState.Filter.only(id: id))
                     }
                 }
             }
             .overlay(
                 Rectangle()
-                    .fill(.gray)
+                    .fill(Color("Divider"))
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )

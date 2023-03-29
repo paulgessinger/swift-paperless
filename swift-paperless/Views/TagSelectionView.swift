@@ -148,7 +148,7 @@ struct TagSelectionView: View {
             }
             .overlay(
                 Rectangle()
-                    .fill(.gray)
+                    .fill(Color("Divider"))
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )
