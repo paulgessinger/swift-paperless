@@ -121,6 +121,33 @@ struct FilterBar: View {
         }
     }
 
+    private enum Aspect {
+        case tag
+        case correspondent
+        case documentType
+    }
+
+    private func present(_ aspect: Aspect) {
+        Task {
+            // needed to unblock opening when menu is open
+            try? await Task.sleep(for: .seconds(0.05))
+            switch aspect {
+            case .tag:
+                showDocumentType = false
+                showCorrespondent = false
+                showTags = true
+            case .correspondent:
+                showDocumentType = false
+                showCorrespondent = true
+                showTags = false
+            case .documentType:
+                showDocumentType = true
+                showCorrespondent = false
+                showTags = false
+            }
+        }
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
@@ -142,6 +169,11 @@ struct FilterBar: View {
                                 .labelStyle(.iconOnly)
                             CircleCounter(value: filterState.count)
                         }, active: true, action: {}, chevron: false)
+//                    } primaryAction: {
+//                        withAnimation {
+//                            store.filterState.clear()
+//                            filterState.clear()
+//                        }
                     }
                 }
 
@@ -153,14 +185,20 @@ struct FilterBar: View {
                         Text("None")
                     case .only(let ids):
                         if ids.count == 1 {
-                            Text(store.tags[ids[0]]?.name ?? "1 tag")
+                            if let name = store.tags[ids.first!]?.name {
+                                Text(name)
+                            }
+                            else {
+                                Text("1 tag")
+                                    .redacted(reason: .placeholder)
+                            }
                         }
                         else {
                             CircleCounter(value: ids.count)
                             Text("Tags")
                         }
                     }
-                }, active: filterState.tags != .any) { showTags = true }
+                }, active: filterState.tags != .any) { present(.tag) }
 
                 Element(label: {
                     switch filterState.documentType {
@@ -169,9 +207,15 @@ struct FilterBar: View {
                     case .notAssigned:
                         Text("None")
                     case .only(let id):
-                        Text(store.documentTypes[id]?.name ?? "1 document type")
+                        if let name = store.documentTypes[id]?.name {
+                            Text(name)
+                        }
+                        else {
+                            Text("1 document type")
+                                .redacted(reason: .placeholder)
+                        }
                     }
-                }, active: filterState.documentType != .any) { showDocumentType = true }
+                }, active: filterState.documentType != .any) { present(.documentType) }
 
                 Element(label: {
                     switch filterState.correspondent {
@@ -180,9 +224,15 @@ struct FilterBar: View {
                     case .notAssigned:
                         Text("None")
                     case .only(let id):
-                        Text(store.correspondents[id]?.name ?? "1 correspondent")
+                        if let name = store.correspondents[id]?.name {
+                            Text(name)
+                        }
+                        else {
+                            Text("1 correspondent")
+                                .redacted(reason: .placeholder)
+                        }
                     }
-                }, active: filterState.correspondent != .any) { showCorrespondent = true }
+                }, active: filterState.correspondent != .any) { present(.correspondent) }
 
                 Divider()
 
@@ -278,7 +328,9 @@ struct DocumentView: View {
 
     func load(clear: Bool) async {
         if clear {
-            await store.fetchAll()
+            _ = withAnimation {
+                Task { await store.fetchAll() }
+            }
         }
         let new = await store.fetchDocuments(clear: clear)
 
@@ -388,11 +440,9 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
-                if logoVisible {
-                    SearchBarView(text: $searchDebounce.text)
-                        .padding(.horizontal)
-                        .padding(.bottom, 4)
-                }
+                SearchBarView(text: $searchDebounce.text)
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
                 FilterBar()
                 GeometryReader { geo in
                     OffsetObservingScrollView(offset: $scrollOffset.value) {
