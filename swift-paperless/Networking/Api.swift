@@ -54,6 +54,8 @@ extension Endpoint {
                              value: ids.map { String($0) }.joined(separator: ",")))
         }
 
+        queryItems.append(.init(name: "ordering", value: "-created"))
+
         return Endpoint(
             path: "/api/documents/",
             queryItems: queryItems

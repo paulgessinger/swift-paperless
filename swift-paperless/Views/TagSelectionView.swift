@@ -69,7 +69,7 @@ struct TagSelectionView: View {
 
                 // MARK: - Search bar
 
-                SearchBarView(text: $searchDebounce.debouncedText)
+                SearchBarView(text: $searchDebounce.text)
             }
             .transition(.opacity)
             .padding(.horizontal)

@@ -38,10 +38,9 @@ class ThrottleObject<T: Equatable>: ObservableObject {
         self.value = value
         throttledValue = value
         $value
-//            .removeDuplicates()
             .throttle(for: .seconds(delay), scheduler: DispatchQueue.main, latest: true)
             .sink(receiveValue: { [weak self] value in
-                self?.throttledValue = value
+                DispatchQueue.main.async { self?.throttledValue = value }
                 self?.publisher.send(value)
             })
             .store(in: &tasks)
