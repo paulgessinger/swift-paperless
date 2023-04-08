@@ -40,16 +40,28 @@
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
+		7A58A24629E19BC500986FE9 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
+		7A58A24729E19BEB00986FE9 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
+		7A58A24829E19BF400986FE9 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
+		7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
+		7A58A24A29E19C1800986FE9 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691429CF967900414BA7 /* ConnectionManager.swift */; };
+		7A58A24B29E19C1F00986FE9 /* MultiPartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
 		7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C138B29ABC35E00D71F51 /* ColorHex.swift */; };
 		7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C139029ABFC3F00D71F51 /* TagView.swift */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
+		7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */ = {isa = PBXBuildFile; fileRef = 7A6F31DC29DE936C00186A87 /* generate_filterrules.py */; };
+		7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
+		7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
+		7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9AA03929AD39F300A55529 /* OrderedCollections */; };
 		7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */; };
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
+		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
+		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
 		7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
 		7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691129CF80F600414BA7 /* LogoView.swift */; };
 		7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691129CF80F600414BA7 /* LogoView.swift */; };
@@ -134,7 +146,11 @@
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
+		7A6F31DC29DE936C00186A87 /* generate_filterrules.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = generate_filterrules.py; sourceTree = SOURCE_ROOT; };
+		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
+		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7AEF690F29CF7FA800414BA7 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7AEF691129CF80F600414BA7 /* LogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoView.swift; sourceTree = "<group>"; };
 		7AEF691429CF967900414BA7 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
@@ -235,6 +251,7 @@
 		7A5482AD299AD56C00D5061E /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
+				7A6F31DC29DE936C00186A87 /* generate_filterrules.py */,
 				7A256CEE29B6828D00BADEB8 /* Info.plist */,
 				7AF04B7929A6898C008E8F79 /* Views */,
 				7AB060DC29C6621E004E6C63 /* Networking */,
@@ -247,6 +264,8 @@
 				7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */,
 				7AEF691429CF967900414BA7 /* ConnectionManager.swift */,
 				7AEF691B29D049D900414BA7 /* PositionObservingView.swift */,
+				7ACB386429D99FCE006CE102 /* FilterRuleType.swift */,
+				7A6F31DE29DEA46500186A87 /* FilterRule.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -267,6 +286,7 @@
 			children = (
 				7A5C138B29ABC35E00D71F51 /* ColorHex.swift */,
 				7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */,
+				7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */,
 			);
 			path = "swift-paperlessTests";
 			sourceTree = "<group>";
@@ -465,6 +485,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */,
+				7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */,
 				7A4D9F3829D4B78500B25A63 /* demo.pdf in Resources */,
 				7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */,
 			);
@@ -518,6 +539,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A4AA91129BE202800D845A2 /* PreviewModel.swift in Sources */,
+				7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */,
+				7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */,
 				7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */,
 				7A4AA91429BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
@@ -547,8 +570,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A58A24729E19BEB00986FE9 /* Repository.swift in Sources */,
+				7A58A24629E19BC500986FE9 /* Api.swift in Sources */,
+				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
+				7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */,
 				7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */,
+				7A58A24A29E19C1800986FE9 /* ConnectionManager.swift in Sources */,
+				7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */,
+				7A58A24B29E19C1F00986FE9 /* MultiPartFormDataRequest.swift in Sources */,
+				7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */,
 				7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */,
+				7A58A24829E19BF400986FE9 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

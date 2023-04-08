@@ -158,7 +158,7 @@ enum DateDecodingError: Error {
     case invalidDate(string: String)
 }
 
-private let decoder: JSONDecoder = {
+let decoder: JSONDecoder = {
     let d = JSONDecoder()
     d.dateDecodingStrategy = .custom { decoder -> Date in
         let container = try decoder.singleValueContainer()

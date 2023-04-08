@@ -2,3 +2,4 @@ demo/data
 demo/media
 Credentials.plist
 .vscode
+venv
