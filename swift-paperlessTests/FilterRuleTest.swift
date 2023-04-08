@@ -7,6 +7,18 @@
 
 import XCTest
 
+private func datetime(year: Int, month: Int, day: Int) -> Date {
+    var dateComponents = DateComponents()
+    dateComponents.year = year
+    dateComponents.month = month
+    dateComponents.day = day
+    dateComponents.timeZone = TimeZone(abbreviation: "CEST")
+    dateComponents.hour = 0
+    dateComponents.minute = 0
+
+    return Calendar(identifier: .gregorian).date(from: dateComponents)!
+}
+
 final class FilterRuleTest: XCTestCase {
     func testDecoding() throws {
         let input = """
@@ -52,23 +64,13 @@ final class FilterRuleTest: XCTestCase {
 
         let result = try JSONDecoder().decode([FilterRule].self, from: input)
 
-        var dateComponents = DateComponents()
-        dateComponents.year = 2023
-        dateComponents.month = 1
-        dateComponents.day = 1
-        dateComponents.timeZone = TimeZone(abbreviation: "CEST")
-        dateComponents.hour = 0
-        dateComponents.minute = 0
-
-        let datetime = Calendar(identifier: .gregorian).date(from: dateComponents)!
-
         let expected: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),
             .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime)),
+            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
         ]
 
         XCTAssertEqual(result, expected)
@@ -83,23 +85,13 @@ final class FilterRuleTest: XCTestCase {
     }
 
     func testEncodingMultiple() throws {
-        var dateComponents = DateComponents()
-        dateComponents.year = 2023
-        dateComponents.month = 1
-        dateComponents.day = 1
-        dateComponents.timeZone = TimeZone(abbreviation: "CEST")
-        dateComponents.hour = 0
-        dateComponents.minute = 0
-
-        let datetime = Calendar(identifier: .gregorian).date(from: dateComponents)!
-
         let input: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),
             .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime)),
+            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
         ]
 
         let encoder = JSONEncoder()
@@ -137,5 +129,33 @@ final class FilterRuleTest: XCTestCase {
         .replacingOccurrences(of: "\n", with: "")
 
         XCTAssertEqual(actual, expected)
+    }
+
+    func testQueryItems() throws {
+        let input: [FilterRule] = [
+            .init(ruleType: .title, value: .string(value: "shantel")),
+            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
+            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
+            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
+            .init(ruleType: .correspondent, value: .correspondent(id: nil)),
+            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
+        ]
+
+        let sort = { (a: URLQueryItem, b: URLQueryItem) -> Bool in a.name < b.name }
+
+        var items = FilterRule.queryItems(for: input)
+        items.sort(by: sort)
+
+        var expected: [URLQueryItem] = [
+            .init(name: "title__icontains", value: "shantel"),
+            .init(name: "tags__id__all", value: "66,71"),
+            .init(name: "tags__id__none", value: "75"),
+            .init(name: "correspondent__isnull", value: "1"),
+            .init(name: "added__date__gt", value: "2023-01-01"),
+        ]
+        expected.sort(by: sort)
+
+        XCTAssertEqual(items[0], expected[0])
+        XCTAssertEqual(items, expected)
     }
 }

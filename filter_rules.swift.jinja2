@@ -6,7 +6,7 @@
 import Foundation
 
 
-enum FilterRuleType : Int, Equatable {
+enum FilterRuleType : Int, Equatable, CaseIterable {
 
   enum DataType {
     case date
@@ -63,6 +63,14 @@ enum FilterRuleType : Int, Equatable {
       default:
         return false
     }
+  }
+
+  static func allMultiples() -> Set<FilterRuleType> {
+    return [
+      {%- for rule in rule_types | selectattr("multi") %}
+      .{{ rule.swift_name }},
+      {%- endfor %}
+    ]
   }
 
  func isNullFilterVar() -> String? {

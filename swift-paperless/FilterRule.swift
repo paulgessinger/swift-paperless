@@ -18,6 +18,31 @@ enum FilterRuleValue: Codable, Equatable {
     case storagePath(id: UInt?)
     case correspondent(id: UInt?)
     case string(value: String)
+
+    fileprivate func string() -> String? {
+        var s: String? = nil
+        switch self {
+        case .date(let value):
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            s = dateFormatter.string(from: value)
+        case .number(let value):
+            s = String(value)
+        case .tag(let id):
+            s = String(id)
+        case .boolean(let value):
+            s = String(value)
+        case .documentType(let id):
+            s = id == nil ? nil : String(id!)
+        case .storagePath(let id):
+            s = id == nil ? nil : String(id!)
+        case .correspondent(let id):
+            s = id == nil ? nil : String(id!)
+        case .string(let value):
+            s = value
+        }
+        return s
+    }
 }
 
 private extension KeyedDecodingContainerProtocol {
@@ -92,28 +117,34 @@ struct FilterRule: Codable, Equatable {
 
         try container.encode(ruleType, forKey: .ruleType)
 
-        var s: String? = nil
-        switch value {
-        case .date(let value):
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            s = dateFormatter.string(from: value)
-        case .number(let value):
-            s = String(value)
-        case .tag(let id):
-            s = String(id)
-        case .boolean(let value):
-            s = String(value)
-        case .documentType(let id):
-            s = id == nil ? nil : String(id!)
-        case .storagePath(let id):
-            s = id == nil ? nil : String(id!)
-        case .correspondent(let id):
-            s = id == nil ? nil : String(id!)
-        case .string(let value):
-            s = value
+        try container.encode(value.string(), forKey: .value)
+    }
+
+    static func queryItems(for rules: [FilterRule]) -> [URLQueryItem] {
+        var result: [URLQueryItem] = []
+
+        let rulesMultiple = rules.filter { $0.ruleType.multiple() }
+
+        let groups = Dictionary(grouping: rulesMultiple, by: { $0.ruleType })
+
+        for (type, group) in groups {
+            let values = group.compactMap { $0.value.string() }.sorted()
+
+            result.append(.init(name: type.filterVar(), value: values.joined(separator: ",")))
         }
 
-        try container.encode(s, forKey: .value)
+        for rule in rules.filter({ !$0.ruleType.multiple() }) {
+            if let value = rule.value.string() {
+                result.append(.init(name: rule.ruleType.filterVar(), value: value))
+            }
+            else {
+                guard let nullVar = rule.ruleType.isNullFilterVar() else {
+                    fatalError("Rule value is null, but rule has no null filter var")
+                }
+                result.append(.init(name: nullVar, value: "1"))
+            }
+        }
+
+        return result
     }
 }
