@@ -162,34 +162,6 @@ struct DocumentEditView: View {
             .onChange(of: document) { _ in
                 modified = true
             }
-            .onChange(of: selectedState) { value in
-                switch value.tags {
-                case .any:
-                    print("Invalid selected tags .any: this should not happen")
-                case .notAssigned:
-                    document.tags = []
-                case .only(let ids):
-                    document.tags = ids
-                }
-
-                switch value.correspondent {
-                case .any:
-                    print("Invalid selected correspondent .any: this should not happen")
-                case .notAssigned:
-                    document.correspondent = nil
-                case .only(let ids):
-                    document.correspondent = ids
-                }
-
-                switch value.documentType {
-                case .any:
-                    print("Invalid selected document type .any: this should not happen")
-                case .notAssigned:
-                    document.documentType = nil
-                case .only(let ids):
-                    document.documentType = ids
-                }
-            }
 
             .task {
                 async let _ = await store.fetchAllCorrespondents()

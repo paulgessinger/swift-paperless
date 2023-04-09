@@ -183,7 +183,25 @@ struct FilterBar: View {
                         Text("Tags")
                     case .notAssigned:
                         Text("None")
-                    case .only(let ids):
+                    case .allOf(let include, let exclude):
+                        let count = include.count + exclude.count
+                        if count == 1 {
+                            if let i = include.first, let name = store.tags[i]?.name {
+                                Text(name)
+                            }
+                            else if let i = exclude.first, let name = store.tags[i]?.name {
+                                Text("not \(name)")
+                            }
+                            else {
+                                Text("1 tag")
+                                    .redacted(reason: .placeholder)
+                            }
+                        }
+                        else {
+                            CircleCounter(value: count)
+                            Text("Tags")
+                        }
+                    case .anyOf(let ids):
                         if ids.count == 1 {
                             if let name = store.tags[ids.first!]?.name {
                                 Text(name)
@@ -260,8 +278,8 @@ struct FilterBar: View {
 
         .sheet(isPresented: $showTags) {
             modal($showTags, title: "Tags") {
-                TagFilterView(tags: store.tags,
-                              selectedTags: $filterState.tags)
+                TagFilterView(
+                    selectedTags: $filterState.tags)
             }
         }
 

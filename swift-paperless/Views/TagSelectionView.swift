@@ -9,11 +9,18 @@ import SwiftUI
 
 // - MARK: TagFilterView
 struct TagFilterView: View {
-    var tags: [UInt: Tag]
-    @Binding var selectedTags: FilterState.Tag
-    var filterMode = true
+    @EnvironmentObject private var store: DocumentStore
+
+    @Binding var selectedTags: FilterState.TagFilter
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+
+    private enum Mode {
+        case all
+        case any
+    }
+
+    @State private var mode = Mode.all
 
     private func row<Content: View>(action: @escaping () -> (),
                                     active: Bool,
@@ -40,111 +47,147 @@ struct TagFilterView: View {
         }
     }
 
+    private func onPress(tag: Tag) {
+        var next: FilterState.TagFilter = selectedTags
+
+        switch selectedTags {
+        case .any:
+            next = .allOf(include: [tag.id], exclude: [])
+        case .notAssigned:
+            next = .allOf(include: [tag.id], exclude: [])
+        case .allOf(let include, let exclude):
+            if include.contains(tag.id) {
+                next = .allOf(
+                    include: include.filter { $0 != tag.id },
+                    exclude: exclude + [tag.id]
+                )
+            }
+            else if exclude.contains(tag.id) {
+                next = .allOf(
+                    include: include,
+                    exclude: exclude.filter { $0 != tag.id }
+                )
+            }
+            else {
+                next = .allOf(
+                    include: include + [tag.id],
+                    exclude: exclude
+                )
+            }
+
+        case .anyOf(let ids):
+            if ids.contains(tag.id) {
+                next = .anyOf(ids: ids.filter { $0 != tag.id })
+            }
+            else {
+                next = .anyOf(ids: ids + [tag.id])
+            }
+        }
+
+        switch next {
+        case .allOf(let include, let exclude):
+            if include.isEmpty && exclude.isEmpty {
+                next = .any
+            }
+            if !exclude.isEmpty {
+                mode = .all
+            }
+        case .anyOf(let ids):
+            if ids.isEmpty {
+                next = .any
+            }
+        default:
+            break
+        }
+
+        withAnimation {
+            selectedTags = next
+        }
+    }
+
     var body: some View {
         VStack {
             VStack {
-                if case var .only(ids) = selectedTags {
-                    TagsView(tags: ids.compactMap { tags[$0] }) { tag in
-                        Task {
-                            withAnimation {
-                                if let i = ids.firstIndex(of: tag.id) {
-                                    ids.remove(at: i)
-                                }
-                                if filterMode {
-                                    selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                                }
-                                else {
-                                    selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
-                                }
-                            }
-                        }
-                    }
-                    .padding(10)
-                    .background(
-                        Rectangle()
-                            .fill(Color.systemGroupedBackground)
-                            .cornerRadius(10)
-                    )
-                    .padding(.bottom, 5)
-                }
-
-                // MARK: - Search bar
-
                 SearchBarView(text: $searchDebounce.text)
             }
             .transition(.opacity)
             .padding(.horizontal)
             .padding(.vertical, 2)
 
-            // MARK: - Tag selection list
+            // Debug:
+//            Text(String(describing: selectedTags))
 
             Form {
                 Section {
-                    if filterMode {
-                        row(action: {
-                            Task { withAnimation { selectedTags = .any }}
-                        }, active: selectedTags == .any, content: {
-                            Text("Any")
-                        })
+                    row(action: {
+                        Task { withAnimation { selectedTags = .any }}
+                    }, active: selectedTags == .any, content: {
+                        Text("No filter")
+                    })
 
-                        row(action: {
-                            Task { withAnimation { selectedTags = .notAssigned }}
-                        }, active: selectedTags == .notAssigned, content: {
-                            Text("Not assigned")
-                        })
-                    }
-                    else {
-                        // Repurpose not assigned to mean: no tags assigned
-                        row(action: {
-                            Task { withAnimation { selectedTags = .notAssigned }}
-                        }, active: selectedTags == .notAssigned, content: {
-                            Text("None")
-                        })
-                    }
+                    row(action: {
+                        Task { withAnimation { selectedTags = .notAssigned }}
+                    }, active: selectedTags == .notAssigned, content: {
+                        Text("Not assigned")
+                    })
                 }
 
-                ForEach(
-                    tags.sorted { $0.value.name < $1.value.name }
-                        .filter { tagFilter(tag: $0.value) },
-                    id: \.value.id
-                ) { _, tag in
-                    HStack {
-                        Button(action: {
-                            Task {
-                                withAnimation {
-                                    switch selectedTags {
-                                    case .any, .notAssigned:
-                                        selectedTags = .only(ids: [tag.id])
-                                    case var .only(ids):
-                                        if let i = ids.firstIndex(of: tag.id) {
-                                            ids.remove(at: i)
-                                        }
-                                        else {
-                                            ids.append(tag.id)
-                                        }
+                Section {
+                    ForEach(
+                        store.tags.sorted { $0.value.name < $1.value.name }
+                            .filter { tagFilter(tag: $0.value) },
+                        id: \.value.id
+                    ) { _, tag in
+                        HStack {
+                            Button(action: { onPress(tag: tag) }) {
+                                TagView(tag: tag)
+                            }
 
-                                        if filterMode {
-                                            selectedTags = ids.isEmpty ? .any : .only(ids: ids)
-                                        }
-                                        else {
-                                            selectedTags = ids.isEmpty ? .notAssigned : .only(ids: ids)
-                                        }
-                                    }
+                            Spacer()
+
+                            switch selectedTags {
+                            case .any:
+                                EmptyView()
+                            case .notAssigned:
+                                EmptyView()
+                            case .allOf(let include, let exclude):
+                                if include.contains(tag.id) {
+                                    Label("Included", systemImage: "checkmark")
+                                        .labelStyle(.iconOnly)
+                                }
+                                if exclude.contains(tag.id) {
+                                    Label("Excluded", systemImage: "xmark.circle")
+                                        .labelStyle(.iconOnly)
+                                }
+                            case .anyOf(let ids):
+                                if ids.contains(tag.id) {
+                                    Label("Selected", systemImage: "checkmark")
+                                        .labelStyle(.iconOnly)
                                 }
                             }
-                        }) {
-                            TagView(tag: tag)
                         }
-
-                        Spacer()
-
-                        if case let .only(ids) = selectedTags {
-                            if ids.contains(tag.id) {
-                                Label("Active", systemImage: "checkmark")
-                                    .labelStyle(.iconOnly)
-                            }
-                        }
+                        .transaction { transaction in transaction.animation = nil }
                     }
+                } header: {
+                    Picker("Mode", selection: $mode) {
+                        Text("All").tag(Mode.all)
+                        Text("Any").tag(Mode.any)
+                    }
+                    .textCase(.none)
+                    .padding(.bottom, 10)
+                    .pickerStyle(.segmented)
+                    .disabled({
+                        switch selectedTags {
+                        case .any:
+                            return true
+                        case .notAssigned:
+                            return true
+                        case .allOf(_, let exclude):
+                            return !exclude.isEmpty
+                        case .anyOf:
+                            return false
+                        }
+                    }())
                 }
             }
             .overlay(
@@ -153,16 +196,41 @@ struct TagFilterView: View {
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )
-//            .animation(.linear, value: searchDebounce.debouncedText)
+        }
+
+        .onChange(of: mode) { value in
+            switch value {
+            case .all:
+                switch selectedTags {
+                case .allOf:
+                    break // already in all
+                case .anyOf(let ids):
+                    selectedTags = .allOf(include: ids, exclude: [])
+                default:
+                    print("Switched to Mode.all in invalid state")
+                }
+            case .any:
+                switch selectedTags {
+                case .allOf(let include, let exclude):
+                    if !exclude.isEmpty {
+                        print("Switched to Mode.any, but had excludes??")
+                    }
+                    selectedTags = .anyOf(ids: include)
+                case .anyOf:
+                    break // already in any
+                default:
+                    print("Switched to Mode.any in invalid state")
+                }
+            }
         }
     }
 }
 
 // - MARK: TagEditView
-struct TagEditView: View {
+struct TagEditView<D>: View where D: DocumentProtocol {
     @EnvironmentObject private var store: DocumentStore
 
-    @Binding var document: Document
+    @Binding var document: D
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
@@ -266,12 +334,15 @@ struct TagEditView: View {
 // MARK: - Previews
 
 struct TagFilterView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
     @State static var filterState = FilterState()
 
     static var previews: some View {
-        TagFilterView(tags: PreviewModel.tags,
-                      selectedTags: $filterState.tags,
-                      filterMode: true)
+        BindingHelper(element: filterState.tags) { tags in
+            TagFilterView(selectedTags: tags)
+        }
+        .environmentObject(store)
     }
 }
 

@@ -119,8 +119,8 @@ struct FilterView: View {
                             )
                         }
                         else if activeTab == .tag {
-                            TagFilterView(tags: store.tags,
-                                          selectedTags: $store.filterState.tags)
+                            TagFilterView(
+                                selectedTags: $store.filterState.tags)
                         }
                     }
                     .navigationTitle("Filter")

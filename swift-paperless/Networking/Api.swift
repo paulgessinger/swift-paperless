@@ -48,10 +48,12 @@ extension Endpoint {
         case .any: break
         case .notAssigned:
             queryItems.append(URLQueryItem(name: "is_tagged", value: "0"))
-        case let .only(ids):
+        case let .allOf(include, _):
             queryItems.append(
                 URLQueryItem(name: "tags__id__all",
-                             value: ids.map { String($0) }.joined(separator: ",")))
+                             value: include.map { String($0) }.joined(separator: ",")))
+        case .anyOf:
+            fatalError("Not implemented yet")
         }
 
         queryItems.append(.init(name: "ordering", value: "-created"))

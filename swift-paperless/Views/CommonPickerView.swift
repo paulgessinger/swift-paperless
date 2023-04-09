@@ -72,7 +72,7 @@ struct CommonPicker: View {
 
 protocol Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Self]> { get }
-    static var documentPath: WritableKeyPath<Document, UInt?> { get }
+    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol
 
     var id: UInt { get }
     var name: String { get }
@@ -81,23 +81,23 @@ protocol Pickable {
 extension Correspondent: Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> { \.correspondents }
 
-    static var documentPath: WritableKeyPath<Document, UInt?> {
-        \.correspondent
+    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        return \.correspondent
     }
 }
 
 extension DocumentType: Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> { \.documentTypes }
 
-    static var documentPath: WritableKeyPath<Document, UInt?> {
-        \.documentType
+    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        return \.documentType
     }
 }
 
-struct CommonPickerEdit<Element>: View where Element: Pickable {
+struct CommonPickerEdit<Element, D>: View where Element: Pickable, D: DocumentProtocol {
     @EnvironmentObject var store: DocumentStore
 
-    @Binding var document: Document
+    @Binding var document: D
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
@@ -115,8 +115,7 @@ struct CommonPickerEdit<Element>: View where Element: Pickable {
         return all.filter { $0.1.range(of: searchDebounce.debouncedText, options: .caseInsensitive) != nil }
     }
 
-    init(_ type: Element.Type, document: Binding<Document>) {
-//        self._document = State(initialValue: document)
+    init(_ type: Element.Type, document: Binding<D>) {
         self._document = document
     }
 
@@ -124,13 +123,13 @@ struct CommonPickerEdit<Element>: View where Element: Pickable {
         return HStack {
             Button(action: {
                 // set new value
-                document[keyPath: Element.documentPath] = value
+                document[keyPath: Element.documentPath(D.self)] = value
             }) {
                 Text(label)
             }
             .foregroundColor(.primary)
             Spacer()
-            if document[keyPath: Element.documentPath] == value {
+            if document[keyPath: Element.documentPath(D.self)] == value {
                 Label("Active", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }

@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-private struct BindingHelper<Content: View>: View {
-    @State var document: Document
-    @ViewBuilder var content: (Binding<Document>) -> Content
+struct BindingHelper<Element, Content: View>: View {
+    @State var element: Element
+    @ViewBuilder var content: (Binding<Element>) -> Content
 
     var body: some View {
-        content($document)
+        content($element)
     }
 }
 
@@ -26,7 +26,7 @@ struct DocumentLoader<Content: View>: View {
     var body: some View {
         Group {
             if let document = document {
-                BindingHelper(document: document, content: content)
+                BindingHelper(element: document, content: content)
             }
             else {
                 ProgressView()

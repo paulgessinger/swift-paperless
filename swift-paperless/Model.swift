@@ -12,7 +12,13 @@ import OrderedCollections
 import Semaphore
 import SwiftUI
 
-struct Document: Identifiable, Equatable, Hashable, Model {
+protocol DocumentProtocol: Codable {
+    var documentType: UInt? { get set }
+    var correspondent: UInt? { get set }
+    var tags: [UInt] { get set }
+}
+
+struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
     var id: UInt
     var title: String
     var documentType: UInt?
@@ -24,7 +30,7 @@ struct Document: Identifiable, Equatable, Hashable, Model {
     private(set) var storagePath: String? = nil
 }
 
-struct ProtoDocument: Codable {
+struct ProtoDocument: DocumentProtocol {
     var title: String = ""
     var documentType: UInt? = nil
     var correspondent: UInt? = nil
@@ -94,17 +100,18 @@ struct FilterState: Equatable, Codable {
         case only(id: UInt)
     }
 
-    enum Tag: Equatable, Hashable, Codable {
+    enum TagFilter: Equatable, Hashable, Codable {
         case any
         case notAssigned
-        case only(ids: [UInt])
+        case allOf(include: [UInt], exclude: [UInt])
+        case anyOf(ids: [UInt])
     }
 
     var correspondent: Filter = .any
     var documentType: Filter = .any
-    var tags: Tag = .any
+    var tags: TagFilter = .any
 
-    init(correspondent: Filter = .any, documentType: Filter = .any, tags: Tag = .any) {
+    init(correspondent: Filter = .any, documentType: Filter = .any, tags: TagFilter = .any) {
         self.correspondent = correspondent
         self.documentType = documentType
         self.tags = tags

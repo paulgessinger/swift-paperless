@@ -119,8 +119,7 @@ struct CreateDocumentView<Title: View>: View {
                                 selection: $selectedState.correspondent,
                                 elements: store.correspondents.sorted {
                                     $0.value.name < $1.value.name
-                                }.map { ($0.value.id, $0.value.name) },
-                                filterMode: false
+                                }.map { ($0.value.id, $0.value.name) }
                             )
                         }) {
                             HStack {
@@ -147,8 +146,7 @@ struct CreateDocumentView<Title: View>: View {
                                 selection: $selectedState.documentType,
                                 elements: store.documentTypes.sorted {
                                     $0.value.name < $1.value.name
-                                }.map { ($0.value.id, $0.value.name) },
-                                filterMode: false
+                                }.map { ($0.value.id, $0.value.name) }
                             )
                         }) {
                             HStack {
@@ -171,9 +169,7 @@ struct CreateDocumentView<Title: View>: View {
                         }
 
                         NavigationLink(destination: {
-                            TagFilterView(tags: store.tags,
-                                          selectedTags: $selectedState.tags,
-                                          filterMode: false)
+                            TagEditView(document: $document)
                                 .navigationTitle("Tags")
                         }) {
                             if document.tags.isEmpty {
@@ -185,39 +181,6 @@ struct CreateDocumentView<Title: View>: View {
                             }
                         }
                         .contentShape(Rectangle())
-                    }
-                }
-
-                .onChange(of: selectedState.correspondent) { value in
-                    switch value {
-                    case .only(let id):
-                        document.correspondent = id
-                    case .notAssigned:
-                        document.correspondent = nil
-                    case .any:
-                        break
-                    }
-                }
-
-                .onChange(of: selectedState.documentType) { value in
-                    switch value {
-                    case .only(let id):
-                        document.documentType = id
-                    case .notAssigned:
-                        document.documentType = nil
-                    case .any:
-                        break
-                    }
-                }
-
-                .onChange(of: selectedState.tags) { value in
-                    switch value {
-                    case .only(let ids):
-                        document.tags = ids
-                    case .notAssigned:
-                        document.tags = []
-                    case .any:
-                        break
                     }
                 }
 
