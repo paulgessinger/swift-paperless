@@ -260,8 +260,8 @@ struct FilterBar: View {
 
         .sheet(isPresented: $showTags) {
             modal($showTags, title: "Tags") {
-                TagSelectionView(tags: store.tags,
-                                 selectedTags: $filterState.tags)
+                TagFilterView(tags: store.tags,
+                              selectedTags: $filterState.tags)
             }
         }
 

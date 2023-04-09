@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct TagSelectionView: View {
+// - MARK: TagFilterView
+struct TagFilterView: View {
     var tags: [UInt: Tag]
     @Binding var selectedTags: FilterState.Tag
     var filterMode = true
@@ -157,24 +158,130 @@ struct TagSelectionView: View {
     }
 }
 
-// MARK: - Previews
+// - MARK: TagEditView
+struct TagEditView: View {
+    @EnvironmentObject private var store: DocumentStore
 
-struct TagSelectionView_Previews: PreviewProvider {
-    @State static var filterState = FilterState()
+    @Binding var document: Document
 
-    static var previews: some View {
-        TagSelectionView(tags: PreviewModel.tags,
-                         selectedTags: $filterState.tags,
-                         filterMode: true)
+    @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+
+    @Namespace private var animation
+
+    private func row<Content: View>(action: @escaping () -> (),
+                                    active: Bool,
+                                    @ViewBuilder content: () -> Content) -> some View
+    {
+        HStack {
+            Button(action: { withAnimation { action() }}, label: content)
+                .foregroundColor(.primary)
+            Spacer()
+            if active {
+                Label("Active", systemImage: "checkmark")
+                    .labelStyle(.iconOnly)
+            }
+        }
+    }
+
+    private func tagFilter(tag: Tag) -> Bool {
+        if document.tags.contains(tag.id) { return false }
+        if searchDebounce.debouncedText.isEmpty { return true }
+        if let _ = tag.name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
+            return true
+        }
+        else {
+            return false
+        }
+    }
+
+    var body: some View {
+        VStack {
+            VStack {
+                SearchBarView(text: $searchDebounce.text)
+            }
+            .transition(.opacity)
+            .padding(.horizontal)
+            .padding(.vertical, 2)
+
+            // MARK: - Tag selection list
+
+            Form {
+                if !document.tags.isEmpty {
+                    Section {
+                        ForEach(document.tags, id: \.self) { id in
+                            let tag = store.tags[id]
+                            Button(action: {
+                                withAnimation {
+                                    document.tags = document.tags.filter { $0 != id }
+                                }
+                            }) {
+                                HStack {
+                                    TagView(tag: tag).if(tag == nil) { view in
+                                        view.redacted(reason: .placeholder)
+                                    }
+                                    Spacer()
+                                    Label("Remove", systemImage: "xmark.circle.fill")
+                                        .labelStyle(.iconOnly)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Selected")
+                    }
+                }
+
+                Section {
+                    ForEach(
+                        store.tags.sorted { $0.value.name < $1.value.name }
+                            .filter { tagFilter(tag: $0.value) },
+                        id: \.value.id
+                    ) { _, tag in
+                        Button(action: {
+                            withAnimation {
+                                document.tags.append(tag.id)
+                            }
+                        }) {
+                            HStack {
+                                TagView(tag: tag)
+                                Spacer()
+                                Label("Add", systemImage: "plus.circle")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                }
+            }
+            .overlay(
+                Rectangle()
+                    .fill(Color("Divider"))
+                    .frame(maxWidth: .infinity, maxHeight: 1),
+                alignment: .top
+            )
+        }
     }
 }
 
-struct TagSelectionViewEdit_Previews: PreviewProvider {
+// MARK: - Previews
+
+struct TagFilterView_Previews: PreviewProvider {
     @State static var filterState = FilterState()
 
     static var previews: some View {
-        TagSelectionView(tags: PreviewModel.tags,
-                         selectedTags: $filterState.tags,
-                         filterMode: false)
+        TagFilterView(tags: PreviewModel.tags,
+                      selectedTags: $filterState.tags,
+                      filterMode: true)
+    }
+}
+
+struct TagEditView_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        DocumentLoader(id: 3) { document in
+            TagEditView(document: document)
+        }
+        .environmentObject(store)
     }
 }

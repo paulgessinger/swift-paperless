@@ -25,26 +25,6 @@ struct DocumentEditView: View {
 
     init(document: Document) {
         self._document = State(initialValue: document)
-
-        var filter = FilterState()
-
-        filter.tags = .notAssigned
-        filter.correspondent = .notAssigned
-        filter.documentType = .notAssigned
-
-        if !self.document.tags.isEmpty {
-            filter.tags = .only(ids: self.document.tags)
-        }
-
-        if let corr = self.document.correspondent {
-            filter.correspondent = .only(id: corr)
-        }
-
-        if let dt = self.document.documentType {
-            filter.documentType = .only(id: dt)
-        }
-
-        self._selectedState = State(initialValue: filter)
     }
 
     var body: some View {
@@ -56,65 +36,47 @@ struct DocumentEditView: View {
                 }
                 Section {
                     NavigationLink(destination: {
-                        CommonPicker(
-                            selection: $selectedState.correspondent,
-                            elements: store.correspondents.sorted {
-                                $0.value.name < $1.value.name
-                            }.map { ($0.value.id, $0.value.name) },
-                            filterMode: false
+                        CommonPickerEdit(
+                            Correspondent.self,
+                            document: $document
                         )
                     }) {
                         HStack {
                             Text("Correspondent")
                             Spacer()
-                            Group { () -> Text in
-                                var label = "None"
-                                switch selectedState.correspondent {
-                                case .any:
-                                    print("Selected 'any' correspondent, this should not happen")
-                                case .notAssigned:
-                                    break
-                                case .only(let id):
-                                    label = store.correspondents[id]?.name ?? "None"
+                            Group {
+                                if let id = document.correspondent {
+                                    Text(store.correspondents[id]?.name ?? "ERROR")
+                                } else {
+                                    Text("None")
                                 }
-                                return Text(label)
-                                    .foregroundColor(.gray)
                             }
+                            .foregroundColor(.gray)
                         }
                     }
 
                     NavigationLink(destination: {
-                        CommonPicker(
-                            selection: $selectedState.documentType,
-                            elements: store.documentTypes.sorted {
-                                $0.value.name < $1.value.name
-                            }.map { ($0.value.id, $0.value.name) },
-                            filterMode: false
+                        CommonPickerEdit(
+                            DocumentType.self,
+                            document: $document
                         )
                     }) {
                         HStack {
                             Text("Document type")
                             Spacer()
-                            Group { () -> Text in
-                                var label = "None"
-                                switch selectedState.documentType {
-                                case .any:
-                                    print("Selected 'any' document type, this should not happen")
-                                case .notAssigned:
-                                    break
-                                case .only(let id):
-                                    label = store.documentTypes[id]?.name ?? "None"
+                            Group {
+                                if let id = document.documentType {
+                                    Text(store.documentTypes[id]?.name ?? "ERROR")
+                                } else {
+                                    Text("None")
                                 }
-                                return Text(label)
-                                    .foregroundColor(.gray)
                             }
+                            .foregroundColor(.gray)
                         }
                     }
-
+//
                     NavigationLink(destination: {
-                        TagSelectionView(tags: store.tags,
-                                         selectedTags: $selectedState.tags,
-                                         filterMode: false)
+                        TagEditView(document: $document)
                             .navigationTitle("Tags")
                     }) {
                         if document.tags.isEmpty {

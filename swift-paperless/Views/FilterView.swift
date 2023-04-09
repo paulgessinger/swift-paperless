@@ -7,14 +7,6 @@
 
 import SwiftUI
 
-protocol Pickable {
-    var id: UInt { get }
-    var name: String { get }
-}
-
-extension Correspondent: Pickable {}
-extension DocumentType: Pickable {}
-
 private struct PreviewHelper<Content: View>: View {
     @EnvironmentObject var store: DocumentStore
     @State var loaded = false
@@ -127,8 +119,8 @@ struct FilterView: View {
                             )
                         }
                         else if activeTab == .tag {
-                            TagSelectionView(tags: store.tags,
-                                             selectedTags: $store.filterState.tags)
+                            TagFilterView(tags: store.tags,
+                                          selectedTags: $store.filterState.tags)
                         }
                     }
                     .navigationTitle("Filter")

@@ -171,9 +171,9 @@ struct CreateDocumentView<Title: View>: View {
                         }
 
                         NavigationLink(destination: {
-                            TagSelectionView(tags: store.tags,
-                                             selectedTags: $selectedState.tags,
-                                             filterMode: false)
+                            TagFilterView(tags: store.tags,
+                                          selectedTags: $selectedState.tags,
+                                          filterMode: false)
                                 .navigationTitle("Tags")
                         }) {
                             if document.tags.isEmpty {

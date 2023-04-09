@@ -12,6 +12,9 @@ struct SearchBarView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @FocusState private var focused: Bool
+    @State private var showCancel: Bool = false
+
     var textColor: Color {
         if colorScheme == .dark {
             return Color.green
@@ -32,31 +35,60 @@ struct SearchBarView: View {
 
     var body: some View {
         HStack {
-            Label("Search", systemImage: "magnifyingglass")
-                .labelStyle(.iconOnly)
-                .foregroundColor(.gray)
-                .padding(.trailing, -2)
-            TextField("Search", text: $text)
-                .padding(.trailing, 4)
-                .padding(.leading, 0)
-                .padding(.vertical, 8)
-                .foregroundColor(text.isEmpty ? .gray : .primary)
-            if !text.isEmpty {
-                Spacer()
-                Label("Clear", systemImage: "xmark.circle.fill")
+            HStack {
+                Label("Search", systemImage: "magnifyingglass")
                     .labelStyle(.iconOnly)
                     .foregroundColor(.gray)
-                    .onTapGesture {
-                        text = ""
+                    .padding(.trailing, -2)
+                TextField("Search", text: $text)
+                    .padding(.trailing, 4)
+                    .padding(.leading, 0)
+                    .padding(.vertical, 8)
+                    .foregroundColor(text.isEmpty ? .gray : .primary)
+                    .focused($focused)
+
+                if !text.isEmpty {
+                    Spacer()
+                    Label("Clear", systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .foregroundColor(.gray)
+                        .onTapGesture {
+                            text = ""
+                        }
+                }
+            }
+            .padding(.horizontal, 10)
+            .background(
+                Rectangle()
+                    .fill(barColor)
+                    .cornerRadius(10)
+            )
+
+            Group {
+                if showCancel {
+                    Button("Cancel") {
+                        focused = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                            text = ""
+                            withAnimation {
+                                showCancel = false
+                            }
+                        }
                     }
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                }
             }
         }
-        .padding(.horizontal, 10)
-        .background(
-            Rectangle()
-                .fill(barColor)
-                .cornerRadius(10)
-        )
+        .animation(.easeInOut, value: focused)
+        .transition(.opacity)
+
+        .onChange(of: focused) { newValue in
+            if newValue {
+                withAnimation {
+                    showCancel = true
+                }
+            }
+        }
     }
 }
 

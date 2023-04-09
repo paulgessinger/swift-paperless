@@ -20,8 +20,10 @@ struct TagView: View {
         self.tagID = tagID
     }
 
-    init(tag: Tag) {
-        self._tag = State(initialValue: tag)
+    init(tag: Tag? = nil) {
+        let dummy = Tag(id: 0, isInboxTag: false, name: "        ", slug: "", color: .gray, textColor: .primary)
+
+        self._tag = State(initialValue: tag ?? dummy)
     }
 
     var body: some View {
