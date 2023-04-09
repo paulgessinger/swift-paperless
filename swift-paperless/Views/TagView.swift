@@ -21,7 +21,7 @@ struct TagView: View {
     }
 
     init(tag: Tag? = nil) {
-        let dummy = Tag(id: 0, isInboxTag: false, name: "        ", slug: "", color: .gray, textColor: .primary)
+        let dummy = Tag.placeholder(8)
 
         self._tag = State(initialValue: tag ?? dummy)
     }

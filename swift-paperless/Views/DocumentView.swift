@@ -109,7 +109,22 @@ struct FilterBar: View {
     }
 
     private struct CircleCounter: View {
+        enum Mode {
+            case include
+            case exclude
+        }
+
         var value: Int
+        var mode = Mode.include
+
+        private var color: Color {
+            switch mode {
+            case .include:
+                return Color.accentColor
+            case .exclude:
+                return Color.red
+            }
+        }
 
         var body: some View {
             Text("\(value)")
@@ -117,7 +132,7 @@ struct FilterBar: View {
                 .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
                 .if(value > 1) { view in view.padding(5) }
                 .frame(minWidth: 20, minHeight: 20)
-                .background(Circle().fill(Color.accentColor))
+                .background(Circle().fill(color))
         }
     }
 
@@ -153,7 +168,7 @@ struct FilterBar: View {
             HStack {
                 if filterState.filtering {
                     Menu {
-                        Text("\(filterState.count) filter(s) applied")
+                        Text("\(filterState.ruleCount) filter(s) applied")
                         Divider()
                         Button(role: .destructive) {
                             withAnimation {
@@ -167,7 +182,7 @@ struct FilterBar: View {
                         Element(label: {
                             Label("Filtering", systemImage: "line.3.horizontal.decrease")
                                 .labelStyle(.iconOnly)
-                            CircleCounter(value: filterState.count)
+                            CircleCounter(value: filterState.ruleCount)
                         }, active: true, action: {}, chevron: false)
 //                    } primaryAction: {
 //                        withAnimation {
@@ -190,7 +205,9 @@ struct FilterBar: View {
                                 Text(name)
                             }
                             else if let i = exclude.first, let name = store.tags[i]?.name {
-                                Text("not \(name)")
+                                Label("Exclude", systemImage: "xmark")
+                                    .labelStyle(.iconOnly)
+                                Text("\(name)")
                             }
                             else {
                                 Text("1 tag")
@@ -198,7 +215,17 @@ struct FilterBar: View {
                             }
                         }
                         else {
-                            CircleCounter(value: count)
+                            if !include.isEmpty, !exclude.isEmpty {
+                                CircleCounter(value: include.count, mode: .include)
+                                Text("/")
+                                CircleCounter(value: exclude.count, mode: .exclude)
+                            }
+                            else if !include.isEmpty {
+                                CircleCounter(value: count, mode: .include)
+                            }
+                            else {
+                                CircleCounter(value: count, mode: .exclude)
+                            }
                             Text("Tags")
                         }
                     case .anyOf(let ids):
@@ -304,6 +331,12 @@ struct FilterBar: View {
                 )
             }
         }
+
+        .onChange(of: store.filterState) { value in
+            withAnimation {
+                filterState = value
+            }
+        }
     }
 }
 
@@ -325,7 +358,7 @@ struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var connectionManager: ConnectionManager
 
-    @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+    @StateObject private var searchDebounce = DebounceObject(delay: 0.4)
     @StateObject private var nav = NavigationCoordinator()
 
     @State private var documents: [Document] = []
@@ -362,25 +395,6 @@ struct DocumentView: View {
                 documents += new
             }
         }
-    }
-
-    func updateSearchCompletion() async {
-        if searchDebounce.debouncedText == "" {
-            searchSuggestions = []
-        }
-        else {
-            searchSuggestions = await store.repository.getSearchCompletion(term: searchDebounce.debouncedText, limit: 10)
-        }
-    }
-
-    func handleSearch(query: String) async {
-        var filterState = store.filterState
-        filterState.searchText = query == "" ? nil : query
-        store.filterState = filterState
-
-        isLoading = true
-        await load(clear: true)
-        isLoading = false
     }
 
     func cell(document: Document) -> some View {
@@ -458,9 +472,14 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
-                SearchBarView(text: $searchDebounce.text)
-                    .padding(.horizontal)
-                    .padding(.bottom, 4)
+                SearchBarView(text: $searchDebounce.text, cancelEnabled: false) {
+                    store.filterState.search = .init(
+                        mode: .titleContent,
+                        text: searchDebounce.debouncedText
+                    )
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
                 FilterBar()
                 GeometryReader { geo in
                     OffsetObservingScrollView(offset: $scrollOffset.value) {
@@ -620,16 +639,10 @@ struct DocumentView: View {
             }
 
             .onChange(of: searchDebounce.debouncedText) { _ in
-                Task {
-                    await updateSearchCompletion()
-
-                    print("Change search to \(searchDebounce.debouncedText)")
-
-                    if searchDebounce.debouncedText == "" {
-                        store.filterState.searchText = nil
-                        await load(clear: true)
-                    }
-                }
+                store.filterState.search = .init(
+                    mode: .titleContent,
+                    text: searchDebounce.debouncedText
+                )
             }
 
             .task {
@@ -639,24 +652,9 @@ struct DocumentView: View {
                     isLoading = false
                     initialLoad = false
                 }
-            }
 
-//            .searchable(text: $searchDebounce.text,
-//                        placement: .automatic)
-//            {
-//                ForEach(searchSuggestions, id: \.self) { v in
-//                    Text(v).searchCompletion(v)
-//                }
-//            }
-
-            .onSubmit(of: .search) {
-                print("Search submit: \(searchDebounce.text)")
-                if searchDebounce.text == store.filterState.searchText {
-                    return
-                }
-                Task {
-                    store.filterState.searchText = searchDebounce.text
-                    await load(clear: true)
+                if let text = store.filterState.search.text {
+                    searchDebounce.text = text
                 }
             }
         }

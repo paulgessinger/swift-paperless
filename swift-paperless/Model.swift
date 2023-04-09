@@ -93,64 +93,6 @@ extension Tag: Equatable, Hashable {
     }
 }
 
-struct FilterState: Equatable, Codable {
-    enum Filter: Equatable, Hashable, Codable {
-        case any
-        case notAssigned
-        case only(id: UInt)
-    }
-
-    enum TagFilter: Equatable, Hashable, Codable {
-        case any
-        case notAssigned
-        case allOf(include: [UInt], exclude: [UInt])
-        case anyOf(ids: [UInt])
-    }
-
-    var correspondent: Filter = .any
-    var documentType: Filter = .any
-    var tags: TagFilter = .any
-
-    init(correspondent: Filter = .any, documentType: Filter = .any, tags: TagFilter = .any) {
-        self.correspondent = correspondent
-        self.documentType = documentType
-        self.tags = tags
-    }
-
-    private var query: String?
-    var searchText: String? {
-        get { query }
-        set(value) {
-            query = value == "" ? nil : value
-        }
-    }
-
-    var filtering: Bool {
-        return documentType != .any || correspondent != .any || tags != .any
-    }
-
-    var count: Int {
-        var result = 0
-        if documentType != .any {
-            result += 1
-        }
-        if correspondent != .any {
-            result += 1
-        }
-        if tags != .any {
-            result += 1
-        }
-
-        return result
-    }
-
-    mutating func clear() {
-        documentType = .any
-        correspondent = .any
-        tags = .any
-    }
-}
-
 class DocumentStore: ObservableObject {
     @Published var documents: [UInt: Document] = [:]
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
@@ -182,17 +124,17 @@ class DocumentStore: ObservableObject {
                 return FilterState()
             }
 //            print(String(data: data, encoding: .utf8))
-            guard let value = try? JSONDecoder().decode(FilterState.self, from: data) else {
+            guard let rules = try? JSONDecoder().decode([FilterRule].self, from: data) else {
                 print("No decode")
                 return FilterState()
             }
 //            print("GOT: \(value)")
-            return value
+            return FilterState(rules: rules)
         }
 
         set {
 //            print("SET: \(newValue)")
-            guard let s = try? JSONEncoder().encode(newValue) else {
+            guard let s = try? JSONEncoder().encode(newValue.rules) else {
                 print("NO ENCODE")
                 return
             }

@@ -20,41 +20,9 @@ extension Endpoint {
             URLQueryItem(name: "page", value: String(page)),
         ]
 
-        if let query = filter.searchText {
-            queryItems.append(URLQueryItem(name: "query", value: query))
-        }
+        let rules = filter.rules
+        queryItems += FilterRule.queryItems(for: rules)
 
-//        if case let .notAssigned = filter.correspondent {
-//            queryItems.append(URLQueryItem(name: "correspondent__id", value: "isnull"))
-//        }
-
-        switch filter.correspondent {
-        case .any: break
-        case .notAssigned:
-            queryItems.append(URLQueryItem(name: "correspondent__isnull", value: "1"))
-        case let .only(id):
-            queryItems.append(URLQueryItem(name: "correspondent__id", value: String(id)))
-        }
-
-        switch filter.documentType {
-        case .any: break
-        case .notAssigned:
-            queryItems.append(URLQueryItem(name: "document_type__isnull", value: "1"))
-        case let .only(id):
-            queryItems.append(URLQueryItem(name: "document_type__id", value: String(id)))
-        }
-
-        switch filter.tags {
-        case .any: break
-        case .notAssigned:
-            queryItems.append(URLQueryItem(name: "is_tagged", value: "0"))
-        case let .allOf(include, _):
-            queryItems.append(
-                URLQueryItem(name: "tags__id__all",
-                             value: include.map { String($0) }.joined(separator: ",")))
-        case .anyOf:
-            fatalError("Not implemented yet")
-        }
 
         queryItems.append(.init(name: "ordering", value: "-created"))
 
@@ -369,6 +337,7 @@ class ApiRepository: Repository {
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
+        print(Endpoint.documents(page: 1, filter: filter).url(host: ""))
         return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))

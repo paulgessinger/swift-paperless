@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SearchBarView: View {
     @Binding var text: String
+    var cancelEnabled = true
+    var onSubmit: () -> Void = {}
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -46,6 +48,7 @@ struct SearchBarView: View {
                     .padding(.vertical, 8)
                     .foregroundColor(text.isEmpty ? .gray : .primary)
                     .focused($focused)
+                    .onSubmit(onSubmit)
 
                 if !text.isEmpty {
                     Spacer()
@@ -65,7 +68,7 @@ struct SearchBarView: View {
             )
 
             Group {
-                if showCancel {
+                if showCancel && cancelEnabled {
                     Button("Cancel") {
                         focused = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
