@@ -175,16 +175,17 @@ struct FilterBar: View {
         }
     }
 
-    private enum Aspect {
-        case tag
-        case correspondent
-        case documentType
-    }
+//    private enum Aspect {
+//        case tag
+//        case correspondent
+//        case documentType
+//    }
 
-//    private func present(_ aspect: Aspect) {
-//        Task {
+    private func present(_ isPresented: Binding<Bool>) {
+        Task {
 //            // needed to unblock opening when menu is open
-    ////            try? await Task.sleep(for: .seconds(0.02))
+            try? await Task.sleep(for: .seconds(0.02))
+            isPresented.wrappedValue = true
 //            switch aspect {
 //            case .tag:
 //                showDocumentType = false
@@ -199,8 +200,8 @@ struct FilterBar: View {
 //                showCorrespondent = false
 //                showTags = false
 //            }
-//        }
-//    }
+        }
+    }
 
     @State var offset = CGSize()
     @State var menuWidth = 0.0
@@ -208,52 +209,83 @@ struct FilterBar: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
-                VStack {
-                    Menu {
-                        if !store.savedViews.isEmpty {
-                            Text("Saved views")
-                            ForEach(store.savedViews.map { $0.value }, id: \.id) { savedView in
-                                Button(savedView.name) {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        store.filterState = .init(rules: savedView.filterRules)
-                                    }
-                                }
-                            }
-                        }
+//                VStack {
+//                    Menu {
+//                        if !store.savedViews.isEmpty {
+//                            Text("Saved views")
+//                            ForEach(store.savedViews.map { $0.value }, id: \.id) { savedView in
+//                                Button(savedView.name) {
+//                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                                        store.filterState = .init(rules: savedView.filterRules)
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//                        if filterState.filtering {
+//                            if !store.savedViews.isEmpty {
+//                                Divider()
+//                            }
+//                            Text("\(filterState.ruleCount) filter(s) applied")
+//                            Divider()
+//                            Button(role: .destructive) {
+//                                withAnimation {
+//                                    store.filterState.clear()
+//                                    filterState.clear()
+//                                }
+//                            } label: {
+//                                Label("Clear filters", systemImage: "xmark")
+//                            }
+//                        }
+//
+//                    } label: {
+//                    }
+//                }
+//                .frame(width: menuWidth)
 
-                        if filterState.filtering {
-                            if !store.savedViews.isEmpty {
-                                Divider()
-                            }
-                            Text("\(filterState.ruleCount) filter(s) applied")
-                            Divider()
-                            Button(role: .destructive) {
-                                withAnimation {
-                                    store.filterState.clear()
-                                    filterState.clear()
-                                }
-                            } label: {
-                                Label("Clear filters", systemImage: "xmark")
-                            }
-                        }
-
-                    } label: {
-                        SizeObservingView(
-                            coordinateSpace: .local,
-                            size: $offset,
-                            content: {
-                                Element.Pill(active: filterState.filtering, chevron: false) {
-                                    Label("Filtering", systemImage: "line.3.horizontal.decrease")
-                                        .labelStyle(.iconOnly)
-                                    if filterState.ruleCount > 0 {
-                                        CircleCounter(value: filterState.ruleCount)
-                                    }
-                                }
-                            }
-                        )
+                Element.Pill(active: filterState.filtering, chevron: false) {
+                    Label("Filtering", systemImage: "line.3.horizontal.decrease")
+                        .labelStyle(.iconOnly)
+                    if filterState.ruleCount > 0 {
+                        CircleCounter(value: filterState.ruleCount)
                     }
                 }
-                .frame(width: menuWidth)
+                .overlay {
+                    GeometryReader { geo in
+                        Menu {
+                            if !store.savedViews.isEmpty {
+                                Text("Saved views")
+                                ForEach(store.savedViews.map { $0.value }, id: \.id) { savedView in
+                                    Button(savedView.name) {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            store.filterState = .init(rules: savedView.filterRules)
+                                        }
+                                    }
+                                }
+                            }
+
+                            if filterState.filtering {
+                                if !store.savedViews.isEmpty {
+                                    Divider()
+                                }
+                                Text("\(filterState.ruleCount) filter(s) applied")
+                                Divider()
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        store.filterState.clear()
+                                        filterState.clear()
+                                    }
+                                } label: {
+                                    Label("Clear filters", systemImage: "xmark")
+                                }
+                            }
+
+                        } label: {
+                            Color.clear
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        }
+                    }
+                }
 
                 .onChange(of: offset) { _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -314,7 +346,7 @@ struct FilterBar: View {
                             Text("Tags")
                         }
                     }
-                }, active: filterState.tags != .any) { showTags = true }
+                }, active: filterState.tags != .any) { present($showTags) }
 
                 Element(label: {
                     switch filterState.documentType {
@@ -331,7 +363,7 @@ struct FilterBar: View {
                                 .redacted(reason: .placeholder)
                         }
                     }
-                }, active: filterState.documentType != .any) { showDocumentType = true }
+                }, active: filterState.documentType != .any) { present($showDocumentType) }
 
                 Element(label: {
                     switch filterState.correspondent {
@@ -348,7 +380,7 @@ struct FilterBar: View {
                                 .redacted(reason: .placeholder)
                         }
                     }
-                }, active: filterState.correspondent != .any) { showCorrespondent = true }
+                }, active: filterState.correspondent != .any) { present($showCorrespondent) }
 
                 Divider()
 
