@@ -155,6 +155,8 @@ extension FilterRule: Codable {
     }
 }
 
+// MARK: - FilterState
+
 struct FilterState: Equatable, Codable {
     enum Filter: Equatable, Hashable, Codable {
         case any
@@ -199,44 +201,45 @@ struct FilterState: Equatable, Codable {
         }
     }
 
-    var correspondent: Filter = .any
-    var documentType: Filter = .any
-    var tags: TagFilter = .any
-    var remaining: [FilterRule] = []
+    var correspondent: Filter = .any { didSet { modified = correspondent != oldValue }}
+    var documentType: Filter = .any { didSet { modified = documentType != oldValue }}
+    var tags: TagFilter = .any { didSet { modified = tags != oldValue }}
+    var remaining: [FilterRule] = [] { didSet { modified = remaining != oldValue }}
+    var savedView: UInt? = nil
+    var modified = false
 
-    struct Search: Codable, Equatable {
-        private var _searchText: String?
-        var mode = SearchMode.titleContent
-        var text: String? {
-            get { _searchText }
-            set(value) {
-                _searchText = value == "" ? nil : value
+//    private enum CodingKeys: String, CodingKey {
+//        case correspondent, documentType, tags, remaining, savedView
+//    }
+
+    var searchText: String? {
+        didSet {
+            if searchText == "" {
+                searchText = nil
             }
-        }
-
-        init(mode: SearchMode = .titleContent, text: String? = nil) {
-            self.mode = mode
-            self.text = text
+            modified = searchText != oldValue
         }
     }
 
-    var search = Search()
+    var searchMode = SearchMode.titleContent {
+        didSet { modified = searchMode != oldValue }
+    }
 
-    // MARK: - Initializers
+    // MARK: Initializers
 
-    init(correspondent: Filter = .any,
-         documentType: Filter = .any,
-         tags: TagFilter = .any,
-         searchText: String? = nil,
-         searchMode: SearchMode = .titleContent,
-         remaining: [FilterRule] = [])
-    {
+    init(correspondent: FilterState.Filter = .any, documentType: FilterState.Filter = .any, tags: FilterState.TagFilter = .any, remaining: [FilterRule] = [], savedView: UInt? = nil, searchText: String? = nil, searchMode: SearchMode = .titleContent) {
         self.correspondent = correspondent
         self.documentType = documentType
         self.tags = tags
-        search.text = searchText
-        search.mode = searchMode
         self.remaining = remaining
+        self.savedView = savedView
+        self.searchText = searchText
+        self.searchMode = searchMode
+    }
+
+    init(savedView: SavedView) {
+        self.init(rules: savedView.filterRules)
+        self.savedView = savedView.id
     }
 
     init(rules: [FilterRule]) {
@@ -250,13 +253,13 @@ struct FilterState: Equatable, Codable {
                 guard let mode = SearchMode(ruleType: rule.ruleType) else {
                     fatalError("Could not convert rule type to search mode (this should not occur)")
                 }
-                search.mode = mode
+                searchMode = mode
                 guard case .string(let v) = rule.value else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
                 }
-                search.text = v
+                searchText = v
 
             case .correspondent:
                 guard case .correspondent(let id) = rule.value else {
@@ -359,14 +362,14 @@ struct FilterState: Equatable, Codable {
         }
     }
 
-    // MARK: - Methods
+    // MARK: Methods
 
     var rules: [FilterRule] {
         var result = remaining
 
-        if let s = search.text {
+        if let s = searchText {
             result.append(
-                .init(ruleType: search.mode.ruleType, value: .string(value: s))
+                .init(ruleType: searchMode.ruleType, value: .string(value: s))
             )
         }
 
@@ -421,7 +424,7 @@ struct FilterState: Equatable, Codable {
     }
 
     var filtering: Bool {
-        return documentType != .any || correspondent != .any || tags != .any || search.text != nil
+        return documentType != .any || correspondent != .any || tags != .any || searchText != nil
     }
 
     var ruleCount: Int {
@@ -435,7 +438,7 @@ struct FilterState: Equatable, Codable {
         if tags != .any {
             result += 1
         }
-        if search.text != nil {
+        if searchText != nil {
             result += 1
         }
 
@@ -446,6 +449,9 @@ struct FilterState: Equatable, Codable {
         documentType = .any
         correspondent = .any
         tags = .any
-        search = Search()
+        searchText = nil
+        searchMode = .titleContent
+        savedView = nil
+        modified = false
     }
 }

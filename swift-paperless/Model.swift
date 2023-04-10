@@ -167,31 +167,30 @@ class DocumentStore: ObservableObject {
     var filterStatePublisher =
         PassthroughSubject<FilterState, Never>()
 
-    var filterState: FilterState {
-        get {
-//            print("GETTING!")
-            guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
-                print("No default")
-                return FilterState()
-            }
-//            print(String(data: data, encoding: .utf8))
-            guard let rules = try? JSONDecoder().decode([FilterRule].self, from: data) else {
-                print("No decode")
-                return FilterState()
-            }
-//            print("GOT: \(value)")
-            return FilterState(rules: rules)
+    var filterState: FilterState = {
+//        print("GETTING!")
+        guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
+            print("No default")
+            return FilterState()
         }
-
-        set {
-//            print("SET: \(newValue)")
-            guard let s = try? JSONEncoder().encode(newValue.rules) else {
+//        print(String(data: data, encoding: .utf8))
+        guard let value = try? JSONDecoder().decode(FilterState.self, from: data) else {
+            print("No decode")
+            return FilterState()
+        }
+//        let value = FilterState(rules: rules)
+//        print("GOT: \(value)")
+        return value
+    }() {
+        didSet {
+//            print("SET: \(filterState)")
+            guard let s = try? JSONEncoder().encode(filterState) else {
                 print("NO ENCODE")
                 return
             }
 //            print(String(data: s, encoding: .utf8))
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")
-            filterStatePublisher.send(newValue)
+            filterStatePublisher.send(filterState)
         }
     }
 
