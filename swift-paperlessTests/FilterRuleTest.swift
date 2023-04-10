@@ -341,13 +341,104 @@ final class FilterRuleTest: XCTestCase {
 
         XCTAssertEqual(state.tags, .allOf(include: [66, 71], exclude: [75]))
 
-        XCTAssertEqual(state.searchMode, .title)
-        XCTAssertEqual(state.searchText, "shantel")
+        XCTAssertEqual(state.search.mode, .title)
+        XCTAssertEqual(state.search.text, "shantel")
         XCTAssertEqual(state.correspondent, .notAssigned)
         XCTAssertEqual(state.remaining, input.suffix(1))
 
         XCTAssertEqual(
             state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue }),
             input.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue }))
+    }
+
+    func testLoadSavedView() throws {
+        let input = """
+        {
+          "count": 4,
+          "next": null,
+          "previous": null,
+          "results": [
+            {
+              "id": 3,
+              "name": "CHEP 2023 & CERN",
+              "show_on_dashboard": false,
+              "show_in_sidebar": true,
+              "sort_field": "created",
+              "sort_reverse": true,
+              "filter_rules": [
+                {
+                  "rule_type": 0,
+                  "value": "shantel"
+                },
+                {
+                  "rule_type": 6,
+                  "value": "66"
+                },
+                {
+                  "rule_type": 6,
+                  "value": "71"
+                },
+                {
+                  "rule_type": 17,
+                  "value": "75"
+                },
+                {
+                  "rule_type": 3,
+                  "value": null
+                },
+                {
+                  "rule_type": 14,
+                  "value": "2023-01-01"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Health",
+              "show_on_dashboard": false,
+              "show_in_sidebar": true,
+              "sort_field": "created",
+              "sort_reverse": true,
+              "filter_rules": [
+                {
+                  "rule_type": 6,
+                  "value": "9"
+                }
+              ]
+            },
+            {
+              "id": 1,
+              "name": "Inbox",
+              "show_on_dashboard": true,
+              "show_in_sidebar": true,
+              "sort_field": "added",
+              "sort_reverse": true,
+              "filter_rules": [
+                {
+                  "rule_type": 6,
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Without any tag",
+              "show_on_dashboard": false,
+              "show_in_sidebar": true,
+              "sort_field": "created",
+              "sort_reverse": true,
+              "filter_rules": [
+                {
+                  "rule_type": 7,
+                  "value": "false"
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let result = try JSONDecoder().decode(ListResponse<SavedView>.self, from: input.data(using: .utf8)!)
+        print(result)
     }
 }

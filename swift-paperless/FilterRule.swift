@@ -67,7 +67,7 @@ private extension KeyedDecodingContainerProtocol {
     }
 }
 
-struct FilterRule: Codable, Equatable {
+struct FilterRule: Equatable {
     var ruleType: FilterRuleType
     var value: FilterRuleValue
 
@@ -79,45 +79,6 @@ struct FilterRule: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case ruleType = "rule_type"
         case value
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.ruleType = try container.decode(FilterRuleType.self, forKey: .ruleType)
-        switch ruleType.dataType() {
-        case .date:
-            let dateStr = try container.decode(String.self, forKey: .value)
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            guard let date = dateFormatter.date(from: dateStr) else {
-                throw DateDecodingError.invalidDate(string: dateStr)
-            }
-            self.value = .date(value: date)
-
-//            self.value = try .date(value: container.decode(Date.self, forKey: .value))
-        case .number:
-            self.value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
-        case .tag:
-            self.value = try .tag(id: container.decodeOrConvert(UInt.self, forKey: .value))
-        case .boolean:
-            self.value = try .boolean(value: container.decodeOrConvert(Bool.self, forKey: .value))
-        case .documentType:
-            self.value = try .documentType(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .storagePath:
-            self.value = try .storagePath(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .correspondent:
-            self.value = try .correspondent(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .string:
-            self.value = try .string(value: container.decodeOrConvert(String.self, forKey: .value))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-
-        try container.encode(ruleType, forKey: .ruleType)
-
-        try container.encode(value.string(), forKey: .value)
     }
 
     static func queryItems(for rules: [FilterRule]) -> [URLQueryItem] {
@@ -149,6 +110,48 @@ struct FilterRule: Codable, Equatable {
         }
 
         return result
+    }
+}
+
+extension FilterRule: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        ruleType = try container.decode(FilterRuleType.self, forKey: .ruleType)
+
+        switch ruleType.dataType() {
+        case .date:
+            let dateStr = try container.decode(String.self, forKey: .value)
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            guard let date = dateFormatter.date(from: dateStr) else {
+                throw DateDecodingError.invalidDate(string: dateStr)
+            }
+            value = .date(value: date)
+
+//            self.value = try .date(value: container.decode(Date.self, forKey: .value))
+        case .number:
+            value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
+        case .tag:
+            value = try .tag(id: container.decodeOrConvert(UInt.self, forKey: .value))
+        case .boolean:
+            value = try .boolean(value: container.decodeOrConvert(Bool.self, forKey: .value))
+        case .documentType:
+            value = try .documentType(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+        case .storagePath:
+            value = try .storagePath(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+        case .correspondent:
+            value = try .correspondent(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+        case .string:
+            value = try .string(value: container.decodeOrConvert(String.self, forKey: .value))
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(ruleType, forKey: .ruleType)
+
+        try container.encode(value.string(), forKey: .value)
     }
 }
 
@@ -262,7 +265,7 @@ struct FilterState: Equatable, Codable {
                     break
                 }
 
-                self.correspondent = id == nil ? .notAssigned : .only(id: id!)
+                correspondent = id == nil ? .notAssigned : .only(id: id!)
 
             case .documentType:
                 guard case .documentType(let id) = rule.value else {
@@ -271,7 +274,7 @@ struct FilterState: Equatable, Codable {
                     break
                 }
 
-                self.documentType = id == nil ? .notAssigned : .only(id: id!)
+                documentType = id == nil ? .notAssigned : .only(id: id!)
 
             case .hasTagsAll:
                 guard case .tag(let id) = rule.value else {
@@ -346,7 +349,7 @@ struct FilterState: Equatable, Codable {
                     remaining.append(rule)
 
                 case .any:
-                    self.tags = .notAssigned
+                    tags = .notAssigned
                 case .notAssigned: break
                 }
 

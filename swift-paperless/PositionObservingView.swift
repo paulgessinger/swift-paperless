@@ -30,11 +30,40 @@ struct PositionObservingView<Content: View>: View {
     }
 }
 
+struct SizeObservingView<Content: View>: View {
+    var coordinateSpace: CoordinateSpace
+    @Binding var size: CGSize
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .background(GeometryReader { geometry in
+                Color.clear.preference(
+                    key: PreferenceKey.self,
+                    value: geometry.frame(in: coordinateSpace).size
+                )
+            })
+            .onPreferenceChange(PreferenceKey.self) { size in
+                self.size = size
+            }
+    }
+}
+
 private extension PositionObservingView {
     enum PreferenceKey: SwiftUI.PreferenceKey {
         static var defaultValue: CGPoint { .zero }
 
         static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
+            // No-op
+        }
+    }
+}
+
+private extension SizeObservingView {
+    enum PreferenceKey: SwiftUI.PreferenceKey {
+        static var defaultValue: CGSize { .zero }
+
+        static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
             // No-op
         }
     }

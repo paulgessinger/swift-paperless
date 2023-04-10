@@ -28,6 +28,13 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
 
     private(set) var added: String? = nil
     private(set) var storagePath: String? = nil
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title
+        case documentType = "document_type"
+        case correspondent, created, tags, added
+        case storagePath = "storage_path"
+    }
 }
 
 struct ProtoDocument: DocumentProtocol {
@@ -60,12 +67,24 @@ struct Correspondent: Codable, Identifiable, Model {
     // match?
     var name: String
     var slug: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case documentCount = "document_count"
+        case isInsensitive = "is_insensitive"
+        case lastCorrespondence = "last_correspondence"
+        case name, slug
+    }
 }
 
 struct DocumentType: Codable, Identifiable, Model {
     var id: UInt
     var name: String
     var slug: String
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, slug
+    }
 }
 
 struct Tag: Codable, Identifiable, Model {
@@ -75,6 +94,13 @@ struct Tag: Codable, Identifiable, Model {
     var slug: String
     @HexColor var color: Color
     @HexColor var textColor: Color
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case isInboxTag = "is_inbox_tag"
+        case name, slug, color
+        case textColor = "text_color"
+    }
 
     static func placeholder(_ length: Int) -> Tag {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -93,11 +119,36 @@ extension Tag: Equatable, Hashable {
     }
 }
 
+struct SavedView: Codable, Identifiable, Hashable, Model {
+    var id: UInt
+    var name: String
+    var showOnDashboard: Bool
+    var showInSidebar: Bool
+    var sortField: String
+    var sortReverse: Bool
+    var filterRules: [FilterRule]
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case showOnDashboard = "show_on_dashboard"
+        case showInSidebar = "show_in_sidebar"
+        case sortField = "sort_field"
+        case sortReverse = "sort_reverse"
+        case filterRules = "filter_rules"
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 class DocumentStore: ObservableObject {
     @Published var documents: [UInt: Document] = [:]
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
     @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
     @Published private(set) var tags: [UInt: Tag] = [:]
+    @Published private(set) var savedViews: [UInt: SavedView] = [:]
 
 //    @Published var filterState = FilterState()
 
@@ -149,9 +200,10 @@ class DocumentStore: ObservableObject {
         documentSource = repository.documents(filter: FilterState())
 
         Task {
-            async let _ = await fetchAllTags()
-            async let _ = await fetchAllCorrespondents()
-            async let _ = await fetchAllDocumentTypes()
+//            async let _ = await fetchAllTags()
+//            async let _ = await fetchAllCorrespondents()
+//            async let _ = await fetchAllDocumentTypes()
+            async let _ = await fetchAll()
         }
 
 //        Task { await MainActor.run { self.filterState = persistentFilterState }}
@@ -226,11 +278,18 @@ class DocumentStore: ObservableObject {
     }
 
     @MainActor
+    func fetchAllSavedViews() async {
+        await fetchAll(elements: await repository.savedViews(),
+                       collection: \.savedViews)
+    }
+
+    @MainActor
     func fetchAll() async {
         async let c: () = fetchAllCorrespondents()
         async let d: () = fetchAllDocumentTypes()
         async let t: () = fetchAllTags()
-        _ = await (c, d, t)
+        async let s: () = fetchAllSavedViews()
+        _ = await (c, d, t, s)
     }
 
     @MainActor

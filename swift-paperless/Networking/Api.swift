@@ -18,11 +18,11 @@ extension Endpoint {
     static func documents(page: UInt, filter: FilterState = FilterState()) -> Endpoint {
         var queryItems = [
             URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "truncate_content", value: "true"),
         ]
 
         let rules = filter.rules
         queryItems += FilterRule.queryItems(for: rules)
-
 
         queryItems.append(.init(name: "ordering", value: "-created"))
 
@@ -81,9 +81,16 @@ extension Endpoint {
             return tags()
         case is Document.Type:
             return documents(page: 1, filter: FilterState())
+        case is SavedView.Type:
+            return savedViews()
         default:
             fatalError("Invalid type")
         }
+    }
+
+    static func savedViews() -> Endpoint {
+        return Endpoint(path: "/api/saved_views/",
+                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
@@ -115,7 +122,7 @@ extension Endpoint {
     }
 }
 
-private struct ListResponse<Element>: Decodable
+struct ListResponse<Element>: Decodable
     where Element: Decodable
 {
     var count: UInt
@@ -148,7 +155,7 @@ let decoder: JSONDecoder = {
 
         return res
     }
-    d.keyDecodingStrategy = .convertFromSnakeCase
+//    d.keyDecodingStrategy = .convertFromSnakeCase
     return d
 }()
 
@@ -460,5 +467,9 @@ class ApiRepository: Repository {
             guard let uiImage = UIImage(data: data) else { return nil }
             return Image(uiImage: uiImage)
         } catch { return nil }
+    }
+
+    func savedViews() async -> [SavedView] {
+        return await all(SavedView.self)
     }
 }

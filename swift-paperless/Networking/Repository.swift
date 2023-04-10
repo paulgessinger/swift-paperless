@@ -32,6 +32,8 @@ protocol Repository {
 
     func download(documentID: UInt) async -> URL?
     func getSearchCompletion(term: String, limit: UInt) async -> [String]
+
+    func savedViews() async -> [SavedView]
 }
 
 class NullRepository: Repository {
@@ -57,6 +59,8 @@ class NullRepository: Repository {
     }
 
     func thumbnail(document: Document) async -> (Bool, Image?) { return (false, nil) }
+
+    func savedViews() async -> [SavedView] { return [] }
 }
 
 // - MARK: DocumentSource

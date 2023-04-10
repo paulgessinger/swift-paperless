@@ -171,4 +171,8 @@ class PreviewRepository: Repository {
             return (false, nil)
         }
     }
+
+    func savedViews() async -> [SavedView] {
+        return []
+    }
 }
