@@ -240,3 +240,39 @@ extension View {
         }
     }
 }
+
+struct Haptics {
+    static let shared = Haptics()
+
+    private var impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
+
+    private let notificationGenerator = UINotificationFeedbackGenerator()
+
+    private init() {
+        let styles = [UIImpactFeedbackGenerator.FeedbackStyle]([
+            .light, .heavy, .medium, .rigid, .soft
+        ])
+
+        for style in styles {
+            impactGenerators[style] = UIImpactFeedbackGenerator(style: style)
+        }
+    }
+
+    func prepare() {
+        for (_, gen) in impactGenerators {
+            gen.prepare()
+        }
+        notificationGenerator.prepare()
+    }
+
+    func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        notificationGenerator.notificationOccurred(type)
+    }
+
+    func impact(style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        guard let gen = impactGenerators[style] else {
+            fatalError("Invalid feedback style")
+        }
+        gen.impactOccurred()
+    }
+}

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 10.04.23.
 //
 
+import Combine
 import Foundation
 import SwiftUI
 
@@ -63,6 +64,7 @@ private struct FilterMenu<Content: View>: View {
                 Text("\(filterState.ruleCount) filter(s) applied")
                 Divider()
                 Button(role: .destructive) {
+                    Haptics.shared.notification(.success)
                     withAnimation {
                         store.filterState.clear()
                         filterState.clear()
@@ -78,16 +80,30 @@ private struct FilterMenu<Content: View>: View {
     }
 }
 
+// MARK: Element View
+
 private struct Element<Label: View>: View {
     @ViewBuilder var label: () -> Label
     var active: Bool
     var action: () -> Void
     var chevron = true
 
+    @State private var pressed = false
+
     var body: some View {
-        Button(action: action) {
-            Pill(active: active, chevron: chevron, label: label)
-        }
+        Pill(active: active, chevron: chevron, label: label)
+            .onTapGesture {
+                Haptics.shared.impact(style: .light)
+                action()
+                Task {
+                    pressed = true
+                    try? await Task.sleep(for: .seconds(0.3))
+                    withAnimation {
+                        pressed = false
+                    }
+                }
+            }
+            .opacity(pressed ? 0.7 : 1.0)
     }
 }
 
@@ -121,10 +137,18 @@ private struct Pill<Label: View>: View {
 
 struct FilterBar: View {
     @EnvironmentObject private var store: DocumentStore
+    @Environment(\.dismiss) private var dismiss
 
     @State private var showTags = false
     @State private var showDocumentType = false
     @State private var showCorrespondent = false
+
+    private enum ModalMode {
+        case tags
+        case correspondent
+        case documentType
+    }
+
     @State private var filterState = FilterState()
 
     private struct Modal<Content: View>: View {
@@ -133,6 +157,7 @@ struct FilterBar: View {
 
         var title: String
         @Binding var filterState: FilterState
+        var onDismiss: () -> Void = {}
         @ViewBuilder var content: () -> Content
 
         var body: some View {
@@ -147,6 +172,7 @@ struct FilterBar: View {
                         Button("Done") {
                             dismiss()
                             store.filterState = filterState
+                            onDismiss()
                         }
                     }
                 }
@@ -182,11 +208,19 @@ struct FilterBar: View {
         }
     }
 
-    private func present(_ isPresented: Binding<Bool>) {
-        Task {
-            // needed to unblock opening when menu is open
-            try? await Task.sleep(for: .seconds(0.02))
-            isPresented.wrappedValue = true
+    // MARK: present()
+
+    private func present(_ mode: ModalMode) {
+//        impact.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+            switch mode {
+            case .tags:
+                showTags = true
+            case .correspondent:
+                showCorrespondent = true
+            case .documentType:
+                showDocumentType = true
+            }
         }
     }
 
@@ -195,142 +229,157 @@ struct FilterBar: View {
     @State var filterMenuHit = false
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack {
-                Pill(active: filterState.filtering, chevron: false) {
-                    Label("Filtering", systemImage: "line.3.horizontal.decrease")
-                        .labelStyle(.iconOnly)
-                    if let savedViewId = filterState.savedView,
-                       let savedView = store.savedViews[savedViewId],
-                       !filterState.modified
-                    {
-                        Text("\(savedView.name)")
-                    }
-                    else if filterState.ruleCount > 0 {
-                        CircleCounter(value: filterState.ruleCount)
-                    }
-                }
-                .opacity(filterMenuHit ? 0.5 : 1.0)
-                .overlay {
-                    GeometryReader { geo in
-                        FilterMenu(filterState: $filterState) {
-                            Color.clear
-                                .frame(width: geo.size.width, height: geo.size.height)
+        VStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    Pill(active: filterState.filtering, chevron: false) {
+                        Label("Filtering", systemImage: "line.3.horizontal.decrease")
+                            .labelStyle(.iconOnly)
+                        if let savedViewId = filterState.savedView,
+                           let savedView = store.savedViews[savedViewId],
+                           !filterState.modified
+                        {
+                            Text("\(savedView.name)")
+                        }
+                        else if filterState.ruleCount > 0 {
+                            CircleCounter(value: filterState.ruleCount)
                         }
                     }
-                    .onTapGesture {
-                        Task {
-                            filterMenuHit = true
-                            try? await Task.sleep(for: .seconds(0.3))
-                            withAnimation { filterMenuHit = false }
-                        }
-                    }
-                }
-
-                .onChange(of: offset) { _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        withAnimation {
-                            menuWidth = offset.width
-                        }
-                    }
-                }
-
-                Element(label: {
-                    switch filterState.tags {
-                    case .any:
-                        Text("Tags")
-                    case .notAssigned:
-                        Text("None")
-                    case .allOf(let include, let exclude):
-                        let count = include.count + exclude.count
-                        if count == 1 {
-                            if let i = include.first, let name = store.tags[i]?.name {
-                                Text(name)
+                    .opacity(filterMenuHit ? 0.5 : 1.0)
+                    .overlay {
+                        GeometryReader { geo in
+                            FilterMenu(filterState: $filterState) {
+                                Color.clear
+                                    .frame(width: geo.size.width, height: geo.size.height)
                             }
-                            else if let i = exclude.first, let name = store.tags[i]?.name {
-                                Label("Exclude", systemImage: "xmark")
-                                    .labelStyle(.iconOnly)
-                                Text("\(name)")
+                        }
+                        .onTapGesture {
+                            Task {
+                                Haptics.shared.prepare()
+                                Haptics.shared.impact(style: .light)
+                                filterMenuHit = true
+                                try? await Task.sleep(for: .seconds(0.3))
+                                withAnimation { filterMenuHit = false }
+                            }
+                        }
+                    }
+
+                    .onChange(of: offset) { _ in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation {
+                                menuWidth = offset.width
+                            }
+                        }
+                    }
+
+                    Element(label: {
+                        switch filterState.tags {
+                        case .any:
+                            Text("Tags")
+                        case .notAssigned:
+                            Text("None")
+                        case .allOf(let include, let exclude):
+                            let count = include.count + exclude.count
+                            if count == 1 {
+                                if let i = include.first, let name = store.tags[i]?.name {
+                                    Text(name)
+                                }
+                                else if let i = exclude.first, let name = store.tags[i]?.name {
+                                    Label("Exclude", systemImage: "xmark")
+                                        .labelStyle(.iconOnly)
+                                    Text("\(name)")
+                                }
+                                else {
+                                    Text("1 tag")
+                                        .redacted(reason: .placeholder)
+                                }
                             }
                             else {
-                                Text("1 tag")
+                                if !include.isEmpty, !exclude.isEmpty {
+                                    CircleCounter(value: include.count, mode: .include)
+                                    Text("/")
+                                    CircleCounter(value: exclude.count, mode: .exclude)
+                                }
+                                else if !include.isEmpty {
+                                    CircleCounter(value: count, mode: .include)
+                                }
+                                else {
+                                    CircleCounter(value: count, mode: .exclude)
+                                }
+                                Text("Tags")
+                            }
+                        case .anyOf(let ids):
+                            if ids.count == 1 {
+                                if let name = store.tags[ids.first!]?.name {
+                                    Text(name)
+                                }
+                                else {
+                                    Text("1 tag")
+                                        .redacted(reason: .placeholder)
+                                }
+                            }
+                            else {
+                                CircleCounter(value: ids.count)
+                                Text("Tags")
+                            }
+                        }
+                    }, active: filterState.tags != .any) {
+                        //                    if showTags {
+                        //                        print("IS ALREADY TRUE")
+                        //                        showTags = false
+                        //                    }
+                        ////                    DispatchQueue.main.async {
+                        ////                    Task {
+                        //                    showTags = true
+                        ////                    }
+                        ////                    }
+                        present(.tags)
+                    }
+
+                    Element(label: {
+                        switch filterState.documentType {
+                        case .any:
+                            Text("Document Type")
+                        case .notAssigned:
+                            Text("None")
+                        case .only(let id):
+                            if let name = store.documentTypes[id]?.name {
+                                Text(name)
+                            }
+                            else {
+                                Text("1 document type")
                                     .redacted(reason: .placeholder)
                             }
                         }
-                        else {
-                            if !include.isEmpty, !exclude.isEmpty {
-                                CircleCounter(value: include.count, mode: .include)
-                                Text("/")
-                                CircleCounter(value: exclude.count, mode: .exclude)
-                            }
-                            else if !include.isEmpty {
-                                CircleCounter(value: count, mode: .include)
-                            }
-                            else {
-                                CircleCounter(value: count, mode: .exclude)
-                            }
-                            Text("Tags")
-                        }
-                    case .anyOf(let ids):
-                        if ids.count == 1 {
-                            if let name = store.tags[ids.first!]?.name {
+                    }, active: filterState.documentType != .any) { present(.documentType) }
+
+                    Element(label: {
+                        switch filterState.correspondent {
+                        case .any:
+                            Text("Correspondent")
+                        case .notAssigned:
+                            Text("None")
+                        case .only(let id):
+                            if let name = store.correspondents[id]?.name {
                                 Text(name)
                             }
                             else {
-                                Text("1 tag")
+                                Text("1 correspondent")
                                     .redacted(reason: .placeholder)
                             }
                         }
-                        else {
-                            CircleCounter(value: ids.count)
-                            Text("Tags")
-                        }
-                    }
-                }, active: filterState.tags != .any) { present($showTags) }
+                    }, active: filterState.correspondent != .any) { present(.correspondent) }
 
-                Element(label: {
-                    switch filterState.documentType {
-                    case .any:
-                        Text("Document Type")
-                    case .notAssigned:
-                        Text("None")
-                    case .only(let id):
-                        if let name = store.documentTypes[id]?.name {
-                            Text(name)
-                        }
-                        else {
-                            Text("1 document type")
-                                .redacted(reason: .placeholder)
-                        }
-                    }
-                }, active: filterState.documentType != .any) { present($showDocumentType) }
+                    Divider()
 
-                Element(label: {
-                    switch filterState.correspondent {
-                    case .any:
-                        Text("Correspondent")
-                    case .notAssigned:
-                        Text("None")
-                    case .only(let id):
-                        if let name = store.correspondents[id]?.name {
-                            Text(name)
-                        }
-                        else {
-                            Text("1 correspondent")
-                                .redacted(reason: .placeholder)
-                        }
-                    }
-                }, active: filterState.correspondent != .any) { present($showCorrespondent) }
-
-                Divider()
-
-                Element(label: {
-                    Label("Sort", systemImage: "arrow.up.arrow.down")
-                        .labelStyle(.iconOnly)
-                }, active: false, action: {})
+                    Element(label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                            .labelStyle(.iconOnly)
+                    }, active: false, action: {})
+                }
+                .padding(.horizontal)
+                .foregroundColor(.primary)
             }
-            .padding(.horizontal)
-            .foregroundColor(.primary)
         }
         .task {
             try? await Task.sleep(for: .seconds(0.5))
@@ -346,6 +395,8 @@ struct FilterBar: View {
             alignment: .bottom
         )
         .padding(.bottom, -8)
+
+        // MARK: Sheets
 
         .sheet(isPresented: $showTags) {
             Modal(title: "Tags", filterState: $filterState) {

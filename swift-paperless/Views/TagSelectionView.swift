@@ -10,7 +10,7 @@ import SwiftUI
 // - MARK: TagFilterView
 struct TagFilterView: View {
     @EnvironmentObject private var store: DocumentStore
-    
+
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
     private enum Mode {
@@ -20,7 +20,7 @@ struct TagFilterView: View {
 
     @Binding var selectedTags: FilterState.TagFilter
     @State private var mode = Mode.all
-    
+
     init(selectedTags: Binding<FilterState.TagFilter>) {
         _selectedTags = selectedTags
         switch self.selectedTags {
@@ -31,8 +31,6 @@ struct TagFilterView: View {
         default: break
         }
     }
-
-
 
     private func row<Content: View>(action: @escaping () -> (),
                                     active: Bool,
