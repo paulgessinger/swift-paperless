@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Semaphore
 import SwiftUI
 import UIKit
 
@@ -15,10 +16,11 @@ struct Endpoint {
 }
 
 extension Endpoint {
-    static func documents(page: UInt, filter: FilterState = FilterState()) -> Endpoint {
+    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = 100) -> Endpoint {
         var queryItems = [
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "truncate_content", value: "true"),
+            URLQueryItem(name: "page_size", value: String(pageSize)),
         ]
 
         let rules = filter.rules
@@ -175,34 +177,50 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
 
     private(set) var hasMore = true
 
+    private let semaphore = AsyncSemaphore(value: 1)
+
     init(repository: ApiRepository, url: URL) {
         self.repository = repository
         nextPage = url
     }
 
+    func xprint(_ s: String) {
+        if Element.self == Document.self {
+            print(s)
+        }
+    }
+
     func next() async -> Element? {
+        await semaphore.wait()
+        defer { semaphore.signal() }
+
+//        xprint("ENTER next")
         guard !Task.isCancelled else {
             return nil
         }
 
         // if we have a current page loaded, return next element from that
         if let buffer = buffer, bufferIndex < buffer.count {
+//            xprint("Return from buffer")
             defer { bufferIndex += 1 }
             return buffer[bufferIndex]
         }
 
         guard let url = nextPage else {
+//            xprint("No next page")
             hasMore = false
             return nil
         }
 
         do {
+//            xprint("Fetch more")
             let request = repository.request(url: url)
             let (data, _) = try await URLSession.shared.data(for: request)
 
             let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
 
             guard !decoded.results.isEmpty else {
+//                xprint("Fetch was empty")
                 hasMore = false
                 return nil
             }
@@ -212,6 +230,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
 //                print("Got \(decoded.results.count)")
 //            }
 
+//            xprint("Fetch was good, returning")
             nextPage = decoded.next
 //            print("next: \(nextPage)")
             buffer = decoded.results
@@ -219,7 +238,8 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch {
-            print(error)
+//            xprint("Got error")
+            print("ERROR: \(error)")
             return nil
         }
     }
@@ -239,6 +259,15 @@ class ApiDocumentSource: DocumentSource {
     }
 
     func fetch(limit: UInt) async -> [Document] {
+//        print("CALL FETCH")
+//        var result = [Document]()
+//        for _ in 0 ..< limit {
+//            guard let doc = await sequence.next() else {
+//                break
+//            }
+//            result.append(doc)
+//        }
+//        return result
         return await Array(sequence.prefix(Int(limit)))
     }
 
@@ -344,7 +373,7 @@ class ApiRepository: Repository {
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
-        print(Endpoint.documents(page: 1, filter: filter).url(host: ""))
+        print(Endpoint.documents(page: 1, filter: filter).url(host: "THIS_IS_ON_PURPOSE"))
         return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
@@ -352,12 +381,13 @@ class ApiRepository: Repository {
 
     func download(documentID: UInt) async -> URL? {
         let request = request(.download(documentId: documentID))
+//        print(request.url)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Getting image: Status was not 200")
+                print("Downloading document: Status was not 200")
                 return nil
             }
 
@@ -370,12 +400,9 @@ class ApiRepository: Repository {
                 print("Cannot get ")
                 return nil
             }
-//        print(suggestedFilename)
 
             let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-//        let temporaryFilename = ProcessInfo().globallyUniqueString
             let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(suggestedFilename)
-//        print(temporaryFileURL)
 
             try data.write(to: temporaryFileURL, options: .atomic)
             try await Task.sleep(for: .seconds(0.2)) // wait a little bit for the data to be flushed
@@ -384,25 +411,6 @@ class ApiRepository: Repository {
         } catch {
             print(error)
             return nil
-        }
-    }
-
-    func getSearchCompletion(term: String, limit: UInt = 10) async -> [String] {
-        let request = request(.searchAutocomplete(term: term, limit: limit))
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Getting image: Status was not 200")
-                return []
-            }
-
-            return try decoder.decode([String].self, from: data)
-
-        } catch {
-            print(error)
-            return []
         }
     }
 
@@ -459,7 +467,8 @@ class ApiRepository: Repository {
             let (data, res) = try await URLSession.shared.data(for: request)
 
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                fatalError("Did not get good response for image")
+                return nil
+//                fatalError("Did not get good response for image")
             }
 
 //            try await Task.sleep(for: .seconds(2))

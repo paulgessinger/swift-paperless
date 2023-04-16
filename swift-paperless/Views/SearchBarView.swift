@@ -10,6 +10,7 @@ import SwiftUI
 struct SearchBarView: View {
     @Binding var text: String
     var cancelEnabled = true
+    var isFocused: Binding<Bool>? = nil
     var onSubmit: () -> Void = {}
 
     @Environment(\.colorScheme) private var colorScheme
@@ -56,6 +57,7 @@ struct SearchBarView: View {
                         .labelStyle(.iconOnly)
                         .foregroundColor(.gray)
                         .onTapGesture {
+                            print("RESET SEARCH")
                             text = ""
                         }
                 }
@@ -86,6 +88,10 @@ struct SearchBarView: View {
         .transition(.opacity)
 
         .onChange(of: focused) { newValue in
+            if let isFocused = isFocused {
+                isFocused.wrappedValue = newValue
+            }
+
             if newValue {
                 withAnimation {
                     showCancel = true

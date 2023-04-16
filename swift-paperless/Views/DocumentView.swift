@@ -53,6 +53,121 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
+private struct LoadingDocumentList: View {
+    @State private var documents: [Document] = []
+    @StateObject private var store = DocumentStore(repository: PreviewRepository())
+
+    var body: some View {
+        VStack {
+            ForEach(documents, id: \.self) { document in
+                DocumentCell(document: document)
+                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                    .redacted(reason: .placeholder)
+                Divider()
+                    .padding(.horizontal)
+            }
+        }
+        .environmentObject(store)
+        .task {
+            documents = await store.fetchDocuments(clear: true, pageSize: 10)
+//            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
+        }
+    }
+}
+
+private struct DocumentList: View {
+    @EnvironmentObject private var store: DocumentStore
+
+    @Binding var documents: [Document]
+    @State private var loadingMore = false
+
+    private let stackCutoff = 100
+
+    struct Cell: View {
+        var document: Document
+
+        var body: some View {
+            NavigationLink(value:
+                NavigationState.detail(document: document)
+            ) {
+                DocumentCell(document: document)
+                    .contentShape(Rectangle())
+            }
+
+            .buttonStyle(.plain)
+            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+
+//            if document != documents.last {
+            Divider()
+                .padding(.horizontal)
+//            }
+        }
+    }
+
+    func loadMore() async {
+        let new = await store.fetchDocuments(clear: false, pageSize: 101)
+        documents += new
+    }
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            ForEach(documents
+                .prefix(stackCutoff)
+                .compactMap { store.documents[$0.id] })
+            { document in
+                Cell(document: document)
+//                    .if(document.id == documents.last?.id) { view in
+//                        view.task {
+//                            let hasMore = await store.hasMoreDocuments()
+//                            print("Check more: has: \(hasMore), #doc \(documents.count)")
+//                            if !loadingMore && hasMore {
+//                                loadingMore = true
+//                                await load(false)
+//                                loadingMore = false
+//                            }
+//                        }
+//                    }
+            }
+
+            LazyVStack(alignment: .leading) {
+                let docs = documents
+                    .dropFirst(stackCutoff)
+                    .compactMap { store.documents[$0.id] }
+
+                ForEach(
+                    Array(zip(docs.indices, docs)), id: \.1.id
+                ) { index, document in
+                    Cell(document: document)
+                        .if(index > docs.count - 10) { view in
+                            view.task {
+                                let hasMore = await store.hasMoreDocuments()
+                                print("Check more: has: \(hasMore), #doc \(documents.count)")
+                                if !loadingMore && hasMore {
+                                    loadingMore = true
+//                                    await load(false)
+                                    await loadMore()
+                                    loadingMore = false
+                                }
+                            }
+                        }
+                }
+            }
+
+//                    if !isLoading && !initialLoad {
+//                        Divider().padding()
+//                        HStack {
+//                            Spacer()
+//                            let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
+//                            Text(text)
+//                                .foregroundColor(.gray)
+//                                .transition(.opacity)
+//                            Spacer()
+//                        }
+//                    }
+        }
+    }
+}
+
 struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var connectionManager: ConnectionManager
@@ -65,7 +180,6 @@ struct DocumentView: View {
     @State private var searchSuggestions: [String] = []
     @State private var initialLoad = true
     @State private var isLoading = false
-    @State private var loadingMore = false
     @State private var filterState = FilterState()
     @State private var refreshRequested = false
     @State private var showFileImporter = false
@@ -73,45 +187,24 @@ struct DocumentView: View {
     @State var importUrl: URL?
     @State private var error: String?
 
+//    @State private var searchFocused = false
+
     // This is intentionally NOT a StateObject because that stutters
     @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.5)
 
-    func load(clear: Bool) async {
-        if clear {
-            _ = withAnimation {
-                Task { await store.fetchAll() }
-            }
+    func load() async {
+        withAnimation {
+            isLoading = true
         }
-        let new = await store.fetchDocuments(clear: clear)
+        Task { await store.fetchAll() }
+        documents = []
+//        }
 
-        if clear {
-            withAnimation {
-                documents = new
-            }
-        }
-        else {
-            withAnimation {
-                documents += new
-            }
-        }
-    }
+        let new = await store.fetchDocuments(clear: true, pageSize: 101)
 
-    func cell(document: Document) -> some View {
-        Group {
-            NavigationLink(value:
-                NavigationState.detail(document: document)
-            ) {
-                DocumentCell(document: document, store: store)
-                    .contentShape(Rectangle())
-            }
-
-            .buttonStyle(.plain)
-            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-
-            if document != documents.last {
-                Divider()
-                    .padding(.horizontal)
-            }
+        documents = new
+        withAnimation {
+            isLoading = false
         }
     }
 
@@ -171,9 +264,9 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
-                SearchBarView(text: $searchDebounce.text, cancelEnabled: false) {
-                    store.filterState.searchMode = .titleContent
-                    store.filterState.searchText = searchDebounce.debouncedText
+                SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {
+//                    store.filterState.searchMode = .titleContent
+//                    store.filterState.searchText = searchDebounce.debouncedText
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 4)
@@ -182,45 +275,17 @@ struct DocumentView: View {
 
                 GeometryReader { geo in
                     OffsetObservingScrollView(offset: $scrollOffset.value) {
-                        VStack(alignment: .leading) {
-                            ForEach(documents.prefix(100).compactMap { store.documents[$0.id] }) { document in
-                                cell(document: document)
-                            }
-                            LazyVStack(alignment: .leading) {
-                                ForEach(documents.dropFirst(100).compactMap { store.documents[$0.id] }) { document in
-                                    cell(document: document)
-                                        .task {
-                                            let hasMore = await store.hasMoreDocuments()
-                                            print("Check more: has: \(hasMore), #doc \(documents.count)")
-                                            if let index = documents.firstIndex(where: { $0 == document }) {
-                                                if index >= documents.count - 10 && !loadingMore && hasMore {
-                                                    print("LOAD MORE")
-                                                    Task {
-                                                        loadingMore = true
-                                                        await load(clear: false)
-                                                        loadingMore = false
-                                                    }
-                                                }
-                                            }
-                                        }
-                                }
-                            }
-
-                            if !isLoading && !initialLoad {
-                                Divider().padding()
-                                HStack {
-                                    Spacer()
-                                    let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
-                                    Text(text)
-                                        .foregroundColor(.gray)
-                                        .transition(.opacity)
-                                    Spacer()
-                                }
-                            }
+                        if isLoading {
+                            LoadingDocumentList()
+                                .opacity(0.7)
+                                .frame(width: geo.size.width)
                         }
-                        .padding(.top, 8)
-                        .frame(width: geo.size.width)
+                        else {
+                            DocumentList(documents: $documents)
+                        }
                     }
+                    .padding(.top, 8)
+                    .frame(width: geo.size.width)
                 }
                 .layoutPriority(1)
                 .refreshable {
@@ -244,7 +309,7 @@ struct DocumentView: View {
                     refreshRequested = false
                     Task {
                         isLoading = true
-                        await load(clear: true)
+                        await load()
                         isLoading = false
                     }
                 }
@@ -280,14 +345,14 @@ struct DocumentView: View {
                             .labelStyle(.iconOnly)
                     }
                 }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Group {
-                        if isLoading {
-                            ProgressView()
-                                .transition(.scale)
-                        }
-                    }
-                }
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    Group {
+//                        if isLoading {
+//                            ProgressView()
+//                                .transition(.scale)
+//                        }
+//                    }
+//                }
             }
             .navigationBarTitleDisplayMode(.inline)
 
@@ -321,39 +386,39 @@ struct DocumentView: View {
                 }
             })) {}
 
-            .onChange(of: store.documents) { _ in
-                documents = documents.compactMap { store.documents[$0.id] }
-            }
-
             .onReceive(store.filterStatePublisher) { value in
+                if initialLoad { return }
                 print("Filter updated \(value)")
                 Task {
                     // wait for a short bit while the modal is still
                     // open to let the animation finish
-                    if showFilterModal {
-                        do { try await Task.sleep(for: .seconds(2.5)) } catch {}
-                    }
-                    await load(clear: true)
+//                    if showFilterModal {
+//                        do { try await Task.sleep(for: .seconds(0.5)) } catch {}
+//                    }
+//                    isLoading = true
+                    await load()
+//                    isLoading = false
 
-                    searchDebounce.text = value.searchText ?? ""
+//                    if !searchFocused {
+//                        searchDebounce.text = value.searchText ?? ""
+//                    }
                 }
             }
 
-            .onChange(of: searchDebounce.debouncedText) { _ in
-                store.filterState.searchMode = .titleContent
-                store.filterState.searchText = searchDebounce.debouncedText
-            }
+//            .onChange(of: searchDebounce.debouncedText) { _ in
+//                store.filterState.searchMode = .titleContent
+//                store.filterState.searchText = searchDebounce.debouncedText
+//            }
 
             .task {
                 if initialLoad {
-                    isLoading = true
-                    await load(clear: true)
-                    isLoading = false
+//                    if let text = store.filterState.searchText {
+//                        searchDebounce.text = text
+//                    }
+//                    isLoading = true
+                    await load()
+//                    isLoading = false
                     initialLoad = false
-                }
-
-                if let text = store.filterState.searchText {
-                    searchDebounce.text = text
                 }
             }
         }
@@ -386,7 +451,7 @@ private struct HelperView: View {
         VStack {
             FilterBar()
             ForEach(documents.prefix(5), id: \.id) { document in
-                DocumentCell(document: document, store: store)
+                DocumentCell(document: document)
                     .padding()
             }
             Spacer()

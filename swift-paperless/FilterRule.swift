@@ -201,10 +201,10 @@ struct FilterState: Equatable, Codable {
         }
     }
 
-    var correspondent: Filter = .any { didSet { modified = correspondent != oldValue }}
-    var documentType: Filter = .any { didSet { modified = documentType != oldValue }}
-    var tags: TagFilter = .any { didSet { modified = tags != oldValue }}
-    var remaining: [FilterRule] = [] { didSet { modified = remaining != oldValue }}
+    var correspondent: Filter = .any { didSet { modified = modified || correspondent != oldValue }}
+    var documentType: Filter = .any { didSet { modified = modified || documentType != oldValue }}
+    var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
+    var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
     var savedView: UInt? = nil
     var modified = false
 
@@ -212,12 +212,9 @@ struct FilterState: Equatable, Codable {
 //        case correspondent, documentType, tags, remaining, savedView
 //    }
 
-    var searchText: String? {
+    var searchText: String = "" {
         didSet {
-            if searchText == "" {
-                searchText = nil
-            }
-            modified = searchText != oldValue
+            modified = modified || searchText != oldValue
         }
     }
 
@@ -233,7 +230,7 @@ struct FilterState: Equatable, Codable {
         self.tags = tags
         self.remaining = remaining
         self.savedView = savedView
-        self.searchText = searchText
+        self.searchText = searchText ?? ""
         self.searchMode = searchMode
     }
 
@@ -367,9 +364,9 @@ struct FilterState: Equatable, Codable {
     var rules: [FilterRule] {
         var result = remaining
 
-        if let s = searchText {
+        if !searchText.isEmpty {
             result.append(
-                .init(ruleType: searchMode.ruleType, value: .string(value: s))
+                .init(ruleType: searchMode.ruleType, value: .string(value: searchText))
             )
         }
 
@@ -424,7 +421,7 @@ struct FilterState: Equatable, Codable {
     }
 
     var filtering: Bool {
-        return documentType != .any || correspondent != .any || tags != .any || searchText != nil
+        return documentType != .any || correspondent != .any || tags != .any || !searchText.isEmpty
     }
 
     var ruleCount: Int {
@@ -438,7 +435,7 @@ struct FilterState: Equatable, Codable {
         if tags != .any {
             result += 1
         }
-        if searchText != nil {
+        if !searchText.isEmpty {
             result += 1
         }
 
@@ -449,7 +446,7 @@ struct FilterState: Equatable, Codable {
         documentType = .any
         correspondent = .any
         tags = .any
-        searchText = nil
+        searchText = ""
         searchMode = .titleContent
         savedView = nil
         modified = false

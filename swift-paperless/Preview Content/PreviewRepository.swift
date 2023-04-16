@@ -138,8 +138,6 @@ class PreviewRepository: Repository {
         return Bundle.main.url(forResource: "demo", withExtension: "pdf")
     }
 
-    func getSearchCompletion(term: String, limit: UInt) async -> [String] { return [] }
-
     func tag(id: UInt) async -> Tag? { return tags[id] }
     func tags() async -> [Tag] { return tags.map { $0.value } }
 

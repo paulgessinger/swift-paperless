@@ -31,7 +31,6 @@ protocol Repository {
     func thumbnail(document: Document) async -> (Bool, Image?)
 
     func download(documentID: UInt) async -> URL?
-    func getSearchCompletion(term: String, limit: UInt) async -> [String]
 
     func savedViews() async -> [SavedView]
 }
@@ -42,7 +41,6 @@ class NullRepository: Repository {
     func createDocument(_ document: ProtoDocument, file: URL) async throws {}
 
     func download(documentID: UInt) async -> URL? { return nil }
-    func getSearchCompletion(term: String, limit: UInt) async -> [String] { return [] }
 
     func tag(id: UInt) async -> Tag? { return nil }
     func tags() async -> [Tag] { return [] }

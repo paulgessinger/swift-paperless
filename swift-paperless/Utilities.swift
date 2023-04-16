@@ -31,7 +31,6 @@ class ThrottleObject<T: Equatable>: ObservableObject {
     @Published var throttledValue: T
 
     var publisher = PassthroughSubject<T, Never>()
-
     private var tasks = Set<AnyCancellable>()
 
     init(value: T, delay: TimeInterval = 0.5) {

@@ -427,7 +427,8 @@ struct FilterBar: View {
             }
         }
 
-        .onChange(of: store.filterState) { value in
+//        .onChange(of: store.filterState) { value in
+        .onReceive(store.filterStatePublisher) { value in
             DispatchQueue.main.async {
                 withAnimation {
                     filterState = value
