@@ -8,7 +8,9 @@
 import Foundation
 import SwiftUI
 
-protocol Model {}
+protocol Model {
+    var id: UInt { get }
+}
 
 protocol Repository {
     func updateDocument(_ document: Document) async throws
@@ -33,9 +35,12 @@ protocol Repository {
     func download(documentID: UInt) async -> URL?
 
     func savedViews() async -> [SavedView]
+    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView
 }
 
 class NullRepository: Repository {
+    struct NotImplemented: Error {}
+
     func updateDocument(_ document: Document) async throws {}
     func deleteDocument(_ document: Document) async throws {}
     func createDocument(_ document: ProtoDocument, file: URL) async throws {}
@@ -59,6 +64,7 @@ class NullRepository: Repository {
     func thumbnail(document: Document) async -> (Bool, Image?) { return (false, nil) }
 
     func savedViews() async -> [SavedView] { return [] }
+    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
 }
 
 // - MARK: DocumentSource

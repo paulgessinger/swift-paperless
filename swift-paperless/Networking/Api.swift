@@ -95,6 +95,11 @@ extension Endpoint {
                         queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
+    static func createSavedView() -> Endpoint {
+        return Endpoint(path: "/api/saved_views/",
+                        queryItems: [])
+    }
+
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
         var segment = ""
         switch type {
@@ -480,5 +485,32 @@ class ApiRepository: Repository {
 
     func savedViews() async -> [SavedView] {
         return await all(SavedView.self)
+    }
+
+    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView {
+        var request = request(.createSavedView())
+        print(request.url!)
+
+        let body = try JSONEncoder().encode(view)
+        print("Create saved view: \(String(describing: String(data: body, encoding: .utf8)!))")
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 201 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+
+                throw ApiError.postError(status: hres.statusCode, body: body)
+            }
+
+            let created = try decoder.decode(SavedView.self, from: data)
+            return created
+        } catch {
+            print("Error uploading: \(error)")
+            throw error
+        }
     }
 }

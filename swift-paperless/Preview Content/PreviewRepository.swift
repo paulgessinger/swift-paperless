@@ -170,7 +170,9 @@ class PreviewRepository: Repository {
         }
     }
 
-    func savedViews() async -> [SavedView] {
-        return []
-    }
+    func savedViews() async -> [SavedView] { return [] }
+
+    struct NotImplemented: Error {}
+
+    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
 }

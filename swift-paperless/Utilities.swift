@@ -275,3 +275,31 @@ struct Haptics {
         gen.impactOccurred()
     }
 }
+
+struct ClearableModifier: ViewModifier {
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if !text.isEmpty {
+                    HStack {
+                        Spacer()
+
+                        Label("Clear", systemImage: "xmark.circle.fill")
+                            .labelStyle(.iconOnly)
+                            .foregroundColor(.gray)
+                            .onTapGesture {
+                                self.text = ""
+                            }
+                    }
+                }
+            }
+    }
+}
+
+extension TextField {
+    func clearable(_ text: Binding<String>) -> some View {
+        modifier(ClearableModifier(text: text))
+    }
+}

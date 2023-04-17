@@ -8,74 +8,108 @@
 import Combine
 import Foundation
 import SwiftUI
+import SwiftUINavigation
 
 // MARK: FilterMenu
+
+extension ProtoSavedView: Identifiable {
+    var id: UInt { return 0 }
+}
 
 private struct FilterMenu<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
     @Binding var filterState: FilterState
     @ViewBuilder var label: () -> Content
 
+    @State private var savedView: ProtoSavedView? = nil
+
     var body: some View {
-        Menu {
-            Text("Saved views")
-            if !store.savedViews.isEmpty {
-                ForEach(store.savedViews.map { $0.value }.sorted { $0.id < $1.id }, id: \.id) { savedView in
-                    if store.filterState.savedView == savedView.id {
-                        Menu {
-                            if store.filterState.modified {
-                                Button("Save") {}
-                                Button {
-                                    store.filterState = .init(savedView: savedView)
-                                } label: {
-                                    Label("Discard changes", systemImage: "arrow.counterclockwise")
+        VStack {
+            Menu {
+                Text("Saved views")
+                if !store.savedViews.isEmpty {
+                    ForEach(store.savedViews.map { $0.value }.sorted { $0.id < $1.id }, id: \.id) { savedView in
+                        if store.filterState.savedView == savedView.id {
+                            Menu {
+                                if store.filterState.modified {
+                                    Button("Save") {}
+                                    Button {
+                                        store.filterState = .init(savedView: savedView)
+                                    } label: {
+                                        Label("Discard changes", systemImage: "arrow.counterclockwise")
+                                    }
+                                }
+                                Button("Delete", role: .destructive) {}
+                            } label: {
+                                if store.filterState.modified {
+                                    Label("\(savedView.name) (modified)", systemImage: "checkmark")
+                                }
+                                else {
+                                    Label("\(savedView.name)", systemImage: "checkmark")
                                 }
                             }
-                            Button("Delete", role: .destructive) {}
-                        } label: {
-                            if store.filterState.modified {
-                                Label("\(savedView.name) (modified)", systemImage: "checkmark")
-                            }
-                            else {
-                                Label("\(savedView.name)", systemImage: "checkmark")
-                            }
                         }
-                    }
-                    else {
-                        Button {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                store.filterState = .init(savedView: savedView)
+                        else {
+                            Button {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    store.filterState = .init(savedView: savedView)
+                                }
+                            } label: {
+                                Text("\(savedView.name)")
                             }
-                        } label: {
-                            Text("\(savedView.name)")
                         }
                     }
                 }
-            }
 
-            Button {} label: {
-                Label("Add new", systemImage: "plus.circle")
-            }
+                if filterState.filtering && (filterState.savedView == nil || filterState.modified) {
+                    Button {
+                        let proto = ProtoSavedView(name: "", filterRules: store.filterState.rules)
 
-            if filterState.filtering {
-                if !store.savedViews.isEmpty {
+                        savedView = proto
+                        //                    showSavedViewModal = true
+
+                    } label: {
+                        Label("Add new", systemImage: "plus.circle")
+                    }
+                }
+
+                if filterState.filtering {
+                    if !store.savedViews.isEmpty {
+                        Divider()
+                    }
+                    Text("\(filterState.ruleCount) filter(s) applied")
                     Divider()
-                }
-                Text("\(filterState.ruleCount) filter(s) applied")
-                Divider()
-                Button(role: .destructive) {
-                    Haptics.shared.notification(.success)
-                    withAnimation {
-                        store.filterState.clear()
-                        filterState.clear()
+                    Button(role: .destructive) {
+                        Haptics.shared.notification(.success)
+                        withAnimation {
+                            store.filterState.clear()
+                            filterState.clear()
+                        }
+                    } label: {
+                        Label("Clear filters", systemImage: "xmark")
                     }
-                } label: {
-                    Label("Clear filters", systemImage: "xmark")
+                }
+
+            } label: {
+                label()
+            }
+        }
+
+        .sheet(unwrapping: self.$savedView) { $view in
+            EditSavedView(savedView: $view) {
+                guard let savedView = savedView else {
+                    fatalError("Saved view did not return")
+                }
+
+                Task {
+                    do {
+                        try await store.createSavedView(savedView)
+                    }
+                    catch {
+                        print(error)
+                    }
                 }
             }
-
-        } label: {
-            label()
         }
     }
 }
@@ -151,6 +185,10 @@ struct FilterBar: View {
 
     @State private var filterState = FilterState()
 
+    @State var offset = CGSize()
+    @State var menuWidth = 0.0
+    @State var filterMenuHit = false
+
     private struct Modal<Content: View>: View {
         @EnvironmentObject private var store: DocumentStore
         @Environment(\.dismiss) private var dismiss
@@ -224,15 +262,11 @@ struct FilterBar: View {
         }
     }
 
-    @State var offset = CGSize()
-    @State var menuWidth = 0.0
-    @State var filterMenuHit = false
-
     var body: some View {
         VStack {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
-                    Pill(active: filterState.filtering, chevron: false) {
+                    Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
                         Label("Filtering", systemImage: "line.3.horizontal.decrease")
                             .labelStyle(.iconOnly)
                         if let savedViewId = filterState.savedView,

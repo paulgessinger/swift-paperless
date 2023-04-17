@@ -144,7 +144,8 @@ struct FilterView: View {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") {
                                 dismiss()
-                            }.bold()
+                            }
+                            .bold()
                         }
                     }
                 }
