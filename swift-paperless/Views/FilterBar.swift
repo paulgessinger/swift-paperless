@@ -19,9 +19,11 @@ extension ProtoSavedView: Identifiable {
 private struct FilterMenu<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
     @Binding var filterState: FilterState
+    @Binding var savedView: ProtoSavedView?
     @ViewBuilder var label: () -> Content
 
-    @State private var savedView: ProtoSavedView? = nil
+//    @State private var savedView: ProtoSavedView? = nil
+
     @State private var showDeletePrompt = false
 
     func saveSavedView(_ savedView: SavedView) {
@@ -127,24 +129,6 @@ private struct FilterMenu<Content: View>: View {
             }
         }
 
-        .sheet(unwrapping: self.$savedView) { $view in
-            EditSavedView(savedView: $view) {
-                guard let savedView = savedView else {
-                    fatalError("Saved view did not return")
-                }
-
-                Task {
-                    do {
-                        let created = try await store.createSavedView(savedView)
-                        store.filterState = .init(savedView: created)
-                    }
-                    catch {
-                        print(error)
-                    }
-                }
-            }
-        }
-
         .alert("Delete saved view", isPresented: $showDeletePrompt,
                presenting: filterState.savedView,
                actions: { id in
@@ -243,6 +227,8 @@ struct FilterBar: View {
     @State var menuWidth = 0.0
     @State var filterMenuHit = false
 
+    @State private var savedView: ProtoSavedView? = nil
+
     private struct Modal<Content: View>: View {
         @EnvironmentObject private var store: DocumentStore
         @Environment(\.dismiss) private var dismiss
@@ -340,7 +326,7 @@ struct FilterBar: View {
                     .opacity(filterMenuHit ? 0.5 : 1.0)
                     .overlay {
                         GeometryReader { geo in
-                            FilterMenu(filterState: $filterState) {
+                            FilterMenu(filterState: $filterState, savedView: $savedView) {
                                 Color.clear
                                     .frame(width: geo.size.width, height: geo.size.height)
                             }
@@ -535,7 +521,24 @@ struct FilterBar: View {
             }
         }
 
-//        .onChange(of: store.filterState) { value in
+        .sheet(unwrapping: self.$savedView) { $view in
+            EditSavedView(savedView: $view) {
+                guard let savedView = savedView else {
+                    fatalError("Saved view did not return")
+                }
+
+                Task {
+                    do {
+                        let created = try await store.createSavedView(savedView)
+                        store.filterState = .init(savedView: created)
+                    }
+                    catch {
+                        print(error)
+                    }
+                }
+            }
+        }
+
         .onReceive(store.filterStatePublisher) { value in
             DispatchQueue.main.async {
                 withAnimation {

@@ -65,7 +65,6 @@ struct EditSavedView<S>: View where S: SavedViewProtocol {
                     Button("Cancel") {
                         self.dismiss()
                     }
-                    .foregroundColor(.accentColor) // why is this needed? It's not elsewhere
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -76,13 +75,11 @@ struct EditSavedView<S>: View where S: SavedViewProtocol {
                     }
                     .disabled(savedView.name.isEmpty)
                     .bold()
-                    .foregroundColor(.accentColor) // why is this needed? It's not elsewhere
                 }
             }
 
             .navigationTitle("Saved view")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.light, for: .navigationBar)
         }
     }
 }
