@@ -26,7 +26,12 @@ extension Endpoint {
         let rules = filter.rules
         queryItems += FilterRule.queryItems(for: rules)
 
-        queryItems.append(.init(name: "ordering", value: "-created"))
+        var ordering: String = filter.sortField.rawValue
+        if filter.sortOrder.reverse {
+            ordering = "-" + ordering
+        }
+
+        queryItems.append(.init(name: "ordering", value: ordering))
 
         return Endpoint(
             path: "/api/documents/",

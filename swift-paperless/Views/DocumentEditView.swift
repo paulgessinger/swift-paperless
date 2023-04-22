@@ -32,6 +32,7 @@ struct DocumentEditView: View {
             Form {
                 Section {
                     TextField("Title", text: $document.title) {}
+                        .clearable($document.title)
                     DatePicker("Created date", selection: $document.created, displayedComponents: .date)
                 }
                 Section {
@@ -156,7 +157,7 @@ struct DocumentEditView: View {
                         dismiss()
                     }
                     .bold()
-                    .disabled(!modified)
+                    .disabled(!modified || document.title.isEmpty)
                 }
             }
             .onChange(of: document) { _ in

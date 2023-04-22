@@ -16,6 +16,10 @@ protocol DocumentProtocol: Codable {
     var tags: [UInt] { get set }
 }
 
+protocol Model {
+    var id: UInt { get }
+}
+
 struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
     var id: UInt
     var title: String
@@ -117,41 +121,12 @@ extension Tag: Equatable, Hashable {
     }
 }
 
-enum SortField: String, Codable, CaseIterable {
-    case asn = "archive_serial_number"
-    case correspondent
-    case title
-    case documentType = "document_type"
-    case created
-    case added
-    case modified
-
-    var label: String {
-        switch self {
-        case .asn:
-            return "ASN"
-        case .correspondent:
-            return "Correspondent"
-        case .title:
-            return "Title"
-        case .documentType:
-            return "Document Type"
-        case .created:
-            return "Created"
-        case .added:
-            return "Added"
-        case .modified:
-            return "Modified"
-        }
-    }
-}
-
 protocol SavedViewProtocol: Codable {
     var name: String { get set }
     var showOnDashboard: Bool { get set }
     var showInSidebar: Bool { get set }
     var sortField: SortField { get set }
-    var sortReverse: Bool { get set }
+    var sortOrder: SortOrder { get set }
     var filterRules: [FilterRule] { get set }
 }
 
@@ -161,7 +136,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
     var showOnDashboard: Bool
     var showInSidebar: Bool
     var sortField: SortField
-    var sortReverse: Bool
+    var sortOrder: SortOrder
     var filterRules: [FilterRule]
 
     private enum CodingKeys: String, CodingKey {
@@ -170,7 +145,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
         case showOnDashboard = "show_on_dashboard"
         case showInSidebar = "show_in_sidebar"
         case sortField = "sort_field"
-        case sortReverse = "sort_reverse"
+        case sortOrder = "sort_reverse"
         case filterRules = "filter_rules"
     }
 
@@ -184,7 +159,7 @@ struct ProtoSavedView: Codable, SavedViewProtocol {
     var showOnDashboard: Bool = false
     var showInSidebar: Bool = false
     var sortField: SortField = .created
-    var sortReverse: Bool = false
+    var sortOrder: SortOrder = .descending
     var filterRules: [FilterRule] = []
 
     private enum CodingKeys: String, CodingKey {
@@ -192,7 +167,7 @@ struct ProtoSavedView: Codable, SavedViewProtocol {
         case showOnDashboard = "show_on_dashboard"
         case showInSidebar = "show_in_sidebar"
         case sortField = "sort_field"
-        case sortReverse = "sort_reverse"
+        case sortOrder = "sort_reverse"
         case filterRules = "filter_rules"
     }
 }

@@ -8,10 +8,6 @@
 import Foundation
 import SwiftUI
 
-protocol Model {
-    var id: UInt { get }
-}
-
 protocol Repository {
     func updateDocument(_ document: Document) async throws
     func deleteDocument(_ document: Document) async throws

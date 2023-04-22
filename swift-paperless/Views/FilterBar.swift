@@ -30,6 +30,8 @@ private struct FilterMenu<Content: View>: View {
         }
 
         updated.filterRules = store.filterState.rules
+        updated.sortOrder = store.filterState.sortOrder
+        updated.sortField = store.filterState.sortField
         Task {
             do {
                 try await store.updateSavedView(updated)
@@ -84,7 +86,12 @@ private struct FilterMenu<Content: View>: View {
                 Divider()
                 if filterState.filtering && (filterState.savedView == nil || filterState.modified) {
                     Button {
-                        let proto = ProtoSavedView(name: "", filterRules: store.filterState.rules)
+                        let proto = ProtoSavedView(
+                            name: "",
+                            sortField: store.filterState.sortField,
+                            sortOrder: store.filterState.sortOrder,
+                            filterRules: store.filterState.rules
+                        )
 
                         savedView = proto
                         //                    showSavedViewModal = true
@@ -317,10 +324,14 @@ struct FilterBar: View {
                         Label("Filtering", systemImage: "line.3.horizontal.decrease")
                             .labelStyle(.iconOnly)
                         if let savedViewId = filterState.savedView,
-                           let savedView = store.savedViews[savedViewId],
-                           !filterState.modified
+                           let savedView = store.savedViews[savedViewId]
                         {
-                            Text("\(savedView.name)")
+                            if filterState.modified {
+                                Text("\(savedView.name)*")
+                            }
+                            else {
+                                Text("\(savedView.name)")
+                            }
                         }
                         else if filterState.ruleCount > 0 {
                             CircleCounter(value: filterState.ruleCount)
@@ -453,10 +464,26 @@ struct FilterBar: View {
 
                     Divider()
 
-                    Element(label: {
-                        Label("Sort", systemImage: "arrow.up.arrow.down")
-                            .labelStyle(.iconOnly)
-                    }, active: false, action: {})
+                    Menu {
+                        Picker("Sort by", selection: $filterState.sortField) {
+                            ForEach(SortField.allCases, id: \.rawValue) { f in
+                                Text("\(f.label)").tag(f)
+                            }
+                        }
+
+                        Picker("Ordering", selection: $filterState.sortOrder) {
+                            Label("Ascending", systemImage: "arrow.up")
+                                .tag(SortOrder.ascending)
+                            Label("Descending", systemImage: "arrow.down")
+                                .tag(SortOrder.descending)
+                        }
+                    }
+                    label: {
+                        Element(label: {
+                            Label("Sort", systemImage: "arrow.up.arrow.down")
+                                .labelStyle(.iconOnly)
+                        }, active: filterState.sortOrder != .ascending || filterState.sortField != .added, action: {})
+                    }
                 }
                 .padding(.horizontal)
                 .foregroundColor(.primary)
@@ -467,6 +494,14 @@ struct FilterBar: View {
             withAnimation {
                 filterState = store.filterState
             }
+        }
+
+        .onChange(of: filterState.sortOrder) { value in
+            store.filterState.sortOrder = value
+        }
+
+        .onChange(of: filterState.sortField) { value in
+            store.filterState.sortField = value
         }
 
         // MARK: Sheets

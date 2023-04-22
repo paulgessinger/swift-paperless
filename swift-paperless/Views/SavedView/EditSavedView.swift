@@ -23,7 +23,7 @@ struct EditSavedView<S>: View where S: SavedViewProtocol {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
+                Section("Properties") {
                     TextField("Title", text: self.$savedView.name)
                         .clearable(self.$savedView.name)
 
@@ -32,14 +32,31 @@ struct EditSavedView<S>: View where S: SavedViewProtocol {
                     Toggle("Show in sidebar", isOn: $savedView.showInSidebar)
                 }
 
-                Section {
+                Section("Sorting") {
                     Picker("Sort by", selection: $savedView.sortField) {
                         ForEach(SortField.allCases, id: \.self) { v in
                             Text("\(v.label)").tag(v)
                         }
                     }
 
-                    Toggle("Ascending", isOn: $savedView.sortReverse)
+                    Picker("Sort order", selection: $savedView.sortOrder) {
+                        Text("Ascending").tag(SortOrder.ascending)
+                        Text("Descending").tag(SortOrder.descending)
+                    }
+
+//                    let b = Binding<Bool>(
+//                        get: { savedView.sortOrder.reverse },
+//                        set: { savedView.sortOrder = .init($0) }
+//                    )
+//                    Toggle(isOn: b) {
+//                        let l: String = {
+//                            switch savedView.sortOrder {
+//                            case .ascending: return "Ascending"
+//                            case .descending: return "Descending"
+//                            }
+//                        }()
+//                        Text(l)
+//                    }
                 }
             }
 

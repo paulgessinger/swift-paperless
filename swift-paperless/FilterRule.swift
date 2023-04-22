@@ -155,6 +155,69 @@ extension FilterRule: Codable {
     }
 }
 
+enum SortField: String, Codable, CaseIterable {
+    case asn = "archive_serial_number"
+    case correspondent = "correspondent__name"
+    case title
+    case documentType = "document_type__name"
+    case created
+    case added
+    case modified
+
+    var label: String {
+        switch self {
+        case .asn:
+            return "ASN"
+        case .correspondent:
+            return "Correspondent"
+        case .title:
+            return "Title"
+        case .documentType:
+            return "Document Type"
+        case .created:
+            return "Created"
+        case .added:
+            return "Added"
+        case .modified:
+            return "Modified"
+        }
+    }
+}
+
+enum SortOrder: Codable {
+    case ascending
+    case descending
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let reverse = try container.decode(Bool.self)
+        self = reverse ? .ascending : .descending
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(reverse)
+    }
+
+    var reverse: Bool {
+        switch self {
+        case .ascending:
+            return true
+        case .descending:
+            return false
+        }
+    }
+
+    init(_ reverse: Bool) {
+        if reverse {
+            self = .ascending
+        }
+        else {
+            self = .descending
+        }
+    }
+}
+
 // MARK: - FilterState
 
 struct FilterState: Equatable, Codable {
@@ -205,12 +268,10 @@ struct FilterState: Equatable, Codable {
     var documentType: Filter = .any { didSet { modified = modified || documentType != oldValue }}
     var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
     var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
+    var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
+    var sortOrder: SortOrder = .ascending { didSet { modified = modified || sortOrder != oldValue }}
     var savedView: UInt? = nil
     var modified = false
-
-//    private enum CodingKeys: String, CodingKey {
-//        case correspondent, documentType, tags, remaining, savedView
-//    }
 
     var searchText: String = "" {
         didSet {
@@ -237,6 +298,8 @@ struct FilterState: Equatable, Codable {
     init(savedView: SavedView) {
         self.init(rules: savedView.filterRules)
         self.savedView = savedView.id
+        self.sortField = savedView.sortField
+        self.sortOrder = savedView.sortOrder
     }
 
     init(rules: [FilterRule]) {
@@ -421,7 +484,8 @@ struct FilterState: Equatable, Codable {
     }
 
     var filtering: Bool {
-        return documentType != .any || correspondent != .any || tags != .any || !searchText.isEmpty
+//        return documentType != .any || correspondent != .any || tags != .any || !searchText.isEmpty
+        return self != FilterState()
     }
 
     var ruleCount: Int {
@@ -443,12 +507,13 @@ struct FilterState: Equatable, Codable {
     }
 
     mutating func clear() {
-        documentType = .any
-        correspondent = .any
-        tags = .any
-        searchText = ""
-        searchMode = .titleContent
-        savedView = nil
-        modified = false
+//        documentType = .any
+//        correspondent = .any
+//        tags = .any
+//        searchText = ""
+//        searchMode = .titleContent
+//        savedView = nil
+//        modified = false
+        self = FilterState()
     }
 }

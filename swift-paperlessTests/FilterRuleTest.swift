@@ -341,8 +341,8 @@ final class FilterRuleTest: XCTestCase {
 
         XCTAssertEqual(state.tags, .allOf(include: [66, 71], exclude: [75]))
 
-        XCTAssertEqual(state.search.mode, .title)
-        XCTAssertEqual(state.search.text, "shantel")
+        XCTAssertEqual(state.searchMode, .title)
+        XCTAssertEqual(state.searchText, "shantel")
         XCTAssertEqual(state.correspondent, .notAssigned)
         XCTAssertEqual(state.remaining, input.suffix(1))
 
