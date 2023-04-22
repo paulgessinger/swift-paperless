@@ -100,6 +100,11 @@ extension Endpoint {
                         queryItems: [])
     }
 
+    static func savedView(id: UInt) -> Endpoint {
+        return Endpoint(path: "/api/saved_views/\(id)/",
+                        queryItems: [])
+    }
+
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
         var segment = ""
         switch type {
@@ -168,7 +173,7 @@ let decoder: JSONDecoder = {
 
 enum ApiError: Error {
     case encodingFailed
-    case putFailed
+    case putError(status: Int, body: String)
     case deleteFailed
     case postError(status: Int, body: String)
 }
@@ -314,7 +319,7 @@ class ApiRepository: Repository {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
             print("Saving document: Status was not 200 but \(statusCode)")
             print(String(data: data, encoding: .utf8)!)
-            throw ApiError.putFailed
+            throw ApiError.putError(status: statusCode, body: String(describing: data))
         }
     }
 
@@ -510,6 +515,52 @@ class ApiRepository: Repository {
             return created
         } catch {
             print("Error uploading: \(error)")
+            throw error
+        }
+    }
+
+    func updateSavedView(_ view: SavedView) async throws {
+        var request = request(.savedView(id: view.id))
+        print(request.url!)
+
+        let body = try JSONEncoder().encode(view)
+        print("Update saved view: \(String(describing: String(data: body, encoding: .utf8)!))")
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+
+                throw ApiError.putError(status: hres.statusCode, body: body)
+            }
+
+        } catch {
+            print("Error uploading: \(error)")
+            throw error
+        }
+    }
+
+    func deleteSavedView(_ view: SavedView) async throws {
+        var request = request(.savedView(id: view.id))
+        request.httpMethod = "DELETE"
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 204 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+                print(hres.statusCode)
+                print(body)
+
+                throw ApiError.deleteFailed
+            }
+
+        } catch {
+            print("Error deleting: \(error)")
             throw error
         }
     }

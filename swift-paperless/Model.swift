@@ -103,7 +103,7 @@ struct Tag: Codable, Identifiable, Model {
     static func placeholder(_ length: Int) -> Tag {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let name = String((0 ..< length).map { _ in letters.randomElement()! })
-        return .init(id: 0, isInboxTag: false, name: name, slug: "", color: Color.systemGroupedBackground, textColor: .white)
+        return .init(id: 0, isInboxTag: false, name: name, slug: "", color: Color("ElementBackground"), textColor: .white)
     }
 }
 

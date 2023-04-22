@@ -62,24 +62,32 @@ struct DocumentCell: View {
             VStack(alignment: .leading) {
                 if let id = document.correspondent, let name = store.correspondents[id]?.name {
                     Text("\(name):")
+//                        .fixedSize()
                         .foregroundColor(.accentColor)
-                        .id("correspondent")
+//                        .id("correspondent")
                 }
-                Text("\(document.title)").bold()
+                Text("\(document.title)")
+//                    .fixedSize()
+                    .bold()
 
                 if let id = document.documentType, let name = store.documentTypes[id]?.name {
                     Text(name)
-                        .fixedSize()
+//                        .fixedSize()
                         .foregroundColor(Color.orange)
                 }
 
                 Text(document.created, style: .date)
+//                    .fixedSize()
 
                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
                     .padding(0)
                     .transition(.opacity)
             }
             .padding(.horizontal, 5)
+            .layoutPriority(1)
+        }
+        .transaction { t in
+            t.animation = nil
         }
     }
 }

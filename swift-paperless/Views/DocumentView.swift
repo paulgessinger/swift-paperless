@@ -81,7 +81,7 @@ private struct DocumentList: View {
     @Binding var documents: [Document]
     @State private var loadingMore = false
 
-    private let stackCutoff = 100
+    private let stackCutoff = 30
 
     struct Cell: View {
         var document: Document
@@ -97,16 +97,16 @@ private struct DocumentList: View {
             .buttonStyle(.plain)
             .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
 
-//            if document != documents.last {
             Divider()
                 .padding(.horizontal)
-//            }
         }
     }
 
     func loadMore() async {
-        let new = await store.fetchDocuments(clear: false, pageSize: 101)
-        documents += new
+        let new = await store.fetchDocuments(clear: false, pageSize: UInt(stackCutoff + 1))
+        withAnimation {
+            documents += new
+        }
     }
 
     var body: some View {
@@ -116,17 +116,6 @@ private struct DocumentList: View {
                 .compactMap { store.documents[$0.id] })
             { document in
                 Cell(document: document)
-//                    .if(document.id == documents.last?.id) { view in
-//                        view.task {
-//                            let hasMore = await store.hasMoreDocuments()
-//                            print("Check more: has: \(hasMore), #doc \(documents.count)")
-//                            if !loadingMore && hasMore {
-//                                loadingMore = true
-//                                await load(false)
-//                                loadingMore = false
-//                            }
-//                        }
-//                    }
             }
 
             LazyVStack(alignment: .leading) {
@@ -144,7 +133,7 @@ private struct DocumentList: View {
                                 print("Check more: has: \(hasMore), #doc \(documents.count)")
                                 if !loadingMore && hasMore {
                                     loadingMore = true
-//                                    await load(false)
+                                    //                                    await load(false)
                                     await loadMore()
                                     loadingMore = false
                                 }
@@ -152,18 +141,6 @@ private struct DocumentList: View {
                         }
                 }
             }
-
-//                    if !isLoading && !initialLoad {
-//                        Divider().padding()
-//                        HStack {
-//                            Spacer()
-//                            let text = (documents.isEmpty ? "No documents" : (documents.count == 1 ? "1 document" : "\(documents.count) documents")) + " found"
-//                            Text(text)
-//                                .foregroundColor(.gray)
-//                                .transition(.opacity)
-//                            Spacer()
-//                        }
-//                    }
         }
     }
 }
@@ -193,18 +170,30 @@ struct DocumentView: View {
     @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.5)
 
     func load() async {
-        withAnimation {
+        let d = 0.3
+        async let delay: () = Task.sleep(for: .seconds(d))
+        withAnimation(.linear(duration: d)) {
             isLoading = true
         }
         Task { await store.fetchAll() }
         documents = []
-//        }
 
         let new = await store.fetchDocuments(clear: true, pageSize: 101)
 
+        try? await delay
         documents = new
         withAnimation {
             isLoading = false
+        }
+        initialLoad = false
+    }
+
+    func reload() async {
+        Task { await store.fetchAll() }
+        let new = await store.fetchDocuments(clear: true, pageSize: 101)
+
+        withAnimation {
+            documents = new
         }
     }
 
@@ -264,56 +253,44 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
-                SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {
-//                    store.filterState.searchMode = .titleContent
-//                    store.filterState.searchText = searchDebounce.debouncedText
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 4)
+                SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {}
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
 
                 FilterBar()
 
-                GeometryReader { geo in
-                    OffsetObservingScrollView(offset: $scrollOffset.value) {
+                ScrollView(.vertical) {
+                    VStack {
                         if isLoading {
                             LoadingDocumentList()
                                 .opacity(0.7)
-                                .frame(width: geo.size.width)
                         }
-                        else {
+                        else if !documents.isEmpty {
                             DocumentList(documents: $documents)
+                        }
+                        else if !initialLoad {
+                            Text("No documents")
+                                .padding(.vertical, 50)
                         }
                     }
                     .padding(.top, 8)
-                    .frame(width: geo.size.width)
+                    .frame(maxWidth: .infinity)
                 }
+                .overlay(
+                    Rectangle()
+                        .fill(Color("Divider"))
+                        .frame(maxWidth: .infinity, maxHeight: 1),
+                    alignment: .top
+                )
                 .layoutPriority(1)
                 .refreshable {
-                    // @TODO: Refresh animation here is broken if this modifies state that triggers rerender
                     if isLoading { return }
-                    refreshRequested = true
+                    Task { await reload() }
                 }
             }
 
             .navigationDestination(for: NavigationState.self,
                                    destination: navigationDestinations)
-
-            // Decoupled refresh when scroll is back
-            .onReceive(scrollOffset.publisher) { offset in
-                Task {
-                    if logoVisible != (offset.y < 10) {
-                        withAnimation { logoVisible.toggle() }
-                    }
-                }
-                if offset.y >= -0.0 && refreshRequested {
-                    refreshRequested = false
-                    Task {
-                        isLoading = true
-                        await load()
-                        isLoading = false
-                    }
-                }
-            }
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -345,14 +322,6 @@ struct DocumentView: View {
                             .labelStyle(.iconOnly)
                     }
                 }
-//                ToolbarItem(placement: .navigationBarLeading) {
-//                    Group {
-//                        if isLoading {
-//                            ProgressView()
-//                                .transition(.scale)
-//                        }
-//                    }
-//                }
             }
             .navigationBarTitleDisplayMode(.inline)
 
@@ -387,39 +356,8 @@ struct DocumentView: View {
             })) {}
 
             .onReceive(store.filterStatePublisher) { value in
-                if initialLoad { return }
                 print("Filter updated \(value)")
-                Task {
-                    // wait for a short bit while the modal is still
-                    // open to let the animation finish
-//                    if showFilterModal {
-//                        do { try await Task.sleep(for: .seconds(0.5)) } catch {}
-//                    }
-//                    isLoading = true
-                    await load()
-//                    isLoading = false
-
-//                    if !searchFocused {
-//                        searchDebounce.text = value.searchText ?? ""
-//                    }
-                }
-            }
-
-//            .onChange(of: searchDebounce.debouncedText) { _ in
-//                store.filterState.searchMode = .titleContent
-//                store.filterState.searchText = searchDebounce.debouncedText
-//            }
-
-            .task {
-                if initialLoad {
-//                    if let text = store.filterState.searchText {
-//                        searchDebounce.text = text
-//                    }
-//                    isLoading = true
-                    await load()
-//                    isLoading = false
-                    initialLoad = false
-                }
+                Task { await load() }
             }
         }
         .environmentObject(nav)

@@ -17,11 +17,10 @@ class DocumentStore: ObservableObject {
     @Published private(set) var tags: [UInt: Tag] = [:]
     @Published private(set) var savedViews: [UInt: SavedView] = [:]
 
-//    @Published var filterState = FilterState()
-
     private var documentSource: any DocumentSource
 
     let semaphore = AsyncSemaphore(value: 1)
+    let fetchAllSemaphore = AsyncSemaphore(value: 1)
 
     private(set) var repository: Repository
 
@@ -34,21 +33,15 @@ class DocumentStore: ObservableObject {
     var filterStatePublisher =
         PassthroughSubject<FilterState, Never>()
 
-//    var publisher = PassthroughSubject<T, Never>()
-
     @Published var filterState: FilterState = {
-//        print("GETTING!")
         guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
             print("No default")
             return FilterState()
         }
-//        print(String(data: data, encoding: .utf8))
         guard let value = try? JSONDecoder().decode(FilterState.self, from: data) else {
             print("No decode")
             return FilterState()
         }
-//        let value = FilterState(rules: rules)
-//        print("GOT: \(value)")
         return value
     }() {
         didSet {
@@ -61,20 +54,16 @@ class DocumentStore: ObservableObject {
                 print("NO ENCODE")
                 return
             }
-//            print(String(data: s, encoding: .utf8))
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")
-//            filterStatePublisher.send(filterState)
         }
     }
 
     init(repository: Repository) {
         self.repository = repository
-        documentSource = repository.documents(filter: FilterState())
+        documentSource = NullDocumentSource()
+//        documentSource = repository.documents(filter: FilterState())
 
         Task {
-//            async let _ = await fetchAllTags()
-//            async let _ = await fetchAllCorrespondents()
-//            async let _ = await fetchAllDocumentTypes()
             async let _ = await fetchAll()
         }
 
@@ -85,41 +74,26 @@ class DocumentStore: ObservableObject {
                 self?.filterStatePublisher.send(value)
             }
             .store(in: &tasks)
-
-//        filterStatePublisher.send(filterState)
-
-//        Task { await MainActor.run { self.filterState = persistentFilterState }}
-
-//        $filterState.sink(receiveValue: { value in
-//            self.persistentFilterState = value
-//        })
-//        .store(in: &tasks)
     }
 
     func set(repository: Repository) {
         self.repository = repository
     }
 
-//    @MainActor
+    @MainActor
     func updateDocument(_ document: Document) async throws {
         documents[document.id] = document
         try await repository.updateDocument(document)
     }
 
-//    @MainActor
+    @MainActor
     func deleteDocument(_ document: Document) async throws {
         try await repository.deleteDocument(document)
         documents.removeValue(forKey: document.id)
     }
 
-//    @MainActor
-    func documentBinding(id: UInt) -> Binding<Document> {
-        let binding: Binding<Document> = .init(get: { self.documents[id]! }, set: { self.documents[id] = $0 })
-        return binding
-    }
-
-//    @MainActor
     func fetchDocuments(clear: Bool, pageSize: UInt = 30) async -> [Document] {
+        print("fetchDocuments")
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -144,32 +118,31 @@ class DocumentStore: ObservableObject {
         return await documentSource.hasMore()
     }
 
-//    @MainActor
     func fetchAllCorrespondents() async {
         await fetchAll(elements: await repository.correspondents(),
                        collection: \.correspondents)
     }
 
-//    @MainActor
     func fetchAllDocumentTypes() async {
         await fetchAll(elements: await repository.documentTypes(),
                        collection: \.documentTypes)
     }
 
-//    @MainActor
     func fetchAllTags() async {
         await fetchAll(elements: await repository.tags(),
                        collection: \.tags)
     }
 
-//    @MainActor
     func fetchAllSavedViews() async {
         await fetchAll(elements: await repository.savedViews(),
                        collection: \.savedViews)
     }
 
-//    @MainActor
     func fetchAll() async {
+        print("Fetch all store")
+        await fetchAllSemaphore.wait()
+        defer { fetchAllSemaphore.signal() }
+
         async let c: () = fetchAllCorrespondents()
         async let d: () = fetchAllDocumentTypes()
         async let t: () = fetchAllTags()
@@ -244,5 +217,17 @@ class DocumentStore: ObservableObject {
         let created = try await repository.createSavedView(view)
         savedViews[created.id] = created
         return created
+    }
+
+    @MainActor
+    func updateSavedView(_ view: SavedView) async throws {
+        try await repository.updateSavedView(view)
+        savedViews[view.id] = view
+    }
+
+    @MainActor
+    func deleteSavedView(_ view: SavedView) async throws {
+        try await repository.deleteSavedView(view)
+        savedViews.removeValue(forKey: view.id)
     }
 }

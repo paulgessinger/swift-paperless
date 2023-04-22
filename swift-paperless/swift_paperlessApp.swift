@@ -12,7 +12,8 @@ struct MainView: View {
 
     @State private var showLoginScreen = false
 
-    @StateObject private var store = DocumentStore(repository: NullRepository())
+    @State private var storeReady = false
+    @State private var store: DocumentStore?
 
     @StateObject private var manager = ConnectionManager()
 
@@ -20,9 +21,9 @@ struct MainView: View {
 
     var body: some View {
         Group {
-            if manager.state == .valid {
+            if manager.state == .valid && storeReady {
                 DocumentView()
-                    .environmentObject(store)
+                    .environmentObject(store!)
                     .environmentObject(manager)
             }
             else {
@@ -42,7 +43,8 @@ struct MainView: View {
         .onChange(of: manager.connection) { _ in
             if let conn = manager.connection {
 //                print("Set conn")
-                store.set(repository: ApiRepository(connection: conn))
+                store = DocumentStore(repository: ApiRepository(connection: conn))
+                storeReady = true
             }
         }
     }

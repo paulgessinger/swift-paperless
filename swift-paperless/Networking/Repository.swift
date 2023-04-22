@@ -36,6 +36,8 @@ protocol Repository {
 
     func savedViews() async -> [SavedView]
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView
+    func updateSavedView(_ view: SavedView) async throws
+    func deleteSavedView(_ view: SavedView) async throws
 }
 
 class NullRepository: Repository {
@@ -65,6 +67,8 @@ class NullRepository: Repository {
 
     func savedViews() async -> [SavedView] { return [] }
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
+    func updateSavedView(_ view: SavedView) async throws { throw NotImplemented() }
+    func deleteSavedView(_ view: SavedView) async throws { throw NotImplemented() }
 }
 
 // - MARK: DocumentSource

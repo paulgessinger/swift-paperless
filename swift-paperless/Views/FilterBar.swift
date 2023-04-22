@@ -22,6 +22,24 @@ private struct FilterMenu<Content: View>: View {
     @ViewBuilder var label: () -> Content
 
     @State private var savedView: ProtoSavedView? = nil
+    @State private var showDeletePrompt = false
+
+    func saveSavedView(_ savedView: SavedView) {
+        guard let id = store.filterState.savedView, var updated = store.savedViews[id] else {
+            fatalError("Active SavedView not in store")
+        }
+
+        updated.filterRules = store.filterState.rules
+        Task {
+            do {
+                try await store.updateSavedView(updated)
+                store.filterState = .init(savedView: updated)
+            }
+            catch {
+                print(error)
+            }
+        }
+    }
 
     var body: some View {
         VStack {
@@ -32,14 +50,16 @@ private struct FilterMenu<Content: View>: View {
                         if store.filterState.savedView == savedView.id {
                             Menu {
                                 if store.filterState.modified {
-                                    Button("Save") {}
+                                    Button("Save") { saveSavedView(savedView) }
                                     Button {
                                         store.filterState = .init(savedView: savedView)
                                     } label: {
                                         Label("Discard changes", systemImage: "arrow.counterclockwise")
                                     }
                                 }
-                                Button("Delete", role: .destructive) {}
+                                Button("Delete", role: .destructive) {
+                                    showDeletePrompt = true
+                                }
                             } label: {
                                 if store.filterState.modified {
                                     Label("\(savedView.name) (modified)", systemImage: "checkmark")
@@ -61,6 +81,7 @@ private struct FilterMenu<Content: View>: View {
                     }
                 }
 
+                Divider()
                 if filterState.filtering && (filterState.savedView == nil || filterState.modified) {
                     Button {
                         let proto = ProtoSavedView(name: "", filterRules: store.filterState.rules)
@@ -71,6 +92,10 @@ private struct FilterMenu<Content: View>: View {
                     } label: {
                         Label("Add new", systemImage: "plus.circle")
                     }
+                }
+
+                Button {} label: {
+                    Label("Edit saved views", systemImage: "list.bullet")
                 }
 
                 if filterState.filtering {
@@ -103,7 +128,8 @@ private struct FilterMenu<Content: View>: View {
 
                 Task {
                     do {
-                        try await store.createSavedView(savedView)
+                        let created = try await store.createSavedView(savedView)
+                        store.filterState = .init(savedView: created)
                     }
                     catch {
                         print(error)
@@ -111,6 +137,27 @@ private struct FilterMenu<Content: View>: View {
                 }
             }
         }
+
+        .alert("Delete saved view", isPresented: $showDeletePrompt,
+               presenting: filterState.savedView,
+               actions: { id in
+                   Button("Delete", role: .destructive) {
+                       Task {
+                           do {
+                               store.filterState.savedView = nil
+                               try? await Task.sleep(for: .seconds(0.2))
+                               try await store.deleteSavedView(store.savedViews[id]!)
+                           }
+                           catch {
+                               print("Error deleting view")
+                               store.filterState.savedView = id
+                           }
+                       }
+                   }
+               }, message: { id in
+                   let sv = store.savedViews[id]!
+                   Text("Are you sure you want to delete '\(sv.name)'")
+               })
     }
 }
 
@@ -421,14 +468,6 @@ struct FilterBar: View {
                 filterState = store.filterState
             }
         }
-        .padding(.bottom, 10)
-        .overlay(
-            Rectangle()
-                .fill(Color("Divider"))
-                .frame(maxWidth: .infinity, maxHeight: 1),
-            alignment: .bottom
-        )
-        .padding(.bottom, -8)
 
         // MARK: Sheets
 
