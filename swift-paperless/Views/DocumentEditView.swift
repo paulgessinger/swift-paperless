@@ -12,6 +12,7 @@ struct DocumentEditView: View {
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var nav: NavigationCoordinator
+    @EnvironmentObject private var errorController: ErrorController
 
     @State private var document: Document
     @State private var modified: Bool = false
@@ -151,7 +152,8 @@ struct DocumentEditView: View {
                                 try await store.updateDocument(document)
                             } catch {
                                 print(error)
-                                fatalError("Failed saving")
+                                errorController.push(error: error)
+//                                errorController.push(message: "Error while saving document document!")
                             }
                         }
                         dismiss()

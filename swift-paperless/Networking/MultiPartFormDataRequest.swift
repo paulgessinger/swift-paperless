@@ -16,9 +16,18 @@ private extension NSMutableData {
     }
 }
 
-enum MultiPartFormDataError: Error {
+enum MultiPartFormDataError: Error, LocalizedError {
     case notAFile(url: URL)
     case noMimeType
+
+    var errorDescription: String? {
+        switch self {
+        case .notAFile:
+            return "Given input does not represent a file"
+        case .noMimeType:
+            return "File type could not be determined"
+        }
+    }
 }
 
 struct MultiPartFormDataRequest {

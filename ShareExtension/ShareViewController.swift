@@ -126,6 +126,7 @@ struct ShareView: View {
     @StateObject private var connectionManager = ConnectionManager()
 
     @StateObject private var store = DocumentStore(repository: NullRepository())
+    @StateObject private var errorController = ErrorController()
 
     @State private var error: String = ""
     @State private var showingError = false
@@ -145,12 +146,18 @@ struct ShareView: View {
                 }
 
                 if let url = attachmentManager.documentUrl {
-                    CreateDocumentView(
-                        sourceUrl: url,
-                        callback: self.callback
-                    )
-                    .environmentObject(self.store)
-                    .accentColor(Color("AccentColor"))
+                    VStack {
+                        CreateDocumentView(
+                            sourceUrl: url,
+                            callback: self.callback
+                        )
+                        // @FIXME: Gives a white band at the bottom, not ideal
+                        .padding(.bottom, 40)
+
+                        .environmentObject(self.store)
+                        .environmentObject(self.errorController)
+                        .accentColor(Color("AccentColor"))
+                    }
                 }
             }
             else if self.connectionManager.state == .invalid {

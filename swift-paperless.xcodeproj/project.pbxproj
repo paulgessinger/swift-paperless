@@ -87,6 +87,8 @@
 		7AF2E07729F3F02E0092948B /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AF2E07829F3F0400092948B /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691429CF967900414BA7 /* ConnectionManager.swift */; };
 		7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */; };
+		7AF2E07E29F46C950092948B /* ErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E07D29F46C950092948B /* ErrorController.swift */; };
+		7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E07D29F46C950092948B /* ErrorController.swift */; };
 		7AF6688729A137EA0016BC31 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
@@ -178,6 +180,7 @@
 		7AF04B8029A68A20008E8F79 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		7AF04B8229A68A4F008E8F79 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
 		7AF2E07129F3ECE40092948B /* SavedViewTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewTest.swift; sourceTree = "<group>"; };
+		7AF2E07D29F46C950092948B /* ErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorController.swift; sourceTree = "<group>"; };
 		7AF6688629A137EA0016BC31 /* Api.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Api.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
@@ -356,6 +359,7 @@
 				7AEF690F29CF7FA800414BA7 /* LoginView.swift */,
 				7AEF691129CF80F600414BA7 /* LogoView.swift */,
 				7AD8FC5729E4B37B00157217 /* FilterBar.swift */,
+				7AF2E07D29F46C950092948B /* ErrorController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -544,6 +548,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
 				7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */,
 				7A3E036A29EC9013008F4976 /* EditSavedView.swift in Sources */,
@@ -595,6 +600,7 @@
 				7AEF691C29D049D900414BA7 /* PositionObservingView.swift in Sources */,
 				7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */,
 				7A4AA90929BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
+				7AF2E07E29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA91729BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
 				7A4AA90C29BE1FC700D845A2 /* SearchBarView.swift in Sources */,
 				7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */,

@@ -53,7 +53,7 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
-private struct LoadingDocumentList: View {
+struct LoadingDocumentList: View {
     @State private var documents: [Document] = []
     @StateObject private var store = DocumentStore(repository: PreviewRepository())
 

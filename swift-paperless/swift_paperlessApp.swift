@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import Collections
 import SwiftUI
 
 struct MainView: View {
@@ -17,24 +18,32 @@ struct MainView: View {
 
     @StateObject private var manager = ConnectionManager()
 
+    @StateObject private var errorController = ErrorController()
+
 //    DocumentStore(repository: ApiRepository(apiHost: getCredentials(key: "API_HOST"), apiToken: getCredentials(key: "API_TOKEN")))
 
     var body: some View {
         Group {
             if manager.state == .valid && storeReady {
                 DocumentView()
+                    .modifier(ErrorDisplay(errorController: errorController))
                     .environmentObject(store!)
                     .environmentObject(manager)
+                    .environmentObject(errorController)
             }
             else {
-//                Text("LOGIN PLACEHOLDER VIEW")
+                //                Text("LOGIN PLACEHOLDER VIEW")
             }
+
+//            Text(String(describing: errorController.active))
         }
         .fullScreenCover(isPresented: $showLoginScreen) {
             LoginView(connectionManager: manager)
+                .modifier(ErrorDisplay(errorController: errorController))
+                .environmentObject(errorController)
         }
+
         .task {
-//            manager.logout()
             await manager.check()
         }
         .onChange(of: manager.state) { value in
@@ -42,7 +51,7 @@ struct MainView: View {
         }
         .onChange(of: manager.connection) { _ in
             if let conn = manager.connection {
-//                print("Set conn")
+                //                print("Set conn")
                 store = DocumentStore(repository: ApiRepository(connection: conn))
                 storeReady = true
             }

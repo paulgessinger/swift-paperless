@@ -20,6 +20,7 @@ struct CreateDocumentView<Title: View>: View {
     private var title: () -> Title
 
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
 
     @State private var document = ProtoDocument()
     @State private var selectedState = FilterState()
@@ -27,15 +28,7 @@ struct CreateDocumentView<Title: View>: View {
 
     @State private var previewImage: Image?
 
-    @State private var error: String = ""
-    @State private var showingError = false
-
     var callback: () -> Void
-
-    func setError(_ value: String) {
-        error = value
-        showingError = true
-    }
 
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
         sourceUrl = url
@@ -50,15 +43,11 @@ struct CreateDocumentView<Title: View>: View {
             try await store.repository.createDocument(document, file: sourceUrl)
         }
         catch {
-            switch error {
-            case MultiPartFormDataError.noMimeType:
-                setError("Invalid mime type")
-            case MultiPartFormDataError.notAFile:
-                setError("Not a file")
-            case ApiError.postError(let status, let body):
-                setError("Post error code \(status):\n\(body)")
-            default:
-                setError(String(describing: error))
+            errorController.push(error: error)
+            status = .error
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                status = .none
             }
             return
         }
@@ -183,10 +172,7 @@ struct CreateDocumentView<Title: View>: View {
                         .contentShape(Rectangle())
                     }
                 }
-
-                .alert("\(error)", isPresented: $showingError) {
-                    Button("Ok", role: .cancel) {}
-                }
+                .errorOverlay(errorController: errorController)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

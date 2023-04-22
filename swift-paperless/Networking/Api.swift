@@ -176,11 +176,24 @@ let decoder: JSONDecoder = {
     return d
 }()
 
-enum ApiError: Error {
+enum ApiError: Error, LocalizedError {
     case encodingFailed
-    case putError(status: Int, body: String)
-    case deleteFailed
-    case postError(status: Int, body: String)
+    case putError(type: Model.Type, status: Int, body: String)
+    case deleteFailed(type: Model.Type)
+    case postError(type: Model.Type, status: Int, body: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .encodingFailed:
+            return "Error occurred while comminucating with the server."
+        case .putError(let type, _, _):
+            return "Error while saving \(type)"
+        case .deleteFailed(let type):
+            return "Error while deleting \(type)"
+        case .postError(let type, _, _):
+            return "Error while creating \(type)"
+        }
+    }
 }
 
 class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
@@ -324,7 +337,8 @@ class ApiRepository: Repository {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
             print("Saving document: Status was not 200 but \(statusCode)")
             print(String(data: data, encoding: .utf8)!)
-            throw ApiError.putError(status: statusCode, body: String(describing: data))
+            throw ApiError.putError(type: Document.self, status: statusCode, body: String(describing: data))
+//            throw GenericError(message: "Saving document got unexpected response status")
         }
     }
 
@@ -355,7 +369,7 @@ class ApiRepository: Repository {
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
 
-                throw ApiError.postError(status: hres.statusCode, body: body)
+                throw ApiError.postError(type: Document.self, status: hres.statusCode, body: body)
             }
         } catch {
             print("Error uploading: \(error)")
@@ -372,7 +386,7 @@ class ApiRepository: Repository {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 204 {
             print("Delete document: Status was not 204 but \(statusCode)")
             print(String(data: data, encoding: .utf8)!)
-            throw ApiError.deleteFailed
+            throw ApiError.deleteFailed(type: Document.self)
         }
     }
 
@@ -388,7 +402,7 @@ class ApiRepository: Repository {
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
-        print(Endpoint.documents(page: 1, filter: filter).url(host: "THIS_IS_ON_PURPOSE"))
+//        print(Endpoint.documents(page: 1, filter: filter).url(host: "THIS_IS_ON_PURPOSE"))
         return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
@@ -513,7 +527,7 @@ class ApiRepository: Repository {
             if let hres = response as? HTTPURLResponse, hres.statusCode != 201 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
 
-                throw ApiError.postError(status: hres.statusCode, body: body)
+                throw ApiError.postError(type: SavedView.self, status: hres.statusCode, body: body)
             }
 
             let created = try decoder.decode(SavedView.self, from: data)
@@ -540,7 +554,7 @@ class ApiRepository: Repository {
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
 
-                throw ApiError.putError(status: hres.statusCode, body: body)
+                throw ApiError.putError(type: SavedView.self, status: hres.statusCode, body: body)
             }
 
         } catch {
@@ -561,7 +575,7 @@ class ApiRepository: Repository {
                 print(hres.statusCode)
                 print(body)
 
-                throw ApiError.deleteFailed
+                throw ApiError.deleteFailed(type: SavedView.self)
             }
 
         } catch {

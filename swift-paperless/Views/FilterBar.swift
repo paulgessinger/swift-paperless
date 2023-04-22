@@ -16,8 +16,15 @@ extension ProtoSavedView: Identifiable {
     var id: UInt { return 0 }
 }
 
+private struct SavedViewError: LocalizedError {
+    var errorDescription: String? {
+        return "Active SavedView was not found in store and could not be saved"
+    }
+}
+
 private struct FilterMenu<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
     @Binding var filterState: FilterState
     @Binding var savedView: ProtoSavedView?
     @ViewBuilder var label: () -> Content
@@ -27,6 +34,8 @@ private struct FilterMenu<Content: View>: View {
     @State private var showDeletePrompt = false
 
     func saveSavedView(_ savedView: SavedView) {
+        errorController.push(error: SavedViewError())
+        return
         guard let id = store.filterState.savedView, var updated = store.savedViews[id] else {
             fatalError("Active SavedView not in store")
         }
