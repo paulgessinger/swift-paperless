@@ -74,8 +74,8 @@ struct SearchBarView: View {
                     Button("Cancel") {
                         focused = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                            text = ""
                             withAnimation {
+                                text = ""
                                 showCancel = false
                             }
                         }

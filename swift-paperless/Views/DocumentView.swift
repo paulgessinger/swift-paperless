@@ -236,13 +236,14 @@ struct DocumentView: View {
             DocumentDetailView(document: doc)
                 .navigationBarTitleDisplayMode(.inline)
         case .settings:
-            VStack {
-                Label("Settings", systemImage: "gear")
-                    .labelStyle(.iconOnly)
-                    .imageScale(.large)
-                    .navigationTitle("Settings")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
+            SettingsView()
+//            VStack {
+//                Label("Settings", systemImage: "gear")
+//                    .labelStyle(.iconOnly)
+//                    .imageScale(.large)
+//                    .navigationTitle("Settings")
+//                    .navigationBarTitleDisplayMode(.inline)
+//            }
         default:
             fatalError()
         }
@@ -262,8 +263,8 @@ struct DocumentView: View {
                 ScrollView(.vertical) {
                     VStack {
                         if isLoading {
-                            LoadingDocumentList()
-                                .opacity(0.7)
+//                            LoadingDocumentList()
+//                                .opacity(0.7)
                         }
                         else if !documents.isEmpty {
                             DocumentList(documents: $documents)

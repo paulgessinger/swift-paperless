@@ -194,7 +194,7 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
     }
 }
 
-struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel {
+struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel, Equatable {
     var id: UInt
     var isInboxTag: Bool
     var name: String
@@ -233,11 +233,7 @@ struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel {
     }
 }
 
-extension Tag: Equatable, Hashable {
-    static func == (lhs: Tag, rhs: Tag) -> Bool {
-        lhs.id == rhs.id
-    }
-
+extension Tag: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
