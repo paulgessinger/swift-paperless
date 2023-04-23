@@ -82,8 +82,7 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func updateDocument(_ document: Document) async throws {
-        documents[document.id] = document
-        try await repository.updateDocument(document)
+        documents[document.id] = try await repository.updateDocument(document)
     }
 
     @MainActor
@@ -213,6 +212,24 @@ class DocumentStore: ObservableObject {
     }
 
     @MainActor
+    func createTag(_ tag: ProtoTag) async throws -> Tag {
+        let created = try await repository.createTag(tag)
+        tags[created.id] = created
+        return created
+    }
+
+    @MainActor
+    func updateTag(_ tag: Tag) async throws {
+        tags[tag.id] = try await repository.updateTag(tag)
+    }
+
+    @MainActor
+    func deleteTag(_ tag: Tag) async throws {
+        try await repository.deleteTag(tag)
+        tags.removeValue(forKey: tag.id)
+    }
+
+    @MainActor
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView {
         let created = try await repository.createSavedView(view)
         savedViews[created.id] = created
@@ -221,8 +238,7 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func updateSavedView(_ view: SavedView) async throws {
-        try await repository.updateSavedView(view)
-        savedViews[view.id] = view
+        savedViews[view.id] = try await repository.updateSavedView(view)
     }
 
     @MainActor

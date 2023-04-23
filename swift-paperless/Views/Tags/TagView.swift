@@ -14,12 +14,6 @@ struct TagView: View {
 
     @State var tag: Tag?
 
-    var tagID: UInt?
-
-    init(tagID: UInt) {
-        self.tagID = tagID
-    }
-
     init(tag: Tag? = nil) {
         let dummy = Tag.placeholder(8)
 
@@ -34,20 +28,13 @@ struct TagView: View {
                     .font(.body)
                     .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
                     .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                    .background(tag.color)
-                    .foregroundColor(tag.textColor)
+                    .background(tag.color.color)
+                    .foregroundColor(tag.textColor.color)
                     .clipShape(Capsule())
                     .unredacted()
             }
             else {
                 ProgressView()
-            }
-        }
-        .task {
-            if let tagID = tagID {
-                if let (_, tag) = await store.getTag(id: tagID) {
-                    self.tag = tag
-                }
             }
         }
     }
@@ -73,7 +60,7 @@ struct TagsView: View {
             HFlow {
                 if redactionReasons.contains(.placeholder) {
                     ForEach([4, 6, 5], id: \.self) { v in
-                        TagView(tag: .placeholder(v))
+                        TagView(tag: Tag.placeholder(v))
                     }
                 }
                 else {
@@ -97,20 +84,20 @@ struct TagsView: View {
 struct TagView_Previews: PreviewProvider {
     static let tags: [Tag] = [
         Tag(id: 1, isInboxTag: false, name: "Tag",
-            slug: "tagname", color: Color.blue,
-            textColor: Color.white),
+            slug: "tagname", color: Color.blue.hex,
+            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 2, isInboxTag: false, name: "Tag two",
-            slug: "tagname", color: Color.red,
-            textColor: Color.white),
+            slug: "tagname", color: Color.red.hex,
+            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 3, isInboxTag: false, name: "A very long tag",
-            slug: "tagname", color: Color.green,
-            textColor: Color.white),
+            slug: "tagname", color: Color.green.hex,
+            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 4, isInboxTag: false, name: "Somewhat shorter",
-            slug: "tagname", color: Color.indigo,
-            textColor: Color.white),
+            slug: "tagname", color: Color.indigo.hex,
+            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
     ]
 
     static let fractions = [1.0, 0.8, 0.4, 0.2]

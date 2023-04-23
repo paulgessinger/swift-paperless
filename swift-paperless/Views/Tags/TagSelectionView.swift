@@ -239,14 +239,39 @@ struct TagFilterView: View {
 }
 
 // - MARK: TagEditView
-struct TagEditView<D>: View where D: DocumentProtocol {
+struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
 
     @Binding var document: D
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
     @Namespace private var animation
+
+    private struct CreateTag: View {
+        @EnvironmentObject private var store: DocumentStore
+        @EnvironmentObject private var errorController: ErrorController
+        @Environment(\.dismiss) private var dismiss
+
+        @Binding var document: D
+
+        var body: some View {
+            TagEditView<ProtoTag>(onSave: { value in
+                Task {
+                    do {
+                        let tag = try await store.createTag(value)
+                        document.tags.append(tag.id)
+                        dismiss()
+                    }
+                    catch {
+                        errorController.push(error: error)
+                        throw error
+                    }
+                }
+            })
+        }
+    }
 
     private func row<Content: View>(action: @escaping () -> (),
                                     active: Bool,
@@ -340,6 +365,18 @@ struct TagEditView<D>: View where D: DocumentProtocol {
                 alignment: .top
             )
         }
+
+        .navigationTitle("Tags")
+
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink {
+                    CreateTag(document: $document)
+                } label: {
+                    Label("Add tag", systemImage: "plus")
+                }
+            }
+        }
     }
 }
 
@@ -358,12 +395,15 @@ struct TagFilterView_Previews: PreviewProvider {
     }
 }
 
-struct TagEditView_Previews: PreviewProvider {
+struct DocumentTagEditView_Previews: PreviewProvider {
     @StateObject static var store = DocumentStore(repository: PreviewRepository())
 
     static var previews: some View {
         DocumentLoader(id: 3) { document in
-            TagEditView(document: document)
+            NavigationStack {
+                DocumentTagEditView(document: document)
+                    .navigationBarTitleDisplayMode(.inline)
+            }
         }
         .environmentObject(store)
     }

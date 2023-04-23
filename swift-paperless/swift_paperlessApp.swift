@@ -26,7 +26,7 @@ struct MainView: View {
         Group {
             if manager.state == .valid && storeReady {
                 DocumentView()
-                    .modifier(ErrorDisplay(errorController: errorController))
+                    .errorOverlay(errorController: errorController)
                     .environmentObject(store!)
                     .environmentObject(manager)
                     .environmentObject(errorController)

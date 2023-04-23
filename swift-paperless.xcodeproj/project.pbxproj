@@ -89,6 +89,12 @@
 		7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */; };
 		7AF2E07E29F46C950092948B /* ErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E07D29F46C950092948B /* ErrorController.swift */; };
 		7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E07D29F46C950092948B /* ErrorController.swift */; };
+		7AF2E08229F480310092948B /* TagEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08129F480310092948B /* TagEditView.swift */; };
+		7AF2E08329F480310092948B /* TagEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08129F480310092948B /* TagEditView.swift */; };
+		7AF2E08529F553360092948B /* MatchingEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08429F553360092948B /* MatchingEditView.swift */; };
+		7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08429F553360092948B /* MatchingEditView.swift */; };
+		7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08729F56F3D0092948B /* Endpoint.swift */; };
+		7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08729F56F3D0092948B /* Endpoint.swift */; };
 		7AF6688729A137EA0016BC31 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
@@ -181,6 +187,9 @@
 		7AF04B8229A68A4F008E8F79 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
 		7AF2E07129F3ECE40092948B /* SavedViewTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewTest.swift; sourceTree = "<group>"; };
 		7AF2E07D29F46C950092948B /* ErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorController.swift; sourceTree = "<group>"; };
+		7AF2E08129F480310092948B /* TagEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagEditView.swift; sourceTree = "<group>"; };
+		7AF2E08429F553360092948B /* MatchingEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchingEditView.swift; sourceTree = "<group>"; };
+		7AF2E08729F56F3D0092948B /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		7AF6688629A137EA0016BC31 /* Api.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Api.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
@@ -337,6 +346,7 @@
 				7AF6688629A137EA0016BC31 /* Api.swift */,
 				7AB060DD29C6623F004E6C63 /* Repository.swift */,
 				7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */,
+				7AF2E08729F56F3D0092948B /* Endpoint.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -344,15 +354,14 @@
 		7AF04B7929A6898C008E8F79 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7AF2E08029F4801A0092948B /* Tags */,
 				7A3E036229EC8FEA008F4976 /* SavedView */,
 				7A5482B0299AD56C00D5061E /* DocumentView.swift */,
-				7A5C139029ABFC3F00D71F51 /* TagView.swift */,
 				7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */,
 				7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */,
 				7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */,
 				7AF04B8229A68A4F008E8F79 /* FilterView.swift */,
 				7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */,
-				7A68F0AA29B356A300878223 /* TagSelectionView.swift */,
 				7A4AA90829BE1F7F00D845A2 /* CommonPickerView.swift */,
 				7A4AA90B29BE1FC700D845A2 /* SearchBarView.swift */,
 				7A4AA91329BE22C300D845A2 /* CreateDocumentView.swift */,
@@ -360,8 +369,19 @@
 				7AEF691129CF80F600414BA7 /* LogoView.swift */,
 				7AD8FC5729E4B37B00157217 /* FilterBar.swift */,
 				7AF2E07D29F46C950092948B /* ErrorController.swift */,
+				7AF2E08429F553360092948B /* MatchingEditView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		7AF2E08029F4801A0092948B /* Tags */ = {
+			isa = PBXGroup;
+			children = (
+				7A5C139029ABFC3F00D71F51 /* TagView.swift */,
+				7A68F0AA29B356A300878223 /* TagSelectionView.swift */,
+				7AF2E08129F480310092948B /* TagEditView.swift */,
+			);
+			path = Tags;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -553,6 +573,7 @@
 				7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */,
 				7A3E036A29EC9013008F4976 /* EditSavedView.swift in Sources */,
 				7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */,
+				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
 				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
@@ -561,11 +582,13 @@
 				7AEF691D29D049D900414BA7 /* PositionObservingView.swift in Sources */,
 				7A46887629D4DD3D001AEB7C /* DocumentCell.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
+				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A4AA91529BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A9CC11329E29A39009CAD61 /* DocumentLoader.swift in Sources */,
 				7A4AA91229BE202800D845A2 /* PreviewModel.swift in Sources */,
 				7A4AA91829BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
+				7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */,
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
@@ -590,6 +613,7 @@
 				7AEF691F29D06D6A00414BA7 /* PreviewRepository.swift in Sources */,
 				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
 				7A3E036829EC9013008F4976 /* EditSavedView.swift in Sources */,
+				7AF2E08229F480310092948B /* TagEditView.swift in Sources */,
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
@@ -608,7 +632,9 @@
 				7A9CC11229E29A0D009CAD61 /* DocumentLoader.swift in Sources */,
 				7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */,
 				7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */,
+				7AF2E08529F553360092948B /* MatchingEditView.swift in Sources */,
 				7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */,
+				7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */,
 				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

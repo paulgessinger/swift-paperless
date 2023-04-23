@@ -103,11 +103,11 @@ class PreviewRepository: Repository {
     }
 
     private let tags = [Tag]([
-        .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: .purple, textColor: .white),
-        .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: .blue, textColor: .white),
-        .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: .green, textColor: .white),
-        .init(id: 4, isInboxTag: false, name: "Important", slug: "important", color: .red, textColor: .white),
-        .init(id: 5, isInboxTag: false, name: "Book", slug: "book", color: .yellow, textColor: .white),
+        .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: Color.blue.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: Color.green.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 4, isInboxTag: false, name: "Important", slug: "important", color: Color.red.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 5, isInboxTag: false, name: "Book", slug: "book", color: Color.yellow.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
     ]).reduce(into: [UInt: Tag]()) {
         $0[$1.id] = $1
     }
@@ -130,7 +130,7 @@ class PreviewRepository: Repository {
         $0[$1.id] = $1
     }
 
-    func updateDocument(_ document: Document) async throws {}
+    func updateDocument(_ document: Document) async throws -> Document { document }
     func deleteDocument(_ document: Document) async throws {}
     func createDocument(_ document: ProtoDocument, file: URL) async throws {}
 
@@ -139,6 +139,10 @@ class PreviewRepository: Repository {
     }
 
     func tag(id: UInt) async -> Tag? { return tags[id] }
+    func createTag(_ tag: ProtoTag) async throws -> Tag { throw NotImplemented() }
+    func updateTag(_ tag: Tag) async throws -> Tag { tag }
+    func deleteTag(_ tag: Tag) async throws {}
+
     func tags() async -> [Tag] { return tags.map { $0.value } }
 
     func correspondent(id: UInt) async -> Correspondent? { return correspondents[id] }
@@ -175,6 +179,6 @@ class PreviewRepository: Repository {
     struct NotImplemented: Error {}
 
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
-    func updateSavedView(_ view: SavedView) async throws { throw NotImplemented() }
+    func updateSavedView(_ view: SavedView) async throws -> SavedView { view }
     func deleteSavedView(_ view: SavedView) async throws { throw NotImplemented() }
 }

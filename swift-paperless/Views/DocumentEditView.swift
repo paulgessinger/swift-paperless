@@ -20,8 +20,6 @@ struct DocumentEditView: View {
     @State private var selectedState = FilterState()
     @State private var showDeleteConfirmation = false
 
-    @State private var error = ""
-    @State private var showError = false
     @State private var deleted = false
 
     init(document: Document) {
@@ -78,8 +76,7 @@ struct DocumentEditView: View {
                     }
 //
                     NavigationLink(destination: {
-                        TagEditView(document: $document)
-                            .navigationTitle("Tags")
+                        DocumentTagEditView(document: $document)
                     }) {
                         if document.tags.isEmpty {
                             Text("No tags")
@@ -123,20 +120,14 @@ struct DocumentEditView: View {
                                         impact.impactOccurred()
                                         try await Task.sleep(for: .seconds(0.2))
                                         dismiss()
-//                                    do {
-//                                        try await Task.sleep(for: .seconds(0.2))
-//                                    } catch {}
                                         nav.popToRoot()
                                     } catch {
-                                        self.error = "\(error)"
-                                        showError = true
+                                        errorController.push(error: error)
                                     }
                                 }
                             }
                         }
                     }
-
-                    .alert(error, isPresented: $showError) {}
                 }
             }
             .toolbar {
@@ -151,9 +142,7 @@ struct DocumentEditView: View {
                             do {
                                 try await store.updateDocument(document)
                             } catch {
-                                print(error)
                                 errorController.push(error: error)
-//                                errorController.push(message: "Error while saving document document!")
                             }
                         }
                         dismiss()
@@ -172,6 +161,7 @@ struct DocumentEditView: View {
                 async let _ = await store.fetchAllTags()
             }
         }
+        .errorOverlay(errorController: errorController)
     }
 }
 

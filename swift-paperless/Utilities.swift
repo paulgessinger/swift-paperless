@@ -124,7 +124,7 @@ extension Color {
         self.init(.sRGB, red: r, green: g, blue: b)
     }
 
-    var hex: String {
+    var hexString: String {
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
@@ -140,23 +140,28 @@ extension Color {
     }
 }
 
-@propertyWrapper
-struct HexColor {
-    var wrappedValue: Color
+struct HexColor: Equatable {
+    var color: Color
+
+    init(_ color: Color) {
+        self.color = color
+    }
 }
 
 extension HexColor: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let str = try container.decode(String.self)
-        wrappedValue = try Color(hex: str)
+        color = try Color(hex: str)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(wrappedValue.hex)
+        try container.encode(color.hexString)
     }
 }
+
+extension Color {}
 
 extension Color {
     static let systemBackground = Color(UIColor.systemBackground)
@@ -169,6 +174,10 @@ extension Color {
 //    static func systemGroupedBackground() -> Color {
 //        return Color(UIColor.systemGroupedBackground)
 //    }
+
+    var hex: HexColor {
+        return HexColor(self)
+    }
 }
 
 extension Bundle {

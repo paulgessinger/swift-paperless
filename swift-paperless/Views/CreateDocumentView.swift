@@ -158,7 +158,7 @@ struct CreateDocumentView<Title: View>: View {
                         }
 
                         NavigationLink(destination: {
-                            TagEditView(document: $document)
+                            DocumentTagEditView(document: $document)
                                 .navigationTitle("Tags")
                         }) {
                             if document.tags.isEmpty {
@@ -178,12 +178,6 @@ struct CreateDocumentView<Title: View>: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     title()
-//                    switch title {
-//                    case .logo:
-//                        LogoView()
-//                    case .text(let value):
-//                        Text(value)
-//                    }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -219,5 +213,7 @@ struct CreateDocumentView<Title: View>: View {
                 await store.fetchAll()
             }
         }
+
+        .errorOverlay(errorController: errorController)
     }
 }

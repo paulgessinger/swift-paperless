@@ -34,7 +34,15 @@ enum PreviewModel {
         ]
 
         for i in 1 ... 20 {
-            out[UInt(i)] = Tag(id: UInt(i), isInboxTag: false, name: "Tag \(i)", slug: "tag-\(i)", color: colors[i % colors.count], textColor: Color.white)
+            out[UInt(i)] = Tag(id: UInt(i),
+                               isInboxTag: false,
+                               name: "Tag \(i)",
+                               slug: "tag-\(i)",
+                               color: colors[i % colors.count].hex,
+                               textColor: Color.white.hex,
+                               match: "",
+                               matchingAlgorithm: .auto,
+                               isInsensitive: true)
         }
         return out
     }()

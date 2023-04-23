@@ -10,135 +10,6 @@ import Semaphore
 import SwiftUI
 import UIKit
 
-struct Endpoint {
-    let path: String
-    let queryItems: [URLQueryItem]
-}
-
-extension Endpoint {
-    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = 100) -> Endpoint {
-        var queryItems = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "truncate_content", value: "true"),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
-        ]
-
-        let rules = filter.rules
-        queryItems += FilterRule.queryItems(for: rules)
-
-        var ordering: String = filter.sortField.rawValue
-        if filter.sortOrder.reverse {
-            ordering = "-" + ordering
-        }
-
-        queryItems.append(.init(name: "ordering", value: ordering))
-
-        return Endpoint(
-            path: "/api/documents/",
-            queryItems: queryItems
-        )
-    }
-
-    static func document(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(id)/", queryItems: [])
-    }
-
-    static func thumbnail(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/thumb/", queryItems: [])
-    }
-
-    static func download(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/download/", queryItems: [])
-    }
-
-    static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
-        return Endpoint(
-            path: "/api/search/autocomplete/",
-            queryItems: [
-                URLQueryItem(name: "term", value: term),
-                URLQueryItem(name: "limit", value: String(limit)),
-            ]
-        )
-    }
-
-    static func correspondents() -> Endpoint {
-        return Endpoint(path: "/api/correspondents/",
-                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
-    }
-
-    static func documentTypes() -> Endpoint {
-        return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
-    }
-
-    static func tags() -> Endpoint {
-        return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
-    }
-
-    static func createDocument() -> Endpoint {
-        return Endpoint(path: "/api/documents/post_document/", queryItems: [])
-    }
-
-    static func listAll<T>(_ type: T.Type) -> Endpoint where T: Model {
-        switch type {
-        case is Correspondent.Type:
-            return correspondents()
-        case is DocumentType.Type:
-            return documentTypes()
-        case is Tag.Type:
-            return tags()
-        case is Document.Type:
-            return documents(page: 1, filter: FilterState())
-        case is SavedView.Type:
-            return savedViews()
-        default:
-            fatalError("Invalid type")
-        }
-    }
-
-    static func savedViews() -> Endpoint {
-        return Endpoint(path: "/api/saved_views/",
-                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
-    }
-
-    static func createSavedView() -> Endpoint {
-        return Endpoint(path: "/api/saved_views/",
-                        queryItems: [])
-    }
-
-    static func savedView(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/saved_views/\(id)/",
-                        queryItems: [])
-    }
-
-    static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
-        var segment = ""
-        switch type {
-        case is Correspondent.Type:
-            segment = "correspondents"
-        case is DocumentType.Type:
-            segment = "document_types"
-        case is Tag.Type:
-            segment = "tags"
-        case is Document.Type:
-            return document(id: id)
-        default:
-            fatalError("Invalid type")
-        }
-
-        return Endpoint(path: "/api/\(segment)/\(id)/",
-                        queryItems: [])
-    }
-
-    func url(host: String) -> URL? {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = host
-        components.path = path
-        components.queryItems = queryItems.isEmpty ? nil : queryItems
-        return components.url
-    }
-}
-
 struct ListResponse<Element>: Decodable
     where Element: Decodable
 {
@@ -176,7 +47,7 @@ let decoder: JSONDecoder = {
     return d
 }()
 
-enum ApiError: Error, LocalizedError {
+enum ApiErrorOld: Error, LocalizedError {
     case encodingFailed
     case putError(type: Model.Type, status: Int, body: String)
     case deleteFailed(type: Model.Type)
@@ -195,6 +66,50 @@ enum ApiError: Error, LocalizedError {
         }
     }
 }
+
+enum CrudOperation: String {
+    case create
+    case read
+    case update
+    case delete
+}
+
+struct CrudApiError<Element>: Error, LocalizedError {
+    var operation: CrudOperation
+    var type: Element.Type
+    var status: Int
+    var body: String? = nil
+
+    var errorDescription: String? {
+        return "Failed to \(operation.rawValue) \(type)"
+    }
+
+    var failureReason: String? {
+        return "Backend replied with unexpected status: \(status)"
+    }
+}
+
+// enum CrudApiError<Element>: Error, LocalizedError {
+//    case put(type: Element.Type, status: Int, body: String)
+//    case delete(type: Element.Type, status: Int, body: String)
+//    case post(type: Element.Type, status: Int, body: String)
+//    case post(type: Element.Type, status: Int, body: String)
+//
+//    var operation: String {
+//        switch self {
+//        case .put:
+//            return "update"
+//        case .delete:
+//            return "delete"
+//        case .post:
+//            return "create"
+//        }
+//    }
+//
+//    var errorDescription: String? {
+//        return "Failed to \(operation) object \(Element.self)"
+//    }
+// }
 
 class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
     private var nextPage: URL?
@@ -302,7 +217,7 @@ class ApiDocumentSource: DocumentSource {
     func hasMore() async -> Bool { sequence.hasMore }
 }
 
-class ApiRepository: Repository {
+class ApiRepository {
     private let connection: Connection
 
     init(connection: Connection) {
@@ -321,25 +236,156 @@ class ApiRepository: Repository {
         return endpoint.url(host: apiHost)!
     }
 
-    func updateDocument(_ document: Document) async throws {
+    let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
+//        encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
-        let json = try encoder.encode(document)
+        return encoder
+    }()
 
-        var request = request(.document(id: document.id))
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = json
+    fileprivate func request(url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
+        return request
+    }
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+    fileprivate func request(_ endpoint: Endpoint) -> URLRequest {
+        request(url: url(endpoint))
+    }
 
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-            print("Saving document: Status was not 200 but \(statusCode)")
-            print(String(data: data, encoding: .utf8)!)
-            throw ApiError.putError(type: Document.self, status: statusCode, body: String(describing: data))
-//            throw GenericError(message: "Saving document got unexpected response status")
+    private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
+        let request = request(.single(T.self, id: id))
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if (response as? HTTPURLResponse)?.statusCode != 200 {
+                print("Getting correspondent: Status was not 200")
+                return nil
+            }
+
+            let correspondent = try decoder.decode(type, from: data)
+            return correspondent
+        } catch {
+            print("Error getting \(type) with id \(id): \(error)")
+            return nil
         }
+    }
+
+    private func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
+        let sequence = ApiSequence<T>(repository: self,
+                                      url: url(.listAll(T.self)))
+        return await Array(sequence)
+    }
+
+    private func getImage(url: URL?) async -> Image? {
+        guard let url = url else { return nil }
+
+//        print("Load image at \(url)")
+
+        var request = URLRequest(url: url)
+        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                return nil
+//                fatalError("Did not get good response for image")
+            }
+
+//            try await Task.sleep(for: .seconds(2))
+
+            guard let uiImage = UIImage(data: data) else { return nil }
+            return Image(uiImage: uiImage)
+        } catch { return nil }
+    }
+
+    private func create<ProtoElement, Element>(element: ProtoElement, endpoint: Endpoint, returns: Element.Type) async throws -> Element where ProtoElement: Encodable, Element: Decodable {
+        var request = request(endpoint)
+//        print("Create: \(request.url!)")
+
+        let body = try JSONEncoder().encode(element)
+//        print("Create \(returns): \(String(describing: String(data: body, encoding: .utf8)!))")
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 201 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+
+                throw CrudApiError(operation: .create,
+                                   type: returns,
+                                   status: hres.statusCode,
+                                   body: body)
+            }
+
+            let created = try decoder.decode(returns, from: data)
+            return created
+        } catch {
+            print("Error creating \(returns): \(error)")
+            throw error
+        }
+    }
+
+    private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element where Element: Codable {
+        var request = request(endpoint)
+
+        let body = try encoder.encode(element)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+
+                throw CrudApiError(operation: .update,
+                                   type: Element.self,
+                                   status: hres.statusCode,
+                                   body: body)
+            }
+
+            return try decoder.decode(Element.self, from: data)
+
+        } catch {
+            print(error)
+            throw error
+        }
+    }
+
+    private func delete<Element>(element: Element, endpoint: Endpoint) async throws {
+        var request = request(endpoint)
+        request.httpMethod = "DELETE"
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let hres = response as? HTTPURLResponse, hres.statusCode != 204 {
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+
+                throw CrudApiError(operation: .delete,
+                                   type: Element.self,
+                                   status: hres.statusCode,
+                                   body: body)
+            }
+
+        } catch {
+            print(error)
+            throw error
+        }
+    }
+}
+
+extension ApiRepository: Repository {
+    func updateDocument(_ document: Document) async throws -> Document {
+        return try await update(element: document, endpoint: .document(id: document.id))
     }
 
     func createDocument(_ document: ProtoDocument, file: URL) async throws {
@@ -369,7 +415,7 @@ class ApiRepository: Repository {
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
 
-                throw ApiError.postError(type: Document.self, status: hres.statusCode, body: body)
+                throw ApiErrorOld.postError(type: Document.self, status: hres.statusCode, body: body)
             }
         } catch {
             print("Error uploading: \(error)")
@@ -378,31 +424,10 @@ class ApiRepository: Repository {
     }
 
     func deleteDocument(_ document: Document) async throws {
-        var request = request(.document(id: document.id))
-        request.httpMethod = "DELETE"
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 204 {
-            print("Delete document: Status was not 204 but \(statusCode)")
-            print(String(data: data, encoding: .utf8)!)
-            throw ApiError.deleteFailed(type: Document.self)
-        }
-    }
-
-    fileprivate func request(url: URL) -> URLRequest {
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
-        return request
-    }
-
-    fileprivate func request(_ endpoint: Endpoint) -> URLRequest {
-        request(url: url(endpoint))
+        try await delete(element: document, endpoint: .document(id: document.id))
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
-//        print(Endpoint.documents(page: 1, filter: filter).url(host: "THIS_IS_ON_PURPOSE"))
         return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
@@ -410,7 +435,6 @@ class ApiRepository: Repository {
 
     func download(documentID: UInt) async -> URL? {
         let request = request(.download(documentId: documentID))
-//        print(request.url)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -443,32 +467,20 @@ class ApiRepository: Repository {
         }
     }
 
-    private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
-        let request = request(.single(T.self, id: id))
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Getting correspondent: Status was not 200")
-                return nil
-            }
-
-            let correspondent = try decoder.decode(type, from: data)
-            return correspondent
-        } catch {
-            print("Error getting \(type) with id \(id): \(error)")
-            return nil
-        }
-    }
-
-    private func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
-        let sequence = ApiSequence<T>(repository: self,
-                                      url: url(.listAll(T.self)))
-        return await Array(sequence)
-    }
-
     func tag(id: UInt) async -> Tag? { return await get(Tag.self, id: id) }
+
+    func createTag(_ tag: ProtoTag) async throws -> Tag {
+        return try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
+    }
+
+    func updateTag(_ tag: Tag) async throws -> Tag {
+        return try await update(element: tag, endpoint: .tag(id: tag.id))
+    }
+
+    func deleteTag(_ tag: Tag) async throws {
+        try await delete(element: tag, endpoint: .tag(id: tag.id))
+    }
+
     func tags() async -> [Tag] { return await all(Tag.self) }
 
     func correspondent(id: UInt) async -> Correspondent? { return await get(Correspondent.self, id: id) }
@@ -484,103 +496,19 @@ class ApiRepository: Repository {
         return (false, image)
     }
 
-    private func getImage(url: URL?) async -> Image? {
-        guard let url = url else { return nil }
-
-//        print("Load image at \(url)")
-
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                return nil
-//                fatalError("Did not get good response for image")
-            }
-
-//            try await Task.sleep(for: .seconds(2))
-
-            guard let uiImage = UIImage(data: data) else { return nil }
-            return Image(uiImage: uiImage)
-        } catch { return nil }
-    }
-
     func savedViews() async -> [SavedView] {
         return await all(SavedView.self)
     }
 
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView {
-        var request = request(.createSavedView())
-        print(request.url!)
-
-        let body = try JSONEncoder().encode(view)
-        print("Create saved view: \(String(describing: String(data: body, encoding: .utf8)!))")
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 201 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw ApiError.postError(type: SavedView.self, status: hres.statusCode, body: body)
-            }
-
-            let created = try decoder.decode(SavedView.self, from: data)
-            return created
-        } catch {
-            print("Error uploading: \(error)")
-            throw error
-        }
+        return try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
     }
 
-    func updateSavedView(_ view: SavedView) async throws {
-        var request = request(.savedView(id: view.id))
-        print(request.url!)
-
-        let body = try JSONEncoder().encode(view)
-        print("Update saved view: \(String(describing: String(data: body, encoding: .utf8)!))")
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw ApiError.putError(type: SavedView.self, status: hres.statusCode, body: body)
-            }
-
-        } catch {
-            print("Error uploading: \(error)")
-            throw error
-        }
+    func updateSavedView(_ view: SavedView) async throws -> SavedView {
+        return try await update(element: view, endpoint: .savedView(id: view.id))
     }
 
     func deleteSavedView(_ view: SavedView) async throws {
-        var request = request(.savedView(id: view.id))
-        request.httpMethod = "DELETE"
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 204 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-                print(hres.statusCode)
-                print(body)
-
-                throw ApiError.deleteFailed(type: SavedView.self)
-            }
-
-        } catch {
-            print("Error deleting: \(error)")
-            throw error
-        }
+        try await delete(element: view, endpoint: .savedView(id: view.id))
     }
 }

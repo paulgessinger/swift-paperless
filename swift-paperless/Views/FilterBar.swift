@@ -34,10 +34,9 @@ private struct FilterMenu<Content: View>: View {
     @State private var showDeletePrompt = false
 
     func saveSavedView(_ savedView: SavedView) {
-        errorController.push(error: SavedViewError())
-        return
         guard let id = store.filterState.savedView, var updated = store.savedViews[id] else {
-            fatalError("Active SavedView not in store")
+            errorController.push(message: "Unable to save active saved view")
+            return
         }
 
         updated.filterRules = store.filterState.rules
