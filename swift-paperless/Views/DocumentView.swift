@@ -263,8 +263,8 @@ struct DocumentView: View {
                 ScrollView(.vertical) {
                     VStack {
                         if isLoading {
-//                            LoadingDocumentList()
-//                                .opacity(0.7)
+                            LoadingDocumentList()
+                                .opacity(0.7)
                         }
                         else if !documents.isEmpty {
                             DocumentList(documents: $documents)

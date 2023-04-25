@@ -71,16 +71,18 @@ struct SearchBarView: View {
 
             Group {
                 if showCancel && cancelEnabled {
-                    Button("Cancel") {
-                        focused = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                            withAnimation {
+                    Text("Cancel")
+                        .foregroundColor(.accentColor)
+                        .onTapGesture {
+                            focused = false
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                            withAnimation(.easeInOut) {
                                 text = ""
                                 showCancel = false
                             }
+//                        }
                         }
-                    }
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                        .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
             }
         }
@@ -93,7 +95,7 @@ struct SearchBarView: View {
             }
 
             if newValue {
-                withAnimation {
+                withAnimation(.easeInOut) {
                     showCancel = true
                 }
             }
@@ -103,9 +105,24 @@ struct SearchBarView: View {
 
 struct PreviewWrapper: View {
     @State var text: String = ""
+    @State var hidden = false
 
     var body: some View {
-        SearchBarView(text: $text)
+        NavigationStack {
+            VStack {
+                SearchBarView(text: $text)
+                    .navigationTitle("yoyoyo")
+                Text("Toggle").onTapGesture {
+                    Task {
+                        withAnimation {
+                            hidden.toggle()
+                        }
+                    }
+                }
+                Spacer()
+            }
+            .toolbar(hidden ? .hidden : .automatic)
+        }
     }
 }
 
