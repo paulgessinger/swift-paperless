@@ -85,19 +85,19 @@ struct TagView_Previews: PreviewProvider {
     static let tags: [Tag] = [
         Tag(id: 1, isInboxTag: false, name: "Tag",
             slug: "tagname", color: Color.blue.hex,
-            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+            match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 2, isInboxTag: false, name: "Tag two",
             slug: "tagname", color: Color.red.hex,
-            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+            match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 3, isInboxTag: false, name: "A very long tag",
             slug: "tagname", color: Color.green.hex,
-            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+            match: "", matchingAlgorithm: .auto, isInsensitive: true),
 
         Tag(id: 4, isInboxTag: false, name: "Somewhat shorter",
             slug: "tagname", color: Color.indigo.hex,
-            textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+            match: "", matchingAlgorithm: .auto, isInsensitive: true),
     ]
 
     static let fractions = [1.0, 0.8, 0.4, 0.2]
