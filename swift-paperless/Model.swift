@@ -10,6 +10,12 @@ import Foundation
 import OrderedCollections
 import SwiftUI
 
+protocol MatchingModel {
+    var match: String { get set }
+    var matchingAlgorithm: MatchingAlgorithm { get set }
+    var isInsensitive: Bool { get set }
+}
+
 protocol DocumentProtocol: Codable {
     var documentType: UInt? { get set }
     var correspondent: UInt? { get set }
@@ -61,21 +67,44 @@ extension Document: Codable {
     }
 }
 
-struct Correspondent: Codable, Identifiable, Model {
+protocol CorrespondentProtocol: Equatable, MatchingModel {
+    var name: String { get set }
+}
+
+struct Correspondent: Codable, Identifiable, Model, MatchingModel {
     var id: UInt
     var documentCount: UInt
-    var isInsensitive: Bool
     var lastCorrespondence: Date?
-    // match?
     var name: String
     var slug: String
+
+    var matchingAlgorithm: MatchingAlgorithm
+    var match: String
+    var isInsensitive: Bool
 
     private enum CodingKeys: String, CodingKey {
         case id
         case documentCount = "document_count"
-        case isInsensitive = "is_insensitive"
         case lastCorrespondence = "last_correspondence"
         case name, slug
+        case match
+        case matchingAlgorithm = "matching_algorithm"
+        case isInsensitive = "is_insensitive"
+    }
+}
+
+struct ProtoCorrespondent: Codable, CorrespondentProtocol {
+    var name: String = ""
+
+    var matchingAlgorithm: MatchingAlgorithm = .auto
+    var match: String = ""
+    var isInsensitive: Bool = false
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case match
+        case matchingAlgorithm = "matching_algorithm"
+        case isInsensitive = "is_insensitive"
     }
 }
 
@@ -134,12 +163,6 @@ enum MatchingAlgorithm: Int, Codable, CaseIterable {
     }
 }
 
-protocol MatchingModel {
-    var match: String { get set }
-    var matchingAlgorithm: MatchingAlgorithm { get set }
-    var isInsensitive: Bool { get set }
-}
-
 protocol TagProtocol: Equatable, MatchingModel {
     var isInboxTag: Bool { get set }
     var name: String { get set }
@@ -150,12 +173,7 @@ protocol TagProtocol: Equatable, MatchingModel {
     static func placeholder(_ length: Int) -> Self
 }
 
-struct ProtoTag: Encodable, TagProtocol, MatchingModel {
-    var isInboxTag: Bool = false
-    var name: String = ""
-    var slug: String = ""
-    var color: HexColor = Color.gray.hex
-
+extension TagProtocol {
     var textColor: HexColor {
         // https://github.com/paperless-ngx/paperless-ngx/blob/0dcfb97824b6184094290138fe401d8368722483/src/documents/serialisers.py#L317-L328
 
@@ -169,6 +187,13 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
 
         return HexColor(luminance < 0.53 ? .white : .black)
     }
+}
+
+struct ProtoTag: Encodable, TagProtocol, MatchingModel {
+    var isInboxTag: Bool = false
+    var name: String = ""
+    var slug: String = ""
+    var color: HexColor = Color.gray.hex
 
     var match: String = ""
     var matchingAlgorithm: MatchingAlgorithm = .auto
@@ -200,7 +225,6 @@ struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel, Equatable 
     var name: String
     var slug: String
     var color: HexColor
-    var textColor: HexColor
 
     var match: String
     var matchingAlgorithm: MatchingAlgorithm
@@ -210,7 +234,6 @@ struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel, Equatable 
         case id
         case isInboxTag = "is_inbox_tag"
         case name, slug, color
-        case textColor = "text_color"
         case match
         case matchingAlgorithm = "matching_algorithm"
         case isInsensitive = "is_insensitive"
@@ -225,7 +248,6 @@ struct Tag: Codable, Identifiable, Model, TagProtocol, MatchingModel, Equatable 
             name: name,
             slug: "",
             color: Color("ElementBackground").hex,
-            textColor: Color.white.hex,
             match: "",
             matchingAlgorithm: .auto,
             isInsensitive: true

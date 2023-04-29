@@ -9,8 +9,8 @@ import SwiftUI
 
 enum PreviewModel {
     static let correspondents: [UInt: Correspondent] = [
-        1: Correspondent(id: 1, documentCount: 0, isInsensitive: false, name: "Corr 1", slug: "corr-1"),
-        2: Correspondent(id: 2, documentCount: 0, isInsensitive: false, name: "Corr 2", slug: "corr-2")
+        1: Correspondent(id: 1, documentCount: 0, name: "Corr 1", slug: "corr-1", matchingAlgorithm: .auto, match: "", isInsensitive: false),
+        2: Correspondent(id: 2, documentCount: 0, name: "Corr 2", slug: "corr-2", matchingAlgorithm: .auto, match: "", isInsensitive: false)
     ]
 
     static let documentTypes: [UInt: DocumentType] = [
@@ -39,7 +39,6 @@ enum PreviewModel {
                                name: "Tag \(i)",
                                slug: "tag-\(i)",
                                color: colors[i % colors.count].hex,
-                               textColor: Color.white.hex,
                                match: "",
                                matchingAlgorithm: .auto,
                                isInsensitive: true)

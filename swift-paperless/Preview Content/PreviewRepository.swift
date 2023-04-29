@@ -103,20 +103,20 @@ class PreviewRepository: Repository {
     }
 
     private let tags = [Tag]([
-        .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
-        .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: Color.blue.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
-        .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: Color.green.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
-        .init(id: 4, isInboxTag: false, name: "Important", slug: "important", color: Color.red.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
-        .init(id: 5, isInboxTag: false, name: "Book", slug: "book", color: Color.yellow.hex, textColor: Color.white.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: Color.blue.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: Color.green.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 4, isInboxTag: false, name: "Important", slug: "important", color: Color.red.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+        .init(id: 5, isInboxTag: false, name: "Book", slug: "book", color: Color.yellow.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
     ]).reduce(into: [UInt: Tag]()) {
         $0[$1.id] = $1
     }
 
     private let correspondents = [Correspondent]([
-        .init(id: 1, documentCount: 2, isInsensitive: true, name: "McMillan", slug: "mcmillan"),
-        .init(id: 2, documentCount: 21, isInsensitive: true, name: "Credit Suisse", slug: "cs"),
-        .init(id: 3, documentCount: 66, isInsensitive: true, name: "UBS", slug: "ubs"),
-        .init(id: 4, documentCount: 4, isInsensitive: true, name: "Home", slug: "home"),
+        .init(id: 1, documentCount: 2, name: "McMillan", slug: "mcmillan", matchingAlgorithm: .auto, match: "", isInsensitive: true),
+        .init(id: 2, documentCount: 21, name: "Credit Suisse", slug: "cs", matchingAlgorithm: .auto, match: "", isInsensitive: true),
+        .init(id: 3, documentCount: 66, name: "UBS", slug: "ubs", matchingAlgorithm: .auto, match: "", isInsensitive: true),
+        .init(id: 4, documentCount: 4, name: "Home", slug: "home", matchingAlgorithm: .auto, match: "", isInsensitive: true),
     ]).reduce(into: [UInt: Correspondent]()) {
         $0[$1.id] = $1
     }
