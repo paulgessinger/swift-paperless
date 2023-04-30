@@ -184,7 +184,7 @@ class PreviewRepository: Repository {
 
     struct NotImplemented: Error {}
 
-    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
-    func updateSavedView(_ view: SavedView) async throws -> SavedView { view }
-    func deleteSavedView(_ view: SavedView) async throws { throw NotImplemented() }
+    func create(savedView: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
+    func update(savedView: SavedView) async throws -> SavedView { savedView }
+    func delete(savedView: SavedView) async throws { throw NotImplemented() }
 }

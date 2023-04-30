@@ -327,7 +327,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
 }
 
 struct ProtoSavedView: Codable, SavedViewProtocol {
-    var name: String
+    var name: String = ""
     var showOnDashboard: Bool = false
     var showInSidebar: Bool = false
     var sortField: SortField = .created

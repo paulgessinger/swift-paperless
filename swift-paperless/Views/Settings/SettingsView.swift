@@ -119,7 +119,7 @@ extension DocumentTypeEditView: EditViewProtocol where Element == DocumentType {
 extension DocumentTypeEditView: CreateViewProtocol where Element == ProtoDocumentType {}
 
 struct DocumentTypeManager: ManagerProtocol {
-    static var elementName: KeyPath<DocumentType, String> = \.name
+    static var elementName: KeyPath<Model.Element, String> = \.name
 
     final class Model: ManagerModel {
         typealias Element = DocumentType
@@ -162,7 +162,55 @@ struct DocumentTypeManager: ManagerProtocol {
     }
 }
 
-// MARK: - Saved View Management ?
+// MARK: - Saved View Management
+
+extension SavedViewEditView: EditViewProtocol where Element == SavedView {}
+
+extension SavedViewEditView: CreateViewProtocol where Element == ProtoSavedView {}
+
+struct SavedViewManager: ManagerProtocol {
+    static var elementName: KeyPath<SavedView, String> = \.name
+
+    final class Model: ManagerModel {
+        typealias Element = SavedView
+        typealias ProtoElement = ProtoSavedView
+
+        private var store: DocumentStore
+
+        init(store: DocumentStore) {
+            self.store = store
+        }
+
+        func load() -> [SavedView] {
+            return store.savedViews
+                .map { $0.value }
+                .sorted(by: { $0.name < $1.name })
+        }
+
+        func update(_ view: SavedView) async throws {
+            try await store.update(savedView: view)
+        }
+
+        func create(_ view: ProtoSavedView) async throws -> SavedView {
+            return try await store.create(savedView: view)
+        }
+
+        func delete(_ view: SavedView) async throws {
+            try await store.delete(savedView: view)
+        }
+    }
+
+    typealias EditView = SavedViewEditView<SavedView>
+    typealias CreateView = SavedViewEditView<ProtoSavedView>
+
+    struct RowView: RowViewProtocol {
+        var element: SavedView
+
+        var body: some View {
+            Text("\(element.name)")
+        }
+    }
+}
 
 // MARK: - Settings View
 
@@ -171,7 +219,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("Data types") {
+            Section {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle("Tags")
@@ -194,6 +242,14 @@ struct SettingsView: View {
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
                     Label("Document types", systemImage: "doc.fill")
+                }
+
+                NavigationLink {
+                    ManageView<SavedViewManager>(store: store)
+                        .navigationTitle("Saved views")
+                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
+                } label: {
+                    Label("Saved views", systemImage: "line.3.horizontal.decrease.circle.fill")
                 }
             }
         }

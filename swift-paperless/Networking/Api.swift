@@ -534,15 +534,15 @@ extension ApiRepository: Repository {
         return await all(SavedView.self)
     }
 
-    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView {
+    func create(savedView view: ProtoSavedView) async throws -> SavedView {
         return try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
     }
 
-    func updateSavedView(_ view: SavedView) async throws -> SavedView {
+    func update(savedView view: SavedView) async throws -> SavedView {
         return try await update(element: view, endpoint: .savedView(id: view.id))
     }
 
-    func deleteSavedView(_ view: SavedView) async throws {
+    func delete(savedView view: SavedView) async throws {
         try await delete(element: view, endpoint: .savedView(id: view.id))
     }
 }

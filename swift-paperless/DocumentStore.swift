@@ -301,20 +301,20 @@ class DocumentStore: ObservableObject {
     }
 
     @MainActor
-    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView {
-        let created = try await repository.createSavedView(view)
+    func create(savedView: ProtoSavedView) async throws -> SavedView {
+        let created = try await repository.create(savedView: savedView)
         savedViews[created.id] = created
         return created
     }
 
     @MainActor
-    func updateSavedView(_ view: SavedView) async throws {
-        savedViews[view.id] = try await repository.updateSavedView(view)
+    func update(savedView: SavedView) async throws {
+        savedViews[savedView.id] = try await repository.update(savedView: savedView)
     }
 
     @MainActor
-    func deleteSavedView(_ view: SavedView) async throws {
-        try await repository.deleteSavedView(view)
-        savedViews.removeValue(forKey: view.id)
+    func delete(savedView: SavedView) async throws {
+        try await repository.delete(savedView: savedView)
+        savedViews.removeValue(forKey: savedView.id)
     }
 }

@@ -153,6 +153,7 @@ struct DocumentEditView: View {
                     .disabled(!modified || document.title.isEmpty)
                 }
             }
+
             .onChange(of: document) { _ in
                 modified = true
             }

@@ -45,6 +45,8 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
                 .disabled(!valid())
             }
         }
+
+        .navigationTitle(Element.self is DocumentType.Type ? "Edit document type" : "Create document type")
     }
 }
 

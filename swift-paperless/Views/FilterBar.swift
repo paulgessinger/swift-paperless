@@ -44,7 +44,7 @@ private struct FilterMenu<Content: View>: View {
         updated.sortField = store.filterState.sortField
         Task {
             do {
-                try await store.updateSavedView(updated)
+                try await store.update(savedView: updated)
                 store.filterState = .init(savedView: updated)
             }
             catch {
@@ -111,7 +111,11 @@ private struct FilterMenu<Content: View>: View {
                     }
                 }
 
-                Button {} label: {
+                NavigationLink {
+                    ManageView<SavedViewManager>(store: store)
+                        .navigationTitle("Saved views")
+                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
+                } label: {
                     Label("Edit saved views", systemImage: "list.bullet")
                 }
 
@@ -145,7 +149,7 @@ private struct FilterMenu<Content: View>: View {
                            do {
                                store.filterState.savedView = nil
                                try? await Task.sleep(for: .seconds(0.2))
-                               try await store.deleteSavedView(store.savedViews[id]!)
+                               try await store.delete(savedView: store.savedViews[id]!)
                            }
                            catch {
                                print("Error deleting view")
@@ -306,6 +310,37 @@ struct FilterBar: View {
                 showCorrespondent = true
             case .documentType:
                 showDocumentType = true
+            }
+        }
+    }
+
+    private struct AddSavedViewSheet: View {
+        var savedView: ProtoSavedView
+
+        @Environment(\.dismiss) private var dismiss
+        @EnvironmentObject private var store: DocumentStore
+
+        var body: some View {
+            NavigationStack {
+                SavedViewEditView(element: savedView) { savedView in
+                    Task {
+                        do {
+                            let created = try await store.create(savedView: savedView)
+                            store.filterState = .init(savedView: created)
+                            dismiss()
+                        }
+                        catch {
+                            print(error)
+                        }
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                    }
+                }
             }
         }
     }
@@ -530,21 +565,7 @@ struct FilterBar: View {
         }
 
         .sheet(unwrapping: self.$savedView) { $view in
-            EditSavedView(savedView: $view) {
-                guard let savedView = savedView else {
-                    fatalError("Saved view did not return")
-                }
-
-                Task {
-                    do {
-                        let created = try await store.createSavedView(savedView)
-                        store.filterState = .init(savedView: created)
-                    }
-                    catch {
-                        print(error)
-                    }
-                }
-            }
+            AddSavedViewSheet(savedView: view)
         }
 
         .onReceive(store.filterStatePublisher) { value in

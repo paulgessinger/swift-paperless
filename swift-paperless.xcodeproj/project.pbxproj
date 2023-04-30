@@ -19,8 +19,8 @@
 		7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
-		7A3E036829EC9013008F4976 /* EditSavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* EditSavedView.swift */; };
-		7A3E036A29EC9013008F4976 /* EditSavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* EditSavedView.swift */; };
+		7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
+		7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
 		7A46887629D4DD3D001AEB7C /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
 		7A46887729D4DD5D001AEB7C /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
 		7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA8E629BB969400D845A2 /* ShareViewController.swift */; };
@@ -156,7 +156,7 @@
 		7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTypeEditView.swift; sourceTree = "<group>"; };
 		7A2A113C29FE649300E9FFE3 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
-		7A3E036729EC9013008F4976 /* EditSavedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditSavedView.swift; sourceTree = "<group>"; };
+		7A3E036729EC9013008F4976 /* SavedViewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewEditView.swift; sourceTree = "<group>"; };
 		7A4AA8E429BB969400D845A2 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4AA8E629BB969400D845A2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		7A4AA8E929BB969400D845A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
@@ -256,7 +256,7 @@
 		7A3E036229EC8FEA008F4976 /* SavedView */ = {
 			isa = PBXGroup;
 			children = (
-				7A3E036729EC9013008F4976 /* EditSavedView.swift */,
+				7A3E036729EC9013008F4976 /* SavedViewEditView.swift */,
 			);
 			path = SavedView;
 			sourceTree = "<group>";
@@ -603,7 +603,7 @@
 				7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
 				7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */,
-				7A3E036A29EC9013008F4976 /* EditSavedView.swift in Sources */,
+				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */,
 				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
@@ -652,7 +652,7 @@
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7AEF691F29D06D6A00414BA7 /* PreviewRepository.swift in Sources */,
 				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
-				7A3E036829EC9013008F4976 /* EditSavedView.swift in Sources */,
+				7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7AF2E08229F480310092948B /* TagEditView.swift in Sources */,
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,

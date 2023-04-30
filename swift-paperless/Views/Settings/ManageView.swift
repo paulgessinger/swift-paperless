@@ -91,7 +91,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             Manager.CreateView(onSave: { newElement in
                 Task {
                     do {
-                        try await model.create(newElement)
+                        _ = try await model.create(newElement)
                         dismiss()
                     } catch {
                         errorController.push(error: error)

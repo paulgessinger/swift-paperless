@@ -105,6 +105,7 @@ struct CreateDocumentView<Title: View>: View {
                                 document: $document,
                                 store: store
                             )
+                            .navigationTitle("Correspondent")
                         }) {
                             HStack {
                                 Text("Correspondent")
@@ -140,6 +141,7 @@ struct CreateDocumentView<Title: View>: View {
                                     }
                                 }
                                 .foregroundColor(.gray)
+                                .navigationTitle("Document type")
                             }
                         }
 

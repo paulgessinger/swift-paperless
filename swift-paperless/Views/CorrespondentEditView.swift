@@ -45,6 +45,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
                 .disabled(!valid())
             }
         }
+        .navigationTitle(Element.self is Correspondent.Type ? "Edit correspondent" : "Create correspondent")
     }
 }
 

@@ -50,9 +50,9 @@ protocol Repository {
     // MARK: Saved views
 
     func savedViews() async -> [SavedView]
-    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView
-    func updateSavedView(_ view: SavedView) async throws -> SavedView
-    func deleteSavedView(_ view: SavedView) async throws
+    func create(savedView: ProtoSavedView) async throws -> SavedView
+    func update(savedView: SavedView) async throws -> SavedView
+    func delete(savedView: SavedView) async throws
 }
 
 class NullRepository: Repository {
@@ -92,9 +92,9 @@ class NullRepository: Repository {
     func thumbnail(document: Document) async -> (Bool, Image?) { return (false, nil) }
 
     func savedViews() async -> [SavedView] { return [] }
-    func createSavedView(_ view: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
-    func updateSavedView(_ view: SavedView) async throws -> SavedView { view }
-    func deleteSavedView(_ view: SavedView) async throws { throw NotImplemented() }
+    func create(savedView: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
+    func update(savedView: SavedView) async throws -> SavedView { savedView }
+    func delete(savedView: SavedView) async throws { throw NotImplemented() }
 }
 
 // - MARK: DocumentSource

@@ -203,7 +203,7 @@ struct CommonPickerEdit<Manager, D>: View
                     CreateView(document: $document,
                                model: model)
                 } label: {
-                    Label("Add tag", systemImage: "plus")
+                    Label("Add new", systemImage: "plus")
                 }
             }
         }
