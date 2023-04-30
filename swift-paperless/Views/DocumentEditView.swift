@@ -158,9 +158,9 @@ struct DocumentEditView: View {
             }
 
             .task {
-                async let _ = await store.fetchAllCorrespondents()
-                async let _ = await store.fetchAllDocumentTypes()
-                async let _ = await store.fetchAllTags()
+                Task.detached {
+                    await store.fetchAll()
+                }
             }
         }
         .errorOverlay(errorController: errorController)
