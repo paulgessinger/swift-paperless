@@ -9,22 +9,35 @@ import Foundation
 import SwiftUI
 
 protocol Repository {
-    func updateDocument(_ document: Document) async throws -> Document
-    func deleteDocument(_ document: Document) async throws
-    func createDocument(_ document: ProtoDocument, file: URL) async throws
+    func update(document: Document) async throws -> Document
+    func delete(document: Document) async throws
+    func create(document: ProtoDocument, file: URL) async throws
+
+    // MARK: Tags
 
     func tag(id: UInt) async -> Tag?
-    func createTag(_ tag: ProtoTag) async throws -> Tag
-    func updateTag(_ tag: Tag) async throws -> Tag
-    func deleteTag(_ tag: Tag) async throws
-
+    func create(tag: ProtoTag) async throws -> Tag
+    func update(tag: Tag) async throws -> Tag
+    func delete(tag: Tag) async throws
     func tags() async -> [Tag]
 
+    // MARK: Correspondent
+
     func correspondent(id: UInt) async -> Correspondent?
+    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent
+    func update(correspondent: Correspondent) async throws -> Correspondent
+    func delete(correspondent: Correspondent) async throws
     func correspondents() async -> [Correspondent]
 
+    // MARK: Document type
+
     func documentType(id: UInt) async -> DocumentType?
+    func create(documentType: ProtoDocumentType) async throws -> DocumentType
+    func update(documentType: DocumentType) async throws -> DocumentType
+    func delete(documentType: DocumentType) async throws
     func documentTypes() async -> [DocumentType]
+
+    // MARK: Documents
 
     func document(id: UInt) async -> Document?
     func documents(filter: FilterState) -> any DocumentSource
@@ -33,6 +46,8 @@ protocol Repository {
     func thumbnail(document: Document) async -> (Bool, Image?)
 
     func download(documentID: UInt) async -> URL?
+
+    // MARK: Saved views
 
     func savedViews() async -> [SavedView]
     func createSavedView(_ view: ProtoSavedView) async throws -> SavedView
@@ -43,23 +58,30 @@ protocol Repository {
 class NullRepository: Repository {
     struct NotImplemented: Error {}
 
-    func updateDocument(_ document: Document) async throws -> Document { document }
-    func deleteDocument(_ document: Document) async throws {}
-    func createDocument(_ document: ProtoDocument, file: URL) async throws {}
+    func update(document: Document) async throws -> Document { document }
+    func delete(document: Document) async throws {}
+    func create(document: ProtoDocument, file: URL) async throws {}
 
     func download(documentID: UInt) async -> URL? { return nil }
 
     func tag(id: UInt) async -> Tag? { return nil }
-    func createTag(_ tag: ProtoTag) async throws -> Tag { throw NotImplemented() }
-    func updateTag(_ tag: Tag) async throws -> Tag { throw NotImplemented() }
-    func deleteTag(_ tag: Tag) async throws { throw NotImplemented() }
+    func create(tag: ProtoTag) async throws -> Tag { throw NotImplemented() }
+    func update(tag: Tag) async throws -> Tag { throw NotImplemented() }
+    func delete(tag: Tag) async throws { throw NotImplemented() }
 
     func tags() async -> [Tag] { return [] }
 
     func correspondent(id: UInt) async -> Correspondent? { return nil }
+    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent { throw NotImplemented() }
+    func update(correspondent: Correspondent) async throws -> Correspondent { throw NotImplemented() }
+    func delete(correspondent: Correspondent) async throws {}
+
     func correspondents() async -> [Correspondent] { return [] }
 
     func documentType(id: UInt) async -> DocumentType? { return nil }
+    func create(documentType: ProtoDocumentType) async throws -> DocumentType { throw NotImplemented() }
+    func update(documentType: DocumentType) async throws -> DocumentType { throw NotImplemented() }
+    func delete(documentType: DocumentType) async throws {}
     func documentTypes() async -> [DocumentType] { return [] }
 
     func document(id: UInt) async -> Document? { return nil }

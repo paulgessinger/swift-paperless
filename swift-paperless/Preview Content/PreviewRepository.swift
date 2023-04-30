@@ -122,33 +122,39 @@ class PreviewRepository: Repository {
     }
 
     private let documentTypes = [DocumentType]([
-        .init(id: 1, name: "Letter", slug: "letter"),
-        .init(id: 2, name: "Invoice", slug: "invoice"),
-        .init(id: 3, name: "Receipt", slug: "receipt"),
-        .init(id: 4, name: "Bank Statement", slug: "bank-statement"),
+        .init(id: 1, name: "Letter", slug: "letter", match: "", matchingAlgorithm: .none, isInsensitive: false),
+        .init(id: 2, name: "Invoice", slug: "invoice", match: "", matchingAlgorithm: .none, isInsensitive: false),
+        .init(id: 3, name: "Receipt", slug: "receipt", match: "", matchingAlgorithm: .none, isInsensitive: false),
+        .init(id: 4, name: "Bank Statement", slug: "bank-statement", match: "", matchingAlgorithm: .none, isInsensitive: false),
     ]).reduce(into: [UInt: DocumentType]()) {
         $0[$1.id] = $1
     }
 
-    func updateDocument(_ document: Document) async throws -> Document { document }
-    func deleteDocument(_ document: Document) async throws {}
-    func createDocument(_ document: ProtoDocument, file: URL) async throws {}
+    func update(document: Document) async throws -> Document { document }
+    func delete(document: Document) async throws {}
+    func create(document: ProtoDocument, file: URL) async throws {}
 
     func download(documentID: UInt) async -> URL? {
         return Bundle.main.url(forResource: "demo", withExtension: "pdf")
     }
 
     func tag(id: UInt) async -> Tag? { return tags[id] }
-    func createTag(_ tag: ProtoTag) async throws -> Tag { throw NotImplemented() }
-    func updateTag(_ tag: Tag) async throws -> Tag { tag }
-    func deleteTag(_ tag: Tag) async throws {}
+    func create(tag: ProtoTag) async throws -> Tag { throw NotImplemented() }
+    func update(tag: Tag) async throws -> Tag { tag }
+    func delete(tag: Tag) async throws {}
 
     func tags() async -> [Tag] { return tags.map { $0.value } }
 
     func correspondent(id: UInt) async -> Correspondent? { return correspondents[id] }
+    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent { throw NotImplemented() }
+    func update(correspondent: Correspondent) async throws -> Correspondent { throw NotImplemented() }
+    func delete(correspondent: Correspondent) async throws {}
     func correspondents() async -> [Correspondent] { return correspondents.map { $0.value } }
 
     func documentType(id: UInt) async -> DocumentType? { return documentTypes[id] }
+    func create(documentType: ProtoDocumentType) async throws -> DocumentType { throw NotImplemented() }
+    func update(documentType: DocumentType) async throws -> DocumentType { throw NotImplemented() }
+    func delete(documentType: DocumentType) async throws {}
     func documentTypes() async -> [DocumentType] { return documentTypes.map { $0.value } }
 
     func document(id: UInt) async -> Document? { return documents[id] }

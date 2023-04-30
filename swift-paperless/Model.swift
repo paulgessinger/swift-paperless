@@ -71,9 +71,9 @@ protocol CorrespondentProtocol: Equatable, MatchingModel {
     var name: String { get set }
 }
 
-struct Correspondent: Codable, Identifiable, Model, MatchingModel {
+struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProtocol {
     var id: UInt
-    var documentCount: UInt
+    var documentCount: UInt?
     var lastCorrespondence: Date?
     var name: String
     var slug: String
@@ -93,7 +93,7 @@ struct Correspondent: Codable, Identifiable, Model, MatchingModel {
     }
 }
 
-struct ProtoCorrespondent: Codable, CorrespondentProtocol {
+struct ProtoCorrespondent: Codable, CorrespondentProtocol, Hashable {
     var name: String = ""
 
     var matchingAlgorithm: MatchingAlgorithm = .auto
@@ -108,13 +108,45 @@ struct ProtoCorrespondent: Codable, CorrespondentProtocol {
     }
 }
 
-struct DocumentType: Codable, Identifiable, Model {
+protocol DocumentTypeProtocol: Equatable, MatchingModel {
+    var name: String { get set }
+}
+
+struct DocumentType:
+    Codable,
+    Hashable,
+    Identifiable,
+    Model,
+    DocumentTypeProtocol
+{
     var id: UInt
     var name: String
     var slug: String
 
+    var match: String
+    var matchingAlgorithm: MatchingAlgorithm
+    var isInsensitive: Bool
+
     private enum CodingKeys: String, CodingKey {
         case id, name, slug
+        case match
+        case matchingAlgorithm = "matching_algorithm"
+        case isInsensitive = "is_insensitive"
+    }
+}
+
+struct ProtoDocumentType: Codable, Hashable, DocumentTypeProtocol {
+    var name: String = ""
+
+    var match: String = ""
+    var matchingAlgorithm: MatchingAlgorithm = .auto
+    var isInsensitive: Bool = false
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case match
+        case matchingAlgorithm = "matching_algorithm"
+        case isInsensitive = "is_insensitive"
     }
 }
 

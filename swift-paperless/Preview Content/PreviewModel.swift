@@ -14,8 +14,8 @@ enum PreviewModel {
     ]
 
     static let documentTypes: [UInt: DocumentType] = [
-        1: DocumentType(id: 1, name: "Type A", slug: "type-a"),
-        2: DocumentType(id: 2, name: "Type B", slug: "type-b")
+        1: DocumentType(id: 1, name: "Type A", slug: "type-a", match: "", matchingAlgorithm: .none, isInsensitive: false),
+        2: DocumentType(id: 2, name: "Type B", slug: "type-b", match: "", matchingAlgorithm: .none, isInsensitive: false)
     ]
 
     static let tags: [UInt: Tag] = {

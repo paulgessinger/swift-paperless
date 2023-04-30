@@ -7,27 +7,22 @@
 
 import SwiftUI
 
-protocol ManagerModel: ObservableObject {
+protocol ManagerModel {
     associatedtype Element: Hashable, Identifiable
     associatedtype ProtoElement
-
-    var searchText: String { get set }
 
     init(store: DocumentStore)
 
     func load() -> [Element]
     func update(_ element: Element) async throws
-    func create(_ element: ProtoElement) async throws
+    func create(_ element: ProtoElement) async throws -> Element
     func delete(_ element: Element) async throws
-
-    func filter(element: Element) -> Bool
 }
 
 protocol RowViewProtocol: View {
     associatedtype Element
     init(element: Element)
 }
-
 
 protocol EditViewProtocol: View {
     associatedtype Element
@@ -39,23 +34,26 @@ protocol CreateViewProtocol: View {
     init(onSave: @escaping (Element) throws -> Void)
 }
 
-
 protocol ManagerProtocol {
     associatedtype Model: ManagerModel
     associatedtype RowView: RowViewProtocol where RowView.Element == Model.Element
     associatedtype EditView: EditViewProtocol where EditView.Element == Model.Element
     associatedtype CreateView: CreateViewProtocol where CreateView.Element == Model.ProtoElement
-}
 
+    static var elementName: KeyPath<Model.Element, String> { get }
+}
 
 struct ManageView<Manager>: View where Manager: ManagerProtocol {
     typealias Element = Manager.Model.Element
 
     @EnvironmentObject var errorController: ErrorController
+    @EnvironmentObject var store: DocumentStore
 
-    @ObservedObject var model: Manager.Model
+    var model: Manager.Model
     @State private var elementToDelete: Element?
     @State private var elements: [Element] = []
+
+    @State private var searchText: String = ""
 
     init(store: DocumentStore) {
         self.model = .init(store: store)
@@ -64,7 +62,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     struct Edit: View {
         @Environment(\.dismiss) private var dismiss
         @EnvironmentObject var errorController: ErrorController
-        @ObservedObject var model: Manager.Model
+        var model: Manager.Model
 
         var element: Element
 
@@ -87,13 +85,13 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     struct Create: View {
         @Environment(\.dismiss) private var dismiss
         @EnvironmentObject var errorController: ErrorController
-        @ObservedObject var model: Manager.Model
+        var model: Manager.Model
 
         var body: some View {
-            Manager.CreateView(onSave: { newTag in
+            Manager.CreateView(onSave: { newElement in
                 Task {
                     do {
-                        try await model.create(newTag)
+                        try await model.create(newElement)
                         dismiss()
                     } catch {
                         errorController.push(error: error)
@@ -105,13 +103,22 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
     }
 
+    func filter(element: Element) -> Bool {
+        if searchText.isEmpty { return true }
+        if let _ = element[keyPath: Manager.elementName].range(of: searchText, options: .caseInsensitive) {
+            return true
+        } else {
+            return false
+        }
+    }
+
     var body: some View {
         VStack {
-            SearchBarView(text: $model.searchText, cancelEnabled: true)
+            SearchBarView(text: $searchText, cancelEnabled: true)
                 .padding(.horizontal)
                 .padding(.bottom, 3)
             List {
-                ForEach(elements.filter(model.filter), id: \.self) { element in
+                ForEach(elements.filter(filter), id: \.self) { element in
                     NavigationLink {
                         Edit(model: model, element: element)
                     } label: {
@@ -154,6 +161,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     } catch {
                         print(error)
                         errorController.push(error: error)
+                        elements = model.load()
                     }
                 }
             }
@@ -165,11 +173,11 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
         .refreshable {
+            await store.fetchAll()
             withAnimation {
                 elements = model.load()
             }
         }
-//        .searchable(text: $model.searchText)
 
         .task {
             elements = model.load()
@@ -177,21 +185,27 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     }
 }
 
-struct ManageView_Previews: PreviewProvider {
-    struct Container: View {
-        @StateObject var store = DocumentStore(repository: PreviewRepository())
-        @StateObject var errorController = ErrorController()
+private struct Container<M: ManagerProtocol>: View {
+    @StateObject var store = DocumentStore(repository: PreviewRepository())
+    @StateObject var errorController = ErrorController()
 
-        var body: some View {
-            NavigationStack {
-                ManageView<TagManager>(store: store)
-            }
-            .environmentObject(store)
-            .errorOverlay(errorController: errorController)
+    var body: some View {
+        NavigationStack {
+            ManageView<M>(store: store)
         }
+        .environmentObject(store)
+        .errorOverlay(errorController: errorController)
     }
+}
 
+struct TagManageView_Previews: PreviewProvider {
     static var previews: some View {
-        Container()
+        Container<TagManager>()
+    }
+}
+
+struct CorrespondentManageView_Previews: PreviewProvider {
+    static var previews: some View {
+        Container<CorrespondentManager>()
     }
 }

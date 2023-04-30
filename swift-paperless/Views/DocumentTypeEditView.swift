@@ -1,13 +1,13 @@
 //
-//  CorrespondentEditView.swift
+//  DocumentTypeEditView.swift
 //  swift-paperless
 //
-//  Created by Paul Gessinger on 25.04.23.
+//  Created by Paul Gessinger on 30.04.23.
 //
 
 import SwiftUI
 
-struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol {
+struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     @State private var element: Element
     var onSave: (Element) throws -> Void
 
@@ -39,7 +39,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
                         try onSave(element)
                     }
                     catch {
-                        print("Save correspondent error: \(error)")
+                        print("Save document type error: \(error)")
                     }
                 }
                 .disabled(!valid())
@@ -48,20 +48,20 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
     }
 }
 
-extension CorrespondentEditView where Element == ProtoCorrespondent {
+extension DocumentTypeEditView where Element == ProtoDocumentType {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
-        self.init(element: ProtoCorrespondent(), onSave: onSave)
+        self.init(element: ProtoDocumentType(), onSave: onSave)
         saveLabel = "Add"
     }
 }
 
-struct CorrespondentEditView_Previews: PreviewProvider {
+struct DocumentTypeEditView_Previews: PreviewProvider {
     struct Container: View {
         var body: some View {
             NavigationStack {
-                CorrespondentEditView<ProtoCorrespondent>()
+                DocumentTypeEditView<ProtoDocumentType>()
                     .navigationBarTitleDisplayMode(.inline)
-                    .navigationTitle("Create correspondent")
+                    .navigationTitle("Create document type")
             }
         }
     }

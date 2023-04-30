@@ -384,11 +384,11 @@ class ApiRepository {
 }
 
 extension ApiRepository: Repository {
-    func updateDocument(_ document: Document) async throws -> Document {
+    func update(document: Document) async throws -> Document {
         return try await update(element: document, endpoint: .document(id: document.id))
     }
 
-    func createDocument(_ document: ProtoDocument, file: URL) async throws {
+    func create(document: ProtoDocument, file: URL) async throws {
         var request = request(.createDocument())
 
         let mp = MultiPartFormDataRequest()
@@ -423,7 +423,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func deleteDocument(_ document: Document) async throws {
+    func delete(document: Document) async throws {
         try await delete(element: document, endpoint: .document(id: document.id))
     }
 
@@ -469,24 +469,58 @@ extension ApiRepository: Repository {
 
     func tag(id: UInt) async -> Tag? { return await get(Tag.self, id: id) }
 
-    func createTag(_ tag: ProtoTag) async throws -> Tag {
+    func create(tag: ProtoTag) async throws -> Tag {
         return try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
     }
 
-    func updateTag(_ tag: Tag) async throws -> Tag {
+    func update(tag: Tag) async throws -> Tag {
         return try await update(element: tag, endpoint: .tag(id: tag.id))
     }
 
-    func deleteTag(_ tag: Tag) async throws {
+    func delete(tag: Tag) async throws {
         try await delete(element: tag, endpoint: .tag(id: tag.id))
     }
 
     func tags() async -> [Tag] { return await all(Tag.self) }
 
     func correspondent(id: UInt) async -> Correspondent? { return await get(Correspondent.self, id: id) }
+
+    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
+        return try await create(element: correspondent,
+                                endpoint: .createCorrespondent(),
+                                returns: Correspondent.self)
+    }
+
+    func update(correspondent: Correspondent) async throws -> Correspondent {
+        return try await update(element: correspondent,
+                                endpoint: .correspondent(id: correspondent.id))
+    }
+
+    func delete(correspondent: Correspondent) async throws {
+        return try await delete(element: correspondent,
+                                endpoint: .correspondent(id: correspondent.id))
+    }
+
     func correspondents() async -> [Correspondent] { return await all(Correspondent.self) }
 
     func documentType(id: UInt) async -> DocumentType? { return await get(DocumentType.self, id: id) }
+
+    func create(documentType: ProtoDocumentType) async throws -> DocumentType {
+        return try await create(element: documentType,
+                                endpoint: .createDocumentType(),
+                                returns: DocumentType.self)
+    }
+
+    func update(documentType: DocumentType) async throws -> DocumentType {
+        return try await update(element: documentType,
+                                endpoint: .documentType(id: documentType.id))
+    }
+
+    func delete(documentType: DocumentType) async throws {
+        return try await delete(element: documentType,
+                                endpoint: .documentType(id: documentType.id))
+    }
+
     func documentTypes() async -> [DocumentType] { return await all(DocumentType.self) }
 
     func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }

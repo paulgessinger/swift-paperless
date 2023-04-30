@@ -40,7 +40,7 @@ struct CreateDocumentView<Title: View>: View {
 
     func upload() async {
         do {
-            try await store.repository.createDocument(document, file: sourceUrl)
+            try await store.repository.create(document: document, file: sourceUrl)
         }
         catch {
             errorController.push(error: error)

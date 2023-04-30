@@ -82,12 +82,12 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func updateDocument(_ document: Document) async throws {
-        documents[document.id] = try await repository.updateDocument(document)
+        documents[document.id] = try await repository.update(document: document)
     }
 
     @MainActor
     func deleteDocument(_ document: Document) async throws {
-        try await repository.deleteDocument(document)
+        try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
     }
 
@@ -164,10 +164,9 @@ class DocumentStore: ObservableObject {
     }
 
 //    @MainActor
-    private func getSingleCached<T>(
-        //        _ type: T.Type,
-        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
-    ) async -> (Bool, T)? where T: Decodable, T: Model {
+    private func getSingleCached<T>(//        _ type: T.Type,
+        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>) async -> (Bool, T)? where T: Decodable, T: Model
+    {
         if let element = self[keyPath: cache][id] {
             return (true, element)
         }
@@ -212,21 +211,93 @@ class DocumentStore: ObservableObject {
     }
 
     @MainActor
-    func createTag(_ tag: ProtoTag) async throws -> Tag {
-        let created = try await repository.createTag(tag)
-        tags[created.id] = created
+    private func create<E, R>(_ returns: R.Type, from element: E,
+                              store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
+                              method: (E) async throws -> R) async throws -> R
+        where R: Identifiable
+    {
+        let created = try await method(element)
+        self[keyPath: store][created.id] = created
         return created
     }
 
     @MainActor
-    func updateTag(_ tag: Tag) async throws {
-        tags[tag.id] = try await repository.updateTag(tag)
+    private func update<E>(_ element: E,
+                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                           method: (E) async throws -> E) async throws where E: Identifiable
+    {
+        self[keyPath: store][element.id] = try await method(element)
     }
 
     @MainActor
-    func deleteTag(_ tag: Tag) async throws {
-        try await repository.deleteTag(tag)
-        tags.removeValue(forKey: tag.id)
+    private func delete<E>(_ element: E,
+                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                           method: (E) async throws -> Void) async throws where E: Identifiable
+    {
+        try await method(element)
+        self[keyPath: store].removeValue(forKey: element.id)
+    }
+
+    @MainActor
+    func create(tag: ProtoTag) async throws -> Tag {
+        return try await create(Tag.self,
+                                from: tag,
+                                store: \.tags,
+                                method: repository.create(tag:))
+    }
+
+    @MainActor
+    func update(tag: Tag) async throws {
+        try await update(tag, store: \.tags, method: repository.update(tag:))
+    }
+
+    @MainActor
+    func delete(tag: Tag) async throws {
+        try await delete(tag, store: \.tags, method: repository.delete(tag:))
+    }
+
+    @MainActor
+    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
+        return try await create(Correspondent.self,
+                                from: correspondent,
+                                store: \.correspondents,
+                                method: repository.create(correspondent:))
+    }
+
+    @MainActor
+    func update(correspondent: Correspondent) async throws {
+        try await update(correspondent,
+                         store: \.correspondents,
+                         method: repository.update(correspondent:))
+    }
+
+    @MainActor
+    func delete(correspondent: Correspondent) async throws {
+        try await delete(correspondent,
+                         store: \.correspondents,
+                         method: repository.delete(correspondent:))
+    }
+
+    @MainActor
+    func create(documentType: ProtoDocumentType) async throws -> DocumentType {
+        return try await create(DocumentType.self,
+                                from: documentType,
+                                store: \.documentTypes,
+                                method: repository.create(documentType:))
+    }
+
+    @MainActor
+    func update(documentType: DocumentType) async throws {
+        try await update(documentType,
+                         store: \.documentTypes,
+                         method: repository.update(documentType:))
+    }
+
+    @MainActor
+    func delete(documentType: DocumentType) async throws {
+        try await delete(documentType,
+                         store: \.documentTypes,
+                         method: repository.delete(documentType:))
     }
 
     @MainActor

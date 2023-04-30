@@ -68,8 +68,24 @@ extension Endpoint {
                         queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
+    static func createCorrespondent() -> Endpoint {
+        return Endpoint(path: "/api/correspondents/")
+    }
+
+    static func correspondent(id: UInt) -> Endpoint {
+        return Endpoint(path: "/api/correspondents/\(id)/")
+    }
+
     static func documentTypes() -> Endpoint {
         return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+    }
+
+    static func createDocumentType() -> Endpoint {
+        return Endpoint(path: "/api/document_types/")
+    }
+
+    static func documentType(id: UInt) -> Endpoint {
+        return Endpoint(path: "/api/document_types/\(id)/")
     }
 
     static func tags() -> Endpoint {

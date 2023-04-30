@@ -37,8 +37,9 @@ struct DocumentEditView: View {
                 Section {
                     NavigationLink(destination: {
                         CommonPickerEdit(
-                            Correspondent.self,
-                            document: $document
+                            manager: CorrespondentManager.self,
+                            document: $document,
+                            store: store
                         )
                     }) {
                         HStack {
@@ -57,8 +58,9 @@ struct DocumentEditView: View {
 
                     NavigationLink(destination: {
                         CommonPickerEdit(
-                            DocumentType.self,
-                            document: $document
+                            manager: DocumentTypeManager.self,
+                            document: $document,
+                            store: store
                         )
                     }) {
                         HStack {

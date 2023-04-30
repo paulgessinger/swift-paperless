@@ -260,7 +260,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             TagEditView<ProtoTag>(onSave: { value in
                 Task {
                     do {
-                        let tag = try await store.createTag(value)
+                        let tag = try await store.create(tag: value)
                         document.tags.append(tag.id)
                         dismiss()
                     }

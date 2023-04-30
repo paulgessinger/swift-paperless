@@ -33,8 +33,7 @@ struct CommonPicker: View {
         if searchDebounce.debouncedText.isEmpty { return true }
         if let _ = name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
             return true
-        }
-        else {
+        } else {
             return false
         }
     }
@@ -94,14 +93,24 @@ extension DocumentType: Pickable {
     }
 }
 
-struct CommonPickerEdit<Element, D>: View where Element: Pickable, D: DocumentProtocol {
-    @EnvironmentObject var store: DocumentStore
+struct CommonPickerEdit<Manager, D>: View
+    where
+    Manager: ManagerProtocol,
+    Manager.Model.Element: Pickable,
+//    Manager.CreateView.Element: Pickable,
+    D: DocumentProtocol
+{
+    typealias Element = Manager.Model.Element
+
+    @ObservedObject var store: DocumentStore
 
     @Binding var document: D
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
     @State private var showNone = true
+
+    private var model: Manager.Model
 
     private func elements() -> [(UInt, String)] {
         let allDict = store[keyPath: Element.storePath]
@@ -115,11 +124,13 @@ struct CommonPickerEdit<Element, D>: View where Element: Pickable, D: DocumentPr
         return all.filter { $0.1.range(of: searchDebounce.debouncedText, options: .caseInsensitive) != nil }
     }
 
-    init(_ type: Element.Type, document: Binding<D>) {
+    init(manager: Manager.Type, document: Binding<D>, store: DocumentStore) {
         self._document = document
+        self.store = store
+        self.model = .init(store: store)
     }
 
-    func row(_ label: String, value: UInt?) -> some View {
+    private func row(_ label: String, value: UInt?) -> some View {
         return HStack {
             Button(action: {
                 // set new value
@@ -133,6 +144,30 @@ struct CommonPickerEdit<Element, D>: View where Element: Pickable, D: DocumentPr
                 Label("Active", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
+        }
+    }
+
+    private struct CreateView: View {
+        @Environment(\.dismiss) private var dismiss
+        @EnvironmentObject var errorController: ErrorController
+
+        @Binding var document: D
+        var model: Manager.Model
+
+        var body: some View {
+            Manager.CreateView(onSave: { newElement in
+                Task {
+                    do {
+                        let created = try await model.create(newElement)
+                        document[keyPath: Element.documentPath(D.self)] = created.id
+                        dismiss()
+                    } catch {
+                        errorController.push(error: error)
+                        throw error
+                    }
+                }
+
+            })
         }
     }
 
@@ -166,6 +201,17 @@ struct CommonPickerEdit<Element, D>: View where Element: Pickable, D: DocumentPr
                 showNone = value.isEmpty
             }
         }
+
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink {
+                    CreateView(document: $document,
+                               model: model)
+                } label: {
+                    Label("Add tag", systemImage: "plus")
+                }
+            }
+        }
     }
 }
 
@@ -174,10 +220,13 @@ struct CommonPickerEditCorrespondent_Previews: PreviewProvider {
 
     static var previews: some View {
         DocumentLoader(id: 1) { document in
-            CommonPickerEdit(
-                Correspondent.self,
-                document: document
-            )
+            NavigationStack {
+                CommonPickerEdit(
+                    manager: CorrespondentManager.self,
+                    document: document,
+                    store: store
+                )
+            }
         }
         .environmentObject(store)
     }
@@ -188,10 +237,13 @@ struct CommonPickerEditDocumentType_Previews: PreviewProvider {
 
     static var previews: some View {
         DocumentLoader(id: 1) { document in
-            CommonPickerEdit(
-                DocumentType.self,
-                document: document
-            )
+            NavigationStack {
+                CommonPickerEdit(
+                    manager: DocumentTypeManager.self,
+                    document: document,
+                    store: store
+                )
+            }
         }
         .environmentObject(store)
     }

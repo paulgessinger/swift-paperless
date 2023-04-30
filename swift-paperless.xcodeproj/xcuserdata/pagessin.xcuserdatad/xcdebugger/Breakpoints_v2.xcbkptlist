@@ -7,15 +7,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "4180C550-2AB5-4CCA-AC5C-4C1647BED142"
+            uuid = "A136EF97-FCC5-43F4-A821-13DC1170D946"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "swift-paperless/Views/Settings/SettingsView.swift"
+            filePath = "swift-paperless/Views/CreateDocumentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
