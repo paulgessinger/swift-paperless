@@ -18,9 +18,9 @@ struct Keychain {
     static func save(service: String, account: String, value: Data) throws {
         let query: [String: Any] = [
             kSecValueData as String: value,
-            kSecClass as String: kSecClassInternetPassword,
+            kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
-            kSecAttrServer as String: service,
+            kSecAttrService as String: service,
         ]
 
         let status = SecItemAdd(query as CFDictionary, nil)
@@ -36,8 +36,8 @@ struct Keychain {
 
     static func update(service: String, account: String, value: Data) throws {
         let query: [String: Any] = [
-            kSecClass as String: kSecClassInternetPassword,
-            kSecAttrServer as String: service,
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
 
@@ -68,11 +68,12 @@ struct Keychain {
 
     static func read(service: String, account: String) throws -> Data {
         let query: [String: Any] = [
-            kSecClass as String: kSecClassInternetPassword,
+            kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
-            kSecAttrServer as String: service,
+            kSecAttrService as String: service,
             kSecReturnData as String: true,
 //            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecMatchLimit as String: kSecMatchLimitOne,
         ]
 
         var result: AnyObject?
@@ -96,8 +97,8 @@ struct Keychain {
 
     static func delete(service: String, account: String) throws {
         let query: [String: Any] = [
-            kSecClass as String: kSecClassInternetPassword,
-            kSecAttrServer as String: service,
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
 
