@@ -23,7 +23,6 @@ struct CreateDocumentView<Title: View>: View {
     @EnvironmentObject private var errorController: ErrorController
 
     @State private var document = ProtoDocument()
-    @State private var selectedState = FilterState()
     @State private var status = Status.none
 
     @State private var previewImage: Image?
@@ -33,7 +32,6 @@ struct CreateDocumentView<Title: View>: View {
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
         sourceUrl = url
         _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
-        _selectedState = State(initialValue: FilterState(correspondent: .notAssigned, documentType: .notAssigned))
         self.title = title
         self.callback = callback
     }
@@ -68,8 +66,6 @@ struct CreateDocumentView<Title: View>: View {
     }
 
     var body: some View {
-        //        Text(attachmentManager.text.joined(separator: "\n"))
-//            Divider()
         NavigationStack {
             VStack {
                 HStack {
@@ -104,56 +100,46 @@ struct CreateDocumentView<Title: View>: View {
                     }
                     Section {
                         NavigationLink(destination: {
-                            CommonPicker(
-                                selection: $selectedState.correspondent,
-                                elements: store.correspondents.sorted {
-                                    $0.value.name < $1.value.name
-                                }.map { ($0.value.id, $0.value.name) }
+                            CommonPickerEdit(
+                                manager: CorrespondentManager.self,
+                                document: $document,
+                                store: store
                             )
                         }) {
                             HStack {
                                 Text("Correspondent")
                                 Spacer()
-                                Group { () -> Text in
-                                    var label = "None"
-                                    switch selectedState.correspondent {
-                                    case .any:
-                                        print("Selected 'any' correspondent, this should not happen")
-                                    case .notAssigned:
-                                        break
-                                    case .only(let id):
-                                        label = store.correspondents[id]?.name ?? "None"
+                                Group {
+                                    if let id = document.correspondent {
+                                        Text(store.correspondents[id]?.name ?? "ERROR")
                                     }
-                                    return Text(label)
-                                        .foregroundColor(.gray)
+                                    else {
+                                        Text("None")
+                                    }
                                 }
+                                .foregroundColor(.gray)
                             }
                         }
 
                         NavigationLink(destination: {
-                            CommonPicker(
-                                selection: $selectedState.documentType,
-                                elements: store.documentTypes.sorted {
-                                    $0.value.name < $1.value.name
-                                }.map { ($0.value.id, $0.value.name) }
+                            CommonPickerEdit(
+                                manager: DocumentTypeManager.self,
+                                document: $document,
+                                store: store
                             )
                         }) {
                             HStack {
                                 Text("Document type")
                                 Spacer()
-                                Group { () -> Text in
-                                    var label = "None"
-                                    switch selectedState.documentType {
-                                    case .any:
-                                        print("Selected 'any' document type, this should not happen")
-                                    case .notAssigned:
-                                        break
-                                    case .only(let id):
-                                        label = store.documentTypes[id]?.name ?? "None"
+                                Group {
+                                    if let id = document.documentType {
+                                        Text(store.documentTypes[id]?.name ?? "ERROR")
                                     }
-                                    return Text(label)
-                                        .foregroundColor(.gray)
+                                    else {
+                                        Text("None")
+                                    }
                                 }
+                                .foregroundColor(.gray)
                             }
                         }
 

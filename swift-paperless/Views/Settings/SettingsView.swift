@@ -175,6 +175,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle("Tags")
+                        .task { Task.detached { await store.fetchAllTags() }}
                 } label: {
                     Label("Tags", systemImage: "tag.fill")
                 }
@@ -182,6 +183,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<CorrespondentManager>(store: store)
                         .navigationTitle("Correspondents")
+                        .task { Task.detached { await store.fetchAllCorrespondents() }}
                 } label: {
                     Label("Correspondents", systemImage: "person.fill")
                 }
@@ -189,6 +191,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<DocumentTypeManager>(store: store)
                         .navigationTitle("Document types")
+                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
                     Label("Document types", systemImage: "doc.fill")
                 }
