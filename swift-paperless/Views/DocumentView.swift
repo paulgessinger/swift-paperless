@@ -46,7 +46,7 @@ enum NavigationState: Equatable, Hashable {
 }
 
 class NavigationCoordinator: ObservableObject {
-    var path = NavigationPath()
+    @Published var path = NavigationPath()
 
     func popToRoot() {
         path.removeLast(path.count)
@@ -84,6 +84,9 @@ private struct DocumentList: View {
     private let stackCutoff = 30
 
     struct Cell: View {
+        @EnvironmentObject private var nav: NavigationCoordinator
+
+        var store: DocumentStore
         var document: Document
 
         var body: some View {
@@ -92,10 +95,34 @@ private struct DocumentList: View {
             ) {
                 DocumentCell(document: document)
                     .contentShape(Rectangle())
+
+//                    .padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
+                    .padding(5)
+                    .contextMenu {
+                        Button {
+                            nav.path.append(NavigationState.detail(document: document))
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+//                        Divider()
+//                        Button(role: .destructive) {} label: {
+//                            Label("Delete", systemImage: "trash")
+//                        }
+                    } preview: {
+                        Button {
+                            print("open")
+                        } label: {
+                            DocumentPreview(store: store, document: document)
+                        }
+                    }
+//                    .swipeActions {
+//                        Button("Delete") {}
+//                    }
             }
 
+            .padding(.horizontal, 10)
             .buttonStyle(.plain)
-            .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
 
             Divider()
                 .padding(.horizontal)
@@ -115,7 +142,7 @@ private struct DocumentList: View {
                 .prefix(stackCutoff)
                 .compactMap { store.documents[$0.id] })
             { document in
-                Cell(document: document)
+                Cell(store: store, document: document)
             }
 
             LazyVStack(alignment: .leading) {
@@ -126,7 +153,7 @@ private struct DocumentList: View {
                 ForEach(
                     Array(zip(docs.indices, docs)), id: \.1.id
                 ) { index, document in
-                    Cell(document: document)
+                    Cell(store: store, document: document)
                         .if(index > docs.count - 10) { view in
                             view.task {
                                 let hasMore = await store.hasMoreDocuments()
@@ -163,6 +190,7 @@ struct DocumentView: View {
     @State var showCreateModal = false
     @State var importUrl: URL?
     @State private var error: String?
+    @State private var logoutRequested = false
 
 //    @State private var searchFocused = false
 
@@ -249,8 +277,6 @@ struct DocumentView: View {
         }
     }
 
-    @State private var logoVisible = true
-
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
@@ -306,16 +332,18 @@ struct DocumentView: View {
                     LogoView()
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
-                        Button {
-                            connectionManager.logout()
-                        } label: {
-                            Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-
                         NavigationLink(value: NavigationState.settings) {
                             Label("Settings", systemImage: "gear")
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            logoutRequested = true
+                        } label: {
+                            Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
                         }
 
                     } label: {
@@ -355,6 +383,13 @@ struct DocumentView: View {
                     error = nil
                 }
             })) {}
+
+            .confirmationDialog("Are you sure?", isPresented: $logoutRequested, titleVisibility: .visible) {
+                Button("Logout", role: .destructive) {
+                    connectionManager.logout()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
 
             .onReceive(store.filterStatePublisher) { value in
                 print("Filter updated \(value)")

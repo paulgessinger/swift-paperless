@@ -15,6 +15,121 @@ private enum DownloadState {
     case error
 }
 
+struct DocumentPreview: View {
+    var store: DocumentStore
+
+    var document: Document
+
+    @State private var download: DownloadState = .initial
+    @State private var fullPreview: Image? = nil
+
+    func loadFullPreview() async {
+        guard let url = await store.repository.download(documentID: document.id) else {
+            print("Failure to download document")
+            return
+        }
+        guard let image = pdfPreview(url: url) else {
+            print("Failure to generate preview")
+            return
+        }
+        await MainActor.run {
+            print("Have full preview")
+            withAnimation {
+                fullPreview = image
+            }
+        }
+    }
+
+    var body: some View {
+        VStack {
+            if let fullPreview = fullPreview {
+                fullPreview
+                    .resizable()
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                    .scaledToFill()
+                    .shadow(color: Color(white: 0.9), radius: 5)
+            }
+            else {
+                AuthAsyncImage(image: {
+                    let image = await store.repository.thumbnail(document: document)
+                    Task.detached {
+                        try? await Task.sleep(for: .seconds(0.2))
+                        await loadFullPreview()
+                    }
+                    return image
+                }) {
+                    image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        //                                .frame(width: 100, height: 100, alignment: .top)
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10)
+                            .stroke(.gray, lineWidth: 1))
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color(white: 0.8))
+                        .cornerRadius(10)
+                        .scaledToFit()
+                        .overlay(ProgressView())
+                }
+                .blur(radius: 5)
+            }
+
+//            switch download {
+//            case .loading, .initial, .loaded:
+//                HStack {
+//                    Spacer()
+//                    ProgressView()
+//                    Spacer()
+//                }
+//                .frame(width: 400, height: 400*1.4)
+//            case .error:
+//                HStack {
+//                    Spacer()
+//                    Label("Unable to load preview", systemImage: "eye.slash")
+//                        .labelStyle(.iconOnly)
+//                        .imageScale(.large)
+//
+//                    Spacer()
+//                }
+//                .frame(width: 400, height: 400*1.4)
+//
+//            case let .ready(_, image):
+//                image
+//                    .resizable()
+//                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
+//                    .clipShape(RoundedRectangle(cornerRadius: 5))
+//                    .scaledToFill()
+//                    .shadow(color: Color(white: 0.9), radius: 5)
+//            }
+        }
+
+        .task {
+//            switch download {
+//            case .initial:
+//                download = .loading
+//                guard let url = await store.repository.download(documentID: document.id) else {
+//                    download = .error
+//                    return
+//                }
+//                download = .loaded(url)
+//                guard let image = pdfPreview(url: url) else {
+//                    download = .error
+//                    return
+//                }
+//                withAnimation {
+//                    download = .ready(url, image)
+//                }
+//
+//            default:
+//                break
+//            }
+        }
+    }
+}
+
 struct DocumentDetailView: View {
     @EnvironmentObject var store: DocumentStore
 
@@ -150,13 +265,13 @@ struct DocumentDetailView: View {
         .task {
             await loadDocument()
 
-            do {
-                try await Task.sleep(for: .seconds(2))
-                withAnimation {
-                    relatedDocuments = []
-                }
-            }
-            catch {}
+//            do {
+//                try await Task.sleep(for: .seconds(2))
+//                withAnimation {
+//                    relatedDocuments = []
+//                }
+//            }
+//            catch {}
         }
 
         .onChange(of: store.documents) { _ in

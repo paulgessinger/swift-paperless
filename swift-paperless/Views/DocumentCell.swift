@@ -7,6 +7,32 @@
 
 import SwiftUI
 
+struct DocumentPreviewImage: View {
+    var store: DocumentStore
+    var document: Document
+
+    var body: some View {
+        AuthAsyncImage(image: {
+            await store.repository.thumbnail(document: document)
+        }) {
+            image in
+            image
+                .resizable()
+                .scaledToFill()
+                .frame(width: 100, height: 100, alignment: .top)
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10)
+                    .stroke(.gray, lineWidth: 1))
+        } placeholder: {
+            Rectangle()
+                .fill(Color(white: 0.8))
+                .cornerRadius(10)
+                .scaledToFit()
+                .overlay(ProgressView())
+        }
+    }
+}
+
 struct DocumentCell: View {
     @EnvironmentObject var store: DocumentStore
     @Environment(\.redactionReasons) var redactionReasons
@@ -37,26 +63,10 @@ struct DocumentCell: View {
                     .shadow(color: Color("ImageShadow"), radius: 5)
             }
             else {
-                AuthAsyncImage(image: {
-                    await store.repository.thumbnail(document: document)
-                }) {
-                    image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100, alignment: .top)
-                        .cornerRadius(10)
-                        .overlay(RoundedRectangle(cornerRadius: 10)
-                            .stroke(.gray, lineWidth: 1))
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color(white: 0.8))
-                        .cornerRadius(10)
-                        .scaledToFit()
-                        .overlay(ProgressView())
-                }
-                .frame(width: 100, height: 100)
-                .shadow(color: Color("ImageShadow"), radius: 5)
+                DocumentPreviewImage(store: store,
+                                     document: document)
+                    .frame(width: 100, height: 100)
+                    .shadow(color: Color("ImageShadow"), radius: 5)
             }
 
             VStack(alignment: .leading) {
@@ -86,9 +96,9 @@ struct DocumentCell: View {
             .padding(.horizontal, 5)
             .layoutPriority(1)
         }
-        .transaction { t in
-            t.animation = nil
-        }
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 
