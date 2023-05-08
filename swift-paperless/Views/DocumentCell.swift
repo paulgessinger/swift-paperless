@@ -96,9 +96,9 @@ struct DocumentCell: View {
             .padding(.horizontal, 5)
             .layoutPriority(1)
         }
-//        .transaction { t in
-//            t.animation = nil
-//        }
+        .transaction { t in
+            t.animation = nil
+        }
     }
 }
 
