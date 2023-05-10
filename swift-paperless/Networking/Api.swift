@@ -247,6 +247,7 @@ class ApiRepository {
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
+        connection.extraHeaders.apply(toRequest: &request)
         return request
     }
 
@@ -286,6 +287,7 @@ class ApiRepository {
 
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        connection.extraHeaders.apply(toRequest: &request)
 
         do {
             let (data, res) = try await URLSession.shared.data(for: request)

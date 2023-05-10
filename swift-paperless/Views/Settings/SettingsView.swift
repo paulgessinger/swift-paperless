@@ -216,10 +216,13 @@ struct SavedViewManager: ManagerProtocol {
 
 struct SettingsView: View {
     @EnvironmentObject var store: DocumentStore
+    @EnvironmentObject var connectionManager: ConnectionManager
+
+    @State var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     var body: some View {
         List {
-            Section {
+            Section("Organization") {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle("Tags")
@@ -252,7 +255,25 @@ struct SettingsView: View {
                     Label("Saved views", systemImage: "line.3.horizontal.decrease.circle.fill")
                 }
             }
+
+            Section("Details") {
+                NavigationLink {
+                    ExtraHeadersView(headers: $extraHeaders)
+                } label: {
+                    Label("Extra headers", systemImage: "list.dash.header.rectangle")
+                }
+            }
         }
+
+        .task {
+            extraHeaders = connectionManager.extraHeaders
+        }
+
+        .onChange(of: extraHeaders) { value in
+            connectionManager.extraHeaders = value
+            store.set(repository: ApiRepository(connection: connectionManager.connection!))
+        }
+
         .navigationTitle("Settings")
     }
 }
@@ -262,6 +283,7 @@ struct SettingsView_Previews: PreviewProvider {
         @StateObject var store = DocumentStore(repository: PreviewRepository())
 
         @StateObject var errorController = ErrorController()
+        @StateObject var connectionManager = ConnectionManager()
 
         var body: some View {
             NavigationStack {
@@ -269,6 +291,7 @@ struct SettingsView_Previews: PreviewProvider {
                     .navigationBarTitleDisplayMode(.inline)
             }
             .environmentObject(store)
+            .environmentObject(connectionManager)
             .errorOverlay(errorController: errorController)
         }
     }

@@ -19,6 +19,8 @@
 		7A297FB829FE9C870021A1ED /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 7A297FB729FE9C870021A1ED /* SwiftUINavigation */; };
 		7A2A113D29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
+		7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A13252A087AD00088808E /* ExtraHeadersView.swift */; };
+		7A2A13272A087AD00088808E /* ExtraHeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A13252A087AD00088808E /* ExtraHeadersView.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
@@ -67,6 +69,10 @@
 		7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
+		7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
+		7A898ECF2A03000D0003DFBD /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
+		7A898ED12A0303140003DFBD /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ED02A0303140003DFBD /* Logging.swift */; };
+		7A898ED22A0303140003DFBD /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ED02A0303140003DFBD /* Logging.swift */; };
 		7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9AA03929AD39F300A55529 /* OrderedCollections */; };
 		7A9CC11229E29A0D009CAD61 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */; };
 		7A9CC11329E29A39009CAD61 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */; };
@@ -155,6 +161,7 @@
 		7A297FAF29FE78750021A1ED /* CorrespondentEditView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CorrespondentEditView.swift; sourceTree = "<group>"; };
 		7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTypeEditView.swift; sourceTree = "<group>"; };
 		7A2A113C29FE649300E9FFE3 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		7A2A13252A087AD00088808E /* ExtraHeadersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraHeadersView.swift; sourceTree = "<group>"; };
 		7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
 		7A3E036729EC9013008F4976 /* SavedViewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewEditView.swift; sourceTree = "<group>"; };
 		7A4AA8E429BB969400D845A2 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -184,6 +191,8 @@
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
 		7A6F31DC29DE936C00186A87 /* generate_filterrules.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = generate_filterrules.py; sourceTree = SOURCE_ROOT; };
 		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
+		7A898ECD2A03000D0003DFBD /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
+		7A898ED02A0303140003DFBD /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
@@ -305,6 +314,7 @@
 		7A5482AD299AD56C00D5061E /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
+				7A898ECC2A02FF3B0003DFBD /* Utilities */,
 				7A6F31DC29DE936C00186A87 /* generate_filterrules.py */,
 				7A256CEE29B6828D00BADEB8 /* Info.plist */,
 				7AF04B7929A6898C008E8F79 /* Views */,
@@ -317,7 +327,6 @@
 				7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */,
 				7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */,
 				7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */,
-				7AF04B8029A68A20008E8F79 /* Utilities.swift */,
 				7A4AA8F329BDEAFA00D845A2 /* AttachmentManager.swift */,
 				7AEF691429CF967900414BA7 /* ConnectionManager.swift */,
 				7AEF691B29D049D900414BA7 /* PositionObservingView.swift */,
@@ -356,6 +365,16 @@
 				7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */,
 			);
 			path = "swift-paperlessUITests";
+			sourceTree = "<group>";
+		};
+		7A898ECC2A02FF3B0003DFBD /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				7AF04B8029A68A20008E8F79 /* Utilities.swift */,
+				7A898ECD2A03000D0003DFBD /* UserDefaults.swift */,
+				7A898ED02A0303140003DFBD /* Logging.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		7AB060DC29C6621E004E6C63 /* Networking */ = {
@@ -410,6 +429,7 @@
 			children = (
 				7AF2E08A29F57C230092948B /* SettingsView.swift */,
 				7A04034129FD68E8009604E4 /* ManageView.swift */,
+				7A2A13252A087AD00088808E /* ExtraHeadersView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -615,12 +635,14 @@
 				7AEF691D29D049D900414BA7 /* PositionObservingView.swift in Sources */,
 				7A46887629D4DD3D001AEB7C /* DocumentCell.swift in Sources */,
 				7A297FB529FE9AC80021A1ED /* ManageView.swift in Sources */,
+				7A2A13272A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
 				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A4AA91529BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A9CC11329E29A39009CAD61 /* DocumentLoader.swift in Sources */,
 				7A4AA91229BE202800D845A2 /* PreviewModel.swift in Sources */,
 				7A297FB629FE9BFA0021A1ED /* SettingsView.swift in Sources */,
+				7A898ECF2A03000D0003DFBD /* UserDefaults.swift in Sources */,
 				7A4AA91829BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
 				7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */,
@@ -629,6 +651,7 @@
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
 				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
 				7A4AA8FF29BE042700D845A2 /* Api.swift in Sources */,
+				7A898ED22A0303140003DFBD /* Logging.swift in Sources */,
 				7A4AA90F29BE1FEB00D845A2 /* TagView.swift in Sources */,
 				7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A297FB129FE78750021A1ED /* CorrespondentEditView.swift in Sources */,
@@ -642,6 +665,7 @@
 				7A4AA91129BE202800D845A2 /* PreviewModel.swift in Sources */,
 				7A297FB329FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */,
 				7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */,
+				7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */,
 				7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */,
 				7A297FB029FE78750021A1ED /* CorrespondentEditView.swift in Sources */,
@@ -656,6 +680,7 @@
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
+				7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
 				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,
@@ -669,6 +694,7 @@
 				7A4AA90C29BE1FC700D845A2 /* SearchBarView.swift in Sources */,
 				7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */,
 				7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */,
+				7A898ED12A0303140003DFBD /* Logging.swift in Sources */,
 				7A9CC11229E29A0D009CAD61 /* DocumentLoader.swift in Sources */,
 				7AF04B8329A68A4F008E8F79 /* FilterView.swift in Sources */,
 				7A04034229FD68E8009604E4 /* ManageView.swift in Sources */,
@@ -765,7 +791,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -794,7 +820,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -930,7 +956,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -939,8 +964,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -950,10 +975,12 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -975,7 +1002,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -984,8 +1010,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -995,10 +1021,12 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

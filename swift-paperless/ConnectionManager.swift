@@ -11,6 +11,7 @@ import Foundation
 struct Connection: Equatable {
     let host: String
     let token: String
+    let extraHeaders: [ConnectionManager.HeaderValue]
 }
 
 class ConnectionManager: ObservableObject {
@@ -25,9 +26,17 @@ class ConnectionManager: ObservableObject {
     }
 
     @Published var state: LoginState = .none
-    @Published var connection: Connection?
+//    @Published var connection: Connection?
 
     private let keychainAccount = "PaperlessAccount"
+
+    struct HeaderValue: Codable, Equatable {
+        var key: String
+        var value: String
+    }
+
+    @UserDefaultBacked(key: "ExtraHeaders", storage: .group)
+    var extraHeaders: [HeaderValue] = []
 
     private(set) var apiHost: String? {
         get {
@@ -40,17 +49,16 @@ class ConnectionManager: ObservableObject {
 
     func check() async {
         await MainActor.run {
-            guard let conn = get() else {
+            guard connection != nil else {
                 state = .invalid
                 return
             }
 
-            connection = conn
             state = .valid
         }
     }
 
-    func get() -> Connection? {
+    var connection: Connection? {
         guard let host = apiHost else {
             return nil
         }
@@ -64,18 +72,19 @@ class ConnectionManager: ObservableObject {
             return nil
         }
 
-        return Connection(host: host, token: String(data: data, encoding: .utf8)!)
+        return Connection(host: host,
+                          token: String(data: data, encoding: .utf8)!,
+                          extraHeaders: extraHeaders)
     }
 
-    func set(_ conn: Connection) throws {
-        apiHost = conn.host
+    func set(host: String, token: String) throws {
+        apiHost = host
 
-        try Keychain.saveOrUpdate(service: conn.host,
+        try Keychain.saveOrUpdate(service: host,
                                   account: keychainAccount,
-                                  value: conn.token.data(using: .utf8)!)
+                                  value: token.data(using: .utf8)!)
 
         state = .valid
-        connection = conn
     }
 
     func logout() {
@@ -90,7 +99,14 @@ class ConnectionManager: ObservableObject {
             print(error)
         }
 
-        connection = nil
         state = .invalid
+    }
+}
+
+extension Array where Element == ConnectionManager.HeaderValue {
+    func apply(toRequest req: inout URLRequest) {
+        for kv in self {
+            req.setValue(kv.value, forHTTPHeaderField: kv.key)
+        }
     }
 }

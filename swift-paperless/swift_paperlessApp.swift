@@ -49,9 +49,8 @@ struct MainView: View {
         .onChange(of: manager.state) { value in
             showLoginScreen = value == .invalid
         }
-        .onChange(of: manager.connection) { _ in
+        .onChange(of: manager.state) { _ in
             if let conn = manager.connection {
-                //                print("Set conn")
                 store = DocumentStore(repository: ApiRepository(connection: conn))
                 storeReady = true
             }

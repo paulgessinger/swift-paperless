@@ -28,6 +28,43 @@ private struct TokenResponse: Decodable {
     var token: String
 }
 
+private struct DetailsView: View {
+    @ObservedObject var connectionManager: ConnectionManager
+    @State private var extraHeaders: [ConnectionManager.HeaderValue]
+    @Environment(\.dismiss) private var dismiss
+
+    init(connectionManager: ConnectionManager) {
+        self.connectionManager = connectionManager
+        self._extraHeaders = State(initialValue: connectionManager.extraHeaders)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                NavigationLink {
+                    ExtraHeadersView(headers: $extraHeaders)
+                } label: {
+                    Text("Extra headers")
+                }
+            }
+            .navigationTitle("Details")
+            .navigationBarTitleDisplayMode(.inline)
+
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+
+        .onChange(of: extraHeaders) { value in
+            connectionManager.extraHeaders = value
+        }
+    }
+}
+
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
 
@@ -54,6 +91,8 @@ struct LoginView: View {
 
     @State private var username: String = ""
     @State private var password: String = ""
+
+    @State private var showDetails: Bool = false
 
     private func deriveUrl(string value: String, suffix: String = "") -> URL? {
         var value = value
@@ -87,7 +126,9 @@ struct LoginView: View {
             return
         }
 
-        let request = URLRequest(url: url)
+        var request = URLRequest(url: url)
+        connectionManager.extraHeaders.apply(toRequest: &request)
+
         do {
             urlState = .checking
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -129,6 +170,7 @@ struct LoginView: View {
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = json
+            connectionManager.extraHeaders.apply(toRequest: &request)
 
             let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -144,7 +186,7 @@ struct LoginView: View {
 
             try await Task.sleep(for: .seconds(0.5))
 
-            try connectionManager.set(Connection(host: host, token: tokenResponse.token))
+            try connectionManager.set(host: host, token: tokenResponse.token)
             return true
 
         } catch {
@@ -154,120 +196,153 @@ struct LoginView: View {
     }
 
     var body: some View {
-        Form {
-            HStack {
-                Spacer()
-                LogoView()
-                Spacer()
-            }
-            .listRowInsets(EdgeInsets())
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-            .background(Color.systemGroupedBackground)
-
-            Section {
+        NavigationStack {
+            Form {
                 HStack {
-                    TextField("Paperless URL", text: $url.text)
+                    Spacer()
+                    LogoView()
+                    Spacer()
+                }
+                .listRowInsets(EdgeInsets())
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .background(Color.systemGroupedBackground)
+
+                Section {
+                    HStack {
+                        TextField("Paperless URL", text: $url.text)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                        Spacer()
+                        switch urlState {
+                        case .checking:
+                            ProgressView()
+                        case .valid:
+                            Label("Valid", systemImage:
+                                "checkmark.circle.fill")
+                                .labelStyle(.iconOnly)
+                                .foregroundColor(.accentColor)
+                        case .error:
+                            Label("Error", systemImage:
+                                "xmark.circle.fill")
+                                .labelStyle(.iconOnly)
+                                .foregroundColor(.red)
+                        case .empty:
+                            EmptyView()
+                        }
+                    }
+
+                    if apiInUrl {
+                        HStack(alignment: .top) {
+                            Image(systemName: "info.circle")
+                            Text("Do not include the /api/ part of the URL")
+                        }
+                        .foregroundColor(.gray)
+                        .padding()
+                        .listRowInsets(EdgeInsets())
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                        .background(Color.systemGroupedBackground)
+                        .transition(.opacity)
+                    }
+                }
+                Section("Credentials") {
+                    TextField("Username", text: $username)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
-                    Spacer()
-                    switch urlState {
-                    case .checking:
-                        ProgressView()
-                    case .valid:
-                        Label("Valid", systemImage:
-                            "checkmark.circle.fill")
-                            .labelStyle(.iconOnly)
-                            .foregroundColor(.accentColor)
-                    case .error:
-                        Label("Error", systemImage:
-                            "xmark.circle.fill")
-                            .labelStyle(.iconOnly)
-                            .foregroundColor(.red)
-                    case .empty:
-                        EmptyView()
-                    }
+                    SecureField("Password", text: $password)
                 }
+                HStack(alignment: .top) {
+                    Image(systemName: "info.circle")
+                    Text("Your password is used to login, and not stored on the device!")
+                }
+                .foregroundColor(.gray)
+                .padding()
+                .listRowInsets(EdgeInsets())
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .background(Color.systemGroupedBackground)
 
-                if apiInUrl {
-                    HStack(alignment: .top) {
-                        Image(systemName: "info.circle")
-                        Text("Do not include the /api/ part of the URL")
+                Section {
+                    Button(action: {
+                        Task {
+                            if await login() {
+                                withAnimation { loginState = .valid }
+                            } else {
+                                withAnimation { loginState = .error }
+                            }
+                        }
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Login")
+                            if loginState == .valid {
+                                Label("Valid", systemImage: "checkmark.circle.fill")
+                                    .labelStyle(.iconOnly)
+                            } else if loginState == .error {
+                                Label("Error", systemImage: "xmark.circle.fill")
+                                    .labelStyle(.iconOnly)
+                            }
+                            Spacer()
+                        }
+                        .foregroundColor({
+                            switch loginState {
+                            case .valid:
+                                return Color.accentColor
+                            case .error:
+                                return Color.red
+                            case .none:
+                                return Color.primary
+                            }
+                        }())
                     }
-                    .foregroundColor(.gray)
-                    .padding()
-                    .listRowInsets(EdgeInsets())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                    .background(Color.systemGroupedBackground)
-                    .transition(.opacity)
+                    .disabled(urlState != .valid || username.isEmpty || password.isEmpty)
                 }
             }
-            Section("Credentials") {
-                TextField("Username", text: $username)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                SecureField("Password", text: $password)
+            .onChange(of: url.debouncedText) { value in
+                Task {
+                    await checkUrl(string: value)
+                    withAnimation {
+                        apiInUrl = value.contains("/api")
+                    }
+                }
             }
-            HStack(alignment: .top) {
-                Image(systemName: "info.circle")
-                Text("Your password is used to login, and not stored on the device!")
-            }
-            .foregroundColor(.gray)
-            .padding()
-            .listRowInsets(EdgeInsets())
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-            .background(Color.systemGroupedBackground)
+            .onChange(of: username) { _ in withAnimation { loginState = .none }}
+            .onChange(of: password) { _ in withAnimation { loginState = .none }}
 
-            Section {
-                Button(action: {
-                    Task {
-                        if await login() {
-                            withAnimation { loginState = .valid }
-                        } else {
-                            withAnimation { loginState = .error }
-                        }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showDetails = true
+                    } label: {
+                        Label("More", systemImage: "info.circle")
                     }
-                }) {
-                    HStack {
-                        Spacer()
-                        Text("Login")
-                        if loginState == .valid {
-                            Label("Valid", systemImage: "checkmark.circle.fill")
-                                .labelStyle(.iconOnly)
-                        } else if loginState == .error {
-                            Label("Error", systemImage: "xmark.circle.fill")
-                                .labelStyle(.iconOnly)
-                        }
-                        Spacer()
-                    }
-                    .foregroundColor({
-                        switch loginState {
-                        case .valid:
-                            return Color.accentColor
-                        case .error:
-                            return Color.red
-                        case .none:
-                            return Color.primary
-                        }
-                    }())
                 }
-                .disabled(urlState != .valid || username.isEmpty || password.isEmpty)
+            }
+
+            .sheet(isPresented: $showDetails) {
+                DetailsView(connectionManager: connectionManager)
             }
         }
-        .onChange(of: url.debouncedText) { value in
-            Task {
-                await checkUrl(string: value)
-                withAnimation {
-                    apiInUrl = value.contains("/api")
-                }
-            }
-        }
-        .onChange(of: username) { _ in withAnimation { loginState = .none }}
-        .onChange(of: password) { _ in withAnimation { loginState = .none }}
     }
 }
 
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
         LoginView(connectionManager: ConnectionManager())
+    }
+}
+
+struct DetailsView_Previews: PreviewProvider {
+    struct Container: View {
+        @State var headers: [(String, String)] = [
+            ("header1", "value1"),
+            ("Header2", "other value")
+        ]
+
+        var body: some View {
+            DetailsView(connectionManager: ConnectionManager())
+        }
+    }
+
+    static var previews: some View {
+        Container()
     }
 }
