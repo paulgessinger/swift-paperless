@@ -6,8 +6,6 @@
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
-			<key>NSExtensionActivationSupportsAttachmentsWithMaxCount</key>
-			<integer>1</integer>
 			<key>NSExtensionActivationRule</key>
 			<string>SUBQUERY (
                 extensionItems,
@@ -15,9 +13,11 @@
                 SUBQUERY (
                     $extensionItem.attachments,
                     $attachment,
-                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;com.adobe.pdf&quot;
+                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf"
                 ).@count == $extensionItem.attachments.@count
             ).@count == 1</string>
+			<key>NSExtensionActivationSupportsAttachmentsWithMaxCount</key>
+			<integer>1</integer>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>
 		<string>MainInterface</string>
