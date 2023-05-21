@@ -16,6 +16,7 @@ class DocumentStore: ObservableObject {
     @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
     @Published private(set) var tags: [UInt: Tag] = [:]
     @Published private(set) var savedViews: [UInt: SavedView] = [:]
+    @Published private(set) var storagePaths: [UInt: StoragePath] = [:]
 
     private var documentSource: any DocumentSource
 
@@ -137,6 +138,11 @@ class DocumentStore: ObservableObject {
                        collection: \.savedViews)
     }
 
+    func fetchAllStoragePaths() async {
+        await fetchAll(elements: await repository.storagePaths(),
+                       collection: \.storagePaths)
+    }
+
     func fetchAll() async {
         print("Fetch all store")
         await fetchAllSemaphore.wait()
@@ -146,7 +152,8 @@ class DocumentStore: ObservableObject {
         async let d: () = fetchAllDocumentTypes()
         async let t: () = fetchAllTags()
         async let s: () = fetchAllSavedViews()
-        _ = await (c, d, t, s)
+        async let p: () = fetchAllStoragePaths()
+        _ = await (c, d, t, s, p)
     }
 
     @MainActor
@@ -316,5 +323,27 @@ class DocumentStore: ObservableObject {
     func delete(savedView: SavedView) async throws {
         try await repository.delete(savedView: savedView)
         savedViews.removeValue(forKey: savedView.id)
+    }
+
+    @MainActor
+    func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
+        return try await create(StoragePath.self,
+                                from: storagePath,
+                                store: \.storagePaths,
+                                method: repository.create(storagePath:))
+    }
+
+    @MainActor
+    func update(storagePath: StoragePath) async throws {
+        try await update(storagePath,
+                         store: \.storagePaths,
+                         method: repository.update(storagePath:))
+    }
+
+    @MainActor
+    func delete(storagePath: StoragePath) async throws {
+        try await delete(storagePath,
+                         store: \.storagePaths,
+                         method: repository.delete(storagePath:))
     }
 }

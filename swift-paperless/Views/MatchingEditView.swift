@@ -15,20 +15,24 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
 
     var body: some View {
         Group {
-            Section("Matching") {
+            Section {
                 Picker("Matching algorithm", selection: $element.matchingAlgorithm) {
                     ForEach(MatchingAlgorithm.allCases, id: \.self) { alg in
                         Text("\(alg.title)").tag(alg)
                     }
                 }
-
-                VStack {
-                    Text("\(element.matchingAlgorithm.label)")
-                        .id(element.matchingAlgorithm)
-                        .foregroundColor(.gray)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .animation(.linear, value: element.matchingAlgorithm)
+//                VStack {
+//                    Text("\(element.matchingAlgorithm.label)")
+//                        .id(element.matchingAlgorithm)
+//                        .foregroundColor(.gray)
+//                        .fixedSize(horizontal: false, vertical: true)
+//                }
+//                .animation(.linear, value: element.matchingAlgorithm)
+            } header: {
+                Text("Matching")
+            } footer: {
+                Text("\(element.matchingAlgorithm.label)")
+                    .lineLimit(3, reservesSpace: true)
             }
 
             if showTextField {

@@ -12,7 +12,7 @@ protocol StoragePathProtocol: Codable, MatchingModel {
     var path: String { get set }
 }
 
-struct StoragePath: StoragePathProtocol, Model {
+struct StoragePath: StoragePathProtocol, Model, Identifiable, Hashable {
     var id: UInt
     var name: String
     var path: String

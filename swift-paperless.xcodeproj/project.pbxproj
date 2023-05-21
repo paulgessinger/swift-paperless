@@ -72,6 +72,8 @@
 		7A81C5AC2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AE2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
+		7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */; };
+		7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */; };
 		7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
 		7A898ECF2A03000D0003DFBD /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
 		7A898ED12A0303140003DFBD /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ED02A0303140003DFBD /* Logging.swift */; };
@@ -210,6 +212,7 @@
 		7A6F31DC29DE936C00186A87 /* generate_filterrules.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = generate_filterrules.py; sourceTree = SOURCE_ROOT; };
 		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
 		7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathModel.swift; sourceTree = "<group>"; };
+		7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathEditView.swift; sourceTree = "<group>"; };
 		7A898ECD2A03000D0003DFBD /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
 		7A898ED02A0303140003DFBD /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		7A8E1F752A1A6FE4002A7CB3 /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
@@ -286,14 +289,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		7A3E036229EC8FEA008F4976 /* SavedView */ = {
-			isa = PBXGroup;
-			children = (
-				7A3E036729EC9013008F4976 /* SavedViewEditView.swift */,
-			);
-			path = SavedView;
-			sourceTree = "<group>";
-		};
 		7A4AA8E529BB969400D845A2 /* ShareExtension */ = {
 			isa = PBXGroup;
 			children = (
@@ -431,9 +426,10 @@
 			children = (
 				7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */,
 				7A297FAF29FE78750021A1ED /* CorrespondentEditView.swift */,
+				7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */,
+				7A3E036729EC9013008F4976 /* SavedViewEditView.swift */,
 				7AF2E08D29F57D6F0092948B /* Settings */,
 				7AF2E08029F4801A0092948B /* Tags */,
-				7A3E036229EC8FEA008F4976 /* SavedView */,
 				7A5482B0299AD56C00D5061E /* DocumentView.swift */,
 				7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */,
 				7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */,
@@ -668,6 +664,7 @@
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
+				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
 				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
 				7A46887729D4DD5D001AEB7C /* AuthAsyncImage.swift in Sources */,
@@ -729,6 +726,7 @@
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */,
+				7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
 				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,

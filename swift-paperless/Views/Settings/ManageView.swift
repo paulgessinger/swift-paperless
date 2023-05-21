@@ -114,24 +114,31 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var body: some View {
         VStack {
-            SearchBarView(text: $searchText, cancelEnabled: true)
-                .padding(.horizontal)
-                .padding(.bottom, 3)
-            List {
-                ForEach(elements.filter(filter), id: \.self) { element in
-                    NavigationLink {
-                        Edit(model: model, element: element)
-                    } label: {
-                        Manager.RowView(element: element)
-                    }
-                    .swipeActions {
-                        Button("Delete", role: .destructive) {
-                            elements.removeAll(where: { $0 == element })
-                            elementToDelete = element
+            if elements.isEmpty {
+                Divider()
+                Text("No items found, \nbut you can create the first one")
+                    .multilineTextAlignment(.center)
+                Spacer()
+            } else {
+                SearchBarView(text: $searchText, cancelEnabled: true)
+                    .padding(.horizontal)
+                    .padding(.bottom, 3)
+                List {
+                    ForEach(elements.filter(filter), id: \.self) { element in
+                        NavigationLink {
+                            Edit(model: model, element: element)
+                        } label: {
+                            Manager.RowView(element: element)
+                        }
+                        .swipeActions {
+                            Button("Delete", role: .destructive) {
+                                elements.removeAll(where: { $0 == element })
+                                elementToDelete = element
+                            }
                         }
                     }
+                    .onDelete { _ in }
                 }
-                .onDelete { _ in }
             }
         }
 

@@ -289,21 +289,35 @@ struct ClearableModifier: ViewModifier {
     @Binding var text: String
 
     func body(content: Content) -> some View {
-        content
-            .overlay {
-                if !text.isEmpty {
-                    HStack {
-                        Spacer()
+        HStack {
+            content
 
-                        Label("Clear", systemImage: "xmark.circle.fill")
-                            .labelStyle(.iconOnly)
-                            .foregroundColor(.gray)
-                            .onTapGesture {
-                                self.text = ""
-                            }
-                    }
+            Spacer()
+
+            Label("Clear", systemImage: "xmark.circle.fill")
+                .labelStyle(.iconOnly)
+                .foregroundColor(.gray)
+                .onTapGesture {
+                    self.text = ""
                 }
-            }
+                .opacity(text.isEmpty ? 0 : 1)
+        }
+
+//        content
+//            .overlay {
+//                if !text.isEmpty {
+//                    HStack {
+//                        Spacer()
+//
+//                        Label("Clear", systemImage: "xmark.circle.fill")
+//                            .labelStyle(.iconOnly)
+//                            .foregroundColor(.gray)
+//                            .onTapGesture {
+//                                self.text = ""
+//                            }
+//                    }
+//                }
+//            }
     }
 }
 

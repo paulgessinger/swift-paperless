@@ -161,6 +161,10 @@ extension Endpoint {
             segment = "tags"
         case is Document.Type:
             return document(id: id)
+        case is SavedView.Type:
+            segment = "saved_views"
+        case is StoragePath.Type:
+            segment = "storage_paths"
         default:
             fatalError("Invalid type")
         }

@@ -212,6 +212,56 @@ struct SavedViewManager: ManagerProtocol {
     }
 }
 
+// MARK: - Storage Paths Management
+
+extension StoragePathEditView: EditViewProtocol where Element == StoragePath {}
+
+extension StoragePathEditView: CreateViewProtocol where Element == ProtoStoragePath {}
+
+struct StoragePathManager: ManagerProtocol {
+    static var elementName: KeyPath<StoragePath, String> = \.name
+
+    final class Model: ManagerModel {
+        typealias Element = StoragePath
+        typealias ProtoElement = ProtoStoragePath
+
+        private var store: DocumentStore
+
+        init(store: DocumentStore) {
+            self.store = store
+        }
+
+        func load() -> [StoragePath] {
+            return store.storagePaths
+                .map { $0.value }
+                .sorted(by: { $0.name < $1.name })
+        }
+
+        func update(_ path: StoragePath) async throws {
+            try await store.update(storagePath: path)
+        }
+
+        func create(_ path: ProtoStoragePath) async throws -> StoragePath {
+            return try await store.create(storagePath: path)
+        }
+
+        func delete(_ path: StoragePath) async throws {
+            try await store.delete(storagePath: path)
+        }
+    }
+
+    typealias EditView = StoragePathEditView<StoragePath>
+    typealias CreateView = StoragePathEditView<ProtoStoragePath>
+
+    struct RowView: RowViewProtocol {
+        var element: StoragePath
+
+        var body: some View {
+            Text("\(element.name)")
+        }
+    }
+}
+
 // MARK: - Settings View
 
 struct SettingsView: View {
@@ -253,6 +303,14 @@ struct SettingsView: View {
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
                     Label("Saved views", systemImage: "line.3.horizontal.decrease.circle.fill")
+                }
+
+                NavigationLink {
+                    ManageView<StoragePathManager>(store: store)
+                        .navigationTitle("Storage paths")
+                        .task { Task.detached { await store.fetchAllStoragePaths() }}
+                } label: {
+                    Label("Storage paths", systemImage: "archivebox.fill")
                 }
             }
 
