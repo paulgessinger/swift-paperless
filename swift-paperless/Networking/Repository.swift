@@ -53,6 +53,13 @@ protocol Repository {
     func create(savedView: ProtoSavedView) async throws -> SavedView
     func update(savedView: SavedView) async throws -> SavedView
     func delete(savedView: SavedView) async throws
+
+    // MARK: Storage paths
+
+    func storagePaths() async -> [StoragePath]
+    func create(storagePath: ProtoStoragePath) async throws -> StoragePath
+    func update(storagePath: StoragePath) async throws -> StoragePath
+    func delete(storagePath: StoragePath) async throws
 }
 
 class NullRepository: Repository {
@@ -95,6 +102,11 @@ class NullRepository: Repository {
     func create(savedView: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
     func update(savedView: SavedView) async throws -> SavedView { savedView }
     func delete(savedView: SavedView) async throws { throw NotImplemented() }
+
+    func storagePaths() async -> [StoragePath] { return [] }
+    func create(storagePath: ProtoStoragePath) async throws -> StoragePath { throw NotImplemented() }
+    func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
+    func delete(storagePath: StoragePath) async throws { throw NotImplemented() }
 }
 
 // - MARK: DocumentSource

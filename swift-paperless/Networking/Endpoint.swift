@@ -116,6 +116,8 @@ extension Endpoint {
             return documents(page: 1, filter: FilterState())
         case is SavedView.Type:
             return savedViews()
+        case is StoragePath.Type:
+            return storagePaths()
         default:
             fatalError("Invalid type")
         }
@@ -134,6 +136,18 @@ extension Endpoint {
     static func savedView(id: UInt) -> Endpoint {
         return Endpoint(path: "/api/saved_views/\(id)/",
                         queryItems: [])
+    }
+
+    static func storagePaths() -> Endpoint {
+        return .init(path: "/api/storage_paths/")
+    }
+
+    static func createStoragePath() -> Endpoint {
+        return .init(path: "/api/storage_paths/")
+    }
+
+    static func storagePath(id: UInt) -> Endpoint {
+        return .init(path: "/api/storage_paths/\(id)/")
     }
 
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {

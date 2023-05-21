@@ -532,6 +532,8 @@ extension ApiRepository: Repository {
         return (false, image)
     }
 
+    // MARK: Saved views
+
     func savedViews() async -> [SavedView] {
         return await all(SavedView.self)
     }
@@ -546,5 +548,23 @@ extension ApiRepository: Repository {
 
     func delete(savedView view: SavedView) async throws {
         try await delete(element: view, endpoint: .savedView(id: view.id))
+    }
+
+    // MARK: Storage paths
+
+    func storagePaths() async -> [StoragePath] {
+        return await all(StoragePath.self)
+    }
+
+    func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
+        return try await create(element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
+    }
+
+    func update(storagePath: StoragePath) async throws -> StoragePath {
+        return try await update(element: storagePath, endpoint: .savedView(id: storagePath.id))
+    }
+
+    func delete(storagePath: StoragePath) async throws {
+        try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 }
