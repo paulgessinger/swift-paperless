@@ -35,7 +35,7 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
     var tags: [UInt]
 
     private(set) var added: String? = nil
-    private(set) var storagePath: String? = nil
+    private(set) var storagePath: UInt? = nil
 
     private enum CodingKeys: String, CodingKey {
         case id, title
