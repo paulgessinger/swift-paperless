@@ -27,6 +27,7 @@ struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProto
         case documentCount = "document_count"
         case lastCorrespondence = "last_correspondence"
         case name, slug
+
         case match
         case matchingAlgorithm = "matching_algorithm"
         case isInsensitive = "is_insensitive"
