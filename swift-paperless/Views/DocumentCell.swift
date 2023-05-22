@@ -52,6 +52,35 @@ struct DocumentCell: View {
 //        self.tags = self.document.tags.compactMap { store.tags[$0] }
     }
 
+    static var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.doesRelativeDateFormatting = false
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }
+
+    private struct Aspect: View {
+        var label: String
+        var systemImage: String
+
+        @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
+
+        init(_ label: String, systemImage: String) {
+            self.label = label
+            self.systemImage = systemImage
+        }
+
+        var body: some View {
+            HStack {
+                Image(systemName: systemImage)
+                    .frame(width: imageWidth)
+                Text(label)
+            }
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top) {
             if redactionReasons.contains(.placeholder) {
@@ -70,24 +99,21 @@ struct DocumentCell: View {
             }
 
             VStack(alignment: .leading) {
-                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                    Text("\(name):")
-//                        .fixedSize()
-                        .foregroundColor(.accentColor)
-//                        .id("correspondent")
-                }
                 Text("\(document.title)")
-//                    .fixedSize()
                     .bold()
 
+                if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                    Aspect(name, systemImage: "person")
+                        .foregroundColor(.accentColor)
+                }
+
                 if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                    Text(name)
-//                        .fixedSize()
+                    Aspect(name, systemImage: "doc")
                         .foregroundColor(Color.orange)
                 }
 
-                Text(document.created, style: .date)
-//                    .fixedSize()
+
+                Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
                     .padding(0)
