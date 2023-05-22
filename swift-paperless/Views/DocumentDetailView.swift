@@ -179,7 +179,7 @@ struct DocumentDetailView: View {
         var body: some View {
             HStack {
                 Image(systemName: systemImage)
-                    .frame(width: imageWidth)
+                    .frame(width: imageWidth, alignment: .leading)
                 Text(label)
             }
         }
@@ -191,25 +191,41 @@ struct DocumentDetailView: View {
                 Text("\(document.title)")
                     .font(.title)
 
-                HStack(spacing: 25) {
+                HStack(alignment: .top, spacing: 25) {
                     VStack(alignment: .leading) {
                         if let id = document.correspondent, let name = store.correspondents[id]?.name {
                             Aspect(name, systemImage: "person")
                                 .foregroundColor(Color.accentColor)
+                        }
+                        else {
+                            Aspect("Not assigned", systemImage: "person")
+                                .foregroundColor(Color.gray)
+                                .opacity(0.5)
                         }
 
                         if let id = document.documentType, let name = store.documentTypes[id]?.name {
                             Aspect(name, systemImage: "doc")
                                 .foregroundColor(Color.orange)
                         }
+                        else {
+                            Aspect("Not assigned", systemImage: "doc")
+                                .foregroundColor(Color.gray)
+                                .opacity(0.5)
+                        }
                     }
+                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+
                     VStack(alignment: .leading) {
                         Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
                         if let id = document.storagePath, let name = store.storagePaths[id]?.name {
                             Aspect(name, systemImage: "archivebox")
                         }
+                        else {
+                            Aspect("Default", systemImage: "archivebox")
+                        }
                     }
+                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                 }
 
                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
@@ -290,6 +306,7 @@ struct DocumentDetailView: View {
                     self.document = document
                 }
             }
+
             .toolbar {
                 Button("Edit") {
                     editing.toggle()
