@@ -310,9 +310,11 @@ struct DocumentDetailView: View {
             .toolbar {
                 Button("Edit") {
                     editing.toggle()
-                }.sheet(isPresented: $editing) {
-                    DocumentEditView(document: document)
                 }
+            }
+
+            .sheet(isPresented: $editing) {
+                DocumentEditView(document: $document)
             }
         }
     }

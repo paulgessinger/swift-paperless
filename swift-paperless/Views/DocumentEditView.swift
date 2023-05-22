@@ -14,6 +14,7 @@ struct DocumentEditView: View {
     @EnvironmentObject private var nav: NavigationCoordinator
     @EnvironmentObject private var errorController: ErrorController
 
+    @Binding var documentOut: Document
     @State private var document: Document
     @State private var modified: Bool = false
 
@@ -22,24 +23,25 @@ struct DocumentEditView: View {
 
     @State private var deleted = false
 
-    init(document: Document) {
-        self._document = State(initialValue: document)
+    init(document: Binding<Document>) {
+        self._documentOut = document
+        self._document = State(initialValue: document.wrappedValue)
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Title", text: $document.title) {}
-                        .clearable($document.title)
-                    DatePicker("Created date", selection: $document.created, displayedComponents: .date)
+                    TextField("Title", text: self.$document.title) {}
+                        .clearable(self.$document.title)
+                    DatePicker("Created date", selection: self.$document.created, displayedComponents: .date)
                 }
                 Section {
                     NavigationLink(destination: {
                         CommonPickerEdit(
                             manager: CorrespondentManager.self,
-                            document: $document,
-                            store: store
+                            document: self.$document,
+                            store: self.store
                         )
                     }) {
                         HStack {
@@ -47,7 +49,7 @@ struct DocumentEditView: View {
                             Spacer()
                             Group {
                                 if let id = document.correspondent {
-                                    Text(store.correspondents[id]?.name ?? "ERROR")
+                                    Text(self.store.correspondents[id]?.name ?? "ERROR")
                                 } else {
                                     Text("None")
                                 }
@@ -59,8 +61,8 @@ struct DocumentEditView: View {
                     NavigationLink(destination: {
                         CommonPickerEdit(
                             manager: DocumentTypeManager.self,
-                            document: $document,
-                            store: store
+                            document: self.$document,
+                            store: self.store
                         )
                     }) {
                         HStack {
@@ -68,7 +70,7 @@ struct DocumentEditView: View {
                             Spacer()
                             Group {
                                 if let id = document.documentType {
-                                    Text(store.documentTypes[id]?.name ?? "ERROR")
+                                    Text(self.store.documentTypes[id]?.name ?? "ERROR")
                                 } else {
                                     Text("None")
                                 }
@@ -78,12 +80,12 @@ struct DocumentEditView: View {
                     }
 //
                     NavigationLink(destination: {
-                        DocumentTagEditView(document: $document)
+                        DocumentTagEditView(document: self.$document)
                     }) {
-                        if document.tags.isEmpty {
+                        if self.document.tags.isEmpty {
                             Text("No tags")
                         } else {
-                            TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                            TagsView(tags: self.document.tags.compactMap { self.store.tags[$0] })
                                 .contentShape(Rectangle())
                         }
                     }
@@ -92,11 +94,11 @@ struct DocumentEditView: View {
 
                 Section {
                     Button(action: {
-                        showDeleteConfirmation = true
+                        self.showDeleteConfirmation = true
                     }) {
                         HStack {
                             Spacer()
-                            if !deleted {
+                            if !self.deleted {
                                 Text("Delete")
                             } else {
                                 HStack {
@@ -110,21 +112,21 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
 
-                    .alert("Delete document \(document.title)", isPresented: $showDeleteConfirmation) {
+                    .alert("Delete document \(self.document.title)", isPresented: self.$showDeleteConfirmation) {
                         Button("Cancel", role: .cancel) {}
                         Button("Delete", role: .destructive) {
                             DispatchQueue.main.async {
                                 Task {
                                     do {
-                                        try await store.deleteDocument(document)
-                                        deleted = true
+                                        try await self.store.deleteDocument(self.document)
+                                        self.deleted = true
                                         let impact = UIImpactFeedbackGenerator(style: .rigid)
                                         impact.impactOccurred()
                                         try await Task.sleep(for: .seconds(0.2))
-                                        dismiss()
-                                        nav.popToRoot()
+                                        self.dismiss()
+                                        self.nav.popToRoot()
                                     } catch {
-                                        errorController.push(error: error)
+                                        self.errorController.push(error: error)
                                     }
                                 }
                             }
@@ -135,36 +137,39 @@ struct DocumentEditView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel", role: .cancel) {
-                        dismiss()
+                        self.dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         Task {
+                            let copy = document
+                            documentOut = document
                             do {
-                                try await store.updateDocument(document)
+                                try await self.store.updateDocument(self.document)
                             } catch {
-                                errorController.push(error: error)
+                                self.errorController.push(error: error)
+                                documentOut = copy
                             }
                         }
-                        dismiss()
+                        self.dismiss()
                     }
                     .bold()
-                    .disabled(!modified || document.title.isEmpty)
+                    .disabled(!self.modified || self.document.title.isEmpty)
                 }
             }
 
-            .onChange(of: document) { _ in
-                modified = true
+            .onChange(of: self.document) { _ in
+                self.modified = true
             }
 
             .task {
                 Task.detached {
-                    await store.fetchAll()
+                    await self.store.fetchAll()
                 }
             }
         }
-        .errorOverlay(errorController: errorController)
+        .errorOverlay(errorController: self.errorController)
     }
 }
 
@@ -174,12 +179,12 @@ private struct PreviewHelper: View {
 
     var body: some View {
         VStack {
-            if let document = document {
-                DocumentEditView(document: document)
+            if self.document != nil {
+                DocumentEditView(document: Binding(unwrapping: self.$document)!)
             }
         }
         .task {
-            document = await store.document(id: 1)
+            self.document = await self.store.document(id: 1)
         }
     }
 }
