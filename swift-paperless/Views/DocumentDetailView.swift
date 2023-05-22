@@ -136,27 +136,12 @@ struct DocumentDetailView: View {
     @State private var editing = false
     @State var document: Document
 
-    @State private var correspondent: Correspondent?
-    @State private var documentType: DocumentType?
-
     @State private var download: DownloadState = .initial
     @State private var previewUrl: URL?
 
     @State private var tags: [Tag] = []
 
     @State private var relatedDocuments: [Document]? = nil
-
-    private func loadData() async {
-        correspondent = nil
-        documentType = nil
-        if let cId = document.correspondent {
-            correspondent = await store.getCorrespondent(id: cId)?.1
-        }
-        if let dId = document.documentType {
-            documentType = await store.getDocumentType(id: dId)?.1
-        }
-        (_, tags) = await store.getTags(document.tags)
-    }
 
     private func loadDocument() async {
         switch download {
@@ -180,32 +165,57 @@ struct DocumentDetailView: View {
         }
     }
 
+    private struct Aspect: View {
+        var label: String
+        var systemImage: String
+
+        @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
+
+        init(_ label: String, systemImage: String) {
+            self.label = label
+            self.systemImage = systemImage
+        }
+
+        var body: some View {
+            HStack {
+                Image(systemName: systemImage)
+                    .frame(width: imageWidth)
+                Text(label)
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                Group {
-                    (
-                        Text.titleCorrespondent(value: correspondent)
-                            + Text("\(document.title)")
-                    ).font(.title)
-                }.task {
-                    await loadData()
-                }
-                .onChange(of: document) { _ in
-                    Task {
-                        await loadData()
+                Text("\(document.title)")
+                    .font(.title)
+
+                HStack(spacing: 25) {
+                    VStack(alignment: .leading) {
+                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                            Aspect(name, systemImage: "person")
+                                .foregroundColor(Color.accentColor)
+                        }
+
+                        if let id = document.documentType, let name = store.documentTypes[id]?.name {
+                            Aspect(name, systemImage: "doc")
+                                .foregroundColor(Color.orange)
+                        }
+                    }
+                    VStack(alignment: .leading) {
+                        Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
+
+                        if let id = document.storagePath, let name = store.storagePaths[id]?.name {
+                            Aspect(name, systemImage: "archivebox")
+                        }
                     }
                 }
 
-                Text.titleDocumentType(value: documentType)
-                    .font(.headline)
-                    .foregroundColor(Color.orange)
-
-                Text(document.created, style: .date)
-
-                TagsView(tags: tags)
+                TagsView(tags: document.tags.compactMap { store.tags[$0] })
 
                 Divider()
+                    .padding(.vertical)
 
                 Button(action: {
                     Task {
@@ -261,38 +271,31 @@ struct DocumentDetailView: View {
                 }
             }
             .padding()
-        }
-        .task {
-            await loadDocument()
 
-//            do {
-//                try await Task.sleep(for: .seconds(2))
-//                withAnimation {
-//                    relatedDocuments = []
-//                }
-//            }
-//            catch {}
-        }
-
-        .onChange(of: store.documents) { _ in
-            if let document = store.documents[document.id] {
-                self.document = document
+            .task {
+                await loadDocument()
             }
-//            else {
-//                print("Document in detail view went away")
-//            }
-        }
 
-        .refreshable {
-            if let document = await store.document(id: document.id) {
-                self.document = document
+            .onChange(of: store.documents) { _ in
+                if let document = store.documents[document.id] {
+                    self.document = document
+                }
+                //            else {
+                //                print("Document in detail view went away")
+                //            }
             }
-        }
-        .toolbar {
-            Button("Edit") {
-                editing.toggle()
-            }.sheet(isPresented: $editing) {
-                DocumentEditView(document: document)
+
+            .refreshable {
+                if let document = await store.document(id: document.id) {
+                    self.document = document
+                }
+            }
+            .toolbar {
+                Button("Edit") {
+                    editing.toggle()
+                }.sheet(isPresented: $editing) {
+                    DocumentEditView(document: document)
+                }
             }
         }
     }

@@ -112,6 +112,9 @@ struct DocumentCell: View {
                         .foregroundColor(Color.orange)
                 }
 
+                if let id = document.storagePath, let name = store.storagePaths[id]?.name {
+                    Aspect(name, systemImage: "archivebox")
+                }
 
                 Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
