@@ -24,16 +24,16 @@ struct DocumentLoader<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
 
     var body: some View {
-        Group {
-            if let document = document {
-                BindingHelper(element: document, content: content)
+        VStack {
+            if document != nil {
+                content(Binding(unwrapping: self.$document)!)
             }
             else {
                 ProgressView()
             }
         }
         .task {
-            document = await store.document(id: id)!
+            document = await store.repository.documents(filter: .init()).fetch(limit: 999).first!
         }
     }
 }

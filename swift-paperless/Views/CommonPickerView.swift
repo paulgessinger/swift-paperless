@@ -67,25 +67,40 @@ struct CommonPicker: View {
 protocol Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Self]> { get }
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol
+    static var notAssignedLabel: String { get }
 
     var id: UInt { get }
     var name: String { get }
 }
 
 extension Correspondent: Pickable {
-    static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> { \.correspondents }
+    static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> = \.correspondents
 
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
         return \.correspondent
     }
+
+    static var notAssignedLabel: String = "None"
 }
 
 extension DocumentType: Pickable {
-    static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> { \.documentTypes }
+    static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> = \.documentTypes
 
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
         return \.documentType
     }
+
+    static var notAssignedLabel: String = "None"
+}
+
+extension StoragePath: Pickable {
+    static var storePath: KeyPath<DocumentStore, [UInt: StoragePath]> = \.storagePaths
+
+    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        return \.storagePath
+    }
+
+    static var notAssignedLabel: String = "Default"
 }
 
 struct CommonPickerEdit<Manager, D>: View
@@ -175,7 +190,7 @@ struct CommonPickerEdit<Manager, D>: View
             Form {
                 if showNone {
                     Section {
-                        row("None", value: nil)
+                        row(Element.notAssignedLabel, value: nil)
                     }
                 }
                 Section {
@@ -235,6 +250,23 @@ struct CommonPickerEditDocumentType_Previews: PreviewProvider {
             NavigationStack {
                 CommonPickerEdit(
                     manager: DocumentTypeManager.self,
+                    document: document,
+                    store: store
+                )
+            }
+        }
+        .environmentObject(store)
+    }
+}
+
+struct CommonPickerEditStoragePath_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        DocumentLoader(id: 1) { document in
+            NavigationStack {
+                CommonPickerEdit(
+                    manager: StoragePathManager.self,
                     document: document,
                     store: store
                 )

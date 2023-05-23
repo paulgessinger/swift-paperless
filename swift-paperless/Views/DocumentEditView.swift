@@ -78,7 +78,28 @@ struct DocumentEditView: View {
                             .foregroundColor(.gray)
                         }
                     }
-                    //
+
+                    NavigationLink(destination: {
+                        CommonPickerEdit(
+                            manager: StoragePathManager.self,
+                            document: self.$document,
+                            store: self.store
+                        )
+                    }) {
+                        HStack {
+                            Text("Storage path")
+                            Spacer()
+                            Group {
+                                if let id = document.storagePath {
+                                    Text(self.store.storagePaths[id]?.name ?? "ERROR")
+                                } else {
+                                    Text("None")
+                                }
+                            }
+                            .foregroundColor(.gray)
+                        }
+                    }
+
                     NavigationLink(destination: {
                         DocumentTagEditView(document: self.$document)
                     }) {
