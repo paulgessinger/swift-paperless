@@ -146,6 +146,28 @@ struct CreateDocumentView<Title: View>: View {
                         }
 
                         NavigationLink(destination: {
+                            CommonPickerEdit(
+                                manager: StoragePathManager.self,
+                                document: self.$document,
+                                store: self.store
+                            )
+                        }) {
+                            HStack {
+                                Text("Storage path")
+                                Spacer()
+                                Group {
+                                    if let id = document.storagePath {
+                                        Text(self.store.storagePaths[id]?.name ?? "ERROR")
+                                    }
+                                    else {
+                                        Text("None")
+                                    }
+                                }
+                                .foregroundColor(.gray)
+                            }
+                        }
+
+                        NavigationLink(destination: {
                             DocumentTagEditView(document: $document)
                                 .navigationTitle("Tags")
                         }) {
