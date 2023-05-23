@@ -78,7 +78,7 @@ struct DocumentEditView: View {
                             .foregroundColor(.gray)
                         }
                     }
-//
+                    //
                     NavigationLink(destination: {
                         DocumentTagEditView(document: self.$document)
                     }) {
@@ -112,8 +112,10 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
 
-                    .alert("Delete document \(self.document.title)", isPresented: self.$showDeleteConfirmation) {
-                        Button("Cancel", role: .cancel) {}
+                    .confirmationDialog("Are you sure?",
+                                        isPresented: self.$showDeleteConfirmation,
+                                        titleVisibility: .visible)
+                    {
                         Button("Delete", role: .destructive) {
                             DispatchQueue.main.async {
                                 Task {
@@ -131,6 +133,7 @@ struct DocumentEditView: View {
                                 }
                             }
                         }
+                        Button("Cancel", role: .cancel) {}
                     }
                 }
             }
@@ -180,20 +183,25 @@ private struct PreviewHelper: View {
     var body: some View {
         VStack {
             if self.document != nil {
-                DocumentEditView(document: Binding(unwrapping: self.$document)!)
+                DocumentEditView(document: Binding(unwrapping: $document)!)
             }
         }
         .task {
             self.document = await self.store.document(id: 1)
+            guard self.document != nil else {
+                fatalError()
+            }
         }
     }
 }
 
 struct DocumentEditView_Previews: PreviewProvider {
     @StateObject static var store = DocumentStore(repository: PreviewRepository())
+    @StateObject static var errorController = ErrorController()
 
     static var previews: some View {
         PreviewHelper()
             .environmentObject(store)
+            .environmentObject(errorController)
     }
 }
