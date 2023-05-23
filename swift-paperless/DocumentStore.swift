@@ -40,7 +40,7 @@ class DocumentStore: ObservableObject {
             return FilterState()
         }
         guard let value = try? JSONDecoder().decode(FilterState.self, from: data) else {
-            print("No decode")
+//            print("No decode")
             return FilterState()
         }
         return value
@@ -50,9 +50,9 @@ class DocumentStore: ObservableObject {
                 return
             }
 
-            print("SET: \(filterState)")
+//            print("SET: \(filterState)")
             guard let s = try? JSONEncoder().encode(filterState) else {
-                print("NO ENCODE")
+//                print("NO ENCODE")
                 return
             }
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")

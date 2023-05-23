@@ -266,6 +266,7 @@ struct FilterState: Equatable, Codable {
 
     var correspondent: Filter = .any { didSet { modified = modified || correspondent != oldValue }}
     var documentType: Filter = .any { didSet { modified = modified || documentType != oldValue }}
+    var storagePath: Filter = .any { didSet { modified = modified || storagePath != oldValue }}
     var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
     var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
     var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
@@ -285,9 +286,18 @@ struct FilterState: Equatable, Codable {
 
     // MARK: Initializers
 
-    init(correspondent: FilterState.Filter = .any, documentType: FilterState.Filter = .any, tags: FilterState.TagFilter = .any, remaining: [FilterRule] = [], savedView: UInt? = nil, searchText: String? = nil, searchMode: SearchMode = .titleContent) {
+    init(correspondent: FilterState.Filter = .any,
+         documentType: FilterState.Filter = .any,
+         storagePath: FilterState.Filter = .any,
+         tags: FilterState.TagFilter = .any,
+         remaining: [FilterRule] = [],
+         savedView: UInt? = nil,
+         searchText: String? = nil,
+         searchMode: SearchMode = .titleContent)
+    {
         self.correspondent = correspondent
         self.documentType = documentType
+        self.storagePath = storagePath
         self.tags = tags
         self.remaining = remaining
         self.savedView = savedView
@@ -337,6 +347,14 @@ struct FilterState: Equatable, Codable {
                     break
                 }
 
+                documentType = id == nil ? .notAssigned : .only(id: id!)
+
+            case .storagePath:
+                guard case .storagePath(let id) = rule.value else {
+                    print("Invalid value for rule type")
+                    remaining.append(rule)
+                    break
+                }
                 documentType = id == nil ? .notAssigned : .only(id: id!)
 
             case .hasTagsAll:
@@ -457,6 +475,16 @@ struct FilterState: Equatable, Codable {
         case .any: break
         }
 
+        switch storagePath {
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .storagePath, value: .storagePath(id: nil)))
+        case .only(let id):
+            result.append(
+                .init(ruleType: .storagePath, value: .storagePath(id: id)))
+        case .any: break
+        }
+
         switch tags {
         case .any: break
         case .notAssigned:
@@ -494,6 +522,9 @@ struct FilterState: Equatable, Codable {
             result += 1
         }
         if correspondent != .any {
+            result += 1
+        }
+        if storagePath != .any {
             result += 1
         }
         if tags != .any {

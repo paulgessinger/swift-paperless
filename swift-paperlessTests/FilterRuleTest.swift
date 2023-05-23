@@ -139,6 +139,8 @@ final class FilterRuleTest: XCTestCase {
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
             .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
+            .init(ruleType: .storagePath, value: .storagePath(id: 8)),
+            .init(ruleType: .storagePath, value: .storagePath(id: nil)),
         ]
 
         let sort = { (a: URLQueryItem, b: URLQueryItem) -> Bool in a.name < b.name }
@@ -152,11 +154,15 @@ final class FilterRuleTest: XCTestCase {
             .init(name: "tags__id__none", value: "75"),
             .init(name: "correspondent__isnull", value: "1"),
             .init(name: "added__date__gt", value: "2023-01-01"),
+            .init(name: "storage_path__id", value: "8"),
+            .init(name: "storage_path__isnull", value: "1"),
         ]
         expected.sort(by: sort)
 
-        XCTAssertEqual(items[0], expected[0])
-        XCTAssertEqual(items, expected)
+//        XCTAssertEqual(items[0], expected[0])
+        for (item, exp) in zip(items, expected) {
+            XCTAssertEqual(item, exp)
+        }
 
         XCTAssertEqual(
             [URLQueryItem(name: "is_tagged", value: "0")],

@@ -226,11 +226,13 @@ struct FilterBar: View {
     @State private var showTags = false
     @State private var showDocumentType = false
     @State private var showCorrespondent = false
+    @State private var showStoragePath = false
 
     private enum ModalMode {
         case tags
         case correspondent
         case documentType
+        case storagePath
     }
 
     @State private var filterState = FilterState()
@@ -310,6 +312,8 @@ struct FilterBar: View {
                 showCorrespondent = true
             case .documentType:
                 showDocumentType = true
+            case .storagePath:
+                showStoragePath = true
             }
         }
     }
@@ -491,6 +495,23 @@ struct FilterBar: View {
                         }
                     }, active: filterState.correspondent != .any) { present(.correspondent) }
 
+                    Element(label: {
+                        switch filterState.storagePath {
+                        case .any:
+                            Text("Storage path")
+                        case .notAssigned:
+                            Text("Default")
+                        case .only(let id):
+                            if let name = store.storagePaths[id]?.name {
+                                Text(name)
+                            }
+                            else {
+                                Text("1 path")
+                                    .redacted(reason: .placeholder)
+                            }
+                        }
+                    }, active: filterState.storagePath != .any) { present(.storagePath) }
+
                     Divider()
 
                     Menu {
@@ -560,6 +581,18 @@ struct FilterBar: View {
                     elements: store.correspondents.sorted {
                         $0.value.name < $1.value.name
                     }.map { ($0.value.id, $0.value.name) }
+                )
+            }
+        }
+
+        .sheet(isPresented: $showStoragePath) {
+            Modal(title: "Storage path", filterState: $filterState) {
+                CommonPicker(
+                    selection: $filterState.storagePath,
+                    elements: store.storagePaths.sorted {
+                        $0.value.name < $1.value.name
+                    }.map { ($0.value.id, $0.value.name) },
+                    notAssignedLabel: "Default"
                 )
             }
         }
