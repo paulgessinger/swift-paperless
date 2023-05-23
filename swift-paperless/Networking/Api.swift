@@ -10,19 +10,6 @@ import Semaphore
 import SwiftUI
 import UIKit
 
-struct ListResponse<Element>: Decodable
-    where Element: Decodable
-{
-    var count: UInt
-    var next: URL?
-    var previous: URL?
-    var results: [Element]
-}
-
-enum DateDecodingError: Error {
-    case invalidDate(string: String)
-}
-
 let decoder: JSONDecoder = {
     let d = JSONDecoder()
     d.dateDecodingStrategy = .custom { decoder -> Date in

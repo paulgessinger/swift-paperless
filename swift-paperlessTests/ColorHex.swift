@@ -11,7 +11,7 @@ import XCTest
 import SwiftUI
 
 struct TestStruct: Codable {
-    @HexColor var color: Color
+    var color: HexColor
 }
 
 final class ColorHex: XCTestCase {
@@ -36,11 +36,11 @@ final class ColorHex: XCTestCase {
     }
 
     func testToHex() throws {
-        XCTAssertEqual("#ffffff", Color.white.hex)
-        XCTAssertEqual("#000000", Color.black.hex)
-        XCTAssertEqual("#ff0000", Color(.sRGB, red: 1, green: 0, blue: 0).hex)
-        XCTAssertEqual("#00ff00", Color(.sRGB, red: 0, green: 1, blue: 0).hex)
-        XCTAssertEqual("#0000ff", Color(.sRGB, red: 0, green: 0, blue: 1).hex)
+        XCTAssertEqual("#ffffff", Color.white.hexString)
+        XCTAssertEqual("#000000", Color.black.hexString)
+        XCTAssertEqual("#ff0000", Color(.sRGB, red: 1, green: 0, blue: 0).hexString)
+        XCTAssertEqual("#00ff00", Color(.sRGB, red: 0, green: 1, blue: 0).hexString)
+        XCTAssertEqual("#0000ff", Color(.sRGB, red: 0, green: 0, blue: 1).hexString)
     }
 
     let inputs = [
@@ -56,14 +56,14 @@ final class ColorHex: XCTestCase {
             let input = "{\"color\":\"\(s)\"}".data(using: .utf8)!
             let test = try decoder.decode(TestStruct.self, from: input)
             XCTAssertNotNil(test)
-            XCTAssertEqual(test.color, c)
+            XCTAssertEqual(test.color.color, c)
         }
     }
 
     func testToJson() throws {
         let encoder = JSONEncoder()
         for (s, c) in inputs {
-            let value = TestStruct(color: c)
+            let value = TestStruct(color: c.hex)
             let data = try encoder.encode(value)
             let string = String(data: data, encoding: .utf8)!
             let expected = "{\"color\":\"\(s)\"}"
