@@ -9,6 +9,8 @@ organize your documents digitally.
 
 This application requires a self-hosted instance to function.
 
+You can check it out in [TestFlight](https://testflight.apple.com/join/bOpOdzwL)!
+
 ## Where's the code?
 
 For the time being, this repository is only used for the issue tracker.  Once
