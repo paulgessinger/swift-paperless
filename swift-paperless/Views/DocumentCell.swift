@@ -5,31 +5,45 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import NukeUI
 import SwiftUI
 
 struct DocumentPreviewImage: View {
     var store: DocumentStore
     var document: Document
 
+    @StateObject private var image = FetchImage()
+
     var body: some View {
-        AuthAsyncImage(image: {
-            await store.repository.thumbnail(document: document)
-        }) {
-            image in
-            image
-                .resizable()
-                .scaledToFill()
-                .frame(width: 100, height: 100, alignment: .top)
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10)
-                    .stroke(.gray, lineWidth: 1))
-        } placeholder: {
+        ZStack {
             Rectangle()
                 .fill(Color(white: 0.8))
-                .cornerRadius(10)
-                .scaledToFit()
+                .aspectRatio(contentMode: .fill)
                 .overlay(ProgressView())
+                .frame(width: 100, height: 150, alignment: .top)
+
+            image.image?
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 100, height: 150, alignment: .top)
         }
+
+        .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10)
+            .stroke(.gray, lineWidth: 1))
+
+        .task {
+            guard let data = await store.repository.thumbnailData(document: document) else {
+                return
+            }
+
+            image.load(ImageRequest(id: "\(document.id)", data: { data }, processors: [
+                .resize(size: CGSize(width: 200, height: 200))
+            ]))
+        }
+
+        .transition(.opacity)
+        .animation(.default, value: image.image)
     }
 }
 
@@ -38,18 +52,9 @@ struct DocumentCell: View {
     @Environment(\.redactionReasons) var redactionReasons
 
     var document: Document
-//    var correspondent: Correspondent? = nil
-//    var documentType: DocumentType? = nil
-//    var tags: [Tag] = []
 
     init(document: Document) {
         self.document = document
-//        self.correspondent = nil
-//        self.documentType = nil
-//        self.tags = []
-//        self.correspondent = self.document.correspondent.flatMap { store.correspondents[$0] }
-//        self.documentType = self.document.documentType.flatMap { store.documentTypes[$0] }
-//        self.tags = self.document.tags.compactMap { store.tags[$0] }
     }
 
     static var dateFormatter: DateFormatter {
@@ -87,33 +92,44 @@ struct DocumentCell: View {
                 Rectangle()
                     .fill(Color(white: 0.8))
                     .cornerRadius(10)
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
+                    .frame(width: 100, height: 150)
+                    .scaledToFill()
                     .shadow(color: Color("ImageShadow"), radius: 5)
             }
             else {
                 DocumentPreviewImage(store: store,
                                      document: document)
-                    .frame(width: 100, height: 100)
                     .shadow(color: Color("ImageShadow"), radius: 5)
             }
 
             VStack(alignment: .leading) {
                 Text("\(document.title)")
                     .bold()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
 
                 if let id = document.correspondent, let name = store.correspondents[id]?.name {
                     Aspect(name, systemImage: "person")
                         .foregroundColor(.accentColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
 
                 if let id = document.documentType, let name = store.documentTypes[id]?.name {
                     Aspect(name, systemImage: "doc")
                         .foregroundColor(Color.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
 
                 if let id = document.storagePath, let name = store.storagePaths[id]?.name {
                     Aspect(name, systemImage: "archivebox")
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
 
                 Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
@@ -122,12 +138,11 @@ struct DocumentCell: View {
                     .padding(0)
                     .transition(.opacity)
             }
-            .padding(.horizontal, 5)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .layoutPriority(1)
+            .padding(.horizontal, 5)
         }
-        .transaction { t in
-            t.animation = nil
-        }
+        .frame(maxHeight: 165, alignment: .center)
     }
 }
 
@@ -144,7 +159,7 @@ private struct HelperView: View {
             Spacer()
         }
         .task {
-            documents = await store.fetchDocuments(clear: false)
+            documents = await store.fetchDocuments(clear: true)
         }
     }
 }

@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "nuke",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/Nuke",
+      "state" : {
+        "revision" : "c3864b8882bc69f5edfe5c70e18786c91d228b28",
+        "version" : "12.1.3"
+      }
+    },
+    {
       "identity" : "semaphore",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/Semaphore",

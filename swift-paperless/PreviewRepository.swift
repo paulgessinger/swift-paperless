@@ -129,6 +129,8 @@ class PreviewRepository: Repository {
                                        tags: t(),
                                        storagePath: p())
         }
+
+        documents[2]?.title = "I am a very long document title that will not fit into a single line."
     }
 
     func update(document: Document) async throws -> Document { document }
@@ -165,19 +167,28 @@ class PreviewRepository: Repository {
     }
 
     func thumbnail(document: Document) async -> (Bool, Image?) {
+        guard let data = await thumbnailData(document: document) else {
+            print("No thumb data returned")
+            return (false, nil)
+        }
+
+        guard let uiImage = UIImage(data: data) else { return (false, nil) }
+        let image = Image(uiImage: uiImage)
+
+        return (false, image)
+    }
+
+    func thumbnailData(document: Document) async -> Data? {
         let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/200")!)
 
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
 
-            guard let uiImage = UIImage(data: data) else { return (false, nil) }
-            let image = Image(uiImage: uiImage)
-
-            return (false, image)
+            return data
         }
         catch {
             print(error)
-            return (false, nil)
+            return nil
         }
     }
 

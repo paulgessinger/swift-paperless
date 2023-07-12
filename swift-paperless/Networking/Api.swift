@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 import Semaphore
 import SwiftUI
 import UIKit
@@ -267,30 +268,6 @@ class ApiRepository {
         return await Array(sequence)
     }
 
-    private func getImage(url: URL?) async -> Image? {
-        guard let url = url else { return nil }
-
-//        print("Load image at \(url)")
-
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        connection.extraHeaders.apply(toRequest: &request)
-
-        do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                return nil
-//                fatalError("Did not get good response for image")
-            }
-
-//            try await Task.sleep(for: .seconds(2))
-
-            guard let uiImage = UIImage(data: data) else { return nil }
-            return Image(uiImage: uiImage)
-        } catch { return nil }
-    }
-
     private func create<ProtoElement, Element>(element: ProtoElement, endpoint: Endpoint, returns: Element.Type) async throws -> Element where ProtoElement: Encodable, Element: Decodable {
         var request = request(endpoint)
 //        print("Create: \(request.url!)")
@@ -515,8 +492,32 @@ extension ApiRepository: Repository {
     func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }
 
     func thumbnail(document: Document) async -> (Bool, Image?) {
-        let image = await getImage(url: url(Endpoint.thumbnail(documentId: document.id)))
+        guard let data = await thumbnailData(document: document) else {
+            return (false, nil)
+        }
+        guard let uiImage = UIImage(data: data) else {
+            return (false, nil)
+        }
+        let image = Image(uiImage: uiImage)
         return (false, image)
+    }
+
+    func thumbnailData(document: Document) async -> Data? {
+        let url = url(Endpoint.thumbnail(documentId: document.id))
+
+        var request = URLRequest(url: url)
+        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        connection.extraHeaders.apply(toRequest: &request)
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                return nil
+            }
+
+            return data
+        } catch { return nil }
     }
 
     // MARK: Saved views

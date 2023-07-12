@@ -81,8 +81,6 @@ private struct DocumentList: View {
     @Binding var documents: [Document]
     @State private var loadingMore = false
 
-    private let stackCutoff = 30
-
     struct Cell: View {
         @EnvironmentObject private var nav: NavigationCoordinator
 
@@ -96,7 +94,6 @@ private struct DocumentList: View {
                 DocumentCell(document: document)
                     .contentShape(Rectangle())
 
-//                    .padding(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
                     .padding(5)
                     .contextMenu {
                         Button {
@@ -105,10 +102,6 @@ private struct DocumentList: View {
                             Label("Edit", systemImage: "pencil")
                         }
 
-//                        Divider()
-//                        Button(role: .destructive) {} label: {
-//                            Label("Delete", systemImage: "trash")
-//                        }
                     } preview: {
                         Button {
                             print("open")
@@ -116,9 +109,6 @@ private struct DocumentList: View {
                             DocumentPreview(store: store, document: document)
                         }
                     }
-//                    .swipeActions {
-//                        Button("Delete") {}
-//                    }
             }
 
             .padding(.horizontal, 10)
@@ -130,45 +120,33 @@ private struct DocumentList: View {
     }
 
     func loadMore() async {
-        let new = await store.fetchDocuments(clear: false, pageSize: UInt(stackCutoff + 1))
+        let new = await store.fetchDocuments(clear: false, pageSize: 101)
         withAnimation {
             documents += new
         }
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            ForEach(documents
-                .prefix(stackCutoff)
-                .compactMap { store.documents[$0.id] })
-            { document in
+        LazyVStack(alignment: .leading) {
+            ForEach(
+                Array(zip(documents.indices, documents)), id: \.1.id
+            ) { index, document in
                 Cell(store: store, document: document)
-            }
-
-            LazyVStack(alignment: .leading) {
-                let docs = documents
-                    .dropFirst(stackCutoff)
-                    .compactMap { store.documents[$0.id] }
-
-                ForEach(
-                    Array(zip(docs.indices, docs)), id: \.1.id
-                ) { index, document in
-                    Cell(store: store, document: document)
-                        .if(index > docs.count - 10) { view in
-                            view.task {
-                                let hasMore = await store.hasMoreDocuments()
-                                print("Check more: has: \(hasMore), #doc \(documents.count)")
-                                if !loadingMore && hasMore {
-                                    loadingMore = true
-                                    //                                    await load(false)
-                                    await loadMore()
-                                    loadingMore = false
-                                }
+                    .if(index > documents.count - 10) { view in
+                        view.task {
+                            let hasMore = await store.hasMoreDocuments()
+                            print("Check more: has: \(hasMore), #doc \(documents.count)")
+                            if !loadingMore && hasMore {
+                                loadingMore = true
+                                //                                    await load(false)
+                                await loadMore()
+                                loadingMore = false
                             }
                         }
-                }
+                    }
             }
         }
+//        }
     }
 }
 
@@ -192,11 +170,6 @@ struct DocumentView: View {
     @State private var error: String?
     @State private var logoutRequested = false
 
-//    @State private var searchFocused = false
-
-    // This is intentionally NOT a StateObject because that stutters
-    @State private var scrollOffset = ThrottleObject(value: CGPoint(), delay: 0.5)
-
     func load() async {
         let d = 0.3
         async let delay: () = Task.sleep(for: .seconds(d))
@@ -206,10 +179,10 @@ struct DocumentView: View {
         Task { await store.fetchAll() }
         documents = []
 
-        let new = await store.fetchDocuments(clear: true, pageSize: 101)
+        let new = await store.fetchDocuments(clear: true, pageSize: 21)
 
-        try? await delay
         documents = new
+        try? await delay
         withAnimation {
             isLoading = false
         }
@@ -218,7 +191,7 @@ struct DocumentView: View {
 
     func reload() async {
         Task { await store.fetchAll() }
-        let new = await store.fetchDocuments(clear: true, pageSize: 101)
+        let new = await store.fetchDocuments(clear: true, pageSize: 21)
 
         withAnimation {
             documents = new
@@ -265,13 +238,6 @@ struct DocumentView: View {
                 .navigationBarTitleDisplayMode(.inline)
         case .settings:
             SettingsView()
-//            VStack {
-//                Label("Settings", systemImage: "gear")
-//                    .labelStyle(.iconOnly)
-//                    .imageScale(.large)
-//                    .navigationTitle("Settings")
-//                    .navigationBarTitleDisplayMode(.inline)
-//            }
         default:
             fatalError()
         }
@@ -394,6 +360,10 @@ struct DocumentView: View {
             .onReceive(store.filterStatePublisher) { value in
                 print("Filter updated \(value)")
                 Task { await load() }
+            }
+
+            .onChange(of: store.documents) { _ in
+                documents = documents.compactMap { store.documents[$0.id] }
             }
         }
         .environmentObject(nav)

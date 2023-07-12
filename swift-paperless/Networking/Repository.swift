@@ -44,6 +44,7 @@ protocol Repository {
 
     // @TODO: Remove UIImage
     func thumbnail(document: Document) async -> (Bool, Image?)
+    func thumbnailData(document: Document) async -> Data?
 
     func download(documentID: UInt) async -> URL?
 
@@ -97,6 +98,7 @@ class NullRepository: Repository {
     }
 
     func thumbnail(document: Document) async -> (Bool, Image?) { return (false, nil) }
+    func thumbnailData(document: Document) async -> Data? { return nil }
 
     func savedViews() async -> [SavedView] { return [] }
     func create(savedView: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
