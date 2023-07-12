@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 25.03.23.
 //
 
+import os
 import SwiftUI
 
 private struct Response: Decodable {
@@ -94,39 +95,55 @@ struct LoginView: View {
 
     @State private var showDetails: Bool = false
 
-    private func deriveUrl(string value: String, suffix: String = "") -> URL? {
-        var value = value
-        if !value.starts(with: "https://") {
-            value = "https://" + value
+    private func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolved: URL)? {
+        let url: URL?
+
+        let pattern = /https?:\/\/(.*)/
+
+        if (try? pattern.wholeMatch(in: value)) != nil {
+            url = URL(string: value)
+        } else {
+            url = URL(string: "https://\(value)")
         }
 
-        if value.last != "/" {
-            value += "/"
-        }
-        value += "api/"
-        value += suffix
-
-        guard let url = URL(string: value) else {
+        guard let url = url else {
+            Logger.shared.debug("Derived url \(value) was invalid")
             return nil
         }
 
-        return url
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.shared.debug("Unable to parse url into components")
+            return nil
+        }
+        let base = url
+
+        components.path = "/api/" + suffix
+
+        guard let url = components.url else {
+            Logger.shared.debug("Unable to convert components back to url \(components)")
+            return nil
+        }
+
+        Logger.shared.trace("Derive url: \(value) + \(suffix) -> \(url)")
+
+        return (base, url)
     }
 
     private func checkUrl(string value: String) async {
+        Logger.shared.debug("Checking backend URL \(value)")
         guard !value.isEmpty else {
-            print("Value is empty")
+            Logger.shared.trace("Value is empty")
             urlState = .empty
             return
         }
 
-        guard let url = deriveUrl(string: value) else {
-            print("Cannot convert to url")
+        guard let (_, apiUrl) = deriveUrl(string: value) else {
+            Logger.shared.trace("Cannot convert to url")
             urlState = .error
             return
         }
 
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: apiUrl)
         connectionManager.extraHeaders.apply(toRequest: &request)
 
         do {
@@ -134,7 +151,7 @@ struct LoginView: View {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                print("Checking API status was not 200 but \(statusCode)")
+                Logger.shared.debug("Checking API status was not 200 but \(statusCode)")
                 urlState = .error
                 return
             }
@@ -142,31 +159,26 @@ struct LoginView: View {
             let _ = try JSONDecoder().decode(Response.self, from: data)
             urlState = .valid
         } catch {
-            print("Checking API error: \(error)")
+            Logger.shared.debug("Checking API error: \(error)")
             urlState = .error
             return
         }
     }
 
     private func login() async -> Bool {
-        var host = url.text
-        if host.starts(with: "https://") {
-            host.removeFirst("https://".count)
-        }
-
-        print(host)
+        Logger.shared.trace("Attempting login with url \(url.text)")
 
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
-            guard let url = deriveUrl(string: host, suffix: "token/") else {
-                print("Error making URL for logging in")
+            guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token/") else {
+                Logger.shared.debug("Error making URL for logging in")
                 return false
             }
 
 //            print(url)
 
-            var request = URLRequest(url: url)
+            var request = URLRequest(url: tokenUrl)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = json
@@ -175,23 +187,24 @@ struct LoginView: View {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                print("Token request response was not 200 but \(statusCode)")
+                Logger.shared.debug("Token request response was not 200 but \(statusCode)")
                 return false
             }
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-//            print(tokenResponse.token)
+
+            Logger.shared.trace("Login successful")
 
             withAnimation { loginState = .valid }
 
             try await Task.sleep(for: .seconds(0.5))
 
             // @TODO Change scheme!
-            try connectionManager.set(host: host, token: tokenResponse.token, scheme: .https)
+            try connectionManager.set(host: baseUrl, token: tokenResponse.token)
             return true
 
         } catch {
-            print(error)
+            Logger.shared.error("\(error)")
         }
         return false
     }

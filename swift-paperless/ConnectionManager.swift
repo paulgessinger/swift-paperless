@@ -15,41 +15,14 @@ enum ConnectionScheme: String, Codable {
 }
 
 struct Connection: Equatable {
-    let host: String
+    let host: URL
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
-    let scheme: ConnectionScheme
 
-    init(host: String, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
+    init(host: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
         self.token = token
         self.extraHeaders = extraHeaders
-
-        let pattern = /(?:(https?):\/\/)?(.*)\/?/
-
-        // parse host
-        if let match = try? pattern.wholeMatch(in: host) {
-            // always take host part
-            self.host = String(match.2)
-            // if host string did contain a scheme
-            if let s = match.1 {
-                // if it's valid use it
-                if let s = ConnectionScheme(rawValue: String(s)) {
-                    self.scheme = s
-                } else {
-                    // it's not valid, default to argument
-                    Logger.shared.error("Unable to convert stored host scheme \(s) to scheme enum. Assuming \(scheme.rawValue)")
-                    self.scheme = scheme
-                }
-            } else {
-                // host string did not contain a scheme, take argument
-                self.scheme = scheme
-            }
-        } else {
-            // host did not match pattern (weird!) use argument
-            Logger.shared.error("Unparsable host given")
-            self.host = host
-            self.scheme = scheme
-        }
+        self.host = host
     }
 }
 
@@ -86,8 +59,8 @@ class ConnectionManager: ObservableObject {
         }
     }
 
-    @UserDefaultBacked(key: "ConnectionScheme", storage: .group)
-    var scheme: ConnectionScheme = .https
+//    @UserDefaultBacked(key: "ConnectionScheme", storage: .group)
+//    var scheme: ConnectionScheme = .https
 
     func check() async {
         await MainActor.run {
@@ -101,13 +74,13 @@ class ConnectionManager: ObservableObject {
     }
 
     var connection: Connection? {
-        guard let host = apiHost else {
+        guard let apiHost = apiHost, let host = URL(string: apiHost) else {
             return nil
         }
 
         let data: Data
         do {
-            data = try Keychain.read(service: host,
+            data = try Keychain.read(service: apiHost,
                                      account: keychainAccount)
         } catch {
             print(error)
@@ -116,12 +89,12 @@ class ConnectionManager: ObservableObject {
 
         return Connection(host: host,
                           token: String(data: data, encoding: .utf8)!,
-                          extraHeaders: extraHeaders, scheme: scheme)
+                          extraHeaders: extraHeaders)
     }
 
-    func set(host: String, token: String, scheme: ConnectionScheme) throws {
+    func set(host: URL, token: String) throws {
+        let host = host.absoluteString
         apiHost = host
-        self.scheme = scheme
 
         try Keychain.saveOrUpdate(service: host,
                                   account: keychainAccount,

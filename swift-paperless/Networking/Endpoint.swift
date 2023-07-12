@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 struct Endpoint {
     let path: String
@@ -173,12 +174,27 @@ extension Endpoint {
                         queryItems: [])
     }
 
-    func url(host: String, scheme: ConnectionScheme) -> URL? {
-        var components = URLComponents()
-        components.scheme = scheme.rawValue
-        components.host = host
+    func url(host url: URL) -> URL? {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.shared.error("Host given to endpoint was invalid! \(url)")
+            return nil
+        }
+
+        if components.host == nil {
+            Logger.shared.debug("Host did not end up in components, probably migration issue")
+            let host = url.absoluteString
+            if host.starts(with: "http://") || host.starts(with: "https://") {
+                Logger.shared.error("Scheme is in host, unknown reason for failure")
+                return nil
+            }
+
+            components.host = url.absoluteString
+            components.scheme = "https"
+        }
+
         components.path = path
         components.queryItems = queryItems.isEmpty ? nil : queryItems
+        Logger.shared.trace("URL for Endpoint \(path): \(components)")
         return components.url
     }
 }

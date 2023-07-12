@@ -6,6 +6,7 @@
 //
 
 import Collections
+import os
 import SwiftUI
 
 struct MainView: View {
@@ -44,6 +45,7 @@ struct MainView: View {
         }
 
         .task {
+            Logger.shared.notice("Checking login status")
             await manager.check()
         }
         .onChange(of: manager.state) { value in

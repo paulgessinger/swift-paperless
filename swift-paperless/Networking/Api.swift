@@ -210,6 +210,7 @@ class ApiRepository {
 
     init(connection: Connection) {
         self.connection = connection
+        Logger.shared.trace("Initializing ApiRespository with connection \(connection.host, privacy: .private) \(connection.token, privacy: .private)")
     }
 
     private var apiToken: String {
@@ -217,7 +218,9 @@ class ApiRepository {
     }
 
     func url(_ endpoint: Endpoint) -> URL {
-        return endpoint.url(host: connection.host, scheme: connection.scheme)!
+        let connection = self.connection
+        Logger.shared.trace("Making API endpoint URL with \(connection.host) for \(endpoint.path)")
+        return endpoint.url(host: connection.host)!
     }
 
     let encoder: JSONEncoder = {
@@ -228,6 +231,7 @@ class ApiRepository {
     }()
 
     fileprivate func request(url: URL) -> URLRequest {
+        Logger.shared.trace("Creating API request for URL \(url)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
