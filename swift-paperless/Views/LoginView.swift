@@ -186,7 +186,8 @@ struct LoginView: View {
 
             try await Task.sleep(for: .seconds(0.5))
 
-            try connectionManager.set(host: host, token: tokenResponse.token)
+            // @TODO Change scheme!
+            try connectionManager.set(host: host, token: tokenResponse.token, scheme: .https)
             return true
 
         } catch {

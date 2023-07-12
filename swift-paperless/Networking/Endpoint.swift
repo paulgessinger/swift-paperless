@@ -173,9 +173,9 @@ extension Endpoint {
                         queryItems: [])
     }
 
-    func url(host: String) -> URL? {
+    func url(host: String, scheme: ConnectionScheme) -> URL? {
         var components = URLComponents()
-        components.scheme = "https"
+        components.scheme = scheme.rawValue
         components.host = host
         components.path = path
         components.queryItems = queryItems.isEmpty ? nil : queryItems

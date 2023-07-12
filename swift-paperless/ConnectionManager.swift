@@ -7,11 +7,50 @@
 
 import AuthenticationServices
 import Foundation
+import os
+
+enum ConnectionScheme: String, Codable {
+    case http
+    case https
+}
 
 struct Connection: Equatable {
     let host: String
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
+    let scheme: ConnectionScheme
+
+    init(host: String, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
+        self.token = token
+        self.extraHeaders = extraHeaders
+
+        let pattern = /(?:(https?):\/\/)?(.*)\/?/
+
+        // parse host
+        if let match = try? pattern.wholeMatch(in: host) {
+            // always take host part
+            self.host = String(match.2)
+            // if host string did contain a scheme
+            if let s = match.1 {
+                // if it's valid use it
+                if let s = ConnectionScheme(rawValue: String(s)) {
+                    self.scheme = s
+                } else {
+                    // it's not valid, default to argument
+                    Logger.shared.error("Unable to convert stored host scheme \(s) to scheme enum. Assuming \(scheme.rawValue)")
+                    self.scheme = scheme
+                }
+            } else {
+                // host string did not contain a scheme, take argument
+                self.scheme = scheme
+            }
+        } else {
+            // host did not match pattern (weird!) use argument
+            Logger.shared.error("Unparsable host given")
+            self.host = host
+            self.scheme = scheme
+        }
+    }
 }
 
 class ConnectionManager: ObservableObject {
@@ -47,6 +86,9 @@ class ConnectionManager: ObservableObject {
         }
     }
 
+    @UserDefaultBacked(key: "ConnectionScheme", storage: .group)
+    var scheme: ConnectionScheme = .https
+
     func check() async {
         await MainActor.run {
             guard connection != nil else {
@@ -74,11 +116,12 @@ class ConnectionManager: ObservableObject {
 
         return Connection(host: host,
                           token: String(data: data, encoding: .utf8)!,
-                          extraHeaders: extraHeaders)
+                          extraHeaders: extraHeaders, scheme: scheme)
     }
 
-    func set(host: String, token: String) throws {
+    func set(host: String, token: String, scheme: ConnectionScheme) throws {
         apiHost = host
+        self.scheme = scheme
 
         try Keychain.saveOrUpdate(service: host,
                                   account: keychainAccount,

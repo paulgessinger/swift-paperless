@@ -212,16 +212,12 @@ class ApiRepository {
         self.connection = connection
     }
 
-    private var apiHost: String {
-        connection.host
-    }
-
     private var apiToken: String {
         connection.token
     }
 
     func url(_ endpoint: Endpoint) -> URL {
-        return endpoint.url(host: apiHost)!
+        return endpoint.url(host: connection.host, scheme: connection.scheme)!
     }
 
     let encoder: JSONEncoder = {
