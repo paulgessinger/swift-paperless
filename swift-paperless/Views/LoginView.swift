@@ -245,34 +245,38 @@ struct LoginView: View {
                         }
                     }
 
-                    if apiInUrl {
-                        HStack(alignment: .top) {
-                            Image(systemName: "info.circle")
-                            Text("Do not include the /api/ part of the URL")
+                } footer: {
+                    VStack(alignment: .leading) {
+                        if apiInUrl {
+                            HStack(alignment: .top) {
+                                Image(systemName: "info.circle")
+                                Text("Do not include the /api/ part of the URL")
+                            }
                         }
-                        .foregroundColor(.gray)
-                        .padding()
-                        .listRowInsets(EdgeInsets())
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                        .background(Color.systemGroupedBackground)
-                        .transition(.opacity)
+
+                        if url.debouncedText.starts(with: "http://") {
+                            HStack(alignment: .top) {
+                                Image(systemName: "info.circle")
+                                Text("If at all possible, use HTTPS to connect to the Paperless server")
+                            }
+                        }
                     }
+                    .transition(.opacity)
                 }
-                Section("Credentials") {
+
+                Section {
                     TextField("Username", text: $username)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                     SecureField("Password", text: $password)
+                } header: {
+                    Text("Credentials")
+                } footer: {
+                    HStack(alignment: .top) {
+                        Image(systemName: "info.circle")
+                        Text("Your password is used to login, and not stored on the device!")
+                    }
                 }
-                HStack(alignment: .top) {
-                    Image(systemName: "info.circle")
-                    Text("Your password is used to login, and not stored on the device!")
-                }
-                .foregroundColor(.gray)
-                .padding()
-                .listRowInsets(EdgeInsets())
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .background(Color.systemGroupedBackground)
 
                 Section {
                     Button(action: {
