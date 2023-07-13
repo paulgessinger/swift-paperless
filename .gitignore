@@ -3,3 +3,6 @@ demo/media
 Credentials.plist
 .vscode
 venv
+
+*.app.dSYM.zip
+*.ipa
