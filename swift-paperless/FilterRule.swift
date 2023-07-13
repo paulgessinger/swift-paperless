@@ -17,6 +17,7 @@ enum FilterRuleValue: Codable, Equatable {
     case documentType(id: UInt?)
     case storagePath(id: UInt?)
     case correspondent(id: UInt?)
+    case owner(id: UInt?)
     case string(value: String)
 
     fileprivate func string() -> String? {
@@ -37,6 +38,8 @@ enum FilterRuleValue: Codable, Equatable {
         case .storagePath(let id):
             s = id == nil ? nil : String(id!)
         case .correspondent(let id):
+            s = id == nil ? nil : String(id!)
+        case .owner(let id):
             s = id == nil ? nil : String(id!)
         case .string(let value):
             s = value
@@ -74,6 +77,29 @@ struct FilterRule: Equatable {
     init(ruleType: FilterRuleType, value: FilterRuleValue) {
         self.ruleType = ruleType
         self.value = value
+
+        let dt = self.ruleType.dataType()
+
+        switch value {
+        case .date:
+            precondition(dt == .date, "Invalid data type")
+        case .number:
+            precondition(dt == .number, "Invalid data type")
+        case .tag:
+            precondition(dt == .tag, "Invalid data type")
+        case .boolean:
+            precondition(dt == .boolean, "Invalid data type")
+        case .documentType:
+            precondition(dt == .documentType, "Invalid data type")
+        case .storagePath:
+            precondition(dt == .storagePath, "Invalid data type")
+        case .correspondent:
+            precondition(dt == .correspondent, "Invalid data type")
+        case .owner:
+            precondition(dt == .number, "Invalid data type")
+        case .string:
+            precondition(dt == .string, "Invalid data type")
+        }
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -123,6 +149,7 @@ extension FilterRule: Codable {
             let dateStr = try container.decode(String.self, forKey: .value)
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
+            dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
             guard let date = dateFormatter.date(from: dateStr) else {
                 throw DateDecodingError.invalidDate(string: dateStr)
             }
