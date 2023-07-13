@@ -11,3 +11,4 @@ venv
 *.p8
 
 fastlane/report.xml
+fastlane/README.md
