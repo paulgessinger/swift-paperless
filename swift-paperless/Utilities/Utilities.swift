@@ -132,7 +132,10 @@ extension Color {
 
         UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
 
-        let convert = { v in UInt(v > 0.99999 ? 255 : v * 255.0) }
+        let convert = { v in
+            let vv = max(0.0, min(1.0, v))
+            return UInt(vv > 0.99999 ? 255 : vv * 255.0)
+        }
 
         return ("#" + String(format: "%02x", convert(red)) +
             String(format: "%02x", convert(green)) +
