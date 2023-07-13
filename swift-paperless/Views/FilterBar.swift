@@ -58,7 +58,7 @@ private struct FilterMenu<Content: View>: View {
             Menu {
                 Text("Saved views")
                 if !store.savedViews.isEmpty {
-                    ForEach(store.savedViews.map { $0.value }.sorted { $0.id < $1.id }, id: \.id) { savedView in
+                    ForEach(store.savedViews.map { $0.value }.sorted { $0.name < $1.name }, id: \.id) { savedView in
                         if store.filterState.savedView == savedView.id {
                             Menu {
                                 if store.filterState.modified {
