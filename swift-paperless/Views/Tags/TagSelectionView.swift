@@ -157,26 +157,29 @@ struct TagFilterView: View {
 
                             Spacer()
 
-                            switch selectedTags {
-                            case .any:
-                                EmptyView()
-                            case .notAssigned:
-                                EmptyView()
-                            case .allOf(let include, let exclude):
-                                if include.contains(tag.id) {
-                                    Label("Included", systemImage: "checkmark")
-                                        .labelStyle(.iconOnly)
-                                }
-                                if exclude.contains(tag.id) {
-                                    Label("Excluded", systemImage: "xmark.circle")
-                                        .labelStyle(.iconOnly)
-                                }
-                            case .anyOf(let ids):
-                                if ids.contains(tag.id) {
-                                    Label("Selected", systemImage: "checkmark")
-                                        .labelStyle(.iconOnly)
+                            VStack {
+                                switch selectedTags {
+                                case .any:
+                                    EmptyView()
+                                case .notAssigned:
+                                    EmptyView()
+                                case .allOf(let include, let exclude):
+                                    if include.contains(tag.id) {
+                                        Label("Included", systemImage: "checkmark")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                    if exclude.contains(tag.id) {
+                                        Label("Excluded", systemImage: "xmark.circle")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                case .anyOf(let ids):
+                                    if ids.contains(tag.id) {
+                                        Label("Selected", systemImage: "checkmark")
+                                            .labelStyle(.iconOnly)
+                                    }
                                 }
                             }
+                            .frame(width: 20, alignment: .trailing)
                         }
                         .transaction { transaction in transaction.animation = nil }
                     }

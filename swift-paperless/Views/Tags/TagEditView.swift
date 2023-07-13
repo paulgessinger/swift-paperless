@@ -45,19 +45,20 @@ struct TagEditView<Element>: View where Element: TagProtocol {
 
                 Toggle("Inbox tag", isOn: $tag.value.isInboxTag)
             } header: {
-                HStack {
-                    Spacer()
-                    Text(!tag.throttledValue.name.isEmpty ? tag.throttledValue.name : " Tag name ")
-                        .fixedSize(horizontal: true, vertical: false)
-                        .font(.title3)
-                        .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                        .background(tag.value.color.color)
-                        .foregroundColor(tag.value.textColor.color)
-                        .clipShape(Capsule())
-                        .textCase(.none)
-                        .animation(.linear(duration: 0.2), value: tag.throttledValue.name)
-                    Spacer()
-                }
+                Text(!tag.throttledValue.name.isEmpty ? tag.throttledValue.name : " Tag name ")
+
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                    .font(.title3)
+                    .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                    .background(tag.value.color.color)
+                    .foregroundColor(tag.value.textColor.color)
+                    .clipShape(Capsule())
+                    .textCase(.none)
+                    .animation(.linear(duration: 0.2), value: tag.throttledValue.name)
+
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
 
             Section("Color") {

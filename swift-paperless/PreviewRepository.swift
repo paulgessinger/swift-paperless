@@ -54,6 +54,7 @@ class PreviewRepository: Repository {
             .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: Color.green.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
             .init(id: 4, isInboxTag: false, name: "Important", slug: "important", color: Color.red.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
             .init(id: 5, isInboxTag: false, name: "Book", slug: "book", color: Color.yellow.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
+            .init(id: 6, isInboxTag: false, name: "I am a very long tag name that will not fit in most places in the UI", slug: "very_long", color: Color.red.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
         ]).reduce(into: [UInt: Tag]()) {
             $0[$1.id] = $1
         }

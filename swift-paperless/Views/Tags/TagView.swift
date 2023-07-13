@@ -24,7 +24,7 @@ struct TagView: View {
         Group {
             if let tag = tag {
                 Text("\(tag.name)")
-                    .fixedSize(horizontal: true, vertical: false)
+                    .lineLimit(1)
                     .font(.body)
                     .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
                     .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
