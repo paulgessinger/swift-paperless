@@ -6,3 +6,8 @@ venv
 
 *.app.dSYM.zip
 *.ipa
+
+.env.default
+*.p8
+
+fastlane/report.xml
