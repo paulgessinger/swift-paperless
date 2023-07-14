@@ -14,6 +14,7 @@
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
 		7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C42A5EB08D00C18B44 /* NukeUI */; };
+		7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2831AF2A61D30B009E86CE /* CasePaths */; };
 		7A297FB029FE78750021A1ED /* CorrespondentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A297FAF29FE78750021A1ED /* CorrespondentEditView.swift */; };
 		7A297FB129FE78750021A1ED /* CorrespondentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A297FAF29FE78750021A1ED /* CorrespondentEditView.swift */; };
 		7A297FB329FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */; };
@@ -282,6 +283,7 @@
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
 				7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
+				7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */,
 				7AEBA7A929EDBFBF006D5620 /* SwiftUINavigation in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
@@ -538,6 +540,7 @@
 				7A1C32BE2A5EAF1A00C18B44 /* Nuke */,
 				7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */,
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
+				7A2831AF2A61D30B009E86CE /* CasePaths */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -621,6 +624,7 @@
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */,
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
+				7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1266,6 +1270,14 @@
 				minimumVersion = 12.0.0;
 			};
 		};
+		7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-case-paths";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.14.1;
+			};
+		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/Semaphore";
@@ -1328,6 +1340,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		7A2831AF2A61D30B009E86CE /* CasePaths */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */;
+			productName = CasePaths;
 		};
 		7A297FB729FE9C870021A1ED /* SwiftUINavigation */ = {
 			isa = XCSwiftPackageProductDependency;

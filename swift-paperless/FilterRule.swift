@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 06.04.23.
 //
 
+import CasePaths
 import Foundation
 import os
 
@@ -369,6 +370,16 @@ struct FilterState: Equatable, Codable {
 
                 correspondent = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
+            case .hasCorrespondentAny:
+                correspondent = handleElementAny(case: /FilterRuleValue.correspondent,
+                                                 filter: correspondent,
+                                                 rule: rule)
+
+            case .doesNotHaveCorrespondent:
+                correspondent = handleElementNone(case: /FilterRuleValue.correspondent,
+                                                  filter: correspondent,
+                                                  rule: rule)
+
             case .documentType:
                 guard case .documentType(let id) = rule.value else {
                     print("Invalid value for rule type")
@@ -379,50 +390,14 @@ struct FilterState: Equatable, Codable {
                 documentType = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasDocumentTypeAny:
-                guard case .documentType(let id) = rule.value else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
-                    remaining.append(rule)
-                    break
-                }
-
-                guard let id = id else {
-                    Logger.shared.error("hasDocumentTypeAny with nil id")
-                    remaining.append(rule)
-                    break
-                }
-
-                switch documentType {
-                case .anyOf(let ids):
-                    documentType = .anyOf(ids: ids + [id])
-                case .noneOf:
-                    Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
-                    fallthrough
-                default:
-                    documentType = .anyOf(ids: [id])
-                }
+                documentType = handleElementAny(case: /FilterRuleValue.documentType,
+                                                filter: documentType,
+                                                rule: rule)
 
             case .doesNotHaveDocumentType:
-                guard case .documentType(let id) = rule.value else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
-                    remaining.append(rule)
-                    break
-                }
-
-                guard let id = id else {
-                    Logger.shared.error("doesNotHaveDocumentType with nil id")
-                    remaining.append(rule)
-                    break
-                }
-
-                switch documentType {
-                case .noneOf(let ids):
-                    documentType = .noneOf(ids: ids + [id])
-                case .anyOf:
-                    Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
-                    fallthrough
-                default:
-                    documentType = .noneOf(ids: [id])
-                }
+                documentType = handleElementNone(case: /FilterRuleValue.documentType,
+                                                 filter: documentType,
+                                                 rule: rule)
 
             case .storagePath:
                 guard case .storagePath(let id) = rule.value else {
@@ -431,6 +406,16 @@ struct FilterState: Equatable, Codable {
                     break
                 }
                 storagePath = id == nil ? .notAssigned : .anyOf(ids: [id!])
+
+            case .hasStoragePathAny:
+                storagePath = handleElementAny(case: /FilterRuleValue.storagePath,
+                                               filter: storagePath,
+                                               rule: rule)
+
+            case .doesNotHaveStoragePath:
+                storagePath = handleElementNone(case: /FilterRuleValue.storagePath,
+                                                filter: storagePath,
+                                                rule: rule)
 
             case .hasTagsAll:
                 guard case .tag(let id) = rule.value else {
@@ -516,6 +501,56 @@ struct FilterState: Equatable, Codable {
     }
 
     // MARK: Methods
+
+    mutating func handleElementAny(case casePath: CasePath<FilterRuleValue, UInt?>, filter: Filter,
+                                   rule: FilterRule) -> Filter
+    {
+        guard let id = casePath.extract(from: rule.value) else {
+            Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+            remaining.append(rule)
+            return filter
+        }
+
+        guard let id = id else {
+            Logger.shared.error("hasDocumentTypeAny with nil id")
+            remaining.append(rule)
+            return filter
+        }
+
+        switch filter {
+        case .anyOf(let ids):
+            return .anyOf(ids: ids + [id])
+        case .noneOf:
+            Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
+            fallthrough
+        default:
+            return .anyOf(ids: [id])
+        }
+    }
+
+    mutating func handleElementNone(case casePath: CasePath<FilterRuleValue, UInt?>, filter: Filter, rule: FilterRule) -> Filter {
+        guard let id = casePath.extract(from: rule.value) else {
+            Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+            remaining.append(rule)
+            return filter
+        }
+
+        guard let id = id else {
+            Logger.shared.error("doesNotHaveDocumentType with nil id")
+            remaining.append(rule)
+            return filter
+        }
+
+        switch filter {
+        case .noneOf(let ids):
+            return .noneOf(ids: ids + [id])
+        case .anyOf:
+            Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
+            fallthrough
+        default:
+            return .noneOf(ids: [id])
+        }
+    }
 
     var rules: [FilterRule] {
         var result = remaining
