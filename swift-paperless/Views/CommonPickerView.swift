@@ -13,12 +13,25 @@ struct CommonPicker: View {
         case noneOf
     }
 
-    @State private var mode = Mode.anyOf
+    @State private var mode: Mode = .anyOf
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
     @Binding var selection: FilterState.Filter
     var elements: [(UInt, String)]
-    var notAssignedLabel: String = "Not assigned"
+    var notAssignedLabel: String
+
+    init(selection: Binding<FilterState.Filter>, elements: [(UInt, String)], notAssignedLabel: String = "Not assigned") {
+        self._selection = selection
+        self.elements = elements
+        self.notAssignedLabel = notAssignedLabel
+
+        switch self.selection {
+        case .any, .anyOf, .notAssigned:
+            self._mode = State(initialValue: .anyOf)
+        case .noneOf:
+            self._mode = State(initialValue: .noneOf)
+        }
+    }
 
     private struct Row: View {
         let label: String
