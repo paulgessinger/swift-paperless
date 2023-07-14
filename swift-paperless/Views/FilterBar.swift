@@ -10,6 +10,8 @@ import Foundation
 import SwiftUI
 import SwiftUINavigation
 
+// @TODO: Add UI for FilterState with remaining rules!
+
 // MARK: FilterMenu
 
 extension ProtoSavedView: Identifiable {

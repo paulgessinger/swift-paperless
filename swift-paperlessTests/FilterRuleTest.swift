@@ -337,6 +337,8 @@ final class FilterRuleTest: XCTestCase {
                 .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 19)),
             ]),
             FilterState(correspondent: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
     }
 
     func testRuleToFilterStateDocumentType() {
@@ -380,6 +382,8 @@ final class FilterRuleTest: XCTestCase {
                 .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 19)),
             ]),
             FilterState(documentType: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
     }
 
     func testRuleToFilterStateRemaining() {
@@ -441,7 +445,51 @@ final class FilterRuleTest: XCTestCase {
     }
 
     func testRuleToFilterStateOwner() {
-        // @TODO: Implement owner rules!
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .owner, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerIsnull, value: .boolean(value: true)),
+            ]),
+            FilterState(owner: .notAssigned))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerIsnull, value: .boolean(value: false)), // this is pretty odd
+            ]),
+            FilterState(owner: .any))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerAny, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerAny, value: .number(value: 8)),
+                .init(ruleType: .ownerAny, value: .number(value: 99)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8, 99])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .noneOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+            ]),
+            FilterState(owner: .noneOf(ids: [8, 99])))
+
+        // @TODO: Test error states
     }
 
     func testRuleToFilterStateStoragePath() {
@@ -485,6 +533,8 @@ final class FilterRuleTest: XCTestCase {
                 .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 19)),
             ]),
             FilterState(storagePath: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
     }
 
     // - MARK: FilterState to FilterRule
@@ -594,12 +644,38 @@ final class FilterRuleTest: XCTestCase {
         XCTAssertEqual(
             [FilterRule(ruleType: .hasAnyTag, value: .boolean(value: false))],
             FilterState(tags: .notAssigned).rules)
-
-        // @TODO: Test error states (do we expect any this direction?)
     }
 
     func testFilterStateToRuleOwner() {
-        // @TODO: Implement owner rules
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true)),
+        ], FilterState(owner: .notAssigned).rules)
+
+        // This could theoretically be expressed as:
+        // FilterRule(ruleType: .ownerIsnull, value: .boolean(value: false))
+        // But this is redundant to just not having a rule, so let's not create one.
+        XCTAssertEqual([], FilterState(owner: .any).rules) // we could the
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
+        ], FilterState(owner: .anyOf(ids: [8])).rules)
+
+        // Technically, this could also be expressed as a rule .owner with value 8,
+        // but that's equivalent
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
+            FilterRule(ruleType: .ownerAny, value: .number(value: 99)),
+        ], FilterState(owner: .anyOf(ids: [8, 99])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+        ], FilterState(owner: .noneOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+        ], FilterState(owner: .noneOf(ids: [8, 99])).rules)
     }
 
     func testFilterStateToRuleStoragePath() {

@@ -297,6 +297,8 @@ struct FilterState: Equatable, Codable {
     var correspondent: Filter = .any { didSet { modified = modified || correspondent != oldValue }}
     var documentType: Filter = .any { didSet { modified = modified || documentType != oldValue }}
     var storagePath: Filter = .any { didSet { modified = modified || storagePath != oldValue }}
+    var owner: Filter = .any { didSet { modified = modified || owner != oldValue } }
+
     var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
     var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
     var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
@@ -316,10 +318,11 @@ struct FilterState: Equatable, Codable {
 
     // MARK: Initializers
 
-    init(correspondent: FilterState.Filter = .any,
-         documentType: FilterState.Filter = .any,
-         storagePath: FilterState.Filter = .any,
-         tags: FilterState.TagFilter = .any,
+    init(correspondent: Filter = .any,
+         documentType: Filter = .any,
+         storagePath: Filter = .any,
+         owner: Filter = .any,
+         tags: TagFilter = .any,
          remaining: [FilterRule] = [],
          savedView: UInt? = nil,
          searchText: String? = nil,
@@ -328,6 +331,7 @@ struct FilterState: Equatable, Codable {
         self.correspondent = correspondent
         self.documentType = documentType
         self.storagePath = storagePath
+        self.owner = owner
         self.tags = tags
         self.remaining = remaining
         self.savedView = savedView
@@ -419,7 +423,7 @@ struct FilterState: Equatable, Codable {
 
             case .hasTagsAll:
                 guard case .tag(let id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
@@ -432,13 +436,13 @@ struct FilterState: Equatable, Codable {
                     self.tags = .allOf(include: [id], exclude: [])
                 }
                 else {
-                    print("Already found .anyOf tag rule, inconsistent rule set?")
+                    Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                 }
 
             case .doesNotHaveTag:
                 guard case .tag(let id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
@@ -451,14 +455,14 @@ struct FilterState: Equatable, Codable {
                     self.tags = .allOf(include: [], exclude: [id])
                 }
                 else {
-                    print("Already found .anyOf tag rule, inconsistent rule set?")
+                    Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                     break
                 }
 
             case .hasTagsAny:
                 guard case .tag(let id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
@@ -470,7 +474,7 @@ struct FilterState: Equatable, Codable {
                     tags = .anyOf(ids: [id])
                 }
                 else {
-                    print("Already found .anyOf tag rule, inconsistent rule set?")
+                    Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                     break
                 }
@@ -491,7 +495,93 @@ struct FilterState: Equatable, Codable {
 
                 case .any:
                     tags = .notAssigned
-                case .notAssigned: break
+                case .notAssigned:
+                    // nothing to do, redundant rule probably
+                    break
+                }
+
+            case .owner:
+                guard case .number(let id) = rule.value, id >= 0 else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case .anyOf(let ids):
+                    if !(ids.count == 1 && ids[0] == id) {
+                        Logger.shared.error("Owner is already set to .anyOf, but got other owner")
+                    }
+                    fallthrough // reset anyway
+                case .noneOf:
+                    Logger.shared.error("Owner is already set to .noneOf, but got explicit owner")
+                    fallthrough // reset anyway
+                case .notAssigned:
+                    Logger.shared.error("Already have ownerIsnull rule, but got explicit owner")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .anyOf(ids: [UInt(id)])
+                }
+
+            case .ownerIsnull:
+                guard case .boolean(let value) = rule.value else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case .anyOf:
+                    Logger.shared.error("Owner is already set to .anyOf, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .noneOf:
+                    Logger.shared.error("Owner is already set to .noneOf, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .notAssigned:
+                    Logger.shared.error("Already have ownerIsnull rule, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = value ? .notAssigned : .any
+                }
+
+            case .ownerAny:
+                guard case .number(let sid) = rule.value, sid >= 0 else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                let id = UInt(sid)
+
+                switch owner {
+                case .anyOf(let ids):
+                    owner = .anyOf(ids: ids + [id])
+                case .noneOf, .notAssigned:
+                    let ownerCopy = owner
+                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerAny=\(id)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .anyOf(ids: [id])
+                }
+
+            case .ownerDoesNotInclude:
+                guard case .number(let sid) = rule.value, sid >= 0 else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                let id = UInt(sid)
+
+                switch owner {
+                case .noneOf(let ids):
+                    owner = .noneOf(ids: ids + [id])
+                case .anyOf, .notAssigned:
+                    let ownerCopy = owner
+                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerDoesNotInclude=\(id)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .noneOf(ids: [id])
                 }
 
             default:
@@ -641,11 +731,26 @@ struct FilterState: Equatable, Codable {
             }
         }
 
+        switch owner {
+        case .any: break
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .ownerIsnull, value: .boolean(value: true))
+            )
+        case .anyOf(let ids):
+            for id in ids {
+                result.append(.init(ruleType: .ownerAny, value: .number(value: Int(id))))
+            }
+        case .noneOf(let ids):
+            for id in ids {
+                result.append(.init(ruleType: .ownerDoesNotInclude, value: .number(value: Int(id))))
+            }
+        }
+
         return result
     }
 
     var filtering: Bool {
-//        return documentType != .any || correspondent != .any || tags != .any || !searchText.isEmpty
         return self != FilterState()
     }
 
