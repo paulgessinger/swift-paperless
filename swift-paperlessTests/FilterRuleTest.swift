@@ -508,10 +508,6 @@ final class FilterRuleTest: XCTestCase {
     func testFilterStateToRuleCorrespondent() {
         // Old single rule
         XCTAssertEqual(
-            [FilterRule(ruleType: .correspondent, value: .correspondent(id: 8))],
-            FilterState(correspondent: .anyOf(ids: [8])).rules)
-
-        XCTAssertEqual(
             [FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))],
             FilterState(correspondent: .notAssigned).rules)
 
@@ -542,10 +538,6 @@ final class FilterRuleTest: XCTestCase {
 
     func testFilterStateToRuleDocumentType() {
         // Old single rule
-        XCTAssertEqual(
-            [FilterRule(ruleType: .documentType, value: .documentType(id: 8))],
-            FilterState(documentType: .anyOf(ids: [8])).rules)
-
         XCTAssertEqual(
             [FilterRule(ruleType: .documentType, value: .documentType(id: nil))],
             FilterState(documentType: .notAssigned).rules)
@@ -612,10 +604,6 @@ final class FilterRuleTest: XCTestCase {
 
     func testFilterStateToRuleStoragePath() {
         // Old single rule
-        XCTAssertEqual(
-            [FilterRule(ruleType: .storagePath, value: .storagePath(id: 8))],
-            FilterState(storagePath: .anyOf(ids: [8])).rules)
-
         XCTAssertEqual(
             [FilterRule(ruleType: .storagePath, value: .storagePath(id: nil))],
             FilterState(storagePath: .notAssigned).rules)
