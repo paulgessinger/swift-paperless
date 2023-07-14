@@ -164,6 +164,50 @@ private struct FilterMenu<Content: View>: View {
     }
 }
 
+// MARK: Common Element View
+
+private struct CommonElementLabel: View {
+    var body: some View {
+        Text("Common")
+//                        switch filterState.documentType {
+//                        case .any:
+//                            Text("Document Type")
+//                        case .notAssigned:
+//                            Text("None")
+//                        case .anyOf(let ids):
+//                            if ids.count == 1 {
+//                                if let name = store.documentTypes[ids[0]]?.name {
+//                                    Text(name)
+//                                }
+//                                else {
+//                                    Text("1 document type")
+//                                        .redacted(reason: .placeholder)
+//                                }
+//                            }
+//                            else {
+//                                CircleCounter(value: ids.count, mode: .include)
+//                                Text("Document Types")
+//                            }
+//                        case .noneOf(let ids):
+//                            if ids.count == 1 {
+//                                Label("Exclude", systemImage: "xmark")
+//                                    .labelStyle(.iconOnly)
+//                                if let name = store.documentTypes[ids[0]]?.name {
+//                                    Text(name)
+//                                }
+//                                else {
+//                                    Text("1 document type")
+//                                        .redacted(reason: .placeholder)
+//                                }
+//                            }
+//                            else {
+//                                CircleCounter(value: ids.count, mode: .exclude)
+//                                Text("Document Types")
+//                            }
+//                        }
+    }
+}
+
 // MARK: Element View
 
 private struct Element<Label: View>: View {
@@ -449,67 +493,19 @@ struct FilterBar: View {
                             }
                         }
                     }, active: filterState.tags != .any) {
-                        //                    if showTags {
-                        //                        print("IS ALREADY TRUE")
-                        //                        showTags = false
-                        //                    }
-                        ////                    DispatchQueue.main.async {
-                        ////                    Task {
-                        //                    showTags = true
-                        ////                    }
-                        ////                    }
                         present(.tags)
                     }
 
                     Element(label: {
-                        switch filterState.documentType {
-                        case .any:
-                            Text("Document Type")
-                        case .notAssigned:
-                            Text("None")
-                        case .only(let id):
-                            if let name = store.documentTypes[id]?.name {
-                                Text(name)
-                            }
-                            else {
-                                Text("1 document type")
-                                    .redacted(reason: .placeholder)
-                            }
-                        }
+                        CommonElementLabel()
                     }, active: filterState.documentType != .any) { present(.documentType) }
 
                     Element(label: {
-                        switch filterState.correspondent {
-                        case .any:
-                            Text("Correspondent")
-                        case .notAssigned:
-                            Text("None")
-                        case .only(let id):
-                            if let name = store.correspondents[id]?.name {
-                                Text(name)
-                            }
-                            else {
-                                Text("1 correspondent")
-                                    .redacted(reason: .placeholder)
-                            }
-                        }
+                        CommonElementLabel()
                     }, active: filterState.correspondent != .any) { present(.correspondent) }
 
                     Element(label: {
-                        switch filterState.storagePath {
-                        case .any:
-                            Text("Storage path")
-                        case .notAssigned:
-                            Text("Default")
-                        case .only(let id):
-                            if let name = store.storagePaths[id]?.name {
-                                Text(name)
-                            }
-                            else {
-                                Text("1 path")
-                                    .redacted(reason: .placeholder)
-                            }
-                        }
+                        CommonElementLabel()
                     }, active: filterState.storagePath != .any) { present(.storagePath) }
 
                     Divider()

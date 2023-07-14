@@ -8,23 +8,40 @@
 import SwiftUI
 
 struct CommonPicker: View {
-    @Binding var selection: FilterState.Filter
-    var elements: [(UInt, String)]
+    private enum Mode {
+        case anyOf
+        case noneOf
+    }
 
-    var notAssignedLabel: String = "Not assigned"
-
+    @State private var mode = Mode.anyOf
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
-    func row(_ label: String, value: FilterState.Filter) -> some View {
-        return HStack {
-            Button(action: { Task { selection = value } }) {
-                Text(label)
-            }
-            .foregroundColor(.primary)
-            Spacer()
-            if selection == value {
-                Label("Active", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
+    @Binding var selection: FilterState.Filter
+    var elements: [(UInt, String)]
+    var notAssignedLabel: String = "Not assigned"
+
+    private struct Row: View {
+        let label: String
+        let selected: Bool
+        let action: () -> Void
+
+        init(_ label: String, selected: Bool, action: @escaping () -> Void = {}) {
+            self.label = label
+            self.selected = selected
+            self.action = action
+        }
+
+        var body: some View {
+            HStack {
+                Button(action: action) {
+                    Text(label)
+                }
+                .foregroundColor(.primary)
+                Spacer()
+                if selected {
+                    Label("Active", systemImage: "checkmark")
+                        .labelStyle(.iconOnly)
+                }
             }
         }
     }
@@ -38,6 +55,17 @@ struct CommonPicker: View {
         }
     }
 
+    private func selected(id: UInt) -> Bool {
+        switch selection {
+        case .anyOf(let ids):
+            return ids.contains(id)
+        case .noneOf(let ids):
+            return ids.contains(id)
+        default:
+            return false
+        }
+    }
+
     var body: some View {
         VStack {
             SearchBarView(text: $searchDebounce.text)
@@ -46,15 +74,60 @@ struct CommonPicker: View {
                 .padding(.vertical, 2)
             Form {
                 Section {
-                    row("Any", value: FilterState.Filter.any)
-                    row(notAssignedLabel, value: FilterState.Filter.notAssigned)
+                    Row("Any", selected: selection == FilterState.Filter.any) {
+                        selection = .any
+                    }
+                    Row(notAssignedLabel, selected: selection == FilterState.Filter.notAssigned) {
+                        selection = .notAssigned
+                    }
                 }
                 Section {
                     ForEach(elements.filter { filter(name: $0.1) },
                             id: \.0)
                     { id, name in
-                        row(name, value: FilterState.Filter.only(id: id))
+                        Row(name, selected: selected(id: id)) {
+                            switch selection {
+                            case .any:
+                                selection = .anyOf(ids: [id])
+                            case .notAssigned:
+                                selection = .anyOf(ids: [id])
+                            case .anyOf(var ids):
+                                if ids.contains(id) {
+                                    ids = ids.filter { $0 != id }
+                                    selection = ids.isEmpty ? .any : .anyOf(ids: ids)
+                                } else {
+                                    selection = .anyOf(ids: [id] + ids)
+                                }
+                            case .noneOf(var ids):
+                                if ids.contains(id) {
+                                    ids = ids.filter { $0 != id }
+                                    selection = ids.isEmpty ? .any : .noneOf(ids: ids)
+                                } else {
+                                    selection = .noneOf(ids: [id] + ids)
+                                }
+                            }
+                        }
                     }
+                } header: {
+                    Picker("Mode", selection: $mode) {
+                        Text("Include").tag(Mode.anyOf)
+                        Text("Exclude").tag(Mode.noneOf)
+                    }
+                    .textCase(.none)
+                    .padding(.bottom, 10)
+                    .pickerStyle(.segmented)
+                    .disabled({
+                        switch selection {
+                        case .any:
+                            return true
+                        case .notAssigned:
+                            return true
+                        case .anyOf:
+                            return false
+                        case .noneOf:
+                            return false
+                        }
+                    }())
                 }
             }
             .overlay(
@@ -63,6 +136,31 @@ struct CommonPicker: View {
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )
+        }
+
+        .onChange(of: mode) { newValue in
+            switch newValue {
+            case .anyOf:
+                switch selection {
+                case .noneOf(let ids):
+                    selection = .anyOf(ids: ids)
+                case .anyOf:
+                    // noop
+                    break
+                default:
+                    preconditionFailure("Changed CommonPicker selection mode, but was not in either of the modes")
+                }
+            case .noneOf:
+                switch selection {
+                case .anyOf(let ids):
+                    selection = .noneOf(ids: ids)
+                case .noneOf:
+                    // noop
+                    break
+                default:
+                    preconditionFailure("Changed mode, but was not in either of the modes")
+                }
+            }
         }
     }
 }
@@ -225,6 +323,57 @@ struct CommonPickerEdit<Manager, D>: View
                 }
             }
         }
+    }
+}
+
+private struct FilterViewPreviewHelper<T: Pickable>: View {
+    @EnvironmentObject var store: DocumentStore
+    @State var filterState = FilterState.Filter.any
+    @State var elements: [(UInt, String)] = []
+
+    var elementKeyPath: KeyPath<DocumentStore, [UInt: T]>
+
+    init(elements: KeyPath<DocumentStore, [UInt: T]>) {
+        self.elementKeyPath = elements
+    }
+
+    var body: some View {
+        NavigationStack {
+            CommonPicker(selection: $filterState,
+                         elements: elements)
+        }
+        .task {
+            elements = store[keyPath: elementKeyPath]
+                .map { ($0.key, $0.value.name) }
+                .sorted(by: { $0.1 < $1.1 })
+        }
+    }
+}
+
+struct CommonFilterPickerCorrespondent_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        FilterViewPreviewHelper(elements: \.correspondents)
+            .environmentObject(store)
+    }
+}
+
+struct CommonFilterPickerDocumentType_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        FilterViewPreviewHelper(elements: \.documentTypes)
+            .environmentObject(store)
+    }
+}
+
+struct CommonFilterPickerStoragePaths_Previews: PreviewProvider {
+    @StateObject static var store = DocumentStore(repository: PreviewRepository())
+
+    static var previews: some View {
+        FilterViewPreviewHelper(elements: \.storagePaths)
+            .environmentObject(store)
     }
 }
 

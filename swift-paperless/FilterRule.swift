@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 extension FilterRuleType: Codable {}
 
@@ -251,7 +252,8 @@ struct FilterState: Equatable, Codable {
     enum Filter: Equatable, Hashable, Codable {
         case any
         case notAssigned
-        case only(id: UInt)
+        case anyOf(ids: [UInt])
+        case noneOf(ids: [UInt])
     }
 
     enum TagFilter: Equatable, Hashable, Codable {
@@ -365,7 +367,7 @@ struct FilterState: Equatable, Codable {
                     break
                 }
 
-                correspondent = id == nil ? .notAssigned : .only(id: id!)
+                correspondent = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .documentType:
                 guard case .documentType(let id) = rule.value else {
@@ -374,7 +376,53 @@ struct FilterState: Equatable, Codable {
                     break
                 }
 
-                documentType = id == nil ? .notAssigned : .only(id: id!)
+                documentType = id == nil ? .notAssigned : .anyOf(ids: [id!])
+
+            case .hasDocumentTypeAny:
+                guard case .documentType(let id) = rule.value else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                guard let id = id else {
+                    Logger.shared.error("hasDocumentTypeAny with nil id")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch documentType {
+                case .anyOf(let ids):
+                    documentType = .anyOf(ids: ids + [id])
+                case .noneOf:
+                    Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
+                    fallthrough
+                default:
+                    documentType = .anyOf(ids: [id])
+                }
+
+            case .doesNotHaveDocumentType:
+                guard case .documentType(let id) = rule.value else {
+                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                guard let id = id else {
+                    Logger.shared.error("doesNotHaveDocumentType with nil id")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch documentType {
+                case .noneOf(let ids):
+                    documentType = .noneOf(ids: ids + [id])
+                case .anyOf:
+                    Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
+                    fallthrough
+                default:
+                    documentType = .noneOf(ids: [id])
+                }
 
             case .storagePath:
                 guard case .storagePath(let id) = rule.value else {
@@ -382,7 +430,7 @@ struct FilterState: Equatable, Codable {
                     remaining.append(rule)
                     break
                 }
-                documentType = id == nil ? .notAssigned : .only(id: id!)
+                storagePath = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasTagsAll:
                 guard case .tag(let id) = rule.value else {
@@ -483,10 +531,18 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .correspondent, value: .correspondent(id: nil))
             )
-        case .only(let id):
-            result.append(
-                .init(ruleType: .correspondent, value: .correspondent(id: id))
-            )
+        case .anyOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: id))
+                )
+            }
+        case .noneOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: id))
+                )
+            }
         case .any: break
         }
 
@@ -495,10 +551,18 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .documentType, value: .documentType(id: nil))
             )
-        case .only(let id):
-            result.append(
-                .init(ruleType: .documentType, value: .documentType(id: id))
-            )
+        case .anyOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: id))
+                )
+            }
+        case .noneOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: id))
+                )
+            }
         case .any: break
         }
 
@@ -506,9 +570,16 @@ struct FilterState: Equatable, Codable {
         case .notAssigned:
             result.append(
                 .init(ruleType: .storagePath, value: .storagePath(id: nil)))
-        case .only(let id):
-            result.append(
-                .init(ruleType: .storagePath, value: .storagePath(id: id)))
+        case .anyOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasStoragePathAny, value: .storagePath(id: id)))
+            }
+        case .noneOf(let ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: id)))
+            }
         case .any: break
         }
 
