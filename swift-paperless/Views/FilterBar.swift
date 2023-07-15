@@ -166,47 +166,82 @@ private struct FilterMenu<Content: View>: View {
     }
 }
 
+private struct CircleCounter: View {
+    enum Mode {
+        case include
+        case exclude
+    }
+
+    var value: Int
+    var mode = Mode.include
+
+    private var color: Color {
+        switch mode {
+        case .include:
+            return Color.accentColor
+        case .exclude:
+            return Color.red
+        }
+    }
+
+    var body: some View {
+        Text("\(value)")
+            .foregroundColor(.white)
+            .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
+            .if(value > 1) { view in view.padding(5) }
+            .frame(minWidth: 20, minHeight: 20)
+            .background(Circle().fill(color))
+    }
+}
+
 // MARK: Common Element View
 
-private struct CommonElementLabel: View {
+private struct CommonElementLabel<Element: Pickable>: View {
+    @EnvironmentObject var store: DocumentStore
+
+    let state: FilterState.Filter
+
+    init(_ type: Element.Type, state: FilterState.Filter) {
+        self.state = state
+    }
+
     var body: some View {
-        Text("Common")
-//                        switch filterState.documentType {
-//                        case .any:
-//                            Text("Document Type")
-//                        case .notAssigned:
-//                            Text("None")
-//                        case .anyOf(let ids):
-//                            if ids.count == 1 {
-//                                if let name = store.documentTypes[ids[0]]?.name {
-//                                    Text(name)
-//                                }
-//                                else {
-//                                    Text("1 document type")
-//                                        .redacted(reason: .placeholder)
-//                                }
-//                            }
-//                            else {
-//                                CircleCounter(value: ids.count, mode: .include)
-//                                Text("Document Types")
-//                            }
-//                        case .noneOf(let ids):
-//                            if ids.count == 1 {
-//                                Label("Exclude", systemImage: "xmark")
-//                                    .labelStyle(.iconOnly)
-//                                if let name = store.documentTypes[ids[0]]?.name {
-//                                    Text(name)
-//                                }
-//                                else {
-//                                    Text("1 document type")
-//                                        .redacted(reason: .placeholder)
-//                                }
-//                            }
-//                            else {
-//                                CircleCounter(value: ids.count, mode: .exclude)
-//                                Text("Document Types")
-//                            }
-//                        }
+        switch state {
+        case .any:
+            Text(Element.singularLabel)
+        case .notAssigned:
+            Text(Element.notAssignedLabel)
+        case .anyOf(let ids):
+            if ids.count == 1 {
+                if let name = store[keyPath: Element.storePath][ids[0]]?.name {
+                    Text(name)
+                }
+                else {
+                    Text("1 \(Element.singularLabel)")
+                        .redacted(reason: .placeholder)
+                }
+            }
+            else {
+                CircleCounter(value: ids.count, mode: .include)
+                Text(Element.pluralLabel)
+            }
+        case .noneOf(let ids):
+            if ids.count == 1 {
+                Label("Exclude", systemImage: "xmark")
+                    .labelStyle(.iconOnly)
+                if let name = store[keyPath: Element.storePath][ids[0]]?.name {
+                    Text(name)
+                }
+                else {
+                    Text("1 \(Element.singularLabel)")
+                        .redacted(reason: .placeholder)
+                }
+            }
+            else {
+                CircleCounter(value: ids.count, mode: .exclude)
+                Text(Element.pluralLabel)
+            }
+        }
     }
 }
 
@@ -315,34 +350,6 @@ struct FilterBar: View {
                     }
                 }
             }
-        }
-    }
-
-    private struct CircleCounter: View {
-        enum Mode {
-            case include
-            case exclude
-        }
-
-        var value: Int
-        var mode = Mode.include
-
-        private var color: Color {
-            switch mode {
-            case .include:
-                return Color.accentColor
-            case .exclude:
-                return Color.red
-            }
-        }
-
-        var body: some View {
-            Text("\(value)")
-                .foregroundColor(.white)
-                .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
-                .if(value > 1) { view in view.padding(5) }
-                .frame(minWidth: 20, minHeight: 20)
-                .background(Circle().fill(color))
         }
     }
 
@@ -499,15 +506,18 @@ struct FilterBar: View {
                     }
 
                     Element(label: {
-                        CommonElementLabel()
+                        CommonElementLabel(DocumentType.self,
+                                           state: filterState.documentType)
                     }, active: filterState.documentType != .any) { present(.documentType) }
 
                     Element(label: {
-                        CommonElementLabel()
+                        CommonElementLabel(Correspondent.self,
+                                           state: filterState.correspondent)
                     }, active: filterState.correspondent != .any) { present(.correspondent) }
 
                     Element(label: {
-                        CommonElementLabel()
+                        CommonElementLabel(StoragePath.self,
+                                           state: filterState.storagePath)
                     }, active: filterState.storagePath != .any) { present(.storagePath) }
 
                     Divider()

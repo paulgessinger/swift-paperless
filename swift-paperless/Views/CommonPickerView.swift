@@ -181,7 +181,10 @@ struct CommonPicker: View {
 protocol Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Self]> { get }
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol
+
     static var notAssignedLabel: String { get }
+    static var singularLabel: String { get }
+    static var pluralLabel: String { get }
 
     var id: UInt { get }
     var name: String { get }
@@ -194,7 +197,9 @@ extension Correspondent: Pickable {
         return \.correspondent
     }
 
-    static var notAssignedLabel: String = "None"
+    static var notAssignedLabel = "None"
+    static var singularLabel = "Correspondent"
+    static var pluralLabel = "Correspondents"
 }
 
 extension DocumentType: Pickable {
@@ -205,6 +210,8 @@ extension DocumentType: Pickable {
     }
 
     static var notAssignedLabel: String = "None"
+    static var singularLabel = "Document Type"
+    static var pluralLabel = "Document Types"
 }
 
 extension StoragePath: Pickable {
@@ -215,6 +222,8 @@ extension StoragePath: Pickable {
     }
 
     static var notAssignedLabel: String = "Default"
+    static var singularLabel = "Storage Path"
+    static var pluralLabel = "Storage Paths"
 }
 
 struct CommonPickerEdit<Manager, D>: View
