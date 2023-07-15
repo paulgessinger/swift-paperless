@@ -7,7 +7,13 @@ last_tag = sys.argv[1]
 
 commits = (
     check_output(
-        ["git", "log", "--no-merges", "--pretty=format:%s", last_tag + "..HEAD"]
+        [
+            "git",
+            "log",
+            #  "--no-merges",
+            "--pretty=format:%s",
+            last_tag + "..HEAD",
+        ]
     )
     .decode("utf-8")
     .split("\n")

@@ -28,8 +28,8 @@ platform :ios do
     )
 
     ensure_git_branch(branch: "main")
-    # ensure_git_status_clean
-    # git_pull(rebase: true)
+    ensure_git_status_clean
+    git_pull(rebase: true)
 
     previous_build_number = latest_testflight_build_number()
     current_build_number = previous_build_number + 1
