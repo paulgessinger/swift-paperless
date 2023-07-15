@@ -119,6 +119,8 @@ extension Endpoint {
             return savedViews()
         case is StoragePath.Type:
             return storagePaths()
+        case is User.Type:
+            return users()
         default:
             fatalError("Invalid type")
         }
@@ -140,7 +142,8 @@ extension Endpoint {
     }
 
     static func storagePaths() -> Endpoint {
-        return .init(path: "/api/storage_paths/")
+        return .init(path: "/api/storage_paths/",
+                     queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createStoragePath() -> Endpoint {
@@ -149,6 +152,15 @@ extension Endpoint {
 
     static func storagePath(id: UInt) -> Endpoint {
         return .init(path: "/api/storage_paths/\(id)/")
+    }
+
+    static func users() -> Endpoint {
+        return .init(path: "/api/users/",
+                     queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+    }
+
+    static func uiSettings() -> Endpoint {
+        return .init(path: "/api/ui_settings/")
     }
 
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {

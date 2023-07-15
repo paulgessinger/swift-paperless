@@ -304,6 +304,8 @@ struct FilterState: Equatable, Codable {
     var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
     var sortOrder: SortOrder = .ascending { didSet { modified = modified || sortOrder != oldValue }}
     var savedView: UInt? = nil
+
+    @EquatableNoop
     var modified = false
 
     var searchText: String = "" {
@@ -763,6 +765,9 @@ struct FilterState: Equatable, Codable {
             result += 1
         }
         if storagePath != .any {
+            result += 1
+        }
+        if owner != .any {
             result += 1
         }
         if tags != .any {

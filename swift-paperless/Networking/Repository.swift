@@ -61,6 +61,9 @@ protocol Repository {
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath
     func update(storagePath: StoragePath) async throws -> StoragePath
     func delete(storagePath: StoragePath) async throws
+
+    func currentUser() async throws -> User
+    func users() async -> [User]
 }
 
 class NullRepository: Repository {
@@ -109,6 +112,9 @@ class NullRepository: Repository {
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath { throw NotImplemented() }
     func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
     func delete(storagePath: StoragePath) async throws { throw NotImplemented() }
+
+    func currentUser() async throws -> User { throw NotImplemented() }
+    func users() async -> [User] { [] }
 }
 
 // - MARK: DocumentSource

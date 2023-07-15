@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import os
 import SwiftUI
 import SwiftUINavigation
 
@@ -519,6 +520,120 @@ struct FilterBar: View {
                         CommonElementLabel(StoragePath.self,
                                            state: filterState.storagePath)
                     }, active: filterState.storagePath != .any) { present(.storagePath) }
+
+                    Pill(active: filterState.owner != .any) {
+                        switch filterState.owner {
+                        case .any:
+                            Text("Permissions")
+                        case .anyOf(let ids):
+                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                Text("My documents")
+                            }
+                            else {
+                                CircleCounter(value: ids.count, mode: .include)
+                                Text("Users")
+                            }
+                        case .noneOf(let ids):
+                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                Text("Shared with me")
+                            }
+                            else {
+                                CircleCounter(value: ids.count, mode: .exclude)
+                                Text("Users")
+                            }
+                        case .notAssigned:
+                            Text("Unowned")
+                        }
+                    }
+                    .overlay {
+                        GeometryReader { geo in
+
+                            Menu {
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .any
+                                    }
+                                } label: {
+                                    let text = "All"
+                                    if filterState.owner == .any {
+                                        Label(text, systemImage: "checkmark")
+                                    }
+                                    else {
+                                        Text(text)
+                                    }
+                                }
+
+                                if let user = store.currentUser {
+                                    Button {
+                                        withAnimation {
+                                            store.filterState.owner = .anyOf(ids: [user.id])
+                                        }
+                                    } label: {
+                                        let text = "My documents"
+                                        switch filterState.owner {
+                                        case .anyOf(let ids):
+                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                                Label(text, systemImage: "checkmark")
+                                            }
+                                            else {
+                                                Text(text)
+                                            }
+                                        default:
+                                            Text(text)
+                                        }
+                                    }
+                                    Button {
+                                        withAnimation {
+                                            store.filterState.owner = .noneOf(ids: [user.id])
+                                        }
+                                    } label: {
+                                        let text = "Shared with me"
+                                        switch filterState.owner {
+                                        case .noneOf(let ids):
+                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                                Label(text, systemImage: "checkmark")
+                                            }
+                                            else {
+                                                Text(text)
+                                            }
+                                        default:
+                                            Text(text)
+                                        }
+                                    }
+                                }
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .notAssigned
+                                    }
+
+                                } label: {
+                                    let text = "Unowned"
+                                    if filterState.owner == .notAssigned {
+                                        Label(text, systemImage: "checkmark")
+                                    }
+                                    else {
+                                        Text(text)
+                                    }
+                                }
+
+                                switch filterState.owner {
+                                case .anyOf(let ids), .noneOf(let ids):
+                                    if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
+                                        Divider()
+                                        Text("Owner filter is in explicit user mode.")
+                                    }
+                                    else {
+                                        EmptyView()
+                                    }
+                                case .notAssigned, .any:
+                                    EmptyView()
+                                }
+                            } label: {
+                                Color.clear
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                            }
+                        }
+                    }
 
                     Divider()
 

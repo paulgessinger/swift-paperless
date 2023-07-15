@@ -204,4 +204,10 @@ class PreviewRepository: Repository {
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath { throw NotImplemented() }
     func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
     func delete(storagePath: StoragePath) async throws { throw NotImplemented() }
+
+    func currentUser() async throws -> User {
+        .init(id: 1, isSuperUser: true, username: "user")
+    }
+
+    func users() async -> [User] { [] }
 }

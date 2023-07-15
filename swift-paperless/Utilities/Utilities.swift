@@ -329,3 +329,24 @@ extension TextField {
         modifier(ClearableModifier(text: text))
     }
 }
+
+@propertyWrapper
+struct EquatableNoop<Value>: Equatable {
+    var wrappedValue: Value
+
+    static func == (lhs: EquatableNoop<Value>, rhs: EquatableNoop<Value>) -> Bool {
+        true
+    }
+}
+
+extension EquatableNoop: Codable where Value: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        wrappedValue = try container.decode(Value.self)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wrappedValue)
+    }
+}
