@@ -7,8 +7,11 @@
 
 import Combine
 import Foundation
+import os
 import SwiftUI
 import SwiftUINavigation
+
+// @TODO: Add UI for FilterState with remaining rules!
 
 // MARK: FilterMenu
 
@@ -164,6 +167,85 @@ private struct FilterMenu<Content: View>: View {
     }
 }
 
+private struct CircleCounter: View {
+    enum Mode {
+        case include
+        case exclude
+    }
+
+    var value: Int
+    var mode = Mode.include
+
+    private var color: Color {
+        switch mode {
+        case .include:
+            return Color.accentColor
+        case .exclude:
+            return Color.red
+        }
+    }
+
+    var body: some View {
+        Text("\(value)")
+            .foregroundColor(.white)
+            .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
+            .if(value > 1) { view in view.padding(5) }
+            .frame(minWidth: 20, minHeight: 20)
+            .background(Circle().fill(color))
+    }
+}
+
+// MARK: Common Element View
+
+private struct CommonElementLabel<Element: Pickable>: View {
+    @EnvironmentObject var store: DocumentStore
+
+    let state: FilterState.Filter
+
+    init(_ type: Element.Type, state: FilterState.Filter) {
+        self.state = state
+    }
+
+    var body: some View {
+        switch state {
+        case .any:
+            Text(Element.singularLabel)
+        case .notAssigned:
+            Text(Element.notAssignedLabel)
+        case .anyOf(let ids):
+            if ids.count == 1 {
+                if let name = store[keyPath: Element.storePath][ids[0]]?.name {
+                    Text(name)
+                }
+                else {
+                    Text("1 \(Element.singularLabel)")
+                        .redacted(reason: .placeholder)
+                }
+            }
+            else {
+                CircleCounter(value: ids.count, mode: .include)
+                Text(Element.pluralLabel)
+            }
+        case .noneOf(let ids):
+            if ids.count == 1 {
+                Label("Exclude", systemImage: "xmark")
+                    .labelStyle(.iconOnly)
+                if let name = store[keyPath: Element.storePath][ids[0]]?.name {
+                    Text(name)
+                }
+                else {
+                    Text("1 \(Element.singularLabel)")
+                        .redacted(reason: .placeholder)
+                }
+            }
+            else {
+                CircleCounter(value: ids.count, mode: .exclude)
+                Text(Element.pluralLabel)
+            }
+        }
+    }
+}
+
 // MARK: Element View
 
 private struct Element<Label: View>: View {
@@ -269,34 +351,6 @@ struct FilterBar: View {
                     }
                 }
             }
-        }
-    }
-
-    private struct CircleCounter: View {
-        enum Mode {
-            case include
-            case exclude
-        }
-
-        var value: Int
-        var mode = Mode.include
-
-        private var color: Color {
-            switch mode {
-            case .include:
-                return Color.accentColor
-            case .exclude:
-                return Color.red
-            }
-        }
-
-        var body: some View {
-            Text("\(value)")
-                .foregroundColor(.white)
-                .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
-                .if(value > 1) { view in view.padding(5) }
-                .frame(minWidth: 20, minHeight: 20)
-                .background(Circle().fill(color))
         }
     }
 
@@ -449,68 +503,137 @@ struct FilterBar: View {
                             }
                         }
                     }, active: filterState.tags != .any) {
-                        //                    if showTags {
-                        //                        print("IS ALREADY TRUE")
-                        //                        showTags = false
-                        //                    }
-                        ////                    DispatchQueue.main.async {
-                        ////                    Task {
-                        //                    showTags = true
-                        ////                    }
-                        ////                    }
                         present(.tags)
                     }
 
                     Element(label: {
-                        switch filterState.documentType {
-                        case .any:
-                            Text("Document Type")
-                        case .notAssigned:
-                            Text("None")
-                        case .only(let id):
-                            if let name = store.documentTypes[id]?.name {
-                                Text(name)
-                            }
-                            else {
-                                Text("1 document type")
-                                    .redacted(reason: .placeholder)
-                            }
-                        }
+                        CommonElementLabel(DocumentType.self,
+                                           state: filterState.documentType)
                     }, active: filterState.documentType != .any) { present(.documentType) }
 
                     Element(label: {
-                        switch filterState.correspondent {
-                        case .any:
-                            Text("Correspondent")
-                        case .notAssigned:
-                            Text("None")
-                        case .only(let id):
-                            if let name = store.correspondents[id]?.name {
-                                Text(name)
-                            }
-                            else {
-                                Text("1 correspondent")
-                                    .redacted(reason: .placeholder)
-                            }
-                        }
+                        CommonElementLabel(Correspondent.self,
+                                           state: filterState.correspondent)
                     }, active: filterState.correspondent != .any) { present(.correspondent) }
 
                     Element(label: {
-                        switch filterState.storagePath {
+                        CommonElementLabel(StoragePath.self,
+                                           state: filterState.storagePath)
+                    }, active: filterState.storagePath != .any) { present(.storagePath) }
+
+                    Pill(active: filterState.owner != .any) {
+                        switch filterState.owner {
                         case .any:
-                            Text("Storage path")
-                        case .notAssigned:
-                            Text("Default")
-                        case .only(let id):
-                            if let name = store.storagePaths[id]?.name {
-                                Text(name)
+                            Text("Permissions")
+                        case .anyOf(let ids):
+                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                Text("My documents")
                             }
                             else {
-                                Text("1 path")
-                                    .redacted(reason: .placeholder)
+                                CircleCounter(value: ids.count, mode: .include)
+                                Text("Users")
+                            }
+                        case .noneOf(let ids):
+                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                Text("Shared with me")
+                            }
+                            else {
+                                CircleCounter(value: ids.count, mode: .exclude)
+                                Text("Users")
+                            }
+                        case .notAssigned:
+                            Text("Unowned")
+                        }
+                    }
+                    .overlay {
+                        GeometryReader { geo in
+
+                            Menu {
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .any
+                                    }
+                                } label: {
+                                    let text = "All"
+                                    if filterState.owner == .any {
+                                        Label(text, systemImage: "checkmark")
+                                    }
+                                    else {
+                                        Text(text)
+                                    }
+                                }
+
+                                if let user = store.currentUser {
+                                    Button {
+                                        withAnimation {
+                                            store.filterState.owner = .anyOf(ids: [user.id])
+                                        }
+                                    } label: {
+                                        let text = "My documents"
+                                        switch filterState.owner {
+                                        case .anyOf(let ids):
+                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                                Label(text, systemImage: "checkmark")
+                                            }
+                                            else {
+                                                Text(text)
+                                            }
+                                        default:
+                                            Text(text)
+                                        }
+                                    }
+                                    Button {
+                                        withAnimation {
+                                            store.filterState.owner = .noneOf(ids: [user.id])
+                                        }
+                                    } label: {
+                                        let text = "Shared with me"
+                                        switch filterState.owner {
+                                        case .noneOf(let ids):
+                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                                Label(text, systemImage: "checkmark")
+                                            }
+                                            else {
+                                                Text(text)
+                                            }
+                                        default:
+                                            Text(text)
+                                        }
+                                    }
+                                }
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .notAssigned
+                                    }
+
+                                } label: {
+                                    let text = "Unowned"
+                                    if filterState.owner == .notAssigned {
+                                        Label(text, systemImage: "checkmark")
+                                    }
+                                    else {
+                                        Text(text)
+                                    }
+                                }
+
+                                switch filterState.owner {
+                                case .anyOf(let ids), .noneOf(let ids):
+                                    if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
+                                        Divider()
+                                        Text("Owner filter is in explicit user mode.")
+                                    }
+                                    else {
+                                        EmptyView()
+                                    }
+                                case .notAssigned, .any:
+                                    EmptyView()
+                                }
+                            } label: {
+                                Color.clear
+                                    .frame(width: geo.size.width, height: geo.size.height)
                             }
                         }
-                    }, active: filterState.storagePath != .any) { present(.storagePath) }
+                    }
 
                     Divider()
 

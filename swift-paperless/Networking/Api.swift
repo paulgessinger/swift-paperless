@@ -35,26 +35,6 @@ let decoder: JSONDecoder = {
     return d
 }()
 
-enum ApiErrorOld: Error, LocalizedError {
-    case encodingFailed
-    case putError(type: Model.Type, status: Int, body: String)
-    case deleteFailed(type: Model.Type)
-    case postError(type: Model.Type, status: Int, body: String)
-
-    var errorDescription: String? {
-        switch self {
-        case .encodingFailed:
-            return "Error occurred while comminucating with the server."
-        case .putError(let type, _, _):
-            return "Error while saving \(type)"
-        case .deleteFailed(let type):
-            return "Error while deleting \(type)"
-        case .postError(let type, _, _):
-            return "Error while creating \(type)"
-        }
-    }
-}
-
 enum CrudOperation: String {
     case create
     case read
@@ -65,7 +45,7 @@ enum CrudOperation: String {
 struct CrudApiError<Element>: Error, LocalizedError {
     var operation: CrudOperation
     var type: Element.Type
-    var status: Int
+    var status: Int?
     var body: String? = nil
 
     var errorDescription: String? {
@@ -73,7 +53,7 @@ struct CrudApiError<Element>: Error, LocalizedError {
     }
 
     var failureReason: String? {
-        return "Backend replied with unexpected status: \(status)"
+        return "Backend replied with unexpected status: \(String(describing: status))"
     }
 }
 
@@ -380,8 +360,8 @@ extension ApiRepository: Repository {
 
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw ApiErrorOld.postError(type: Document.self, status: hres.statusCode, body: body)
+                Logger.shared.notice("Create response return code \(hres.statusCode) and body \(body)")
+                throw CrudApiError(operation: .create, type: Document.self, status: hres.statusCode)
             }
         } catch {
             print("Error uploading: \(error)")
@@ -406,17 +386,17 @@ extension ApiRepository: Repository {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Downloading document: Status was not 200")
+                Logger.shared.trace("Downloading document: Status was not 200")
                 return nil
             }
 
             guard let response = response as? HTTPURLResponse else {
-                print("Cannot get http response")
+                Logger.shared.trace("Cannot get http response")
                 return nil
             }
 
             guard let suggestedFilename = response.suggestedFilename else {
-                print("Cannot get ")
+                Logger.shared.trace("Cannot get ")
                 return nil
             }
 
@@ -491,6 +471,8 @@ extension ApiRepository: Repository {
 
     func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }
 
+    func users() async -> [User] { return await all(User.self) }
+
     func thumbnail(document: Document) async -> (Bool, Image?) {
         guard let data = await thumbnailData(document: document) else {
             return (false, nil)
@@ -554,5 +536,22 @@ extension ApiRepository: Repository {
 
     func delete(storagePath: StoragePath) async throws {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
+    }
+
+    private struct UiSettingsResponse: Codable {
+        var user: User
+    }
+
+    func currentUser() async throws -> User {
+        let request = request(.uiSettings())
+
+        let (data, res) = try await URLSession.shared.data(for: request)
+
+        guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+            throw CrudApiError(operation: .read, type: UiSettingsResponse.self, status: nil)
+        }
+
+        let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
+        return uiSettings.user
     }
 }

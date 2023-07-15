@@ -12,7 +12,7 @@ private func datetime(year: Int, month: Int, day: Int) -> Date {
     dateComponents.year = year
     dateComponents.month = month
     dateComponents.day = day
-    dateComponents.timeZone = TimeZone(abbreviation: "CEST")
+    dateComponents.timeZone = TimeZone(abbreviation: "UTC")
     dateComponents.hour = 0
     dateComponents.minute = 0
 
@@ -169,6 +169,108 @@ final class FilterRuleTest: XCTestCase {
             FilterRule.queryItems(for: [.init(ruleType: .hasAnyTag, value: .boolean(value: false))]))
     }
 
+    func testFilterOwner() throws {
+        let input1 = FilterRule(ruleType: .owner, value: .owner(id: 8))
+        let items = FilterRule.queryItems(for: [input1])
+        XCTAssertEqual(items, [URLQueryItem(name: "owner__id", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .ownerAny, value: .owner(id: 8)),
+        ]), [URLQueryItem(name: "owner__id__in", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .ownerAny, value: .owner(id: 8)),
+            FilterRule(ruleType: .ownerAny, value: .owner(id: 19)),
+        ]), [URLQueryItem(name: "owner__id__in", value: "19,8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            .init(ruleType: .ownerIsnull, value: .boolean(value: true)),
+        ]), [URLQueryItem(name: "owner__isnull", value: "1")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 25)),
+        ]), [URLQueryItem(name: "owner__id__none", value: "25")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 25)),
+            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 99)),
+        ]), [URLQueryItem(name: "owner__id__none", value: "25,99")])
+    }
+
+    func testFilterDocumentType() throws {
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .documentType, value: .documentType(id: 8)),
+        ]), [URLQueryItem(name: "document_type__id", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+        ]), [URLQueryItem(name: "document_type__id__in", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19)),
+        ]), [URLQueryItem(name: "document_type__id__in", value: "19,8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+        ]), [URLQueryItem(name: "document_type__id__none", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 87)),
+        ]), [URLQueryItem(name: "document_type__id__none", value: "8,87")])
+    }
+
+    func testCorrespondent() throws {
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .correspondent, value: .correspondent(id: 8)),
+        ]), [URLQueryItem(name: "correspondent__id", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+        ]), [URLQueryItem(name: "correspondent__id__in", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19)),
+        ]), [URLQueryItem(name: "correspondent__id__in", value: "19,8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+        ]), [URLQueryItem(name: "correspondent__id__none", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 87)),
+        ]), [URLQueryItem(name: "correspondent__id__none", value: "8,87")])
+    }
+
+    func testStoragePath() throws {
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .storagePath, value: .storagePath(id: 8)),
+        ]), [URLQueryItem(name: "storage_path__id", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+        ]), [URLQueryItem(name: "storage_path__id__in", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 19)),
+        ]), [URLQueryItem(name: "storage_path__id__in", value: "19,8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+        ]), [URLQueryItem(name: "storage_path__id__none", value: "8")])
+
+        XCTAssertEqual(FilterRule.queryItems(for: [
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 87)),
+        ]), [URLQueryItem(name: "storage_path__id__none", value: "8,87")])
+    }
+
+    // - MARK: FilterRule to FilterState
+
     func testSearchModeConversion() {
         XCTAssertEqual(FilterRuleType.title, FilterState.SearchMode.title.ruleType)
         XCTAssertEqual(FilterRuleType.content, FilterState.SearchMode.content.ruleType)
@@ -179,7 +281,7 @@ final class FilterRuleTest: XCTestCase {
         XCTAssertEqual(FilterState.SearchMode(ruleType: .titleContent), FilterState.SearchMode.titleContent)
     }
 
-    func testRuleToFilterState() {
+    func testRuleToFilterStateTextSearch() {
         for mode in [FilterRuleType](
             [.title, .content, .titleContent])
         {
@@ -192,12 +294,15 @@ final class FilterRuleTest: XCTestCase {
                                searchMode: .init(ruleType: mode)!))
             XCTAssert(state.remaining.isEmpty)
         }
+    }
 
+    func testRuleToFilterStateCorrespondent() {
+        // Old single rule
         XCTAssertEqual(
             FilterState(rules: [
                 .init(ruleType: .correspondent, value: .correspondent(id: 8)),
             ]),
-            FilterState(correspondent: .only(id: 8)))
+            FilterState(correspondent: .anyOf(ids: [8])))
 
         XCTAssertEqual(
             FilterState(rules: [
@@ -205,11 +310,44 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(correspondent: .notAssigned))
 
+        // New anyOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+            ]),
+            FilterState(correspondent: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19)),
+            ]),
+            FilterState(correspondent: .anyOf(ids: [8, 19])))
+
+        // New noneOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+            ]),
+            FilterState(correspondent: .noneOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 19)),
+            ]),
+            FilterState(correspondent: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
+    }
+
+    func testRuleToFilterStateDocumentType() {
+        // Old single rule
         XCTAssertEqual(
             FilterState(rules: [
                 .init(ruleType: .documentType, value: .documentType(id: 8)),
             ]),
-            FilterState(documentType: .only(id: 8)))
+            FilterState(documentType: .anyOf(ids: [8])))
 
         XCTAssertEqual(
             FilterState(rules: [
@@ -217,12 +355,46 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(documentType: .notAssigned))
 
+        // New anyOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+            ]),
+            FilterState(documentType: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19)),
+            ]),
+            FilterState(documentType: .anyOf(ids: [8, 19])))
+
+        // New noneOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+            ]),
+            FilterState(documentType: .noneOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 19)),
+            ]),
+            FilterState(documentType: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
+    }
+
+    func testRuleToFilterStateRemaining() {
         // Unsupported rules go to "remaining":
         let addedAfter = FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))
         XCTAssertEqual(
             FilterState(rules: [addedAfter]).remaining,
             [addedAfter])
+    }
 
+    func testRuleToFilterStateTags() {
         let tagAll = [FilterRule]([
             .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
@@ -272,7 +444,102 @@ final class FilterRuleTest: XCTestCase {
         // @TODO: Test error states
     }
 
-    func testFilterStateToRule() {
+    func testRuleToFilterStateOwner() {
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .owner, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerIsnull, value: .boolean(value: true)),
+            ]),
+            FilterState(owner: .notAssigned))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerIsnull, value: .boolean(value: false)), // this is pretty odd
+            ]),
+            FilterState(owner: .any))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerAny, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerAny, value: .number(value: 8)),
+                .init(ruleType: .ownerAny, value: .number(value: 99)),
+            ]),
+            FilterState(owner: .anyOf(ids: [8, 99])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+            ]),
+            FilterState(owner: .noneOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+            ]),
+            FilterState(owner: .noneOf(ids: [8, 99])))
+
+        // @TODO: Test error states
+    }
+
+    func testRuleToFilterStateStoragePath() {
+        // Old single rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .storagePath, value: .storagePath(id: 8)),
+            ]),
+            FilterState(storagePath: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .storagePath, value: .storagePath(id: nil)),
+            ]),
+            FilterState(storagePath: .notAssigned))
+
+        // New anyOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+            ]),
+            FilterState(storagePath: .anyOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 19)),
+            ]),
+            FilterState(storagePath: .anyOf(ids: [8, 19])))
+
+        // New noneOf rule
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+            ]),
+            FilterState(storagePath: .noneOf(ids: [8])))
+
+        XCTAssertEqual(
+            FilterState(rules: [
+                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 19)),
+            ]),
+            FilterState(storagePath: .noneOf(ids: [8, 19])))
+
+        // @TODO: Test error states
+    }
+
+    // - MARK: FilterState to FilterRule
+
+    func testFilterStateToRuleTextSearch() {
         for mode in [FilterState.SearchMode](
             [.title, .content, .titleContent])
         {
@@ -282,31 +549,79 @@ final class FilterRuleTest: XCTestCase {
                 FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo")),
             ])
         }
+    }
 
+    func testFilterStateToRuleEmpty() {
         XCTAssertEqual([], FilterState().rules)
+    }
 
-        XCTAssertEqual(
-            [FilterRule(ruleType: .correspondent, value: .correspondent(id: 8))],
-            FilterState(correspondent: .only(id: 8)).rules)
-
+    func testFilterStateToRuleCorrespondent() {
+        // Old single rule
         XCTAssertEqual(
             [FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))],
             FilterState(correspondent: .notAssigned).rules)
 
+        // New anyOf rule
         XCTAssertEqual(
-            [FilterRule(ruleType: .documentType, value: .documentType(id: 8))],
-            FilterState(documentType: .only(id: 8)).rules)
+            [FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))],
+            FilterState(correspondent: .anyOf(ids: [8])).rules)
 
+        XCTAssertEqual(
+            [
+                FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+                FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 99)),
+            ],
+            FilterState(correspondent: .anyOf(ids: [8, 99])).rules)
+
+        // New noneOf rule
+        XCTAssertEqual(
+            [FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))],
+            FilterState(correspondent: .noneOf(ids: [8])).rules)
+
+        XCTAssertEqual(
+            [
+                FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+                FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 99)),
+            ],
+            FilterState(correspondent: .noneOf(ids: [8, 99])).rules)
+    }
+
+    func testFilterStateToRuleDocumentType() {
+        // Old single rule
         XCTAssertEqual(
             [FilterRule(ruleType: .documentType, value: .documentType(id: nil))],
             FilterState(documentType: .notAssigned).rules)
 
+        // New anyOf rule
+        XCTAssertEqual(
+            [FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))],
+            FilterState(documentType: .anyOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 99)),
+        ], FilterState(documentType: .anyOf(ids: [8, 99])).rules)
+
+        // New noneOf rule
+        XCTAssertEqual([
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+        ], FilterState(documentType: .noneOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 99)),
+        ], FilterState(documentType: .noneOf(ids: [8, 99])).rules)
+    }
+
+    func testFilterStatetoRuleRemaining() {
         // Unsupported rules go to "remaining" and are preserved
         let addedAfter = FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))
         XCTAssertEqual(
             FilterState(rules: [addedAfter]).rules,
             [addedAfter])
+    }
 
+    func testFilterStateToRuleTags() {
         let tagAll = [FilterRule]([
             .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
@@ -329,11 +644,70 @@ final class FilterRuleTest: XCTestCase {
         XCTAssertEqual(
             [FilterRule(ruleType: .hasAnyTag, value: .boolean(value: false))],
             FilterState(tags: .notAssigned).rules)
+    }
 
-        // @TODO: Test error states (do we expect any this direction?)
+    func testFilterStateToRuleOwner() {
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true)),
+        ], FilterState(owner: .notAssigned).rules)
+
+        // This could theoretically be expressed as:
+        // FilterRule(ruleType: .ownerIsnull, value: .boolean(value: false))
+        // But this is redundant to just not having a rule, so let's not create one.
+        XCTAssertEqual([], FilterState(owner: .any).rules) // we could the
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
+        ], FilterState(owner: .anyOf(ids: [8])).rules)
+
+        // Technically, this could also be expressed as a rule .owner with value 8,
+        // but that's equivalent
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
+            FilterRule(ruleType: .ownerAny, value: .number(value: 99)),
+        ], FilterState(owner: .anyOf(ids: [8, 99])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+        ], FilterState(owner: .noneOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+        ], FilterState(owner: .noneOf(ids: [8, 99])).rules)
+    }
+
+    func testFilterStateToRuleStoragePath() {
+        // Old single rule
+        XCTAssertEqual(
+            [FilterRule(ruleType: .storagePath, value: .storagePath(id: nil))],
+            FilterState(storagePath: .notAssigned).rules)
+
+        // New anyOf rule
+        XCTAssertEqual(
+            [FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))],
+            FilterState(storagePath: .anyOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 99)),
+        ], FilterState(storagePath: .anyOf(ids: [8, 99])).rules)
+
+        // New noneOf rule
+        XCTAssertEqual([
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+        ], FilterState(storagePath: .noneOf(ids: [8])).rules)
+
+        XCTAssertEqual([
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 99)),
+        ], FilterState(storagePath: .noneOf(ids: [8, 99])).rules)
     }
 
     func testRulesToFilterState() throws {
+        // @TODO: Add owner and storage path filter
+
         let input: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),
             .init(ruleType: .hasTagsAll, value: .tag(id: 66)),

@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import os
 import Semaphore
 import SwiftUI
 
@@ -17,6 +18,9 @@ class DocumentStore: ObservableObject {
     @Published private(set) var tags: [UInt: Tag] = [:]
     @Published private(set) var savedViews: [UInt: SavedView] = [:]
     @Published private(set) var storagePaths: [UInt: StoragePath] = [:]
+    @Published private(set) var users: [UInt: User] = [:]
+
+    @Published private(set) var currentUser: User?
 
     private var documentSource: any DocumentSource
 
@@ -35,27 +39,34 @@ class DocumentStore: ObservableObject {
         PassthroughSubject<FilterState, Never>()
 
     @Published var filterState: FilterState = {
+        Logger.shared.trace("Loading FilterState")
         guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
             print("No default")
             return FilterState()
         }
-        guard let value = try? JSONDecoder().decode(FilterState.self, from: data) else {
-//            print("No decode")
+        do {
+            let value = try JSONDecoder().decode(FilterState.self, from: data)
+            Logger.shared.trace("Decoded filter state from UserDefaults: \(String(decoding: data, as: UTF8.self)) -> \(String(describing: value)) -> ")
+            return value
+        }
+        catch {
+            Logger.shared.trace("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
             return FilterState()
         }
-        return value
     }() {
         didSet {
+            Logger.shared.trace("FilterState modified")
             if filterState == oldValue {
                 return
             }
 
-//            print("SET: \(filterState)")
             guard let s = try? JSONEncoder().encode(filterState) else {
-//                print("NO ENCODE")
+                Logger.shared.trace("Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
                 return
             }
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")
+
+            Logger.shared.trace("Encoded filter state to UserDefaults: \(String(describing: self.filterState)) -> \(String(decoding: s, as: UTF8.self))")
         }
     }
 
@@ -93,7 +104,7 @@ class DocumentStore: ObservableObject {
     }
 
     func fetchDocuments(clear: Bool, pageSize: UInt = 30) async -> [Document] {
-        print("fetchDocuments")
+        Logger.shared.trace("fetchDocuments")
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -143,17 +154,52 @@ class DocumentStore: ObservableObject {
                        collection: \.storagePaths)
     }
 
+    @MainActor
+    func fetchCurrentUser() async {
+        if currentUser != nil {
+            // We don't expect this to change
+            return
+        }
+
+        do {
+            currentUser = try await repository.currentUser()
+        }
+        catch {
+            Logger.shared.error("Unable to get current user")
+//            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
+        }
+    }
+
+    func fetchAllUsers() async {
+        await fetchAll(elements: await repository.users(),
+                       collection: \.users)
+    }
+
     func fetchAll() async {
-        print("Fetch all store")
+        // @TODO: This gets called concurrently during startup, maybe debounce
+        Logger.shared.notice("Fetch all store request")
         await fetchAllSemaphore.wait()
         defer { fetchAllSemaphore.signal() }
+        Logger.shared.notice("Fetch all store")
 
-        async let c: () = fetchAllCorrespondents()
-        async let d: () = fetchAllDocumentTypes()
-        async let t: () = fetchAllTags()
-        async let s: () = fetchAllSavedViews()
-        async let p: () = fetchAllStoragePaths()
-        _ = await (c, d, t, s, p)
+        let funcs = [
+            fetchAllCorrespondents,
+            fetchAllDocumentTypes,
+            fetchAllTags,
+            fetchAllSavedViews,
+            fetchAllStoragePaths,
+            fetchCurrentUser,
+            fetchAllUsers
+        ]
+
+        await withTaskGroup(of: Void.self) { g in
+            for fn in funcs {
+                g.addTask {
+                    await fn()
+                }
+            }
+        }
+        Logger.shared.notice("Fetch all store complete")
     }
 
     @MainActor

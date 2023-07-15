@@ -9,14 +9,9 @@ import Foundation
 enum FilterRuleType : Int, Equatable, CaseIterable {
 
   enum DataType {
-    case date
-    case number
-    case tag
-    case boolean
-    case documentType
-    case storagePath
-    case correspondent
-    case string
+      {%- for dataType in rule_types|map(attribute='datatype')|unique|sort %}
+      case {{ dataType|to_camel }}
+      {%- endfor %}
   }
 
 {%- for rule in rule_types %}

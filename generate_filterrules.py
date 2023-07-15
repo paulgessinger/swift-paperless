@@ -6,12 +6,21 @@ import re
 import dirtyjson
 import yaml
 from pathlib import Path
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
+from subprocess import check_call, check_output, CalledProcessError
 
-# url = sys.argv[1]
-url = "https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750d558b58018d1d3393db145d162d44fceb/src-ui/src/app/data/filter-rule-type.ts"
+url = "https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/5acd1c7c1b5cdc094dec7bde0de8cd8a7bef269a/src-ui/src/app/data/filter-rule-type.ts"
+
+def swiftformat(file: Path) -> None: pass
+try:
+    exe = check_output(["command", "-v", "swiftformat"]).decode("utf-8").strip()
+    def swiftformat(file: Path) -> None:
+        check_call([exe, "--swiftversion", "5", str(file)])
+except CalledProcessError:
+    pass
 
 response = urllib.request.urlopen(url)
 
@@ -85,6 +94,15 @@ env.filters["to_camel"] = to_camel
 
 template = env.get_template("filter_rules.swift.jinja2")
 
-print(template.render(rule_types=rule_types, url=url, date=datetime.now()))
+with tempfile.TemporaryDirectory() as tmpdir:
+
+    file = Path(tmpdir) / "filter_rules.swift"
+    with file.open("w") as f:
+        f.write(template.render(rule_types=rule_types, url=url, date=datetime.now()))
+
+    swiftformat(file)
+
+    print(file.read_text().strip())
+
 
 #  print(ids)
