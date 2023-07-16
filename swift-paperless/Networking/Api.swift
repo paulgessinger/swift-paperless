@@ -554,4 +554,21 @@ extension ApiRepository: Repository {
         let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
         return uiSettings.user
     }
+
+    func tasks() async -> [PaperlessTask] {
+        let request = request(.tasks())
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: nil)
+            }
+
+            return try decoder.decode([PaperlessTask].self, from: data)
+        } catch {
+            Logger.shared.debug("Unable to load tasks: \(error)")
+            return []
+        }
+    }
 }

@@ -6,38 +6,11 @@
 //
 
 import Combine
+import os
 import QuickLook
 import SwiftUI
 
 import AsyncAlgorithms
-
-struct SearchFilterBar<Content: View>: View {
-    @Environment(\.isSearching) private var isSearching
-
-    var content: () -> Content
-
-    var body: some View {
-        if isSearching {
-            content()
-        }
-    }
-}
-
-struct PillButton: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .padding(.horizontal, 15)
-            .padding(.vertical, 15)
-            .foregroundColor(.white)
-            .background(LinearGradient(colors: [
-                    Color(uiColor: UIColor(Color("AccentColor")).ligher()),
-                    Color.accentColor
-                ],
-                startPoint: .topLeading, endPoint: .bottomTrailing))
-            .clipShape(Capsule())
-            .shadow(radius: 5)
-    }
-}
 
 enum NavigationState: Equatable, Hashable {
     case root
@@ -53,106 +26,57 @@ class NavigationCoordinator: ObservableObject {
     }
 }
 
-struct LoadingDocumentList: View {
-    @State private var documents: [Document] = []
-    @StateObject private var store = DocumentStore(repository: PreviewRepository())
+struct TaskActivityToolbar: View {
+    @EnvironmentObject var store: DocumentStore
+
+    @State private var number: Int?
 
     var body: some View {
-        VStack {
-            ForEach(documents, id: \.self) { document in
-                DocumentCell(document: document)
-                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-                    .redacted(reason: .placeholder)
-                Divider()
-                    .padding(.horizontal)
-            }
-        }
-        .environmentObject(store)
-        .task {
-            documents = await store.fetchDocuments(clear: true, pageSize: 10)
-//            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
-        }
-    }
-}
-
-private struct DocumentList: View {
-    @EnvironmentObject private var store: DocumentStore
-
-    @Binding var documents: [Document]
-    @State private var loadingMore = false
-
-    struct Cell: View {
-        @EnvironmentObject private var nav: NavigationCoordinator
-
-        var store: DocumentStore
-        var document: Document
-
-        var body: some View {
-            NavigationLink(value:
-                NavigationState.detail(document: document)
-            ) {
-                DocumentCell(document: document)
-                    .contentShape(Rectangle())
-
-                    .padding(5)
-                    .contextMenu {
-                        Button {
-                            nav.path.append(NavigationState.detail(document: document))
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
+        Rectangle()
+            .fill(.clear)
+            .overlay {
+                if let number, number > 0 {
+                    Menu {
+                        ForEach(store.activeTasks.filter { $0.status == .STARTED }, id: \.id) { task in
+                            let name = (task.taskFileName ?? task.taskName) ?? "unknown task"
+                            Text("Processing \(name)")
                         }
-
-                    } preview: {
-                        Button {
-                            print("open")
-                        } label: {
-                            DocumentPreview(store: store, document: document)
+                        let queued = store.activeTasks.filter { $0.status != .STARTED }.count
+                        if queued > 0 {
+                            Divider()
+                            Text("Pending \(queued) tasks")
                         }
+                    } label: {
+                        TaskActivityView(text: "\(number)")
                     }
+                }
+            }
+            .task {
+                repeat {
+                    Logger.shared.trace("Loading tasks")
+
+                    // @TODO: Improve backend API to allow fetching only active:
+//                https://github.com/paperless-ngx/paperless-ngx/blob/83f9f2d3870556a8f55167cbc89375fc967965a8/src/documents/views.py#L1072
+                    await store.fetchTasks()
+
+                    try? await Task.sleep(for: .seconds(10))
+                }
+                while !Task.isCancelled
             }
 
-            .padding(.horizontal, 10)
-            .buttonStyle(.plain)
-
-            Divider()
-                .padding(.horizontal)
-        }
-    }
-
-    func loadMore() async {
-        let new = await store.fetchDocuments(clear: false, pageSize: 101)
-        withAnimation {
-            documents += new
-        }
-    }
-
-    var body: some View {
-        LazyVStack(alignment: .leading) {
-            ForEach(
-                Array(zip(documents.indices, documents)), id: \.1.id
-            ) { index, document in
-                Cell(store: store, document: document)
-                    .if(index > documents.count - 10) { view in
-                        view.task {
-                            let hasMore = await store.hasMoreDocuments()
-                            print("Check more: has: \(hasMore), #doc \(documents.count)")
-                            if !loadingMore && hasMore {
-                                loadingMore = true
-                                //                                    await load(false)
-                                await loadMore()
-                                loadingMore = false
-                            }
-                        }
-                    }
+            .onChange(of: store.activeTasks) { _ in
+                withAnimation {
+                    number = store.activeTasks.count
+                }
             }
-        }
-//        }
     }
 }
 
 struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var connectionManager: ConnectionManager
+
+    // MARK: State
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.4)
     @StateObject private var nav = NavigationCoordinator()
@@ -243,6 +167,8 @@ struct DocumentView: View {
         }
     }
 
+    // MARK: Main View Body
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack {
@@ -285,7 +211,12 @@ struct DocumentView: View {
             .navigationDestination(for: NavigationState.self,
                                    destination: navigationDestinations)
 
+            // MARK: Main toolbar
+
             .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    TaskActivityToolbar()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showFileImporter = true
@@ -335,6 +266,7 @@ struct DocumentView: View {
                     sourceUrl: importUrl!,
                     callback: {
                         showCreateModal = false
+                        Task { await store.fetchTasks() }
                     },
                     title: {
                         Text("Add document")
@@ -369,6 +301,8 @@ struct DocumentView: View {
         .environmentObject(nav)
     }
 }
+
+// - MARK: Previews
 
 struct DocumentView_Previews: PreviewProvider {
     static let store = DocumentStore(repository: PreviewRepository())

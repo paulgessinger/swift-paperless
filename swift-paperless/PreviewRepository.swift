@@ -210,4 +210,6 @@ class PreviewRepository: Repository {
     }
 
     func users() async -> [User] { [] }
+
+    func tasks() async -> [PaperlessTask] { [] }
 }

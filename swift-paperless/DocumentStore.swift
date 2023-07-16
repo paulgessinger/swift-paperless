@@ -12,31 +12,19 @@ import Semaphore
 import SwiftUI
 
 class DocumentStore: ObservableObject {
+    // MARK: Publishers
+
     @Published var documents: [UInt: Document] = [:]
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
     @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
     @Published private(set) var tags: [UInt: Tag] = [:]
     @Published private(set) var savedViews: [UInt: SavedView] = [:]
     @Published private(set) var storagePaths: [UInt: StoragePath] = [:]
-    @Published private(set) var users: [UInt: User] = [:]
 
+    @Published private(set) var users: [UInt: User] = [:]
     @Published private(set) var currentUser: User?
 
-    private var documentSource: any DocumentSource
-
-    let semaphore = AsyncSemaphore(value: 1)
-    let fetchAllSemaphore = AsyncSemaphore(value: 1)
-
-    private(set) var repository: Repository
-
-    func clearDocuments() {
-        documents = [:]
-    }
-
-    private var tasks = Set<AnyCancellable>()
-
-    var filterStatePublisher =
-        PassthroughSubject<FilterState, Never>()
+    @Published private(set) var activeTasks: [PaperlessTask] = []
 
     @Published var filterState: FilterState = {
         Logger.shared.trace("Loading FilterState")
@@ -70,6 +58,22 @@ class DocumentStore: ObservableObject {
         }
     }
 
+    // MARK: Members
+
+    private var documentSource: any DocumentSource
+
+    let semaphore = AsyncSemaphore(value: 1)
+    let fetchAllSemaphore = AsyncSemaphore(value: 1)
+
+    private(set) var repository: Repository
+
+    private var tasks = Set<AnyCancellable>()
+
+    var filterStatePublisher =
+        PassthroughSubject<FilterState, Never>()
+
+    // MARK: Methods
+
     init(repository: Repository) {
         self.repository = repository
         documentSource = NullDocumentSource()
@@ -86,6 +90,10 @@ class DocumentStore: ObservableObject {
                 self?.filterStatePublisher.send(value)
             }
             .store(in: &tasks)
+    }
+
+    func clearDocuments() {
+        documents = [:]
     }
 
     func set(repository: Repository) {
@@ -127,6 +135,16 @@ class DocumentStore: ObservableObject {
 
     func hasMoreDocuments() async -> Bool {
         return await documentSource.hasMore()
+    }
+
+    func fetchTasks() async {
+        let tasks = await repository.tasks()
+        let activeTasks = tasks.filter { $0.isActive }
+//        let inactiveTasks = tasks.filter { !$0.isActive }
+
+        await MainActor.run {
+            self.activeTasks = activeTasks
+        }
     }
 
     func fetchAllCorrespondents() async {

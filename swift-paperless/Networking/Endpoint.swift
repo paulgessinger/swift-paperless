@@ -163,6 +163,10 @@ extension Endpoint {
         return .init(path: "/api/ui_settings/")
     }
 
+    static func tasks() -> Endpoint {
+        return .init(path: "/api/tasks/")
+    }
+
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
         var segment = ""
         switch type {

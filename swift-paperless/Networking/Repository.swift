@@ -64,6 +64,8 @@ protocol Repository {
 
     func currentUser() async throws -> User
     func users() async -> [User]
+
+    func tasks() async -> [PaperlessTask]
 }
 
 class NullRepository: Repository {
@@ -115,6 +117,8 @@ class NullRepository: Repository {
 
     func currentUser() async throws -> User { throw NotImplemented() }
     func users() async -> [User] { [] }
+
+    func tasks() async -> [PaperlessTask] { [] }
 }
 
 // - MARK: DocumentSource
