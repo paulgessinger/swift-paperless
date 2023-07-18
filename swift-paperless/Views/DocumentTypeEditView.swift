@@ -16,7 +16,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     init(element: Element, onSave: @escaping (Element) throws -> Void = { _ in }) {
         _element = State(initialValue: element)
         self.onSave = onSave
-        saveLabel = "Save"
+        saveLabel = String(localized: "Save", comment: "Document type edit")
     }
 
     private func valid() -> Bool {
@@ -53,7 +53,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
 extension DocumentTypeEditView where Element == ProtoDocumentType {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoDocumentType(), onSave: onSave)
-        saveLabel = "Add"
+        saveLabel = String(localized: "Add", comment: "Save document type")
     }
 }
 

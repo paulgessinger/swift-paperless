@@ -53,7 +53,7 @@ struct SearchBarView: View {
 
                 if !text.isEmpty {
                     Spacer()
-                    Label("Clear", systemImage: "xmark.circle.fill")
+                    Label("Clear search", systemImage: "xmark.circle.fill")
                         .labelStyle(.iconOnly)
                         .foregroundColor(.gray)
                         .onTapGesture {
@@ -111,8 +111,7 @@ struct PreviewWrapper: View {
         NavigationStack {
             VStack {
                 SearchBarView(text: $text)
-                    .navigationTitle("yoyoyo")
-                Text("Toggle").onTapGesture {
+                Text(String("Toggle")).onTapGesture {
                     Task {
                         withAnimation {
                             hidden.toggle()

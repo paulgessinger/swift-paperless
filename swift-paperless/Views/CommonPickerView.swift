@@ -52,7 +52,7 @@ struct CommonPicker: View {
                 .foregroundColor(.primary)
                 Spacer()
                 if selected {
-                    Label("Active", systemImage: "checkmark")
+                    Label("Element is selected", systemImage: "checkmark")
                         .labelStyle(.iconOnly)
                 }
             }
@@ -122,9 +122,9 @@ struct CommonPicker: View {
                         }
                     }
                 } header: {
-                    Picker("Mode", selection: $mode) {
-                        Text("Include").tag(Mode.anyOf)
-                        Text("Exclude").tag(Mode.noneOf)
+                    Picker(String(localized: "Selection mode", comment: "Common element selection mode (include/exclude)"), selection: $mode) {
+                        Text("Include element").tag(Mode.anyOf)
+                        Text("Exclude element").tag(Mode.noneOf)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
@@ -182,9 +182,11 @@ protocol Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Self]> { get }
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol
 
-    static var notAssignedLabel: String { get }
+    static var notAssignedFilter: String { get }
+    static var notAssignedPicker: String { get }
     static var singularLabel: String { get }
     static var pluralLabel: String { get }
+    static var excludeLabel: String { get }
 
     var id: UInt { get }
     var name: String { get }
@@ -197,9 +199,11 @@ extension Correspondent: Pickable {
         return \.correspondent
     }
 
-    static var notAssignedLabel = "None"
-    static var singularLabel = "Correspondent"
-    static var pluralLabel = "Correspondents"
+    static var notAssignedFilter = LocalizedStrings.Filter.Correspondent.notAssignedFilter
+    static var notAssignedPicker = LocalizedStrings.Filter.Correspondent.notAssignedPicker
+    static var singularLabel = String(localized: "Correspondent")
+    static var pluralLabel = String(localized: "Correspondents")
+    static var excludeLabel = String(localized: "Exclude correspondent")
 }
 
 extension DocumentType: Pickable {
@@ -209,9 +213,11 @@ extension DocumentType: Pickable {
         return \.documentType
     }
 
-    static var notAssignedLabel: String = "None"
-    static var singularLabel = "Document Type"
-    static var pluralLabel = "Document Types"
+    static var notAssignedFilter = LocalizedStrings.Filter.DocumentType.notAssignedFilter
+    static var notAssignedPicker = LocalizedStrings.Filter.DocumentType.notAssignedPicker
+    static var singularLabel = String(localized: "Document type")
+    static var pluralLabel = String(localized: "Document types")
+    static var excludeLabel = String(localized: "Exclude document type")
 }
 
 extension StoragePath: Pickable {
@@ -221,9 +227,11 @@ extension StoragePath: Pickable {
         return \.storagePath
     }
 
-    static var notAssignedLabel: String = "Default"
-    static var singularLabel = "Storage Path"
-    static var pluralLabel = "Storage Paths"
+    static var notAssignedFilter = LocalizedStrings.Filter.StoragePath.notAssignedFilter
+    static var notAssignedPicker = LocalizedStrings.Filter.StoragePath.notAssignedPicker
+    static var singularLabel = String(localized: "Storage path")
+    static var pluralLabel = String(localized: "Storage paths")
+    static var excludeLabel = String(localized: "Exclude storage path")
 }
 
 struct CommonPickerEdit<Manager, D>: View
@@ -274,7 +282,7 @@ struct CommonPickerEdit<Manager, D>: View
             .foregroundColor(.primary)
             Spacer()
             if document[keyPath: Element.documentPath(D.self)] == value {
-                Label("Active", systemImage: "checkmark")
+                Label("Element is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -313,7 +321,7 @@ struct CommonPickerEdit<Manager, D>: View
             Form {
                 if showNone {
                     Section {
-                        row(Element.notAssignedLabel, value: nil)
+                        row(Element.notAssignedPicker, value: nil)
                     }
                 }
                 Section {
@@ -341,7 +349,7 @@ struct CommonPickerEdit<Manager, D>: View
                     CreateView(document: $document,
                                model: model)
                 } label: {
-                    Label("Add new", systemImage: "plus")
+                    Label("Add", systemImage: "plus")
                 }
             }
         }

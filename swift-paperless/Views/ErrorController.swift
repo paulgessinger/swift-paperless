@@ -53,7 +53,7 @@ private struct ErrorView: View {
                 .scaleEffect(1.5)
                 .labelStyle(.iconOnly)
                 .padding(.trailing, 5)
-            Text("\(error.localizedDescription)")
+            Text(error.localizedDescription)
             Spacer()
         }
         .foregroundColor(.white)
@@ -133,7 +133,7 @@ struct ErrorOverlay_Previews: PreviewProvider {
         @EnvironmentObject var errorController: ErrorController
 
         var body: some View {
-            Button("Trigger error") {
+            Button(String("Trigger error")) {
                 errorController.push(error: PreviewError())
             }
         }

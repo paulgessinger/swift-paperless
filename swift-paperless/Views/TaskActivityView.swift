@@ -63,8 +63,8 @@ struct TaskActivityView: View {
 struct TaskActivityView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            Text("Body")
-                .navigationTitle("Title")
+            Text(String("Body"))
+                .navigationTitle(String("Title"))
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
 //                        Menu {
@@ -77,7 +77,7 @@ struct TaskActivityView_Previews: PreviewProvider {
                         }
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("GOGO") {}
+                        Button(String("GOGO")) {}
                     }
                 }
         }

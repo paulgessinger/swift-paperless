@@ -22,7 +22,7 @@ struct TagEditView<Element>: View where Element: TagProtocol {
     {
         _tag = StateObject(wrappedValue: ThrottleObject(value: tag, delay: 0.5))
         self.onSave = onSave
-        saveLabel = "Save"
+        saveLabel = String(localized: "Save", comment: "Tag edit")
     }
 
     private let scale = 2.0
@@ -105,7 +105,7 @@ extension TagEditView where Element == ProtoTag {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(tag: ProtoTag(color: HexColor(Self.randomColor())),
                   onSave: onSave)
-        saveLabel = "Add"
+        saveLabel = String(localized: "Add", comment: "Save tag")
     }
 }
 

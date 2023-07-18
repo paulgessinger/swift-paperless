@@ -43,6 +43,7 @@ struct DocumentEditView: View {
                             document: self.$document,
                             store: self.store
                         )
+                        .navigationTitle("Correspondent")
                     }) {
                         HStack {
                             Text("Correspondent")
@@ -51,7 +52,7 @@ struct DocumentEditView: View {
                                 if let id = document.correspondent {
                                     Text(self.store.correspondents[id]?.name ?? "ERROR")
                                 } else {
-                                    Text("None")
+                                    Text(LocalizedStrings.Filter.Correspondent.notAssignedFilter)
                                 }
                             }
                             .foregroundColor(.gray)
@@ -64,6 +65,7 @@ struct DocumentEditView: View {
                             document: self.$document,
                             store: self.store
                         )
+                        .navigationTitle("Document type")
                     }) {
                         HStack {
                             Text("Document type")
@@ -72,7 +74,7 @@ struct DocumentEditView: View {
                                 if let id = document.documentType {
                                     Text(self.store.documentTypes[id]?.name ?? "ERROR")
                                 } else {
-                                    Text("None")
+                                    Text(LocalizedStrings.Filter.DocumentType.notAssignedFilter)
                                 }
                             }
                             .foregroundColor(.gray)
@@ -85,6 +87,7 @@ struct DocumentEditView: View {
                             document: self.$document,
                             store: self.store
                         )
+                        .navigationTitle("Storage path")
                     }) {
                         HStack {
                             Text("Storage path")
@@ -93,7 +96,7 @@ struct DocumentEditView: View {
                                 if let id = document.storagePath {
                                     Text(self.store.storagePaths[id]?.name ?? "ERROR")
                                 } else {
-                                    Text("None")
+                                    Text(LocalizedStrings.Filter.StoragePath.notAssignedFilter)
                                 }
                             }
                             .foregroundColor(.gray)
@@ -104,7 +107,7 @@ struct DocumentEditView: View {
                         DocumentTagEditView(document: self.$document)
                     }) {
                         if self.document.tags.isEmpty {
-                            Text("No tags")
+                            Text("\(0) tag(s)")
                         } else {
                             TagsView(tags: self.document.tags.compactMap { self.store.tags[$0] })
                                 .contentShape(Rectangle())
@@ -120,10 +123,10 @@ struct DocumentEditView: View {
                         HStack {
                             Spacer()
                             if !self.deleted {
-                                Text("Delete")
+                                Text(String(localized: "Delete", comment: "Delete document"))
                             } else {
                                 HStack {
-                                    Text("Deleted")
+                                    Text(String(localized: "Deleted", comment: "Document deleted"))
                                     Image(systemName: "checkmark.circle.fill")
                                 }
                             }
@@ -133,7 +136,8 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
 
-                    .confirmationDialog("Are you sure?",
+                    .confirmationDialog(String(localized: "Are you sure?",
+                                               comment: "Document delete confirmation"),
                                         isPresented: self.$showDeleteConfirmation,
                                         titleVisibility: .visible)
                     {
@@ -165,7 +169,7 @@ struct DocumentEditView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button(String(localized: "Save", comment: "Save document")) {
                         Task {
                             let copy = document
                             documentOut = document

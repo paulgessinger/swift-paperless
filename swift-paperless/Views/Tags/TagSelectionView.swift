@@ -41,7 +41,7 @@ struct TagFilterView: View {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label("Active", systemImage: "checkmark")
+                Label("Tag is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -134,13 +134,13 @@ struct TagFilterView: View {
                     row(action: {
                         Task { withAnimation { selectedTags = .any }}
                     }, active: selectedTags == .any, content: {
-                        Text("No filter")
+                        Text(LocalizedStrings.Filter.Tags.all)
                     })
 
                     row(action: {
                         Task { withAnimation { selectedTags = .notAssigned }}
                     }, active: selectedTags == .notAssigned, content: {
-                        Text("Not assigned")
+                        Text(LocalizedStrings.Filter.Tags.notAssignedPicker)
                     })
                 }
 
@@ -165,16 +165,16 @@ struct TagFilterView: View {
                                     EmptyView()
                                 case .allOf(let include, let exclude):
                                     if include.contains(tag.id) {
-                                        Label("Included", systemImage: "checkmark")
+                                        Label("Tag included", systemImage: "checkmark")
                                             .labelStyle(.iconOnly)
                                     }
                                     if exclude.contains(tag.id) {
-                                        Label("Excluded", systemImage: "xmark.circle")
+                                        Label("Tag excluded", systemImage: "xmark.circle")
                                             .labelStyle(.iconOnly)
                                     }
                                 case .anyOf(let ids):
                                     if ids.contains(tag.id) {
-                                        Label("Selected", systemImage: "checkmark")
+                                        Label("Tag is selected", systemImage: "checkmark")
                                             .labelStyle(.iconOnly)
                                     }
                                 }
@@ -184,9 +184,9 @@ struct TagFilterView: View {
                         .transaction { transaction in transaction.animation = nil }
                     }
                 } header: {
-                    Picker("Mode", selection: $mode) {
-                        Text("All").tag(Mode.all)
-                        Text("Any").tag(Mode.any)
+                    Picker("Tag filter mode", selection: $mode) {
+                        Text("All tags").tag(Mode.all)
+                        Text("Any tag").tag(Mode.any)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
@@ -285,7 +285,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label("Active", systemImage: "checkmark")
+                Label("Tag is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -353,7 +353,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                             HStack {
                                 TagView(tag: tag)
                                 Spacer()
-                                Label("Add", systemImage: "plus.circle")
+                                Label("Add tag", systemImage: "plus.circle")
                                     .labelStyle(.iconOnly)
                                     .foregroundColor(.accentColor)
                             }

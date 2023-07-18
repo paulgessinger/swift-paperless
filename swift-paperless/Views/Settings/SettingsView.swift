@@ -107,7 +107,7 @@ struct CorrespondentManager: ManagerProtocol {
         var element: Correspondent
 
         var body: some View {
-            Text("\(element.name)")
+            Text(element.name)
         }
     }
 }
@@ -157,7 +157,7 @@ struct DocumentTypeManager: ManagerProtocol {
         var element: DocumentType
 
         var body: some View {
-            Text("\(element.name)")
+            Text(element.name)
         }
     }
 }
@@ -207,7 +207,7 @@ struct SavedViewManager: ManagerProtocol {
         var element: SavedView
 
         var body: some View {
-            Text("\(element.name)")
+            Text(element.name)
         }
     }
 }
@@ -257,7 +257,7 @@ struct StoragePathManager: ManagerProtocol {
         var element: StoragePath
 
         var body: some View {
-            Text("\(element.name)")
+            Text(element.name)
         }
     }
 }

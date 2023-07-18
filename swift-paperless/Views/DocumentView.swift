@@ -44,7 +44,7 @@ struct TaskActivityToolbar: View {
                         let queued = store.activeTasks.filter { $0.status != .STARTED }.count
                         if queued > 0 {
                             Divider()
-                            Text("Pending \(queued) tasks")
+                            Text("\(queued) pending task(s)")
                         }
                     } label: {
                         TaskActivityView(text: "\(number)")
@@ -82,7 +82,6 @@ struct DocumentView: View {
     @StateObject private var nav = NavigationCoordinator()
 
     @State private var documents: [Document] = []
-    @State private var showFilterModal = false
     @State private var searchSuggestions: [String] = []
     @State private var initialLoad = true
     @State private var isLoading = false
@@ -244,17 +243,12 @@ struct DocumentView: View {
                         }
 
                     } label: {
-                        Label("Menu", systemImage: "ellipsis.circle")
+                        Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
                             .labelStyle(.iconOnly)
                     }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-
-            .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                FilterView()
-                    .environmentObject(store)
-            }
 
             .fileImporter(isPresented: $showFileImporter,
                           allowedContentTypes: [.pdf],
@@ -282,7 +276,7 @@ struct DocumentView: View {
                 }
             })) {}
 
-            .confirmationDialog("Are you sure?", isPresented: $logoutRequested, titleVisibility: .visible) {
+            .confirmationDialog(String(localized: "Are you sure?", comment: "Logout confirmation"), isPresented: $logoutRequested, titleVisibility: .visible) {
                 Button("Logout", role: .destructive) {
                     connectionManager.logout()
                 }

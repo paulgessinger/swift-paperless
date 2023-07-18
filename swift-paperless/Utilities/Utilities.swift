@@ -46,30 +46,6 @@ class ThrottleObject<T: Equatable>: ObservableObject {
     }
 }
 
-extension Text {
-    static func titleCorrespondent(value: Correspondent?) -> Text {
-        if let correspondent = value {
-            return Text("\(correspondent.name): ")
-//                .bold()
-                .foregroundColor(.accentColor)
-        }
-        else {
-            return Text("")
-        }
-    }
-
-    static func titleDocumentType(value: DocumentType?) -> Text {
-        if let documentType = value {
-            return Text("\(documentType.name)")
-//                .bold()
-                .foregroundColor(.orange)
-        }
-        else {
-            return Text("")
-        }
-    }
-}
-
 extension UIColor {
     private func makeColor(delta: CGFloat) -> UIColor {
         var red: CGFloat = 0
@@ -297,7 +273,7 @@ struct ClearableModifier: ViewModifier {
 
             Spacer()
 
-            Label("Clear", systemImage: "xmark.circle.fill")
+            Label("Clear text", systemImage: "xmark.circle.fill")
                 .labelStyle(.iconOnly)
                 .foregroundColor(.gray)
                 .onTapGesture {
@@ -305,22 +281,6 @@ struct ClearableModifier: ViewModifier {
                 }
                 .opacity(text.isEmpty ? 0 : 1)
         }
-
-//        content
-//            .overlay {
-//                if !text.isEmpty {
-//                    HStack {
-//                        Spacer()
-//
-//                        Label("Clear", systemImage: "xmark.circle.fill")
-//                            .labelStyle(.iconOnly)
-//                            .foregroundColor(.gray)
-//                            .onTapGesture {
-//                                self.text = ""
-//                            }
-//                    }
-//                }
-//            }
     }
 }
 

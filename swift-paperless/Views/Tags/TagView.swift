@@ -23,7 +23,7 @@ struct TagView: View {
     var body: some View {
         Group {
             if let tag = tag {
-                Text("\(tag.name)")
+                Text(tag.name)
                     .lineLimit(1)
                     .font(.body)
                     .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)

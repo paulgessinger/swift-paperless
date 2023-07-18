@@ -1,0 +1,410 @@
+/* Indicates a saved view has been modified */
+"%@ (modified)" = "%@ (verändert)";
+
+/* Indicates modified saved view in the filter bar */
+"%@*" = "%@*";
+
+/* Save storage path
+Save document type
+Save tag
+Save saved view */
+"Add" = "Hinzufügen";
+
+/* No comment provided by engineer. */
+"Add document" = "Dokument hinzufügen";
+
+/* No comment provided by engineer. */
+"Add tag" = "Tag hinzufügen";
+
+/* Sort field names */
+"Added" = "Hinzugefügt am";
+
+/* Matching algorithm
+Owner filtering */
+"All" = "Alle";
+
+/* No comment provided by engineer. */
+"All tags" = "Alle";
+
+/* Matching algorithm */
+"Any" = "Irgendein Wort";
+
+/* No comment provided by engineer. */
+"Any tag" = "Irgendeines";
+
+/* No comment provided by engineer. */
+"Are you sure you want to delete '%@'" = "Sind Sie sicher dass Sie '%@' löschen möchten?";
+
+/* Common element delete confirmation
+Document delete confirmation
+Logout confirmation */
+"Are you sure?" = "Sind Sie sicher?";
+
+/* No comment provided by engineer. */
+"Ascending" = "Aufsteigend";
+
+/* Sort field names */
+"ASN" = "ASN";
+
+/* Matching algorithm */
+"Auto" = "Auto";
+
+/* No comment provided by engineer. */
+"Cancel" = "Abbrechen";
+
+/* Matching algorithm */
+"Case insensitive" = "Groß-/Kleinschreibung irrelevant";
+
+/* No comment provided by engineer. */
+"Clear filters" = "Filter entfernen";
+
+/* No comment provided by engineer. */
+"Clear search" = "Suchtext löschen";
+
+/* No comment provided by engineer. */
+"Clear text" = "Text löschen";
+
+/* No comment provided by engineer. */
+"Color" = "Farbe";
+
+/* Sort field names */
+"Correspondent" = "Korrespondent";
+
+/* Correspondent filtering */
+"correspondent_not_assigned_filter" = "Keiner";
+
+/* Correspondent filtering */
+"correspondent_not_assigned_picker" = "Nicht zugewiesen";
+
+/* No comment provided by engineer. */
+"Correspondents" = "Korrespondenten";
+
+/* No comment provided by engineer. */
+"Create correspondent" = "Korrespondenten erstellen";
+
+/* No comment provided by engineer. */
+"Create document type" = "Dokumenttyp erstellen";
+
+/* No comment provided by engineer. */
+"Create saved view" = "Gespeicherte Ansicht erstellen";
+
+/* No comment provided by engineer. */
+"Create storage path" = "Speicherpfad erstellen";
+
+/* No comment provided by engineer. */
+"Create tag" = "Tag erstellen";
+
+/* Sort field names */
+"Created" = "Erstellt am";
+
+/* No comment provided by engineer. */
+"Created date" = "Erstellt am";
+
+/* Delete document */
+"Delete" = "Löschen";
+
+/* No comment provided by engineer. */
+"Delete saved view" = "Gespeicherte Ansicht löschen";
+
+/* Document deleted */
+"Deleted" = "Gelöscht";
+
+/* No comment provided by engineer. */
+"Descending" = "Absteigend";
+
+/* No comment provided by engineer. */
+"Details" = "Details";
+
+/* No comment provided by engineer. */
+"Discard changes" = "Änderungen verwerfen";
+
+/* Sort field names */
+"Document type" = "Dokumenttyp";
+
+/* No comment provided by engineer. */
+"Document types" = "Dokumenttypen";
+
+/* Document type filtering */
+"document_type_not_assigned_filter" = "Keiner";
+
+/* Document type filtering */
+"document_type_not_assigned_picker" = "Nicht zugewiesen";
+
+/* No comment provided by engineer. */
+"Done" = "Fertig";
+
+/* No comment provided by engineer. */
+"Edit" = "Bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit correspondent" = "Korrespondent bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit document type" = "Dokumenttyp bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit saved view" = "Gespeicherte Ansicht bearbeiten";
+
+/* Saved view edit menu button */
+"Edit saved views" = "Gespeicherte Ansichten bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit storage path" = "Speicherpfad bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit tag" = "Tag bearbeiten";
+
+/* No comment provided by engineer. */
+"Element is selected" = "Element ist ausgewählt";
+
+/* No comment provided by engineer. */
+"Error" = "Fehler";
+
+/* Matching algorithm */
+"Exact" = "Exakt";
+
+/* No comment provided by engineer. */
+"Exclude correspondent" = "Korrespondent ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Exclude document type" = "Dokumenttyp ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Exclude element" = "Element ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Exclude storage path" = "Speicherpfad ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Exclude tag" = "Tag ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Extra headers" = "Explizite Header";
+
+/* (No Comment) */
+"extra_headers_description" = "Explizite zusätzliche Header die in alle Anfragen and die Schnittstelle mitgegeben werden.";
+
+/* Filter bar extra menu label */
+"Filtering" = "Filter aktiv";
+
+/* Matching algorithm */
+"Fuzzy" = "Ungenau";
+
+/* No comment provided by engineer. */
+"Inbox tag" = "Posteingangs-Tag";
+
+/* No comment provided by engineer. */
+"Include element" = "Element eingeschlossen";
+
+/* No comment provided by engineer. */
+"Key" = "Schlüssel";
+
+/* No comment provided by engineer. */
+"Logout" = "Ausloggen";
+
+/* No comment provided by engineer. */
+"Matching" = "Automatische Zuweisung";
+
+/* No comment provided by engineer. */
+"Matching algorithm" = "Algorithmus";
+
+/* Matching algorithm */
+"Matching pattern" = "Zuweisungsmuster";
+
+/* Matching algorithm */
+"matching_explanation_all" = "Dokument enthält alle folgenden Wörter";
+
+/* Matching algorithm */
+"matching_explanation_any" = "Dokument enthält eines der folgenden Wörter";
+
+/* Matching algorithm */
+"matching_explanation_auto" = "Zuweisung automatisch erlernen";
+
+/* Matching algorithm */
+"matching_explanation_fuzzy" = "Dokument enthält ein zum folgenden Wort ähnliches Wort";
+
+/* Matching algorithm */
+"matching_explanation_literal" = "Dokument enthält die folgende Zeichenkette";
+
+/* Matching algorithm */
+"matching_explanation_none" = "Keine automatische Zuweisung";
+
+/* Matching algorithm */
+"matching_explanation_regex" = "Dokument passt zum folgenden Ausdruck";
+
+/* 'More' menu */
+"Menu of more options" = "Weitere Optionen";
+
+/* Sort field names */
+"Modified" = "Verändert";
+
+/* Owner filtering */
+"My documents" = "Meine Dokumente";
+
+/* No comment provided by engineer. */
+"Name" = "Name";
+
+/* No comment provided by engineer. */
+"No documents" = "Keine Dokumente";
+
+/* Tags filterings */
+"No filter" = "Kein Filter";
+
+/* No comment provided by engineer. */
+"No tags" = "Keine Tags";
+
+/* (No Comment) */
+"no_elements_found" = "Keine Elemente gefunden";
+
+/* Matching algorithm */
+"None" = "Keine";
+
+/* No comment provided by engineer. */
+"Ok" = "Ok";
+
+/* No comment provided by engineer. */
+"Organization" = "Organisation";
+
+/* Filter state additional information popup */
+"owner_filter_explicit_unsupported" = "Berechtigungen filtert explizite Benutzer";
+
+/* Owner filtering */
+"owner_not_assigned_filter" = "Kein Besitzer";
+
+/* Owner filtering */
+"owner_not_assigned_picker" = "Kein Besitzer";
+
+/* No comment provided by engineer. */
+"Paperless" = "Paperless";
+
+/* No comment provided by engineer. */
+"Path" = "Pfad";
+
+/* No comment provided by engineer. */
+"Permissions" = "Berechtigungen";
+
+/* No comment provided by engineer. */
+"Please log in using the app first!" = "Bitte loggen Sie sich zuerst in der App ein!";
+
+/* No comment provided by engineer. */
+"Processing %@" = "%@ wird verarbeitet";
+
+/* No comment provided by engineer. */
+"Properties" = "Eigenschaften";
+
+/* No comment provided by engineer. */
+"Random color" = "Zufällige Farbe";
+
+/* Matching algorithm */
+"RegEx" = "Regulärer Ausdruck";
+
+/* No comment provided by engineer. */
+"Remove" = "Löschen";
+
+/* Storage path edit
+Correspondent edit
+Tag edit
+Document type edit
+Saved view edit
+Save document */
+"Save" = "Speichern";
+
+/* No comment provided by engineer. */
+"Saved views" = "Gespeicherte Ansichten";
+
+/* No comment provided by engineer. */
+"Search" = "Suchen";
+
+/* No comment provided by engineer. */
+"Selected" = "Ausgewählt";
+
+/* Common element selection mode (include/exclude) */
+"Selection mode" = "Auswahlmodus";
+
+/* No comment provided by engineer. */
+"Settings" = "Einstellungen";
+
+/* Owner filtering */
+"Shared with me" = "Mit mir geteilt";
+
+/* No comment provided by engineer. */
+"Show in sidebar" = "In der Seitenleiste anzeigen";
+
+/* No comment provided by engineer. */
+"Show on dashboard" = "Auf der Startseite anzeigen";
+
+/* No comment provided by engineer. */
+"Sort by" = "Sortieren nach";
+
+/* No comment provided by engineer. */
+"Sort menu" = "Sortiereinstellungen";
+
+/* No comment provided by engineer. */
+"Sort order" = "Sortierreihenfolge";
+
+/* No comment provided by engineer. */
+"Sort ordering" = "Sortierreihenfolge";
+
+/* No comment provided by engineer. */
+"Sorting" = "Sortieren";
+
+/* No comment provided by engineer. */
+"Storage path" = "Speicherpfad";
+
+/* No comment provided by engineer. */
+"Storage paths" = "Speicherpfade";
+
+/* No comment provided by engineer. */
+"storage_path_format_explanation" = "z. B. {created_year}-{title} oder benutzen Sie Schrägstriche, um bspw. Verzeichnisse hinzuzufügen {created_year}/{correspondent}/{title}. Siehe [Dokumentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) für eine vollständige Liste.";
+
+/* Storage path filtering */
+"storage_path_not_assigned_filter" = "Standard";
+
+/* Storage path filtering */
+"storage_path_not_assigned_picker" = "Nicht zugewiesen";
+
+/* No comment provided by engineer. */
+"Tag excluded" = "Tag ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Tag filter mode" = "Tag Filtermodus";
+
+/* No comment provided by engineer. */
+"Tag included" = "Tag eingeschlossen";
+
+/* No comment provided by engineer. */
+"Tag is selected" = "Tag ist ausgewählt";
+
+/* No comment provided by engineer. */
+"Tag name" = "Name";
+
+/* No comment provided by engineer. */
+"Tags" = "Tags";
+
+/* Tags filterings */
+"tags_not_assigned_filter" = "Kein Tag";
+
+/* Tags filterings */
+"tags_not_assigned_picker" = "Nicht zugewiesen";
+
+/* Sort field names */
+"Title" = "Titel";
+
+/* No comment provided by engineer. */
+"Unable to load preview" = "Vorschau kann nicht geladen werden";
+
+/* Owner filtering */
+"Unowned" = "Ohne Bezitzer";
+
+/* No comment provided by engineer. */
+"Upload complete" = "Upload abgeschlossen";
+
+/* No comment provided by engineer. */
+"Upload error" = "Fehler beim Upload";
+
+/* Number of filtered users, number is separate */
+"Users" = "Besitzer";
+
+/* No comment provided by engineer. */
+"Value" = "Inhalt";
+

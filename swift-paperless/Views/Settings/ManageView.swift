@@ -116,7 +116,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         VStack {
             if elements.isEmpty {
                 Divider()
-                Text("No items found, \nbut you can create the first one")
+                Text("no_elements_found")
                     .multilineTextAlignment(.center)
                 Spacer()
             } else {
@@ -155,7 +155,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog("Are you sure?",
+        .confirmationDialog(String(localized: "Are you sure?", comment: "Common element delete confirmation"),
                             isPresented: $elementToDelete.isPresent(),
                             titleVisibility: .visible)
         {
