@@ -119,7 +119,7 @@ private struct FilterMenu<Content: View>: View {
                         .navigationTitle("Saved views")
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
-                    Label(String(localized: "Edit saved views"), systemImage: "list.bullet")
+                    Label(String(localized: "Edit saved views", comment: "Saved view edit menu button"), systemImage: "list.bullet")
                 }
 
                 if filterState.filtering {
@@ -186,7 +186,7 @@ private struct CircleCounter: View {
     }
 
     var body: some View {
-        Text("\(value)")
+        Text(String("\(value)"))
             .foregroundColor(.white)
             .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
             .if(value > 1) { view in view.padding(5) }
@@ -211,14 +211,14 @@ private struct CommonElementLabel<Element: Pickable>: View {
         case .any:
             Text(Element.singularLabel)
         case .notAssigned:
-            Text(Element.notAssignedLabel)
+            Text(Element.notAssignedFilter)
         case .anyOf(let ids):
             if ids.count == 1 {
                 if let name = store[keyPath: Element.storePath][ids[0]]?.name {
                     Text(name)
                 }
                 else {
-                    Text("1 \(Element.singularLabel)")
+                    Text(Element.singularLabel)
                         .redacted(reason: .placeholder)
                 }
             }
@@ -228,13 +228,13 @@ private struct CommonElementLabel<Element: Pickable>: View {
             }
         case .noneOf(let ids):
             if ids.count == 1 {
-                Label("Exclude", systemImage: "xmark")
+                Label(Element.excludeLabel, systemImage: "xmark")
                     .labelStyle(.iconOnly)
                 if let name = store[keyPath: Element.storePath][ids[0]]?.name {
                     Text(name)
                 }
                 else {
-                    Text("1 \(Element.singularLabel)")
+                    Text(Element.singularLabel)
                         .redacted(reason: .placeholder)
                 }
             }
@@ -344,7 +344,7 @@ struct FilterBar: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
+                        Button(String(localized: "Done")) {
                             dismiss()
                             store.filterState = filterState
                             onDismiss()
@@ -415,7 +415,7 @@ struct FilterBar: View {
                            let savedView = store.savedViews[savedViewId]
                         {
                             if filterState.modified {
-                                Text("\(savedView.name)*")
+                                Text(String(localized: "\(savedView.name)*", comment: "Indicates modified saved view in the filter bar"))
                             }
                             else {
                                 Text(savedView.name)
@@ -477,7 +477,7 @@ struct FilterBar: View {
                             else {
                                 if !include.isEmpty, !exclude.isEmpty {
                                     CircleCounter(value: include.count, mode: .include)
-                                    Text("/")
+                                    Text(String("/"))
                                     CircleCounter(value: exclude.count, mode: .exclude)
                                 }
                                 else if !include.isEmpty {
@@ -645,7 +645,7 @@ struct FilterBar: View {
                             }
                         }
 
-                        Picker("Ordering", selection: $filterState.sortOrder) {
+                        Picker("Sort ordering", selection: $filterState.sortOrder) {
                             Label("Ascending", systemImage: "arrow.up")
                                 .tag(SortOrder.ascending)
                             Label("Descending", systemImage: "arrow.down")
@@ -654,7 +654,7 @@ struct FilterBar: View {
                     }
                     label: {
                         Element(label: {
-                            Label("Sort", systemImage: "arrow.up.arrow.down")
+                            Label("Sort menu", systemImage: "arrow.up.arrow.down")
                                 .labelStyle(.iconOnly)
                         }, active: filterState.sortOrder != .ascending || filterState.sortField != .added, action: {})
                     }

@@ -1,11 +1,23 @@
-/* No comment provided by engineer. */
+/* Indicates a saved view has been modified */
+"%@ (modified)" = "%@ (verändert)";
+
+/* Indicates modified saved view in the filter bar */
+"%@*" = "%@*";
+
+/* Save storage path
+Save document type
+Save tag
+Save saved view */
 "Add" = "Hinzufügen";
+
+/* No comment provided by engineer. */
+"Add document" = "Dokument hinzufügen";
 
 /* No comment provided by engineer. */
 "Add tag" = "Tag hinzufügen";
 
 /* Sort field names */
-"Added" = "Hunzugefügt am";
+"Added" = "Hinzugefügt am";
 
 /* Matching algorithm
 Owner filtering */
@@ -21,6 +33,11 @@ Owner filtering */
 "Any tag" = "Irgendeines";
 
 /* No comment provided by engineer. */
+"Are you sure you want to delete '%@'" = "Sind Sie sicher dass Sie '%@' löschen möchten?";
+
+/* Common element delete confirmation
+Document delete confirmation
+Logout confirmation */
 "Are you sure?" = "Sind Sie sicher?";
 
 /* No comment provided by engineer. */
@@ -37,6 +54,9 @@ Owner filtering */
 
 /* Matching algorithm */
 "Case insensitive" = "Groß-/Kleinschreibung irrelevant";
+
+/* No comment provided by engineer. */
+"Clear filters" = "Filter entfernen";
 
 /* No comment provided by engineer. */
 "Clear search" = "Suchtext löschen";
@@ -69,6 +89,9 @@ Owner filtering */
 "Create saved view" = "Gespeicherte Ansicht erstellen";
 
 /* No comment provided by engineer. */
+"Create storage path" = "Speicherpfad erstellen";
+
+/* No comment provided by engineer. */
 "Create tag" = "Tag erstellen";
 
 /* Sort field names */
@@ -77,14 +100,23 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Created date" = "Erstellt am";
 
-/* No comment provided by engineer. */
+/* Delete document */
 "Delete" = "Löschen";
+
+/* No comment provided by engineer. */
+"Delete saved view" = "Gespeicherte Ansicht löschen";
+
+/* Document deleted */
+"Deleted" = "Gelöscht";
 
 /* No comment provided by engineer. */
 "Descending" = "Absteigend";
 
 /* No comment provided by engineer. */
 "Details" = "Details";
+
+/* No comment provided by engineer. */
+"Discard changes" = "Änderungen verwerfen";
 
 /* Sort field names */
 "Document type" = "Dokumenttyp";
@@ -99,6 +131,12 @@ Owner filtering */
 "document_type_not_assigned_picker" = "Nicht zugewiesen";
 
 /* No comment provided by engineer. */
+"Done" = "Fertig";
+
+/* No comment provided by engineer. */
+"Edit" = "Bearbeiten";
+
+/* No comment provided by engineer. */
 "Edit correspondent" = "Korrespondent bearbeiten";
 
 /* No comment provided by engineer. */
@@ -107,23 +145,47 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Edit saved view" = "Gespeicherte Ansicht bearbeiten";
 
+/* Saved view edit menu button */
+"Edit saved views" = "Gespeicherte Ansichten bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit storage path" = "Speicherpfad bearbeiten";
+
 /* No comment provided by engineer. */
 "Edit tag" = "Tag bearbeiten";
 
 /* No comment provided by engineer. */
 "Element is selected" = "Element ist ausgewählt";
 
+/* No comment provided by engineer. */
+"Error" = "Fehler";
+
 /* Matching algorithm */
 "Exact" = "Exakt";
+
+/* No comment provided by engineer. */
+"Exclude correspondent" = "Korrespondent ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Exclude document type" = "Dokumenttyp ausgeschlossen";
 
 /* No comment provided by engineer. */
 "Exclude element" = "Element ausgeschlossen";
 
 /* No comment provided by engineer. */
-"Extra headers" = "Explizite Header";
+"Exclude storage path" = "Speicherpfad ausgeschlossen";
 
 /* No comment provided by engineer. */
-"Extra headers to include in all API requests that the app makes to your installation." = "Explizite zusätzliche Header die in alle Anfragen and die Schnittstelle mitgegeben werden.";
+"Exclude tag" = "Tag ausgeschlossen";
+
+/* No comment provided by engineer. */
+"Extra headers" = "Explizite Header";
+
+/* (No Comment) */
+"extra_headers_description" = "Explizite zusätzliche Header die in alle Anfragen and die Schnittstelle mitgegeben werden.";
+
+/* Filter bar extra menu label */
+"Filtering" = "Filter aktiv";
 
 /* Matching algorithm */
 "Fuzzy" = "Ungenau";
@@ -136,6 +198,9 @@ Owner filtering */
 
 /* No comment provided by engineer. */
 "Key" = "Schlüssel";
+
+/* No comment provided by engineer. */
+"Logout" = "Ausloggen";
 
 /* No comment provided by engineer. */
 "Matching" = "Automatische Zuweisung";
@@ -167,6 +232,9 @@ Owner filtering */
 /* Matching algorithm */
 "matching_explanation_regex" = "Dokument passt zum folgenden Ausdruck";
 
+/* 'More' menu */
+"Menu of more options" = "Weitere Optionen";
+
 /* Sort field names */
 "Modified" = "Verändert";
 
@@ -176,14 +244,17 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Name" = "Name";
 
+/* No comment provided by engineer. */
+"No documents" = "Keine Dokumente";
+
 /* Tags filterings */
 "No filter" = "Kein Filter";
 
 /* No comment provided by engineer. */
-"No items found, \nbut you can create the first one" = "Keine Elemente gefunden, aber Sie können das erste Element erstellen";
-
-/* No comment provided by engineer. */
 "No tags" = "Keine Tags";
+
+/* (No Comment) */
+"no_elements_found" = "Keine Elemente gefunden";
 
 /* Matching algorithm */
 "None" = "Keine";
@@ -194,7 +265,7 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Organization" = "Organisation";
 
-/* (No Comment) */
+/* Filter state additional information popup */
 "owner_filter_explicit_unsupported" = "Berechtigungen filtert explizite Benutzer";
 
 /* Owner filtering */
@@ -210,7 +281,13 @@ Owner filtering */
 "Path" = "Pfad";
 
 /* No comment provided by engineer. */
+"Permissions" = "Berechtigungen";
+
+/* No comment provided by engineer. */
 "Please log in using the app first!" = "Bitte loggen Sie sich zuerst in der App ein!";
+
+/* No comment provided by engineer. */
+"Processing %@" = "%@ wird verarbeitet";
 
 /* No comment provided by engineer. */
 "Properties" = "Eigenschaften";
@@ -224,7 +301,12 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Remove" = "Löschen";
 
-/* No comment provided by engineer. */
+/* Storage path edit
+Correspondent edit
+Tag edit
+Document type edit
+Saved view edit
+Save document */
 "Save" = "Speichern";
 
 /* No comment provided by engineer. */
@@ -235,6 +317,9 @@ Owner filtering */
 
 /* No comment provided by engineer. */
 "Selected" = "Ausgewählt";
+
+/* Common element selection mode (include/exclude) */
+"Selection mode" = "Auswahlmodus";
 
 /* No comment provided by engineer. */
 "Settings" = "Einstellungen";
@@ -252,7 +337,13 @@ Owner filtering */
 "Sort by" = "Sortieren nach";
 
 /* No comment provided by engineer. */
+"Sort menu" = "Sortiereinstellungen";
+
+/* No comment provided by engineer. */
 "Sort order" = "Sortierreihenfolge";
+
+/* No comment provided by engineer. */
+"Sort ordering" = "Sortierreihenfolge";
 
 /* No comment provided by engineer. */
 "Sorting" = "Sortieren";
@@ -276,6 +367,9 @@ Owner filtering */
 "Tag excluded" = "Tag ausgeschlossen";
 
 /* No comment provided by engineer. */
+"Tag filter mode" = "Tag Filtermodus";
+
+/* No comment provided by engineer. */
 "Tag included" = "Tag eingeschlossen";
 
 /* No comment provided by engineer. */
@@ -296,6 +390,9 @@ Owner filtering */
 /* Sort field names */
 "Title" = "Titel";
 
+/* No comment provided by engineer. */
+"Unable to load preview" = "Vorschau kann nicht geladen werden";
+
 /* Owner filtering */
 "Unowned" = "Ohne Bezitzer";
 
@@ -311,20 +408,3 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Value" = "Inhalt";
 
-/* No comment provided by engineer. */
-"Edit saved views" = "Gespeicherte Ansichten bearbeiten";
-
-/* No comment provided by engineer. */
-"Clear filters" = "Filter entfernen";
-
-/* No comment provided by engineer. */
-"%@ (modified)" = "%@ (verändert)";
-
-/* No comment provided by engineer. */
-"No documents" = "Keine Dokumente";
-
-/* No comment provided by engineer. */
-"Permissions" = "Berechtigungen";
-
-/* No comment provided by engineer. */
-"Done" = "Fertig";

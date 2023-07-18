@@ -20,6 +20,24 @@
 			<string>Keine Filter angewendet</string>
 		</dict>
 	</dict>
+	<key>%lld pending task(s)</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Eine ausstehende Aufgabe</string>
+			<key>other</key>
+			<string>%d Aufgaben ausstehend</string>
+			<key>zero</key>
+			<string>Keine ausstehenden Aufgaben</string>
+		</dict>
+	</dict>
 	<key>%lld tag(s)</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -35,7 +53,7 @@
 			<key>other</key>
 			<string>%d Tags</string>
 			<key>zero</key>
-			<string>keine Tags</string>
+			<string>Keine Tags</string>
 		</dict>
 	</dict>
 </dict>

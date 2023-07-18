@@ -44,7 +44,7 @@ struct TaskActivityToolbar: View {
                         let queued = store.activeTasks.filter { $0.status != .STARTED }.count
                         if queued > 0 {
                             Divider()
-                            Text("Pending \(queued) tasks")
+                            Text("\(queued) pending task(s)")
                         }
                     } label: {
                         TaskActivityView(text: "\(number)")
@@ -243,7 +243,7 @@ struct DocumentView: View {
                         }
 
                     } label: {
-                        Label("Menu", systemImage: "ellipsis.circle")
+                        Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
                             .labelStyle(.iconOnly)
                     }
                 }
@@ -276,7 +276,7 @@ struct DocumentView: View {
                 }
             })) {}
 
-            .confirmationDialog("Are you sure?", isPresented: $logoutRequested, titleVisibility: .visible) {
+            .confirmationDialog(String(localized: "Are you sure?", comment: "Logout confirmation"), isPresented: $logoutRequested, titleVisibility: .visible) {
                 Button("Logout", role: .destructive) {
                     connectionManager.logout()
                 }

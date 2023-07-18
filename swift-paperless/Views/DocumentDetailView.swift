@@ -271,20 +271,20 @@ struct DocumentDetailView: View {
                 .buttonStyle(.plain)
                 .quickLookPreview($previewUrl)
 
-                if let related = relatedDocuments {
-                    Group {
-                        Divider()
-                        HStack {
-                            Spacer()
-                            Text("Related documents")
-                                .foregroundColor(.gray)
-                            Spacer()
-                        }
-                        ForEach(related) { _ in Text("Doc") }
-                    }
-                    .transition(
-                        .opacity.combined(with: .move(edge: .bottom)))
-                }
+//                if let related = relatedDocuments {
+//                    Group {
+//                        Divider()
+//                        HStack {
+//                            Spacer()
+//                            Text("Related documents")
+//                                .foregroundColor(.gray)
+//                            Spacer()
+//                        }
+//                        ForEach(related) { _ in Text("Doc") }
+//                    }
+//                    .transition(
+//                        .opacity.combined(with: .move(edge: .bottom)))
+//                }
             }
             .padding()
 

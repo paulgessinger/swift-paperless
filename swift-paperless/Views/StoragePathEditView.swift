@@ -18,7 +18,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     {
         _storagePath = State(initialValue: storagePath)
         self.onSave = onSave
-        saveLabel = "Save"
+        saveLabel = String(localized: "Save", comment: "Storage path edit")
     }
 
     var isValid: Bool {
@@ -47,7 +47,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Save") {
+                Button(saveLabel) {
                     do {
                         try onSave(storagePath)
                     }
@@ -60,7 +60,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
             }
         }
 
-        .navigationTitle(Element.self is SavedView.Type ? "Edit saved view" : "Create saved view")
+        .navigationTitle(Element.self is SavedView.Type ? "Edit storage path" : "Create storage path")
 
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -69,7 +69,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 extension StoragePathEditView where Element == ProtoStoragePath {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoStoragePath(), onSave: onSave)
-        saveLabel = "Add"
+        saveLabel = String(localized: "Add", comment: "Save storage path")
     }
 }
 

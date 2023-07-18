@@ -133,7 +133,7 @@ struct ErrorOverlay_Previews: PreviewProvider {
         @EnvironmentObject var errorController: ErrorController
 
         var body: some View {
-            Button("Trigger error") {
+            Button(String("Trigger error")) {
                 errorController.push(error: PreviewError())
             }
         }

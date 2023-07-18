@@ -58,3 +58,8 @@
 /* Tags filterings */
 "tags_not_assigned_picker" = "Not assigned";
 
+"extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
+
+"no_elements_found" = "No elements found";
+
+

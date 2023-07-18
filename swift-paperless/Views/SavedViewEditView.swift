@@ -18,7 +18,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     {
         _savedView = State(initialValue: savedView)
         self.onSave = onSave
-        saveLabel = "Save"
+        saveLabel = String(localized: "Save", comment: "Saved view edit")
     }
 
     var body: some View {
@@ -70,7 +70,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 extension SavedViewEditView where Element == ProtoSavedView {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoSavedView(), onSave: onSave)
-        saveLabel = "Add"
+        saveLabel = String(localized: "Add", comment: "Save saved view")
     }
 }
 

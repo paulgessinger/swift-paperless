@@ -12,12 +12,30 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
-			<key>zero</key>
-			<string>No filters applied</string>
 			<key>one</key>
 			<string>1 filter applied</string>
 			<key>other</key>
 			<string>%d filters applied</string>
+			<key>zero</key>
+			<string>No filters applied</string>
+		</dict>
+	</dict>
+	<key>%lld pending task(s)</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>One pending task</string>
+			<key>other</key>
+			<string>Pending %d tasks</string>
+			<key>zero</key>
+			<string>No pending tasks</string>
 		</dict>
 	</dict>
 	<key>%lld tag(s)</key>
@@ -30,12 +48,12 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
-			<key>zero</key>
-			<string>no tags</string>
 			<key>one</key>
 			<string>1 tag</string>
 			<key>other</key>
 			<string>%d tags</string>
+			<key>zero</key>
+			<string>No tags</string>
 		</dict>
 	</dict>
 </dict>

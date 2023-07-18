@@ -111,7 +111,7 @@ struct PreviewWrapper: View {
         NavigationStack {
             VStack {
                 SearchBarView(text: $text)
-                Text("Toggle").onTapGesture {
+                Text(String("Toggle")).onTapGesture {
                     Task {
                         withAnimation {
                             hidden.toggle()

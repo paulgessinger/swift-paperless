@@ -45,7 +45,7 @@ struct ExtraHeadersView: View {
                     }
                 }
             } footer: {
-                Text("Extra headers to include in all API requests that the app makes to your installation.")
+                Text("extra_headers_description")
             }
         }
 

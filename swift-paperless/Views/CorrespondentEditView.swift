@@ -16,7 +16,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
     init(element: Element, onSave: @escaping (Element) throws -> Void = { _ in }) {
         _element = State(initialValue: element)
         self.onSave = onSave
-        saveLabel = "Save"
+        saveLabel = String(localized: "Save", comment: "Correspondent edit")
     }
 
     private func valid() -> Bool {
@@ -52,7 +52,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
 extension CorrespondentEditView where Element == ProtoCorrespondent {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoCorrespondent(), onSave: onSave)
-        saveLabel = "Add"
+        saveLabel = String(localized: "Add", comment: "Save document type")
     }
 }
 
