@@ -12,3 +12,4 @@ venv
 
 fastlane/report.xml
 fastlane/README.md
+*.xcloc

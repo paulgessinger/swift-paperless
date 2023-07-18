@@ -82,7 +82,6 @@ struct DocumentView: View {
     @StateObject private var nav = NavigationCoordinator()
 
     @State private var documents: [Document] = []
-    @State private var showFilterModal = false
     @State private var searchSuggestions: [String] = []
     @State private var initialLoad = true
     @State private var isLoading = false
@@ -250,11 +249,6 @@ struct DocumentView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-
-            .sheet(isPresented: $showFilterModal, onDismiss: {}) {
-                FilterView()
-                    .environmentObject(store)
-            }
 
             .fileImporter(isPresented: $showFileImporter,
                           allowedContentTypes: [.pdf],

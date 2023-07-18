@@ -37,7 +37,7 @@ struct ExtraHeadersView: View {
                     let tup = headers[idx]
                     NavigationLink {
                         SingleView(header: $headers[idx])
-                    } label: { Text("\(tup.key): \(tup.value)") }
+                    } label: { Text(String("\(tup.key): \(tup.value)")) }
                 }
                 .onDelete { ids in
                     withAnimation {

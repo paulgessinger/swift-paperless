@@ -77,10 +77,10 @@ private struct FilterMenu<Content: View>: View {
                                 }
                             } label: {
                                 if store.filterState.modified {
-                                    Label("\(savedView.name) (modified)", systemImage: "checkmark")
+                                    Label(String(localized: "\(savedView.name) (modified)", comment: "Indicates a saved view has been modified"), systemImage: "checkmark")
                                 }
                                 else {
-                                    Label("\(savedView.name)", systemImage: "checkmark")
+                                    Label(savedView.name, systemImage: "checkmark")
                                 }
                             }
                         }
@@ -90,7 +90,7 @@ private struct FilterMenu<Content: View>: View {
                                     store.filterState = .init(savedView: savedView)
                                 }
                             } label: {
-                                Text("\(savedView.name)")
+                                Text(savedView.name)
                             }
                         }
                     }
@@ -110,7 +110,7 @@ private struct FilterMenu<Content: View>: View {
                         //                    showSavedViewModal = true
 
                     } label: {
-                        Label("Add new", systemImage: "plus.circle")
+                        Label("Add", systemImage: "plus.circle")
                     }
                 }
 
@@ -281,6 +281,7 @@ private struct Pill<Label: View>: View {
     var body: some View {
         HStack {
             label()
+                .fixedSize()
             if chevron {
                 Image(systemName: "chevron.down")
             }
@@ -408,7 +409,7 @@ struct FilterBar: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
-                        Label("Filtering", systemImage: "line.3.horizontal.decrease")
+                        Label(String(localized: "Filtering", comment: "Filter bar extra menu label"), systemImage: "line.3.horizontal.decrease")
                             .labelStyle(.iconOnly)
                         if let savedViewId = filterState.savedView,
                            let savedView = store.savedViews[savedViewId]
@@ -417,7 +418,7 @@ struct FilterBar: View {
                                 Text("\(savedView.name)*")
                             }
                             else {
-                                Text("\(savedView.name)")
+                                Text(savedView.name)
                             }
                         }
                         else if filterState.ruleCount > 0 {
@@ -456,7 +457,7 @@ struct FilterBar: View {
                         case .any:
                             Text("Tags")
                         case .notAssigned:
-                            Text("None")
+                            Text(LocalizedStrings.Filter.Tags.notAssignedFilter)
                         case .allOf(let include, let exclude):
                             let count = include.count + exclude.count
                             if count == 1 {
@@ -464,12 +465,12 @@ struct FilterBar: View {
                                     Text(name)
                                 }
                                 else if let i = exclude.first, let name = store.tags[i]?.name {
-                                    Label("Exclude", systemImage: "xmark")
+                                    Label("Exclude tag", systemImage: "xmark")
                                         .labelStyle(.iconOnly)
-                                    Text("\(name)")
+                                    Text(name)
                                 }
                                 else {
-                                    Text("1 tag")
+                                    Text(String(localized: "\(1) tag(s)"))
                                         .redacted(reason: .placeholder)
                                 }
                             }
@@ -493,7 +494,7 @@ struct FilterBar: View {
                                     Text(name)
                                 }
                                 else {
-                                    Text("1 tag")
+                                    Text(String(localized: "\(1) tag(s)"))
                                         .redacted(reason: .placeholder)
                                 }
                             }
@@ -527,22 +528,22 @@ struct FilterBar: View {
                             Text("Permissions")
                         case .anyOf(let ids):
                             if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                Text("My documents")
+                                Text(LocalizedStrings.Filter.Owner.myDocuments)
                             }
                             else {
                                 CircleCounter(value: ids.count, mode: .include)
-                                Text("Users")
+                                Text(LocalizedStrings.Filter.Owner.multipleUsers)
                             }
                         case .noneOf(let ids):
                             if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                Text("Shared with me")
+                                Text(LocalizedStrings.Filter.Owner.sharedWithMe)
                             }
                             else {
                                 CircleCounter(value: ids.count, mode: .exclude)
-                                Text("Users")
+                                Text(LocalizedStrings.Filter.Owner.multipleUsers)
                             }
                         case .notAssigned:
-                            Text("Unowned")
+                            Text(LocalizedStrings.Filter.Owner.unowned)
                         }
                     }
                     .overlay {
@@ -554,7 +555,7 @@ struct FilterBar: View {
                                         store.filterState.owner = .any
                                     }
                                 } label: {
-                                    let text = "All"
+                                    let text = LocalizedStrings.Filter.Owner.all
                                     if filterState.owner == .any {
                                         Label(text, systemImage: "checkmark")
                                     }
@@ -569,7 +570,7 @@ struct FilterBar: View {
                                             store.filterState.owner = .anyOf(ids: [user.id])
                                         }
                                     } label: {
-                                        let text = "My documents"
+                                        let text = LocalizedStrings.Filter.Owner.myDocuments
                                         switch filterState.owner {
                                         case .anyOf(let ids):
                                             if ids.count == 1 && ids[0] == store.currentUser?.id {
@@ -587,7 +588,7 @@ struct FilterBar: View {
                                             store.filterState.owner = .noneOf(ids: [user.id])
                                         }
                                     } label: {
-                                        let text = "Shared with me"
+                                        let text = LocalizedStrings.Filter.Owner.sharedWithMe
                                         switch filterState.owner {
                                         case .noneOf(let ids):
                                             if ids.count == 1 && ids[0] == store.currentUser?.id {
@@ -607,7 +608,7 @@ struct FilterBar: View {
                                     }
 
                                 } label: {
-                                    let text = "Unowned"
+                                    let text = LocalizedStrings.Filter.Owner.unowned
                                     if filterState.owner == .notAssigned {
                                         Label(text, systemImage: "checkmark")
                                     }
@@ -620,7 +621,7 @@ struct FilterBar: View {
                                 case .anyOf(let ids), .noneOf(let ids):
                                     if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
                                         Divider()
-                                        Text("Owner filter is in explicit user mode.")
+                                        Text(String(localized: "owner_filter_explicit_unsupported", comment: "Filter state additional information popup"))
                                     }
                                     else {
                                         EmptyView()
@@ -640,7 +641,7 @@ struct FilterBar: View {
                     Menu {
                         Picker("Sort by", selection: $filterState.sortField) {
                             ForEach(SortField.allCases, id: \.rawValue) { f in
-                                Text("\(f.label)").tag(f)
+                                Text(f.label).tag(f)
                             }
                         }
 
@@ -687,7 +688,7 @@ struct FilterBar: View {
         }
 
         .sheet(isPresented: $showDocumentType) {
-            Modal(title: "Document Type", filterState: $filterState) {
+            Modal(title: "Document type", filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.documentType,
                     elements: store.documentTypes.sorted {

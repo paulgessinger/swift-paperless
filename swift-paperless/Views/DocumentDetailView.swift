@@ -188,7 +188,7 @@ struct DocumentDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                Text("\(document.title)")
+                Text(document.title)
                     .font(.title)
 
                 HStack(alignment: .top, spacing: 25) {

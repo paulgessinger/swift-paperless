@@ -53,7 +53,7 @@ private struct ErrorView: View {
                 .scaleEffect(1.5)
                 .labelStyle(.iconOnly)
                 .padding(.trailing, 5)
-            Text("\(error.localizedDescription)")
+            Text(error.localizedDescription)
             Spacer()
         }
         .foregroundColor(.white)

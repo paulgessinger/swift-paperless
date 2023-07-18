@@ -18,28 +18,21 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
             Section {
                 Picker("Matching algorithm", selection: $element.matchingAlgorithm) {
                     ForEach(MatchingAlgorithm.allCases, id: \.self) { alg in
-                        Text("\(alg.title)").tag(alg)
+                        Text(alg.title).tag(alg)
                     }
                 }
-//                VStack {
-//                    Text("\(element.matchingAlgorithm.label)")
-//                        .id(element.matchingAlgorithm)
-//                        .foregroundColor(.gray)
-//                        .fixedSize(horizontal: false, vertical: true)
-//                }
-//                .animation(.linear, value: element.matchingAlgorithm)
             } header: {
                 Text("Matching")
             } footer: {
-                Text("\(element.matchingAlgorithm.label)")
+                Text(element.matchingAlgorithm.label)
                     .lineLimit(3, reservesSpace: true)
             }
 
             if showTextField {
-                TextField("Matching pattern", text: $element.match)
+                TextField(String(localized: "Matching pattern", comment: "Matching algorithm"), text: $element.match)
                     .clearable($element.match)
 
-                Toggle("Case insensitive", isOn: $element.isInsensitive)
+                Toggle(String(localized: "Case insensitive", comment: "Matching algorithm"), isOn: $element.isInsensitive)
             }
         }
         .onChange(of: element.matchingAlgorithm) { value in

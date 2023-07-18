@@ -1,0 +1,160 @@
+/* No comment provided by engineer. */
+"Add" = "Hinzufügen";
+
+/* No comment provided by engineer. */
+"Add tag" = "Tag hinzufügen";
+
+/* Sort field names */
+"Added" = "Hunzugefügt am";
+
+/* Matching algorithm
+Owner filtering */
+"All" = "Alle";
+
+/* Matching algorithm */
+"Any" = "Irgendein Wort";
+
+/* No comment provided by engineer. */
+"Are you sure?" = "Sind Sie sicher?";
+
+/* No comment provided by engineer. */
+"Ascending" = "Aufsteigend";
+
+/* Sort field names */
+"ASN" = "ASN";
+
+/* Matching algorithm */
+"Auto" = "Auto";
+
+/* No comment provided by engineer. */
+"Cancel" = "Abbrechen";
+
+/* Matching algorithm */
+"Case insensitive" = "Groß-/Kleinschreibung irrelevant";
+
+/* No comment provided by engineer. */
+"Clear search" = "Suchtext löschen";
+
+/* No comment provided by engineer. */
+"Clear text" = "Text löschen";
+
+/* No comment provided by engineer. */
+"Color" = "Farbe";
+
+/* Sort field names */
+"Correspondent" = "Korrespondent";
+
+/* No comment provided by engineer. */
+"Correspondents" = "Korrespondenten";
+
+/* No comment provided by engineer. */
+"Create correspondent" = "Korrespondenten erstellen";
+
+/* No comment provided by engineer. */
+"Create document type" = "Dokumenttyp erstellen";
+
+/* No comment provided by engineer. */
+"Create saved view" = "Gespeicherte Ansicht erstellen";
+
+/* No comment provided by engineer. */
+"Create tag" = "Tag erstellen";
+
+/* Sort field names */
+"Created" = "Erstellt am";
+
+/* No comment provided by engineer. */
+"Created date" = "Erstellt am";
+
+/* No comment provided by engineer. */
+"Delete" = "Löschen";
+
+/* No comment provided by engineer. */
+"Descending" = "Absteigend";
+
+/* No comment provided by engineer. */
+"Details" = "Details";
+
+/* Sort field names */
+"Document type" = "Dokumenttyp";
+
+/* No comment provided by engineer. */
+"Document types" = "Dokumenttypen";
+
+/* No comment provided by engineer. */
+"Edit correspondent" = "Korrespondent bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit document type" = "Dokumenttyp bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit saved view" = "Gespeicherte Ansicht bearbeiten";
+
+/* No comment provided by engineer. */
+"Edit tag" = "Tag bearbeiten";
+
+/* No comment provided by engineer. */
+"Element is selected" = "Element ist ausgewählt";
+
+/* Matching algorithm */
+"Exact" = "Exakt";
+
+/* Matching algorithm */
+"Fuzzy" = "Ungenau";
+
+/* No comment provided by engineer. */
+"Matching" = "Automatische Zuweisung";
+
+/* No comment provided by engineer. */
+"Matching algorithm" = "Zuweisungsalgorithmus";
+
+/* Matching algorithm */
+"Matching pattern" = "Zuweisungsmuster";
+
+/* Matching algorithm */
+"matching_explanation_all" = "Dokument enthält alle folgenden Wörter";
+
+/* Matching algorithm */
+"matching_explanation_any" = "Dokument enthält eines der folgenden Wörter";
+
+/* Matching algorithm */
+"matching_explanation_auto" = "Zuweisung automatisch erlernen";
+
+/* Matching algorithm */
+"matching_explanation_fuzzy" = "Dokument enthält ein zum folgenden Wort ähnliches Wort";
+
+/* Matching algorithm */
+"matching_explanation_literal" = "Dokument enthält die folgende Zeichenkette";
+
+/* Matching algorithm */
+"matching_explanation_none" = "Keine automatische Zuweisung";
+
+/* Matching algorithm */
+"matching_explanation_regex" = "Dokument passt zum folgenden Ausdruck";
+
+/* Owner filtering */
+"My documents" = "Meine Dokumente";
+
+/* Matching algorithm */
+"None" = "Keine";
+
+/* (No Comment) */
+"owner_filter_explicit_unsupported" = "Berechtigungen filtert explizite Benutzer";
+
+/* No comment provided by engineer. */
+"Paperless" = "Paperless";
+
+/* Matching algorithm */
+"RegEx" = "Regulärer Ausdruck";
+
+/* No comment provided by engineer. */
+"Search" = "Suchen";
+
+/* Owner filtering */
+"Shared with me" = "Mit mir geteilt";
+
+/* No comment provided by engineer. */
+"Tags" = "Tags";
+
+/* Owner filtering */
+"Unowned" = "Ohne Bezitzer";
+

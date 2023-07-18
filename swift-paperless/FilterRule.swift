@@ -196,19 +196,19 @@ enum SortField: String, Codable, CaseIterable {
     var label: String {
         switch self {
         case .asn:
-            return "ASN"
+            return String(localized: "ASN", comment: "Sort field names")
         case .correspondent:
-            return "Correspondent"
+            return String(localized: "Correspondent", comment: "Sort field names")
         case .title:
-            return "Title"
+            return String(localized: "Title", comment: "Sort field names")
         case .documentType:
-            return "Document Type"
+            return String(localized: "Document type", comment: "Sort field names")
         case .created:
-            return "Created"
+            return String(localized: "Created", comment: "Sort field names")
         case .added:
-            return "Added"
+            return String(localized: "Added", comment: "Sort field names")
         case .modified:
-            return "Modified"
+            return String(localized: "Modified", comment: "Sort field names")
         }
     }
 }

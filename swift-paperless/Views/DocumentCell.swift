@@ -103,7 +103,7 @@ struct DocumentCell: View {
             }
 
             VStack(alignment: .leading) {
-                Text("\(document.title)")
+                Text(document.title)
                     .bold()
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(2)

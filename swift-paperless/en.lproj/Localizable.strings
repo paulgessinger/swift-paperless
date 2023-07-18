@@ -1,0 +1,24 @@
+/* Matching algorithm */
+"matching_explanation_all" = "Document contains all of these words (space separated)";
+
+/* Matching algorithm */
+"matching_explanation_any" = "Document contains any of these words (space separated)";
+
+/* Matching algorithm */
+"matching_explanation_fuzzy" = "Document contains a word similar to this word";
+
+/* Matching algorithm */
+"matching_explanation_literal" = "Document contains this string";
+
+/* Matching algorithm */
+"matching_explanation_none" = "No automatic matching";
+
+/* Matching algorithm */
+"matching_explanation_regex" = "Document matches this regular expression";
+
+/* (No Comment) */
+"owner_filter_explicit_unsupported" = "Owner filter is in explicit user mode.";
+
+/* No comment provided by engineer. */
+"storage_path_format_explanation" = "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list.";
+

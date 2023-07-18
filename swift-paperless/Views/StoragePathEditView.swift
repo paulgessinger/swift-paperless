@@ -39,7 +39,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
             } header: {
                 Text("Properties")
             } footer: {
-                Text("e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list.")
+                Text("storage_path_format_explanation")
             }
 
             MatchEditView(element: $storagePath)

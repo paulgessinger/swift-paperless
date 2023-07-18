@@ -41,7 +41,7 @@ struct TagFilterView: View {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label("Active", systemImage: "checkmark")
+                Label("Tag is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -285,7 +285,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label("Active", systemImage: "checkmark")
+                Label("Tag is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -353,7 +353,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                             HStack {
                                 TagView(tag: tag)
                                 Spacer()
-                                Label("Add", systemImage: "plus.circle")
+                                Label("Add tag", systemImage: "plus.circle")
                                     .labelStyle(.iconOnly)
                                     .foregroundColor(.accentColor)
                             }

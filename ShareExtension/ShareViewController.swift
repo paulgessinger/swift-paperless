@@ -174,7 +174,7 @@ struct ShareView: View {
                 }
             }
         }
-        .alert("\(self.error)", isPresented: self.$showingError) {
+        .alert(self.error, isPresented: self.$showingError) {
             Button("Ok", role: .cancel) {}
         }
 

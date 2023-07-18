@@ -26,40 +26,39 @@ enum MatchingAlgorithm: Int, Codable, CaseIterable {
     var title: String {
         switch self {
         case .none:
-            return "None"
+            return String(localized:"None", comment: "Matching algorithm")
         case .any:
-            return "Any"
+            return String(localized:"Any", comment: "Matching algorithm")
         case .all:
-            return "All"
+            return String(localized:"All", comment: "Matching algorithm")
         case .literal:
-            return "Exact"
+            return String(localized:"Exact", comment: "Matching algorithm")
         case .regex:
-            return "RegEx"
+            return String(localized:"RegEx", comment: "Matching algorithm")
         case .fuzzy:
-            return "Fuzzy"
+            return String(localized:"Fuzzy", comment: "Matching algorithm")
         case .auto:
-            return "Auto"
+            return String(localized:"Auto", comment: "Matching algorithm")
         }
     }
 
     var label: String {
-//        var result = title + ": "
         var result = ""
         switch self {
         case .none:
-            result += "No automatic matching"
+            result += String(localized: "matching_explanation_none", comment: "Matching algorithm")
         case .any:
-            result += "Document contains any of these words (space separated)"
+            result += String(localized: "matching_explanation_any", comment: "Matching algorithm")
         case .all:
-            result += "Document contains all of these words (space separated)"
+            result += String(localized: "matching_explanation_all", comment: "Matching algorithm")
         case .literal:
-            result += "Document contains this string"
+            result += String(localized: "matching_explanation_literal", comment: "Matching algorithm")
         case .regex:
-            result += "Document matches this regular expression"
+            result += String(localized: "matching_explanation_regex", comment: "Matching algorithm")
         case .fuzzy:
-            result += "Document contains a word similar to this word"
+            result += String(localized: "matching_explanation_fuzzy", comment: "Matching algorithm")
         case .auto:
-            result += "Learn matching automatically"
+            result += String(localized: "matching_explanation_auto", comment: "Matching algorithm")
         }
         return result
     }

@@ -35,7 +35,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
             Section("Sorting") {
                 Picker("Sort by", selection: $savedView.sortField) {
                     ForEach(SortField.allCases, id: \.self) { v in
-                        Text("\(v.label)").tag(v)
+                        Text(v.label).tag(v)
                     }
                 }
 

@@ -52,7 +52,7 @@ struct CommonPicker: View {
                 .foregroundColor(.primary)
                 Spacer()
                 if selected {
-                    Label("Active", systemImage: "checkmark")
+                    Label("Element is selected", systemImage: "checkmark")
                         .labelStyle(.iconOnly)
                 }
             }
@@ -197,9 +197,9 @@ extension Correspondent: Pickable {
         return \.correspondent
     }
 
-    static var notAssignedLabel = "None"
-    static var singularLabel = "Correspondent"
-    static var pluralLabel = "Correspondents"
+    static var notAssignedLabel = LocalizedStrings.Filter.Correspondent.notAssignedFilter
+    static var singularLabel = String(localized: "Correspondent")
+    static var pluralLabel = String(localized: "Correspondents")
 }
 
 extension DocumentType: Pickable {
@@ -209,9 +209,9 @@ extension DocumentType: Pickable {
         return \.documentType
     }
 
-    static var notAssignedLabel: String = "None"
-    static var singularLabel = "Document Type"
-    static var pluralLabel = "Document Types"
+    static var notAssignedLabel = LocalizedStrings.Filter.DocumentType.notAssignedFilter
+    static var singularLabel = String(localized: "Document type")
+    static var pluralLabel = String(localized: "Document types")
 }
 
 extension StoragePath: Pickable {
@@ -221,9 +221,9 @@ extension StoragePath: Pickable {
         return \.storagePath
     }
 
-    static var notAssignedLabel: String = "Default"
-    static var singularLabel = "Storage Path"
-    static var pluralLabel = "Storage Paths"
+    static var notAssignedLabel = LocalizedStrings.Filter.StoragePath.notAssignedFilter
+    static var singularLabel = String(localized: "Storage path")
+    static var pluralLabel = String(localized: "Storage paths")
 }
 
 struct CommonPickerEdit<Manager, D>: View
@@ -274,7 +274,7 @@ struct CommonPickerEdit<Manager, D>: View
             .foregroundColor(.primary)
             Spacer()
             if document[keyPath: Element.documentPath(D.self)] == value {
-                Label("Active", systemImage: "checkmark")
+                Label("Element is selected", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -341,7 +341,7 @@ struct CommonPickerEdit<Manager, D>: View
                     CreateView(document: $document,
                                model: model)
                 } label: {
-                    Label("Add new", systemImage: "plus")
+                    Label("Add", systemImage: "plus")
                 }
             }
         }
