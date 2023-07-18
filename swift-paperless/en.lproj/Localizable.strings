@@ -23,6 +23,9 @@
 "matching_explanation_any" = "Document contains any of these words (space separated)";
 
 /* Matching algorithm */
+"matching_explanation_auto" = "Learn matching automatically";
+
+/* Matching algorithm */
 "matching_explanation_fuzzy" = "Document contains a word similar to this word";
 
 /* Matching algorithm */
