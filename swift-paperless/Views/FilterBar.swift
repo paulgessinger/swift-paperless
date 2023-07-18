@@ -119,7 +119,7 @@ private struct FilterMenu<Content: View>: View {
                         .navigationTitle("Saved views")
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
-                    Label("Edit saved views", systemImage: "list.bullet")
+                    Label(String(localized: "Edit saved views"), systemImage: "list.bullet")
                 }
 
                 if filterState.filtering {
@@ -135,7 +135,7 @@ private struct FilterMenu<Content: View>: View {
                             filterState.clear()
                         }
                     } label: {
-                        Label("Clear filters", systemImage: "xmark")
+                        Label(String(localized: "Clear filters"), systemImage: "xmark")
                     }
                 }
 

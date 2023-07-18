@@ -2,6 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>%lld filter(s) applied</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>zero</key>
+			<string>No filters applied</string>
+			<key>one</key>
+			<string>1 filter applied</string>
+			<key>other</key>
+			<string>%d filters applied</string>
+		</dict>
+	</dict>
 	<key>%lld tag(s)</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>

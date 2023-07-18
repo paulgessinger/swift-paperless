@@ -174,7 +174,7 @@ struct TagFilterView: View {
                                     }
                                 case .anyOf(let ids):
                                     if ids.contains(tag.id) {
-                                        Label("Tag selected", systemImage: "checkmark")
+                                        Label("Tag is selected", systemImage: "checkmark")
                                             .labelStyle(.iconOnly)
                                     }
                                 }
