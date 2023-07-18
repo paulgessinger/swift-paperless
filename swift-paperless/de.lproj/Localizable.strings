@@ -117,6 +117,9 @@ Owner filtering */
 "Exact" = "Exakt";
 
 /* No comment provided by engineer. */
+"Exclude element" = "Element ausgeschlossen";
+
+/* No comment provided by engineer. */
 "Extra headers" = "Explizite Header";
 
 /* No comment provided by engineer. */
@@ -127,6 +130,9 @@ Owner filtering */
 
 /* No comment provided by engineer. */
 "Inbox tag" = "Posteingangs-Tag";
+
+/* No comment provided by engineer. */
+"Include element" = "Element eingeschlossen";
 
 /* No comment provided by engineer. */
 "Key" = "Schlüssel";
@@ -267,10 +273,10 @@ Owner filtering */
 "storage_path_not_assigned_picker" = "Nicht zugewiesen";
 
 /* No comment provided by engineer. */
-"Tag excluded" = "Tag ausgeschloßen";
+"Tag excluded" = "Tag ausgeschlossen";
 
 /* No comment provided by engineer. */
-"Tag included" = "Tag eingeschloßsen";
+"Tag included" = "Tag eingeschlossen";
 
 /* No comment provided by engineer. */
 "Tag is selected" = "Tag ist ausgewählt";
@@ -305,14 +311,20 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Value" = "Inhalt";
 
+/* No comment provided by engineer. */
 "Edit saved views" = "Gespeicherte Ansichten bearbeiten";
 
+/* No comment provided by engineer. */
 "Clear filters" = "Filter entfernen";
 
+/* No comment provided by engineer. */
 "%@ (modified)" = "%@ (verändert)";
 
+/* No comment provided by engineer. */
 "No documents" = "Keine Dokumente";
 
+/* No comment provided by engineer. */
 "Permissions" = "Berechtigungen";
 
+/* No comment provided by engineer. */
 "Done" = "Fertig";

@@ -123,8 +123,8 @@ struct CommonPicker: View {
                     }
                 } header: {
                     Picker("Mode", selection: $mode) {
-                        Text("Include").tag(Mode.anyOf)
-                        Text("Exclude").tag(Mode.noneOf)
+                        Text("Include element").tag(Mode.anyOf)
+                        Text("Exclude element").tag(Mode.noneOf)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
