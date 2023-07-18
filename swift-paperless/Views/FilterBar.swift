@@ -716,7 +716,7 @@ struct FilterBar: View {
                     elements: store.storagePaths.sorted {
                         $0.value.name < $1.value.name
                     }.map { ($0.value.id, $0.value.name) },
-                    notAssignedLabel: "Default"
+                    notAssignedLabel: LocalizedStrings.Filter.StoragePath.notAssignedPicker
                 )
             }
         }

@@ -11,8 +11,14 @@
 Owner filtering */
 "All" = "Alle";
 
+/* No comment provided by engineer. */
+"All tags" = "Alle";
+
 /* Matching algorithm */
 "Any" = "Irgendein Wort";
+
+/* No comment provided by engineer. */
+"Any tag" = "Irgendeines";
 
 /* No comment provided by engineer. */
 "Are you sure?" = "Sind Sie sicher?";
@@ -43,6 +49,12 @@ Owner filtering */
 
 /* Sort field names */
 "Correspondent" = "Korrespondent";
+
+/* Correspondent filtering */
+"correspondent_not_assigned_filter" = "Keiner";
+
+/* Correspondent filtering */
+"correspondent_not_assigned_picker" = "Nicht zugewiesen";
 
 /* No comment provided by engineer. */
 "Correspondents" = "Korrespondenten";
@@ -80,6 +92,12 @@ Owner filtering */
 /* No comment provided by engineer. */
 "Document types" = "Dokumenttypen";
 
+/* Document type filtering */
+"document_type_not_assigned_filter" = "Keiner";
+
+/* Document type filtering */
+"document_type_not_assigned_picker" = "Nicht zugewiesen";
+
 /* No comment provided by engineer. */
 "Edit correspondent" = "Korrespondent bearbeiten";
 
@@ -102,10 +120,13 @@ Owner filtering */
 "Fuzzy" = "Ungenau";
 
 /* No comment provided by engineer. */
+"Key" = "Schlüssel";
+
+/* No comment provided by engineer. */
 "Matching" = "Automatische Zuweisung";
 
 /* No comment provided by engineer. */
-"Matching algorithm" = "Zuweisungsalgorithmus";
+"Matching algorithm" = "Algorithmus";
 
 /* Matching algorithm */
 "Matching pattern" = "Zuweisungsmuster";
@@ -134,11 +155,20 @@ Owner filtering */
 /* Owner filtering */
 "My documents" = "Meine Dokumente";
 
+/* Tags filterings */
+"No filter" = "Kein Filter";
+
 /* Matching algorithm */
 "None" = "Keine";
 
 /* (No Comment) */
 "owner_filter_explicit_unsupported" = "Berechtigungen filtert explizite Benutzer";
+
+/* Owner filtering */
+"owner_not_assigned_filter" = "Kein Besitzer";
+
+/* Owner filtering */
+"owner_not_assigned_picker" = "Kein Besitzer";
 
 /* No comment provided by engineer. */
 "Paperless" = "Paperless";
@@ -152,9 +182,24 @@ Owner filtering */
 /* Owner filtering */
 "Shared with me" = "Mit mir geteilt";
 
+/* Storage path filtering */
+"storage_path_not_assigned_filter" = "Standard";
+
+/* Storage path filtering */
+"storage_path_not_assigned_picker" = "Nicht zugewiesen";
+
 /* No comment provided by engineer. */
 "Tags" = "Tags";
 
+/* Tags filterings */
+"tags_not_assigned_filter" = "Keine";
+
+/* Tags filterings */
+"tags_not_assigned_picker" = "Nicht zugewiesen";
+
 /* Owner filtering */
 "Unowned" = "Ohne Bezitzer";
+
+/* Number of filtered users, number is separate */
+"Users" = "Besitzer";
 
