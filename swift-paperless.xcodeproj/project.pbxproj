@@ -15,8 +15,10 @@
 		7A04EE432A672BB800C9CAE3 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482B0299AD56C00D5061E /* DocumentView.swift */; };
 		7A04EE442A672BCD00C9CAE3 /* DocumentList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B92A63DDDF009E86CE /* DocumentList.swift */; };
 		7A04EE452A672BDA00C9CAE3 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */; };
-		7A04EE462A672BE200C9CAE3 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
 		7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
+		7A04EE482A673A7200C9CAE3 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
+		7A04EE4A2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */; };
+		7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32BE2A5EAF1A00C18B44 /* Nuke */; };
@@ -125,8 +127,6 @@
 		7A8E1F872A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8E1F852A1A8FD4002A7CB3 /* SavedViewModel.swift */; };
 		7A8E1F882A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8E1F852A1A8FD4002A7CB3 /* SavedViewModel.swift */; };
 		7A9AA03A29AD39F300A55529 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9AA03929AD39F300A55529 /* OrderedCollections */; };
-		7A9CC11229E29A0D009CAD61 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */; };
-		7A9CC11329E29A39009CAD61 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */; };
 		7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */; };
@@ -207,6 +207,7 @@
 		7A01BAF12A67241E00BF1186 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7A01BAF22A67241E00BF1186 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7A04034129FD68E8009604E4 /* ManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageView.swift; sourceTree = "<group>"; };
+		7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
 		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A2831B12A62748D009E86CE /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskActivityView.swift; sourceTree = "<group>"; };
@@ -259,7 +260,6 @@
 		7A8E1F7D2A1A8F7D002A7CB3 /* DocumentTypeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTypeModel.swift; sourceTree = "<group>"; };
 		7A8E1F812A1A8F90002A7CB3 /* TagModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagModel.swift; sourceTree = "<group>"; };
 		7A8E1F852A1A8FD4002A7CB3 /* SavedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewModel.swift; sourceTree = "<group>"; };
-		7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
@@ -381,6 +381,7 @@
 				7A898ECC2A02FF3B0003DFBD /* Utilities */,
 				7A6F31DC29DE936C00186A87 /* generate_filterrules.py */,
 				7A256CEE29B6828D00BADEB8 /* Info.plist */,
+				7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */,
 				7AF04B7929A6898C008E8F79 /* Views */,
 				7AB060DC29C6621E004E6C63 /* Networking */,
 				7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */,
@@ -407,7 +408,6 @@
 				7A4D9F3729D4B78500B25A63 /* demo.pdf */,
 				7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */,
 				7A4AA91029BE202800D845A2 /* PreviewModel.swift */,
-				7A9CC11129E29A0D009CAD61 /* DocumentLoader.swift */,
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
@@ -726,9 +726,10 @@
 				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
 				7A04EE452A672BDA00C9CAE3 /* DocumentDetailView.swift in Sources */,
 				7A2831B32A62748D009E86CE /* UserModel.swift in Sources */,
-				7A04EE462A672BE200C9CAE3 /* DocumentEditView.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
+				7A04EE482A673A7200C9CAE3 /* DocumentEditView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
+				7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
@@ -745,7 +746,6 @@
 				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A4AA91529BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A8E1F842A1A8F90002A7CB3 /* TagModel.swift in Sources */,
-				7A9CC11329E29A39009CAD61 /* DocumentLoader.swift in Sources */,
 				7A4AA91229BE202800D845A2 /* PreviewModel.swift in Sources */,
 				7A04EE432A672BB800C9CAE3 /* DocumentView.swift in Sources */,
 				7A04EE422A672A2800C9CAE3 /* FilterBar.swift in Sources */,
@@ -790,6 +790,7 @@
 				7A2A113D29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7AF2E08F29F57DA10092948B /* SettingsView.swift in Sources */,
 				7A8E1F762A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
+				7A04EE4A2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A4AA91429BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A8E1F7E2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
@@ -823,7 +824,6 @@
 				7A2831B52A63CEE6009E86CE /* TaskActivityView.swift in Sources */,
 				7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */,
 				7A898ED12A0303140003DFBD /* Logging.swift in Sources */,
-				7A9CC11229E29A0D009CAD61 /* DocumentLoader.swift in Sources */,
 				7A04034229FD68E8009604E4 /* ManageView.swift in Sources */,
 				7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */,
 				7AF2E08529F553360092948B /* MatchingEditView.swift in Sources */,
@@ -926,7 +926,7 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
@@ -955,7 +955,7 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
@@ -1103,7 +1103,7 @@
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
@@ -1149,7 +1149,7 @@
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
@@ -1192,7 +1192,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1216,7 +1216,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1239,7 +1239,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1262,7 +1262,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
