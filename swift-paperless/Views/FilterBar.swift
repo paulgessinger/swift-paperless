@@ -681,36 +681,38 @@ struct FilterBar: View {
         // MARK: Sheets
 
         .sheet(isPresented: $showTags) {
-            Modal(title: "Tags", filterState: $filterState) {
+            Modal(title: String(localized: "Tags"), filterState: $filterState) {
                 TagFilterView(
                     selectedTags: $filterState.tags)
             }
         }
 
         .sheet(isPresented: $showDocumentType) {
-            Modal(title: "Document type", filterState: $filterState) {
+            Modal(title: String(localized: "Document type"), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.documentType,
                     elements: store.documentTypes.sorted {
                         $0.value.name < $1.value.name
-                    }.map { ($0.value.id, $0.value.name) }
+                    }.map { ($0.value.id, $0.value.name) },
+                    notAssignedLabel: LocalizedStrings.Filter.DocumentType.notAssignedPicker
                 )
             }
         }
 
         .sheet(isPresented: $showCorrespondent) {
-            Modal(title: "Correspondent", filterState: $filterState) {
+            Modal(title: String(localized: "Correspondent"), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.correspondent,
                     elements: store.correspondents.sorted {
                         $0.value.name < $1.value.name
-                    }.map { ($0.value.id, $0.value.name) }
+                    }.map { ($0.value.id, $0.value.name) },
+                    notAssignedLabel: LocalizedStrings.Filter.Correspondent.notAssignedPicker
                 )
             }
         }
 
         .sheet(isPresented: $showStoragePath) {
-            Modal(title: "Storage path", filterState: $filterState) {
+            Modal(title: String(localized: "Storage path"), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.storagePath,
                     elements: store.storagePaths.sorted {

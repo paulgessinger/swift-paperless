@@ -19,15 +19,14 @@ Save saved view */
 /* Sort field names */
 "Added" = "Hinzugefügt am";
 
-/* Matching algorithm
-Owner filtering */
+/* Owner filtering */
 "All" = "Alle";
 
 /* No comment provided by engineer. */
 "All tags" = "Alle";
 
-/* Matching algorithm */
-"Any" = "Irgendein Wort";
+/* No comment provided by engineer. */
+"Any" = "Alle";
 
 /* No comment provided by engineer. */
 "Any tag" = "Irgendeines";
@@ -45,9 +44,6 @@ Logout confirmation */
 
 /* Sort field names */
 "ASN" = "ASN";
-
-/* Matching algorithm */
-"Auto" = "Auto";
 
 /* No comment provided by engineer. */
 "Cancel" = "Abbrechen";
@@ -160,9 +156,6 @@ Logout confirmation */
 /* No comment provided by engineer. */
 "Error" = "Fehler";
 
-/* Matching algorithm */
-"Exact" = "Exakt";
-
 /* No comment provided by engineer. */
 "Exclude correspondent" = "Korrespondent ausgeschlossen";
 
@@ -170,7 +163,7 @@ Logout confirmation */
 "Exclude document type" = "Dokumenttyp ausgeschlossen";
 
 /* No comment provided by engineer. */
-"Exclude element" = "Element ausgeschlossen";
+"Exclude element" = "Ausschließen";
 
 /* No comment provided by engineer. */
 "Exclude storage path" = "Speicherpfad ausgeschlossen";
@@ -187,14 +180,11 @@ Logout confirmation */
 /* Filter bar extra menu label */
 "Filtering" = "Filter aktiv";
 
-/* Matching algorithm */
-"Fuzzy" = "Ungenau";
-
 /* No comment provided by engineer. */
 "Inbox tag" = "Posteingangs-Tag";
 
 /* No comment provided by engineer. */
-"Include element" = "Element eingeschlossen";
+"Include element" = "Einschließen";
 
 /* No comment provided by engineer. */
 "Key" = "Schlüssel";
@@ -210,6 +200,27 @@ Logout confirmation */
 
 /* Matching algorithm */
 "Matching pattern" = "Zuweisungsmuster";
+
+/* Matching algorithm */
+"matching_algorithm_all" = "Alle";
+
+/* Matching algorithm */
+"matching_algorithm_any" = "Irgendein Wort";
+
+/* Matching algorithm */
+"matching_algorithm_auto" = "Automatisch";
+
+/* Matching algorithm */
+"matching_algorithm_exact" = "Exakt";
+
+/* Matching algorithm */
+"matching_algorithm_fuzzy" = "Ungenau";
+
+/* Matching algorithm */
+"matching_algorithm_none" = "Keiner";
+
+/* Matching algorithm */
+"matching_algorithm_regEx" = "Regulärer Ausdruck";
 
 /* Matching algorithm */
 "matching_explanation_all" = "Dokument enthält alle folgenden Wörter";
@@ -236,7 +247,7 @@ Logout confirmation */
 "Menu of more options" = "Weitere Optionen";
 
 /* Sort field names */
-"Modified" = "Verändert";
+"Modified" = "Verändert am";
 
 /* Owner filtering */
 "My documents" = "Meine Dokumente";
@@ -256,7 +267,7 @@ Logout confirmation */
 /* (No Comment) */
 "no_elements_found" = "Keine Elemente gefunden";
 
-/* Matching algorithm */
+/* No comment provided by engineer. */
 "None" = "Keine";
 
 /* No comment provided by engineer. */
@@ -294,9 +305,6 @@ Logout confirmation */
 
 /* No comment provided by engineer. */
 "Random color" = "Zufällige Farbe";
-
-/* Matching algorithm */
-"RegEx" = "Regulärer Ausdruck";
 
 /* No comment provided by engineer. */
 "Remove" = "Löschen";
@@ -394,7 +402,7 @@ Save document */
 "Unable to load preview" = "Vorschau kann nicht geladen werden";
 
 /* Owner filtering */
-"Unowned" = "Ohne Bezitzer";
+"Unowned" = "Ohne Besitzer";
 
 /* No comment provided by engineer. */
 "Upload complete" = "Upload abgeschlossen";

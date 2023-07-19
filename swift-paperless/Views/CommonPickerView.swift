@@ -87,7 +87,7 @@ struct CommonPicker: View {
                 .padding(.vertical, 2)
             Form {
                 Section {
-                    Row("Any", selected: selection == FilterState.Filter.any) {
+                    Row(String(localized: "Any"), selected: selection == FilterState.Filter.any) {
                         selection = .any
                     }
                     Row(notAssignedLabel, selected: selection == FilterState.Filter.notAssigned) {

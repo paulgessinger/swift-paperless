@@ -16,6 +16,30 @@
 /* Document type filtering */
 "document_type_not_assigned_picker" = "Not assigned";
 
+/* (No Comment) */
+"extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
+
+/* Matching algorithm */
+"matching_algorithm_all" = "All";
+
+/* Matching algorithm */
+"matching_algorithm_any" = "Any";
+
+/* Matching algorithm */
+"matching_algorithm_auto" = "Auto";
+
+/* Matching algorithm */
+"matching_algorithm_exact" = "Exact";
+
+/* Matching algorithm */
+"matching_algorithm_fuzzy" = "Fuzzy";
+
+/* Matching algorithm */
+"matching_algorithm_none" = "None";
+
+/* Matching algorithm */
+"matching_algorithm_regEx" = "RegEx";
+
 /* Matching algorithm */
 "matching_explanation_all" = "Document contains all of these words (space separated)";
 
@@ -38,6 +62,9 @@
 "matching_explanation_regex" = "Document matches this regular expression";
 
 /* (No Comment) */
+"no_elements_found" = "No elements found";
+
+/* Filter state additional information popup */
 "owner_filter_explicit_unsupported" = "Owner filter is in explicit user mode.";
 
 /* Owner filtering */
@@ -60,9 +87,4 @@
 
 /* Tags filterings */
 "tags_not_assigned_picker" = "Not assigned";
-
-"extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
-
-"no_elements_found" = "No elements found";
-
 
