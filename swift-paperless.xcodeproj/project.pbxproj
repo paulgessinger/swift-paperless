@@ -19,6 +19,7 @@
 		7A04EE482A673A7200C9CAE3 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */; };
 		7A04EE4A2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */; };
 		7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */; };
+		7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32BE2A5EAF1A00C18B44 /* Nuke */; };
@@ -724,6 +725,7 @@
 				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */,
 				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
+				7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */,
 				7A04EE452A672BDA00C9CAE3 /* DocumentDetailView.swift in Sources */,
 				7A2831B32A62748D009E86CE /* UserModel.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,

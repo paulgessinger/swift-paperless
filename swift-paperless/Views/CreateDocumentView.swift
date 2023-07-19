@@ -115,7 +115,7 @@ struct CreateDocumentView<Title: View>: View {
                                         Text(store.correspondents[id]?.name ?? "ERROR")
                                     }
                                     else {
-                                        Text("None")
+                                        Text(LocalizedStrings.Filter.Correspondent.notAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -137,7 +137,7 @@ struct CreateDocumentView<Title: View>: View {
                                         Text(store.documentTypes[id]?.name ?? "ERROR")
                                     }
                                     else {
-                                        Text("None")
+                                        Text(LocalizedStrings.Filter.DocumentType.notAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -160,7 +160,7 @@ struct CreateDocumentView<Title: View>: View {
                                         Text(self.store.storagePaths[id]?.name ?? "ERROR")
                                     }
                                     else {
-                                        Text("None")
+                                        Text(LocalizedStrings.Filter.StoragePath.notAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)

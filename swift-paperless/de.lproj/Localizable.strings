@@ -189,6 +189,51 @@ Logout confirmation */
 /* No comment provided by engineer. */
 "Key" = "Schlüssel";
 
+/* Login */
+"login.api_in_url_notice" = "Bitte `/api/` aus der URL entfernen";
+
+/* Login */
+"login.credentials" = "Zugangsdaten";
+
+/* Login */
+"login.details_title" = "Details";
+
+/* Login */
+"login.extra_headers" = "Zusätzliche *Header*";
+
+/* Login */
+"login.http_warning" = "Bitte nur zu lokalen Installationen per HTTP verbinden!";
+
+/* Login login_button */
+"login.login_button.error" = "Fehler beim Login";
+
+/* Login login_button */
+"login.login_button.label" = "Einloggen";
+
+/* Login login_button */
+"login.login_button.valid" = "Login gültig";
+
+/* Login */
+"login.more_toolbar_button_label" = "Mehr";
+
+/* Login paperless_url */
+"login.paperless_url.error" = "URL ungültig";
+
+/* Login paperless_url */
+"login.paperless_url.placeholder" = "Paperless URL";
+
+/* Login paperless_url */
+"login.paperless_url.valid" = "URL gültig";
+
+/* Login */
+"login.password" = "Passwort";
+
+/* Login */
+"login.password_storage_notice" = "Dass Passwort wird nur zum Login benutzt, und nicht gespeichert!";
+
+/* Login */
+"login.username" = "Username";
+
 /* No comment provided by engineer. */
 "Logout" = "Ausloggen";
 
@@ -266,9 +311,6 @@ Logout confirmation */
 
 /* (No Comment) */
 "no_elements_found" = "Keine Elemente gefunden";
-
-/* No comment provided by engineer. */
-"None" = "Keine";
 
 /* No comment provided by engineer. */
 "Ok" = "Ok";

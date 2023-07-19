@@ -19,6 +19,51 @@
 /* (No Comment) */
 "extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
 
+/* Login */
+"login.api_in_url_notice" = "Do not include `/api` in the URL";
+
+/* Login */
+"login.credentials" = "Credentials";
+
+/* Login */
+"login.details_title" = "Details";
+
+/* Login */
+"login.extra_headers" = "Extra headers";
+
+/* Login */
+"login.http_warning" = "If at all possible, use HTTPS to connect to the API.";
+
+/* Login login_button */
+"login.login_button.error" = "Login error";
+
+/* Login login_button */
+"login.login_button.label" = "Login";
+
+/* Login login_button */
+"login.login_button.valid" = "Login valid";
+
+/* Login */
+"login.more_toolbar_button_label" = "More";
+
+/* Login paperless_url */
+"login.paperless_url.error" = "URL invalid";
+
+/* Login paperless_url */
+"login.paperless_url.placeholder" = "Paperless URL";
+
+/* Login paperless_url */
+"login.paperless_url.valid" = "URL valid";
+
+/* Login */
+"login.password" = "Password";
+
+/* Login */
+"login.password_storage_notice" = "Your password is only used to log in, and not stored!";
+
+/* Login */
+"login.username" = "Username";
+
 /* Matching algorithm */
 "matching_algorithm_all" = "All";
 

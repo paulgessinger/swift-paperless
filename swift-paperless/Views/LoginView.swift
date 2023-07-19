@@ -45,10 +45,10 @@ private struct DetailsView: View {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Text("Extra headers")
+                    Text(LocalizedStrings.Login.extraHeaders)
                 }
             }
-            .navigationTitle("Details")
+            .navigationTitle(LocalizedStrings.Login.detailsTitle)
             .navigationBarTitleDisplayMode(.inline)
 
             .toolbar {
@@ -223,7 +223,7 @@ struct LoginView: View {
 
                 Section {
                     HStack {
-                        TextField("Paperless URL", text: $url.text)
+                        TextField(LocalizedStrings.Login.PaperlessUrl.placeholder, text: $url.text)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                         Spacer()
@@ -231,12 +231,12 @@ struct LoginView: View {
                         case .checking:
                             ProgressView()
                         case .valid:
-                            Label("Valid", systemImage:
+                            Label(LocalizedStrings.Login.PaperlessUrl.valid, systemImage:
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
                         case .error:
-                            Label("Error", systemImage:
+                            Label(LocalizedStrings.Login.PaperlessUrl.error, systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.red)
@@ -250,14 +250,14 @@ struct LoginView: View {
                         if apiInUrl {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
-                                Text("Do not include the /api/ part of the URL")
+                                Text(LocalizedStrings.Login.apiInUrlNotice)
                             }
                         }
 
                         if url.debouncedText.starts(with: "http://") {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
-                                Text("If at all possible, use HTTPS to connect to the Paperless server")
+                                Text(LocalizedStrings.Login.httpWarning)
                             }
                         }
                     }
@@ -265,16 +265,16 @@ struct LoginView: View {
                 }
 
                 Section {
-                    TextField("Username", text: $username)
+                    TextField(LocalizedStrings.Login.username, text: $username)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
-                    SecureField("Password", text: $password)
+                    SecureField(LocalizedStrings.Login.password, text: $password)
                 } header: {
-                    Text("Credentials")
+                    Text(LocalizedStrings.Login.credentials)
                 } footer: {
                     HStack(alignment: .top) {
                         Image(systemName: "info.circle")
-                        Text("Your password is used to login, and not stored on the device!")
+                        Text(LocalizedStrings.Login.passwordStorageNotice)
                     }
                 }
 
@@ -290,12 +290,12 @@ struct LoginView: View {
                     }) {
                         HStack {
                             Spacer()
-                            Text("Login")
+                            Text(LocalizedStrings.Login.LoginButton.label)
                             if loginState == .valid {
-                                Label("Valid", systemImage: "checkmark.circle.fill")
+                                Label(LocalizedStrings.Login.LoginButton.valid, systemImage: "checkmark.circle.fill")
                                     .labelStyle(.iconOnly)
                             } else if loginState == .error {
-                                Label("Error", systemImage: "xmark.circle.fill")
+                                Label(LocalizedStrings.Login.LoginButton.error, systemImage: "xmark.circle.fill")
                                     .labelStyle(.iconOnly)
                             }
                             Spacer()
@@ -330,7 +330,7 @@ struct LoginView: View {
                     Button {
                         showDetails = true
                     } label: {
-                        Label("More", systemImage: "info.circle")
+                        Label(LocalizedStrings.Login.moreToolbarButtonLabel, systemImage: "info.circle")
                     }
                 }
             }
