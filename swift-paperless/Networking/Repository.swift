@@ -40,6 +40,7 @@ protocol Repository {
     // MARK: Documents
 
     func document(id: UInt) async -> Document?
+    func document(asn: UInt) async -> Document?
     func documents(filter: FilterState) -> any DocumentSource
 
     // @TODO: Remove UIImage
@@ -98,6 +99,7 @@ class NullRepository: Repository {
     func documentTypes() async -> [DocumentType] { return [] }
 
     func document(id: UInt) async -> Document? { return nil }
+    func document(asn: UInt) async -> Document? { return nil }
     func documents(filter: FilterState) -> any DocumentSource {
         return NullDocumentSource()
     }

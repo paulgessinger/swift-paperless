@@ -47,6 +47,26 @@ struct DocumentPreviewImage: View {
     }
 }
 
+struct DocumentCellAspect: View {
+    var label: String
+    var systemImage: String
+
+    @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
+
+    init(_ label: String, systemImage: String) {
+        self.label = label
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        HStack {
+            Image(systemName: systemImage)
+                .frame(width: imageWidth)
+            Text(label)
+        }
+    }
+}
+
 struct DocumentCell: View {
     @EnvironmentObject var store: DocumentStore
     @Environment(\.redactionReasons) var redactionReasons
@@ -66,25 +86,7 @@ struct DocumentCell: View {
         return formatter
     }
 
-    private struct Aspect: View {
-        var label: String
-        var systemImage: String
-
-        @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
-
-        init(_ label: String, systemImage: String) {
-            self.label = label
-            self.systemImage = systemImage
-        }
-
-        var body: some View {
-            HStack {
-                Image(systemName: systemImage)
-                    .frame(width: imageWidth)
-                Text(label)
-            }
-        }
-    }
+    typealias Aspect = DocumentCellAspect
 
     var body: some View {
         HStack(alignment: .top) {

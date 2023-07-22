@@ -93,6 +93,9 @@ struct DocumentView: View {
     @State private var error: String?
     @State private var logoutRequested = false
 
+    @State private var dataScannerIsAvailable = false
+    @State private var showDataScanner = false
+
     func load() async {
         let d = 0.3
         async let delay: () = Task.sleep(for: .seconds(d))
@@ -261,6 +264,19 @@ struct DocumentView: View {
                             .labelStyle(.iconOnly)
                     }
                 }
+
+                if dataScannerIsAvailable {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            Task {
+                                try? await Task.sleep(for: .seconds(0.1))
+                                showDataScanner = true
+                            }
+                        } label: {
+                            Label("document_view.toolbar.asn", systemImage: "number.circle")
+                        }
+                    }
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
 
@@ -281,6 +297,10 @@ struct DocumentView: View {
                     }
                 )
                 .environmentObject(store)
+            }
+
+            .sheet(isPresented: $showDataScanner, onDismiss: {}) {
+                DataScannerView()
             }
 
             .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
@@ -304,6 +324,10 @@ struct DocumentView: View {
 
             .onChange(of: store.documents) { _ in
                 documents = documents.compactMap { store.documents[$0.id] }
+            }
+
+            .task {
+                dataScannerIsAvailable = await DataScannerView.isAvailable
             }
         }
         .environmentObject(nav)

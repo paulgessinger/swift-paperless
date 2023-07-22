@@ -9,6 +9,7 @@ import Foundation
 
 protocol DocumentProtocol: Codable {
     var documentType: UInt? { get set }
+    var asn: UInt? { get set }
     var correspondent: UInt? { get set }
     var tags: [UInt] { get set }
     var storagePath: UInt? { get set }
@@ -17,6 +18,7 @@ protocol DocumentProtocol: Codable {
 struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
     var id: UInt
     var title: String
+    var asn: UInt?
     var documentType: UInt?
     var correspondent: UInt?
     var created: Date
@@ -27,6 +29,7 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
 
     private enum CodingKeys: String, CodingKey {
         case id, title
+        case asn = "archive_serial_number"
         case documentType = "document_type"
         case correspondent, created, tags, added
         case storagePath = "storage_path"
@@ -35,6 +38,7 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
 
 struct ProtoDocument: DocumentProtocol {
     var title: String = ""
+    var asn: UInt?
     var documentType: UInt? = nil
     var correspondent: UInt? = nil
     var tags: [UInt] = []
