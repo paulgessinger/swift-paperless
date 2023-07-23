@@ -184,6 +184,7 @@ struct HighlightView: View {
 
 private struct DataScannerViewInternal: UIViewControllerRepresentable {
     var store: DocumentStore
+    var isScanning: Binding<Bool>
     var action: ((Document) -> Void)?
 
     class Coordinator: NSObject, DataScannerViewControllerDelegate {
@@ -312,12 +313,20 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
 
         viewController.delegate = context.coordinator
 
-        try? viewController.startScanning()
+        if isScanning.wrappedValue {
+            try? viewController.startScanning()
+        }
 
         return viewController
     }
 
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
+        if isScanning.wrappedValue {
+            try? uiViewController.startScanning()
+        } else {
+            uiViewController.stopScanning()
+        }
+    }
 
     static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator: Coordinator) {
         uiViewController.stopScanning()
@@ -328,56 +337,225 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
     }
 }
 
-struct DataScannerView: View {
+private struct DetailView: View {
+    var document: Document
+
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var store: DocumentStore
 
-    @State private var document: Document?
+    var body: some View {
+        NavigationStack {
+            DocumentDetailView(document: document)
+                .navigationBarTitleDisplayMode(.inline)
 
-    private struct DetailView: View {
-        var document: Document
-
-        @Environment(\.dismiss) private var dismiss
-
-        var body: some View {
-            NavigationStack {
-                DocumentDetailView(document: document)
-                    .navigationBarTitleDisplayMode(.inline)
-
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Back") {
-                                dismiss()
-                            }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Back") {
+                            dismiss()
                         }
                     }
-            }
+                }
         }
+    }
+}
+
+private struct TypeAsnView: View {
+    private enum Status {
+        case none
+        case loading(asn: UInt)
+        case valid(document: Document)
+        case invalid
+    }
+
+    @StateObject private var debounce = DebounceObject(delay: 0.1)
+    @EnvironmentObject private var store: DocumentStore
+    @FocusState private var focused: Bool
+    @State private var status = Status.none
+    @State private var document: Document?
+
+    private var asn: UInt? {
+        if let _ = try? /\d+/.wholeMatch(in: debounce.text) {
+            return UInt(debounce.text)
+        }
+        return nil
     }
 
     var body: some View {
-        DataScannerViewInternal(store: store) { document in
-            self.document = document
+        VStack {
+            // @TODO: The vertical spacing is kind of wonky. Improve layout
+            if case let .valid(document) = status {
+                DocumentCell(document: document)
+                    .padding(.top)
+                    .padding(.horizontal)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        self.document = document
+                    }
+                    .transition(.identity.combined(with: .opacity).animation(.default.delay(0.1)))
+
+                Divider()
+                    .padding(.top, 2)
+                    .padding(.bottom, 0)
+            }
+            HStack {
+                Text("ASN:")
+                    .padding(.leading)
+                    .padding(.vertical, 19)
+                TextField("1234", text: $debounce.text)
+                    .focused($focused)
+                    .keyboardType(.numberPad)
+                    .padding(.vertical, 19)
+
+                switch status {
+                case .none:
+                    EmptyView()
+                case .loading:
+                    ProgressView()
+                        .padding(10)
+                case let .valid(document):
+                    Button("Open") {
+                        self.document = document
+                    }
+                    .padding(10)
+                    .foregroundColor(.white)
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color.accentColor)
+                    )
+                    .padding(10)
+                case .invalid:
+                    Label("Invalid ASN", systemImage: "xmark")
+                        .labelStyle(.iconOnly)
+                        .padding(10)
+                        .foregroundColor(.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color.red)
+                        )
+                        .padding(10)
+                }
+            }
         }
 
-        .interactiveDismissDisabled(true)
-        .ignoresSafeArea(.container, edges: .bottom)
+        .background(
+            //            RoundedRectangle(cornerRadius: 15)
+            Rectangle().fill(.thickMaterial)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .padding()
+        .onAppear { focused = true }
 
-        .overlay(alignment: .topLeading) {
-            Button(role: .cancel) {
-                dismiss()
-            } label: {
-                Text("Cancel")
-                    .padding(.horizontal)
-                    .padding(.vertical, 10)
-                    .background(RoundedRectangle(cornerRadius: 15).fill(.regularMaterial))
+        .onChange(of: debounce.debouncedText) { _ in
+
+            guard !debounce.text.isEmpty else {
+                withAnimation { status = .none }
+                return
             }
-            .padding()
+
+            guard let asn else {
+                withAnimation {
+                    status = .invalid
+                }
+                return
+            }
+
+            withAnimation {
+                status = .loading(asn: asn)
+            }
+
+            Task {
+                if let document = await store.repository.document(asn: asn) {
+                    withAnimation {
+                        status = .valid(document: document)
+                    }
+                } else {
+                    withAnimation {
+                        status = .invalid
+                    }
+                }
+            }
         }
 
         .sheet(unwrapping: $document) { document in
             DetailView(document: document.wrappedValue)
         }
+    }
+}
+
+struct DataScannerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: DocumentStore
+
+    @State private var document: Document?
+    @State private var showTypeAsn = false
+    @State private var isScanning = true
+
+    var body: some View {
+        DataScannerViewInternal(store: store, isScanning: $isScanning) { document in
+            self.document = document
+        }
+        .transaction { t in
+            t.animation = nil
+        }
+
+        .interactiveDismissDisabled(true)
+        .ignoresSafeArea(.container, edges: .bottom)
+
+        .overlay(alignment: .top) {
+            HStack {
+                Button(role: .cancel) {
+                    dismiss()
+                } label: {
+                    Label("Cancel", systemImage: "xmark")
+                        .labelStyle(.iconOnly)
+                        .font(.title2)
+                        .padding(15)
+                        .background(Circle().fill(.regularMaterial))
+                }
+                .padding()
+
+                Spacer()
+
+                Button {
+                    if showTypeAsn {
+                        withAnimation {
+                            showTypeAsn = false
+                        }
+                        Task {
+                            try? await Task.sleep(for: .seconds(0.5))
+                            isScanning = true
+                        }
+                    } else {
+                        isScanning = false
+                        withAnimation {
+                            showTypeAsn = true
+                        }
+                    }
+                } label: {
+                    Label("Type in ASN", systemImage: "keyboard")
+                        .labelStyle(.iconOnly)
+                        .font(.title2)
+                        .padding(15)
+                        .background(Circle().fill(.regularMaterial))
+                }
+                .padding()
+            }
+        }
+
+        .safeAreaInset(edge: .bottom) {
+            if showTypeAsn {
+                TypeAsnView()
+                    .transition(.move(edge: .bottom))
+            }
+        }
+
+        .sheet(unwrapping: $document) { document in
+            DetailView(document: document.wrappedValue)
+        }
+
+//        .sheet(isPresented: $showTypeAsn) {
+//            TextField()
+//                .presentationDetents([.medium])
+//        }
     }
 
     static var isAvailable: Bool {
