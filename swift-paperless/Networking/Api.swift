@@ -186,7 +186,7 @@ class ApiDocumentSource: DocumentSource {
 }
 
 class ApiRepository {
-    private let connection: Connection
+    let connection: Connection
 
     init(connection: Connection) {
         self.connection = connection

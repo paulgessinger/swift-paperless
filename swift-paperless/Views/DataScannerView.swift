@@ -10,23 +10,37 @@ import SwiftUI
 import UIKit
 import VisionKit
 
-private func extractAsn(_ value: String, patterns: [String] = []) -> UInt? {
+private func extractAsn(_ value: String, patterns: [Regex<AnyRegexOutput>] = []) -> UInt? {
     let basePattern = /(?:ASN)?(\d+)/
     if let match = try? basePattern.wholeMatch(in: value) {
         return UInt(match.1)
     }
 
     for pattern in patterns {
-        do {
-            let ex = try Regex(pattern)
-            if let match = try? ex.wholeMatch(in: value) {
-                if let mAsn = match.output[1].substring {
-                    return UInt(mAsn)
-                }
+        if let match = try? pattern.wholeMatch(in: value) {
+            if let mAsn = match.output[1].substring {
+                return UInt(mAsn)
             }
-        } catch {
-            Logger.shared.error("Invalid pattern supplied to `extractAsn`: \(pattern) -> \(error)")
         }
+    }
+
+    return nil
+}
+
+private func makeAsnUrlPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
+    guard let fullHost = (store.repository as? ApiRepository)?.connection.host else {
+        return nil
+    }
+
+    let components = URLComponents(url: fullHost, resolvingAgainstBaseURL: false)
+
+    guard let host = components?.host else { return nil }
+    let escapedHost = NSRegularExpression.escapedPattern(for: host)
+
+    do {
+        return try Regex("^(?:https?:\\/\\/)?\(escapedHost)\\/asn\\/(\\d+)\\/?$")
+    } catch {
+        Logger.shared.error("Error making expression: \(error)")
     }
 
     return nil
@@ -48,10 +62,17 @@ struct HighlightView: View {
 
     @EnvironmentObject private var store: DocumentStore
 
-    private var asn: UInt? { extractAsn(text) }
+    var asnUrlPattern: [Regex<AnyRegexOutput>] {
+        // @TODO: Can I cache this somehow?
+        if let pattern = makeAsnUrlPattern(store: store) {
+            return [pattern]
+        }
+        return []
+    }
+
+    private var asn: UInt? { extractAsn(text, patterns: asnUrlPattern) }
 
     var document: Document? {
-        print("DOCUMENT STATUS: \(status)")
         switch status {
         case let .loaded(document):
             return document
@@ -183,7 +204,13 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
                 Logger.shared.trace("Tapped on element without payload")
                 return
             }
-            guard let asn = extractAsn(payload) else {
+
+            var patterns: [Regex<AnyRegexOutput>] = []
+            if let pattern = makeAsnUrlPattern(store: parent.store) {
+                patterns.append(pattern)
+            }
+
+            guard let asn = extractAsn(payload, patterns: patterns) else {
                 Logger.shared.trace("Tapped on element but failed to extract ASN")
                 return
             }
@@ -195,19 +222,6 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
 
                 parent.action?(document)
             }
-
-//            guard let vc = items[item.id] else {
-//                Logger.shared.debug("Tapped on item we didn't have a view for")
-//                return
-//            }
-//
-//            guard let document = vc.rootView.document else {
-//                Logger.shared.trace("Tapped on item which didn't have a document")
-//                // no document behind view, so probably invalid code or invalid ASN
-//                return
-//            }
-//
-//            parent.action?(document)
         }
 
         private func centerFromBounds(_ bounds: RecognizedItem.Bounds) -> CGPoint {
@@ -364,25 +378,6 @@ struct DataScannerView: View {
         .sheet(unwrapping: $document) { document in
             DetailView(document: document.wrappedValue)
         }
-
-//            .safeAreaInset(edge: .top, spacing: 0) {
-//                HStack {
-//                    Button("Cancel") {
-//                        dismiss()
-//                    }
-//                    Spacer()
-//                    Text("Scan ASN")
-//                    Spacer()
-//                }
-//                .padding()
-//                .frame(maxWidth: .infinity)
-//
-//                .background(
-//                    Rectangle()
-//                        .fill(Material.bar)
-//                        .ignoresSafeArea(.container, edges: .top)
-//                )
-//            }
     }
 
     static var isAvailable: Bool {
