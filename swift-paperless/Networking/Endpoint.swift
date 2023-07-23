@@ -20,21 +20,26 @@ struct Endpoint {
 
 extension Endpoint {
     static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = 100) -> Endpoint {
-        var queryItems = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "truncate_content", value: "true"),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
-        ]
-
-        let rules = filter.rules
-        queryItems += FilterRule.queryItems(for: rules)
+        var endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
 
         var ordering: String = filter.sortField.rawValue
         if filter.sortOrder.reverse {
             ordering = "-" + ordering
         }
 
-        queryItems.append(.init(name: "ordering", value: ordering))
+        let queryItems = endpoint.queryItems + [.init(name: "ordering", value: ordering)]
+
+        return Endpoint(path: endpoint.path, queryItems: queryItems)
+    }
+
+    static func documents(page: UInt, rules: [FilterRule] = [], pageSize: UInt = 100) -> Endpoint {
+        var queryItems = [
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "truncate_content", value: "true"),
+            URLQueryItem(name: "page_size", value: String(pageSize)),
+        ]
+
+        queryItems += FilterRule.queryItems(for: rules)
 
         return Endpoint(
             path: "/api/documents/",

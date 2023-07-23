@@ -96,6 +96,9 @@ struct DocumentView: View {
     @State private var error: String?
     @State private var logoutRequested = false
 
+    @State private var dataScannerIsAvailable = false
+    @State private var showDataScanner = false
+
     func load() async {
         let d = 0.3
         async let delay: () = Task.sleep(for: .seconds(d))
@@ -230,10 +233,9 @@ struct DocumentView: View {
             // MARK: Main toolbar
 
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
                     TaskActivityToolbar()
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
+
                     Button {
                         showFileImporter = true
                     } label: {
@@ -244,8 +246,7 @@ struct DocumentView: View {
                 ToolbarItem(placement: .principal) {
                     LogoView()
                 }
-
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
                     Menu {
                         NavigationLink(value: NavigationState.settings) {
                             Label("Settings", systemImage: "gear")
@@ -262,6 +263,17 @@ struct DocumentView: View {
                     } label: {
                         Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
                             .labelStyle(.iconOnly)
+                    }
+
+                    if DataScannerView.isAvailable {
+                        Button {
+                            Task {
+                                try? await Task.sleep(for: .seconds(0.1))
+                                showDataScanner = true
+                            }
+                        } label: {
+                            Label("document_view.toolbar.asn", systemImage: "number.circle")
+                        }
                     }
                 }
             }
@@ -286,6 +298,10 @@ struct DocumentView: View {
                 .environmentObject(store)
             }
 
+            .sheet(isPresented: $showDataScanner, onDismiss: {}) {
+                DataScannerView()
+            }
+
             .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
                 value in
                 if !value {
@@ -308,6 +324,7 @@ struct DocumentView: View {
             .onChange(of: store.documents) { _ in
                 documents = documents.compactMap { store.documents[$0.id] }
             }
+
         }
         .environmentObject(nav)
     }

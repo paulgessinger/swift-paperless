@@ -186,7 +186,7 @@ class ApiDocumentSource: DocumentSource {
 }
 
 class ApiRepository {
-    private let connection: Connection
+    let connection: Connection
 
     init(connection: Connection) {
         self.connection = connection
@@ -470,6 +470,33 @@ extension ApiRepository: Repository {
     func documentTypes() async -> [DocumentType] { return await all(DocumentType.self) }
 
     func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }
+
+    func document(asn: UInt) async -> Document? {
+        let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
+
+        let request = request(endpoint)
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                Logger.shared.error("Error fetching document by ASN \(asn): status code != 200")
+                return nil
+            }
+
+            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+
+            guard decoded.count > 0, !decoded.results.isEmpty else {
+                // this means the ASN was not found
+                return nil
+            }
+            return decoded.results.first
+
+        } catch {
+            Logger.shared.error("Error fetching document by ASN \(asn): \(error)")
+            return nil
+        }
+    }
 
     func users() async -> [User] { return await all(User.self) }
 

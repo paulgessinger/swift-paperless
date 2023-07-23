@@ -163,6 +163,10 @@ class PreviewRepository: Repository {
 
     func document(id: UInt) async -> Document? { return documents[id] }
 
+    func document(asn: UInt) async -> Document? {
+        return documents.first(where: { $0.value.asn == asn })?.value
+    }
+
     func documents(filter: FilterState) -> any DocumentSource {
         return PreviewDocumentSource(sequence: documents.map { $0.value }.sorted(by: { a, b in a.id < b.id }))
     }
