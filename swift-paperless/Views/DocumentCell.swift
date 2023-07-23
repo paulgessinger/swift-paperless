@@ -18,14 +18,14 @@ struct DocumentPreviewImage: View {
         ZStack {
             Rectangle()
                 .fill(Color(white: 0.8))
-                .aspectRatio(contentMode: .fill)
+//                .aspectRatio(contentMode: .fill)
                 .overlay(ProgressView())
-                .frame(width: 100, height: 150, alignment: .top)
+//                .frame(width: 100, height: 150, alignment: .top)
 
             image.image?
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 100, height: 150, alignment: .top)
+//                .aspectRatio(contentMode: .fill)
+//                .frame(width: 100, height: 150, alignment: .top)
         }
 
         .cornerRadius(10)
@@ -92,13 +92,13 @@ struct DocumentCell: View {
                 Rectangle()
                     .fill(Color(white: 0.8))
                     .cornerRadius(10)
-                    .frame(width: 100, height: 150)
-                    .scaledToFill()
+                    .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
             }
             else {
                 DocumentPreviewImage(store: store,
                                      document: document)
+                    .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
             }
 
@@ -142,7 +142,7 @@ struct DocumentCell: View {
             .layoutPriority(1)
             .padding(.horizontal, 5)
         }
-        .frame(maxHeight: 165, alignment: .center)
+        .frame(height: 200)
     }
 }
 

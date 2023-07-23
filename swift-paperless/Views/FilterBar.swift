@@ -405,264 +405,265 @@ struct FilterBar: View {
     }
 
     var body: some View {
-        VStack {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
-                        Label(String(localized: "Filtering", comment: "Filter bar extra menu label"), systemImage: "line.3.horizontal.decrease")
-                            .labelStyle(.iconOnly)
-                        if let savedViewId = filterState.savedView,
-                           let savedView = store.savedViews[savedViewId]
-                        {
-                            if filterState.modified {
-                                Text(String(localized: "\(savedView.name)*", comment: "Indicates modified saved view in the filter bar"))
-                            }
-                            else {
-                                Text(savedView.name)
-                            }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
+                    Label(String(localized: "Filtering", comment: "Filter bar extra menu label"), systemImage: "line.3.horizontal.decrease")
+                        .labelStyle(.iconOnly)
+                    if let savedViewId = filterState.savedView,
+                       let savedView = store.savedViews[savedViewId]
+                    {
+                        if filterState.modified {
+                            Text(String(localized: "\(savedView.name)*", comment: "Indicates modified saved view in the filter bar"))
                         }
-                        else if filterState.ruleCount > 0 {
-                            CircleCounter(value: filterState.ruleCount)
+                        else {
+                            Text(savedView.name)
                         }
                     }
-                    .opacity(filterMenuHit ? 0.5 : 1.0)
-                    .overlay {
-                        GeometryReader { geo in
-                            FilterMenu(filterState: $filterState, savedView: $savedView) {
-                                Color.clear
-                                    .frame(width: geo.size.width, height: geo.size.height)
-                            }
-                        }
-                        .onTapGesture {
-                            Task {
-                                Haptics.shared.prepare()
-                                Haptics.shared.impact(style: .light)
-                                filterMenuHit = true
-                                try? await Task.sleep(for: .seconds(0.3))
-                                withAnimation { filterMenuHit = false }
-                            }
-                        }
-                    }
-
-                    .onChange(of: offset) { _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            withAnimation {
-                                menuWidth = offset.width
-                            }
-                        }
-                    }
-
-                    Element(label: {
-                        switch filterState.tags {
-                        case .any:
-                            Text("Tags")
-                        case .notAssigned:
-                            Text(LocalizedStrings.Filter.Tags.notAssignedFilter)
-                        case .allOf(let include, let exclude):
-                            let count = include.count + exclude.count
-                            if count == 1 {
-                                if let i = include.first, let name = store.tags[i]?.name {
-                                    Text(name)
-                                }
-                                else if let i = exclude.first, let name = store.tags[i]?.name {
-                                    Label("Exclude tag", systemImage: "xmark")
-                                        .labelStyle(.iconOnly)
-                                    Text(name)
-                                }
-                                else {
-                                    Text(String(localized: "\(1) tag(s)"))
-                                        .redacted(reason: .placeholder)
-                                }
-                            }
-                            else {
-                                if !include.isEmpty, !exclude.isEmpty {
-                                    CircleCounter(value: include.count, mode: .include)
-                                    Text(String("/"))
-                                    CircleCounter(value: exclude.count, mode: .exclude)
-                                }
-                                else if !include.isEmpty {
-                                    CircleCounter(value: count, mode: .include)
-                                }
-                                else {
-                                    CircleCounter(value: count, mode: .exclude)
-                                }
-                                Text("Tags")
-                            }
-                        case .anyOf(let ids):
-                            if ids.count == 1 {
-                                if let name = store.tags[ids.first!]?.name {
-                                    Text(name)
-                                }
-                                else {
-                                    Text(String(localized: "\(1) tag(s)"))
-                                        .redacted(reason: .placeholder)
-                                }
-                            }
-                            else {
-                                CircleCounter(value: ids.count)
-                                Text("Tags")
-                            }
-                        }
-                    }, active: filterState.tags != .any) {
-                        present(.tags)
-                    }
-
-                    Element(label: {
-                        CommonElementLabel(DocumentType.self,
-                                           state: filterState.documentType)
-                    }, active: filterState.documentType != .any) { present(.documentType) }
-
-                    Element(label: {
-                        CommonElementLabel(Correspondent.self,
-                                           state: filterState.correspondent)
-                    }, active: filterState.correspondent != .any) { present(.correspondent) }
-
-                    Element(label: {
-                        CommonElementLabel(StoragePath.self,
-                                           state: filterState.storagePath)
-                    }, active: filterState.storagePath != .any) { present(.storagePath) }
-
-                    Pill(active: filterState.owner != .any) {
-                        switch filterState.owner {
-                        case .any:
-                            Text("Permissions")
-                        case .anyOf(let ids):
-                            if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                Text(LocalizedStrings.Filter.Owner.myDocuments)
-                            }
-                            else {
-                                CircleCounter(value: ids.count, mode: .include)
-                                Text(LocalizedStrings.Filter.Owner.multipleUsers)
-                            }
-                        case .noneOf(let ids):
-                            if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                Text(LocalizedStrings.Filter.Owner.sharedWithMe)
-                            }
-                            else {
-                                CircleCounter(value: ids.count, mode: .exclude)
-                                Text(LocalizedStrings.Filter.Owner.multipleUsers)
-                            }
-                        case .notAssigned:
-                            Text(LocalizedStrings.Filter.Owner.unowned)
-                        }
-                    }
-                    .overlay {
-                        GeometryReader { geo in
-
-                            Menu {
-                                Button {
-                                    withAnimation {
-                                        store.filterState.owner = .any
-                                    }
-                                } label: {
-                                    let text = LocalizedStrings.Filter.Owner.all
-                                    if filterState.owner == .any {
-                                        Label(text, systemImage: "checkmark")
-                                    }
-                                    else {
-                                        Text(text)
-                                    }
-                                }
-
-                                if let user = store.currentUser {
-                                    Button {
-                                        withAnimation {
-                                            store.filterState.owner = .anyOf(ids: [user.id])
-                                        }
-                                    } label: {
-                                        let text = LocalizedStrings.Filter.Owner.myDocuments
-                                        switch filterState.owner {
-                                        case .anyOf(let ids):
-                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                                Label(text, systemImage: "checkmark")
-                                            }
-                                            else {
-                                                Text(text)
-                                            }
-                                        default:
-                                            Text(text)
-                                        }
-                                    }
-                                    Button {
-                                        withAnimation {
-                                            store.filterState.owner = .noneOf(ids: [user.id])
-                                        }
-                                    } label: {
-                                        let text = LocalizedStrings.Filter.Owner.sharedWithMe
-                                        switch filterState.owner {
-                                        case .noneOf(let ids):
-                                            if ids.count == 1 && ids[0] == store.currentUser?.id {
-                                                Label(text, systemImage: "checkmark")
-                                            }
-                                            else {
-                                                Text(text)
-                                            }
-                                        default:
-                                            Text(text)
-                                        }
-                                    }
-                                }
-                                Button {
-                                    withAnimation {
-                                        store.filterState.owner = .notAssigned
-                                    }
-
-                                } label: {
-                                    let text = LocalizedStrings.Filter.Owner.unowned
-                                    if filterState.owner == .notAssigned {
-                                        Label(text, systemImage: "checkmark")
-                                    }
-                                    else {
-                                        Text(text)
-                                    }
-                                }
-
-                                switch filterState.owner {
-                                case .anyOf(let ids), .noneOf(let ids):
-                                    if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
-                                        Divider()
-                                        Text(String(localized: "owner_filter_explicit_unsupported", comment: "Filter state additional information popup"))
-                                    }
-                                    else {
-                                        EmptyView()
-                                    }
-                                case .notAssigned, .any:
-                                    EmptyView()
-                                }
-                            } label: {
-                                Color.clear
-                                    .frame(width: geo.size.width, height: geo.size.height)
-                            }
-                        }
-                    }
-
-                    Divider()
-
-                    Menu {
-                        Picker("Sort by", selection: $filterState.sortField) {
-                            ForEach(SortField.allCases, id: \.rawValue) { f in
-                                Text(f.label).tag(f)
-                            }
-                        }
-
-                        Picker("Sort ordering", selection: $filterState.sortOrder) {
-                            Label("Ascending", systemImage: "arrow.up")
-                                .tag(SortOrder.ascending)
-                            Label("Descending", systemImage: "arrow.down")
-                                .tag(SortOrder.descending)
-                        }
-                    }
-                    label: {
-                        Element(label: {
-                            Label("Sort menu", systemImage: "arrow.up.arrow.down")
-                                .labelStyle(.iconOnly)
-                        }, active: filterState.sortOrder != .ascending || filterState.sortField != .added, action: {})
+                    else if filterState.ruleCount > 0 {
+                        CircleCounter(value: filterState.ruleCount)
                     }
                 }
-                .padding(.horizontal)
-                .foregroundColor(.primary)
+                .opacity(filterMenuHit ? 0.5 : 1.0)
+                .overlay {
+                    GeometryReader { geo in
+                        FilterMenu(filterState: $filterState, savedView: $savedView) {
+                            Color.clear
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        }
+                    }
+                    .onTapGesture {
+                        Task {
+                            Haptics.shared.prepare()
+                            Haptics.shared.impact(style: .light)
+                            filterMenuHit = true
+                            try? await Task.sleep(for: .seconds(0.3))
+                            withAnimation { filterMenuHit = false }
+                        }
+                    }
+                }
+
+                .onChange(of: offset) { _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        withAnimation {
+                            menuWidth = offset.width
+                        }
+                    }
+                }
+
+                Element(label: {
+                    switch filterState.tags {
+                    case .any:
+                        Text("Tags")
+                    case .notAssigned:
+                        Text(LocalizedStrings.Filter.Tags.notAssignedFilter)
+                    case .allOf(let include, let exclude):
+                        let count = include.count + exclude.count
+                        if count == 1 {
+                            if let i = include.first, let name = store.tags[i]?.name {
+                                Text(name)
+                            }
+                            else if let i = exclude.first, let name = store.tags[i]?.name {
+                                Label("Exclude tag", systemImage: "xmark")
+                                    .labelStyle(.iconOnly)
+                                Text(name)
+                            }
+                            else {
+                                Text(String(localized: "\(1) tag(s)"))
+                                    .redacted(reason: .placeholder)
+                            }
+                        }
+                        else {
+                            if !include.isEmpty, !exclude.isEmpty {
+                                CircleCounter(value: include.count, mode: .include)
+                                Text(String("/"))
+                                CircleCounter(value: exclude.count, mode: .exclude)
+                            }
+                            else if !include.isEmpty {
+                                CircleCounter(value: count, mode: .include)
+                            }
+                            else {
+                                CircleCounter(value: count, mode: .exclude)
+                            }
+                            Text("Tags")
+                        }
+                    case .anyOf(let ids):
+                        if ids.count == 1 {
+                            if let name = store.tags[ids.first!]?.name {
+                                Text(name)
+                            }
+                            else {
+                                Text(String(localized: "\(1) tag(s)"))
+                                    .redacted(reason: .placeholder)
+                            }
+                        }
+                        else {
+                            CircleCounter(value: ids.count)
+                            Text("Tags")
+                        }
+                    }
+                }, active: filterState.tags != .any) {
+                    present(.tags)
+                }
+
+                Element(label: {
+                    CommonElementLabel(DocumentType.self,
+                                       state: filterState.documentType)
+                }, active: filterState.documentType != .any) { present(.documentType) }
+
+                Element(label: {
+                    CommonElementLabel(Correspondent.self,
+                                       state: filterState.correspondent)
+                }, active: filterState.correspondent != .any) { present(.correspondent) }
+
+                Element(label: {
+                    CommonElementLabel(StoragePath.self,
+                                       state: filterState.storagePath)
+                }, active: filterState.storagePath != .any) { present(.storagePath) }
+
+                Pill(active: filterState.owner != .any) {
+                    switch filterState.owner {
+                    case .any:
+                        Text("Permissions")
+                    case .anyOf(let ids):
+                        if ids.count == 1 && ids[0] == store.currentUser?.id {
+                            Text(LocalizedStrings.Filter.Owner.myDocuments)
+                        }
+                        else {
+                            CircleCounter(value: ids.count, mode: .include)
+                            Text(LocalizedStrings.Filter.Owner.multipleUsers)
+                        }
+                    case .noneOf(let ids):
+                        if ids.count == 1 && ids[0] == store.currentUser?.id {
+                            Text(LocalizedStrings.Filter.Owner.sharedWithMe)
+                        }
+                        else {
+                            CircleCounter(value: ids.count, mode: .exclude)
+                            Text(LocalizedStrings.Filter.Owner.multipleUsers)
+                        }
+                    case .notAssigned:
+                        Text(LocalizedStrings.Filter.Owner.unowned)
+                    }
+                }
+                .overlay {
+                    GeometryReader { geo in
+
+                        Menu {
+                            Button {
+                                withAnimation {
+                                    store.filterState.owner = .any
+                                }
+                            } label: {
+                                let text = LocalizedStrings.Filter.Owner.all
+                                if filterState.owner == .any {
+                                    Label(text, systemImage: "checkmark")
+                                }
+                                else {
+                                    Text(text)
+                                }
+                            }
+
+                            if let user = store.currentUser {
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .anyOf(ids: [user.id])
+                                    }
+                                } label: {
+                                    let text = LocalizedStrings.Filter.Owner.myDocuments
+                                    switch filterState.owner {
+                                    case .anyOf(let ids):
+                                        if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                            Label(text, systemImage: "checkmark")
+                                        }
+                                        else {
+                                            Text(text)
+                                        }
+                                    default:
+                                        Text(text)
+                                    }
+                                }
+                                Button {
+                                    withAnimation {
+                                        store.filterState.owner = .noneOf(ids: [user.id])
+                                    }
+                                } label: {
+                                    let text = LocalizedStrings.Filter.Owner.sharedWithMe
+                                    switch filterState.owner {
+                                    case .noneOf(let ids):
+                                        if ids.count == 1 && ids[0] == store.currentUser?.id {
+                                            Label(text, systemImage: "checkmark")
+                                        }
+                                        else {
+                                            Text(text)
+                                        }
+                                    default:
+                                        Text(text)
+                                    }
+                                }
+                            }
+                            Button {
+                                withAnimation {
+                                    store.filterState.owner = .notAssigned
+                                }
+
+                            } label: {
+                                let text = LocalizedStrings.Filter.Owner.unowned
+                                if filterState.owner == .notAssigned {
+                                    Label(text, systemImage: "checkmark")
+                                }
+                                else {
+                                    Text(text)
+                                }
+                            }
+
+                            switch filterState.owner {
+                            case .anyOf(let ids), .noneOf(let ids):
+                                if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
+                                    Divider()
+                                    Text(String(localized: "owner_filter_explicit_unsupported", comment: "Filter state additional information popup"))
+                                }
+                                else {
+                                    EmptyView()
+                                }
+                            case .notAssigned, .any:
+                                EmptyView()
+                            }
+                        } label: {
+                            Color.clear
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        }
+                    }
+                }
+
+                Divider()
+
+                Menu {
+                    Picker("Sort by", selection: $filterState.sortField) {
+                        ForEach(SortField.allCases, id: \.rawValue) { f in
+                            Text(f.label).tag(f)
+                        }
+                    }
+
+                    Picker("Sort ordering", selection: $filterState.sortOrder) {
+                        Label("Ascending", systemImage: "arrow.up")
+                            .tag(SortOrder.ascending)
+                        Label("Descending", systemImage: "arrow.down")
+                            .tag(SortOrder.descending)
+                    }
+                }
+                    label: {
+                    Element(label: {
+                        Label("Sort menu", systemImage: "arrow.up.arrow.down")
+                            .labelStyle(.iconOnly)
+                    }, active: filterState.sortOrder != .ascending || filterState.sortField != .added, action: {})
+                }
             }
+            .padding(.horizontal)
+            .foregroundColor(.primary)
         }
+        .scaledToFit()
+        .padding(.vertical, 5)
+
         .task {
             try? await Task.sleep(for: .seconds(0.5))
             withAnimation {

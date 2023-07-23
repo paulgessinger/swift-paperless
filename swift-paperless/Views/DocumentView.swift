@@ -170,42 +170,56 @@ struct DocumentView: View {
 
     var body: some View {
         NavigationStack(path: $nav.path) {
-            VStack {
-                SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {}
-                    .padding(.horizontal)
-                    .padding(.bottom, 4)
-
-                FilterBar()
-
-                ScrollView(.vertical) {
-                    VStack {
-                        if isLoading {
-                            LoadingDocumentList()
-                                .opacity(0.7)
-                        }
-                        else if !documents.isEmpty {
-                            DocumentList(documents: $documents)
-                        }
-                        else if !initialLoad {
-                            Text("No documents")
-                                .padding(.vertical, 50)
-                        }
+            ScrollView(.vertical) {
+                VStack {
+                    if isLoading {
+                        LoadingDocumentList()
+                            .opacity(0.7)
                     }
-                    .padding(.top, 8)
-                    .frame(maxWidth: .infinity)
+                    else if !documents.isEmpty {
+                        DocumentList(documents: $documents)
+                    }
+                    else if !initialLoad {
+                        Text("No documents")
+                            .padding(.vertical, 50)
+                    }
                 }
-                .overlay(
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+            }
+
+            .layoutPriority(1)
+
+            .refreshable {
+                if isLoading { return }
+                Task { await reload() }
+            }
+
+            .safeAreaInset(edge: .top) {
+                VStack {
+                    SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {}
+                        .padding(.horizontal)
+
+                    FilterBar()
+                        .padding(.bottom, 3)
+                }
+
+                .background(
                     Rectangle()
-                        .fill(Color("Divider"))
-                        .frame(maxWidth: .infinity, maxHeight: 1),
-                    alignment: .top
+                        .fill(
+                            Material.bar
+                        )
+                        .ignoresSafeArea(.container, edges: .top)
                 )
-                .layoutPriority(1)
-                .refreshable {
-                    if isLoading { return }
-                    Task { await reload() }
+
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(.gray)
+                        .frame(height: 1, alignment: .bottom)
                 }
             }
+
+            .toolbarBackground(.hidden, for: .navigationBar)
 
             .navigationDestination(for: NavigationState.self,
                                    destination: navigationDestinations)
@@ -298,12 +312,24 @@ struct DocumentView: View {
 
 // - MARK: Previews
 
+private struct StoreHelper<Content>: View where Content: View {
+    @ViewBuilder var content: () -> Content
+
+    @StateObject var store = DocumentStore(repository: PreviewRepository())
+
+    var body: some View {
+        content()
+            .environmentObject(store)
+    }
+}
+
 struct DocumentView_Previews: PreviewProvider {
     static let store = DocumentStore(repository: PreviewRepository())
 
     static var previews: some View {
-        DocumentView()
-            .environmentObject(store)
+        StoreHelper {
+            DocumentView()
+        }
     }
 }
 
@@ -329,7 +355,9 @@ private struct HelperView: View {
             Spacer()
         }
         .task {
+            try? await Task.sleep(for: .seconds(0.1))
             documents = await store.fetchDocuments(clear: false)
+            print("GOGOGO")
         }
     }
 }

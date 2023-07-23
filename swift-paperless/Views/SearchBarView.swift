@@ -18,15 +18,6 @@ struct SearchBarView: View {
     @FocusState private var focused: Bool
     @State private var showCancel: Bool = false
 
-    var textColor: Color {
-        if colorScheme == .dark {
-            return Color.green
-        }
-        else {
-            return Color.red
-        }
-    }
-
     var barColor: Color {
         if colorScheme == .dark {
             return Color.secondarySystemGroupedBackground
@@ -65,7 +56,8 @@ struct SearchBarView: View {
             .padding(.horizontal, 10)
             .background(
                 Rectangle()
-                    .fill(barColor)
+//                    .fill(barColor)
+                    .fill(.ultraThinMaterial)
                     .cornerRadius(10)
             )
 
