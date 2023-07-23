@@ -230,10 +230,9 @@ struct DocumentView: View {
             // MARK: Main toolbar
 
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
                     TaskActivityToolbar()
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
+
                     Button {
                         showFileImporter = true
                     } label: {
@@ -244,8 +243,7 @@ struct DocumentView: View {
                 ToolbarItem(placement: .principal) {
                     LogoView()
                 }
-
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
                     Menu {
                         NavigationLink(value: NavigationState.settings) {
                             Label("Settings", systemImage: "gear")
@@ -263,10 +261,8 @@ struct DocumentView: View {
                         Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
                             .labelStyle(.iconOnly)
                     }
-                }
 
-                if dataScannerIsAvailable {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    if DataScannerView.isAvailable {
                         Button {
                             Task {
                                 try? await Task.sleep(for: .seconds(0.1))
@@ -326,9 +322,6 @@ struct DocumentView: View {
                 documents = documents.compactMap { store.documents[$0.id] }
             }
 
-            .task {
-                dataScannerIsAvailable = await DataScannerView.isAvailable
-            }
         }
         .environmentObject(nav)
     }

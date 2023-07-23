@@ -131,7 +131,7 @@ struct DocumentPreview: View {
 }
 
 struct DocumentDetailView: View {
-    @EnvironmentObject var store: DocumentStore
+    @EnvironmentObject private var store: DocumentStore
 
     @State private var editing = false
     @State var document: Document
