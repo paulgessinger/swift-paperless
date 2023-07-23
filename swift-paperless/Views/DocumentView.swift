@@ -49,8 +49,11 @@ struct TaskActivityToolbar: View {
                     } label: {
                         TaskActivityView(text: "\(number)")
                     }
+                    .transition(.opacity)
                 }
             }
+            .padding(.horizontal)
+
             .task {
                 repeat {
                     Logger.shared.trace("Loading tasks")
