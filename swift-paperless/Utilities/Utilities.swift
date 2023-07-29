@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import os
 import SwiftUI
 
 class DebounceObject: ObservableObject {
@@ -176,6 +177,20 @@ extension Bundle {
 
 // @TODO: Put this into a dispatch queue
 func pdfPreview(url: URL) -> Image? {
+    var fileSize: UInt64 = 0
+    do {
+        let attr = try FileManager.default.attributesOfItem(atPath: url.path)
+        let dict = attr as NSDictionary
+        fileSize = dict.fileSize()
+    }
+    catch {}
+
+    // @TODO: Only run this in case of app extension
+    if fileSize > 5 * 1024 * 1024 {
+        Logger.shared.debug("Refusing to make PDF preview, file size is \(fileSize)")
+        return nil
+    }
+
     guard let doc = CGPDFDocument(url as CFURL) else { return nil }
     guard let page = doc.page(at: 1) else { return nil }
 
