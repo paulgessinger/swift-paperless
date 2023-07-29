@@ -142,6 +142,7 @@ struct DocumentEditView: View {
                                         titleVisibility: .visible)
                     {
                         Button("Delete", role: .destructive) {
+                            // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
                             DispatchQueue.main.async {
                                 Task {
                                     do {
