@@ -96,8 +96,8 @@ struct DocumentView: View {
     @State private var error: String?
     @State private var logoutRequested = false
 
-    @State private var dataScannerIsAvailable = false
     @State private var showDataScanner = false
+    @State private var showTypeAsn = false
 
     func load() async {
         let d = 0.3
@@ -225,6 +225,18 @@ struct DocumentView: View {
                 }
             }
 
+            .safeAreaInset(edge: .bottom) {
+                if showTypeAsn {
+                    TypeAsnView { document in
+                        nav.path.append(NavigationState.detail(document: document))
+                        withAnimation {
+                            showTypeAsn = false
+                        }
+                    }
+                    .transition(.move(edge: .bottom))
+                }
+            }
+
             .toolbarBackground(.hidden, for: .navigationBar)
 
             .navigationDestination(for: NavigationState.self,
@@ -270,6 +282,15 @@ struct DocumentView: View {
                             Task {
                                 try? await Task.sleep(for: .seconds(0.1))
                                 showDataScanner = true
+                            }
+                        } label: {
+                            Label("document_view.toolbar.asn", systemImage: "number.circle")
+                        }
+                    }
+                    else {
+                        Button {
+                            withAnimation(.spring(response: 0.5)) {
+                                showTypeAsn.toggle()
                             }
                         } label: {
                             Label("document_view.toolbar.asn", systemImage: "number.circle")
@@ -324,7 +345,6 @@ struct DocumentView: View {
             .onChange(of: store.documents) { _ in
                 documents = documents.compactMap { store.documents[$0.id] }
             }
-
         }
         .environmentObject(nav)
     }

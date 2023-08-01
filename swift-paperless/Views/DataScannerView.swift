@@ -358,7 +358,7 @@ private struct DetailView: View {
     }
 }
 
-private struct TypeAsnView: View {
+struct TypeAsnView: View {
     private enum Status {
         case none
         case loading(asn: UInt)
@@ -370,7 +370,8 @@ private struct TypeAsnView: View {
     @EnvironmentObject private var store: DocumentStore
     @FocusState private var focused: Bool
     @State private var status = Status.none
-    @State private var document: Document?
+
+    var action: (Document) -> Void
 
     private var asn: UInt? {
         if let _ = try? /\d+/.wholeMatch(in: debounce.text) {
@@ -388,7 +389,7 @@ private struct TypeAsnView: View {
                     .padding(.horizontal)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        self.document = document
+                        action(document)
                     }
                     .transition(.identity.combined(with: .opacity).animation(.default.delay(0.1)))
 
@@ -410,10 +411,10 @@ private struct TypeAsnView: View {
                     EmptyView()
                 case .loading:
                     ProgressView()
-                        .padding(10)
+                        .padding(20)
                 case let .valid(document):
                     Button("Open") {
-                        self.document = document
+                        action(document)
                     }
                     .padding(10)
                     .foregroundColor(.white)
@@ -473,10 +474,6 @@ private struct TypeAsnView: View {
                     }
                 }
             }
-        }
-
-        .sheet(unwrapping: $document) { document in
-            DetailView(document: document.wrappedValue)
         }
     }
 }
@@ -543,8 +540,10 @@ struct DataScannerView: View {
 
         .safeAreaInset(edge: .bottom) {
             if showTypeAsn {
-                TypeAsnView()
-                    .transition(.move(edge: .bottom))
+                TypeAsnView { document in
+                    self.document = document
+                }
+                .transition(.move(edge: .bottom))
             }
         }
 
