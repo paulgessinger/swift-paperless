@@ -185,10 +185,11 @@ func pdfPreview(url: URL) -> Image? {
     }
     catch {}
 
-    // @TODO: Only run this in case of app extension
-    if fileSize > 5 * 1024 * 1024 {
-        Logger.shared.debug("Refusing to make PDF preview, file size is \(fileSize)")
-        return nil
+    if Bundle.main.bundlePath.hasSuffix(".appex") {
+        if fileSize > 5 * 1024 * 1024 {
+            Logger.shared.debug("Refusing to make PDF preview, file size is \(fileSize)")
+            return nil
+        }
     }
 
     guard let doc = CGPDFDocument(url as CFURL) else { return nil }
