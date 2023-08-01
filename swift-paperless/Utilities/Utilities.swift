@@ -330,3 +330,32 @@ extension EquatableNoop: Codable where Value: Codable {
         try container.encode(wrappedValue)
     }
 }
+
+func gather<Return>(_ functions: (() async -> Return)...) async -> [Return] {
+    return await gather(functions)
+}
+
+func gather(_ functions: (() async -> Void)...) async {
+    await gather(functions)
+}
+
+func gather<Return>(_ functions: [() async -> Return]) async -> [Return] {
+    return await withTaskGroup(of: Return.self, returning: [Return].self) { g in
+        var result: [Return] = []
+        for fn in functions {
+            g.addTask { await fn() }
+        }
+        for await r in g {
+            result.append(r)
+        }
+        return result
+    }
+}
+
+func gather(_ functions: [() async -> Void]) async {
+    await withTaskGroup(of: Void.self) { g in
+        for fn in functions {
+            g.addTask { await fn() }
+        }
+    }
+}
