@@ -22,18 +22,20 @@ private struct SuggestionView<Element>: View
                 .filter { $0 != document[keyPath: property] }
                 .compactMap { elements[$0] }
             if !selected.isEmpty {
-                HStack {
-                    ForEach(selected, id: \.id) { element in
-                        Text("\(element.name)")
-                            .foregroundColor(.accentColor)
-                            .underline()
-                            .onTapGesture {
-                                Task {
-                                    withAnimation {
-                                        document[keyPath: property] = element.id
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(selected, id: \.id) { element in
+                            Text("\(element.name)")
+                                .foregroundColor(.accentColor)
+                                .underline()
+                                .onTapGesture {
+                                    Task {
+                                        withAnimation {
+                                            document[keyPath: property] = element.id
+                                        }
                                     }
                                 }
-                            }
+                        }
                     }
                 }
                 .transition(.opacity)
@@ -52,7 +54,9 @@ struct DocumentEditView: View {
 
     @Binding var documentOut: Document
     @State private var document: Document
-    @State private var modified: Bool = false
+    private var modified: Bool {
+        document != documentOut
+    }
 
     @State private var selectedState = FilterState()
     @State private var showDeleteConfirmation = false
@@ -76,18 +80,20 @@ struct DocumentEditView: View {
                     DatePicker("Created date", selection: self.$document.created, displayedComponents: .date)
                 } footer: {
                     if let suggestions, !suggestions.dates.isEmpty {
-                        HStack {
-                            ForEach(suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }, id: \.self) { date in
-                                Text(date, style: .date)
-                                    .foregroundColor(.accentColor)
-                                    .underline()
-                                    .onTapGesture {
-                                        Task {
-                                            withAnimation {
-                                                document.created = date
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }, id: \.self) { date in
+                                    Text(date, style: .date)
+                                        .foregroundColor(.accentColor)
+                                        .underline()
+                                        .onTapGesture {
+                                            Task {
+                                                withAnimation {
+                                                    document.created = date
+                                                }
                                             }
                                         }
-                                    }
+                                }
                             }
                         }
                         .transition(.opacity)
@@ -276,10 +282,6 @@ struct DocumentEditView: View {
                     .bold()
                     .disabled(!self.modified || self.document.title.isEmpty)
                 }
-            }
-
-            .onChange(of: self.document) { _ in
-                self.modified = true
             }
 
             .task {
