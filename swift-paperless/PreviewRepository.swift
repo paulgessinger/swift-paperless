@@ -198,6 +198,10 @@ class PreviewRepository: Repository {
         }
     }
 
+    func suggestions(documentId: UInt) async -> Suggestions {
+        .init(correspondents: [1], tags: [2, 3], documentTypes: [4], storagePaths: [2], dates: [.now, .now.advanced(by: 86400)])
+    }
+
     struct NotImplemented: Error {}
 
     func savedViews() async -> [SavedView] { return [] }

@@ -8,6 +8,40 @@
 import os
 import SwiftUI
 
+private struct SuggestionView<Element>: View
+    where Element: Named, Element: Identifiable, Element.ID == UInt
+{
+    @Binding var document: Document
+    let property: WritableKeyPath<Document, UInt?>
+    let elements: [UInt: Element]
+    let suggestions: [UInt]?
+
+    var body: some View {
+        if let suggestions {
+            let selected = suggestions
+                .filter { $0 != document[keyPath: property] }
+                .compactMap { elements[$0] }
+            if !selected.isEmpty {
+                HStack {
+                    ForEach(selected, id: \.id) { element in
+                        Text("\(element.name)")
+                            .foregroundColor(.accentColor)
+                            .underline()
+                            .onTapGesture {
+                                Task {
+                                    withAnimation {
+                                        document[keyPath: property] = element.id
+                                    }
+                                }
+                            }
+                    }
+                }
+                .transition(.opacity)
+            }
+        }
+    }
+}
+
 struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
@@ -25,6 +59,8 @@ struct DocumentEditView: View {
 
     @State private var deleted = false
 
+    @State private var suggestions: Suggestions?
+
     init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
         self._documentOut = document
         self._document = State(initialValue: document.wrappedValue)
@@ -38,74 +74,121 @@ struct DocumentEditView: View {
                     TextField("Title", text: self.$document.title) {}
                         .clearable(self.$document.title)
                     DatePicker("Created date", selection: self.$document.created, displayedComponents: .date)
+                } footer: {
+                    if let suggestions, !suggestions.dates.isEmpty {
+                        HStack {
+                            ForEach(suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }, id: \.self) { date in
+                                Text(date, style: .date)
+                                    .foregroundColor(.accentColor)
+                                    .underline()
+                                    .onTapGesture {
+                                        Task {
+                                            withAnimation {
+                                                document.created = date
+                                            }
+                                        }
+                                    }
+                            }
+                        }
+                        .transition(.opacity)
+                    }
                 }
+
                 Section {
-                    NavigationLink(destination: {
-                        CommonPickerEdit(
-                            manager: CorrespondentManager.self,
-                            document: self.$document,
-                            store: self.store
-                        )
-                        .navigationTitle("Correspondent")
-                    }) {
-                        HStack {
-                            Text("Correspondent")
-                            Spacer()
-                            Group {
-                                if let id = document.correspondent {
-                                    Text(self.store.correspondents[id]?.name ?? "ERROR")
-                                } else {
-                                    Text(LocalizedStrings.Filter.Correspondent.notAssignedFilter)
+                    HStack { // Prevents problem when applying suggestions
+                        NavigationLink(destination: {
+                            CommonPickerEdit(
+                                manager: CorrespondentManager.self,
+                                document: self.$document,
+                                store: self.store
+                            )
+                            .navigationTitle("Correspondent")
+                        }) {
+                            HStack {
+                                Text("Correspondent")
+                                Spacer()
+                                Group {
+                                    if let id = document.correspondent {
+                                        Text(self.store.correspondents[id]?.name ?? "ERROR")
+                                    } else {
+                                        Text(LocalizedStrings.Filter.Correspondent.notAssignedFilter)
+                                    }
                                 }
+                                .foregroundColor(.gray)
                             }
-                            .foregroundColor(.gray)
+                        }
+                    }
+                } footer: {
+                    SuggestionView(document: $document,
+                                   property: \.correspondent,
+                                   elements: store.correspondents,
+                                   suggestions: suggestions?.correspondents)
+                }
+
+                Section {
+                    HStack { // Prevents problem when applying suggestions
+                        NavigationLink(destination: {
+                            CommonPickerEdit(
+                                manager: DocumentTypeManager.self,
+                                document: self.$document,
+                                store: self.store
+                            )
+                            .navigationTitle("Document type")
+                        }) {
+                            HStack {
+                                Text("Document type")
+                                Spacer()
+                                Group {
+                                    if let id = document.documentType {
+                                        Text(self.store.documentTypes[id]?.name ?? "ERROR")
+                                    } else {
+                                        Text(LocalizedStrings.Filter.DocumentType.notAssignedFilter)
+                                    }
+                                }
+                                .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                } footer: {
+                    SuggestionView(document: $document,
+                                   property: \.documentType,
+                                   elements: store.documentTypes,
+                                   suggestions: suggestions?.documentTypes)
+                }
+
+                Section {
+                    HStack { // Prevents problem when applying suggestions
+                        NavigationLink(destination: {
+                            CommonPickerEdit(
+                                manager: StoragePathManager.self,
+                                document: self.$document,
+                                store: self.store
+                            )
+                            .navigationTitle("Storage path")
+                        }) {
+                            HStack {
+                                Text("Storage path")
+                                Spacer()
+                                Group {
+                                    if let id = document.storagePath {
+                                        Text(self.store.storagePaths[id]?.name ?? "ERROR")
+                                    } else {
+                                        Text(LocalizedStrings.Filter.StoragePath.notAssignedFilter)
+                                    }
+                                }
+                                .foregroundColor(.gray)
+                            }
                         }
                     }
 
-                    NavigationLink(destination: {
-                        CommonPickerEdit(
-                            manager: DocumentTypeManager.self,
-                            document: self.$document,
-                            store: self.store
-                        )
-                        .navigationTitle("Document type")
-                    }) {
-                        HStack {
-                            Text("Document type")
-                            Spacer()
-                            Group {
-                                if let id = document.documentType {
-                                    Text(self.store.documentTypes[id]?.name ?? "ERROR")
-                                } else {
-                                    Text(LocalizedStrings.Filter.DocumentType.notAssignedFilter)
-                                }
-                            }
-                            .foregroundColor(.gray)
-                        }
-                    }
+                } footer: {
+                    SuggestionView(document: $document,
+                                   property: \.storagePath,
+                                   elements: store.storagePaths,
+                                   suggestions: suggestions?.storagePaths)
+                }
 
-                    NavigationLink(destination: {
-                        CommonPickerEdit(
-                            manager: StoragePathManager.self,
-                            document: self.$document,
-                            store: self.store
-                        )
-                        .navigationTitle("Storage path")
-                    }) {
-                        HStack {
-                            Text("Storage path")
-                            Spacer()
-                            Group {
-                                if let id = document.storagePath {
-                                    Text(self.store.storagePaths[id]?.name ?? "ERROR")
-                                } else {
-                                    Text(LocalizedStrings.Filter.StoragePath.notAssignedFilter)
-                                }
-                            }
-                            .foregroundColor(.gray)
-                        }
-                    }
-
+                Section {
                     NavigationLink(destination: {
                         DocumentTagEditView(document: self.$document)
                     }) {
@@ -201,7 +284,19 @@ struct DocumentEditView: View {
 
             .task {
                 Task.detached {
-                    await self.store.fetchAll()
+                    await gather([
+                        self.store.fetchAll,
+                        {
+                            if await suggestions == nil {
+                                let suggestions = await store.repository.suggestions(documentId: document.id)
+                                await MainActor.run {
+                                    withAnimation {
+                                        self.suggestions = suggestions
+                                    }
+                                }
+                            }
+                        }
+                    ])
                 }
             }
         }

@@ -16,8 +16,12 @@ protocol MatchingModel {
     var isInsensitive: Bool { get set }
 }
 
-protocol Model {
+protocol Model: Identifiable {
     var id: UInt { get }
+}
+
+protocol Named {
+    var name: String { get }
 }
 
 enum MatchingAlgorithm: Int, Codable, CaseIterable {

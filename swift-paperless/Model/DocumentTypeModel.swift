@@ -16,7 +16,8 @@ struct DocumentType:
     Hashable,
     Identifiable,
     Model,
-    DocumentTypeProtocol
+    DocumentTypeProtocol,
+    Named
 {
     var id: UInt
     var name: String

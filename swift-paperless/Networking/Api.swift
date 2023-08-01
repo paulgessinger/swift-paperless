@@ -25,11 +25,17 @@ let decoder: JSONDecoder = {
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZZZZZ"
 
-        guard let res = df.date(from: dateStr) else {
-            throw DateDecodingError.invalidDate(string: dateStr)
+        if let res = df.date(from: dateStr) {
+            return res
         }
 
-        return res
+        df.dateFormat = "yyyy-MM-dd"
+
+        if let res = df.date(from: dateStr) {
+            return res
+        }
+
+        throw DateDecodingError.invalidDate(string: dateStr)
     }
 //    d.keyDecodingStrategy = .convertFromSnakeCase
     return d
@@ -527,6 +533,23 @@ extension ApiRepository: Repository {
 
             return data
         } catch { return nil }
+    }
+
+    func suggestions(documentId: UInt) async -> Suggestions {
+        let request = request(.suggestions(documentId: documentId))
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: nil)
+            }
+
+            return try decoder.decode(Suggestions.self, from: data)
+        } catch {
+            Logger.shared.debug("Unable to load suggestions: \(error)")
+            return .init()
+        }
     }
 
     // MARK: Saved views
