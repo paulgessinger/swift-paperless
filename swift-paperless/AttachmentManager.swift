@@ -18,8 +18,6 @@ class AttachmentManager: ObservableObject {
     @Published private(set) var previewImage: Image?
     @Published var documentUrl: URL?
 
-    @Published private(set) var text: [String] = ["Initial"]
-
     func setDocumentUrl(_ url: URL) {
         Task { await MainActor.run { documentUrl = url }}
     }
@@ -32,14 +30,6 @@ class AttachmentManager: ObservableObject {
         Task {
             await MainActor.run {
                 previewImage = image
-            }
-        }
-    }
-
-    func add(_ value: String) {
-        Task {
-            await MainActor.run {
-                text.append(value)
             }
         }
     }

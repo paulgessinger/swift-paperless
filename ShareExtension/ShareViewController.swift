@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 10.03.23.
 //
 
+import os
 import Social
 import SwiftUI
 import UIKit
@@ -36,49 +37,51 @@ private extension AttachmentManager {
         setLoading(false)
         switch data {
         case let url as URL:
-            self.add("\(url)")
+            Logger.shared.debug("Received url \(url)")
             if previewImage == nil {
-                if let preview = pdfPreview(url: url) {
-                    self.add("have custom pdf render preview")
-                    setPreviewImage(preview)
-                }
-                else {
-                    Task {
-                        // this is on the main actor already anyway
-                        if let image = await makePreviewImage() {
-                            setPreviewImage(image)
-                        }
-                    }
-                }
+//                if let preview = pdfPreview(url: url) {
+//                    Logger.shared.debug("Have custom pdf render preview")
+//                    setPreviewImage(preview)
+//                }
+//                else {
+//                    Task {
+//                        // this is on the main actor already anyway
+//                        if let image = await makePreviewImage() {
+//                            Logger.shared.debug("Have preview image and can set")
+//                            setPreviewImage(image)
+//                        }
+//                    }
+//                }
             }
             setDocumentUrl(url)
         default:
-            self.add("no clue")
+            Logger.shared.debug("Got attachment data \(String(describing: data)) but cannot handle")
         }
     }
 
     func receiveAttachment(attachment: NSItemProvider) {
         guard attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") else {
-            NSLog("Got invalid attachment")
+            Logger.shared.debug("Got invalid attachment")
             self.error = .invalidAttachment
             return
         }
 
-        self.add("Load attach")
+        Logger.shared.trace("Load attach")
         attachment.loadItem(forTypeIdentifier: "com.adobe.pdf", options: nil,
                             completionHandler: self.didLoadItem)
 
-        self.add("Load preview")
+        Logger.shared.trace("Load preview")
         attachment.loadPreviewImage(options: [:], completionHandler: { sc, error in
-            self.add("Preview completion")
+            Logger.shared.trace("Preview completion")
             if error != nil || sc == nil {
-                self.add("No preview: error: \(String(describing: error))")
+                Logger.shared.trace("No preview: error: \(String(describing: error))")
                 return
             }
 
             if let sc = sc {
                 _ = sc
-                fatalError("Got preview, I don't actually know what to do now")
+                Logger.shared.error("Got preview, I don't actually know what to do now")
+                fatalError("Dead")
             }
 
         })
@@ -92,6 +95,7 @@ class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        Logger.shared.trace("Paperless share extension viewDidLoad fired")
 
         let shareView = ShareView(attachmentManager: attachmentManager,
                                   callback: {
