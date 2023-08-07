@@ -25,7 +25,6 @@ struct CreateDocumentView<Title: View>: View {
     @State private var document = ProtoDocument()
     @State private var status = Status.none
 
-    @State private var previewImage: Image?
 
     var callback: () -> Void
 
@@ -70,21 +69,12 @@ struct CreateDocumentView<Title: View>: View {
             VStack {
                 HStack {
                     Group {
-                        if let preview = previewImage {
-                            preview
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 100, alignment: .top)
-                                .cornerRadius(10)
-                        }
-                        else {
-                            Rectangle()
-                                .fill(Color.systemGroupedBackground)
-                                .frame(width: 100, height: 100)
-                                .cornerRadius(10)
-                        }
+                        PDFThumbnail(file: sourceUrl)
+                            .background(.white)
+                            .frame(width: 100, height: 100, alignment: .top)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
-                    .overlay(RoundedRectangle(cornerRadius: 10)
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .stroke(.gray, lineWidth: 1))
 
                     Text(document.title)
@@ -219,7 +209,6 @@ struct CreateDocumentView<Title: View>: View {
                 }
             }
             .task {
-                previewImage = pdfPreview(url: sourceUrl)
                 await store.fetchAll()
             }
         }

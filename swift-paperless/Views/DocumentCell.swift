@@ -29,7 +29,7 @@ struct DocumentPreviewImage: View {
         }
 
         .cornerRadius(10)
-        .overlay(RoundedRectangle(cornerRadius: 10)
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
             .stroke(.gray, lineWidth: 1))
 
         .task {

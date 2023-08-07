@@ -139,7 +139,8 @@ class PreviewRepository: Repository {
     func create(document: ProtoDocument, file: URL) async throws {}
 
     func download(documentID: UInt) async -> URL? {
-        return Bundle.main.url(forResource: "demo", withExtension: "pdf")
+        try? await Task.sleep(for: .seconds(10))
+        return Bundle.main.url(forResource: "demo2", withExtension: "pdf")
     }
 
     func tag(id: UInt) async -> Tag? { return tags[id] }
@@ -171,16 +172,16 @@ class PreviewRepository: Repository {
         return PreviewDocumentSource(sequence: documents.map { $0.value }.sorted(by: { a, b in a.id < b.id }))
     }
 
-    func thumbnail(document: Document) async -> (Bool, Image?) {
+    func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
             print("No thumb data returned")
-            return (false, nil)
+            return nil
         }
 
-        guard let uiImage = UIImage(data: data) else { return (false, nil) }
+        guard let uiImage = UIImage(data: data) else { return nil }
         let image = Image(uiImage: uiImage)
 
-        return (false, image)
+        return image
     }
 
     func thumbnailData(document: Document) async -> Data? {

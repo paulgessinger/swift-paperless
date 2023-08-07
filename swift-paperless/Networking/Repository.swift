@@ -44,7 +44,7 @@ protocol Repository {
     func documents(filter: FilterState) -> any DocumentSource
 
     // @TODO: Remove UIImage
-    func thumbnail(document: Document) async -> (Bool, Image?)
+    func thumbnail(document: Document) async -> Image?
     func thumbnailData(document: Document) async -> Data?
 
     func download(documentID: UInt) async -> URL?
@@ -104,7 +104,7 @@ class NullRepository: Repository {
         return NullDocumentSource()
     }
 
-    func thumbnail(document: Document) async -> (Bool, Image?) { return (false, nil) }
+    func thumbnail(document: Document) async -> Image? { return nil }
     func thumbnailData(document: Document) async -> Data? { return nil }
 
     func savedViews() async -> [SavedView] { return [] }

@@ -10,8 +10,7 @@ import SwiftUI
 private enum DownloadState {
     case initial
     case loading
-    case loaded(URL)
-    case ready(URL, Image)
+    case loaded(PDFThumbnail)
     case error
 }
 
@@ -143,6 +142,8 @@ struct DocumentDetailView: View {
 
     @State private var relatedDocuments: [Document]? = nil
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private func loadDocument() async {
         switch download {
         case .initial:
@@ -151,13 +152,12 @@ struct DocumentDetailView: View {
                 download = .error
                 return
             }
-            download = .loaded(url)
-            guard let image = pdfPreview(url: url) else {
+            guard let view = PDFThumbnail(file: url) else {
                 download = .error
                 return
             }
             withAnimation {
-                download = .ready(url, image)
+                download = .loaded(view)
             }
 
         default:
@@ -185,69 +185,80 @@ struct DocumentDetailView: View {
         }
     }
 
+    var gray: Color {
+        if colorScheme == .dark {
+            return Color.secondarySystemGroupedBackground
+        }
+        else {
+            return Color.systemGroupedBackground
+        }
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading) {
-                Text(document.title)
-                    .font(.title)
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading) {
 
-                HStack(alignment: .top, spacing: 25) {
-                    VStack(alignment: .leading) {
-                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                            Aspect(name, systemImage: "person")
-                                .foregroundColor(Color.accentColor)
-                        }
-                        else {
-                            Aspect("Not assigned", systemImage: "person")
-                                .foregroundColor(Color.gray)
-                                .opacity(0.5)
-                        }
+                    HStack(alignment: .top, spacing: 25) {
+                        VStack(alignment: .leading) {
+                            if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                Aspect(name, systemImage: "person")
+                                    .foregroundColor(Color.accentColor)
+                            }
+                            else {
+                                Aspect("Not assigned", systemImage: "person")
+                                    .foregroundColor(Color.gray)
+                                    .opacity(0.5)
+                            }
 
-                        if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                            Aspect(name, systemImage: "doc")
-                                .foregroundColor(Color.orange)
+                            if let id = document.documentType, let name = store.documentTypes[id]?.name {
+                                Aspect(name, systemImage: "doc")
+                                    .foregroundColor(Color.orange)
+                            }
+                            else {
+                                Aspect("Not assigned", systemImage: "doc")
+                                    .foregroundColor(Color.gray)
+                                    .opacity(0.5)
+                            }
                         }
-                        else {
-                            Aspect("Not assigned", systemImage: "doc")
-                                .foregroundColor(Color.gray)
-                                .opacity(0.5)
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+
+                        VStack(alignment: .leading) {
+                            Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
+
+                            if let id = document.storagePath, let name = store.storagePaths[id]?.name {
+                                Aspect(name, systemImage: "archivebox")
+                            }
+                            else {
+                                Aspect("Default", systemImage: "archivebox")
+                            }
                         }
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
-                    VStack(alignment: .leading) {
-                        Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
-
-                        if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                            Aspect(name, systemImage: "archivebox")
-                        }
-                        else {
-                            Aspect("Default", systemImage: "archivebox")
-                        }
-                    }
-                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                    TagsView(tags: document.tags.compactMap { store.tags[$0] })
                 }
+                .padding()
 
-                TagsView(tags: document.tags.compactMap { store.tags[$0] })
-
-                Divider()
-                    .padding(.vertical)
-
-                Button(action: {
-                    Task {
-                        if case let .ready(url, _) = download {
-                            previewUrl = url
-                        }
-                    }
-                }) {
+                VStack {
                     switch download {
-                    case .loading, .initial, .loaded:
+                    case .loading, .initial:
+
                         HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
+                            AuthAsyncImage {
+                                await store.repository.thumbnail(document: document)
+                            } content: { image in
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .blur(radius: 5)
+                            }
+                            placeholder: {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .aspectRatio(0.75, contentMode: .fit)
+                            }
                         }
-                        .frame(height: 400)
                     case .error:
                         HStack {
                             Spacer()
@@ -257,19 +268,33 @@ struct DocumentDetailView: View {
 
                             Spacer()
                         }
-                        .frame(height: 400)
 
-                    case let .ready(_, image):
-                        image
-                            .resizable()
-                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-                            .clipShape(RoundedRectangle(cornerRadius: 5))
-                            .scaledToFill()
-                            .shadow(color: Color(white: 0.9), radius: 5)
+                    case let .loaded(view):
+                        view
+                            .background(.white)
                     }
                 }
-                .buttonStyle(.plain)
-                .quickLookPreview($previewUrl)
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(.gray, lineWidth: 1))
+                .shadow(color: Color("ImageShadow"), radius: 15)
+                .padding()
+
+                .onTapGesture {
+                    if case let .loaded(view) = download {
+                        previewUrl = view.file
+                    }
+                }
+            }
+
+            .refreshable {
+                if let document = await store.document(id: document.id) {
+                    self.document = document
+                }
+            }
+        }
+
+        .quickLookPreview($previewUrl)
 
 //                if let related = relatedDocuments {
 //                    Group {
@@ -285,37 +310,30 @@ struct DocumentDetailView: View {
 //                    .transition(
 //                        .opacity.combined(with: .move(edge: .bottom)))
 //                }
-            }
-            .padding()
 
-            .task {
-                await loadDocument()
             }
 
-            .onChange(of: store.documents) { _ in
-                if let document = store.documents[document.id] {
-                    self.document = document
-                }
-                //            else {
-                //                print("Document in detail view went away")
-                //            }
-            }
+        .navigationTitle(document.title)
+        .navigationBarTitleDisplayMode(.large)
 
-            .refreshable {
-                if let document = await store.document(id: document.id) {
-                    self.document = document
-                }
-            }
+        .task {
+            await loadDocument()
+        }
 
-            .toolbar {
-                Button("Edit") {
-                    editing.toggle()
-                }
+        .onChange(of: store.documents) { _ in
+            if let document = store.documents[document.id] {
+                self.document = document
             }
+        }
 
-            .sheet(isPresented: $editing) {
-                DocumentEditView(document: $document)
+        .toolbar {
+            Button("Edit") {
+                editing.toggle()
             }
+        }
+
+        .sheet(isPresented: $editing) {
+            DocumentEditView(document: $document)
         }
     }
 }
@@ -325,13 +343,15 @@ private struct PreviewHelper: View {
     @State var document: Document?
 
     var body: some View {
-        VStack {
-            if let document = document {
-                DocumentDetailView(document: document)
+        NavigationStack {
+            VStack {
+                if let document = document {
+                    DocumentDetailView(document: document)
+                }
             }
-        }
-        .task {
-            document = await store.document(id: 1)
+            .task {
+                document = await store.document(id: 1)
+            }
         }
     }
 }

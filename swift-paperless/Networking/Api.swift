@@ -500,15 +500,15 @@ extension ApiRepository: Repository {
 
     func users() async -> [User] { return await all(User.self) }
 
-    func thumbnail(document: Document) async -> (Bool, Image?) {
+    func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
-            return (false, nil)
+            return nil
         }
         guard let uiImage = UIImage(data: data) else {
-            return (false, nil)
+            return nil
         }
         let image = Image(uiImage: uiImage)
-        return (false, image)
+        return image
     }
 
     func thumbnailData(document: Document) async -> Data? {

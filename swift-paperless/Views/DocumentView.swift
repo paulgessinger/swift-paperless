@@ -164,7 +164,6 @@ struct DocumentView: View {
         switch nav {
         case .detail(let doc):
             DocumentDetailView(document: doc)
-                .navigationBarTitleDisplayMode(.inline)
         case .settings:
             SettingsView()
         default:
