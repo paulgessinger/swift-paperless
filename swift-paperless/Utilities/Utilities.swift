@@ -282,10 +282,12 @@ struct Haptics {
 
 struct ClearableModifier: ViewModifier {
     @Binding var text: String
+    @FocusState var focused: Bool
 
     func body(content: Content) -> some View {
         HStack {
             content
+                .focused($focused)
 
             Spacer()
 
@@ -294,6 +296,7 @@ struct ClearableModifier: ViewModifier {
                 .foregroundColor(.gray)
                 .onTapGesture {
                     self.text = ""
+                    focused = true
                 }
                 .opacity(text.isEmpty ? 0 : 1)
         }
@@ -302,7 +305,9 @@ struct ClearableModifier: ViewModifier {
 
 extension TextField {
     func clearable(_ text: Binding<String>) -> some View {
-        modifier(ClearableModifier(text: text))
+        let m = ClearableModifier(text: text)
+        return modifier(m)
+            .focused(m.$focused)
     }
 }
 
