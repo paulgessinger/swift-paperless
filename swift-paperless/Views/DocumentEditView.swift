@@ -77,26 +77,31 @@ struct DocumentEditView: View {
                 Section {
                     TextField("Title", text: self.$document.title) {}
                         .clearable(self.$document.title)
-                    DatePicker("Created date", selection: self.$document.created, displayedComponents: .date)
+                    DatePicker("Created date",
+                               selection: self.$document.created.animation(.default),
+                               displayedComponents: .date)
                 } footer: {
                     if let suggestions, !suggestions.dates.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }, id: \.self) { date in
-                                    Text(date, style: .date)
-                                        .foregroundColor(.accentColor)
-                                        .underline()
-                                        .onTapGesture {
-                                            Task {
-                                                withAnimation {
-                                                    document.created = date
+                        let valid = suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }
+                        if !valid.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(valid, id: \.self) { date in
+                                        Text(date, style: .date)
+                                            .foregroundColor(.accentColor)
+                                            .underline()
+                                            .onTapGesture {
+                                                Task {
+                                                    withAnimation {
+                                                        document.created = date
+                                                    }
                                                 }
                                             }
-                                        }
+                                    }
                                 }
                             }
+                            .transition(.opacity)
                         }
-                        .transition(.opacity)
                     }
                 }
 
