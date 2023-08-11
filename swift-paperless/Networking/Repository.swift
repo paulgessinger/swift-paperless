@@ -49,6 +49,8 @@ protocol Repository {
 
     func download(documentID: UInt) async -> URL?
 
+    func suggestions(documentId: UInt) async -> Suggestions
+
     // MARK: Saved views
 
     func savedViews() async -> [SavedView]
@@ -121,6 +123,8 @@ class NullRepository: Repository {
     func users() async -> [User] { [] }
 
     func tasks() async -> [PaperlessTask] { [] }
+
+    func suggestions(documentId: UInt) async -> Suggestions { .init() }
 }
 
 // - MARK: DocumentSource

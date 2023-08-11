@@ -11,7 +11,7 @@ protocol CorrespondentProtocol: Equatable, MatchingModel {
     var name: String { get set }
 }
 
-struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProtocol {
+struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProtocol, Named {
     var id: UInt
     var documentCount: UInt?
     var lastCorrespondence: Date?
