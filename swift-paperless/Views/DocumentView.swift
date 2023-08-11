@@ -18,13 +18,12 @@ enum NavigationState: Equatable, Hashable {
     case settings
 }
 
-class NavigationCoordinator: ObservableObject {
-    @Published var path = NavigationPath()
-
-    func popToRoot() {
-        path.removeLast(path.count)
+extension NavigationPath {
+    mutating func popToRoot() {
+        removeLast(count)
     }
 }
+
 
 struct TaskActivityToolbar: View {
     @EnvironmentObject var store: DocumentStore
@@ -82,7 +81,7 @@ struct DocumentView: View {
     // MARK: State
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.4)
-    @StateObject private var nav = NavigationCoordinator()
+    @State private var navPath = NavigationPath()
 
     @State private var documents: [Document] = []
     @State private var searchSuggestions: [String] = []
@@ -163,7 +162,7 @@ struct DocumentView: View {
     func navigationDestinations(nav: NavigationState) -> some View {
         switch nav {
         case .detail(let doc):
-            DocumentDetailView(document: doc)
+            DocumentDetailView(document: doc, navPath: $navPath)
         case .settings:
             SettingsView()
         default:
@@ -174,7 +173,7 @@ struct DocumentView: View {
     // MARK: Main View Body
 
     var body: some View {
-        NavigationStack(path: $nav.path) {
+        NavigationStack(path: $navPath) {
             ScrollView(.vertical) {
                 VStack {
                     if isLoading {
@@ -182,7 +181,7 @@ struct DocumentView: View {
                             .opacity(0.7)
                     }
                     else if !documents.isEmpty {
-                        DocumentList(documents: $documents)
+                        DocumentList(documents: $documents, navPath: $navPath)
                     }
                     else if !initialLoad {
                         Text("No documents")
@@ -227,7 +226,7 @@ struct DocumentView: View {
             .safeAreaInset(edge: .bottom) {
                 if showTypeAsn {
                     TypeAsnView { document in
-                        nav.path.append(NavigationState.detail(document: document))
+                        navPath.append(NavigationState.detail(document: document))
                         withAnimation {
                             showTypeAsn = false
                         }
@@ -345,7 +344,6 @@ struct DocumentView: View {
                 documents = documents.compactMap { store.documents[$0.id] }
             }
         }
-        .environmentObject(nav)
     }
 }
 

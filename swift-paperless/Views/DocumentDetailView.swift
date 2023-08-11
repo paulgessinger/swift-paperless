@@ -132,9 +132,10 @@ struct DocumentPreview: View {
 struct DocumentDetailView: View {
     @EnvironmentObject private var store: DocumentStore
 
-    @State private var editing = false
     @State var document: Document
+    var navPath: Binding<NavigationPath>?
 
+    @State private var editing = false
     @State private var download: DownloadState = .initial
     @State private var previewUrl: URL?
 
@@ -330,7 +331,7 @@ struct DocumentDetailView: View {
         }
 
         .sheet(isPresented: $editing) {
-            DocumentEditView(document: $document)
+            DocumentEditView(document: $document, navPath: navPath)
         }
     }
 }
@@ -338,12 +339,13 @@ struct DocumentDetailView: View {
 private struct PreviewHelper: View {
     @EnvironmentObject var store: DocumentStore
     @State var document: Document?
+    @State var navPath = NavigationPath()
 
     var body: some View {
         NavigationStack {
             VStack {
                 if let document = document {
-                    DocumentDetailView(document: document)
+                    DocumentDetailView(document: document, navPath: $navPath)
                 }
             }
             .task {

@@ -32,15 +32,15 @@ struct LoadingDocumentList: View {
 
 struct DocumentList: View {
     @EnvironmentObject private var store: DocumentStore
-
     @Binding var documents: [Document]
+    @Binding var navPath: NavigationPath
+
     @State private var loadingMore = false
 
     struct Cell: View {
-        @EnvironmentObject private var nav: NavigationCoordinator
-
         var store: DocumentStore
         var document: Document
+        @Binding var navPath: NavigationPath
 
         var body: some View {
             NavigationLink(value:
@@ -52,7 +52,7 @@ struct DocumentList: View {
                     .padding(5)
                     .contextMenu {
                         Button {
-                            nav.path.append(NavigationState.detail(document: document))
+                            navPath.append(NavigationState.detail(document: document))
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
@@ -86,7 +86,7 @@ struct DocumentList: View {
             ForEach(
                 Array(zip(documents.indices, documents)), id: \.1.id
             ) { index, document in
-                Cell(store: store, document: document)
+                Cell(store: store, document: document, navPath: $navPath)
                     .if(index > documents.count - 10) { view in
                         view.task {
                             let hasMore = await store.hasMoreDocuments()

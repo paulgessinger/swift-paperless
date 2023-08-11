@@ -5,14 +5,16 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import os
 import SwiftUI
 
 struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
     @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var nav: NavigationCoordinator
     @EnvironmentObject private var errorController: ErrorController
+
+    var navPath: Binding<NavigationPath>? = nil
 
     @Binding var documentOut: Document
     @State private var document: Document
@@ -23,9 +25,10 @@ struct DocumentEditView: View {
 
     @State private var deleted = false
 
-    init(document: Binding<Document>) {
+    init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
         self._documentOut = document
         self._document = State(initialValue: document.wrappedValue)
+        self.navPath = navPath
     }
 
     var body: some View {
@@ -146,13 +149,17 @@ struct DocumentEditView: View {
                             DispatchQueue.main.async {
                                 Task {
                                     do {
+                                        Logger.shared.trace("Deleted document from Edit view")
                                         try await self.store.deleteDocument(self.document)
                                         self.deleted = true
                                         let impact = UIImpactFeedbackGenerator(style: .rigid)
                                         impact.impactOccurred()
                                         try await Task.sleep(for: .seconds(0.2))
                                         self.dismiss()
-                                        self.nav.popToRoot()
+                                        if let navPath {
+                                            Logger.shared.trace("Pop navigation to root")
+                                            navPath.wrappedValue.popToRoot()
+                                        }
                                     } catch {
                                         self.errorController.push(error: error)
                                     }
@@ -205,11 +212,12 @@ struct DocumentEditView: View {
 private struct PreviewHelper: View {
     @EnvironmentObject var store: DocumentStore
     @State var document: Document?
+    @State var navPath = NavigationPath()
 
     var body: some View {
         VStack {
             if self.document != nil {
-                DocumentEditView(document: Binding(unwrapping: $document)!)
+                DocumentEditView(document: Binding(unwrapping: $document)!, navPath: $navPath)
             }
         }
         .task {
