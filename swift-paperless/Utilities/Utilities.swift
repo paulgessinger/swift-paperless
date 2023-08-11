@@ -287,7 +287,7 @@ struct ClearableModifier: ViewModifier {
     func body(content: Content) -> some View {
         HStack {
             content
-                .focused($focused)
+                .focused($focused) // @TODO: This is probably not ideal if I want to manage focus externally.
 
             Spacer()
 
@@ -307,7 +307,6 @@ extension TextField {
     func clearable(_ text: Binding<String>) -> some View {
         let m = ClearableModifier(text: text)
         return modifier(m)
-            .focused(m.$focused)
     }
 }
 
