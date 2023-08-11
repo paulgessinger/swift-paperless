@@ -199,6 +199,10 @@ struct DocumentDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading) {
+                    Text(document.title)
+                        .font(.title)
+                        .bold()
+                        .padding(.bottom)
                     HStack(alignment: .top, spacing: 25) {
                         VStack(alignment: .leading) {
                             if let id = document.correspondent, let name = store.correspondents[id]?.name {
@@ -311,8 +315,7 @@ struct DocumentDetailView: View {
 //                        .opacity.combined(with: .move(edge: .bottom)))
 //                }
 
-        .navigationTitle(document.title)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
 
         .task {
             await loadDocument()
