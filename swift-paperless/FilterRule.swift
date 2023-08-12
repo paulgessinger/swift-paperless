@@ -220,7 +220,7 @@ enum SortOrder: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let reverse = try container.decode(Bool.self)
-        self = reverse ? .ascending : .descending
+        self.init(reverse)
     }
 
     public func encode(to encoder: Encoder) throws {
