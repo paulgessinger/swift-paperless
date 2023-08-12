@@ -43,6 +43,8 @@ protocol Repository {
     func document(asn: UInt) async -> Document?
     func documents(filter: FilterState) -> any DocumentSource
 
+    func nextAsn() async -> UInt
+
     // @TODO: Remove UIImage
     func thumbnail(document: Document) async -> Image?
     func thumbnailData(document: Document) async -> Data?
@@ -105,6 +107,8 @@ class NullRepository: Repository {
     func documents(filter: FilterState) -> any DocumentSource {
         return NullDocumentSource()
     }
+
+    func nextAsn() async -> UInt { 1 }
 
     func thumbnail(document: Document) async -> Image? { return nil }
     func thumbnailData(document: Document) async -> Data? { return nil }

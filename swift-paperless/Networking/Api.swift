@@ -504,6 +504,33 @@ extension ApiRepository: Repository {
         }
     }
 
+    func nextAsn() async -> UInt {
+        var fs = FilterState()
+        fs.sortField = .asn
+        fs.sortOrder = .descending
+        let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
+        let url = url(endpoint)
+        Logger.shared.trace("\(url)")
+
+        let request = request(endpoint)
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                Logger.shared.error("Error fetching document by for next ASN: status code != 200")
+                return 1
+            }
+
+            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+
+            return (decoded.results.first?.asn ?? 0) + 1
+        } catch {
+            Logger.shared.error("Error fetching document for next ASN: \(error)")
+        }
+
+        return 0
+    }
+
     func users() async -> [User] { return await all(User.self) }
 
     func thumbnail(document: Document) async -> Image? {

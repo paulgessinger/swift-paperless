@@ -121,9 +121,19 @@ class PreviewRepository: Repository {
             return self.storagePaths.map { $0.value.id }.sorted().randomElement(using: &generator)
         }
 
+        var maxAsn: UInt = 0
+        let asn = { () -> UInt? in
+            if Float.random(in: 0..<1.0, using: &generator) < 0.5 {
+                return nil
+            }
+            maxAsn += 1
+            return maxAsn
+        }
+
         for i in 0..<30 {
             documents[UInt(i)] = .init(id: UInt(i),
                                        title: "Document \(i + 1)",
+                                       asn: asn(),
                                        documentType: dt(),
                                        correspondent: corr(),
                                        created: .now,
@@ -132,6 +142,10 @@ class PreviewRepository: Repository {
         }
 
         documents[2]?.title = "I am a very long document title that will not fit into a single line."
+    }
+
+    func nextAsn() async -> UInt {
+        (documents.compactMap { $0.value.asn }.max() ?? 0) + 1
     }
 
     func update(document: Document) async throws -> Document { document }
