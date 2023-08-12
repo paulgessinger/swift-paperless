@@ -111,6 +111,10 @@ struct DocumentCell: View {
                     .lineLimit(2)
                     .truncationMode(.middle)
 
+                if let asn = document.asn {
+                    Aspect("#\(asn)", systemImage: "qrcode")
+                }
+
                 if let id = document.correspondent, let name = store.correspondents[id]?.name {
                     Aspect(name, systemImage: "person")
                         .foregroundColor(.accentColor)

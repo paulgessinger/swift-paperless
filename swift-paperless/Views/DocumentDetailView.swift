@@ -129,6 +129,33 @@ struct DocumentPreview: View {
     }
 }
 
+private struct Aspect<Content: View>: View {
+    var label: Content
+    var systemImage: String
+
+    @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
+
+    init(systemImage: String, content: @escaping () -> Content) {
+        self.systemImage = systemImage
+        self.label = content()
+    }
+
+    var body: some View {
+        HStack {
+            Image(systemName: systemImage)
+                .frame(width: imageWidth, alignment: .leading)
+            label
+        }
+    }
+}
+
+private extension Aspect where Content == Text {
+    init(_ label: String, systemImage: String) {
+        self.label = Text(label)
+        self.systemImage = systemImage
+    }
+}
+
 struct DocumentDetailView: View {
     @EnvironmentObject private var store: DocumentStore
 
@@ -166,26 +193,6 @@ struct DocumentDetailView: View {
         }
     }
 
-    private struct Aspect: View {
-        var label: String
-        var systemImage: String
-
-        @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
-
-        init(_ label: String, systemImage: String) {
-            self.label = label
-            self.systemImage = systemImage
-        }
-
-        var body: some View {
-            HStack {
-                Image(systemName: systemImage)
-                    .frame(width: imageWidth, alignment: .leading)
-                Text(label)
-            }
-        }
-    }
-
     var gray: Color {
         if colorScheme == .dark {
             return Color.secondarySystemGroupedBackground
@@ -205,6 +212,19 @@ struct DocumentDetailView: View {
                         .padding(.bottom)
                     HStack(alignment: .top, spacing: 25) {
                         VStack(alignment: .leading) {
+                            if let asn = document.asn {
+                                Aspect("#\(asn)", systemImage: "qrcode")
+                            }
+                            else {
+                                Aspect(systemImage: "qrcode") {
+                                    HStack(spacing: 2) {
+                                        Text("#")
+                                        Text("0000")
+                                            .redacted(reason: .placeholder)
+                                    }
+                                }
+                            }
+
                             if let id = document.correspondent, let name = store.correspondents[id]?.name {
                                 Aspect(name, systemImage: "person")
                                     .foregroundColor(Color.accentColor)
