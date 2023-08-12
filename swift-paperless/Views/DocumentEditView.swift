@@ -28,6 +28,7 @@ private struct SuggestionView<Element>: View
                             Text("\(element.name)")
                                 .foregroundColor(.accentColor)
                                 .underline()
+                                .font(.footnote)
                                 .onTapGesture {
                                     Task {
                                         withAnimation {
@@ -80,7 +81,7 @@ struct DocumentEditView: View {
                     DatePicker("Created date",
                                selection: self.$document.created.animation(.default),
                                displayedComponents: .date)
-                } footer: {
+
                     if let suggestions, !suggestions.dates.isEmpty {
                         let valid = suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }
                         if !valid.isEmpty {
@@ -89,6 +90,7 @@ struct DocumentEditView: View {
                                     ForEach(valid, id: \.self) { date in
                                         Text(date, style: .date)
                                             .foregroundColor(.accentColor)
+                                            .font(.footnote)
                                             .underline()
                                             .onTapGesture {
                                                 Task {
@@ -129,7 +131,6 @@ struct DocumentEditView: View {
                             }
                         }
                     }
-                } footer: {
                     SuggestionView(document: $document,
                                    property: \.correspondent,
                                    elements: store.correspondents,
@@ -160,7 +161,7 @@ struct DocumentEditView: View {
                             }
                         }
                     }
-                } footer: {
+
                     SuggestionView(document: $document,
                                    property: \.documentType,
                                    elements: store.documentTypes,
@@ -192,7 +193,6 @@ struct DocumentEditView: View {
                         }
                     }
 
-                } footer: {
                     SuggestionView(document: $document,
                                    property: \.storagePath,
                                    elements: store.storagePaths,
