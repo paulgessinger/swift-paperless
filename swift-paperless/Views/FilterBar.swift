@@ -651,11 +651,11 @@ struct FilterBar: View {
                             .tag(SortOrder.descending)
                     }
                 }
-                    label: {
+                label: {
                     Element(label: {
                         Label("Sort menu", systemImage: "arrow.up.arrow.down")
                             .labelStyle(.iconOnly)
-                    }, active: filterState.sortOrder != .ascending || filterState.sortField != .added, action: {})
+                    }, active: filterState.sortOrder != .descending || filterState.sortField != .added, action: {})
                 }
             }
             .padding(.horizontal)

@@ -230,19 +230,19 @@ enum SortOrder: Codable {
 
     var reverse: Bool {
         switch self {
-        case .ascending:
-            return true
         case .descending:
+            return true
+        case .ascending:
             return false
         }
     }
 
     init(_ reverse: Bool) {
         if reverse {
-            self = .ascending
+            self = .descending
         }
         else {
-            self = .descending
+            self = .ascending
         }
     }
 }
@@ -302,7 +302,7 @@ struct FilterState: Equatable, Codable {
     var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
     var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
     var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
-    var sortOrder: SortOrder = .ascending { didSet { modified = modified || sortOrder != oldValue }}
+    var sortOrder: SortOrder = .descending { didSet { modified = modified || sortOrder != oldValue }}
     var savedView: UInt? = nil
 
     @EquatableNoop
