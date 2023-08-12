@@ -18,14 +18,15 @@ protocol DocumentProtocol: Codable {
 struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
     var id: UInt
     var title: String
-    var asn: UInt?
-    var documentType: UInt?
-    var correspondent: UInt?
+
+    @NullCodable var asn: UInt?
+    @NullCodable var documentType: UInt?
+    @NullCodable var correspondent: UInt?
     var created: Date
     var tags: [UInt]
 
     private(set) var added: String? = nil
-    var storagePath: UInt? = nil
+    @NullCodable var storagePath: UInt? = nil
 
     private enum CodingKeys: String, CodingKey {
         case id, title
