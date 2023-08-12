@@ -134,6 +134,10 @@ class PreviewRepository: Repository {
         documents[2]?.title = "I am a very long document title that will not fit into a single line."
     }
 
+    func nextAsn() async -> UInt {
+        (documents.compactMap { $0.value.asn }.max() ?? 0) + 1
+    }
+
     func update(document: Document) async throws -> Document { document }
     func delete(document: Document) async throws {}
     func create(document: ProtoDocument, file: URL) async throws {}

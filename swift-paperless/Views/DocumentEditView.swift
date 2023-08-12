@@ -66,6 +66,23 @@ struct DocumentEditView: View {
 
     @State private var suggestions: Suggestions?
 
+    private var asn: Binding<String> {
+        .init(get: {
+            if let asn = document.asn {
+                return "\(asn)"
+            } else {
+                return ""
+            }
+        }, set: { document.asn = UInt($0) })
+    }
+
+    func asnPlusOne() async {
+        let nextAsn = await store.repository.nextAsn()
+        withAnimation {
+            document.asn = nextAsn
+        }
+    }
+
     init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
         self._documentOut = document
         self._document = State(initialValue: document.wrappedValue)
@@ -78,6 +95,21 @@ struct DocumentEditView: View {
                 Section {
                     TextField("Title", text: self.$document.title) {}
                         .clearable(self.$document.title)
+
+                    TextField("ASN", text: asn)
+                        .keyboardType(.numberPad)
+                        .overlay(alignment: .trailing) {
+                            if document.asn == nil {
+                                Button("+1") { Task { await asnPlusOne() }}
+                                    .padding(.vertical, 2)
+                                    .padding(.horizontal, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                            .fill(Color.accentColor))
+                                    .foregroundColor(.white)
+                            }
+                        }
+
                     DatePicker("Created date",
                                selection: self.$document.created.animation(.default),
                                displayedComponents: .date)
