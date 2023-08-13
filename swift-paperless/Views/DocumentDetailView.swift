@@ -310,11 +310,11 @@ struct DocumentDetailView: View {
                     }
                 }
             }
+        }
 
-            .refreshable {
-                if let document = await store.document(id: document.id) {
-                    self.document = document
-                }
+        .refreshable {
+            if let document = await store.document(id: document.id) {
+                self.document = document
             }
         }
 
