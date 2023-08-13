@@ -314,6 +314,15 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Preferences") {
+                NavigationLink {
+                    PreferencesView()
+                        .navigationTitle("Preferences")
+                } label: {
+                    Label("Preferences", systemImage: "dial.low")
+                }
+            }
+
             Section("Details") {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)

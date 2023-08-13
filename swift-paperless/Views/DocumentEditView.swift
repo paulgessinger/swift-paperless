@@ -62,6 +62,9 @@ struct DocumentEditView: View {
     @State private var selectedState = FilterState()
     @State private var showDeleteConfirmation = false
 
+    @AppStorage(SettingsKeys.documentDeleteConfirmation)
+    var documentDeleteConfirmation: Bool = true
+
     @State private var deleted = false
 
     @State private var suggestions: Suggestions?
@@ -87,6 +90,28 @@ struct DocumentEditView: View {
         self._documentOut = document
         self._document = State(initialValue: document.wrappedValue)
         self.navPath = navPath
+    }
+
+    func doDocumentDelete() {
+        DispatchQueue.main.async {
+            Task {
+                do {
+                    Logger.shared.trace("Deleted document from Edit view")
+                    try await self.store.deleteDocument(self.document)
+                    self.deleted = true
+                    let impact = UIImpactFeedbackGenerator(style: .rigid)
+                    impact.impactOccurred()
+                    try await Task.sleep(for: .seconds(0.2))
+                    self.dismiss()
+                    if let navPath {
+                        Logger.shared.trace("Pop navigation to root")
+                        navPath.wrappedValue.popToRoot()
+                    }
+                } catch {
+                    self.errorController.push(error: error)
+                }
+            }
+        }
     }
 
     var body: some View {
@@ -247,7 +272,11 @@ struct DocumentEditView: View {
 
                 Section {
                     Button(action: {
-                        self.showDeleteConfirmation = true
+                        if documentDeleteConfirmation {
+                            self.showDeleteConfirmation = true
+                        } else {
+                            doDocumentDelete()
+                        }
                     }) {
                         HStack {
                             Spacer()
@@ -272,25 +301,7 @@ struct DocumentEditView: View {
                     {
                         Button("Delete", role: .destructive) {
                             // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                            DispatchQueue.main.async {
-                                Task {
-                                    do {
-                                        Logger.shared.trace("Deleted document from Edit view")
-                                        try await self.store.deleteDocument(self.document)
-                                        self.deleted = true
-                                        let impact = UIImpactFeedbackGenerator(style: .rigid)
-                                        impact.impactOccurred()
-                                        try await Task.sleep(for: .seconds(0.2))
-                                        self.dismiss()
-                                        if let navPath {
-                                            Logger.shared.trace("Pop navigation to root")
-                                            navPath.wrappedValue.popToRoot()
-                                        }
-                                    } catch {
-                                        self.errorController.push(error: error)
-                                    }
-                                }
-                            }
+                            doDocumentDelete()
                         }
                         Button("Cancel", role: .cancel) {}
                     }

@@ -62,4 +62,9 @@ enum LocalizedStrings {
             static let error = String(localized: "login.login_button.error", comment: "Login login_button")
         }
     }
+
+    enum Settings {
+        static let documentDeleteConfirmationLabel = String(localized: "settings.preferences.document_delete_confirmation_label", comment: "Preferences")
+        static let documentDeleteConfirmationDescription = String(localized: "settings.preferences.document_delete_confirmation_description", comment: "Preferences")
+    }
 }

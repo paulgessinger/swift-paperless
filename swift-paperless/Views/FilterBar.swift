@@ -297,7 +297,7 @@ private struct Pill<Label: View>: View {
         .overlay(
             Capsule()
                 .strokeBorder(active ? Color("AccentColorLightened") : Color("ElementBorder"),
-                              lineWidth: 1))
+                              lineWidth: 0.66))
         .foregroundColor(active ? Color("AccentColorLightened") : Color.primary)
         .if(active) { view in view.bold() }
     }

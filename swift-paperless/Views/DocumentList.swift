@@ -14,13 +14,21 @@ struct LoadingDocumentList: View {
 
     var body: some View {
         VStack {
-            ForEach(documents, id: \.self) { document in
-                DocumentCell(document: document)
-                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-                    .redacted(reason: .placeholder)
-                Divider()
-                    .padding(.horizontal)
+            List(documents, id: \.self) { document in
+                VStack {
+                    DocumentCell(document: document)
+                        .redacted(reason: .placeholder)
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                    Rectangle()
+                        .fill(.gray)
+                        .frame(height: 0.33)
+                        .padding(.horizontal)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
+            .listStyle(.plain)
         }
         .environmentObject(store)
         .task {
@@ -92,6 +100,15 @@ class DocumentListViewModel: ObservableObject {
             documents[target] = document
         }
     }
+
+    func removeInboxTags(document: Document) async {
+        var document = document
+        let inboxTags = store.tags.values.filter { $0.isInboxTag }
+        for tag in inboxTags {
+            document.tags.removeAll(where: { $0 == tag.id })
+        }
+        try? await store.updateDocument(document)
+    }
 }
 
 struct DocumentList: View {
@@ -99,7 +116,12 @@ struct DocumentList: View {
     @Binding var navPath: NavigationPath
     @Binding var filterState: FilterState
 
+    @State private var documentToDelete: Document?
+
     @StateObject private var viewModel: DocumentListViewModel
+
+    @AppStorage(SettingsKeys.documentDeleteConfirmation)
+    var documentDeleteConfirmation: Bool = true
 
     init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>) {
         self.store = store
@@ -112,80 +134,144 @@ struct DocumentList: View {
         var store: DocumentStore
         var document: Document
         @Binding var navPath: NavigationPath
+        var documentDeleteConfirmation: Bool
+        @Binding var documentToDelete: Document?
+        var viewModel: DocumentListViewModel
+
+        private func onDeleteButtonPressed() async {
+            if documentDeleteConfirmation {
+                documentToDelete = document
+            }
+            else {
+                try? await store.deleteDocument(document)
+            }
+        }
 
         var body: some View {
-            NavigationLink(value:
-                NavigationState.detail(document: document)
-            ) {
-                DocumentCell(document: document)
-                    .contentShape(Rectangle())
+            ZStack {
+                VStack {
+                    DocumentCell(document: document)
+                        .contentShape(Rectangle())
 
-                    .padding(5)
-                    .contextMenu {
-                        Button {
-                            navPath.append(NavigationState.detail(document: document))
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
+                        .padding(.horizontal)
+                        .padding(.vertical)
 
-                    } preview: {
-                        Button {
-                            print("open")
-                        } label: {
-                            DocumentPreview(store: store, document: document)
-                        }
-                    }
+                    Rectangle()
+                        .fill(.gray)
+                        .frame(height: 0.33)
+                        .padding(.horizontal)
+                }
+
+                NavigationLink(value:
+                    NavigationState.detail(document: document)
+                ) {}
+                    .frame(width: 0)
+                    .opacity(0)
             }
 
-            .padding(.horizontal, 10)
-            .buttonStyle(.plain)
+            .swipeActions(edge: .leading) {
+                Button {
+                    print("Remove INBOX")
+                    Task { await viewModel.removeInboxTags(document: document) }
+                } label: {
+                    Label("Remove inbox tags", systemImage: "tray")
+                }
+                .tint(.accentColor)
+            }
 
-            Divider()
-                .padding(.horizontal)
+            .contextMenu {
+                Button {
+                    navPath.append(NavigationState.detail(document: document))
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+
+                Button {
+                    Task { await viewModel.removeInboxTags(document: document) }
+                } label: {
+                    Label("Remove inbox tags", systemImage: "tray")
+                }
+
+                Button(role: .destructive) {
+                    Task { await onDeleteButtonPressed() }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+
+            } preview: {
+                DocumentPreview(document: document)
+                    .environmentObject(store)
+            }
+
+            .swipeActions(edge: .trailing) {
+                Button(role: documentDeleteConfirmation ? .none : .destructive) {
+                    Task { await onDeleteButtonPressed() }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                .tint(.red)
+            }
+
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            ScrollViewReader { proxy in
-                VStack {
-                    if !viewModel.ready {
-                        LoadingDocumentList()
-                            .padding(.top, 8)
+        ScrollViewReader { proxy in
+            VStack {
+                if !viewModel.ready {
+                    LoadingDocumentList()
+                }
+                else {
+                    let documents = viewModel.documents
+                    if !documents.isEmpty {
+                        List(
+                            Array(zip(documents.indices, documents)), id: \.1.id
+                        ) { idx, document in
+                            Cell(store: store,
+                                 document: document,
+                                 navPath: $navPath,
+                                 documentDeleteConfirmation: documentDeleteConfirmation,
+                                 documentToDelete: $documentToDelete,
+                                 viewModel: viewModel)
+                                .task {
+                                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                                }
+                        }
+                        .listStyle(.plain)
                     }
                     else {
-                        let documents = viewModel.documents
-                        LazyVStack(alignment: .leading) {
-                            ForEach(
-                                Array(zip(documents.indices, documents)), id: \.1.id
-                            ) { idx, document in
-                                Cell(store: store, document: document, navPath: $navPath)
-                                    .task {
-                                        await viewModel.fetchMoreIfNeeded(currentIndex: idx)
-                                    }
+                        List {
+                            HStack {
+                                Spacer()
+                                Text("No documents")
+                                Spacer()
                             }
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
                         }
-                        .padding(.top, 8)
-                    }
-
-                    if viewModel.ready && viewModel.loading {
-                        ProgressView()
+                        .listStyle(.plain)
                     }
                 }
 
-                .id("docvstack")
-
-                .onChange(of: filterState) { filter in
-                    Task {
-                        await viewModel.refresh(filter: filter)
-                        withAnimation {
-                            proxy.scrollTo("docvstack", anchor: .top)
-                        }
-                    }
+                if viewModel.ready && viewModel.loading {
+                    ProgressView()
                 }
-
-                .animation(.default, value: viewModel.documents)
             }
+
+            .onChange(of: filterState) { filter in
+                Task {
+                    await viewModel.refresh(filter: filter)
+                    withAnimation {
+                        if let document = viewModel.documents.first {
+                            proxy.scrollTo(document.id, anchor: .top)
+                        }
+                    }
+                }
+            }
+
+            .animation(.default, value: viewModel.documents)
         }
         .refreshable {
             Task { await viewModel.refresh() }
@@ -203,6 +289,17 @@ struct DocumentList: View {
             case .changeReceived:
                 Task { await viewModel.refresh(retain: true) }
             }
+        }
+
+        .confirmationDialog(title: { _ in Text("Delete document") }, unwrapping: $documentToDelete) { document in
+            Button(role: .destructive) {
+                Task { try? await store.deleteDocument(document) }
+            } label: { Text("Delete document") }
+            Button(role: .cancel) {
+                documentToDelete = nil
+            } label: { Text("Cancel") }
+        } message: { document in
+            Text("Delete document \"\(document.title)\"")
         }
     }
 }

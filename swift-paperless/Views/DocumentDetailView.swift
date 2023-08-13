@@ -15,116 +15,79 @@ private enum DownloadState {
 }
 
 struct DocumentPreview: View {
-    var store: DocumentStore
-
+    @State private var download = DownloadState.initial
     var document: Document
 
-    @State private var download: DownloadState = .initial
-    @State private var fullPreview: Image? = nil
+    var body: some View {
+        IntegratedDocumentPreview(download: $download, document: document)
+    }
+}
 
-    func loadFullPreview() async {
-        guard let url = await store.repository.download(documentID: document.id) else {
-            print("Failure to download document")
-            return
-        }
-        guard let image = pdfPreview(url: url) else {
-            print("Failure to generate preview")
-            return
-        }
-        await MainActor.run {
-            print("Have full preview")
-            withAnimation {
-                fullPreview = image
+private struct IntegratedDocumentPreview: View {
+    @EnvironmentObject private var store: DocumentStore
+    @Binding var download: DownloadState
+    var document: Document
+
+    private func loadDocument() async {
+        switch download {
+        case .initial:
+            download = .loading
+            guard let url = await store.repository.download(documentID: document.id) else {
+                download = .error
+                return
             }
+            guard let view = PDFThumbnail(file: url) else {
+                download = .error
+                return
+            }
+            withAnimation {
+                download = .loaded(view)
+            }
+
+        default:
+            break
         }
     }
 
     var body: some View {
-        VStack {
-            if let fullPreview = fullPreview {
-                fullPreview
-                    .resizable()
-                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                    .scaledToFill()
-                    .shadow(color: Color(white: 0.9), radius: 5)
-            }
-            else {
-                AuthAsyncImage(image: {
-                    let image = await store.repository.thumbnail(document: document)
-                    Task.detached {
-                        try? await Task.sleep(for: .seconds(0.2))
-                        await loadFullPreview()
-                    }
-                    return image
-                }) {
-                    image in
+        ZStack {
+            HStack {
+                AuthAsyncImage {
+                    await store.repository.thumbnail(document: document)
+                } content: { image in
                     image
                         .resizable()
-                        .scaledToFill()
-                        //                                .frame(width: 100, height: 100, alignment: .top)
-                        .cornerRadius(10)
-                        .overlay(RoundedRectangle(cornerRadius: 10)
-                            .stroke(.gray, lineWidth: 1))
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color(white: 0.8))
-                        .cornerRadius(10)
                         .scaledToFit()
-                        .overlay(ProgressView())
+                        .blur(radius: 5)
                 }
-                .blur(radius: 5)
+                placeholder: {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .aspectRatio(0.75, contentMode: .fit)
+                }
             }
 
-//            switch download {
-//            case .loading, .initial, .loaded:
-//                HStack {
-//                    Spacer()
-//                    ProgressView()
-//                    Spacer()
-//                }
-//                .frame(width: 400, height: 400*1.4)
-//            case .error:
-//                HStack {
-//                    Spacer()
-//                    Label("Unable to load preview", systemImage: "eye.slash")
-//                        .labelStyle(.iconOnly)
-//                        .imageScale(.large)
-//
-//                    Spacer()
-//                }
-//                .frame(width: 400, height: 400*1.4)
-//
-//            case let .ready(_, image):
-//                image
-//                    .resizable()
-//                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray, lineWidth: 1))
-//                    .clipShape(RoundedRectangle(cornerRadius: 5))
-//                    .scaledToFill()
-//                    .shadow(color: Color(white: 0.9), radius: 5)
-//            }
-        }
+            switch download {
+            case .error:
+                HStack {
+                    Spacer()
+                    Label("Unable to load preview", systemImage: "eye.slash")
+                        .labelStyle(.iconOnly)
+                        .imageScale(.large)
 
+                    Spacer()
+                }
+
+            case let .loaded(view):
+                view
+                    .background(.white)
+
+            default:
+                EmptyView()
+            }
+        }
         .task {
-//            switch download {
-//            case .initial:
-//                download = .loading
-//                guard let url = await store.repository.download(documentID: document.id) else {
-//                    download = .error
-//                    return
-//                }
-//                download = .loaded(url)
-//                guard let image = pdfPreview(url: url) else {
-//                    download = .error
-//                    return
-//                }
-//                withAnimation {
-//                    download = .ready(url, image)
-//                }
-//
-//            default:
-//                break
-//            }
+            await loadDocument()
         }
     }
 }
@@ -171,27 +134,6 @@ struct DocumentDetailView: View {
     @State private var relatedDocuments: [Document]? = nil
 
     @Environment(\.colorScheme) private var colorScheme
-
-    private func loadDocument() async {
-        switch download {
-        case .initial:
-            download = .loading
-            guard let url = await store.repository.download(documentID: document.id) else {
-                download = .error
-                return
-            }
-            guard let view = PDFThumbnail(file: url) else {
-                download = .error
-                return
-            }
-            withAnimation {
-                download = .loaded(view)
-            }
-
-        default:
-            break
-        }
-    }
 
     var gray: Color {
         if colorScheme == .dark {
@@ -264,51 +206,18 @@ struct DocumentDetailView: View {
                 }
                 .padding()
 
-                VStack {
-                    switch download {
-                    case .loading, .initial:
+                IntegratedDocumentPreview(download: $download, document: document)
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(.gray, lineWidth: 0.33))
+                    .shadow(color: Color("ImageShadow"), radius: 15)
+                    .padding()
 
-                        HStack {
-                            AuthAsyncImage {
-                                await store.repository.thumbnail(document: document)
-                            } content: { image in
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .blur(radius: 5)
-                            }
-                            placeholder: {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .aspectRatio(0.75, contentMode: .fit)
-                            }
+                    .onTapGesture {
+                        if case let .loaded(view) = download {
+                            previewUrl = view.file
                         }
-                    case .error:
-                        HStack {
-                            Spacer()
-                            Label("Unable to load preview", systemImage: "eye.slash")
-                                .labelStyle(.iconOnly)
-                                .imageScale(.large)
-
-                            Spacer()
-                        }
-
-                    case let .loaded(view):
-                        view
-                            .background(.white)
                     }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(.gray, lineWidth: 1))
-                .shadow(color: Color("ImageShadow"), radius: 15)
-                .padding()
-
-                .onTapGesture {
-                    if case let .loaded(view) = download {
-                        previewUrl = view.file
-                    }
-                }
             }
         }
 
@@ -336,10 +245,6 @@ struct DocumentDetailView: View {
 //                }
 
         .navigationBarTitleDisplayMode(.inline)
-
-        .task {
-            await loadDocument()
-        }
 
         .onChange(of: store.documents) { _ in
             if let document = store.documents[document.id] {

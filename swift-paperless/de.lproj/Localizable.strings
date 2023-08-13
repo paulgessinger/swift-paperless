@@ -46,6 +46,9 @@ Logout confirmation */
 "ASN" = "ASN";
 
 /* No comment provided by engineer. */
+"Back" = "Zurück";
+
+/* No comment provided by engineer. */
 "Cancel" = "Abbrechen";
 
 /* Matching algorithm */
@@ -100,6 +103,12 @@ Logout confirmation */
 "Delete" = "Löschen";
 
 /* No comment provided by engineer. */
+"Delete document" = "Dokument löschen";
+
+/* No comment provided by engineer. */
+"Delete document \"%@\"" = "Dokument \"%@\" löschen";
+
+/* No comment provided by engineer. */
 "Delete saved view" = "Gespeicherte Ansicht löschen";
 
 /* Document deleted */
@@ -125,6 +134,9 @@ Logout confirmation */
 
 /* Document type filtering */
 "document_type_not_assigned_picker" = "Nicht zugewiesen";
+
+/* No comment provided by engineer. */
+"document_view.toolbar.asn" = "ASN";
 
 /* No comment provided by engineer. */
 "Done" = "Fertig";
@@ -185,6 +197,12 @@ Logout confirmation */
 
 /* No comment provided by engineer. */
 "Include element" = "Einschließen";
+
+/* No comment provided by engineer. */
+"Invalid ASN" = "Ungültige Seriennummer";
+
+/* No comment provided by engineer. */
+"Invalid ASN %llu" = "Ungültige Seriennummer %llu";
 
 /* No comment provided by engineer. */
 "Key" = "Schlüssel";
@@ -301,6 +319,9 @@ Logout confirmation */
 "Name" = "Name";
 
 /* No comment provided by engineer. */
+"No ASN: %@" = "Seriennummer fehlt: %@";
+
+/* No comment provided by engineer. */
 "No documents" = "Keine Dokumente";
 
 /* Tags filterings */
@@ -314,6 +335,9 @@ Logout confirmation */
 
 /* No comment provided by engineer. */
 "Ok" = "Ok";
+
+/* No comment provided by engineer. */
+"Open" = "Öffnen";
 
 /* No comment provided by engineer. */
 "Organization" = "Organisation";
@@ -351,6 +375,9 @@ Logout confirmation */
 /* No comment provided by engineer. */
 "Remove" = "Löschen";
 
+/* No comment provided by engineer. */
+"Remove inbox tags" = "Posteingangs Tags entfernen";
+
 /* Storage path edit
 Correspondent edit
 Tag edit
@@ -373,6 +400,12 @@ Save document */
 
 /* No comment provided by engineer. */
 "Settings" = "Einstellungen";
+
+/* Preferences */
+"settings.preferences.document_delete_confirmation_description" = "Nach Bestätigung fragen, bevor ein Dokument gelöscht wird";
+
+/* Preferences */
+"settings.preferences.document_delete_confirmation_label" = "Löschbestätigung Dokumente";
 
 /* Owner filtering */
 "Shared with me" = "Mit mir geteilt";
@@ -439,6 +472,9 @@ Save document */
 
 /* Sort field names */
 "Title" = "Titel";
+
+/* No comment provided by engineer. */
+"Type in ASN" = "Seriennummer eingeben";
 
 /* No comment provided by engineer. */
 "Unable to load preview" = "Vorschau kann nicht geladen werden";

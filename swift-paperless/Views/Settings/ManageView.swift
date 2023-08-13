@@ -131,10 +131,10 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                             Manager.RowView(element: element)
                         }
                         .swipeActions {
-                            Button("Delete", role: .destructive) {
-                                elements.removeAll(where: { $0 == element })
+                            Button("Delete") {
                                 elementToDelete = element
                             }
+                            .tint(.red)
                         }
                     }
                     .onDelete { _ in }
@@ -155,12 +155,13 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog(String(localized: "Are you sure?", comment: "Common element delete confirmation"),
-                            isPresented: $elementToDelete.isPresent(),
-                            titleVisibility: .visible)
-        {
+        .confirmationDialog(title: {
+            _ in Text(String(localized: "Are you sure?", comment: "Common element delete confirmation"))
+        }, unwrapping: $elementToDelete, actions: { e in
             Button("Delete", role: .destructive) {
-                let e = elementToDelete!
+                withAnimation {
+                    elements.removeAll(where: { $0 == e })
+                }
                 Task {
                     do {
                         try await model.delete(e)
@@ -177,7 +178,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     elements = model.load()
                 }
             }
-        }
+        }, message: { _ in })
 
         .refreshable {
             await store.fetchAll()

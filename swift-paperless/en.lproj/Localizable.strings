@@ -16,8 +16,14 @@
 /* Document type filtering */
 "document_type_not_assigned_picker" = "Not assigned";
 
+/* No comment provided by engineer. */
+"Exclude element" = "Exclude";
+
 /* (No Comment) */
 "extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
+
+/* No comment provided by engineer. */
+"Include element" = "Include";
 
 /* Login */
 "login.api_in_url_notice" = "Do not include `/api` in the URL";
@@ -117,6 +123,12 @@
 
 /* Owner filtering */
 "owner_not_assigned_picker" = "Not assigned";
+
+/* Preferences */
+"settings.preferences.document_delete_confirmation_description" = "Ask for confirmation before deleting a document";
+
+/* Preferences */
+"settings.preferences.document_delete_confirmation_label" = "Document delete confirmation";
 
 /* No comment provided by engineer. */
 "storage_path_format_explanation" = "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list.";
