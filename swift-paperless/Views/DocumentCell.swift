@@ -165,7 +165,8 @@ private struct HelperView: View {
             Spacer()
         }
         .task {
-            documents = await store.fetchDocuments(clear: true, filter: FilterState())
+            // @TODO: Fix this preview
+//            documents = await store.fetchDocuments(clear: true, filter: FilterState())
         }
     }
 }

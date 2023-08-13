@@ -28,7 +28,8 @@ class DocumentStore: ObservableObject {
 
     // MARK: Members
 
-    private var documentSource: any DocumentSource
+    var documentDeletePublisher =
+        PassthroughSubject<Document, Never>()
 
     let semaphore = AsyncSemaphore(value: 1)
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
@@ -39,7 +40,7 @@ class DocumentStore: ObservableObject {
 
     init(repository: Repository) {
         self.repository = repository
-        documentSource = NullDocumentSource()
+//        documentSource = NullDocumentSource()
 //        documentSource = repository.documents(filter: FilterState())
 
         Task {
@@ -64,32 +65,7 @@ class DocumentStore: ObservableObject {
     func deleteDocument(_ document: Document) async throws {
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
-    }
-
-    func fetchDocuments(clear: Bool, filter: FilterState, pageSize: UInt = 30) async -> [Document] {
-        Logger.shared.trace("fetchDocuments")
-        await semaphore.wait()
-        defer { semaphore.signal() }
-
-        if clear {
-            documentSource = repository.documents(filter: filter)
-        }
-
-        let result = await documentSource.fetch(limit: pageSize)
-
-        await MainActor.run {
-            var copy = documents
-            for document in result {
-                copy[document.id] = document
-            }
-            documents = copy
-        }
-
-        return result
-    }
-
-    func hasMoreDocuments() async -> Bool {
-        return await documentSource.hasMore()
+        documentDeletePublisher.send(document)
     }
 
     func fetchTasks() async {

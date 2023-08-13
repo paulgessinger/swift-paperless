@@ -176,15 +176,9 @@ class ApiDocumentSource: DocumentSource {
     }
 
     func fetch(limit: UInt) async -> [Document] {
-//        print("CALL FETCH")
-//        var result = [Document]()
-//        for _ in 0 ..< limit {
-//            guard let doc = await sequence.next() else {
-//                break
-//            }
-//            result.append(doc)
-//        }
-//        return result
+        guard sequence.hasMore else {
+            return []
+        }
         return await Array(sequence.prefix(Int(limit)))
     }
 

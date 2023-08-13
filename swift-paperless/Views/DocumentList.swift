@@ -24,19 +24,81 @@ struct LoadingDocumentList: View {
         }
         .environmentObject(store)
         .task {
-            documents = await store.fetchDocuments(clear: true, filter: FilterState(), pageSize: 10)
-//            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
+//            documents = await store.fetchDocuments(clear: true, filter: FilterState(), pageSize: 10)
+            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
         }
     }
 }
 
+class DocumentListViewModel: ObservableObject {
+    private var store: DocumentStore
+    private var filterState: FilterState
+
+    @Published var documents: [Document] = []
+    @Published var loading = false
+    @Published var ready = false
+
+    private var source: DocumentSource
+
+    private var initialBatchSize: UInt = 20
+    private var batchSize: UInt = 100
+    private var fetchMargin = 10
+
+    init(store: DocumentStore, filterState: FilterState) {
+        self.store = store
+        self.filterState = filterState
+        self.source = store.repository.documents(filter: filterState)
+    }
+
+    @MainActor
+    func load() async {
+        guard documents.isEmpty && !loading else { return }
+        loading = true
+        let batch = await source.fetch(limit: initialBatchSize)
+        documents = batch
+        ready = true
+        loading = false
+    }
+
+    @MainActor
+    func fetchMoreIfNeeded(currentIndex: Int) async {
+        if currentIndex >= documents.count - fetchMargin {
+            guard !loading else { return }
+            loading = true
+            let batch = await source.fetch(limit: batchSize)
+            documents += batch
+            loading = false
+        }
+    }
+
+    @MainActor
+    func refresh(filter: FilterState? = nil) async {
+        if let filter {
+            filterState = filter
+        }
+        source = store.repository.documents(filter: filterState)
+        let batch = await source.fetch(limit: initialBatchSize)
+        documents = batch
+    }
+
+    func remove(document: Document) {
+        documents.removeAll(where: { $0.id == document.id })
+    }
+}
+
 struct DocumentList: View {
-    @EnvironmentObject private var store: DocumentStore
-    @Binding var documents: [Document]
+    var store: DocumentStore
     @Binding var navPath: NavigationPath
     @Binding var filterState: FilterState
 
-    @State private var loadingMore = false
+    @StateObject private var viewModel: DocumentListViewModel
+
+    init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>) {
+        self.store = store
+        self._navPath = navPath
+        self._filterState = filterState
+        self._viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue))
+    }
 
     struct Cell: View {
         var store: DocumentStore
@@ -75,33 +137,58 @@ struct DocumentList: View {
         }
     }
 
-    func loadMore() async {
-        let new = await store.fetchDocuments(clear: false, filter: filterState, pageSize: 101)
-        withAnimation {
-            documents += new
-        }
-    }
-
     var body: some View {
-        LazyVStack(alignment: .leading) {
-            ForEach(
-                Array(zip(documents.indices, documents)), id: \.1.id
-            ) { index, document in
-                Cell(store: store, document: document, navPath: $navPath)
-                    .if(index > documents.count - 10) { view in
-                        view.task {
-                            let hasMore = await store.hasMoreDocuments()
-                            print("Check more: has: \(hasMore), #doc \(documents.count)")
-                            if !loadingMore && hasMore {
-                                loadingMore = true
-                                //                                    await load(false)
-                                await loadMore()
-                                loadingMore = false
+        ScrollView(.vertical) {
+            ScrollViewReader { proxy in
+                VStack {
+                    if !viewModel.ready {
+                        LoadingDocumentList()
+                    }
+                    else {
+                        let documents = viewModel.documents
+                        LazyVStack(alignment: .leading) {
+                            ForEach(
+                                Array(zip(documents.indices, documents)), id: \.1.id
+                            ) { idx, document in
+                                Cell(store: store, document: document, navPath: $navPath)
+                                    .task {
+                                        await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                                    }
                             }
                         }
                     }
+
+                    if viewModel.loading {
+                        ProgressView()
+                    }
+                }
+
+                .id("docvstack")
+
+                .onChange(of: filterState) { filter in
+                    Task {
+                        await viewModel.refresh(filter: filter)
+                        withAnimation {
+                            proxy.scrollTo("docvstack", anchor: .top)
+                        }
+                    }
+                }
+
+                .animation(.default, value: viewModel.documents)
+
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
             }
         }
-//        }
+        .refreshable {
+            Task { await viewModel.refresh() }
+        }
+        .task {
+            await viewModel.load()
+        }
+
+        .onReceive(store.documentDeletePublisher) { document in
+            viewModel.remove(document: document)
+        }
     }
 }

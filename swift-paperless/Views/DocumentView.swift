@@ -83,7 +83,6 @@ struct DocumentView: View {
     @StateObject private var searchDebounce = DebounceObject(delay: 0.4)
     @State private var navPath = NavigationPath()
 
-    @State private var documents: [Document] = []
     @State private var searchSuggestions: [String] = []
     @State private var initialLoad = true
     @State private var isLoading = false
@@ -97,36 +96,6 @@ struct DocumentView: View {
 
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
-
-    func load() async {
-        let d = 0.3
-        async let delay: () = Task.sleep(for: .seconds(d))
-        withAnimation(.linear(duration: d)) {
-            isLoading = true
-        }
-        Task { await store.fetchAll() }
-        documents = []
-
-        let new = await store.fetchDocuments(clear: true,
-                                             filter: filterModel.filterState, pageSize: 21)
-
-        documents = new
-        try? await delay
-        withAnimation {
-            isLoading = false
-        }
-        initialLoad = false
-    }
-
-    func reload() async {
-        Task { await store.fetchAll() }
-        let new = await store.fetchDocuments(clear: true,
-                                             filter: filterModel.filterState, pageSize: 21)
-
-        withAnimation {
-            documents = new
-        }
-    }
 
     func importFile(result: Result<[URL], Error>) {
         do {
@@ -176,177 +145,154 @@ struct DocumentView: View {
 
     var body: some View {
         NavigationStack(path: $navPath) {
-            ScrollView(.vertical) {
-                VStack {
-                    if isLoading {
-                        LoadingDocumentList()
-                            .opacity(0.7)
+            DocumentList(store: store, navPath: $navPath,
+                         filterState: $filterModel.filterState)
+
+                .layoutPriority(1)
+
+                .safeAreaInset(edge: .top) {
+                    VStack {
+                        SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
+                            .padding(.horizontal)
+
+                        FilterBar()
+                            .padding(.bottom, 3)
                     }
-                    else if !documents.isEmpty {
-                        DocumentList(documents: $documents,
-                                     navPath: $navPath,
-                                     filterState: $filterModel.filterState)
-                    }
-                    else if !initialLoad {
-                        Text("No documents")
-                            .padding(.vertical, 50)
-                    }
-                }
-                .padding(.top, 8)
-                .frame(maxWidth: .infinity)
-            }
 
-            .layoutPriority(1)
+                    .background(
+                        Rectangle()
+                            .fill(
+                                Material.bar
+                            )
+                            .ignoresSafeArea(.container, edges: .top)
+                    )
 
-            .refreshable {
-                if isLoading { return }
-                Task { await reload() }
-            }
-
-            .safeAreaInset(edge: .top) {
-                VStack {
-                    SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
-                        .padding(.horizontal)
-
-                    FilterBar()
-                        .padding(.bottom, 3)
-                }
-
-                .background(
-                    Rectangle()
-                        .fill(
-                            Material.bar
-                        )
-                        .ignoresSafeArea(.container, edges: .top)
-                )
-
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(.gray)
-                        .frame(height: 1, alignment: .bottom)
-                }
-            }
-
-            .safeAreaInset(edge: .bottom) {
-                if showTypeAsn {
-                    TypeAsnView { document in
-                        navPath.append(NavigationState.detail(document: document))
-                        withAnimation {
-                            showTypeAsn = false
-                        }
-                    }
-                    .transition(.move(edge: .bottom))
-                }
-            }
-
-            .toolbarBackground(.hidden, for: .navigationBar)
-
-            .navigationDestination(for: NavigationState.self,
-                                   destination: navigationDestinations)
-
-            // MARK: Main toolbar
-
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    TaskActivityToolbar()
-
-                    Button {
-                        showFileImporter = true
-                    } label: {
-                        Label("Add", systemImage: "plus")
+                    .overlay(alignment: .bottom) {
+                        Rectangle()
+                            .fill(.gray)
+                            .frame(height: 1, alignment: .bottom)
                     }
                 }
 
-                ToolbarItem(placement: .principal) {
-                    LogoView()
-                }
-                ToolbarItemGroup(placement: .navigationBarLeading) {
-                    Menu {
-                        NavigationLink(value: NavigationState.settings) {
-                            Label("Settings", systemImage: "gear")
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            logoutRequested = true
-                        } label: {
-                            Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-
-                    } label: {
-                        Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
-                            .labelStyle(.iconOnly)
-                    }
-
-                    if DataScannerView.isAvailable {
-                        Button {
-                            Task {
-                                try? await Task.sleep(for: .seconds(0.1))
-                                showDataScanner = true
+                .safeAreaInset(edge: .bottom) {
+                    if showTypeAsn {
+                        TypeAsnView { document in
+                            navPath.append(NavigationState.detail(document: document))
+                            withAnimation {
+                                showTypeAsn = false
                             }
-                        } label: {
-                            Label("document_view.toolbar.asn", systemImage: "number.circle")
                         }
+                        .transition(.move(edge: .bottom))
                     }
-                    else {
+                }
+
+                .toolbarBackground(.hidden, for: .navigationBar)
+
+                .navigationDestination(for: NavigationState.self,
+                                       destination: navigationDestinations)
+
+                // MARK: Main toolbar
+
+                .toolbar {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        TaskActivityToolbar()
+
                         Button {
-                            withAnimation(.spring(response: 0.5)) {
-                                showTypeAsn.toggle()
-                            }
+                            showFileImporter = true
                         } label: {
-                            Label("document_view.toolbar.asn", systemImage: "number.circle")
+                            Label("Add", systemImage: "plus")
+                        }
+                    }
+
+                    ToolbarItem(placement: .principal) {
+                        LogoView()
+                    }
+                    ToolbarItemGroup(placement: .navigationBarLeading) {
+                        Menu {
+                            NavigationLink(value: NavigationState.settings) {
+                                Label("Settings", systemImage: "gear")
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                logoutRequested = true
+                            } label: {
+                                Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                            }
+
+                        } label: {
+                            Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
+                                .labelStyle(.iconOnly)
+                        }
+
+                        if DataScannerView.isAvailable {
+                            Button {
+                                Task {
+                                    try? await Task.sleep(for: .seconds(0.1))
+                                    showDataScanner = true
+                                }
+                            } label: {
+                                Label("document_view.toolbar.asn", systemImage: "number.circle")
+                            }
+                        }
+                        else {
+                            Button {
+                                withAnimation(.spring(response: 0.5)) {
+                                    showTypeAsn.toggle()
+                                }
+                            } label: {
+                                Label("document_view.toolbar.asn", systemImage: "number.circle")
+                            }
                         }
                     }
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
 
-            .fileImporter(isPresented: $showFileImporter,
-                          allowedContentTypes: [.pdf],
-                          allowsMultipleSelection: false,
-                          onCompletion: importFile)
+                .fileImporter(isPresented: $showFileImporter,
+                              allowedContentTypes: [.pdf],
+                              allowsMultipleSelection: false,
+                              onCompletion: importFile)
 
-            .sheet(isPresented: $showCreateModal, onDismiss: {}) {
-                CreateDocumentView(
-                    sourceUrl: importUrl!,
-                    callback: {
-                        showCreateModal = false
-                        Task { await store.fetchTasks() }
-                    },
-                    title: {
-                        Text("Add document")
+                .sheet(isPresented: $showCreateModal, onDismiss: {}) {
+                    CreateDocumentView(
+                        sourceUrl: importUrl!,
+                        callback: {
+                            showCreateModal = false
+                            Task { await store.fetchTasks() }
+                        },
+                        title: {
+                            Text("Add document")
+                        }
+                    )
+                    .environmentObject(store)
+                }
+
+                .sheet(isPresented: $showDataScanner, onDismiss: {}) {
+                    DataScannerView()
+                }
+
+                .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
+                    value in
+                    if !value {
+                        error = nil
                     }
-                )
-                .environmentObject(store)
-            }
+                })) {}
 
-            .sheet(isPresented: $showDataScanner, onDismiss: {}) {
-                DataScannerView()
-            }
-
-            .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
-                value in
-                if !value {
-                    error = nil
+                .confirmationDialog(String(localized: "Are you sure?", comment: "Logout confirmation"), isPresented: $logoutRequested, titleVisibility: .visible) {
+                    Button("Logout", role: .destructive) {
+                        connectionManager.logout()
+                    }
+                    Button("Cancel", role: .cancel) {}
                 }
-            })) {}
 
-            .confirmationDialog(String(localized: "Are you sure?", comment: "Logout confirmation"), isPresented: $logoutRequested, titleVisibility: .visible) {
-                Button("Logout", role: .destructive) {
-                    connectionManager.logout()
+                .task {
+                    await store.fetchAll()
                 }
-                Button("Cancel", role: .cancel) {}
-            }
 
-            .onReceive(filterModel.filterStatePublisher) { value in
-                print("Filter updated \(value)")
-                Task { await load() }
-            }
-
-            .onChange(of: store.documents) { _ in
-                documents = documents.compactMap { store.documents[$0.id] }
-            }
+//            .onChange(of: store.documents) { _ in
+//                documents = documents.compactMap { store.documents[$0.id] }
+//            }
         }
     }
 }
@@ -382,23 +328,24 @@ struct FilterBar_Previews: PreviewProvider {
     }
 }
 
+// @TODO: Fix this
 private struct HelperView: View {
     @EnvironmentObject var store: DocumentStore
-    @State var documents = [Document]()
+//    @State var documents = [Document]()
     @State var filterState = FilterState()
 
     var body: some View {
         VStack {
-            FilterBar()
-            ForEach(documents.prefix(5), id: \.id) { document in
-                DocumentCell(document: document)
-                    .padding()
-            }
-            Spacer()
+//            FilterBar()
+//            ForEach(documents.prefix(5), id: \.id) { document in
+//                DocumentCell(document: document)
+//                    .padding()
+//            }
+//            Spacer()
         }
         .task {
             try? await Task.sleep(for: .seconds(0.1))
-            documents = await store.fetchDocuments(clear: false, filter: filterState)
+//            documents = await store.fetchDocuments(clear: false, filter: filterState)
             print("GOGOGO")
         }
     }
