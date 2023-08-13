@@ -117,9 +117,7 @@ struct PDFPreview_Previews: PreviewProvider {
                 PDFPreview(file: Bundle.main.url(forResource: "demo2", withExtension: "pdf")!)
                     .edgesIgnoringSafeArea(.bottom)
                     .background(.gray)
-                    .safeAreaInset(edge: .top) {
-                        Text("Hi")
-                    }
+                    .safeAreaInset(edge: .top) {}
             }
         }
     }

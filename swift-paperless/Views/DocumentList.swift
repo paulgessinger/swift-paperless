@@ -138,6 +138,15 @@ struct DocumentList: View {
         @Binding var documentToDelete: Document?
         var viewModel: DocumentListViewModel
 
+        private func onDeleteButtonPressed() async {
+            if documentDeleteConfirmation {
+                documentToDelete = document
+            }
+            else {
+                try? await store.deleteDocument(document)
+            }
+        }
+
         var body: some View {
             ZStack {
                 VStack {
@@ -165,7 +174,7 @@ struct DocumentList: View {
                     print("Remove INBOX")
                     Task { await viewModel.removeInboxTags(document: document) }
                 } label: {
-                    Label("Remove inbox labels", systemImage: "tray")
+                    Label("Remove inbox tags", systemImage: "tray")
                 }
                 .tint(.accentColor)
             }
@@ -177,18 +186,26 @@ struct DocumentList: View {
                     Label("Edit", systemImage: "pencil")
                 }
 
+                Button {
+                    Task { await viewModel.removeInboxTags(document: document) }
+                } label: {
+                    Label("Remove inbox tags", systemImage: "tray")
+                }
+
+                Button(role: .destructive) {
+                    Task { await onDeleteButtonPressed() }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+
             } preview: {
-                DocumentPreview(store: store, document: document)
+                DocumentPreview(document: document)
+                    .environmentObject(store)
             }
 
             .swipeActions(edge: .trailing) {
                 Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    if documentDeleteConfirmation {
-                        documentToDelete = document
-                    }
-                    else {
-                        Task { try? await store.deleteDocument(document) }
-                    }
+                    Task { await onDeleteButtonPressed() }
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
