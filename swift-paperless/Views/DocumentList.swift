@@ -14,21 +14,13 @@ struct LoadingDocumentList: View {
 
     var body: some View {
         VStack {
-            List(documents, id: \.self) { document in
-                VStack {
-                    DocumentCell(document: document)
-                        .redacted(reason: .placeholder)
-                        .padding(.horizontal)
-                        .padding(.vertical)
-                    Rectangle()
-                        .fill(.gray)
-                        .frame(height: 0.33)
-                        .padding(.horizontal)
-                }
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            ForEach(documents, id: \.self) { document in
+                DocumentCell(document: document)
+                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
+                    .redacted(reason: .placeholder)
+                Divider()
+                    .padding(.horizontal)
             }
-            .listStyle(.plain)
         }
         .environmentObject(store)
         .task {
@@ -148,130 +140,111 @@ struct DocumentList: View {
         }
 
         var body: some View {
-            ZStack {
-                VStack {
-                    DocumentCell(document: document)
-                        .contentShape(Rectangle())
+            NavigationLink(value:
+                NavigationState.detail(document: document)
+            ) {
+                DocumentCell(document: document)
+                    .contentShape(Rectangle())
 
-                        .padding(.horizontal)
-                        .padding(.vertical)
+                    .padding(5)
+                    .contextMenu {
+                        Button {
+                            navPath.append(NavigationState.detail(document: document))
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
 
-                    Rectangle()
-                        .fill(.gray)
-                        .frame(height: 0.33)
-                        .padding(.horizontal)
-                }
+                        Button {
+                            Task { await viewModel.removeInboxTags(document: document) }
+                        } label: {
+                            Label("Remove inbox tags", systemImage: "tray")
+                        }
 
-                NavigationLink(value:
-                    NavigationState.detail(document: document)
-                ) {}
-                    .frame(width: 0)
-                    .opacity(0)
+                        Button(role: .destructive) {
+                            Task { await onDeleteButtonPressed() }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } preview: {
+                        DocumentPreview(document: document)
+                            .environmentObject(store)
+                    }
+
+//                    .swipeActions(edge: .leading) {
+//                        Button {
+//                            print("Remove INBOX")
+//                            Task { await viewModel.removeInboxTags(document: document) }
+//                        } label: {
+//                            Label("Remove inbox tags", systemImage: "tray")
+//                        }
+//                        .tint(.accentColor)
+//                    }
+//
+//                    .swipeActions(edge: .trailing) {
+//                        Button(role: documentDeleteConfirmation ? .none : .destructive) {
+//                            Task { await onDeleteButtonPressed() }
+//                        } label: {
+//                            Label("Delete", systemImage: "trash")
+//                        }
+//                        .tint(.red)
+//                    }
             }
 
-            .swipeActions(edge: .leading) {
-                Button {
-                    print("Remove INBOX")
-                    Task { await viewModel.removeInboxTags(document: document) }
-                } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
-                }
-                .tint(.accentColor)
-            }
+            .padding(.horizontal, 10)
+            .buttonStyle(.plain)
 
-            .contextMenu {
-                Button {
-                    navPath.append(NavigationState.detail(document: document))
-                } label: {
-                    Label("Edit", systemImage: "pencil")
-                }
-
-                Button {
-                    Task { await viewModel.removeInboxTags(document: document) }
-                } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
-                }
-
-                Button(role: .destructive) {
-                    Task { await onDeleteButtonPressed() }
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-
-            } preview: {
-                DocumentPreview(document: document)
-                    .environmentObject(store)
-            }
-
-            .swipeActions(edge: .trailing) {
-                Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    Task { await onDeleteButtonPressed() }
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-                .tint(.red)
-            }
-
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            Divider()
+                .padding(.horizontal)
         }
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            VStack {
-                if !viewModel.ready {
-                    LoadingDocumentList()
-                }
-                else {
-                    let documents = viewModel.documents
-                    if !documents.isEmpty {
-                        List(
-                            Array(zip(documents.indices, documents)), id: \.1.id
-                        ) { idx, document in
-                            Cell(store: store,
-                                 document: document,
-                                 navPath: $navPath,
-                                 documentDeleteConfirmation: documentDeleteConfirmation,
-                                 documentToDelete: $documentToDelete,
-                                 viewModel: viewModel)
-                                .task {
-                                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
-                                }
-                        }
-                        .listStyle(.plain)
+        ScrollView(.vertical) {
+            ScrollViewReader { proxy in
+                VStack {
+                    if !viewModel.ready {
+                        LoadingDocumentList()
+                            .padding(.top, 8)
                     }
                     else {
-                        List {
-                            HStack {
-                                Spacer()
-                                Text("No documents")
-                                Spacer()
+                        let documents = viewModel.documents
+                        LazyVStack(alignment: .leading) {
+                            ForEach(
+                                Array(zip(documents.indices, documents)), id: \.1.id
+                            ) { idx, document in
+                                Cell(store: store,
+                                     document: document,
+                                     navPath: $navPath,
+                                     documentDeleteConfirmation: documentDeleteConfirmation,
+                                     documentToDelete: $documentToDelete,
+                                     viewModel: viewModel)
+
+                                    .task {
+                                        await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                                    }
                             }
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
                         }
-                        .listStyle(.plain)
+                        .padding(.top, 8)
+                    }
+
+                    if viewModel.ready && viewModel.loading {
+                        ProgressView()
                     }
                 }
 
-                if viewModel.ready && viewModel.loading {
-                    ProgressView()
-                }
-            }
+                .id("docvstack")
 
-            .onChange(of: filterState) { filter in
-                Task {
-                    await viewModel.refresh(filter: filter)
-                    withAnimation {
-                        if let document = viewModel.documents.first {
-                            proxy.scrollTo(document.id, anchor: .top)
+                .onChange(of: filterState) { filter in
+                    Task {
+                        await viewModel.refresh(filter: filter)
+                        withAnimation {
+                            proxy.scrollTo("docvstack", anchor: .top)
                         }
                     }
                 }
-            }
 
-            .animation(.default, value: viewModel.documents)
+                .animation(.default, value: viewModel.documents)
+            }
         }
         .refreshable {
             Task { await viewModel.refresh() }
