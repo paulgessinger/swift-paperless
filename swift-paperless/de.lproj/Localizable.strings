@@ -374,6 +374,12 @@ Save document */
 /* No comment provided by engineer. */
 "Settings" = "Einstellungen";
 
+/* Preferences */
+"settings.preferences.document_delete_confirmation_description" = "Nach Bestätigung fragen, bevor ein Dokument gelöscht wird";
+
+/* Preferences */
+"settings.preferences.document_delete_confirmation_label" = "Löschbestätigung Dokumente";
+
 /* Owner filtering */
 "Shared with me" = "Mit mir geteilt";
 

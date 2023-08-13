@@ -100,6 +100,15 @@ class DocumentListViewModel: ObservableObject {
             documents[target] = document
         }
     }
+
+    func removeInboxTags(document: Document) async {
+        var document = document
+        let inboxTags = store.tags.values.filter { $0.isInboxTag }
+        for tag in inboxTags {
+            document.tags.removeAll(where: { $0 == tag.id })
+        }
+        try? await store.updateDocument(document)
+    }
 }
 
 struct DocumentList: View {
@@ -107,7 +116,12 @@ struct DocumentList: View {
     @Binding var navPath: NavigationPath
     @Binding var filterState: FilterState
 
+    @State private var documentToDelete: Document?
+
     @StateObject private var viewModel: DocumentListViewModel
+
+    @AppStorage(SettingsKeys.documentDeleteConfirmation)
+    var documentDeleteConfirmation: Bool = true
 
     init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>) {
         self.store = store
@@ -120,6 +134,9 @@ struct DocumentList: View {
         var store: DocumentStore
         var document: Document
         @Binding var navPath: NavigationPath
+        var documentDeleteConfirmation: Bool
+        @Binding var documentToDelete: Document?
+        var viewModel: DocumentListViewModel
 
         var body: some View {
             ZStack {
@@ -129,26 +146,12 @@ struct DocumentList: View {
 
                         .padding(.horizontal)
                         .padding(.vertical)
-                        .contextMenu {
-                            Button {
-                                navPath.append(NavigationState.detail(document: document))
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
 
-                        } preview: {
-                            Button {
-                                print("open")
-                            } label: {
-                                DocumentPreview(store: store, document: document)
-                            }
-                        }
                     Rectangle()
                         .fill(.gray)
                         .frame(height: 0.33)
                         .padding(.horizontal)
                 }
-//                    .padding(.horizontal, 10)
 
                 NavigationLink(value:
                     NavigationState.detail(document: document)
@@ -157,12 +160,43 @@ struct DocumentList: View {
                     .opacity(0)
             }
 
+            .swipeActions(edge: .leading) {
+                Button {
+                    print("Remove INBOX")
+                    Task { await viewModel.removeInboxTags(document: document) }
+                } label: {
+                    Label("Remove inbox labels", systemImage: "tray")
+                }
+                .tint(.accentColor)
+            }
+
+            .contextMenu {
+                Button {
+                    navPath.append(NavigationState.detail(document: document))
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+
+            } preview: {
+                DocumentPreview(store: store, document: document)
+            }
+
+            .swipeActions(edge: .trailing) {
+                Button(role: documentDeleteConfirmation ? .none : .destructive) {
+                    if documentDeleteConfirmation {
+                        documentToDelete = document
+                    }
+                    else {
+                        Task { try? await store.deleteDocument(document) }
+                    }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                .tint(.red)
+            }
+
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-
-//            Divider()
-//                .padding(.horizontal)
-//                .padding(.vertical, 0)
         }
     }
 
@@ -178,7 +212,12 @@ struct DocumentList: View {
                         List(
                             Array(zip(documents.indices, documents)), id: \.1.id
                         ) { idx, document in
-                            Cell(store: store, document: document, navPath: $navPath)
+                            Cell(store: store,
+                                 document: document,
+                                 navPath: $navPath,
+                                 documentDeleteConfirmation: documentDeleteConfirmation,
+                                 documentToDelete: $documentToDelete,
+                                 viewModel: viewModel)
                                 .task {
                                     await viewModel.fetchMoreIfNeeded(currentIndex: idx)
                                 }
@@ -233,6 +272,17 @@ struct DocumentList: View {
             case .changeReceived:
                 Task { await viewModel.refresh(retain: true) }
             }
+        }
+
+        .confirmationDialog(title: { _ in Text("Delete document") }, unwrapping: $documentToDelete) { document in
+            Button(role: .destructive) {
+                Task { try? await store.deleteDocument(document) }
+            } label: { Text("Delete document") }
+            Button(role: .cancel) {
+                documentToDelete = nil
+            } label: { Text("Cancel") }
+        } message: { document in
+            Text("Delete document \"\(document.title)\"")
         }
     }
 }
