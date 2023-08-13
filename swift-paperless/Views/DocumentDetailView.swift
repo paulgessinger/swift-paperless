@@ -300,7 +300,7 @@ struct DocumentDetailView: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(.gray, lineWidth: 1))
+                    .stroke(.gray, lineWidth: 0.33))
                 .shadow(color: Color("ImageShadow"), radius: 15)
                 .padding()
 

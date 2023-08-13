@@ -30,7 +30,7 @@ struct DocumentPreviewImage: View {
 
         .cornerRadius(10)
         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .stroke(.gray, lineWidth: 1))
+            .stroke(.gray, lineWidth: 0.33))
 
         .task {
             guard let data = await store.repository.thumbnailData(document: document) else {

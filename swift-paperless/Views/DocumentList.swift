@@ -14,13 +14,21 @@ struct LoadingDocumentList: View {
 
     var body: some View {
         VStack {
-            ForEach(documents, id: \.self) { document in
-                DocumentCell(document: document)
-                    .padding(EdgeInsets(top: 5, leading: 15, bottom: 5, trailing: 15))
-                    .redacted(reason: .placeholder)
-                Divider()
-                    .padding(.horizontal)
+            List(documents, id: \.self) { document in
+                VStack {
+                    DocumentCell(document: document)
+                        .redacted(reason: .placeholder)
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                    Rectangle()
+                        .fill(.gray)
+                        .frame(height: 0.33)
+                        .padding(.horizontal)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
+            .listStyle(.plain)
         }
         .environmentObject(store)
         .task {
@@ -114,78 +122,100 @@ struct DocumentList: View {
         @Binding var navPath: NavigationPath
 
         var body: some View {
-            NavigationLink(value:
-                NavigationState.detail(document: document)
-            ) {
-                DocumentCell(document: document)
-                    .contentShape(Rectangle())
+            ZStack {
+                VStack {
+                    DocumentCell(document: document)
+                        .contentShape(Rectangle())
 
-                    .padding(5)
-                    .contextMenu {
-                        Button {
-                            navPath.append(NavigationState.detail(document: document))
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                        .contextMenu {
+                            Button {
+                                navPath.append(NavigationState.detail(document: document))
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
 
-                    } preview: {
-                        Button {
-                            print("open")
-                        } label: {
-                            DocumentPreview(store: store, document: document)
+                        } preview: {
+                            Button {
+                                print("open")
+                            } label: {
+                                DocumentPreview(store: store, document: document)
+                            }
                         }
-                    }
+                    Rectangle()
+                        .fill(.gray)
+                        .frame(height: 0.33)
+                        .padding(.horizontal)
+                }
+//                    .padding(.horizontal, 10)
+
+                NavigationLink(value:
+                    NavigationState.detail(document: document)
+                ) {}
+                    .frame(width: 0)
+                    .opacity(0)
             }
 
-            .padding(.horizontal, 10)
-            .buttonStyle(.plain)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
 
-            Divider()
-                .padding(.horizontal)
+//            Divider()
+//                .padding(.horizontal)
+//                .padding(.vertical, 0)
         }
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            ScrollViewReader { proxy in
-                VStack {
-                    if !viewModel.ready {
-                        LoadingDocumentList()
-                            .padding(.top, 8)
+        ScrollViewReader { proxy in
+            VStack {
+                if !viewModel.ready {
+                    LoadingDocumentList()
+                }
+                else {
+                    let documents = viewModel.documents
+                    if !documents.isEmpty {
+                        List(
+                            Array(zip(documents.indices, documents)), id: \.1.id
+                        ) { idx, document in
+                            Cell(store: store, document: document, navPath: $navPath)
+                                .task {
+                                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                                }
+                        }
+                        .listStyle(.plain)
                     }
                     else {
-                        let documents = viewModel.documents
-                        LazyVStack(alignment: .leading) {
-                            ForEach(
-                                Array(zip(documents.indices, documents)), id: \.1.id
-                            ) { idx, document in
-                                Cell(store: store, document: document, navPath: $navPath)
-                                    .task {
-                                        await viewModel.fetchMoreIfNeeded(currentIndex: idx)
-                                    }
+                        List {
+                            HStack {
+                                Spacer()
+                                Text("No documents")
+                                Spacer()
                             }
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
                         }
-                        .padding(.top, 8)
-                    }
-
-                    if viewModel.ready && viewModel.loading {
-                        ProgressView()
+                        .listStyle(.plain)
                     }
                 }
 
-                .id("docvstack")
-
-                .onChange(of: filterState) { filter in
-                    Task {
-                        await viewModel.refresh(filter: filter)
-                        withAnimation {
-                            proxy.scrollTo("docvstack", anchor: .top)
-                        }
-                    }
+                if viewModel.ready && viewModel.loading {
+                    ProgressView()
                 }
-
-                .animation(.default, value: viewModel.documents)
             }
+
+            .onChange(of: filterState) { filter in
+                Task {
+                    await viewModel.refresh(filter: filter)
+                    withAnimation {
+                        if let document = viewModel.documents.first {
+                            proxy.scrollTo(document.id, anchor: .top)
+                        }
+                    }
+                }
+            }
+
+            .animation(.default, value: viewModel.documents)
         }
         .refreshable {
             Task { await viewModel.refresh() }
