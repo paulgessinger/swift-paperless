@@ -31,6 +31,7 @@ class DocumentStore: ObservableObject {
     enum DocumentEvent {
         case deleted(document: Document)
         case changed(document: Document)
+        case changeReceived(document: Document)
     }
 
     var documentEventPublisher =
@@ -63,8 +64,9 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func updateDocument(_ document: Document) async throws {
-        documents[document.id] = try await repository.update(document: document)
         documentEventPublisher.send(.changed(document: document))
+        documents[document.id] = try await repository.update(document: document)
+        documentEventPublisher.send(.changeReceived(document: document))
     }
 
     @MainActor

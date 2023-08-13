@@ -81,15 +81,16 @@ class DocumentListViewModel: ObservableObject {
         documents = batch
     }
 
+    @MainActor
     func removed(document: Document) {
         documents.removeAll(where: { $0.id == document.id })
     }
 
-    func updated(document: Document) async {
+    @MainActor
+    func updated(document: Document) {
         if let target = documents.firstIndex(where: { $0.id == document.id }) {
             documents[target] = document
         }
-        await refresh(retain: true)
     }
 }
 
@@ -198,7 +199,9 @@ struct DocumentList: View {
             case .deleted(let document):
                 viewModel.removed(document: document)
             case .changed(let document):
-                Task { await viewModel.updated(document: document) }
+                viewModel.updated(document: document)
+            case .changeReceived:
+                Task { await viewModel.refresh(retain: true) }
             }
         }
     }
