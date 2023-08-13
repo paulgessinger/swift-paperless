@@ -168,7 +168,7 @@ struct DocumentList: View {
                         .padding(.top, 8)
                     }
 
-                    if viewModel.loading {
+                    if viewModel.ready && viewModel.loading {
                         ProgressView()
                     }
                 }
