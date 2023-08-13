@@ -16,6 +16,7 @@ struct MainView: View {
 
     @State private var storeReady = false
     @State private var store: DocumentStore?
+    @StateObject private var filterModel = FilterModel()
 
     @StateObject private var manager = ConnectionManager()
 
@@ -30,6 +31,7 @@ struct MainView: View {
                     .errorOverlay(errorController: errorController)
                     .environmentObject(store!)
                     .environmentObject(manager)
+                    .environmentObject(filterModel)
                     .environmentObject(errorController)
             }
             else {

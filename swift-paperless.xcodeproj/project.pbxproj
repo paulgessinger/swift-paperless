@@ -176,6 +176,8 @@
 		7AF6688729A137EA0016BC31 /* Api.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* Api.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
+		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
+		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -302,6 +304,7 @@
 		7AF6688629A137EA0016BC31 /* Api.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Api.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
+		7AFD3F5F2A87F482002789C2 /* FilterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -417,6 +420,7 @@
 				7A6F31DE29DEA46500186A87 /* FilterRule.swift */,
 				7A2A113C29FE649300E9FFE3 /* Keychain.swift */,
 				7A4648062A1D5AED00078968 /* DateDecodingError.swift */,
+				7AFD3F5F2A87F482002789C2 /* FilterModel.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -758,6 +762,7 @@
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A04EE482A673A7200C9CAE3 /* DocumentEditView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
+				7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */,
 				7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
@@ -821,6 +826,7 @@
 				7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */,
 				7A2A113D29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7AF2E08F29F57DA10092948B /* SettingsView.swift in Sources */,
+				7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */,
 				7A8E1F762A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
 				7A04EE4A2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A4AA91429BE22C300D845A2 /* CreateDocumentView.swift in Sources */,

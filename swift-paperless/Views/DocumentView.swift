@@ -24,7 +24,6 @@ extension NavigationPath {
     }
 }
 
-
 struct TaskActivityToolbar: View {
     @EnvironmentObject var store: DocumentStore
 
@@ -76,6 +75,7 @@ struct TaskActivityToolbar: View {
 
 struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var filterModel: FilterModel
     @EnvironmentObject private var connectionManager: ConnectionManager
 
     // MARK: State
@@ -107,7 +107,8 @@ struct DocumentView: View {
         Task { await store.fetchAll() }
         documents = []
 
-        let new = await store.fetchDocuments(clear: true, pageSize: 21)
+        let new = await store.fetchDocuments(clear: true,
+                                             filter: filterModel.filterState, pageSize: 21)
 
         documents = new
         try? await delay
@@ -119,7 +120,8 @@ struct DocumentView: View {
 
     func reload() async {
         Task { await store.fetchAll() }
-        let new = await store.fetchDocuments(clear: true, pageSize: 21)
+        let new = await store.fetchDocuments(clear: true,
+                                             filter: filterModel.filterState, pageSize: 21)
 
         withAnimation {
             documents = new
@@ -181,7 +183,9 @@ struct DocumentView: View {
                             .opacity(0.7)
                     }
                     else if !documents.isEmpty {
-                        DocumentList(documents: $documents, navPath: $navPath)
+                        DocumentList(documents: $documents,
+                                     navPath: $navPath,
+                                     filterState: $filterModel.filterState)
                     }
                     else if !initialLoad {
                         Text("No documents")
@@ -201,7 +205,7 @@ struct DocumentView: View {
 
             .safeAreaInset(edge: .top) {
                 VStack {
-                    SearchBarView(text: $store.filterState.searchText, cancelEnabled: false) {}
+                    SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
                         .padding(.horizontal)
 
                     FilterBar()
@@ -335,7 +339,7 @@ struct DocumentView: View {
                 Button("Cancel", role: .cancel) {}
             }
 
-            .onReceive(store.filterStatePublisher) { value in
+            .onReceive(filterModel.filterStatePublisher) { value in
                 print("Filter updated \(value)")
                 Task { await load() }
             }
@@ -381,6 +385,7 @@ struct FilterBar_Previews: PreviewProvider {
 private struct HelperView: View {
     @EnvironmentObject var store: DocumentStore
     @State var documents = [Document]()
+    @State var filterState = FilterState()
 
     var body: some View {
         VStack {
@@ -393,7 +398,7 @@ private struct HelperView: View {
         }
         .task {
             try? await Task.sleep(for: .seconds(0.1))
-            documents = await store.fetchDocuments(clear: false)
+            documents = await store.fetchDocuments(clear: false, filter: filterState)
             print("GOGOGO")
         }
     }

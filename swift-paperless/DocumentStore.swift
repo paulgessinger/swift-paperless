@@ -26,38 +26,6 @@ class DocumentStore: ObservableObject {
 
     @Published private(set) var activeTasks: [PaperlessTask] = []
 
-    @Published var filterState: FilterState = {
-        Logger.shared.trace("Loading FilterState")
-        guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
-            print("No default")
-            return FilterState()
-        }
-        do {
-            let value = try JSONDecoder().decode(FilterState.self, from: data)
-            Logger.shared.trace("Decoded filter state from UserDefaults: \(String(decoding: data, as: UTF8.self)) -> \(String(describing: value)) -> ")
-            return value
-        }
-        catch {
-            Logger.shared.trace("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
-            return FilterState()
-        }
-    }() {
-        didSet {
-            Logger.shared.trace("FilterState modified")
-            if filterState == oldValue {
-                return
-            }
-
-            guard let s = try? JSONEncoder().encode(filterState) else {
-                Logger.shared.trace("Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
-                return
-            }
-            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")
-
-            Logger.shared.trace("Encoded filter state to UserDefaults: \(String(describing: self.filterState)) -> \(String(decoding: s, as: UTF8.self))")
-        }
-    }
-
     // MARK: Members
 
     private var documentSource: any DocumentSource
@@ -66,11 +34,6 @@ class DocumentStore: ObservableObject {
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
 
     private(set) var repository: Repository
-
-    private var tasks = Set<AnyCancellable>()
-
-    var filterStatePublisher =
-        PassthroughSubject<FilterState, Never>()
 
     // MARK: Methods
 
@@ -82,14 +45,6 @@ class DocumentStore: ObservableObject {
         Task {
             async let _ = await fetchAll()
         }
-
-        $filterState
-            .removeDuplicates()
-            .debounce(for: .seconds(0.2), scheduler: DispatchQueue.main)
-            .sink { [weak self] value in
-                self?.filterStatePublisher.send(value)
-            }
-            .store(in: &tasks)
     }
 
     func clearDocuments() {
@@ -111,13 +66,13 @@ class DocumentStore: ObservableObject {
         documents.removeValue(forKey: document.id)
     }
 
-    func fetchDocuments(clear: Bool, pageSize: UInt = 30) async -> [Document] {
+    func fetchDocuments(clear: Bool, filter: FilterState, pageSize: UInt = 30) async -> [Document] {
         Logger.shared.trace("fetchDocuments")
         await semaphore.wait()
         defer { semaphore.signal() }
 
         if clear {
-            documentSource = repository.documents(filter: filterState)
+            documentSource = repository.documents(filter: filter)
         }
 
         let result = await documentSource.fetch(limit: pageSize)

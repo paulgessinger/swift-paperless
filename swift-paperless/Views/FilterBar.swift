@@ -27,6 +27,7 @@ private struct SavedViewError: LocalizedError {
 
 private struct FilterMenu<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var filterModel: FilterModel
     @EnvironmentObject private var errorController: ErrorController
     @Binding var filterState: FilterState
     @Binding var savedView: ProtoSavedView?
@@ -37,18 +38,18 @@ private struct FilterMenu<Content: View>: View {
     @State private var showDeletePrompt = false
 
     func saveSavedView(_ savedView: SavedView) {
-        guard let id = store.filterState.savedView, var updated = store.savedViews[id] else {
+        guard let id = filterModel.filterState.savedView, var updated = store.savedViews[id] else {
             errorController.push(message: "Unable to save active saved view")
             return
         }
 
-        updated.filterRules = store.filterState.rules
-        updated.sortOrder = store.filterState.sortOrder
-        updated.sortField = store.filterState.sortField
+        updated.filterRules = filterModel.filterState.rules
+        updated.sortOrder = filterModel.filterState.sortOrder
+        updated.sortField = filterModel.filterState.sortField
         Task {
             do {
                 try await store.update(savedView: updated)
-                store.filterState = .init(savedView: updated)
+                filterModel.filterState = .init(savedView: updated)
             }
             catch {
                 print(error)
@@ -62,12 +63,12 @@ private struct FilterMenu<Content: View>: View {
                 Text("Saved views")
                 if !store.savedViews.isEmpty {
                     ForEach(store.savedViews.map { $0.value }.sorted { $0.name < $1.name }, id: \.id) { savedView in
-                        if store.filterState.savedView == savedView.id {
+                        if filterModel.filterState.savedView == savedView.id {
                             Menu {
-                                if store.filterState.modified {
+                                if filterModel.filterState.modified {
                                     Button("Save") { saveSavedView(savedView) }
                                     Button {
-                                        store.filterState = .init(savedView: savedView)
+                                        filterModel.filterState = .init(savedView: savedView)
                                     } label: {
                                         Label("Discard changes", systemImage: "arrow.counterclockwise")
                                     }
@@ -76,7 +77,7 @@ private struct FilterMenu<Content: View>: View {
                                     showDeletePrompt = true
                                 }
                             } label: {
-                                if store.filterState.modified {
+                                if filterModel.filterState.modified {
                                     Label(String(localized: "\(savedView.name) (modified)", comment: "Indicates a saved view has been modified"), systemImage: "checkmark")
                                 }
                                 else {
@@ -87,7 +88,7 @@ private struct FilterMenu<Content: View>: View {
                         else {
                             Button {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    store.filterState = .init(savedView: savedView)
+                                    filterModel.filterState = .init(savedView: savedView)
                                 }
                             } label: {
                                 Text(savedView.name)
@@ -101,9 +102,9 @@ private struct FilterMenu<Content: View>: View {
                     Button {
                         let proto = ProtoSavedView(
                             name: "",
-                            sortField: store.filterState.sortField,
-                            sortOrder: store.filterState.sortOrder,
-                            filterRules: store.filterState.rules
+                            sortField: filterModel.filterState.sortField,
+                            sortOrder: filterModel.filterState.sortOrder,
+                            filterRules: filterModel.filterState.rules
                         )
 
                         savedView = proto
@@ -131,7 +132,7 @@ private struct FilterMenu<Content: View>: View {
                     Button(role: .destructive) {
                         Haptics.shared.notification(.success)
                         withAnimation {
-                            store.filterState.clear()
+                            filterModel.filterState.clear()
                             filterState.clear()
                         }
                     } label: {
@@ -150,13 +151,13 @@ private struct FilterMenu<Content: View>: View {
                    Button("Delete", role: .destructive) {
                        Task {
                            do {
-                               store.filterState.savedView = nil
+                               filterModel.filterState.savedView = nil
                                try? await Task.sleep(for: .seconds(0.2))
                                try await store.delete(savedView: store.savedViews[id]!)
                            }
                            catch {
                                print("Error deleting view")
-                               store.filterState.savedView = id
+                               filterModel.filterState.savedView = id
                            }
                        }
                    }
@@ -304,6 +305,7 @@ private struct Pill<Label: View>: View {
 
 struct FilterBar: View {
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var filterModel: FilterModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var showTags = false
@@ -328,6 +330,7 @@ struct FilterBar: View {
 
     private struct Modal<Content: View>: View {
         @EnvironmentObject private var store: DocumentStore
+        @EnvironmentObject private var filterModel: FilterModel
         @Environment(\.dismiss) private var dismiss
 
         var title: String
@@ -346,7 +349,7 @@ struct FilterBar: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(String(localized: "Done")) {
                             dismiss()
-                            store.filterState = filterState
+                            filterModel.filterState = filterState
                             onDismiss()
                         }
                     }
@@ -378,6 +381,7 @@ struct FilterBar: View {
 
         @Environment(\.dismiss) private var dismiss
         @EnvironmentObject private var store: DocumentStore
+        @EnvironmentObject private var filterModel: FilterModel
 
         var body: some View {
             NavigationStack {
@@ -385,7 +389,7 @@ struct FilterBar: View {
                     Task {
                         do {
                             let created = try await store.create(savedView: savedView)
-                            store.filterState = .init(savedView: created)
+                            filterModel.filterState = .init(savedView: created)
                             dismiss()
                         }
                         catch {
@@ -551,7 +555,7 @@ struct FilterBar: View {
                         Menu {
                             Button {
                                 withAnimation {
-                                    store.filterState.owner = .any
+                                    filterModel.filterState.owner = .any
                                 }
                             } label: {
                                 let text = LocalizedStrings.Filter.Owner.all
@@ -566,7 +570,7 @@ struct FilterBar: View {
                             if let user = store.currentUser {
                                 Button {
                                     withAnimation {
-                                        store.filterState.owner = .anyOf(ids: [user.id])
+                                        filterModel.filterState.owner = .anyOf(ids: [user.id])
                                     }
                                 } label: {
                                     let text = LocalizedStrings.Filter.Owner.myDocuments
@@ -584,7 +588,7 @@ struct FilterBar: View {
                                 }
                                 Button {
                                     withAnimation {
-                                        store.filterState.owner = .noneOf(ids: [user.id])
+                                        filterModel.filterState.owner = .noneOf(ids: [user.id])
                                     }
                                 } label: {
                                     let text = LocalizedStrings.Filter.Owner.sharedWithMe
@@ -603,7 +607,7 @@ struct FilterBar: View {
                             }
                             Button {
                                 withAnimation {
-                                    store.filterState.owner = .notAssigned
+                                    filterModel.filterState.owner = .notAssigned
                                 }
 
                             } label: {
@@ -667,16 +671,16 @@ struct FilterBar: View {
         .task {
             try? await Task.sleep(for: .seconds(0.5))
             withAnimation {
-                filterState = store.filterState
+                filterState = filterModel.filterState
             }
         }
 
         .onChange(of: filterState.sortOrder) { value in
-            store.filterState.sortOrder = value
+            filterModel.filterState.sortOrder = value
         }
 
         .onChange(of: filterState.sortField) { value in
-            store.filterState.sortField = value
+            filterModel.filterState.sortField = value
         }
 
         // MARK: Sheets
@@ -728,7 +732,7 @@ struct FilterBar: View {
             AddSavedViewSheet(savedView: view)
         }
 
-        .onReceive(store.filterStatePublisher) { value in
+        .onReceive(filterModel.filterStatePublisher) { value in
             DispatchQueue.main.async {
                 withAnimation {
                     filterState = value

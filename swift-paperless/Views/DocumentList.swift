@@ -24,7 +24,7 @@ struct LoadingDocumentList: View {
         }
         .environmentObject(store)
         .task {
-            documents = await store.fetchDocuments(clear: true, pageSize: 10)
+            documents = await store.fetchDocuments(clear: true, filter: FilterState(), pageSize: 10)
 //            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
         }
     }
@@ -34,6 +34,7 @@ struct DocumentList: View {
     @EnvironmentObject private var store: DocumentStore
     @Binding var documents: [Document]
     @Binding var navPath: NavigationPath
+    @Binding var filterState: FilterState
 
     @State private var loadingMore = false
 
@@ -75,7 +76,7 @@ struct DocumentList: View {
     }
 
     func loadMore() async {
-        let new = await store.fetchDocuments(clear: false, pageSize: 101)
+        let new = await store.fetchDocuments(clear: false, filter: filterState, pageSize: 101)
         withAnimation {
             documents += new
         }
