@@ -28,8 +28,13 @@ class DocumentStore: ObservableObject {
 
     // MARK: Members
 
-    var documentDeletePublisher =
-        PassthroughSubject<Document, Never>()
+    enum DocumentEvent {
+        case deleted(document: Document)
+        case changed(document: Document)
+    }
+
+    var documentEventPublisher =
+        PassthroughSubject<DocumentEvent, Never>()
 
     let semaphore = AsyncSemaphore(value: 1)
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
@@ -59,13 +64,14 @@ class DocumentStore: ObservableObject {
     @MainActor
     func updateDocument(_ document: Document) async throws {
         documents[document.id] = try await repository.update(document: document)
+        documentEventPublisher.send(.changed(document: document))
     }
 
     @MainActor
     func deleteDocument(_ document: Document) async throws {
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
-        documentDeletePublisher.send(document)
+        documentEventPublisher.send(.deleted(document: document))
     }
 
     func fetchTasks() async {

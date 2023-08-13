@@ -72,17 +72,24 @@ class DocumentListViewModel: ObservableObject {
     }
 
     @MainActor
-    func refresh(filter: FilterState? = nil) async {
+    func refresh(filter: FilterState? = nil, retain: Bool = false) async {
         if let filter {
             filterState = filter
         }
         source = store.repository.documents(filter: filterState)
-        let batch = await source.fetch(limit: initialBatchSize)
+        let batch = await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
         documents = batch
     }
 
-    func remove(document: Document) {
+    func removed(document: Document) {
         documents.removeAll(where: { $0.id == document.id })
+    }
+
+    func updated(document: Document) async {
+        if let target = documents.firstIndex(where: { $0.id == document.id }) {
+            documents[target] = document
+        }
+        await refresh(retain: true)
     }
 }
 
@@ -143,6 +150,7 @@ struct DocumentList: View {
                 VStack {
                     if !viewModel.ready {
                         LoadingDocumentList()
+                            .padding(.top, 8)
                     }
                     else {
                         let documents = viewModel.documents
@@ -156,6 +164,7 @@ struct DocumentList: View {
                                     }
                             }
                         }
+                        .padding(.top, 8)
                     }
 
                     if viewModel.loading {
@@ -175,9 +184,6 @@ struct DocumentList: View {
                 }
 
                 .animation(.default, value: viewModel.documents)
-
-                .padding(.top, 8)
-                .frame(maxWidth: .infinity)
             }
         }
         .refreshable {
@@ -187,8 +193,13 @@ struct DocumentList: View {
             await viewModel.load()
         }
 
-        .onReceive(store.documentDeletePublisher) { document in
-            viewModel.remove(document: document)
+        .onReceive(store.documentEventPublisher) { event in
+            switch event {
+            case .deleted(let document):
+                viewModel.removed(document: document)
+            case .changed(let document):
+                Task { await viewModel.updated(document: document) }
+            }
         }
     }
 }
