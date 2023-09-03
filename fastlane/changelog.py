@@ -41,6 +41,13 @@ for commit in commits:
     if category in groups:
         groups[category].append(message)
 
+print("""
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS! 
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+""".trim())
+
 for category, messages in groups.items():
     if len(messages) > 0:
         print(f"# {group_names[category]}")
