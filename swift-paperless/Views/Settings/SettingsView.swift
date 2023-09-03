@@ -18,7 +18,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("Organization") {
+            Section(LocalizedStrings.Settings.organization) {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle("Tags")
@@ -60,16 +60,16 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Preferences") {
+            Section(LocalizedStrings.Settings.preferences) {
                 NavigationLink {
                     PreferencesView()
-                        .navigationTitle("Preferences")
+                        .navigationTitle(LocalizedStrings.Settings.preferences)
                 } label: {
-                    Label("Preferences", systemImage: "dial.low.fill")
+                    Label(LocalizedStrings.Settings.preferences, systemImage: "dial.low.fill")
                 }
             }
 
-            Section("Advanced") {
+            Section(LocalizedStrings.Settings.advanced) {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
@@ -77,30 +77,30 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Details") {
+            Section(LocalizedStrings.Settings.Details.title) {
                 NavigationLink {
                     LibrariesView()
                 } label: {
-                    Label("Libraries", systemImage: "books.vertical.fill")
+                    Label(LocalizedStrings.Settings.Details.libraries, systemImage: "books.vertical.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
                 } label: {
-                    Label("Source code", systemImage: "terminal.fill")
+                    Label(LocalizedStrings.Settings.Details.sourceCode, systemImage: "terminal.fill")
                         .accentColor(.primary)
                 }
 
                 NavigationLink {
                     PrivacyView()
                 } label: {
-                    Label("Privacy", systemImage: "hand.raised.fill")
+                    Label(LocalizedStrings.Settings.Details.privacy, systemImage: "hand.raised.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
                 } label: {
-                    Label("Feedback", systemImage: "paperplane.fill")
+                    Label(LocalizedStrings.Settings.Details.feedback, systemImage: "paperplane.fill")
                         .accentColor(.primary)
                 }
             }
@@ -115,7 +115,7 @@ struct SettingsView: View {
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }
 
-        .navigationTitle("Settings")
+        .navigationTitle(LocalizedStrings.Settings.title)
     }
 }
 

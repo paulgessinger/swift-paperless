@@ -22,7 +22,7 @@ struct PrivacyView: View {
                 ProgressView("Loading")
             }
         }
-        .navigationTitle("Privacy")
+        .navigationTitle(LocalizedStrings.Settings.Details.privacy)
         .task {
             Task.detached {
                 do {
@@ -32,7 +32,7 @@ struct PrivacyView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        text = "# Privacy\nUnable to load privacy URL. Please navigate [here](\(PrivacyView.url.absoluteString)) to find it."
+                        text = LocalizedStrings.Settings.Details.privacyLoadError(PrivacyView.url.absoluteString)
                     }
                 }
             }

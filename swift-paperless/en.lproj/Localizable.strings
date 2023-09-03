@@ -124,11 +124,44 @@
 /* Owner filtering */
 "owner_not_assigned_picker" = "Not assigned";
 
+/* No comment provided by engineer. */
+"settings.advanced.title" = "Advanced";
+
+/* No comment provided by engineer. */
+"settings.details.feedback" = "Feedback";
+
+/* No comment provided by engineer. */
+"settings.details.libraries.load_error" = "Unable to load used library details";
+
+/* No comment provided by engineer. */
+"settings.details.privacy" = "Privacy";
+
+/* No comment provided by engineer. */
+"settings.details.privacy.load_error %@" = "# Privacy\\nUnable to load privacy URL. Please navigate [here](%@) to find it.";
+
+/* No comment provided by engineer. */
+"settings.details.source_code" = "Source code";
+
+/* No comment provided by engineer. */
+"settings.details.title" = "Details";
+
+/* No comment provided by engineer. */
+"settings.libraries.title" = "Libraries";
+
+/* No comment provided by engineer. */
+"settings.organization.title" = "Organization";
+
 /* Preferences */
 "settings.preferences.document_delete_confirmation_description" = "Ask for confirmation before deleting a document";
 
 /* Preferences */
 "settings.preferences.document_delete_confirmation_label" = "Document delete confirmation";
+
+/* No comment provided by engineer. */
+"settings.preferences.title" = "Preferences";
+
+/* No comment provided by engineer. */
+"settings.title" = "Settings";
 
 /* No comment provided by engineer. */
 "storage_path_format_explanation" = "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list.";

@@ -17,7 +17,7 @@ struct LibrariesView: View {
             text = try String(contentsOfFile: filepath)
         }
         catch {
-            fatalError("Unable to load static text file")
+            fatalError(LocalizedStrings.Settings.Details.librariesLoadError)
         }
     }
 
@@ -25,7 +25,7 @@ struct LibrariesView: View {
         ScrollView(.vertical) {
             Markdown(text)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .navigationTitle("Libraries")
+                .navigationTitle(LocalizedStrings.Settings.Details.libraries)
                 .padding()
         }
     }

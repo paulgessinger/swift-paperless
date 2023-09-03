@@ -37,6 +37,7 @@ Save saved view */
 /* Common element delete confirmation
 Document delete confirmation
 Logout confirmation */
+/* Common element delete confirmation */
 "Are you sure?" = "Sind Sie sicher?";
 
 /* No comment provided by engineer. */
@@ -107,6 +108,7 @@ Logout confirmation */
 
 /* No comment provided by engineer. */
 "Delete document \"%@\"" = "Dokument \"%@\" löschen";
+"Delete" = "Löschen";
 
 /* No comment provided by engineer. */
 "Delete saved view" = "Gespeicherte Ansicht löschen";
@@ -399,13 +401,43 @@ Save document */
 "Selection mode" = "Auswahlmodus";
 
 /* No comment provided by engineer. */
-"Settings" = "Einstellungen";
+"settings.advanced.title" = "Fortgeschritten";
+
+/* No comment provided by engineer. */
+"settings.details.feedback" = "Feedback";
+
+/* No comment provided by engineer. */
+"settings.details.libraries.load_error" = "Bibliothekdetails konnten nicht geladen werden";
+
+/* No comment provided by engineer. */
+"settings.details.privacy" = "Datenschutz";
+
+/* No comment provided by engineer. */
+"settings.details.privacy.load_error %@" = "# Datenschutz\\nDas Laden der Datenschutzinformationen ist fehlgeschlagen. Probieren Sie sie [hier](%@) zu finden.";
+
+/* No comment provided by engineer. */
+"settings.details.source_code" = "Quellcode";
+
+/* No comment provided by engineer. */
+"settings.details.title" = "Details";
+
+/* No comment provided by engineer. */
+"settings.libraries.title" = "Bibliotheken";
+
+/* No comment provided by engineer. */
+"settings.organization.title" = "Organisation";
 
 /* Preferences */
 "settings.preferences.document_delete_confirmation_description" = "Nach Bestätigung fragen, bevor ein Dokument gelöscht wird";
 
 /* Preferences */
 "settings.preferences.document_delete_confirmation_label" = "Löschbestätigung Dokumente";
+
+/* No comment provided by engineer. */
+"settings.preferences.title" = "Präferenzen";
+
+/* No comment provided by engineer. */
+"settings.title" = "Einstellungen";
 
 /* Owner filtering */
 "Shared with me" = "Mit mir geteilt";

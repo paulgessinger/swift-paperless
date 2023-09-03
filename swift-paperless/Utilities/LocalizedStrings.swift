@@ -64,6 +64,28 @@ enum LocalizedStrings {
     }
 
     enum Settings {
+        static let title = String(localized: "settings.title")
+
+        static let organization = String(localized: "settings.organization.title")
+
+        static let preferences = String(localized: "settings.preferences.title")
+
+        static let advanced = String(localized: "settings.advanced.title")
+
+        enum Details {
+            static let title = String(localized: "settings.details.title")
+
+            static let libraries = String(localized: "settings.libraries.title")
+            static let librariesLoadError = String(localized: "settings.details.libraries.load_error")
+
+            static let sourceCode = String(localized: "settings.details.source_code")
+
+            static let privacy = String(localized: "settings.details.privacy")
+            static let privacyLoadError = { (url: String) in String(localized: "settings.details.privacy.load_error \(url)") }
+
+            static let feedback = String(localized: "settings.details.feedback")
+        }
+
         static let documentDeleteConfirmationLabel = String(localized: "settings.preferences.document_delete_confirmation_label", comment: "Preferences")
         static let documentDeleteConfirmationDescription = String(localized: "settings.preferences.document_delete_confirmation_description", comment: "Preferences")
     }
