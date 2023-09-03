@@ -142,7 +142,6 @@
 		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
 		7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD353AC2A8018FE00AFFAFE /* PDFView.swift */; };
-		7AD353AF2A80288A00AFFAFE /* demo2.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 7AD353AE2A80288A00AFFAFE /* demo2.pdf */; };
 		7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 7AD353B02A8036E200AFFAFE /* demo3.pdf */; };
 		7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD353AC2A8018FE00AFFAFE /* PDFView.swift */; };
 		7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD8FC5729E4B37B00157217 /* FilterBar.swift */; };
@@ -288,7 +287,6 @@
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7AD353AC2A8018FE00AFFAFE /* PDFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFView.swift; sourceTree = "<group>"; };
-		7AD353AE2A80288A00AFFAFE /* demo2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = demo2.pdf; sourceTree = "<group>"; };
 		7AD353B02A8036E200AFFAFE /* demo3.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = demo3.pdf; sourceTree = "<group>"; };
 		7AD8FC5729E4B37B00157217 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
 		7AEF690F29CF7FA800414BA7 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -440,7 +438,6 @@
 			children = (
 				7AD353B02A8036E200AFFAFE /* demo3.pdf */,
 				7A4D9F3729D4B78500B25A63 /* demo.pdf */,
-				7AD353AE2A80288A00AFFAFE /* demo2.pdf */,
 				7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */,
 				7A4AA91029BE202800D845A2 /* PreviewModel.swift */,
 			);
@@ -731,7 +728,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */,
-				7AD353AF2A80288A00AFFAFE /* demo2.pdf in Resources */,
 				7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */,
 				7A01BAF32A67241E00BF1186 /* Localizable.strings in Resources */,
 				7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */,
