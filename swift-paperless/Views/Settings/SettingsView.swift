@@ -88,8 +88,8 @@ struct SettingsView: View {
                     UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
                 } label: {
                     Label("Source code", systemImage: "terminal.fill")
+                        .accentColor(.primary)
                 }
-                .buttonStyle(.plain)
 
                 NavigationLink {
                     PrivacyView()
@@ -101,8 +101,8 @@ struct SettingsView: View {
                     UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
                 } label: {
                     Label("Feedback", systemImage: "paperplane.fill")
+                        .accentColor(.primary)
                 }
-                .buttonStyle(.plain)
             }
         }
 
