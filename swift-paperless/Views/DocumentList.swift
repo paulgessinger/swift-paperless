@@ -47,6 +47,7 @@ class DocumentListViewModel: ObservableObject {
     @Published var ready = false
 
     private var source: DocumentSource
+    private var exhausted: Bool = false
 
     private var initialBatchSize: UInt = 20
     private var batchSize: UInt = 100
@@ -68,14 +69,24 @@ class DocumentListViewModel: ObservableObject {
         loading = false
     }
 
-    @MainActor
     func fetchMoreIfNeeded(currentIndex: Int) async {
+        if exhausted { return }
         if currentIndex >= documents.count - fetchMargin {
             guard !loading else { return }
-            loading = true
-            let batch = await source.fetch(limit: batchSize)
-            documents += batch
-            loading = false
+            await MainActor.run { loading = true }
+            Task.detached {
+                let batch = await self.source.fetch(limit: self.batchSize)
+                if batch.isEmpty {
+                    self.exhausted = true
+                    await MainActor.run { self.loading = false }
+                    return
+                }
+
+                await MainActor.run {
+                    self.documents += batch
+                    self.loading = false
+                }
+            }
         }
     }
 
@@ -84,6 +95,7 @@ class DocumentListViewModel: ObservableObject {
         if let filter {
             filterState = filter
         }
+        exhausted = false
         source = store.repository.documents(filter: filterState)
         let batch = await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
         documents = batch
