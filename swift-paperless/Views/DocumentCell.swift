@@ -96,12 +96,14 @@ struct DocumentCell: View {
                     .cornerRadius(10)
                     .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
+                    .frame(height: 200)
             }
             else {
                 DocumentPreviewImage(store: store,
                                      document: document)
                     .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
+                    .frame(height: 200)
             }
 
             VStack(alignment: .leading) {
@@ -148,7 +150,6 @@ struct DocumentCell: View {
             .layoutPriority(1)
             .padding(.horizontal, 5)
         }
-        .frame(height: 200)
     }
 }
 
