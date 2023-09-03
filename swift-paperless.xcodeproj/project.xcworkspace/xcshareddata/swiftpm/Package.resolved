@@ -55,6 +55,15 @@
       }
     },
     {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
+      "state" : {
+        "revision" : "12b351a75201a8124c2f2e1f9fc6ef5cd812c0b9",
+        "version" : "2.1.0"
+      }
+    },
+    {
       "identity" : "swiftui-flow",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tevelee/SwiftUI-Flow",
