@@ -636,6 +636,9 @@ struct FilterBar: View {
                             Color.clear
                                 .frame(width: geo.size.width, height: geo.size.height)
                         }
+                        .onTapGesture {
+                            Haptics.shared.impact(style: .light)
+                        }
                     }
                 }
 
@@ -660,6 +663,9 @@ struct FilterBar: View {
                         Label("Sort menu", systemImage: "arrow.up.arrow.down")
                             .labelStyle(.iconOnly)
                     }, active: filterState.sortOrder != .descending || filterState.sortField != .added, action: {})
+                }
+                .onTapGesture {
+                    Haptics.shared.impact(style: .light)
                 }
             }
             .padding(.horizontal)
