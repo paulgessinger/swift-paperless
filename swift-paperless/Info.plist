@@ -6,6 +6,11 @@
 	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.3</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
