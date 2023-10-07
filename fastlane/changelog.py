@@ -46,7 +46,7 @@ PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
 Redact screenshots to not include information that you do not wish to expose.
 
 ---
-""".trim())
+""".strip())
 
 for category, messages in groups.items():
     if len(messages) > 0:
