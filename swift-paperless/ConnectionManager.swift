@@ -15,14 +15,14 @@ enum ConnectionScheme: String, Codable {
 }
 
 struct Connection: Equatable {
-    let host: URL
+    let url: URL
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
 
-    init(host: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
+    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
+        self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
-        self.host = host
     }
 }
 
@@ -59,6 +59,9 @@ class ConnectionManager: ObservableObject {
         }
     }
 
+    @UserDefaultBacked(key: "ApiPath", storage: .group)
+    var apiPath: String? = nil
+
 //    @UserDefaultBacked(key: "ConnectionScheme", storage: .group)
 //    var scheme: ConnectionScheme = .https
 
@@ -74,8 +77,12 @@ class ConnectionManager: ObservableObject {
     }
 
     var connection: Connection? {
-        guard let apiHost = apiHost, let host = URL(string: apiHost) else {
+        guard let apiHost = apiHost, var url = URL(string: apiHost) else {
             return nil
+        }
+
+        if let path = apiPath {
+            url = url.appending(path: path)
         }
 
         let data: Data
@@ -83,18 +90,27 @@ class ConnectionManager: ObservableObject {
             data = try Keychain.read(service: apiHost,
                                      account: keychainAccount)
         } catch {
-            print(error)
             return nil
         }
 
-        return Connection(host: host,
+        return Connection(url: url,
                           token: String(data: data, encoding: .utf8)!,
                           extraHeaders: extraHeaders)
     }
 
-    func set(host: URL, token: String) throws {
-        let host = host.absoluteString
+    func set(base: URL, token: String) throws {
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+            Logger.shared.error("Previously ok'ed URL could not be parsed")
+            return
+        }
+
+        let path = (components.path == "" || components.path == "/") ? nil : components.path
+        components.path = ""
+
+        let host = base.absoluteString
+
         apiHost = host
+        apiPath = path
 
         try Keychain.saveOrUpdate(service: host,
                                   account: keychainAccount,
@@ -114,6 +130,9 @@ class ConnectionManager: ObservableObject {
         } catch {
             print(error)
         }
+
+        apiHost = nil
+        apiPath = nil
 
         state = .invalid
     }

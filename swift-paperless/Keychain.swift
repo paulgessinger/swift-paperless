@@ -44,8 +44,6 @@ struct Keychain {
         let update = [kSecValueData: value] as CFDictionary
         let status = SecItemUpdate(query as CFDictionary, update)
 
-        print("update \(value)")
-
         guard status != errSecItemNotFound else {
             throw KeychainError.itemNotFound
         }
@@ -60,7 +58,6 @@ struct Keychain {
             try save(service: service, account: account,
                      value: value)
         } catch KeychainError.duplicateItem {
-            print("Duplicate, updating")
             try update(service: service, account: account,
                        value: value)
         }

@@ -42,30 +42,30 @@ extension Endpoint {
         queryItems += FilterRule.queryItems(for: rules)
 
         return Endpoint(
-            path: "/api/documents/",
+            path: "/api/documents",
             queryItems: queryItems
         )
     }
 
     static func document(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(id)/", queryItems: [])
+        return Endpoint(path: "/api/documents/\(id)", queryItems: [])
     }
 
     static func thumbnail(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/thumb/", queryItems: [])
+        return Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
     }
 
     static func download(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/download/", queryItems: [])
+        return Endpoint(path: "/api/documents/\(documentId)/download", queryItems: [])
     }
 
     static func suggestions(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/suggestions/", queryItems: [])
+        return Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
     }
 
     static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
         return Endpoint(
-            path: "/api/search/autocomplete/",
+            path: "/api/search/autocomplete",
             queryItems: [
                 URLQueryItem(name: "term", value: term),
                 URLQueryItem(name: "limit", value: String(limit)),
@@ -74,44 +74,44 @@ extension Endpoint {
     }
 
     static func correspondents() -> Endpoint {
-        return Endpoint(path: "/api/correspondents/",
+        return Endpoint(path: "/api/correspondents",
                         queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createCorrespondent() -> Endpoint {
-        return Endpoint(path: "/api/correspondents/")
+        return Endpoint(path: "/api/correspondents")
     }
 
     static func correspondent(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/correspondents/\(id)/")
+        return Endpoint(path: "/api/correspondents/\(id)")
     }
 
     static func documentTypes() -> Endpoint {
-        return Endpoint(path: "/api/document_types/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        return Endpoint(path: "/api/document_types", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createDocumentType() -> Endpoint {
-        return Endpoint(path: "/api/document_types/")
+        return Endpoint(path: "/api/document_types")
     }
 
     static func documentType(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/document_types/\(id)/")
+        return Endpoint(path: "/api/document_types/\(id)")
     }
 
     static func tags() -> Endpoint {
-        return Endpoint(path: "/api/tags/", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        return Endpoint(path: "/api/tags", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createTag() -> Endpoint {
-        return Endpoint(path: "/api/tags/", queryItems: [])
+        return Endpoint(path: "/api/tags", queryItems: [])
     }
 
     static func tag(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/tags/\(id)/")
+        return Endpoint(path: "/api/tags/\(id)")
     }
 
     static func createDocument() -> Endpoint {
-        return Endpoint(path: "/api/documents/post_document/", queryItems: [])
+        return Endpoint(path: "/api/documents/post_document", queryItems: [])
     }
 
     static func listAll<T>(_ type: T.Type) -> Endpoint where T: Model {
@@ -136,44 +136,44 @@ extension Endpoint {
     }
 
     static func savedViews() -> Endpoint {
-        return Endpoint(path: "/api/saved_views/",
+        return Endpoint(path: "/api/saved_views",
                         queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createSavedView() -> Endpoint {
-        return Endpoint(path: "/api/saved_views/",
+        return Endpoint(path: "/api/saved_views",
                         queryItems: [])
     }
 
     static func savedView(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/saved_views/\(id)/",
+        return Endpoint(path: "/api/saved_views/\(id)",
                         queryItems: [])
     }
 
     static func storagePaths() -> Endpoint {
-        return .init(path: "/api/storage_paths/",
+        return .init(path: "/api/storage_paths",
                      queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func createStoragePath() -> Endpoint {
-        return .init(path: "/api/storage_paths/")
+        return .init(path: "/api/storage_paths")
     }
 
     static func storagePath(id: UInt) -> Endpoint {
-        return .init(path: "/api/storage_paths/\(id)/")
+        return .init(path: "/api/storage_paths/\(id)")
     }
 
     static func users() -> Endpoint {
-        return .init(path: "/api/users/",
+        return .init(path: "/api/users",
                      queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
     }
 
     static func uiSettings() -> Endpoint {
-        return .init(path: "/api/ui_settings/")
+        return .init(path: "/api/ui_settings")
     }
 
     static func tasks() -> Endpoint {
-        return .init(path: "/api/tasks/")
+        return .init(path: "/api/tasks")
     }
 
     static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
@@ -195,31 +195,16 @@ extension Endpoint {
             fatalError("Invalid type")
         }
 
-        return Endpoint(path: "/api/\(segment)/\(id)/",
+        return Endpoint(path: "/api/\(segment)/\(id)",
                         queryItems: [])
     }
 
-    func url(host url: URL) -> URL? {
-        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.shared.error("Host given to endpoint was invalid! \(url)")
-            return nil
+    func url(url: URL) -> URL? {
+        var result = url.appending(path: path, directoryHint: .isDirectory)
+        if !queryItems.isEmpty {
+            result.append(queryItems: queryItems)
         }
-
-        if components.host == nil {
-            Logger.shared.debug("Host did not end up in components, probably migration issue")
-            let host = url.absoluteString
-            if host.starts(with: "http://") || host.starts(with: "https://") {
-                Logger.shared.error("Scheme is in host, unknown reason for failure")
-                return nil
-            }
-
-            components.host = url.absoluteString
-            components.scheme = "https"
-        }
-
-        components.path = path
-        components.queryItems = queryItems.isEmpty ? nil : queryItems
-        Logger.shared.trace("URL for Endpoint \(path): \(components)")
-        return components.url
+        Logger.shared.trace("URL for Endpoint \(path): \(result)")
+        return result
     }
 }

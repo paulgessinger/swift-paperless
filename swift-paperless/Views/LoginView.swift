@@ -106,22 +106,16 @@ struct LoginView: View {
             url = URL(string: "https://\(value)")
         }
 
-        guard let url = url else {
+        guard var url = url else {
             Logger.shared.debug("Derived url \(value) was invalid")
             return nil
         }
 
-        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.shared.debug("Unable to parse url into components")
-            return nil
-        }
         let base = url
 
-        components.path = "/api/" + suffix
-
-        guard let url = components.url else {
-            Logger.shared.debug("Unable to convert components back to url \(components)")
-            return nil
+        url = url.appending(component: "api", directoryHint: .isDirectory)
+        if !suffix.isEmpty {
+            url = url.appending(component: suffix, directoryHint: .isDirectory)
         }
 
         Logger.shared.trace("Derive url: \(value) + \(suffix) -> \(url)")
@@ -171,7 +165,7 @@ struct LoginView: View {
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
-            guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token/") else {
+            guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.debug("Error making URL for logging in")
                 return false
             }
@@ -200,7 +194,7 @@ struct LoginView: View {
             try await Task.sleep(for: .seconds(0.5))
 
             // @TODO Change scheme!
-            try connectionManager.set(host: baseUrl, token: tokenResponse.token)
+            try connectionManager.set(base: baseUrl, token: tokenResponse.token)
             return true
 
         } catch {
