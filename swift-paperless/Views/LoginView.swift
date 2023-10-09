@@ -202,6 +202,43 @@ struct LoginView: View {
         }
         return false
     }
+  
+  private func validateToken() async -> Bool {
+    Logger.shared.trace("Attempting to validate token with url \(url.text)")
+    
+    do {
+      guard let (baseUrl, documentsUrl) = deriveUrl(string: url.text, suffix: "documents") else {
+        Logger.shared.debug("Error making URL for token validation")
+        return false
+      }
+      
+      var request = URLRequest(url: documentsUrl)
+      request.setValue("Token \(password)", forHTTPHeaderField: "Authorization")
+      connectionManager.extraHeaders.apply(toRequest: &request)
+      
+      let (_, response) = try await URLSession.shared.data(for: request)
+      
+      if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
+        Logger.shared.debug("Token validation request response was not 200 but \(statusCode)")
+        return false
+      }
+      
+      Logger.shared.trace("Token validation successful")
+      
+      withAnimation { loginState = .valid }
+      
+      try await Task.sleep(for: .seconds(0.5))
+      
+      try connectionManager.set(base: baseUrl, token: password)
+      return true
+
+    } catch {
+      Logger.shared.error("\(error)")
+    }
+
+    return false
+  }
+  
 
     var body: some View {
         NavigationStack {
@@ -275,11 +312,19 @@ struct LoginView: View {
                 Section {
                     Button(action: {
                         Task {
+                          if username.isEmpty && !password.isEmpty {
+                            if await validateToken() {
+                                withAnimation { loginState = .valid }
+                            } else {
+                                withAnimation { loginState = .error }
+                            }
+                          } else {
                             if await login() {
                                 withAnimation { loginState = .valid }
                             } else {
                                 withAnimation { loginState = .error }
                             }
+                          }
                         }
                     }) {
                         HStack {
@@ -305,7 +350,7 @@ struct LoginView: View {
                             }
                         }())
                     }
-                    .disabled(urlState != .valid || username.isEmpty || password.isEmpty)
+                    .disabled(urlState != .valid || password.isEmpty)
                 }
             }
             .onChange(of: url.debouncedText) { value in
