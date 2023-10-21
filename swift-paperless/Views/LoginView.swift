@@ -75,10 +75,19 @@ struct LoginView: View {
         case empty
         case checking
         case valid
-        case error
+        case error(info: String)
     }
 
     @State private var urlState = UrlState.empty
+
+    var urlStateValid: Bool {
+        switch urlState {
+        case .valid:
+            return true
+        default:
+            return false
+        }
+    }
 
     private enum LoginState {
         case none
@@ -133,7 +142,7 @@ struct LoginView: View {
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
             Logger.shared.trace("Cannot convert to url")
-            urlState = .error
+            urlState = .error(info: "Could not convert to URL: \(value)")
             return
         }
 
@@ -146,7 +155,7 @@ struct LoginView: View {
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.debug("Checking API status was not 200 but \(statusCode)")
-                urlState = .error
+                urlState = .error(info: "Request to \(apiUrl) returned \(statusCode)")
                 return
             }
 
@@ -154,7 +163,7 @@ struct LoginView: View {
             urlState = .valid
         } catch {
             Logger.shared.debug("Checking API error: \(error)")
-            urlState = .error
+            urlState = .error(info: "Request to \(apiUrl) gave error:\n\(error)")
             return
         }
     }
@@ -229,11 +238,14 @@ struct LoginView: View {
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
-                        case .error:
+                        case .error(let info):
                             Label(LocalizedStrings.Login.PaperlessUrl.error, systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.red)
+                                .onTapGesture {
+                                    UIPasteboard.general.string = info
+                                }
                         case .empty:
                             EmptyView()
                         }
@@ -305,7 +317,7 @@ struct LoginView: View {
                             }
                         }())
                     }
-                    .disabled(urlState != .valid || username.isEmpty || password.isEmpty)
+                    .disabled(urlStateValid || username.isEmpty || password.isEmpty)
                 }
             }
             .onChange(of: url.debouncedText) { value in
