@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>%lld filter(s) applied</key>
+	<key>%lld filtre(s) appliqué(s)</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@count@</string>
@@ -13,14 +13,14 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>1 filter applied</string>
+			<string>1 filtre appliqué</string>
 			<key>other</key>
-			<string>%d filters applied</string>
+			<string>%d filtres appliqués</string>
 			<key>zero</key>
-			<string>No filters applied</string>
+			<string>Aucun filtre appliqué</string>
 		</dict>
 	</dict>
-	<key>%lld pending task(s)</key>
+	<key>%lld tâche(s) en attente</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@count@</string>
@@ -31,14 +31,14 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>One pending task</string>
+			<string>Une tâche en attente</string>
 			<key>other</key>
-			<string>Pending %d tasks</string>
+			<string>%d tâches en attente</string>
 			<key>zero</key>
-			<string>No pending tasks</string>
+			<string>Aucune tâche en attente</string>
 		</dict>
 	</dict>
-	<key>%lld tag(s)</key>
+	<key>%lld Étiquettes(s)</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@count@</string>
@@ -49,11 +49,11 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>1 tag</string>
+			<string>1 Étiquette</string>
 			<key>other</key>
-			<string>%d tags</string>
+			<string>%d Étiquettes</string>
 			<key>zero</key>
-			<string>No tags</string>
+			<string>Aucune Étiquette</string>
 		</dict>
 	</dict>
 </dict>
