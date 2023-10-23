@@ -1,180 +1,176 @@
-/* No comment provided by engineer. */
-"All tags" = "All";
+/* Aucun commentaire fourni par l'ingénieur. */
+"All tags" = "Tous les tags";
 
-/* No comment provided by engineer. */
-"Any tag" = "Any";
+/* Aucun commentaire fourni par l'ingénieur. */
+"Any tag" = "N'importe quel tag";
 
-/* Correspondent filtering */
-"correspondent_not_assigned_filter" = "None";
+/* Filtrage des correspondants */
+"correspondent_not_assigned_filter" = "Aucun";
 
-/* Correspondent filtering */
-"correspondent_not_assigned_picker" = "Not assigned";
+/* Filtrage des correspondants */
+"correspondent_not_assigned_picker" = "Non attribué";
 
-/* Document type filtering */
-"document_type_not_assigned_filter" = "None";
+/* Filtrage du type de document */
+"document_type_not_assigned_filter" = "Aucun";
 
-/* Document type filtering */
-"document_type_not_assigned_picker" = "Not assigned";
+/* Filtrage du type de document */
+"document_type_not_assigned_picker" = "Non attribué";
 
-/* No comment provided by engineer. */
-"Exclude element" = "Exclude";
+/* Aucun commentaire fourni par l'ingénieur. */
+"Exclude element" = "Exclure";
 
-/* (No Comment) */
-"extra_headers_description" = "Extra headers to include in all API requests that the app makes to your installation.";
+/* (Pas de commentaire) */
+"extra_headers_description" = "En-têtes supplémentaires à inclure dans toutes les requêtes API que l'application fait à votre installation.";
 
-/* No comment provided by engineer. */
-"Include element" = "Include";
+/* Aucun commentaire fourni par l'ingénieur. */
+"Include element" = "Inclure";
 
-/* Login */
-"login.api_in_url_notice" = "Do not include `/api` in the URL";
+/* Connexion */
+"login.api_in_url_notice" = "Ne pas inclure `/api` dans l'URL";
 
-/* Login */
-"login.credentials" = "Credentials";
+/* Connexion */
+"login.credentials" = "Identifiants";
 
-/* Login */
-"login.details_title" = "Details";
+/* Connexion */
+"login.details_title" = "Détails";
 
-/* Login */
-"login.extra_headers" = "Extra headers";
+/* Connexion */
+"login.extra_headers" = "En-têtes supplémentaires";
 
-/* Login */
-"login.http_warning" = "If at all possible, use HTTPS to connect to the API.";
+/* Connexion */
+"login.http_warning" = "Si possible, utilisez HTTPS pour vous connecter à l'API.";
 
-/* Login login_button */
-"login.login_button.error" = "Login error";
+/* Bouton de connexion */
+"login.login_button.error" = "Erreur de connexion";
 
-/* Login login_button */
-"login.login_button.label" = "Login";
+/* Bouton de connexion */
+"login.login_button.label" = "Connexion";
 
-/* Login login_button */
-"login.login_button.valid" = "Login valid";
+/* Bouton de connexion */
+"login.login_button.valid" = "Connexion valide";
 
-/* Login */
-"login.more_toolbar_button_label" = "More";
+/* Connexion */
+"login.more_toolbar_button_label" = "Plus";
 
-/* Login paperless_url */
-"login.paperless_url.error" = "URL invalid";
+/* URL de Paperless */
+"login.paperless_url.error" = "URL invalide";
 
-/* Login paperless_url */
-"login.paperless_url.placeholder" = "Paperless URL";
+/* URL de Paperless */
+"login.paperless_url.placeholder" = "URL de Paperless";
 
-/* Login paperless_url */
-"login.paperless_url.valid" = "URL valid";
+/* URL de Paperless */
+"login.paperless_url.valid" = "URL valide";
 
-/* Login */
-"login.password" = "Password";
+/* Connexion */
+"login.password" = "Mot de passe";
 
-/* Login */
-"login.password_storage_notice" = "Your password is only used to log in, and not stored!";
+/* Connexion */
+"login.password_storage_notice" = "Votre mot de passe n'est utilisé que pour la connexion et n'est pas stocké !";
 
-/* Login */
-"login.username" = "Username";
+/* Connexion */
+"login.username" = "Nom d'utilisateur";
 
-/* Matching algorithm */
-"matching_algorithm_all" = "All";
+/* Algorithme de correspondance */
+"matching_algorithm_all" = "Tous";
 
-/* Matching algorithm */
-"matching_algorithm_any" = "Any";
+/* Algorithme de correspondance */
+"matching_algorithm_any" = "N'importe lequel";
 
-/* Matching algorithm */
+/* Algorithme de correspondance */
 "matching_algorithm_auto" = "Auto";
 
-/* Matching algorithm */
+/* Algorithme de correspondance */
 "matching_algorithm_exact" = "Exact";
 
-/* Matching algorithm */
-"matching_algorithm_fuzzy" = "Fuzzy";
+/* Algorithme de correspondance */
+"matching_algorithm_fuzzy" = "Flou";
 
-/* Matching algorithm */
-"matching_algorithm_none" = "None";
+/* Algorithme de correspondance */
+"matching_algorithm_none" = "Aucun";
 
-/* Matching algorithm */
+/* Algorithme de correspondance */
 "matching_algorithm_regEx" = "RegEx";
 
-/* Matching algorithm */
-"matching_explanation_all" = "Document contains all of these words (space separated)";
+/* Algorithme de correspondance */
+"matching_explanation_all" = "Le document contient tous ces mots (séparés par des espaces)";
 
-/* Matching algorithm */
-"matching_explanation_any" = "Document contains any of these words (space separated)";
+/* Algorithme de correspondance */
+"matching_explanation_any" = "Le document contient l'un de ces mots (séparés par des espaces)";
 
-/* Matching algorithm */
-"matching_explanation_auto" = "Learn matching automatically";
+/* Algorithme de correspondance */
+"matching_explanation_auto" = "Apprendre la correspondance automatiquement";
 
-/* Matching algorithm */
-"matching_explanation_fuzzy" = "Document contains a word similar to this word";
+/* Algorithme de correspondance */
+"matching_explanation_fuzzy" = "Le document contient un mot similaire à ce mot";
 
-/* Matching algorithm */
-"matching_explanation_literal" = "Document contains this string";
+/* Algorithme de correspondance */
+"matching_explanation_literal" = "Le document contient cette chaîne";
 
-/* Matching algorithm */
-"matching_explanation_none" = "No automatic matching";
+/* Algorithme de correspondance */
+"matching_explanation_none" = "Pas de correspondance automatique";
 
-/* Matching algorithm */
-"matching_explanation_regex" = "Document matches this regular expression";
+/* Algorithme de correspondance */
+"matching_explanation_regex" = "Le document correspond à cette expression régulière";
 
-/* (No Comment) */
-"no_elements_found" = "No elements found";
+/* (Pas de commentaire) */
+"no_elements_found" = "Aucun élément trouvé";
 
-/* Filter state additional information popup */
-"owner_filter_explicit_unsupported" = "Owner filter is in explicit user mode.";
+/* Popup d'informations supplémentaires sur l'état du filtre */
+"owner_filter_explicit_unsupported" = "Le filtre du propriétaire est en mode utilisateur explicite.";
 
-/* Owner filtering */
-"owner_not_assigned_filter" = "None";
+/* Filtrage du propriétaire */
+"owner_not_assigned_filter" = "Aucun";
 
-/* Owner filtering */
-"owner_not_assigned_picker" = "Not assigned";
+/* Filtrage du propriétaire */
+"owner_not_assigned_picker" = "Non attribué";
 
-/* No comment provided by engineer. */
-"settings.advanced.title" = "Advanced";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.advanced.title" = "Avancé";
 
-/* No comment provided by engineer. */
-"settings.details.feedback" = "Feedback";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.feedback" = "Retour d'information";
 
-/* No comment provided by engineer. */
-"settings.details.libraries.load_error" = "Unable to load used library details";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.libraries.load_error" = "Impossible de charger les détails des bibliothèques utilisées";
 
-/* No comment provided by engineer. */
-"settings.details.privacy" = "Privacy";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.privacy" = "Confidentialité";
 
-/* No comment provided by engineer. */
-"settings.details.privacy.load_error %@" = "# Privacy\\nUnable to load privacy URL. Please navigate [here](%@) to find it.";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.privacy.load_error %@" = "# Confidentialité\\nImpossible de charger l'URL de confidentialité. Veuillez naviguer [ici](%@) pour la trouver.";
 
-/* No comment provided by engineer. */
-"settings.details.source_code" = "Source code";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.source_code" = "Code source";
 
-/* No comment provided by engineer. */
-"settings.details.title" = "Details";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.details.title" = "Détails";
 
-/* No comment provided by engineer. */
-"settings.libraries.title" = "Libraries";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.libraries.title" = "Bibliothèques";
 
-/* No comment provided by engineer. */
-"settings.organization.title" = "Organization";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.organization.title" = "Organisation";
 
-/* Preferences */
-"settings.preferences.document_delete_confirmation_description" = "Ask for confirmation before deleting a document";
+/* Préférences */
+"settings.preferences.document_delete_confirmation_description" = "Demander une confirmation avant de supprimer un document";
 
-/* Preferences */
-"settings.preferences.document_delete_confirmation_label" = "Document delete confirmation";
+/* Préférences */
+"settings.preferences.document_delete_confirmation_label" = "Confirmation de suppression du document";
 
-/* No comment provided by engineer. */
-"settings.preferences.title" = "Preferences";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.preferences.title" = "Préférences";
 
-/* No comment provided by engineer. */
-"settings.title" = "Settings";
+/* Aucun commentaire fourni par l'ingénieur. */
+"settings.title" = "Paramètres";
 
-/* No comment provided by engineer. */
-"storage_path_format_explanation" = "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list.";
+/* Aucun commentaire fourni par l'ingénieur. */
+"storage_path_format_explanation" = "par exemple {created_year}-{title} ou utilisez des barres obliques pour ajouter des répertoires par exemple {created_year}/{correspondent}/{title}. Voir la [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) pour la liste complète.";
 
-/* Storage path filtering */
-"storage_path_not_assigned_filter" = "None";
+/* Filtrage du chemin de stockage */
+"storage_path_not_assigned_filter" = "Aucun";
 
-/* Storage path filtering */
-"storage_path_not_assigned_picker" = "Default";
+/* Filtrage du chemin de stockage */
+"storage_path_not_assigned_picker" = "Par défaut";
 
-/* Tags filterings */
-"tags_not_assigned_filter" = "None";
-
-/* Tags filterings */
-"tags_not_assigned_picker" = "Not assigned";
-
+/* Filtrage des tags */
+"tags_not_assigned_filter" = "Aucun
