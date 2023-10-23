@@ -1,176 +1,179 @@
-/* Aucun commentaire fourni par l'ingénieur. */
-"All tags" = "Tous les tags";
+/* No comment provided by engineer. */
+"All tags" = "Tous";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "Any tag" = "N'importe quel tag";
 
-/* Filtrage des correspondants */
+/* Correspondent filtering */
 "correspondent_not_assigned_filter" = "Aucun";
 
-/* Filtrage des correspondants */
+/* Correspondent filtering */
 "correspondent_not_assigned_picker" = "Non attribué";
 
-/* Filtrage du type de document */
+/* Document type filtering */
 "document_type_not_assigned_filter" = "Aucun";
 
-/* Filtrage du type de document */
+/* Document type filtering */
 "document_type_not_assigned_picker" = "Non attribué";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "Exclude element" = "Exclure";
 
-/* (Pas de commentaire) */
+/* (No Comment) */
 "extra_headers_description" = "En-têtes supplémentaires à inclure dans toutes les requêtes API que l'application fait à votre installation.";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "Include element" = "Inclure";
 
-/* Connexion */
+/* Login */
 "login.api_in_url_notice" = "Ne pas inclure `/api` dans l'URL";
 
-/* Connexion */
+/* Login */
 "login.credentials" = "Identifiants";
 
-/* Connexion */
+/* Login */
 "login.details_title" = "Détails";
 
-/* Connexion */
+/* Login */
 "login.extra_headers" = "En-têtes supplémentaires";
 
-/* Connexion */
+/* Login */
 "login.http_warning" = "Si possible, utilisez HTTPS pour vous connecter à l'API.";
 
-/* Bouton de connexion */
+/* Login login_button */
 "login.login_button.error" = "Erreur de connexion";
 
-/* Bouton de connexion */
+/* Login login_button */
 "login.login_button.label" = "Connexion";
 
-/* Bouton de connexion */
+/* Login login_button */
 "login.login_button.valid" = "Connexion valide";
 
-/* Connexion */
+/* Login */
 "login.more_toolbar_button_label" = "Plus";
 
-/* URL de Paperless */
+/* Login paperless_url */
 "login.paperless_url.error" = "URL invalide";
 
-/* URL de Paperless */
+/* Login paperless_url */
 "login.paperless_url.placeholder" = "URL de Paperless";
 
-/* URL de Paperless */
+/* Login paperless_url */
 "login.paperless_url.valid" = "URL valide";
 
-/* Connexion */
+/* Login */
 "login.password" = "Mot de passe";
 
-/* Connexion */
+/* Login */
 "login.password_storage_notice" = "Votre mot de passe n'est utilisé que pour la connexion et n'est pas stocké !";
 
-/* Connexion */
+/* Login */
 "login.username" = "Nom d'utilisateur";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_algorithm_all" = "Tous";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_algorithm_any" = "N'importe lequel";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_algorithm_auto" = "Auto";
 
-/* Algorithme de correspondance */
-"matching_algorithm_exact" = "Exact";
+/* Matching algorithm */
+"matching_algorithm_exact" = "Exacte";
 
-/* Algorithme de correspondance */
-"matching_algorithm_fuzzy" = "Flou";
+/* Matching algorithm */
+"matching_algorithm_fuzzy" = "Approximatif";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_algorithm_none" = "Aucun";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_algorithm_regEx" = "RegEx";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_explanation_all" = "Le document contient tous ces mots (séparés par des espaces)";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_explanation_any" = "Le document contient l'un de ces mots (séparés par des espaces)";
 
-/* Algorithme de correspondance */
-"matching_explanation_auto" = "Apprendre la correspondance automatiquement";
+/* Matching algorithm */
+"matching_explanation_auto" = "Apprentissage automatique du rapprochement";
 
-/* Algorithme de correspondance */
+/* Matching algorithm */
 "matching_explanation_fuzzy" = "Le document contient un mot similaire à ce mot";
 
-/* Algorithme de correspondance */
-"matching_explanation_literal" = "Le document contient cette chaîne";
+/* Matching algorithm */
+"matching_explanation_literal" = "Le document contient cette chaîne de caractères";
 
-/* Algorithme de correspondance */
-"matching_explanation_none" = "Pas de correspondance automatique";
+/* Matching algorithm */
+"matching_explanation_none" = "Désactiver le rapprochement automatique";
 
-/* Algorithme de correspondance */
-"matching_explanation_regex" = "Le document correspond à cette expression régulière";
+/* Matching algorithm */
+"matching_explanation_regex" = "Le document correspond à cette expression regulère";
 
-/* (Pas de commentaire) */
+/* (No Comment) */
 "no_elements_found" = "Aucun élément trouvé";
 
-/* Popup d'informations supplémentaires sur l'état du filtre */
+/* Filter state additional information popup */
 "owner_filter_explicit_unsupported" = "Le filtre du propriétaire est en mode utilisateur explicite.";
 
-/* Filtrage du propriétaire */
+/* Owner filtering */
 "owner_not_assigned_filter" = "Aucun";
 
-/* Filtrage du propriétaire */
+/* Owner filtering */
 "owner_not_assigned_picker" = "Non attribué";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.advanced.title" = "Avancé";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.feedback" = "Retour d'information";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.libraries.load_error" = "Impossible de charger les détails des bibliothèques utilisées";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.privacy" = "Confidentialité";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.privacy.load_error %@" = "# Confidentialité\\nImpossible de charger l'URL de confidentialité. Veuillez naviguer [ici](%@) pour la trouver.";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.source_code" = "Code source";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.details.title" = "Détails";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.libraries.title" = "Bibliothèques";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.organization.title" = "Organisation";
 
-/* Préférences */
+/* Preferences */
 "settings.preferences.document_delete_confirmation_description" = "Demander une confirmation avant de supprimer un document";
 
-/* Préférences */
-"settings.preferences.document_delete_confirmation_label" = "Confirmation de suppression du document";
+/* Preferences */
+"settings.preferences.document_delete_confirmation_label" = "Confirmer la suppression du document";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.preferences.title" = "Préférences";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "settings.title" = "Paramètres";
 
-/* Aucun commentaire fourni par l'ingénieur. */
+/* No comment provided by engineer. */
 "storage_path_format_explanation" = "par exemple {created_year}-{title} ou utilisez des barres obliques pour ajouter des répertoires par exemple {created_year}/{correspondent}/{title}. Voir la [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) pour la liste complète.";
 
-/* Filtrage du chemin de stockage */
+/* Storage path filtering */
 "storage_path_not_assigned_filter" = "Aucun";
 
-/* Filtrage du chemin de stockage */
+/* Storage path filtering */
 "storage_path_not_assigned_picker" = "Par défaut";
 
-/* Filtrage des tags */
-"tags_not_assigned_filter" = "Aucun
+/* Tags filterings */
+"tags_not_assigned_filter" = "Aucun";
+
+/* Tags filterings */
+"tags_not_assigned_picker" = "Non attribué";
