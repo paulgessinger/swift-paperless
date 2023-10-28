@@ -362,7 +362,7 @@ struct LoginView: View {
                             }
                         }())
                     }
-                    .disabled(urlStateValid || password.isEmpty)
+                    .disabled(!urlStateValid || password.isEmpty)
                 }
             }
             .onChange(of: url.debouncedText) { value in
