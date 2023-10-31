@@ -1,5 +1,5 @@
 /* Indicates a saved view has been modified */
-"%@ (modified)" = "%@ (verändert)";
+"%@ (modified)" = "%@ (modifié)";
 
 /* Indicates modified saved view in the filter bar */
 "%@*" = "%@*";
@@ -8,67 +8,67 @@
 Save document type
 Save tag
 Save saved view */
-"Add" = "Hinzufügen";
+"Add" = "Ajouter";
 
 /* No comment provided by engineer. */
-"Add document" = "Dokument hinzufügen";
+"Add document" = "Ajouter un document";
 
 /* No comment provided by engineer. */
-"Add tag" = "Tag hinzufügen";
+"Add tag" = "Ajouter une étiquette";
 
 /* Sort field names */
-"Added" = "Hinzugefügt am";
+"Added" = "ajouté le";
 
 /* Owner filtering */
-"All" = "Alle";
+"All" = "Tous";
 
 /* No comment provided by engineer. */
-"All tags" = "Tous";
+"All tags" = "Toutes les étiquettes";
 
 /* No comment provided by engineer. */
-"Any" = "Alle";
+"Any" = "N'importe";
 
 /* No comment provided by engineer. */
 "Any tag" = "N'importe quel tag";
 
 /* No comment provided by engineer. */
-"Are you sure you want to delete '%@'" = "Sind Sie sicher dass Sie '%@' löschen möchten?";
+"Are you sure you want to delete '%@'" = "Etes-vous sûr de vouloir supprimer '%@' ?";
 
 /* Common element delete confirmation
 Document delete confirmation
 Logout confirmation */
 /* Common element delete confirmation */
-"Are you sure?" = "Sind Sie sicher?";
+"Are you sure?" = "Etes-vous sûr ?";
 
 /* No comment provided by engineer. */
-"Ascending" = "Aufsteigend";
+"Ascending" = "Croissant";
 
 /* Sort field names */
-"ASN" = "ASN";
+"ASN" = "NSA";
 
 /* No comment provided by engineer. */
-"Back" = "Zurück";
+"Back" = "Retour";
 
 /* No comment provided by engineer. */
-"Cancel" = "Abbrechen";
+"Cancel" = "Annuler";
 
 /* Matching algorithm */
-"Case insensitive" = "Groß-/Kleinschreibung irrelevant";
+"Case insensitive" = "Insensible à la casse";
 
 /* No comment provided by engineer. */
-"Clear filters" = "Filter entfernen";
+"Clear filters" = "Effacer les filtres";
 
 /* No comment provided by engineer. */
-"Clear search" = "Suchtext löschen";
+"Clear search" = "Réinitialiser la recherche";
 
 /* No comment provided by engineer. */
-"Clear text" = "Text löschen";
+"Clear text" = "Effacer le texte";
 
 /* No comment provided by engineer. */
-"Color" = "Farbe";
+"Color" = "Couleur";
 
 /* Sort field names */
-"Correspondent" = "Korrespondent";
+"Correspondent" = "Correspondant";
 
 /* Correspondent filtering */
 "correspondent_not_assigned_filter" = "Aucun";
@@ -77,59 +77,59 @@ Logout confirmation */
 "correspondent_not_assigned_picker" = "Non attribué";
 
 /* No comment provided by engineer. */
-"Correspondents" = "Korrespondenten";
+"Correspondents" = "Correspondant";
 
 /* No comment provided by engineer. */
-"Create correspondent" = "Korrespondenten erstellen";
+"Create correspondent" = "Créer un correspondant";
 
 /* No comment provided by engineer. */
-"Create document type" = "Dokumenttyp erstellen";
+"Create document type" = "Créer un type de document";
 
 /* No comment provided by engineer. */
-"Create saved view" = "Gespeicherte Ansicht erstellen";
+"Create saved view" = "Créer une vue enregistrée";
 
 /* No comment provided by engineer. */
-"Create storage path" = "Speicherpfad erstellen";
+"Create storage path" = "Créer un chemin de stockage";
 
 /* No comment provided by engineer. */
-"Create tag" = "Tag erstellen";
+"Create tag" = "Créer une étiquette";
 
 /* Sort field names */
-"Created" = "Erstellt am";
+"Created" = "Créé";
 
 /* No comment provided by engineer. */
-"Created date" = "Erstellt am";
+"Created date" = "Créé le";
 
 /* Delete document */
-"Delete" = "Löschen";
+"Delete" = "Supprimer";
 
 /* No comment provided by engineer. */
-"Delete document" = "Dokument löschen";
+"Delete document" = "Supprimer le document";
 
 /* No comment provided by engineer. */
-"Delete document \"%@\"" = "Dokument \"%@\" löschen";
-"Delete" = "Löschen";
+"Delete document \"%@\"" = "Supprimer le document \"%@\"";
+"Delete" = "Supprimer";
 
 /* No comment provided by engineer. */
-"Delete saved view" = "Gespeicherte Ansicht löschen";
+"Delete saved view" = "Supprimer la vue enregistrée";
 
 /* Document deleted */
-"Deleted" = "Gelöscht";
+"Deleted" = "Supprimé";
 
 /* No comment provided by engineer. */
-"Descending" = "Absteigend";
+"Descending" = "Décroissant";
 
 /* No comment provided by engineer. */
-"Details" = "Details";
+"Details" = "Détails";
 
 /* No comment provided by engineer. */
-"Discard changes" = "Änderungen verwerfen";
+"Discard changes" = "Annuler les modifications";
 
 /* Sort field names */
-"Document type" = "Dokumenttyp";
+"Document type" = "Type de document";
 
 /* No comment provided by engineer. */
-"Document types" = "Dokumenttypen";
+"Document types" = "Types de documents";
 
 /* Document type filtering */
 "document_type_not_assigned_filter" = "Aucun";
@@ -141,73 +141,73 @@ Logout confirmation */
 "document_view.toolbar.asn" = "ASN";
 
 /* No comment provided by engineer. */
-"Done" = "Fertig";
+"Done" = "Terminé";
 
 /* No comment provided by engineer. */
-"Edit" = "Bearbeiten";
+"Edit" = "Editer";
 
 /* No comment provided by engineer. */
-"Edit correspondent" = "Korrespondent bearbeiten";
+"Edit correspondent" = "Editer le correspondant";
 
 /* No comment provided by engineer. */
-"Edit document type" = "Dokumenttyp bearbeiten";
+"Edit document type" = "Editer le type de document";
 
 /* No comment provided by engineer. */
-"Edit saved view" = "Gespeicherte Ansicht bearbeiten";
+"Edit saved view" = "Editer la vue enregistrée";
 
 /* Saved view edit menu button */
-"Edit saved views" = "Gespeicherte Ansichten bearbeiten";
+"Edit saved views" = "Editer les vues enregistrées";
 
 /* No comment provided by engineer. */
-"Edit storage path" = "Speicherpfad bearbeiten";
+"Edit storage path" = "Editer le chemin de stockage";
 
 /* No comment provided by engineer. */
-"Edit tag" = "Tag bearbeiten";
+"Edit tag" = "Editer l'étiquette";
 
 /* No comment provided by engineer. */
-"Element is selected" = "Element ist ausgewählt";
+"Element is selected" = "element selesctionné";
 
 /* No comment provided by engineer. */
-"Error" = "Fehler";
+"Error" = "Erreur";
 
 /* No comment provided by engineer. */
-"Exclude correspondent" = "Korrespondent ausgeschlossen";
+"Exclude correspondent" = "Exclure le correspondant";
 
 /* No comment provided by engineer. */
-"Exclude document type" = "Dokumenttyp ausgeschlossen";
+"Exclude document type" = "Exclure le type de document";
 
 /* No comment provided by engineer. */
-"Exclude element" = "Exclure";
+"Exclude element" = "Exclure l'élement";
 
 /* No comment provided by engineer. */
-"Exclude storage path" = "Speicherpfad ausgeschlossen";
+"Exclude storage path" = "Exclure le chemin de stockage";
 
 /* No comment provided by engineer. */
-"Exclude tag" = "Tag ausgeschlossen";
+"Exclude tag" = "Exclure l'étiquette";
 
 /* No comment provided by engineer. */
-"Extra headers" = "Explizite Header";
+"Extra headers" = "En-têtes supplémentaires";
 
 /* (No Comment) */
 "extra_headers_description" = "En-têtes supplémentaires à inclure dans toutes les requêtes API que l'application fait à votre installation.";
 
 /* Filter bar extra menu label */
-"Filtering" = "Filter aktiv";
+"Filtering" = "Filtre actif";
 
 /* No comment provided by engineer. */
-"Inbox tag" = "Posteingangs-Tag";
+"Inbox tag" = "Étiquette de boite de réception";
 
 /* No comment provided by engineer. */
-"Include element" = "Inclure";
+"Include element" = "Inclure l'élément";
 
 /* No comment provided by engineer. */
-"Invalid ASN" = "Ungültige Seriennummer";
+"Invalid ASN" = "Numéro de Série de l'Archive invalide";
 
 /* No comment provided by engineer. */
-"Invalid ASN %llu" = "Ungültige Seriennummer %llu";
+"Invalid ASN %llu" = "Numéro de Série de l'Archive invalide %llu";
 
 /* No comment provided by engineer. */
-"Key" = "Schlüssel";
+"Key" = "Clé";
 
 /* Login */
 "login.api_in_url_notice" = "Ne pas inclure `/api` dans l'URL";
@@ -255,16 +255,16 @@ Logout confirmation */
 "login.username" = "Nom d'utilisateur";
 
 /* No comment provided by engineer. */
-"Logout" = "Ausloggen";
+"Logout" = "Déconnexion";
 
 /* No comment provided by engineer. */
 "Matching" = "Automatische Zuweisung";
 
 /* No comment provided by engineer. */
-"Matching algorithm" = "Algorithmus";
+"Matching algorithm" = "Algorithme de rapprochement";
 
 /* Matching algorithm */
-"Matching pattern" = "Zuweisungsmuster";
+"Matching pattern" = "Modèle d'attribution";
 
 /* Matching algorithm */
 "matching_algorithm_all" = "Tous";
@@ -273,19 +273,19 @@ Logout confirmation */
 "matching_algorithm_any" = "N'importe lequel";
 
 /* Matching algorithm */
-"matching_algorithm_auto" = "Auto";
+"matching_algorithm_auto" = "Automatique";
 
 /* Matching algorithm */
-"matching_algorithm_exact" = "Exacte";
+"matching_algorithm_exact" = "Concordance exacte";
 
 /* Matching algorithm */
-"matching_algorithm_fuzzy" = "Approximatif";
+"matching_algorithm_fuzzy" = "Mot approximatif";
 
 /* Matching algorithm */
 "matching_algorithm_none" = "Aucun";
 
 /* Matching algorithm */
-"matching_algorithm_regEx" = "RegEx";
+"matching_algorithm_regEx" = "Expression régulière";
 
 /* Matching algorithm */
 "matching_explanation_all" = "Le document contient tous ces mots (séparés par des espaces)";
@@ -309,28 +309,28 @@ Logout confirmation */
 "matching_explanation_regex" = "Le document correspond à cette expression regulère";
 
 /* 'More' menu */
-"Menu of more options" = "Weitere Optionen";
+"Menu of more options" = "Plus d'options";
 
 /* Sort field names */
-"Modified" = "Verändert am";
+"Modified" = "Modifié le";
 
 /* Owner filtering */
-"My documents" = "Meine Dokumente";
+"My documents" = "Mes documents";
 
 /* No comment provided by engineer. */
-"Name" = "Name";
+"Name" = "Nom";
 
 /* No comment provided by engineer. */
-"No ASN: %@" = "Seriennummer fehlt: %@";
+"No ASN: %@" = "Numéro de Série de l'Archive manquant : %@";
 
 /* No comment provided by engineer. */
-"No documents" = "Keine Dokumente";
+"No documents" = "Aucun document";
 
 /* Tags filterings */
-"No filter" = "Kein Filter";
+"No filter" = "Aucun filtre";
 
 /* No comment provided by engineer. */
-"No tags" = "Keine Tags";
+"No tags" = "Aucune éttiquette";
 
 /* (No Comment) */
 "no_elements_found" = "Aucun élément trouvé";
@@ -339,7 +339,7 @@ Logout confirmation */
 "Ok" = "Ok";
 
 /* No comment provided by engineer. */
-"Open" = "Öffnen";
+"Open" = "Ouvrir";
 
 /* No comment provided by engineer. */
 "Organization" = "Organisation";
@@ -357,28 +357,28 @@ Logout confirmation */
 "Paperless" = "Paperless";
 
 /* No comment provided by engineer. */
-"Path" = "Pfad";
+"Path" = "Chemin";
 
 /* No comment provided by engineer. */
-"Permissions" = "Berechtigungen";
+"Permissions" = "Droits d'accès";
 
 /* No comment provided by engineer. */
-"Please log in using the app first!" = "Bitte loggen Sie sich zuerst in der App ein!";
+"Please log in using the app first!" = "Veuillez d'abord vous connecter via l'application !";
 
 /* No comment provided by engineer. */
-"Processing %@" = "%@ wird verarbeitet";
+"Processing %@" = "%@ en cours de traitement";
 
 /* No comment provided by engineer. */
-"Properties" = "Eigenschaften";
+"Properties" = "Propriétés";
 
 /* No comment provided by engineer. */
-"Random color" = "Zufällige Farbe";
+"Random color" = "Couleur aléatoire";
 
 /* No comment provided by engineer. */
-"Remove" = "Löschen";
+"Remove" = "Supprimer";
 
 /* No comment provided by engineer. */
-"Remove inbox tags" = "Posteingangs Tags entfernen";
+"Remove inbox tags" = "Retirer les étiquettes de la boîte de réception";
 
 /* Storage path edit
 Correspondent edit
@@ -386,19 +386,19 @@ Tag edit
 Document type edit
 Saved view edit
 Save document */
-"Save" = "Speichern";
+"Save" = "Sauvegarder";
 
 /* No comment provided by engineer. */
-"Saved views" = "Gespeicherte Ansichten";
+"Saved views" = "Vues enregistrées";
 
 /* No comment provided by engineer. */
-"Search" = "Suchen";
+"Search" = "Rechercher";
 
 /* No comment provided by engineer. */
-"Selected" = "Ausgewählt";
+"Selected" = "Sélectionner";
 
 /* Common element selection mode (include/exclude) */
-"Selection mode" = "Auswahlmodus";
+"Selection mode" = "Mode de sélection";
 
 /* No comment provided by engineer. */
 "settings.advanced.title" = "Avancé";
@@ -440,34 +440,34 @@ Save document */
 "settings.title" = "Paramètres";
 
 /* Owner filtering */
-"Shared with me" = "Mit mir geteilt";
+"Shared with me" = "Partagé avec moi";
 
 /* No comment provided by engineer. */
-"Show in sidebar" = "In der Seitenleiste anzeigen";
+"Show in sidebar" = "Montrer dans la barre latérale";
 
 /* No comment provided by engineer. */
-"Show on dashboard" = "Auf der Startseite anzeigen";
+"Show on dashboard" = "Afficher sur le tableau de bord";
 
 /* No comment provided by engineer. */
-"Sort by" = "Sortieren nach";
+"Sort by" = "Trier par";
 
 /* No comment provided by engineer. */
-"Sort menu" = "Sortiereinstellungen";
+"Sort menu" = "Paramètres de tri";
 
 /* No comment provided by engineer. */
-"Sort order" = "Sortierreihenfolge";
+"Sort order" = "Ordre de tri";
 
 /* No comment provided by engineer. */
-"Sort ordering" = "Sortierreihenfolge";
+"Sort ordering" = "Ordre de tri";
 
 /* No comment provided by engineer. */
-"Sorting" = "Sortieren";
+"Sorting" = "Trier";
 
 /* No comment provided by engineer. */
-"Storage path" = "Speicherpfad";
+"Storage path" = "Chemin de stockage";
 
 /* No comment provided by engineer. */
-"Storage paths" = "Speicherpfade";
+"Storage paths" = "Chemins de stockage";
 
 /* No comment provided by engineer. */
 "storage_path_format_explanation" = "par exemple {created_year}-{title} ou utilisez des barres obliques pour ajouter des répertoires par exemple {created_year}/{correspondent}/{title}. Voir la [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) pour la liste complète.";
@@ -479,50 +479,49 @@ Save document */
 "storage_path_not_assigned_picker" = "Par défaut";
 
 /* No comment provided by engineer. */
-"Tag excluded" = "Tag ausgeschlossen";
+"Tag excluded" = "Étiquette exclue";
 
 /* No comment provided by engineer. */
-"Tag filter mode" = "Tag Filtermodus";
+"Tag filter mode" = "Mode de filtrage par étiquette";
 
 /* No comment provided by engineer. */
-"Tag included" = "Tag eingeschlossen";
+"Tag included" = "Étiquette incluse";
 
 /* No comment provided by engineer. */
-"Tag is selected" = "Tag ist ausgewählt";
+"Tag is selected" = "Étiquette sélectionnée";
 
 /* No comment provided by engineer. */
-"Tag name" = "Name";
+"Tag name" = "Nom de l'étiquette";
 
 /* No comment provided by engineer. */
-"Tags" = "Tags";
+"Tags" = "Étiquettes";
 
 /* Tags filterings */
-"tags_not_assigned_filter" = "Aucun";
+"tags_not_assigned_filter" = "Aucune";
 
 /* Tags filterings */
 "tags_not_assigned_picker" = "Non attribué";
 
 /* Sort field names */
-"Title" = "Titel";
+"Title" = "Titre";
 
 /* No comment provided by engineer. */
-"Type in ASN" = "Seriennummer eingeben";
+"Type in ASN" = "Entrez le Numéro de Série de l'Archive";
 
 /* No comment provided by engineer. */
-"Unable to load preview" = "Vorschau kann nicht geladen werden";
+"Unable to load preview" = "Impossible de charger l'aperçu";
 
 /* Owner filtering */
-"Unowned" = "Ohne Besitzer";
+"Unowned" = "Sans propriétaire";
 
 /* No comment provided by engineer. */
-"Upload complete" = "Upload abgeschlossen";
+"Upload complete" = "Téléchargement terminé";
 
 /* No comment provided by engineer. */
-"Upload error" = "Fehler beim Upload";
+"Upload error" = "Erreur lors du téléchargement";
 
 /* Number of filtered users, number is separate */
-"Users" = "Besitzer";
+"Users" = "Utilisateurs";
 
 /* No comment provided by engineer. */
-"Value" = "Inhalt";
-
+"Value" = "Valeur";
