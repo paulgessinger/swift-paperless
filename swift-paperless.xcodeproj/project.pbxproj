@@ -46,6 +46,13 @@
 		7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A13252A087AD00088808E /* ExtraHeadersView.swift */; };
 		7A2A13272A087AD00088808E /* ExtraHeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A13252A087AD00088808E /* ExtraHeadersView.swift */; };
+		7A2E12222B14F3A000E7704A /* DeriveUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12212B14F3A000E7704A /* DeriveUrl.swift */; };
+		7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12212B14F3A000E7704A /* DeriveUrl.swift */; };
+		7A2E12242B14F3A000E7704A /* DeriveUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12212B14F3A000E7704A /* DeriveUrl.swift */; };
+		7A2E12262B14F42200E7704A /* DeriveUrlTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */; };
+		7A2E12272B14F50900E7704A /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
+		7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */; };
+		7A2E12292B14F51700E7704A /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B62A63D6E2009E86CE /* TaskModel.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
@@ -238,6 +245,8 @@
 		7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTypeEditView.swift; sourceTree = "<group>"; };
 		7A2A113C29FE649300E9FFE3 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		7A2A13252A087AD00088808E /* ExtraHeadersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraHeadersView.swift; sourceTree = "<group>"; };
+		7A2E12212B14F3A000E7704A /* DeriveUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrl.swift; sourceTree = "<group>"; };
+		7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrlTest.swift; sourceTree = "<group>"; };
 		7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
 		7A3E036729EC9013008F4976 /* SavedViewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewEditView.swift; sourceTree = "<group>"; };
 		7A4648022A1D5ABC00078968 /* ListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListResponse.swift; sourceTree = "<group>"; };
@@ -454,6 +463,7 @@
 				7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */,
 				7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */,
 				7AF2E07129F3ECE40092948B /* SavedViewTest.swift */,
+				7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */,
 			);
 			path = "swift-paperlessTests";
 			sourceTree = "<group>";
@@ -504,6 +514,7 @@
 				7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */,
 				7AF2E08729F56F3D0092948B /* Endpoint.swift */,
 				7A4648022A1D5ABC00078968 /* ListResponse.swift */,
+				7A2E12212B14F3A000E7704A /* DeriveUrl.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -805,6 +816,7 @@
 				7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */,
 				7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */,
 				7A2831C52A65BCD6009E86CE /* LocalizedStrings.swift in Sources */,
+				7A2E12242B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */,
@@ -870,6 +882,7 @@
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */,
 				7A2831C42A65BCD6009E86CE /* LocalizedStrings.swift in Sources */,
+				7A2E12222B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A83F6E32A6BE3D7002B5CF6 /* DataScannerView.swift in Sources */,
 				7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */,
 				7A8E1F822A1A8F90002A7CB3 /* TagModel.swift in Sources */,
@@ -900,6 +913,7 @@
 			files = (
 				7A4648042A1D5ABC00078968 /* ListResponse.swift in Sources */,
 				7A8E1F7A2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
+				7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
 				7A2577412A87D32400B15626 /* NullCodable.swift in Sources */,
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
@@ -907,11 +921,15 @@
 				7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */,
 				7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */,
 				7A8E1F832A1A8F90002A7CB3 /* TagModel.swift in Sources */,
+				7A2E12292B14F51700E7704A /* TaskModel.swift in Sources */,
+				7A2E12272B14F50900E7704A /* UserModel.swift in Sources */,
 				7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */,
 				7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */,
 				7AF2E07229F3ECE40092948B /* SavedViewTest.swift in Sources */,
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
+				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
 				7AF2E07729F3F02E0092948B /* Repository.swift in Sources */,
+				7A2E12262B14F42200E7704A /* DeriveUrlTest.swift in Sources */,
 				7A8E1F7C2A1A8F60002A7CB3 /* DocumentModel.swift in Sources */,
 				7A4648002A1D593C00078968 /* UserDefaults.swift in Sources */,
 				7A4648082A1D5AED00078968 /* DateDecodingError.swift in Sources */,
