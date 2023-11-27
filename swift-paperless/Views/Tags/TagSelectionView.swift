@@ -130,13 +130,13 @@ struct TagFilterView: View {
                     row(action: {
                         Task { withAnimation { selectedTags = .any }}
                     }, active: selectedTags == .any, content: {
-                        Text(LocalizedStrings.Filter.Tags.all)
+                        Text(.localizable.tagsFilterAny)
                     })
 
                     row(action: {
                         Task { withAnimation { selectedTags = .notAssigned }}
                     }, active: selectedTags == .notAssigned, content: {
-                        Text(LocalizedStrings.Filter.Tags.notAssignedPicker)
+                        Text(.localizable.tagsNotAssignedPicker)
                     })
                 }
 

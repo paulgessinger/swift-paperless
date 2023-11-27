@@ -29,11 +29,11 @@ struct SearchBarView: View {
     var body: some View {
         HStack {
             HStack {
-                Label("Search", systemImage: "magnifyingglass")
+                Label(String(localized: .localizable.search), systemImage: "magnifyingglass")
                     .labelStyle(.iconOnly)
                     .foregroundColor(.gray)
                     .padding(.trailing, -2)
-                TextField("Search", text: $text)
+                TextField(String(localized: .localizable.search), text: $text)
                     .padding(.trailing, 4)
                     .padding(.leading, 0)
                     .padding(.vertical, 8)
@@ -43,7 +43,7 @@ struct SearchBarView: View {
 
                 if !text.isEmpty {
                     Spacer()
-                    Label("Clear search", systemImage: "xmark.circle.fill")
+                    Label(String(localized: .localizable.searchClear), systemImage: "xmark.circle.fill")
                         .labelStyle(.iconOnly)
                         .foregroundColor(.gray)
                         .onTapGesture {

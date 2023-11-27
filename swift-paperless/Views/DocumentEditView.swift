@@ -181,7 +181,7 @@ struct DocumentEditView: View {
                                     if let id = document.correspondent {
                                         Text(store.correspondents[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.Correspondent.notAssignedFilter)
+                                        Text(.localizable.correspondentNotAssignedFilter)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -211,7 +211,7 @@ struct DocumentEditView: View {
                                     if let id = document.documentType {
                                         Text(store.documentTypes[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.DocumentType.notAssignedFilter)
+                                        Text(.localizable.documentTypeNotAssignedFilter)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -242,7 +242,7 @@ struct DocumentEditView: View {
                                     if let id = document.storagePath {
                                         Text(store.storagePaths[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.StoragePath.notAssignedFilter)
+                                        Text(.localizable.storagePathNotAssignedFilter)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -294,22 +294,21 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
 
-                    .confirmationDialog(String(localized: "Are you sure?",
-                                               comment: "Document delete confirmation"),
+                    .confirmationDialog(String(localized: .localizable.confirmationPromptTitle),
                                         isPresented: $showDeleteConfirmation,
                                         titleVisibility: .visible)
                     {
-                        Button("Delete", role: .destructive) {
+                        Button(String(localized: .localizable.delete), role: .destructive) {
                             // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
                             doDocumentDelete()
                         }
-                        Button("Cancel", role: .cancel) {}
+                        Button(String(localized: .localizable.cancel), role: .cancel) {}
                     }
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel", role: .cancel) {
+                    Button(String(localized: .localizable.cancel), role: .cancel) {
                         dismiss()
                     }
                 }

@@ -115,7 +115,7 @@ struct SettingsView: View {
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }
 
-        .navigationTitle(LocalizedStrings.Settings.title)
+        .navigationTitle(Text(.localizable.settingsTitle))
     }
 }
 

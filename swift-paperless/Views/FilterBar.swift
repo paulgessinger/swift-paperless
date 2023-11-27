@@ -33,8 +33,6 @@ private struct FilterMenu<Content: View>: View {
     @Binding var savedView: ProtoSavedView?
     @ViewBuilder var label: () -> Content
 
-//    @State private var savedView: ProtoSavedView? = nil
-
     @State private var showDeletePrompt = false
 
     func saveSavedView(_: SavedView) {
@@ -59,25 +57,25 @@ private struct FilterMenu<Content: View>: View {
     var body: some View {
         VStack {
             Menu {
-                Text("Saved views")
+                Text(.localizable.savedViews)
                 if !store.savedViews.isEmpty {
                     ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }, id: \.id) { savedView in
                         if filterModel.filterState.savedView == savedView.id {
                             Menu {
                                 if filterModel.filterState.modified {
-                                    Button("Save") { saveSavedView(savedView) }
+                                    Button(String(localized: .localizable.save)) { saveSavedView(savedView) }
                                     Button {
                                         filterModel.filterState = .init(savedView: savedView)
                                     } label: {
-                                        Label("Discard changes", systemImage: "arrow.counterclockwise")
+                                        Label(String(localized: .localizable.discardChanges), systemImage: "arrow.counterclockwise")
                                     }
                                 }
-                                Button("Delete", role: .destructive) {
+                                Button(String(localized: .localizable.delete), role: .destructive) {
                                     showDeletePrompt = true
                                 }
                             } label: {
                                 if filterModel.filterState.modified {
-                                    Label(String(localized: "\(savedView.name) (modified)", comment: "Indicates a saved view has been modified"), systemImage: "checkmark")
+                                    Label(String(localized: .localizable.savedViewModified(savedView.name)), systemImage: "checkmark")
                                 } else {
                                     Label(savedView.name, systemImage: "checkmark")
                                 }
@@ -108,23 +106,23 @@ private struct FilterMenu<Content: View>: View {
                         //                    showSavedViewModal = true
 
                     } label: {
-                        Label("Add", systemImage: "plus.circle")
+                        Label(String(localized: .localizable.add), systemImage: "plus.circle")
                     }
                 }
 
                 NavigationLink {
                     ManageView<SavedViewManager>(store: store)
-                        .navigationTitle("Saved views")
+                        .navigationTitle(Text(.localizable.savedViews))
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
-                    Label(String(localized: "Edit saved views", comment: "Saved view edit menu button"), systemImage: "list.bullet")
+                    Label(String(localized: .localizable.savedViewsEditButtonLabel), systemImage: "list.bullet")
                 }
 
                 if filterState.filtering {
                     if !store.savedViews.isEmpty {
                         Divider()
                     }
-                    Text("\(filterState.ruleCount) filter(s) applied")
+                    Text(.localizable.filtersApplied(filterState.ruleCount))
                     Divider()
                     Button(role: .destructive) {
                         Haptics.shared.notification(.success)
@@ -133,7 +131,7 @@ private struct FilterMenu<Content: View>: View {
                             filterState.clear()
                         }
                     } label: {
-                        Label(String(localized: "Clear filters"), systemImage: "xmark")
+                        Label(String(localized: .localizable.clearFilters), systemImage: "xmark")
                     }
                 }
 
@@ -142,16 +140,17 @@ private struct FilterMenu<Content: View>: View {
             }
         }
 
-        .alert("Delete saved view", isPresented: $showDeletePrompt,
+        .alert(Text(.localizable.savedViewDeleteConfirmationTitle), isPresented: $showDeletePrompt,
                presenting: filterState.savedView,
                actions: { id in
-                   Button("Delete", role: .destructive) {
+                   Button(String(localized: .localizable.delete), role: .destructive) {
                        Task {
                            do {
                                filterModel.filterState.savedView = nil
                                try? await Task.sleep(for: .seconds(0.2))
                                try await store.delete(savedView: store.savedViews[id]!)
                            } catch {
+                               // @TODO: Add improved error handling
                                print("Error deleting view")
                                filterModel.filterState.savedView = id
                            }
@@ -159,7 +158,7 @@ private struct FilterMenu<Content: View>: View {
                    }
                }, message: { id in
                    let sv = store.savedViews[id]!
-                   Text("Are you sure you want to delete '\(sv.name)'")
+                   Text(.localizable.savedViewDeleteConfirmationText(sv.name))
                })
     }
 }
@@ -339,7 +338,7 @@ struct FilterBar: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(String(localized: "Done")) {
+                        Button(String(localized: .localizable.done)) {
                             dismiss()
                             filterModel.filterState = filterState
                             onDismiss()
@@ -390,7 +389,7 @@ struct FilterBar: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") {
+                        Button(String(localized: .localizable.cancel)) {
                             dismiss()
                         }
                     }
@@ -403,13 +402,13 @@ struct FilterBar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
                 Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
-                    Label(String(localized: "Filtering", comment: "Filter bar extra menu label"), systemImage: "line.3.horizontal.decrease")
+                    Label(String(localized: .localizable.filtering), systemImage: "line.3.horizontal.decrease")
                         .labelStyle(.iconOnly)
                     if let savedViewId = filterState.savedView,
                        let savedView = store.savedViews[savedViewId]
                     {
                         if filterState.modified {
-                            Text(String(localized: "\(savedView.name)*", comment: "Indicates modified saved view in the filter bar"))
+                            Text(String(localized: .localizable.savedViewModified(savedView.name)))
                         } else {
                             Text(savedView.name)
                         }
@@ -447,20 +446,20 @@ struct FilterBar: View {
                 Element(label: {
                     switch filterState.tags {
                     case .any:
-                        Text("Tags")
+                        Text(.localizable.tags)
                     case .notAssigned:
-                        Text(LocalizedStrings.Filter.Tags.notAssignedFilter)
+                        Text(.localizable.tagsNotAssignedFilter)
                     case let .allOf(include, exclude):
                         let count = include.count + exclude.count
                         if count == 1 {
                             if let i = include.first, let name = store.tags[i]?.name {
                                 Text(name)
                             } else if let i = exclude.first, let name = store.tags[i]?.name {
-                                Label("Exclude tag", systemImage: "xmark")
+                                Label(String(localized: .localizable.tagExclude), systemImage: "xmark")
                                     .labelStyle(.iconOnly)
                                 Text(name)
                             } else {
-                                Text(String(localized: "\(1) tag(s)"))
+                                Text(.localizable.numberOfTags(1))
                                     .redacted(reason: .placeholder)
                             }
                         } else {
@@ -473,19 +472,19 @@ struct FilterBar: View {
                             } else {
                                 CircleCounter(value: count, mode: .exclude)
                             }
-                            Text("Tags")
+                            Text(.localizable.tags)
                         }
                     case let .anyOf(ids):
                         if ids.count == 1 {
                             if let name = store.tags[ids.first!]?.name {
                                 Text(name)
                             } else {
-                                Text(String(localized: "\(1) tag(s)"))
+                                Text(.localizable.numberOfTags(1))
                                     .redacted(reason: .placeholder)
                             }
                         } else {
                             CircleCounter(value: ids.count)
-                            Text("Tags")
+                            Text(.localizable.tags)
                         }
                     }
                 }, active: filterState.tags != .any) {
@@ -510,23 +509,23 @@ struct FilterBar: View {
                 Pill(active: filterState.owner != .any) {
                     switch filterState.owner {
                     case .any:
-                        Text("Permissions")
+                        Text(.localizable.permissions)
                     case let .anyOf(ids):
                         if ids.count == 1, ids[0] == store.currentUser?.id {
-                            Text(LocalizedStrings.Filter.Owner.myDocuments)
+                            Text(.localizable.ownerMyDocuments)
                         } else {
                             CircleCounter(value: ids.count, mode: .include)
-                            Text(LocalizedStrings.Filter.Owner.multipleUsers)
+                            Text(.localizable.ownerMultipleUsers)
                         }
                     case let .noneOf(ids):
                         if ids.count == 1, ids[0] == store.currentUser?.id {
-                            Text(LocalizedStrings.Filter.Owner.sharedWithMe)
+                            Text(.localizable.ownerSharedWithMe)
                         } else {
                             CircleCounter(value: ids.count, mode: .exclude)
-                            Text(LocalizedStrings.Filter.Owner.multipleUsers)
+                            Text(.localizable.ownerMultipleUsers)
                         }
                     case .notAssigned:
-                        Text(LocalizedStrings.Filter.Owner.unowned)
+                        Text(.localizable.ownerUnowned)
                     }
                 }
                 .overlay {
@@ -538,7 +537,7 @@ struct FilterBar: View {
                                     filterModel.filterState.owner = .any
                                 }
                             } label: {
-                                let text = LocalizedStrings.Filter.Owner.all
+                                let text = String(localized: .localizable.ownerAll)
                                 if filterState.owner == .any {
                                     Label(text, systemImage: "checkmark")
                                 } else {
@@ -552,7 +551,7 @@ struct FilterBar: View {
                                         filterModel.filterState.owner = .anyOf(ids: [user.id])
                                     }
                                 } label: {
-                                    let text = LocalizedStrings.Filter.Owner.myDocuments
+                                    let text = String(localized: .localizable.ownerMyDocuments)
                                     switch filterState.owner {
                                     case let .anyOf(ids):
                                         if ids.count == 1, ids[0] == store.currentUser?.id {
@@ -569,7 +568,7 @@ struct FilterBar: View {
                                         filterModel.filterState.owner = .noneOf(ids: [user.id])
                                     }
                                 } label: {
-                                    let text = LocalizedStrings.Filter.Owner.sharedWithMe
+                                    let text = String(localized: .localizable.ownerSharedWithMe)
                                     switch filterState.owner {
                                     case let .noneOf(ids):
                                         if ids.count == 1, ids[0] == store.currentUser?.id {
@@ -588,7 +587,7 @@ struct FilterBar: View {
                                 }
 
                             } label: {
-                                let text = LocalizedStrings.Filter.Owner.unowned
+                                let text = String(localized: .localizable.ownerUnowned)
                                 if filterState.owner == .notAssigned {
                                     Label(text, systemImage: "checkmark")
                                 } else {
@@ -600,7 +599,7 @@ struct FilterBar: View {
                             case let .anyOf(ids), let .noneOf(ids):
                                 if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
                                     Divider()
-                                    Text(String(localized: "owner_filter_explicit_unsupported", comment: "Filter state additional information popup"))
+                                    Text(String(localized: .localizable.ownerFilterExplicitUnsupported))
                                 } else {
                                     EmptyView()
                                 }
@@ -620,22 +619,22 @@ struct FilterBar: View {
                 Divider()
 
                 Menu {
-                    Picker("Sort by", selection: $filterState.sortField) {
+                    Picker(String(localized: .localizable.sortBy), selection: $filterState.sortField) {
                         ForEach(SortField.allCases, id: \.rawValue) { f in
                             Text(f.label).tag(f)
                         }
                     }
 
-                    Picker("Sort ordering", selection: $filterState.sortOrder) {
-                        Label("Ascending", systemImage: "arrow.up")
+                    Picker(String(localized: .localizable.sortOrdering), selection: $filterState.sortOrder) {
+                        Label(String(localized: .localizable.ascending), systemImage: "arrow.up")
                             .tag(SortOrder.ascending)
-                        Label("Descending", systemImage: "arrow.down")
+                        Label(String(localized: .localizable.descending), systemImage: "arrow.down")
                             .tag(SortOrder.descending)
                     }
                 }
                 label: {
                     Element(label: {
-                        Label("Sort menu", systemImage: "arrow.up.arrow.down")
+                        Label(String(localized: .localizable.sortMenuLabel), systemImage: "arrow.up.arrow.down")
                             .labelStyle(.iconOnly)
                     }, active: filterState.sortOrder != .descending || filterState.sortField != .added, action: {})
                 }
@@ -667,44 +666,44 @@ struct FilterBar: View {
         // MARK: Sheets
 
         .sheet(isPresented: $showTags) {
-            Modal(title: String(localized: "Tags"), filterState: $filterState) {
+            Modal(title: String(localized: .localizable.tags), filterState: $filterState) {
                 TagFilterView(
                     selectedTags: $filterState.tags)
             }
         }
 
         .sheet(isPresented: $showDocumentType) {
-            Modal(title: String(localized: "Document type"), filterState: $filterState) {
+            Modal(title: String(localized: .localizable.documentType), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.documentType,
                     elements: store.documentTypes.sorted {
                         $0.value.name < $1.value.name
                     }.map { ($0.value.id, $0.value.name) },
-                    notAssignedLabel: LocalizedStrings.Filter.DocumentType.notAssignedPicker
+                    notAssignedLabel: String(localized: .localizable.documentTypeNotAssignedPicker)
                 )
             }
         }
 
         .sheet(isPresented: $showCorrespondent) {
-            Modal(title: String(localized: "Correspondent"), filterState: $filterState) {
+            Modal(title: String(localized: .localizable.correspondent), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.correspondent,
                     elements: store.correspondents.sorted {
                         $0.value.name < $1.value.name
                     }.map { ($0.value.id, $0.value.name) },
-                    notAssignedLabel: LocalizedStrings.Filter.Correspondent.notAssignedPicker
+                    notAssignedLabel: String(localized: .localizable.correspondentNotAssignedPicker)
                 )
             }
         }
 
         .sheet(isPresented: $showStoragePath) {
-            Modal(title: String(localized: "Storage path"), filterState: $filterState) {
+            Modal(title: String(localized: .localizable.storagePath), filterState: $filterState) {
                 CommonPicker(
                     selection: $filterState.storagePath,
                     elements: store.storagePaths.sorted {
                         $0.value.name < $1.value.name
                     }.map { ($0.value.id, $0.value.name) },
-                    notAssignedLabel: LocalizedStrings.Filter.StoragePath.notAssignedPicker
+                    notAssignedLabel: String(localized: .localizable.storagePathNotAssignedPicker)
                 )
             }
         }

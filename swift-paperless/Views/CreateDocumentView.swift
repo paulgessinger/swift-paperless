@@ -82,8 +82,8 @@ struct CreateDocumentView<Title: View>: View {
 
                 Form {
                     Section {
-                        TextField("Title", text: $document.title) {}
-                        DatePicker("Created date", selection: $document.created, displayedComponents: .date)
+                        TextField(String(localized: .localizable.documentEditTitleLabel), text: $document.title) {}
+                        DatePicker(String(localized: .localizable.documentEditCreatedDateLabel), selection: $document.created, displayedComponents: .date)
                     }
                     Section {
                         NavigationLink(destination: {
@@ -92,16 +92,16 @@ struct CreateDocumentView<Title: View>: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle("Correspondent")
+                            .navigationTitle(String(localized: .localizable.correspondent))
                         }) {
                             HStack {
-                                Text("Correspondent")
+                                Text(.localizable.correspondent)
                                 Spacer()
                                 Group {
                                     if let id = document.correspondent {
                                         Text(store.correspondents[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.Correspondent.notAssignedPicker)
+                                        Text(.localizable.correspondentNotAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -116,17 +116,17 @@ struct CreateDocumentView<Title: View>: View {
                             )
                         }) {
                             HStack {
-                                Text("Document type")
+                                Text(.localizable.documentType)
                                 Spacer()
                                 Group {
                                     if let id = document.documentType {
                                         Text(store.documentTypes[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.DocumentType.notAssignedPicker)
+                                        Text(.localizable.documentTypeNotAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)
-                                .navigationTitle("Document type")
+                                .navigationTitle(Text(.localizable.documentType))
                             }
                         }
 
@@ -144,7 +144,7 @@ struct CreateDocumentView<Title: View>: View {
                                     if let id = document.storagePath {
                                         Text(store.storagePaths[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(LocalizedStrings.Filter.StoragePath.notAssignedPicker)
+                                        Text(.localizable.storagePathNotAssignedPicker)
                                     }
                                 }
                                 .foregroundColor(.gray)

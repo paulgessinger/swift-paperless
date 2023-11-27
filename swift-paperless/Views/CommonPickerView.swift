@@ -87,7 +87,7 @@ struct CommonPicker: View {
                 .padding(.vertical, 2)
             Form {
                 Section {
-                    Row(String(localized: "Any"), selected: selection == FilterState.Filter.any) {
+                    Row(String(localized: .localizable.commonFilterAny), selected: selection == FilterState.Filter.any) {
                         selection = .any
                     }
                     Row(notAssignedLabel, selected: selection == FilterState.Filter.notAssigned) {
@@ -201,9 +201,9 @@ extension Correspondent: Pickable {
 
     static var notAssignedFilter = String(localized: .localizable.correspondentNotAssignedFilter)
     static var notAssignedPicker = String(localized: .localizable.correspondentNotAssignedPicker)
-    static var singularLabel = String(localized: "Correspondent")
-    static var pluralLabel = String(localized: "Correspondents")
-    static var excludeLabel = String(localized: "Exclude correspondent")
+    static var singularLabel = String(localized: .localizable.correspondent)
+    static var pluralLabel = String(localized: .localizable.correspondents)
+    static var excludeLabel = String(localized: .localizable.correspondentExclude)
 }
 
 extension DocumentType: Pickable {
@@ -213,11 +213,11 @@ extension DocumentType: Pickable {
         \.documentType
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.DocumentType.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.DocumentType.notAssignedPicker
-    static var singularLabel = String(localized: "Document type")
-    static var pluralLabel = String(localized: "Document types")
-    static var excludeLabel = String(localized: "Exclude document type")
+    static var notAssignedFilter = String(localized: .localizable.documentTypeNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.documentTypeNotAssignedPicker)
+    static var singularLabel = String(localized: .localizable.documentType)
+    static var pluralLabel = String(localized: .localizable.documentTypes)
+    static var excludeLabel = String(localized: .localizable.documentTypeExclude)
 }
 
 extension StoragePath: Pickable {
@@ -227,11 +227,11 @@ extension StoragePath: Pickable {
         \.storagePath
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.StoragePath.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.StoragePath.notAssignedPicker
-    static var singularLabel = String(localized: "Storage path")
-    static var pluralLabel = String(localized: "Storage paths")
-    static var excludeLabel = String(localized: "Exclude storage path")
+    static var notAssignedFilter = String(localized: .localizable.storagePathNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.storagePathNotAssignedPicker)
+    static var singularLabel = String(localized: .localizable.storagePath)
+    static var pluralLabel = String(localized: .localizable.storagePaths)
+    static var excludeLabel = String(localized: .localizable.storagePathExclude)
 }
 
 struct CommonPickerEdit<Manager, D>: View
