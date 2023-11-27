@@ -17,4 +17,4 @@ jobs:
         env:
             GYM_SKIP_CODESIGNING: true
             GYM_SKIP_ARCHIVE: true
-        run: fastlane gym
+        run: fastlane gym --scheme swift-paperless
