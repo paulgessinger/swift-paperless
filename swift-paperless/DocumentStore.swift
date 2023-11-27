@@ -111,7 +111,6 @@ class DocumentStore: ObservableObject {
                        collection: \.storagePaths)
     }
 
-    @MainActor
     func fetchCurrentUser() async {
         if currentUser != nil {
             // We don't expect this to change
