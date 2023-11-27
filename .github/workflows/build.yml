@@ -14,8 +14,8 @@ jobs:
         run: brew install xcbeautify
 
       - name: Compile the main application
-        run: >
-          xcodebuild 
-          -project swift-paperless.xcodeproj/
-          -scheme swift-paperless
-          -destination 'platform=iOS Simulator,OS=16.4,name=iPhone 14 Pro | xcbeautify
+        run: |
+          xcodebuild \
+          -project swift-paperless.xcodeproj/ \
+          -scheme swift-paperless \
+          -destination 'platform=iOS Simulator,OS=16.4,name=iPhone 14 Pro
