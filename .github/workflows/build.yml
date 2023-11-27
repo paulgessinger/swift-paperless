@@ -1,0 +1,49 @@
+name: Build and test the application
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: brew install fastlane
+
+      - name: Compile the main application
+        env:
+            GYM_SKIP_CODESIGNING: true
+            GYM_SKIP_ARCHIVE: true
+            GYM_BUILDLOG_PATH: ${GITHUB_WORKSPACE}/log
+        run: fastlane gym --scheme swift-paperless
+
+      - uses: actions/upload-artifact@v3
+        with:
+            name: output
+            path: |
+                log
+
+  test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: brew install fastlane
+
+      - name: Run tests
+        env:
+            GYM_SKIP_CODESIGNING: true
+            GYM_SKIP_ARCHIVE: true
+            GYM_BUILDLOG_PATH: ${GITHUB_WORKSPACE}/log
+        run: fastlane tests
+
+      - uses: actions/upload-artifact@v3
+        with:
+            name: output
+            path: |
+                log
