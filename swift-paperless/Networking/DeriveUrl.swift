@@ -4,10 +4,17 @@ import os
 func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolved: URL)? {
     let url: URL?
 
-    let pattern = /https?:\/\/(.*)/
+    let pattern = /(\w+):\/\/(.*)/
 
-    if (try? pattern.wholeMatch(in: value)) != nil {
-        url = URL(string: value)
+    if let matches = try? pattern.wholeMatch(in: value) {
+        let scheme = matches.1
+        let rest = matches.2
+        if scheme != "http", scheme != "https" {
+            // @TODO: Add proper error handling
+            Logger.shared.debug("Encountered invalid scheme \(scheme)")
+            return nil
+        }
+        url = URL(string: "\(scheme)://\(rest)")
     } else {
         url = URL(string: "https://\(value)")
     }
