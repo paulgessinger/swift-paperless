@@ -122,6 +122,20 @@ struct LoginView: View {
 
         let base = url
 
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            // @TODO: Add proper error handling
+            Logger.shared.debug("Could not parse URL \(url) into components")
+            return nil
+        }
+
+        guard let host = components.host, !host.isEmpty else {
+            // @TODO: Add proper error handling
+            Logger.shared.debug("URL \(url) had empty host")
+            return nil
+        }
+
+        assert(components.scheme != nil)
+
         url = url.appending(component: "api", directoryHint: .isDirectory)
         if !suffix.isEmpty {
             url = url.appending(component: suffix, directoryHint: .isDirectory)
