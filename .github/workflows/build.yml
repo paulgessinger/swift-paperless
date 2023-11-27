@@ -20,6 +20,9 @@ jobs:
           - ios: "17.0.1"
             xcode: "15.0.1"
       fail-fast: false
+    env:
+      GYM_SKIP_CODESIGNING: true
+      GYM_SKIP_ARCHIVE: true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
