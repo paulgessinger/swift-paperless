@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "alerttoast",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elai950/AlertToast",
+      "state" : {
+        "revision" : "b39252eacd159904afd7d718bba0afabb87f2f2f",
+        "version" : "1.3.9"
+      }
+    },
+    {
       "identity" : "nuke",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",

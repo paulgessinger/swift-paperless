@@ -37,7 +37,7 @@ private struct FilterMenu<Content: View>: View {
 
     func saveSavedView(_: SavedView) {
         guard let id = filterModel.filterState.savedView, var updated = store.savedViews[id] else {
-            errorController.push(message: "Unable to save active saved view")
+            errorController.push(title: "Unable to save active saved view")
             return
         }
 

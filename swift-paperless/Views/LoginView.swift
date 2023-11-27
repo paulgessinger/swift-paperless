@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 25.03.23.
 //
 
+import AlertToast
 import os
 import SwiftUI
 
@@ -69,6 +70,8 @@ private struct DetailsView: View {
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
 
+    @EnvironmentObject var errorController: ErrorController
+
     @StateObject private var url = DebounceObject(delay: 1)
 
     private enum UrlState {
@@ -96,6 +99,9 @@ struct LoginView: View {
     }
 
     @State private var loginState = LoginState.none
+
+    @State private var showError = false
+    @State private var showErrorDetail = false
 
     @State private var apiInUrl = false
 
@@ -259,6 +265,10 @@ struct LoginView: View {
                 Section {
                     Button(action: {
                         Task {
+//                            showError = true
+//                            errorController.push(error: GenericError(message: "Manager test"))
+                            errorController.push(title: "Error logging in")
+
                             if await login() {
                                 withAnimation { loginState = .valid }
                             } else {
@@ -289,7 +299,7 @@ struct LoginView: View {
                             }
                         }())
                     }
-                    .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
+//                    .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
                 }
             }
             .onChange(of: url.debouncedText) { value in
@@ -316,6 +326,20 @@ struct LoginView: View {
             .sheet(isPresented: $showDetails) {
                 DetailsView(connectionManager: connectionManager)
             }
+        }
+
+        .toast(isPresenting: $showError, duration: 3, offsetY: 5) {
+            AlertToast(displayMode: .hud, type: .error(.red),
+                       title: "an error", subTitle: "Tap for more information")
+        } onTap: {
+            showErrorDetail = true
+        }
+
+        .alert("Here is a bunch more detail. This is a lot more. I could even print the whole error message here, I don't even care", isPresented: $showErrorDetail) {
+            Button("Copy to clipboard") {
+                UIPasteboard.general.string = "I am the error string"
+            }
+            Button("ok", role: .cancel) {}
         }
     }
 }

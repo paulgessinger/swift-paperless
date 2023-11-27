@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A01BAF32A67241E00BF1186 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7A01BAF02A67241E00BF1186 /* Localizable.strings */; };
+		7A03A8982B15315B00D4805E /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = 7A03A8972B15315B00D4805E /* AlertToast */; };
+		7A03A89A2B15316000D4805E /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = 7A03A8992B15316000D4805E /* AlertToast */; };
 		7A04034229FD68E8009604E4 /* ManageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04034129FD68E8009604E4 /* ManageView.swift */; };
 		7A04EE422A672A2800C9CAE3 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD8FC5729E4B37B00157217 /* FilterBar.swift */; };
 		7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -337,6 +340,7 @@
 				7A4AA90329BE048800D845A2 /* Flow in Frameworks */,
 				7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */,
 				7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */,
+				7A03A89A2B15316000D4805E /* AlertToast in Frameworks */,
 				7A297FB829FE9C870021A1ED /* SwiftUINavigation in Frameworks */,
 				7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */,
 			);
@@ -349,6 +353,7 @@
 				7A68F0B329B4B94B00878223 /* Flow in Frameworks */,
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
+				7A03A8982B15315B00D4805E /* AlertToast in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
 				7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */,
 				7AEBA7A929EDBFBF006D5620 /* SwiftUINavigation in Frameworks */,
@@ -609,6 +614,7 @@
 				7AB060DA29C62395004E6C63 /* AsyncAlgorithms */,
 				7A297FB729FE9C870021A1ED /* SwiftUINavigation */,
 				7A1C32C42A5EB08D00C18B44 /* NukeUI */,
+				7A03A8992B15316000D4805E /* AlertToast */,
 			);
 			productName = ShareExtension;
 			productReference = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */;
@@ -640,6 +646,7 @@
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
 				7A2831AF2A61D30B009E86CE /* CasePaths */,
 				7AB057742AA482D200ABA6B1 /* MarkdownUI */,
+				7A03A8972B15315B00D4805E /* AlertToast */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -729,6 +736,7 @@
 				7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 				7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
+				7A03A8962B15311600D4805E /* XCRemoteSwiftPackageReference "AlertToast" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1442,6 +1450,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7A03A8962B15311600D4805E /* XCRemoteSwiftPackageReference "AlertToast" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elai950/AlertToast";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.9;
+			};
+		};
 		7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
@@ -1517,6 +1533,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7A03A8972B15315B00D4805E /* AlertToast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A03A8962B15311600D4805E /* XCRemoteSwiftPackageReference "AlertToast" */;
+			productName = AlertToast;
+		};
+		7A03A8992B15316000D4805E /* AlertToast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A03A8962B15311600D4805E /* XCRemoteSwiftPackageReference "AlertToast" */;
+			productName = AlertToast;
+		};
 		7A1C32BE2A5EAF1A00C18B44 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
