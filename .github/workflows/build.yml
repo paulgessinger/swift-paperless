@@ -28,20 +28,20 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
 
-      # - name: Install dependencies
-        # run: brew install fastlane
+      - name: Install dependencies
+        run: brew install fastlane
 
-      # - name: Compile the main application
-        # run: fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"
+      - name: Compile the main application
+        run: fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"
 
-  # test:
-    # runs-on: macos-latest
-    # steps:
-      # - name: Checkout
-        # uses: actions/checkout@v3
+  test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      # - name: Install dependencies
-        # run: brew install fastlane
+      - name: Install dependencies
+        run: brew install fastlane
 
-      # - name: Run tests
-        # run: fastlane tests
+      - name: Run tests
+        run: fastlane tests
