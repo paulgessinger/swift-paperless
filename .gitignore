@@ -13,3 +13,4 @@ venv
 fastlane/report.xml
 fastlane/README.md
 *.xcloc
+fastlane/test_output/report.junit
