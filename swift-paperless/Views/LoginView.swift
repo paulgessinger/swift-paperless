@@ -104,34 +104,6 @@ struct LoginView: View {
 
     @State private var showDetails: Bool = false
 
-    private func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolved: URL)? {
-        let url: URL?
-
-        let pattern = /https?:\/\/(.*)/
-
-        if (try? pattern.wholeMatch(in: value)) != nil {
-            url = URL(string: value)
-        } else {
-            url = URL(string: "https://\(value)")
-        }
-
-        guard var url = url else {
-            Logger.shared.debug("Derived url \(value) was invalid")
-            return nil
-        }
-
-        let base = url
-
-        url = url.appending(component: "api", directoryHint: .isDirectory)
-        if !suffix.isEmpty {
-            url = url.appending(component: suffix, directoryHint: .isDirectory)
-        }
-
-        Logger.shared.trace("Derive url: \(value) + \(suffix) -> \(url)")
-
-        return (base, url)
-    }
-
     private func checkUrl(string value: String) async {
         Logger.shared.debug("Checking backend URL \(value)")
         guard !value.isEmpty else {

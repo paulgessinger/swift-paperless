@@ -29,8 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
+            skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7A5482BB299AD56E00D5061E"
@@ -58,6 +57,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "7A5482BB299AD56E00D5061E"
+            BuildableName = "swift-paperlessTests.xctest"
+            BlueprintName = "swift-paperlessTests"
+            ReferencedContainer = "container:swift-paperless.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
