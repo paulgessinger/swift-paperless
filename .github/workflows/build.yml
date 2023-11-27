@@ -10,7 +10,7 @@ jobs:
       matrix:
         ios: 
           - "16.4"
-          - "17.0"
+          - "17.0.1"
         device: 
           - "iPhone 14 Pro"
           - "iPad Pro (12.9-inch) (6th generation)"
