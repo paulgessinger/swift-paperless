@@ -158,7 +158,7 @@ struct DocumentDetailView: View {
                             } else {
                                 Aspect(systemImage: "qrcode") {
                                     HStack(spacing: 2) {
-                                        Text("#")
+                                        Text(String("#"))
                                         Text("0000")
                                             .redacted(reason: .placeholder)
                                     }
