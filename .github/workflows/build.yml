@@ -17,4 +17,11 @@ jobs:
         env:
             GYM_SKIP_CODESIGNING: true
             GYM_SKIP_ARCHIVE: true
+            GYM_BUILDLOG_PATH: ${GITHUB_WORKSPACE}/log
         run: fastlane gym --scheme swift-paperless
+
+      - uses: actions/upload-artifact@v3
+        with:
+            name: output
+            path: |
+                log
