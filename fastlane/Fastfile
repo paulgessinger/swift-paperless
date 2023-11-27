@@ -62,4 +62,14 @@ platform :ios do
       scheme: "swift-paperlessTests",
     )
   end
+
+  lane :build do |options|
+    device = options.fetch(:device, "iPhone 14 Pro")
+    ios = options.fetch(:ios, "16.4")
+
+    build_app(
+      scheme: "swift-paperless",
+      destination: "platform=iOS Simulator,OS=#{ios},name=#{device}",
+    )
+  end
 end
