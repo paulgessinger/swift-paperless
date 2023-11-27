@@ -4,11 +4,6 @@ enum LocalizedStrings {
 //    }
 
     enum Filter {
-        enum Correspondent {
-            static let notAssignedFilter = String(localized: "correspondent_not_assigned_filter", comment: "Correspondent filtering")
-            static let notAssignedPicker = String(localized: "correspondent_not_assigned_picker", comment: "Correspondent filtering")
-        }
-
         enum DocumentType {
             static let notAssignedFilter = String(localized: "document_type_not_assigned_filter", comment: "Document type filtering")
             static let notAssignedPicker = String(localized: "document_type_not_assigned_picker", comment: "Document type filtering")

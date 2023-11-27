@@ -199,8 +199,8 @@ extension Correspondent: Pickable {
         \.correspondent
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.Correspondent.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.Correspondent.notAssignedPicker
+    static var notAssignedFilter = String(localized: .localizable.correspondentNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.correspondentNotAssignedPicker)
     static var singularLabel = String(localized: "Correspondent")
     static var pluralLabel = String(localized: "Correspondents")
     static var excludeLabel = String(localized: "Exclude correspondent")

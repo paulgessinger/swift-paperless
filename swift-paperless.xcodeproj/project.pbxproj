@@ -582,6 +582,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A2E12142B14BBE200E7704A /* PBXTargetDependency */,
 			);
 			name = ShareExtension;
 			packageProductDependencies = (
@@ -607,6 +608,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A2E12122B14BBDB00E7704A /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -707,6 +709,7 @@
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 				7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -949,6 +952,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7A2E12122B14BBDB00E7704A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */;
+		};
+		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
+		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
@@ -997,12 +1008,13 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless.ShareExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1026,12 +1038,13 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless.ShareExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -1187,6 +1200,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless";
@@ -1196,7 +1210,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1234,6 +1248,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless";
@@ -1243,7 +1258,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1418,6 +1433,14 @@
 				minimumVersion = 0.14.1;
 			};
 		};
+		7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/Semaphore";
@@ -1498,6 +1521,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
 			productName = SwiftUINavigation;
+		};
+		7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
 		};
 		7A4AA90229BE048800D845A2 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;

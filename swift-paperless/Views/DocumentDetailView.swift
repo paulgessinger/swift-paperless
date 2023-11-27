@@ -154,7 +154,7 @@ struct DocumentDetailView: View {
                     HStack(alignment: .top, spacing: 25) {
                         VStack(alignment: .leading) {
                             if let asn = document.asn {
-                                Aspect("#\(asn)", systemImage: "qrcode")
+                                Aspect(String(localized: .localizable.documentAsn(Int(asn))), systemImage: "qrcode")
                             } else {
                                 Aspect(systemImage: "qrcode") {
                                     HStack(spacing: 2) {
