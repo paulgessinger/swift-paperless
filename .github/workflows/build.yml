@@ -1,0 +1,21 @@
+name: Build and test the application
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Compile the main application
+        run: >
+          xcodebuild 
+          -project swift-paperless.xcodeproj/
+          -scheme swift-paperless
+          -destination 'platform=iOS Simulator,OS=16.4,name=iPhone 14 Pro | xcbeautify
