@@ -11,6 +11,9 @@ jobs:
         device: 
           - "iPhone 14 Pro"
           - "iPad Pro (12.9-inch) (6th generation)"
+        ios: 
+          - "16.4"
+          - "17.0.1"
         include:
           - ios: "16.4"
             xcode: "14.3.1"
