@@ -10,12 +10,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install xcbeautify
-        run: brew install xcbeautify
+      - name: Install dependencies
+        run: brew install fastlane
 
       - name: Compile the main application
-        run: |
-          xcodebuild \
-          -project swift-paperless.xcodeproj/ \
-          -scheme swift-paperless \
-          -destination 'platform=iOS Simulator,OS=16.4,name=iPhone 14 Pro
+        env:
+            GYM_SKIP_CODESIGNING: true
+            GYM_SKIP_ARCHIVE: true
+        run: fastlane gym
