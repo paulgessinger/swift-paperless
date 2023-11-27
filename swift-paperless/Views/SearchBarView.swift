@@ -62,7 +62,7 @@ struct SearchBarView: View {
 
             Group {
                 if showCancel, cancelEnabled {
-                    Text("Cancel")
+                    Text(.localizable.cancel)
                         .foregroundColor(.accentColor)
                         .onTapGesture {
                             focused = false
