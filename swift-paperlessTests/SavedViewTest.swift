@@ -30,7 +30,7 @@ final class SavedViewTest: XCTestCase {
             XCTAssertEqual(result.showOnDashboard, false)
             XCTAssertEqual(result.showInSidebar, false)
             XCTAssertEqual(result.sortField, .created)
-            XCTAssertEqual(result.sortOrder, .ascending)
+            XCTAssertEqual(result.sortOrder, .descending)
         }
         
         do {
@@ -61,7 +61,7 @@ final class SavedViewTest: XCTestCase {
             XCTAssertEqual(result.showOnDashboard, false)
             XCTAssertEqual(result.showInSidebar, false)
             XCTAssertEqual(result.sortField, .created)
-            XCTAssertEqual(result.sortOrder, .descending)
+            XCTAssertEqual(result.sortOrder, .ascending)
         }
     }
 }
