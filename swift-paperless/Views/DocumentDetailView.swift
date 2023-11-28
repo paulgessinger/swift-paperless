@@ -159,7 +159,7 @@ struct DocumentDetailView: View {
                                 Aspect(systemImage: "qrcode") {
                                     HStack(spacing: 2) {
                                         Text(String("#"))
-                                        Text("0000")
+                                        Text(String("0000"))
                                             .redacted(reason: .placeholder)
                                     }
                                 }
@@ -169,7 +169,7 @@ struct DocumentDetailView: View {
                                 Aspect(name, systemImage: "person")
                                     .foregroundColor(Color.accentColor)
                             } else {
-                                Aspect("Not assigned", systemImage: "person")
+                                Aspect(String(localized: .localizable.correspondentNotAssignedPicker), systemImage: "person")
                                     .foregroundColor(Color.gray)
                                     .opacity(0.5)
                             }
@@ -178,7 +178,7 @@ struct DocumentDetailView: View {
                                 Aspect(name, systemImage: "doc")
                                     .foregroundColor(Color.orange)
                             } else {
-                                Aspect("Not assigned", systemImage: "doc")
+                                Aspect(String(localized: .localizable.documentTypeNotAssignedPicker), systemImage: "doc")
                                     .foregroundColor(Color.gray)
                                     .opacity(0.5)
                             }
@@ -191,7 +191,7 @@ struct DocumentDetailView: View {
                             if let id = document.storagePath, let name = store.storagePaths[id]?.name {
                                 Aspect(name, systemImage: "archivebox")
                             } else {
-                                Aspect("Default", systemImage: "archivebox")
+                                Aspect(String(localized: .localizable.storagePathNotAssignedPicker), systemImage: "archivebox")
                             }
                         }
                         .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
@@ -248,7 +248,7 @@ struct DocumentDetailView: View {
         }
 
         .toolbar {
-            Button("Edit") {
+            Button(String(localized: .localizable.edit)) {
                 editing.toggle()
             }
         }

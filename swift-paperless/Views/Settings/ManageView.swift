@@ -116,7 +116,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         VStack {
             if elements.isEmpty {
                 Divider()
-                Text("no_elements_found")
+                Text(.localizable.noElementsFound)
                     .multilineTextAlignment(.center)
                 Spacer()
             } else {

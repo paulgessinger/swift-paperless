@@ -16,7 +16,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     init(element: Element, onSave: @escaping (Element) throws -> Void = { _ in }) {
         _element = State(initialValue: element)
         self.onSave = onSave
-        saveLabel = String(localized: "Save", comment: "Document type edit")
+        saveLabel = String(localized: .localizable.save)
     }
 
     private func valid() -> Bool {
@@ -26,7 +26,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     var body: some View {
         Form {
             Section {
-                TextField("Name", text: $element.name)
+                TextField(String(localized: .localizable.name), text: $element.name)
                     .clearable($element.name)
             }
 
@@ -45,14 +45,14 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
             }
         }
 
-        .navigationTitle(Element.self is DocumentType.Type ? "Edit document type" : "Create document type")
+        .navigationTitle(Element.self is DocumentType.Type ? Text(.localizable.documentTypeEditTitle) : Text(.localizable.documentTypeCreateTitle))
     }
 }
 
 extension DocumentTypeEditView where Element == ProtoDocumentType {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoDocumentType(), onSave: onSave)
-        saveLabel = String(localized: "Add", comment: "Save document type")
+        saveLabel = String(localized: .localizable.save)
     }
 }
 
@@ -62,7 +62,7 @@ struct DocumentTypeEditView_Previews: PreviewProvider {
             NavigationStack {
                 DocumentTypeEditView<ProtoDocumentType>()
                     .navigationBarTitleDisplayMode(.inline)
-                    .navigationTitle("Create document type")
+                    .navigationTitle(Text(.localizable.documentTypeEditTitle))
             }
         }
     }

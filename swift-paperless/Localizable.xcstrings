@@ -90,6 +90,28 @@
         }
       }
     },
+    "correspondentCreateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create correspondent"
+          }
+        }
+      }
+    },
+    "correspondentEditTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit correspondent"
+          }
+        }
+      }
+    },
     "correspondentExclude" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -226,6 +248,28 @@
         }
       }
     },
+    "documentTypeCreateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create document type"
+          }
+        }
+      }
+    },
+    "documentTypeEditTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit document type"
+          }
+        }
+      }
+    },
     "documentTypeExclude" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -281,6 +325,17 @@
         }
       }
     },
+    "edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
     "filtering" : {
       "comment" : "Filter bar extra menu label",
       "extractionState" : "manual",
@@ -316,6 +371,182 @@
         }
       }
     },
+    "loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading"
+          }
+        }
+      }
+    },
+    "loginApiInUrlNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do not include `/api` in the URL"
+          }
+        }
+      }
+    },
+    "loginButtonError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login error"
+          }
+        }
+      }
+    },
+    "loginButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log in"
+          }
+        }
+      }
+    },
+    "loginButtonValid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login valid"
+          }
+        }
+      }
+    },
+    "loginCredentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credentials"
+          }
+        }
+      }
+    },
+    "loginDetailsTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "loginExtraHeaders" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra headers"
+          }
+        }
+      }
+    },
+    "loginHttpWarning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If at all possible, use HTTPS to connect to the API."
+          }
+        }
+      }
+    },
+    "loginMoreToolbarButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "loginPassword" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        }
+      }
+    },
+    "loginPasswordStorageNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your password is only used to log in, and not stored!"
+          }
+        }
+      }
+    },
+    "loginUrlError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL invalid"
+          }
+        }
+      }
+    },
+    "loginUrlPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless URL"
+          }
+        }
+      }
+    },
+    "loginUrlValid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL valid"
+          }
+        }
+      }
+    },
+    "loginUsername" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Username"
+          }
+        }
+      }
+    },
     "logout" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -323,6 +554,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Log out"
+          }
+        }
+      }
+    },
+    "name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "noElementsFound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No elements found"
           }
         }
       }
@@ -439,6 +692,17 @@
         }
       }
     },
+    "path" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Path"
+          }
+        }
+      }
+    },
     "permissions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -551,6 +815,138 @@
         }
       }
     },
+    "settingsAdvanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced"
+          }
+        }
+      }
+    },
+    "settingsDetailsFeedback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        }
+      }
+    },
+    "settingsDetailsLibraries" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libraries"
+          }
+        }
+      }
+    },
+    "settingsDetailsLibrariesLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load used library details"
+          }
+        }
+      }
+    },
+    "settingsDetailsPrivacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        }
+      }
+    },
+    "settingsDetailsPrivacyLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+          }
+        }
+      }
+    },
+    "settingsDetailsSourceCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source code"
+          }
+        }
+      }
+    },
+    "settingsDetailsTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "settingsDocumentDeleteConfirmationLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document delete confirmation"
+          }
+        }
+      }
+    },
+    "settingsDocumentDeleteConfirmationLabelDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask for confirmation before deleting a document"
+          }
+        }
+      }
+    },
+    "settingsOrganization" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
+          }
+        }
+      }
+    },
+    "settingsPreferences" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferences"
+          }
+        }
+      }
+    },
     "settingsTitle" : {
       "comment" : "Details menu",
       "extractionState" : "manual",
@@ -607,6 +1003,28 @@
         }
       }
     },
+    "storagePathCreateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create storage path"
+          }
+        }
+      }
+    },
+    "storagePathEditTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit storage path"
+          }
+        }
+      }
+    },
     "storagePathExclude" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -614,6 +1032,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exclude storage path"
+          }
+        }
+      }
+    },
+    "storagePathFormatExplanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list."
           }
         }
       }
@@ -640,6 +1069,17 @@
         }
       }
     },
+    "storagePathPropertiesLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Properties"
+          }
+        }
+      }
+    },
     "storagePaths" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -658,6 +1098,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag"
+          }
+        }
+      }
+    },
+    "tagCreateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create tag"
+          }
+        }
+      }
+    },
+    "tagEditTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit tag"
           }
         }
       }
@@ -714,6 +1176,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not assigned"
+          }
+        }
+      }
+    },
+    "title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
           }
         }
       }

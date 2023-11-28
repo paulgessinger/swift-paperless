@@ -14,9 +14,9 @@ struct PreferencesView: View {
     var body: some View {
         Form {
             Section {
-                Toggle(LocalizedStrings.Settings.documentDeleteConfirmationLabel, isOn: $documentDeleteConfirmation)
+                Toggle(String(localized: .localizable.settingsDocumentDeleteConfirmationLabel), isOn: $documentDeleteConfirmation)
             } footer: {
-                Text(LocalizedStrings.Settings.documentDeleteConfirmationDescription)
+                Text(.localizable.settingsDocumentDeleteConfirmationLabelDescription)
             }
         }
     }
