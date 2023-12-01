@@ -1,5 +1,5 @@
 //
-//  NullEncodable.swift
+//  NullCodable.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 12.08.23.
@@ -22,7 +22,7 @@ extension NullCodable: Encodable where T: Encodable {
         switch wrappedValue {
         case .none:
             try container.encodeNil()
-        case .some(let value):
+        case let .some(value):
             try container.encode(value)
         }
     }

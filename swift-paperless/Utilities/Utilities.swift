@@ -114,9 +114,9 @@ extension Color {
             return UInt(vv > 0.99999 ? 255 : vv * 255.0)
         }
 
-        return ("#" + String(format: "%02x", convert(red)) +
+        return "#" + String(format: "%02x", convert(red)) +
             String(format: "%02x", convert(green)) +
-            String(format: "%02x", convert(blue)))
+            String(format: "%02x", convert(blue))
     }
 }
 
@@ -156,7 +156,7 @@ extension Color {
 //    }
 
     var hex: HexColor {
-        return HexColor(self)
+        HexColor(self)
     }
 }
 
@@ -182,8 +182,7 @@ func pdfPreview(url: URL) -> Image? {
         let attr = try FileManager.default.attributesOfItem(atPath: url.path)
         let dict = attr as NSDictionary
         fileSize = dict.fileSize()
-    }
-    catch {}
+    } catch {}
 
     if Bundle.main.bundlePath.hasSuffix(".appex") {
         if fileSize > 5 * 1024 * 1024 {
@@ -215,7 +214,7 @@ struct ColorPalette_Previews: PreviewProvider {
         .red,
         .systemBackground,
         .systemGroupedBackground,
-        .secondarySystemGroupedBackground
+        .secondarySystemGroupedBackground,
     ]
 
     static var previews: some View {
@@ -234,11 +233,10 @@ extension View {
     ///   - condition: The condition to evaluate.
     ///   - transform: The transform to apply to the source `View`.
     /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
-    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+    @ViewBuilder func `if`(_ condition: Bool, transform: (Self) -> some View) -> some View {
         if condition {
             transform(self)
-        }
-        else {
+        } else {
             self
         }
     }
@@ -253,7 +251,7 @@ struct Haptics {
 
     private init() {
         let styles = [UIImpactFeedbackGenerator.FeedbackStyle]([
-            .light, .heavy, .medium, .rigid, .soft
+            .light, .heavy, .medium, .rigid, .soft,
         ])
 
         for style in styles {
@@ -295,7 +293,7 @@ struct ClearableModifier: ViewModifier {
                 .labelStyle(.iconOnly)
                 .foregroundColor(.gray)
                 .onTapGesture {
-                    self.text = ""
+                    text = ""
                     focused = true
                 }
                 .opacity(text.isEmpty ? 0 : 1)
@@ -314,7 +312,7 @@ extension TextField {
 struct EquatableNoop<Value>: Equatable {
     var wrappedValue: Value
 
-    static func == (lhs: EquatableNoop<Value>, rhs: EquatableNoop<Value>) -> Bool {
+    static func == (_: EquatableNoop<Value>, _: EquatableNoop<Value>) -> Bool {
         true
     }
 }
@@ -332,7 +330,7 @@ extension EquatableNoop: Codable where Value: Codable {
 }
 
 func gather<Return>(_ functions: (() async -> Return)...) async -> [Return] {
-    return await gather(functions)
+    await gather(functions)
 }
 
 func gather(_ functions: (() async -> Void)...) async {
@@ -340,7 +338,7 @@ func gather(_ functions: (() async -> Void)...) async {
 }
 
 func gather<Return>(_ functions: [() async -> Return]) async -> [Return] {
-    return await withTaskGroup(of: Return.self, returning: [Return].self) { g in
+    await withTaskGroup(of: Return.self, returning: [Return].self) { g in
         var result: [Return] = []
         for fn in functions {
             g.addTask { await fn() }

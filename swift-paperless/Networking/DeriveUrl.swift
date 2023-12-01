@@ -19,7 +19,7 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
         url = URL(string: "https://\(value)")
     }
 
-    guard var url = url else {
+    guard var url else {
         Logger.shared.debug("Derived url \(value) was invalid")
         return nil
     }

@@ -17,12 +17,12 @@ struct TagView: View {
     init(tag: Tag? = nil) {
         let dummy = Tag.placeholder(8)
 
-        self._tag = State(initialValue: tag ?? dummy)
+        _tag = State(initialValue: tag ?? dummy)
     }
 
     var body: some View {
         Group {
-            if let tag = tag {
+            if let tag {
                 Text(tag.name)
                     .lineLimit(1)
                     .font(.body)
@@ -32,8 +32,7 @@ struct TagView: View {
                     .foregroundColor(tag.textColor.color)
                     .clipShape(Capsule())
                     .unredacted()
-            }
-            else {
+            } else {
                 ProgressView()
             }
         }
@@ -42,17 +41,17 @@ struct TagView: View {
 
 struct TagsView: View {
     var tags: [Tag]
-    var action: ((Tag) -> ())?
+    var action: ((Tag) -> Void)?
 
     @Environment(\.redactionReasons) var redactionReasons
 
-    init(tags: [Tag], action: ((Tag) -> ())? = nil) {
+    init(tags: [Tag], action: ((Tag) -> Void)? = nil) {
         self.tags = tags
         self.action = action
     }
 
     init() {
-        self.tags = []
+        tags = []
     }
 
     var body: some View {
@@ -62,15 +61,13 @@ struct TagsView: View {
                     ForEach([4, 6, 5], id: \.self) { v in
                         TagView(tag: Tag.placeholder(v))
                     }
-                }
-                else {
+                } else {
                     ForEach(tags, id: \.id) { tag in
-                        if let action = action {
+                        if let action {
                             TagView(tag: tag).onTapGesture {
                                 action(tag)
                             }
-                        }
-                        else {
+                        } else {
                             TagView(tag: tag)
                         }
                     }

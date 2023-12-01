@@ -26,14 +26,14 @@ struct ErrorDisplay: ViewModifier {
 
 extension View {
     func errorOverlay(errorController: ErrorController) -> some View {
-        return modifier(ErrorDisplay(errorController: errorController))
+        modifier(ErrorDisplay(errorController: errorController))
     }
 }
 
 struct GenericError: LocalizedError {
     let message: String
 
-    var errorDescription: String? { return message }
+    var errorDescription: String? { message }
 }
 
 private struct ErrorView: View {
@@ -95,8 +95,7 @@ class ErrorController: ObservableObject {
     func push(error: Error, duration: Double = defaultDuration) {
         if let le = error as? LocalizedError {
             push(error: le, duration: duration)
-        }
-        else {
+        } else {
             push(error: GenericError(message: String(describing: error)), duration: duration)
         }
     }

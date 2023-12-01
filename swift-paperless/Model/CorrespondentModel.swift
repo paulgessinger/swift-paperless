@@ -1,5 +1,5 @@
 //
-//  Correspondent.swift
+//  CorrespondentModel.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 21.05.23.

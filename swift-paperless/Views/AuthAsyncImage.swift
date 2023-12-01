@@ -8,8 +8,8 @@
 import SwiftUI
 
 #if os(macOS)
-import Cocoa
-typealias UIImage = NSImage
+    import Cocoa
+    typealias UIImage = NSImage
 #endif
 
 struct AuthAsyncImage<Content: View, Placeholder: View>: View {
@@ -24,16 +24,15 @@ struct AuthAsyncImage<Content: View, Placeholder: View>: View {
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
-        self.getImage = image
+        getImage = image
         self.content = content
         self.placeholder = placeholder
     }
 
     var body: some View {
-        if let image = image {
+        if let image {
             content(image)
-        }
-        else {
+        } else {
             placeholder().task {
                 let image = await getImage()
                 withAnimation {

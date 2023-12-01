@@ -23,7 +23,7 @@ final class SavedViewTest: XCTestCase {
                 ]
             }
             """.data(using: .utf8)!
-            
+
             let result = try JSONDecoder().decode(SavedView.self, from: input)
             XCTAssertEqual(result.id, 5)
             XCTAssertEqual(result.name, "Aktien Kauf")
@@ -32,7 +32,7 @@ final class SavedViewTest: XCTestCase {
             XCTAssertEqual(result.sortField, .created)
             XCTAssertEqual(result.sortOrder, .descending)
         }
-        
+
         do {
             let input = """
             {
@@ -54,7 +54,7 @@ final class SavedViewTest: XCTestCase {
                 ]
             }
             """.data(using: .utf8)!
-            
+
             let result = try JSONDecoder().decode(SavedView.self, from: input)
             XCTAssertEqual(result.id, 5)
             XCTAssertEqual(result.name, "Aktien Kauf")

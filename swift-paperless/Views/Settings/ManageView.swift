@@ -1,5 +1,5 @@
 //
-//  SwiftUIView.swift
+//  ManageView.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 29.04.23.
@@ -56,7 +56,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     @State private var searchText: String = ""
 
     init(store: DocumentStore) {
-        self.model = .init(store: store)
+        model = .init(store: store)
     }
 
     struct Edit: View {

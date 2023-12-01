@@ -53,7 +53,7 @@ private extension PositionObservingView {
     enum PreferenceKey: SwiftUI.PreferenceKey {
         static var defaultValue: CGPoint { .zero }
 
-        static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
+        static func reduce(value _: inout CGPoint, nextValue _: () -> CGPoint) {
             // No-op
         }
     }
@@ -63,7 +63,7 @@ private extension SizeObservingView {
     enum PreferenceKey: SwiftUI.PreferenceKey {
         static var defaultValue: CGSize { .zero }
 
-        static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        static func reduce(value _: inout CGSize, nextValue _: () -> CGSize) {
             // No-op
         }
     }

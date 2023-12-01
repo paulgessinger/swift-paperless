@@ -26,15 +26,14 @@ struct MainView: View {
 
     var body: some View {
         Group {
-            if manager.state == .valid && storeReady {
+            if manager.state == .valid, storeReady {
                 DocumentView()
                     .errorOverlay(errorController: errorController)
                     .environmentObject(store!)
                     .environmentObject(manager)
                     .environmentObject(filterModel)
                     .environmentObject(errorController)
-            }
-            else {
+            } else {
                 //                Text("LOGIN PLACEHOLDER VIEW")
             }
 

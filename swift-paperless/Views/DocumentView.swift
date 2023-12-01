@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  DocumentView.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 13.02.23.
@@ -61,8 +61,7 @@ struct TaskActivityToolbar: View {
                     await store.fetchTasks()
 
                     try? await Task.sleep(for: .seconds(10))
-                }
-                while !Task.isCancelled
+                } while !Task.isCancelled
             }
 
             .onChange(of: store.activeTasks) { _ in
@@ -114,14 +113,12 @@ struct DocumentView: View {
                 importUrl = temporaryFileURL
                 showFileImporter = false
                 showCreateModal = true
-            }
-            else {
+            } else {
                 print("Access denied")
                 error = "Cannot access selected file"
                 // Handle denied access
             }
-        }
-        catch {
+        } catch {
             // Handle failure.
             print("Unable to read file contents")
             print(error.localizedDescription)
@@ -132,7 +129,7 @@ struct DocumentView: View {
     @ViewBuilder
     func navigationDestinations(nav: NavigationState) -> some View {
         switch nav {
-        case .detail(let doc):
+        case let .detail(doc):
             DocumentDetailView(document: doc, navPath: $navPath)
         case .settings:
             SettingsView()
@@ -235,8 +232,7 @@ struct DocumentView: View {
                             } label: {
                                 Label("document_view.toolbar.asn", systemImage: "number.circle")
                             }
-                        }
-                        else {
+                        } else {
                             Button {
                                 withAnimation(.spring(response: 0.5)) {
                                     showTypeAsn.toggle()

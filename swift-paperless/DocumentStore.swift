@@ -78,7 +78,7 @@ class DocumentStore: ObservableObject {
 
     func fetchTasks() async {
         let tasks = await repository.tasks()
-        let activeTasks = tasks.filter { $0.isActive }
+        let activeTasks = tasks.filter(\.isActive)
 //        let inactiveTasks = tasks.filter { !$0.isActive }
 
         await MainActor.run {
@@ -87,27 +87,27 @@ class DocumentStore: ObservableObject {
     }
 
     func fetchAllCorrespondents() async {
-        await fetchAll(elements: await repository.correspondents(),
+        await fetchAll(elements: repository.correspondents(),
                        collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async {
-        await fetchAll(elements: await repository.documentTypes(),
+        await fetchAll(elements: repository.documentTypes(),
                        collection: \.documentTypes)
     }
 
     func fetchAllTags() async {
-        await fetchAll(elements: await repository.tags(),
+        await fetchAll(elements: repository.tags(),
                        collection: \.tags)
     }
 
     func fetchAllSavedViews() async {
-        await fetchAll(elements: await repository.savedViews(),
+        await fetchAll(elements: repository.savedViews(),
                        collection: \.savedViews)
     }
 
     func fetchAllStoragePaths() async {
-        await fetchAll(elements: await repository.storagePaths(),
+        await fetchAll(elements: repository.storagePaths(),
                        collection: \.storagePaths)
     }
 
@@ -120,15 +120,14 @@ class DocumentStore: ObservableObject {
 
         do {
             currentUser = try await repository.currentUser()
-        }
-        catch {
+        } catch {
             Logger.shared.error("Unable to get current user")
 //            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
         }
     }
 
     func fetchAllUsers() async {
-        await fetchAll(elements: await repository.users(),
+        await fetchAll(elements: repository.users(),
                        collection: \.users)
     }
 
@@ -146,7 +145,7 @@ class DocumentStore: ObservableObject {
             fetchAllSavedViews,
             fetchAllStoragePaths,
             fetchCurrentUser,
-            fetchAllUsers
+            fetchAllUsers,
         ]
 
         await withTaskGroup(of: Void.self) { g in
@@ -174,9 +173,9 @@ class DocumentStore: ObservableObject {
     }
 
 //    @MainActor
-    private func getSingleCached<T>(//        _ type: T.Type,
-        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>) async -> (Bool, T)? where T: Decodable, T: Model
-    {
+    private func getSingleCached<T>( //        _ type: T.Type,
+        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
+    ) async -> (Bool, T)? where T: Decodable, T: Model {
         if let element = self[keyPath: cache][id] {
             return (true, element)
         }
@@ -190,22 +189,22 @@ class DocumentStore: ObservableObject {
     }
 
     func getCorrespondent(id: UInt) async -> (Bool, Correspondent)? {
-        return await getSingleCached(get: { await repository.correspondent(id: $0) }, id: id,
-                                     cache: \.correspondents)
+        await getSingleCached(get: { await repository.correspondent(id: $0) }, id: id,
+                              cache: \.correspondents)
     }
 
     func getDocumentType(id: UInt) async -> (Bool, DocumentType)? {
-        return await getSingleCached(get: { await repository.documentType(id: $0) }, id: id,
-                                     cache: \.documentTypes)
+        await getSingleCached(get: { await repository.documentType(id: $0) }, id: id,
+                              cache: \.documentTypes)
     }
 
     func document(id: UInt) async -> Document? {
-        return await repository.document(id: id)
+        await repository.document(id: id)
     }
 
     func getTag(id: UInt) async -> (Bool, Tag)? {
-        return await getSingleCached(get: { await repository.tag(id: $0) }, id: id,
-                                     cache: \.tags)
+        await getSingleCached(get: { await repository.tag(id: $0) }, id: id,
+                              cache: \.tags)
     }
 
     func getTags(_ ids: [UInt]) async -> (Bool, [Tag]) {
@@ -221,7 +220,7 @@ class DocumentStore: ObservableObject {
     }
 
     @MainActor
-    private func create<E, R>(_ returns: R.Type, from element: E,
+    private func create<E, R>(_: R.Type, from element: E,
                               store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
                               method: (E) async throws -> R) async throws -> R
         where R: Identifiable
@@ -250,10 +249,10 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func create(tag: ProtoTag) async throws -> Tag {
-        return try await create(Tag.self,
-                                from: tag,
-                                store: \.tags,
-                                method: repository.create(tag:))
+        try await create(Tag.self,
+                         from: tag,
+                         store: \.tags,
+                         method: repository.create(tag:))
     }
 
     @MainActor
@@ -268,10 +267,10 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-        return try await create(Correspondent.self,
-                                from: correspondent,
-                                store: \.correspondents,
-                                method: repository.create(correspondent:))
+        try await create(Correspondent.self,
+                         from: correspondent,
+                         store: \.correspondents,
+                         method: repository.create(correspondent:))
     }
 
     @MainActor
@@ -290,10 +289,10 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-        return try await create(DocumentType.self,
-                                from: documentType,
-                                store: \.documentTypes,
-                                method: repository.create(documentType:))
+        try await create(DocumentType.self,
+                         from: documentType,
+                         store: \.documentTypes,
+                         method: repository.create(documentType:))
     }
 
     @MainActor
@@ -330,10 +329,10 @@ class DocumentStore: ObservableObject {
 
     @MainActor
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-        return try await create(StoragePath.self,
-                                from: storagePath,
-                                store: \.storagePaths,
-                                method: repository.create(storagePath:))
+        try await create(StoragePath.self,
+                         from: storagePath,
+                         store: \.storagePaths,
+                         method: repository.create(storagePath:))
     }
 
     @MainActor

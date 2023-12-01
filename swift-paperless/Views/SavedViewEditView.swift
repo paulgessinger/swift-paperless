@@ -1,5 +1,5 @@
 //
-//  EditSavedView.swift
+//  SavedViewEditView.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 16.04.23.
@@ -24,8 +24,8 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     var body: some View {
         Form {
             Section("Properties") {
-                TextField("Title", text: self.$savedView.name)
-                    .clearable(self.$savedView.name)
+                TextField("Title", text: $savedView.name)
+                    .clearable($savedView.name)
 
                 Toggle("Show on dashboard", isOn: $savedView.showOnDashboard)
 
@@ -51,8 +51,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
                 Button("Save") {
                     do {
                         try onSave(savedView)
-                    }
-                    catch {
+                    } catch {
                         print("Save saved view error: \(error)")
                     }
                 }

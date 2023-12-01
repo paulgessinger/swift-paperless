@@ -32,9 +32,9 @@ struct TagFilterView: View {
         }
     }
 
-    private func row<Content: View>(action: @escaping () -> (),
-                                    active: Bool,
-                                    @ViewBuilder content: () -> Content) -> some View
+    private func row(action: @escaping () -> Void,
+                     active: Bool,
+                     @ViewBuilder content: () -> some View) -> some View
     {
         HStack {
             Button(action: { withAnimation { action() }}, label: content)
@@ -51,8 +51,7 @@ struct TagFilterView: View {
         if searchDebounce.debouncedText.isEmpty { return true }
         if let _ = tag.name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
             return true
-        }
-        else {
+        } else {
             return false
         }
     }
@@ -67,44 +66,41 @@ struct TagFilterView: View {
         case .notAssigned:
             next = .allOf(include: [tag.id], exclude: [])
 
-        case .allOf(let include, let exclude):
+        case let .allOf(include, exclude):
             if include.contains(tag.id) {
                 next = .allOf(
                     include: include.filter { $0 != tag.id },
                     exclude: exclude + [tag.id]
                 )
-            }
-            else if exclude.contains(tag.id) {
+            } else if exclude.contains(tag.id) {
                 next = .allOf(
                     include: include,
                     exclude: exclude.filter { $0 != tag.id }
                 )
-            }
-            else {
+            } else {
                 next = .allOf(
                     include: include + [tag.id],
                     exclude: exclude
                 )
             }
 
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             if ids.contains(tag.id) {
                 next = .anyOf(ids: ids.filter { $0 != tag.id })
-            }
-            else {
+            } else {
                 next = .anyOf(ids: ids + [tag.id])
             }
         }
 
         switch next {
-        case .allOf(let include, let exclude):
-            if include.isEmpty && exclude.isEmpty {
+        case let .allOf(include, exclude):
+            if include.isEmpty, exclude.isEmpty {
                 next = .any
             }
             if !exclude.isEmpty {
                 mode = .all
             }
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             if ids.isEmpty {
                 next = .any
             }
@@ -163,7 +159,7 @@ struct TagFilterView: View {
                                     EmptyView()
                                 case .notAssigned:
                                     EmptyView()
-                                case .allOf(let include, let exclude):
+                                case let .allOf(include, exclude):
                                     if include.contains(tag.id) {
                                         Label("Tag included", systemImage: "checkmark")
                                             .labelStyle(.iconOnly)
@@ -172,7 +168,7 @@ struct TagFilterView: View {
                                         Label("Tag excluded", systemImage: "xmark.circle")
                                             .labelStyle(.iconOnly)
                                     }
-                                case .anyOf(let ids):
+                                case let .anyOf(ids):
                                     if ids.contains(tag.id) {
                                         Label("Tag is selected", systemImage: "checkmark")
                                             .labelStyle(.iconOnly)
@@ -197,7 +193,7 @@ struct TagFilterView: View {
                             return true
                         case .notAssigned:
                             return true
-                        case .allOf(_, let exclude):
+                        case let .allOf(_, exclude):
                             return !exclude.isEmpty
                         case .anyOf:
                             return false
@@ -219,14 +215,14 @@ struct TagFilterView: View {
                 switch selectedTags {
                 case .allOf:
                     break // already in all
-                case .anyOf(let ids):
+                case let .anyOf(ids):
                     selectedTags = .allOf(include: ids, exclude: [])
                 default:
                     print("Switched to Mode.all in invalid state")
                 }
             case .any:
                 switch selectedTags {
-                case .allOf(let include, let exclude):
+                case let .allOf(include, exclude):
                     if !exclude.isEmpty {
                         print("Switched to Mode.any, but had excludes??")
                     }
@@ -266,8 +262,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                         let tag = try await store.create(tag: value)
                         document.tags.append(tag.id)
                         dismiss()
-                    }
-                    catch {
+                    } catch {
                         errorController.push(error: error)
                         throw error
                     }
@@ -276,9 +271,9 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         }
     }
 
-    private func row<Content: View>(action: @escaping () -> (),
-                                    active: Bool,
-                                    @ViewBuilder content: () -> Content) -> some View
+    private func row(action: @escaping () -> Void,
+                     active: Bool,
+                     @ViewBuilder content: () -> some View) -> some View
     {
         HStack {
             Button(action: { withAnimation { action() }}, label: content)
@@ -296,8 +291,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         if searchDebounce.debouncedText.isEmpty { return true }
         if let _ = tag.name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
             return true
-        }
-        else {
+        } else {
             return false
         }
     }

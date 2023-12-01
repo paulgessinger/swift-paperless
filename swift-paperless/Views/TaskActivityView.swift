@@ -48,15 +48,14 @@ struct TaskActivityView: View {
                 try? await Task.sleep(for: .seconds(duration))
                 trimFrom = 0.0
                 trimTo = 0.0
-                withAnimation(.easeIn(duration: duration/4)) {
+                withAnimation(.easeIn(duration: duration / 4)) {
                     trimTo = 0.25
                 }
-                try? await Task.sleep(for: .seconds(duration/4))
+                try? await Task.sleep(for: .seconds(duration / 4))
                 trimFrom = 0.0
                 trimTo = 0.25
                 rotation = -90
-            }
-            while !Task.isCancelled
+            } while !Task.isCancelled
         }
     }
 }

@@ -37,8 +37,8 @@ struct TagManager: ManagerProtocol {
         }
 
         func load() -> [Element] {
-            return store.tags
-                .map { $0.value }
+            store.tags
+                .map(\.value)
                 .sorted(by: { $0.name < $1.name })
         }
 
@@ -47,7 +47,7 @@ struct TagManager: ManagerProtocol {
         }
 
         func create(_ tag: ProtoTag) async throws -> Tag {
-            return try await store.create(tag: tag)
+            try await store.create(tag: tag)
         }
 
         func delete(_ tag: Tag) async throws {
@@ -82,8 +82,8 @@ struct CorrespondentManager: ManagerProtocol {
         }
 
         func load() -> [Element] {
-            return store.correspondents
-                .map { $0.value }
+            store.correspondents
+                .map(\.value)
                 .sorted(by: { $0.name < $1.name })
         }
 
@@ -92,7 +92,7 @@ struct CorrespondentManager: ManagerProtocol {
         }
 
         func create(_ correspondent: ProtoCorrespondent) async throws -> Correspondent {
-            return try await store.create(correspondent: correspondent)
+            try await store.create(correspondent: correspondent)
         }
 
         func delete(_ correspondent: Correspondent) async throws {
@@ -132,8 +132,8 @@ struct DocumentTypeManager: ManagerProtocol {
         }
 
         func load() -> [Element] {
-            return store.documentTypes
-                .map { $0.value }
+            store.documentTypes
+                .map(\.value)
                 .sorted(by: { $0.name < $1.name })
         }
 
@@ -142,7 +142,7 @@ struct DocumentTypeManager: ManagerProtocol {
         }
 
         func create(_ dt: ProtoDocumentType) async throws -> DocumentType {
-            return try await store.create(documentType: dt)
+            try await store.create(documentType: dt)
         }
 
         func delete(_ dt: DocumentType) async throws {
@@ -182,8 +182,8 @@ struct SavedViewManager: ManagerProtocol {
         }
 
         func load() -> [SavedView] {
-            return store.savedViews
-                .map { $0.value }
+            store.savedViews
+                .map(\.value)
                 .sorted(by: { $0.name < $1.name })
         }
 
@@ -192,7 +192,7 @@ struct SavedViewManager: ManagerProtocol {
         }
 
         func create(_ view: ProtoSavedView) async throws -> SavedView {
-            return try await store.create(savedView: view)
+            try await store.create(savedView: view)
         }
 
         func delete(_ view: SavedView) async throws {
@@ -232,8 +232,8 @@ struct StoragePathManager: ManagerProtocol {
         }
 
         func load() -> [StoragePath] {
-            return store.storagePaths
-                .map { $0.value }
+            store.storagePaths
+                .map(\.value)
                 .sorted(by: { $0.name < $1.name })
         }
 
@@ -242,7 +242,7 @@ struct StoragePathManager: ManagerProtocol {
         }
 
         func create(_ path: ProtoStoragePath) async throws -> StoragePath {
-            return try await store.create(storagePath: path)
+            try await store.create(storagePath: path)
         }
 
         func delete(_ path: StoragePath) async throws {

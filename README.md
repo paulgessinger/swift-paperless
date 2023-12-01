@@ -14,5 +14,5 @@ This application requires a self-hosted instance to function.
 
 ## TestFlight
 
-To get the latest development version of the app, grab it on 
+To get the latest development version of the app, grab it on
 [TestFlight](https://testflight.apple.com/join/bOpOdzwL)!

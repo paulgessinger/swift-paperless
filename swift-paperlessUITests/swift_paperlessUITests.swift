@@ -36,12 +36,11 @@ final class swift_paperlessUITests: XCTestCase {
 
         sleep(5)
 
-        
         let elementsQuery = XCUIApplication().scrollViews.otherElements
         elementsQuery.buttons["CERN: Internal Tax Certificate 2022, Statement, 14. February 2023"].tap()
         elementsQuery.buttons["congstar_EVN_2015_Oktober_2200835303_7155459549, Bank Statement, 12. February 2023"].tap()
         elementsQuery.buttons["Jefferson Lab: Registration Confirmation, 24. January 2023"].swipeUp()
-        
+
         app.navigationBars["Documents"].buttons["Cancel"].tap()
 
         sleep(5)

@@ -10,12 +10,12 @@ import SwiftUI
 enum PreviewModel {
     static let correspondents: [UInt: Correspondent] = [
         1: Correspondent(id: 1, documentCount: 0, name: "Corr 1", slug: "corr-1", matchingAlgorithm: .auto, match: "", isInsensitive: false),
-        2: Correspondent(id: 2, documentCount: 0, name: "Corr 2", slug: "corr-2", matchingAlgorithm: .auto, match: "", isInsensitive: false)
+        2: Correspondent(id: 2, documentCount: 0, name: "Corr 2", slug: "corr-2", matchingAlgorithm: .auto, match: "", isInsensitive: false),
     ]
 
     static let documentTypes: [UInt: DocumentType] = [
         1: DocumentType(id: 1, name: "Type A", slug: "type-a", match: "", matchingAlgorithm: .none, isInsensitive: false),
-        2: DocumentType(id: 2, name: "Type B", slug: "type-b", match: "", matchingAlgorithm: .none, isInsensitive: false)
+        2: DocumentType(id: 2, name: "Type B", slug: "type-b", match: "", matchingAlgorithm: .none, isInsensitive: false),
     ]
 
     static let tags: [UInt: Tag] = {
@@ -30,7 +30,7 @@ enum PreviewModel {
             .brown,
             .indigo,
             .cyan,
-            .mint
+            .mint,
         ]
 
         for i in 1 ... 20 {

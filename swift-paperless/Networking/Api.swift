@@ -1,5 +1,5 @@
 //
-//  Networking.swift
+//  Api.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 18.02.23.
@@ -55,11 +55,11 @@ struct CrudApiError<Element>: Error, LocalizedError {
     var body: String? = nil
 
     var errorDescription: String? {
-        return "Failed to \(operation.rawValue) \(type)"
+        "Failed to \(operation.rawValue) \(type)"
     }
 
     var failureReason: String? {
-        return "Backend replied with unexpected status: \(String(describing: status))"
+        "Backend replied with unexpected status: \(String(describing: status))"
     }
 }
 
@@ -117,7 +117,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         // if we have a current page loaded, return next element from that
-        if let buffer = buffer, bufferIndex < buffer.count {
+        if let buffer, bufferIndex < buffer.count {
 //            xprint("Return from buffer")
             defer { bufferIndex += 1 }
             return buffer[bufferIndex]
@@ -162,7 +162,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
     }
 
     func makeAsyncIterator() -> ApiSequence {
-        return self
+        self
     }
 }
 
@@ -198,7 +198,7 @@ class ApiRepository {
     }
 
     func url(_ endpoint: Endpoint) -> URL {
-        let connection = self.connection
+        let connection = connection
         Logger.shared.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
         return endpoint.url(url: connection.url)!
     }
@@ -242,13 +242,13 @@ class ApiRepository {
         }
     }
 
-    private func all<T: Decodable & Model>(_ type: T.Type) async -> [T] {
+    private func all<T: Decodable & Model>(_: T.Type) async -> [T] {
         let sequence = ApiSequence<T>(repository: self,
                                       url: url(.listAll(T.self)))
         return await Array(sequence)
     }
 
-    private func create<ProtoElement, Element>(element: ProtoElement, endpoint: Endpoint, returns: Element.Type) async throws -> Element where ProtoElement: Encodable, Element: Decodable {
+    private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type) async throws -> Element where Element: Decodable {
         var request = request(endpoint)
 //        print("Create: \(request.url!)")
 
@@ -306,7 +306,7 @@ class ApiRepository {
         }
     }
 
-    private func delete<Element>(element: Element, endpoint: Endpoint) async throws {
+    private func delete<Element>(element _: Element, endpoint: Endpoint) async throws {
         var request = request(endpoint)
         request.httpMethod = "DELETE"
 
@@ -331,7 +331,7 @@ class ApiRepository {
 
 extension ApiRepository: Repository {
     func update(document: Document) async throws -> Document {
-        return try await update(element: document, endpoint: .document(id: document.id))
+        try await update(element: document, endpoint: .document(id: document.id))
     }
 
     func create(document: ProtoDocument, file: URL) async throws {
@@ -374,7 +374,7 @@ extension ApiRepository: Repository {
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
-        return ApiDocumentSource(
+        ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
     }
@@ -413,63 +413,63 @@ extension ApiRepository: Repository {
         }
     }
 
-    func tag(id: UInt) async -> Tag? { return await get(Tag.self, id: id) }
+    func tag(id: UInt) async -> Tag? { await get(Tag.self, id: id) }
 
     func create(tag: ProtoTag) async throws -> Tag {
-        return try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
+        try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
     }
 
     func update(tag: Tag) async throws -> Tag {
-        return try await update(element: tag, endpoint: .tag(id: tag.id))
+        try await update(element: tag, endpoint: .tag(id: tag.id))
     }
 
     func delete(tag: Tag) async throws {
         try await delete(element: tag, endpoint: .tag(id: tag.id))
     }
 
-    func tags() async -> [Tag] { return await all(Tag.self) }
+    func tags() async -> [Tag] { await all(Tag.self) }
 
-    func correspondent(id: UInt) async -> Correspondent? { return await get(Correspondent.self, id: id) }
+    func correspondent(id: UInt) async -> Correspondent? { await get(Correspondent.self, id: id) }
 
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-        return try await create(element: correspondent,
-                                endpoint: .createCorrespondent(),
-                                returns: Correspondent.self)
+        try await create(element: correspondent,
+                         endpoint: .createCorrespondent(),
+                         returns: Correspondent.self)
     }
 
     func update(correspondent: Correspondent) async throws -> Correspondent {
-        return try await update(element: correspondent,
-                                endpoint: .correspondent(id: correspondent.id))
+        try await update(element: correspondent,
+                         endpoint: .correspondent(id: correspondent.id))
     }
 
     func delete(correspondent: Correspondent) async throws {
-        return try await delete(element: correspondent,
-                                endpoint: .correspondent(id: correspondent.id))
+        try await delete(element: correspondent,
+                         endpoint: .correspondent(id: correspondent.id))
     }
 
-    func correspondents() async -> [Correspondent] { return await all(Correspondent.self) }
+    func correspondents() async -> [Correspondent] { await all(Correspondent.self) }
 
-    func documentType(id: UInt) async -> DocumentType? { return await get(DocumentType.self, id: id) }
+    func documentType(id: UInt) async -> DocumentType? { await get(DocumentType.self, id: id) }
 
     func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-        return try await create(element: documentType,
-                                endpoint: .createDocumentType(),
-                                returns: DocumentType.self)
+        try await create(element: documentType,
+                         endpoint: .createDocumentType(),
+                         returns: DocumentType.self)
     }
 
     func update(documentType: DocumentType) async throws -> DocumentType {
-        return try await update(element: documentType,
-                                endpoint: .documentType(id: documentType.id))
+        try await update(element: documentType,
+                         endpoint: .documentType(id: documentType.id))
     }
 
     func delete(documentType: DocumentType) async throws {
-        return try await delete(element: documentType,
-                                endpoint: .documentType(id: documentType.id))
+        try await delete(element: documentType,
+                         endpoint: .documentType(id: documentType.id))
     }
 
-    func documentTypes() async -> [DocumentType] { return await all(DocumentType.self) }
+    func documentTypes() async -> [DocumentType] { await all(DocumentType.self) }
 
-    func document(id: UInt) async -> Document? { return await get(Document.self, id: id) }
+    func document(id: UInt) async -> Document? { await get(Document.self, id: id) }
 
     func document(asn: UInt) async -> Document? {
         let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
@@ -525,7 +525,7 @@ extension ApiRepository: Repository {
         return 0
     }
 
-    func users() async -> [User] { return await all(User.self) }
+    func users() async -> [User] { await all(User.self) }
 
     func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
@@ -576,15 +576,15 @@ extension ApiRepository: Repository {
     // MARK: Saved views
 
     func savedViews() async -> [SavedView] {
-        return await all(SavedView.self)
+        await all(SavedView.self)
     }
 
     func create(savedView view: ProtoSavedView) async throws -> SavedView {
-        return try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
+        try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
     }
 
     func update(savedView view: SavedView) async throws -> SavedView {
-        return try await update(element: view, endpoint: .savedView(id: view.id))
+        try await update(element: view, endpoint: .savedView(id: view.id))
     }
 
     func delete(savedView view: SavedView) async throws {
@@ -594,15 +594,15 @@ extension ApiRepository: Repository {
     // MARK: Storage paths
 
     func storagePaths() async -> [StoragePath] {
-        return await all(StoragePath.self)
+        await all(StoragePath.self)
     }
 
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-        return try await create(element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
+        try await create(element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
     }
 
     func update(storagePath: StoragePath) async throws -> StoragePath {
-        return try await update(element: storagePath, endpoint: .savedView(id: storagePath.id))
+        try await update(element: storagePath, endpoint: .savedView(id: storagePath.id))
     }
 
     func delete(storagePath: StoragePath) async throws {

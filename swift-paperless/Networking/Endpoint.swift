@@ -48,23 +48,23 @@ extension Endpoint {
     }
 
     static func document(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(id)", queryItems: [])
+        Endpoint(path: "/api/documents/\(id)", queryItems: [])
     }
 
     static func thumbnail(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
+        Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
     }
 
     static func download(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/download", queryItems: [])
+        Endpoint(path: "/api/documents/\(documentId)/download", queryItems: [])
     }
 
     static func suggestions(documentId: UInt) -> Endpoint {
-        return Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
+        Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
     }
 
     static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
-        return Endpoint(
+        Endpoint(
             path: "/api/search/autocomplete",
             queryItems: [
                 URLQueryItem(name: "term", value: term),
@@ -74,47 +74,47 @@ extension Endpoint {
     }
 
     static func correspondents() -> Endpoint {
-        return Endpoint(path: "/api/correspondents",
-                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        Endpoint(path: "/api/correspondents",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createCorrespondent() -> Endpoint {
-        return Endpoint(path: "/api/correspondents")
+        Endpoint(path: "/api/correspondents")
     }
 
     static func correspondent(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/correspondents/\(id)")
+        Endpoint(path: "/api/correspondents/\(id)")
     }
 
     static func documentTypes() -> Endpoint {
-        return Endpoint(path: "/api/document_types", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        Endpoint(path: "/api/document_types", queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createDocumentType() -> Endpoint {
-        return Endpoint(path: "/api/document_types")
+        Endpoint(path: "/api/document_types")
     }
 
     static func documentType(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/document_types/\(id)")
+        Endpoint(path: "/api/document_types/\(id)")
     }
 
     static func tags() -> Endpoint {
-        return Endpoint(path: "/api/tags", queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        Endpoint(path: "/api/tags", queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createTag() -> Endpoint {
-        return Endpoint(path: "/api/tags", queryItems: [])
+        Endpoint(path: "/api/tags", queryItems: [])
     }
 
     static func tag(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/tags/\(id)")
+        Endpoint(path: "/api/tags/\(id)")
     }
 
     static func createDocument() -> Endpoint {
-        return Endpoint(path: "/api/documents/post_document", queryItems: [])
+        Endpoint(path: "/api/documents/post_document", queryItems: [])
     }
 
-    static func listAll<T>(_ type: T.Type) -> Endpoint where T: Model {
+    static func listAll(_ type: (some Model).Type) -> Endpoint {
         switch type {
         case is Correspondent.Type:
             return correspondents()
@@ -136,47 +136,47 @@ extension Endpoint {
     }
 
     static func savedViews() -> Endpoint {
-        return Endpoint(path: "/api/saved_views",
-                        queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        Endpoint(path: "/api/saved_views",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createSavedView() -> Endpoint {
-        return Endpoint(path: "/api/saved_views",
-                        queryItems: [])
+        Endpoint(path: "/api/saved_views",
+                 queryItems: [])
     }
 
     static func savedView(id: UInt) -> Endpoint {
-        return Endpoint(path: "/api/saved_views/\(id)",
-                        queryItems: [])
+        Endpoint(path: "/api/saved_views/\(id)",
+                 queryItems: [])
     }
 
     static func storagePaths() -> Endpoint {
-        return .init(path: "/api/storage_paths",
-                     queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        .init(path: "/api/storage_paths",
+              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createStoragePath() -> Endpoint {
-        return .init(path: "/api/storage_paths")
+        .init(path: "/api/storage_paths")
     }
 
     static func storagePath(id: UInt) -> Endpoint {
-        return .init(path: "/api/storage_paths/\(id)")
+        .init(path: "/api/storage_paths/\(id)")
     }
 
     static func users() -> Endpoint {
-        return .init(path: "/api/users",
-                     queryItems: [URLQueryItem(name: "page_size", value: String(100000))])
+        .init(path: "/api/users",
+              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func uiSettings() -> Endpoint {
-        return .init(path: "/api/ui_settings")
+        .init(path: "/api/ui_settings")
     }
 
     static func tasks() -> Endpoint {
-        return .init(path: "/api/tasks")
+        .init(path: "/api/tasks")
     }
 
-    static func single<T>(_ type: T.Type, id: UInt) -> Endpoint where T: Model {
+    static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
         var segment = ""
         switch type {
         case is Correspondent.Type:

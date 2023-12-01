@@ -100,7 +100,7 @@ private struct Aspect<Content: View>: View {
 
     init(systemImage: String, content: @escaping () -> Content) {
         self.systemImage = systemImage
-        self.label = content()
+        label = content()
     }
 
     var body: some View {
@@ -138,8 +138,7 @@ struct DocumentDetailView: View {
     var gray: Color {
         if colorScheme == .dark {
             return Color.secondarySystemGroupedBackground
-        }
-        else {
+        } else {
             return Color.systemGroupedBackground
         }
     }
@@ -156,8 +155,7 @@ struct DocumentDetailView: View {
                         VStack(alignment: .leading) {
                             if let asn = document.asn {
                                 Aspect("#\(asn)", systemImage: "qrcode")
-                            }
-                            else {
+                            } else {
                                 Aspect(systemImage: "qrcode") {
                                     HStack(spacing: 2) {
                                         Text("#")
@@ -170,8 +168,7 @@ struct DocumentDetailView: View {
                             if let id = document.correspondent, let name = store.correspondents[id]?.name {
                                 Aspect(name, systemImage: "person")
                                     .foregroundColor(Color.accentColor)
-                            }
-                            else {
+                            } else {
                                 Aspect("Not assigned", systemImage: "person")
                                     .foregroundColor(Color.gray)
                                     .opacity(0.5)
@@ -180,8 +177,7 @@ struct DocumentDetailView: View {
                             if let id = document.documentType, let name = store.documentTypes[id]?.name {
                                 Aspect(name, systemImage: "doc")
                                     .foregroundColor(Color.orange)
-                            }
-                            else {
+                            } else {
                                 Aspect("Not assigned", systemImage: "doc")
                                     .foregroundColor(Color.gray)
                                     .opacity(0.5)
@@ -194,8 +190,7 @@ struct DocumentDetailView: View {
 
                             if let id = document.storagePath, let name = store.storagePaths[id]?.name {
                                 Aspect(name, systemImage: "archivebox")
-                            }
-                            else {
+                            } else {
                                 Aspect("Default", systemImage: "archivebox")
                             }
                         }
@@ -272,7 +267,7 @@ private struct PreviewHelper: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if let document = document {
+                if let document {
                     DocumentDetailView(document: document, navPath: $navPath)
                 }
             }

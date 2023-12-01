@@ -25,7 +25,6 @@ struct CreateDocumentView<Title: View>: View {
     @State private var document = ProtoDocument()
     @State private var status = Status.none
 
-
     var callback: () -> Void
 
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
@@ -38,8 +37,7 @@ struct CreateDocumentView<Title: View>: View {
     func upload() async {
         do {
             try await store.repository.create(document: document, file: sourceUrl)
-        }
-        catch {
+        } catch {
             errorController.push(error: error)
             status = .error
             Task {
@@ -58,8 +56,7 @@ struct CreateDocumentView<Title: View>: View {
 
         do {
             try await Task.sleep(for: .seconds(0.5))
-        }
-        catch {}
+        } catch {}
 
         callback()
     }
@@ -103,8 +100,7 @@ struct CreateDocumentView<Title: View>: View {
                                 Group {
                                     if let id = document.correspondent {
                                         Text(store.correspondents[id]?.name ?? "ERROR")
-                                    }
-                                    else {
+                                    } else {
                                         Text(LocalizedStrings.Filter.Correspondent.notAssignedPicker)
                                     }
                                 }
@@ -125,8 +121,7 @@ struct CreateDocumentView<Title: View>: View {
                                 Group {
                                     if let id = document.documentType {
                                         Text(store.documentTypes[id]?.name ?? "ERROR")
-                                    }
-                                    else {
+                                    } else {
                                         Text(LocalizedStrings.Filter.DocumentType.notAssignedPicker)
                                     }
                                 }
@@ -138,8 +133,8 @@ struct CreateDocumentView<Title: View>: View {
                         NavigationLink(destination: {
                             CommonPickerEdit(
                                 manager: StoragePathManager.self,
-                                document: self.$document,
-                                store: self.store
+                                document: $document,
+                                store: store
                             )
                         }) {
                             HStack {
@@ -147,9 +142,8 @@ struct CreateDocumentView<Title: View>: View {
                                 Spacer()
                                 Group {
                                     if let id = document.storagePath {
-                                        Text(self.store.storagePaths[id]?.name ?? "ERROR")
-                                    }
-                                    else {
+                                        Text(store.storagePaths[id]?.name ?? "ERROR")
+                                    } else {
                                         Text(LocalizedStrings.Filter.StoragePath.notAssignedPicker)
                                     }
                                 }
@@ -163,8 +157,7 @@ struct CreateDocumentView<Title: View>: View {
                         }) {
                             if document.tags.isEmpty {
                                 Text("No tags")
-                            }
-                            else {
+                            } else {
                                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
                                     .contentShape(Rectangle())
                             }

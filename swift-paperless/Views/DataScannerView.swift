@@ -196,7 +196,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             self.parent = parent
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
+        func dataScanner(_: DataScannerViewController, didTapOn item: RecognizedItem) {
             guard case let .barcode(text) = item else {
                 Logger.shared.trace("Tapped on none-barcode element")
                 return
@@ -226,8 +226,8 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
         }
 
         private func centerFromBounds(_ bounds: RecognizedItem.Bounds) -> CGPoint {
-            return CGPoint(x: (bounds.bottomLeft.x + bounds.bottomRight.x)/2.0,
-                           y: (bounds.bottomLeft.y + bounds.bottomRight.y)/2.0 + 50)
+            CGPoint(x: (bounds.bottomLeft.x + bounds.bottomRight.x) / 2.0,
+                    y: (bounds.bottomLeft.y + bounds.bottomRight.y) / 2.0 + 50)
         }
 
         private func addHighlightView(id: UUID, text: String, center: CGPoint, dataScanner: DataScannerViewController) {
@@ -251,7 +251,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             vc.view.removeFromSuperview()
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
             for item in addedItems {
                 guard case let .barcode(text) = item else {
                     continue
@@ -267,7 +267,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             }
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
             for item in updatedItems {
                 if let vc = items[item.id] {
                     guard case let .barcode(text) = item else {
@@ -293,7 +293,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             }
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        func dataScanner(_: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
             for item in removedItems {
                 removeHightlightView(id: item.id)
             }
@@ -303,7 +303,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let viewController = DataScannerViewController(
             recognizedDataTypes: [
-                .barcode()
+                .barcode(),
             ],
             qualityLevel: .fast,
             recognizesMultipleItems: false,
@@ -320,7 +320,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
         return viewController
     }
 
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
+    func updateUIViewController(_ uiViewController: DataScannerViewController, context _: Context) {
         if isScanning.wrappedValue {
             try? uiViewController.startScanning()
         } else {
@@ -328,7 +328,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
         }
     }
 
-    static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator: Coordinator) {
+    static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator _: Coordinator) {
         uiViewController.stopScanning()
     }
 

@@ -20,9 +20,9 @@ private struct PDFKitView: UIViewRepresentable {
 
 //    @Binding private(set) var aspectRatio: CGFloat!
 
-    func updateUIView(_ uiView: PDFKit.PDFView, context: Context) {}
+    func updateUIView(_: PDFKit.PDFView, context _: Context) {}
 
-    func makeUIView(context: Context) -> PDFKit.PDFView {
+    func makeUIView(context _: Context) -> PDFKit.PDFView {
         let view = PDFKit.PDFView()
         view.autoScales = autoScales
         view.pageShadowsEnabled = pageShadows
@@ -77,8 +77,7 @@ struct PDFThumbnail: View {
         let bounds = document.page(at: 0)?.bounds(for: .trimBox)
         if let bounds {
             aspectRatio = CGFloat(bounds.width / bounds.height)
-        }
-        else {
+        } else {
             aspectRatio = 1
         }
     }

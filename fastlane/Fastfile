@@ -46,14 +46,14 @@ platform :ios do
     build_app(scheme: "swift-paperless")
 
     git_commit(
-      path: "swift-paperless.xcodeproj", 
+      path: "swift-paperless.xcodeproj",
       message: "Bump build number to #{current_build_number}"
     )
 
     add_git_tag(prefix: "v", includes_lane: false)
 
     upload_to_testflight(changelog: changelog)
-    
+
     push_to_git_remote(tags: true)
   end
 

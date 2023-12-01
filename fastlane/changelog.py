@@ -42,7 +42,7 @@ for commit in commits:
         groups[category].append(message)
 
 print("""
-PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS! 
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
 Redact screenshots to not include information that you do not wish to expose.
 
 ---

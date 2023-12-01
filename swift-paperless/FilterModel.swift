@@ -5,8 +5,8 @@
 //  Created by Paul Gessinger on 12.08.23.
 //
 
-import Foundation
 import Combine
+import Foundation
 import os
 
 class FilterModel: ObservableObject {
@@ -25,8 +25,7 @@ class FilterModel: ObservableObject {
             let value = try JSONDecoder().decode(FilterState.self, from: data)
             Logger.shared.trace("Decoded filter state from UserDefaults: \(String(decoding: data, as: UTF8.self)) -> \(String(describing: value)) -> ")
             return value
-        }
-        catch {
+        } catch {
             Logger.shared.trace("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
             return FilterState()
         }

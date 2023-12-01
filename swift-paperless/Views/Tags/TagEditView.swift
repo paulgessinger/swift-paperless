@@ -28,13 +28,13 @@ struct TagEditView<Element>: View where Element: TagProtocol {
     private let scale = 2.0
 
     private static func randomColor() -> Color {
-        return .init(red: Double.random(in: 0 ... 1),
-                     green: Double.random(in: 0 ... 1),
-                     blue: Double.random(in: 0 ... 1))
+        .init(red: Double.random(in: 0 ... 1),
+              green: Double.random(in: 0 ... 1),
+              blue: Double.random(in: 0 ... 1))
     }
 
     private func valid() -> Bool {
-        return !tag.value.name.isEmpty
+        !tag.value.name.isEmpty
     }
 
     var body: some View {
@@ -87,8 +87,7 @@ struct TagEditView<Element>: View where Element: TagProtocol {
                     do {
                         try onSave(tag.value)
 //                        dismiss()
-                    }
-                    catch {
+                    } catch {
                         print("Save tag error: \(error)")
                     }
                 }
