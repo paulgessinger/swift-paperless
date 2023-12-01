@@ -30,19 +30,19 @@ enum MatchingAlgorithm: Int, Codable, CaseIterable {
     var title: String {
         switch self {
         case .none:
-            return String(localized: "matching_algorithm_none", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_none", comment: "Matching algorithm")
         case .any:
-            return String(localized: "matching_algorithm_any", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_any", comment: "Matching algorithm")
         case .all:
-            return String(localized: "matching_algorithm_all", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_all", comment: "Matching algorithm")
         case .literal:
-            return String(localized: "matching_algorithm_exact", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_exact", comment: "Matching algorithm")
         case .regex:
-            return String(localized: "matching_algorithm_regEx", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_regEx", comment: "Matching algorithm")
         case .fuzzy:
-            return String(localized: "matching_algorithm_fuzzy", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_fuzzy", comment: "Matching algorithm")
         case .auto:
-            return String(localized: "matching_algorithm_auto", comment: "Matching algorithm")
+            String(localized: "matching_algorithm_auto", comment: "Matching algorithm")
         }
     }
 

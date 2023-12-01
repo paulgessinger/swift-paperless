@@ -118,14 +118,14 @@ struct DocumentEditView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Title", text: $document.title) {}
+                    TextField(String(localized: .localizable.title), text: $document.title) {}
                         .clearable($document.title)
 
-                    TextField("ASN", text: asn)
+                    TextField(String(localized: .localizable.asn), text: asn)
                         .keyboardType(.numberPad)
                         .overlay(alignment: .trailing) {
                             if document.asn == nil {
-                                Button("+1") { Task { await asnPlusOne() }}
+                                Button(String("+1")) { Task { await asnPlusOne() }}
                                     .padding(.vertical, 2)
                                     .padding(.horizontal, 10)
                                     .background(
@@ -135,7 +135,7 @@ struct DocumentEditView: View {
                             }
                         }
 
-                    DatePicker("Created date",
+                    DatePicker(String(localized: .localizable.documentEditCreatedDateLabel),
                                selection: $document.created.animation(.default),
                                displayedComponents: .date)
 
@@ -172,14 +172,14 @@ struct DocumentEditView: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle("Correspondent")
+                            .navigationTitle(Text(.localizable.correspondent))
                         }) {
                             HStack {
-                                Text("Correspondent")
+                                Text(.localizable.correspondent)
                                 Spacer()
                                 Group {
                                     if let id = document.correspondent {
-                                        Text(store.correspondents[id]?.name ?? "ERROR")
+                                        Text(store.correspondents[id]?.name ?? String(localized: .localizable.error))
                                     } else {
                                         Text(.localizable.correspondentNotAssignedFilter)
                                     }
@@ -202,14 +202,14 @@ struct DocumentEditView: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle("Document type")
+                            .navigationTitle(Text(.localizable.documentType))
                         }) {
                             HStack {
-                                Text("Document type")
+                                Text(.localizable.documentType)
                                 Spacer()
                                 Group {
                                     if let id = document.documentType {
-                                        Text(store.documentTypes[id]?.name ?? "ERROR")
+                                        Text(store.documentTypes[id]?.name ?? String(localized: .localizable.error))
                                     } else {
                                         Text(.localizable.documentTypeNotAssignedFilter)
                                     }
@@ -233,14 +233,14 @@ struct DocumentEditView: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle("Storage path")
+                            .navigationTitle(Text(.localizable.storagePath))
                         }) {
                             HStack {
-                                Text("Storage path")
+                                Text(.localizable.storagePath)
                                 Spacer()
                                 Group {
                                     if let id = document.storagePath {
-                                        Text(store.storagePaths[id]?.name ?? "ERROR")
+                                        Text(store.storagePaths[id]?.name ?? String(localized: .localizable.error))
                                     } else {
                                         Text(.localizable.storagePathNotAssignedFilter)
                                     }
@@ -261,7 +261,7 @@ struct DocumentEditView: View {
                         DocumentTagEditView(document: $document)
                     }) {
                         if document.tags.isEmpty {
-                            Text("\(0) tag(s)")
+                            Text(.localizable.numberOfTags(0))
                         } else {
                             TagsView(tags: document.tags.compactMap { store.tags[$0] })
                                 .contentShape(Rectangle())
@@ -281,10 +281,10 @@ struct DocumentEditView: View {
                         HStack {
                             Spacer()
                             if !deleted {
-                                Text(String(localized: "Delete", comment: "Delete document"))
+                                Text(String(localized: .localizable.delete))
                             } else {
                                 HStack {
-                                    Text(String(localized: "Deleted", comment: "Document deleted"))
+                                    Text(String(localized: .localizable.documentDeleted))
                                     Image(systemName: "checkmark.circle.fill")
                                 }
                             }
@@ -313,7 +313,7 @@ struct DocumentEditView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized: "Save", comment: "Save document")) {
+                    Button(String(localized: .localizable.save)) {
                         Task {
                             let copy = document
                             documentOut = document

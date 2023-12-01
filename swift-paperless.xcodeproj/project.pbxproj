@@ -15,6 +15,10 @@
 		7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
+		7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A1460E92B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A1460F32B19F8380074BAAB /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
+		7A1460F42B19F8380074BAAB /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
 		7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32BE2A5EAF1A00C18B44 /* Nuke */; };
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
@@ -229,6 +233,8 @@
 /* Begin PBXFileReference section */
 		7A04034129FD68E8009604E4 /* ManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageView.swift; sourceTree = "<group>"; };
 		7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
+		7A1460E72B19F76D0074BAAB /* Settings.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Settings.xcstrings; sourceTree = "<group>"; };
+		7A1460F22B19F8380074BAAB /* Login.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Login.xcstrings; sourceTree = "<group>"; };
 		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A25773F2A87D32400B15626 /* NullCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NullCodable.swift; sourceTree = "<group>"; };
 		7A2831B12A62748D009E86CE /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
@@ -365,6 +371,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A1460E62B19F7580074BAAB /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */,
+				7A1460E72B19F76D0074BAAB /* Settings.xcstrings */,
+				7A1460F22B19F8380074BAAB /* Login.xcstrings */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
 		7A4AA8E529BB969400D845A2 /* ShareExtension */ = {
 			isa = PBXGroup;
 			children = (
@@ -409,7 +425,7 @@
 		7A5482AD299AD56C00D5061E /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
-				7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */,
+				7A1460E62B19F7580074BAAB /* Localization */,
 				7A898ECC2A02FF3B0003DFBD /* Utilities */,
 				7A6F31DC29DE936C00186A87 /* generate_filterrules.py */,
 				7A256CEE29B6828D00BADEB8 /* Info.plist */,
@@ -728,6 +744,8 @@
 				7A2E120E2B14B9C900E7704A /* Localizable.xcstrings in Resources */,
 				7A4AA8EA29BB969400D845A2 /* MainInterface.storyboard in Resources */,
 				7AB0576F2AA3934C00ABA6B1 /* libraries.md in Resources */,
+				7A1460E92B19F76D0074BAAB /* Settings.xcstrings in Resources */,
+				7A1460F42B19F8380074BAAB /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -740,7 +758,9 @@
 				7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */,
 				7A4D9F3829D4B78500B25A63 /* demo.pdf in Resources */,
 				7AB0576E2AA3934C00ABA6B1 /* libraries.md in Resources */,
+				7A1460F32B19F8380074BAAB /* Login.xcstrings in Resources */,
 				7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */,
+				7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */,
 				7A2E120D2B14B9C900E7704A /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

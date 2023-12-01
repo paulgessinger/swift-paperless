@@ -207,7 +207,7 @@ struct DocumentView: View {
                     ToolbarItemGroup(placement: .navigationBarLeading) {
                         Menu {
                             NavigationLink(value: NavigationState.settings) {
-                                Label(String(localized: .localizable.settingsTitle), systemImage: "gear")
+                                Label(String(localized: .settings.title), systemImage: "gear")
                             }
 
                             Divider()

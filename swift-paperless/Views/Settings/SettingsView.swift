@@ -18,7 +18,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section(String(localized: .localizable.settingsOrganization)) {
+            Section(String(localized: .settings.organization)) {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle(Text(.localizable.tags))
@@ -60,47 +60,47 @@ struct SettingsView: View {
                 }
             }
 
-            Section(String(localized: .localizable.settingsPreferences)) {
+            Section(String(localized: .settings.preferences)) {
                 NavigationLink {
                     PreferencesView()
-                        .navigationTitle(Text(.localizable.settingsPreferences))
+                        .navigationTitle(Text(.settings.preferences))
                 } label: {
-                    Label(String(localized: .localizable.settingsPreferences), systemImage: "dial.low.fill")
+                    Label(String(localized: .settings.preferences), systemImage: "dial.low.fill")
                 }
             }
 
-            Section(String(localized: .localizable.settingsAdvanced)) {
+            Section(String(localized: .settings.advanced)) {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Label(String(localized: .localizable.loginExtraHeaders), systemImage: "list.bullet.rectangle.fill")
+                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
             }
 
-            Section(String(localized: .localizable.settingsDetailsTitle)) {
+            Section(String(localized: .settings.detailsTitle)) {
                 NavigationLink {
                     LibrariesView()
                 } label: {
-                    Label(String(localized: .localizable.settingsDetailsLibraries), systemImage: "books.vertical.fill")
+                    Label(String(localized: .settings.detailsLibraries), systemImage: "books.vertical.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
                 } label: {
-                    Label(String(localized: .localizable.settingsDetailsSourceCode), systemImage: "terminal.fill")
+                    Label(String(localized: .settings.detailsSourceCode), systemImage: "terminal.fill")
                         .accentColor(.primary)
                 }
 
                 NavigationLink {
                     PrivacyView()
                 } label: {
-                    Label(String(localized: .localizable.settingsDetailsPrivacy), systemImage: "hand.raised.fill")
+                    Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
                 } label: {
-                    Label(String(localized: .localizable.settingsDetailsFeedback), systemImage: "paperplane.fill")
+                    Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
                         .accentColor(.primary)
                 }
             }
@@ -115,7 +115,7 @@ struct SettingsView: View {
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }
 
-        .navigationTitle(Text(.localizable.settingsTitle))
+        .navigationTitle(Text(.settings.title))
     }
 }
 

@@ -22,7 +22,7 @@ struct PrivacyView: View {
                 ProgressView(String(localized: .localizable.loading))
             }
         }
-        .navigationTitle(Text(.localizable.settingsDetailsPrivacy))
+        .navigationTitle(Text(.settings.detailsPrivacy))
         .task {
             Task.detached {
                 do {
@@ -32,7 +32,7 @@ struct PrivacyView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        text = String(localized: .localizable.settingsDetailsPrivacyLoadError(PrivacyView.url.absoluteString))
+                        text = String(localized: .settings.detailsPrivacyLoadError(PrivacyView.url.absoluteString))
                     }
                 }
             }
