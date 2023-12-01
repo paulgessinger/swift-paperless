@@ -111,7 +111,6 @@ class DocumentStore: ObservableObject {
                        collection: \.storagePaths)
     }
 
-    @MainActor
     func fetchCurrentUser() async {
         if currentUser != nil {
             // We don't expect this to change
@@ -119,7 +118,10 @@ class DocumentStore: ObservableObject {
         }
 
         do {
-            currentUser = try await repository.currentUser()
+            let user = try await repository.currentUser()
+            await MainActor.run {
+                currentUser = user
+            }
         } catch {
             Logger.shared.error("Unable to get current user")
 //            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
