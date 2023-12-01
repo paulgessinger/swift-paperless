@@ -582,6 +582,17 @@
         }
       }
     },
+    "remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        }
+      }
+    },
     "save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -679,6 +690,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clear search"
+          }
+        }
+      }
+    },
+    "selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
           }
         }
       }
@@ -826,6 +848,17 @@
         }
       }
     },
+    "tagAdd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add tag"
+          }
+        }
+      }
+    },
     "tagCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -859,6 +892,50 @@
         }
       }
     },
+    "tagExcluded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag excluded"
+          }
+        }
+      }
+    },
+    "tagIncluded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag included"
+          }
+        }
+      }
+    },
+    "tagIsNotSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag is not selected"
+          }
+        }
+      }
+    },
+    "tagIsSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag is selected"
+          }
+        }
+      }
+    },
     "tags" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -866,6 +943,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tags"
+          }
+        }
+      }
+    },
+    "tagsAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tags"
+          }
+        }
+      }
+    },
+    "tagsAny" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any tag"
           }
         }
       }
@@ -878,6 +977,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Any"
+          }
+        }
+      }
+    },
+    "tagsFilterMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag filter mode"
           }
         }
       }
