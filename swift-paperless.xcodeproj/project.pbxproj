@@ -50,9 +50,7 @@
 		7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12212B14F3A000E7704A /* DeriveUrl.swift */; };
 		7A2E12242B14F3A000E7704A /* DeriveUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12212B14F3A000E7704A /* DeriveUrl.swift */; };
 		7A2E12262B14F42200E7704A /* DeriveUrlTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */; };
-		7A2E12272B14F50900E7704A /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */; };
-		7A2E12292B14F51700E7704A /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B62A63D6E2009E86CE /* TaskModel.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
@@ -104,7 +102,6 @@
 		7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C139029ABFC3F00D71F51 /* TagView.swift */; };
 		7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B62A63D6E2009E86CE /* TaskModel.swift */; };
 		7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
-		7A63415E2B150AE800535FE5 /* SuggestionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */ = {isa = PBXBuildFile; fileRef = 7A6F31DC29DE936C00186A87 /* generate_filterrules.py */; };
@@ -933,8 +930,6 @@
 				7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */,
 				7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */,
 				7A8E1F832A1A8F90002A7CB3 /* TagModel.swift in Sources */,
-				7A2E12292B14F51700E7704A /* TaskModel.swift in Sources */,
-				7A2E12272B14F50900E7704A /* UserModel.swift in Sources */,
 				7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */,
 				7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */,
 				7AF2E07229F3ECE40092948B /* SavedViewTest.swift in Sources */,
@@ -947,7 +942,6 @@
 				7A4648082A1D5AED00078968 /* DateDecodingError.swift in Sources */,
 				7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */,
 				7A8E1F7F2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
-				7A63415E2B150AE800535FE5 /* SuggestionsModel.swift in Sources */,
 				7A58A24829E19BF400986FE9 /* Model.swift in Sources */,
 				7A8E1F872A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
 			);
