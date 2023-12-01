@@ -8,10 +8,10 @@ jobs:
     runs-on: macos-13
     strategy:
       matrix:
-        device: 
+        device:
           - "iPhone 14 Pro"
           - "iPad Pro (12.9-inch) (6th generation)"
-        ios: 
+        ios:
           - "16.4"
           - "17.0.1"
         include:

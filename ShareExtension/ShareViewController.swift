@@ -62,13 +62,13 @@ private extension AttachmentManager {
     func receiveAttachment(attachment: NSItemProvider) {
         guard attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") else {
             Logger.shared.debug("Got invalid attachment")
-            self.error = .invalidAttachment
+            error = .invalidAttachment
             return
         }
 
         Logger.shared.trace("Load attach")
         attachment.loadItem(forTypeIdentifier: "com.adobe.pdf", options: nil,
-                            completionHandler: self.didLoadItem)
+                            completionHandler: didLoadItem)
 
         Logger.shared.trace("Load preview")
         attachment.loadPreviewImage(options: [:], completionHandler: { sc, error in
@@ -78,7 +78,7 @@ private extension AttachmentManager {
                 return
             }
 
-            if let sc = sc {
+            if let sc {
                 _ = sc
                 Logger.shared.error("Got preview, I don't actually know what to do now")
                 fatalError("Dead")
@@ -103,16 +103,16 @@ class ShareViewController: UIViewController {
                                   })
 
         let childView = UIHostingController(rootView: shareView)
-        self.addChild(childView)
-        childView.view.frame = self.container.bounds
-        self.container.addSubview(childView.view)
+        addChild(childView)
+        childView.view.frame = container.bounds
+        container.addSubview(childView.view)
         childView.didMove(toParent: self)
 
         if let item = extensionContext?.inputItems.first as? NSExtensionItem {
             if let attachments = item.attachments {
                 for attachment: NSItemProvider in attachments {
                     if attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") {
-                        self.attachmentManager.receiveAttachment(attachment: attachment)
+                        attachmentManager.receiveAttachment(attachment: attachment)
                     }
                 }
             }
@@ -144,7 +144,7 @@ struct ShareView: View {
 
     var body: some View {
         Group {
-            if self.connectionManager.state == .valid {
+            if connectionManager.state == .valid {
                 if let error = attachmentManager.error {
                     Text(String(describing: error))
                 }
@@ -153,18 +153,17 @@ struct ShareView: View {
                     VStack {
                         CreateDocumentView(
                             sourceUrl: url,
-                            callback: self.callback
+                            callback: callback
                         )
                         // @FIXME: Gives a white band at the bottom, not ideal
                         .padding(.bottom, 40)
 
-                        .environmentObject(self.store)
-                        .environmentObject(self.errorController)
+                        .environmentObject(store)
+                        .environmentObject(errorController)
                         .accentColor(Color("AccentColor"))
                     }
                 }
-            }
-            else if self.connectionManager.state == .invalid {
+            } else if connectionManager.state == .invalid {
                 VStack {
                     Spacer()
                     HStack {
@@ -178,18 +177,18 @@ struct ShareView: View {
                 }
             }
         }
-        .alert(self.error, isPresented: self.$showingError) {
+        .alert(error, isPresented: $showingError) {
             Button("Ok", role: .cancel) {}
         }
 
         .task {
-            await self.connectionManager.check()
+            await connectionManager.check()
             if let conn = connectionManager.connection {
-                self.store.set(repository: ApiRepository(connection: conn))
+                store.set(repository: ApiRepository(connection: conn))
             }
         }
 
-        .onChange(of: self.attachmentManager.documentUrl) { _ in
+        .onChange(of: attachmentManager.documentUrl) { _ in
 //            if let url = url, document.title.isEmpty {
 //                document.title = url.lastPathComponent
 //            }

@@ -1,5 +1,5 @@
 //
-//  Suggestions.swift
+//  SuggestionsModel.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 01.08.23.

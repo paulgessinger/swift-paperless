@@ -38,7 +38,7 @@ struct DocumentPreviewImage: View {
             }
 
             image.load(ImageRequest(id: "\(document.id)", data: { data }, processors: [
-                .resize(size: CGSize(width: 200, height: 200))
+                .resize(size: CGSize(width: 200, height: 200)),
             ]))
         }
 
@@ -97,8 +97,7 @@ struct DocumentCell: View {
                     .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
                     .frame(height: 200)
-            }
-            else {
+            } else {
                 DocumentPreviewImage(store: store,
                                      document: document)
                     .aspectRatio(2 / 3, contentMode: .fit)

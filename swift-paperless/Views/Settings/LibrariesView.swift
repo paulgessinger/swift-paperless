@@ -15,8 +15,7 @@ struct LibrariesView: View {
         let filepath = Bundle.main.path(forResource: "libraries", ofType: "md")!
         do {
             text = try String(contentsOfFile: filepath)
-        }
-        catch {
+        } catch {
             fatalError(LocalizedStrings.Settings.Details.librariesLoadError)
         }
     }

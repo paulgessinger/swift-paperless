@@ -20,7 +20,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
     }
 
     private func valid() -> Bool {
-        return !element.name.isEmpty
+        !element.name.isEmpty
     }
 
     var body: some View {
@@ -37,8 +37,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
                 Button(saveLabel) {
                     do {
                         try onSave(element)
-                    }
-                    catch {
+                    } catch {
                         print("Save correspondent error: \(error)")
                     }
                 }

@@ -28,11 +28,11 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     var body: some View {
         Form {
             Section {
-                TextField("Title", text: self.$storagePath.name)
-                    .clearable(self.$storagePath.name)
+                TextField("Title", text: $storagePath.name)
+                    .clearable($storagePath.name)
 
-                TextField("Path", text: self.$storagePath.path)
-                    .clearable(self.$storagePath.path)
+                TextField("Path", text: $storagePath.path)
+                    .clearable($storagePath.path)
                     .autocorrectionDisabled(true)
                     .textInputAutocapitalization(.never)
 
@@ -50,8 +50,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
                 Button(saveLabel) {
                     do {
                         try onSave(storagePath)
-                    }
-                    catch {
+                    } catch {
                         print("Save storage path error: \(error)")
                     }
                 }

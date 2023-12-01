@@ -25,25 +25,25 @@ enum FilterRuleValue: Codable, Equatable {
     fileprivate func string() -> String? {
         var s: String? = nil
         switch self {
-        case .date(let value):
+        case let .date(value):
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             s = dateFormatter.string(from: value)
-        case .number(let value):
+        case let .number(value):
             s = String(value)
-        case .tag(let id):
+        case let .tag(id):
             s = String(id)
-        case .boolean(let value):
+        case let .boolean(value):
             s = String(value)
-        case .documentType(let id):
+        case let .documentType(id):
             s = id == nil ? nil : String(id!)
-        case .storagePath(let id):
+        case let .storagePath(id):
             s = id == nil ? nil : String(id!)
-        case .correspondent(let id):
+        case let .correspondent(id):
             s = id == nil ? nil : String(id!)
-        case .owner(let id):
+        case let .owner(id):
             s = id == nil ? nil : String(id!)
-        case .string(let value):
+        case let .string(value):
             s = value
         }
         return s
@@ -123,13 +123,11 @@ struct FilterRule: Equatable {
         }
 
         for rule in rules.filter({ !$0.ruleType.multiple() }) {
-            if case .boolean(let value) = rule.value {
+            if case let .boolean(value) = rule.value {
                 result.append(.init(name: rule.ruleType.filterVar(), value: value ? "1" : "0"))
-            }
-            else if let value = rule.value.string() {
+            } else if let value = rule.value.string() {
                 result.append(.init(name: rule.ruleType.filterVar(), value: value))
-            }
-            else {
+            } else {
                 guard let nullVar = rule.ruleType.isNullFilterVar() else {
                     fatalError("Rule value is null, but rule has no null filter var")
                 }
@@ -240,8 +238,7 @@ enum SortOrder: Codable {
     init(_ reverse: Bool) {
         if reverse {
             self = .descending
-        }
-        else {
+        } else {
             self = .ascending
         }
     }
@@ -360,7 +357,7 @@ struct FilterState: Equatable, Codable {
                     fatalError("Could not convert rule type to search mode (this should not occur)")
                 }
                 searchMode = mode
-                guard case .string(let v) = rule.value else {
+                guard case let .string(v) = rule.value else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
@@ -368,7 +365,7 @@ struct FilterState: Equatable, Codable {
                 searchText = v
 
             case .correspondent:
-                guard case .correspondent(let id) = rule.value else {
+                guard case let .correspondent(id) = rule.value else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
@@ -387,7 +384,7 @@ struct FilterState: Equatable, Codable {
                                                   rule: rule)
 
             case .documentType:
-                guard case .documentType(let id) = rule.value else {
+                guard case let .documentType(id) = rule.value else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
@@ -406,7 +403,7 @@ struct FilterState: Equatable, Codable {
                                                  rule: rule)
 
             case .storagePath:
-                guard case .storagePath(let id) = rule.value else {
+                guard case let .storagePath(id) = rule.value else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
@@ -424,65 +421,59 @@ struct FilterState: Equatable, Codable {
                                                 rule: rule)
 
             case .hasTagsAll:
-                guard case .tag(let id) = rule.value else {
+                guard case let .tag(id) = rule.value else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
 
-                if case .allOf(let include, let exclude) = tags {
+                if case let .allOf(include, exclude) = tags {
                     // have allOf already
                     self.tags = .allOf(include: include + [id], exclude: exclude)
-                }
-                else if case .any = tags {
+                } else if case .any = tags {
                     self.tags = .allOf(include: [id], exclude: [])
-                }
-                else {
+                } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                 }
 
             case .doesNotHaveTag:
-                guard case .tag(let id) = rule.value else {
+                guard case let .tag(id) = rule.value else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
 
-                if case .allOf(let include, let exclude) = tags {
+                if case let .allOf(include, exclude) = tags {
                     // have allOf already
                     self.tags = .allOf(include: include, exclude: exclude + [id])
-                }
-                else if case .any = tags {
+                } else if case .any = tags {
                     self.tags = .allOf(include: [], exclude: [id])
-                }
-                else {
+                } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                     break
                 }
 
             case .hasTagsAny:
-                guard case .tag(let id) = rule.value else {
+                guard case let .tag(id) = rule.value else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
 
-                if case .anyOf(let ids) = tags {
+                if case let .anyOf(ids) = tags {
                     tags = .anyOf(ids: ids + [id])
-                }
-                else if case .any = tags {
+                } else if case .any = tags {
                     tags = .anyOf(ids: [id])
-                }
-                else {
+                } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                     break
                 }
 
             case .hasAnyTag:
-                guard case .boolean(let value) = rule.value, value == false else {
+                guard case let .boolean(value) = rule.value, value == false else {
                     print("Invalid value for rule type")
                     remaining.append(rule)
                     break
@@ -503,14 +494,14 @@ struct FilterState: Equatable, Codable {
                 }
 
             case .owner:
-                guard case .number(let id) = rule.value, id >= 0 else {
+                guard case let .number(id) = rule.value, id >= 0 else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
                 }
 
                 switch owner {
-                case .anyOf(let ids):
+                case let .anyOf(ids):
                     if !(ids.count == 1 && ids[0] == id) {
                         Logger.shared.error("Owner is already set to .anyOf, but got other owner")
                     }
@@ -526,7 +517,7 @@ struct FilterState: Equatable, Codable {
                 }
 
             case .ownerIsnull:
-                guard case .boolean(let value) = rule.value else {
+                guard case let .boolean(value) = rule.value else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
@@ -547,7 +538,7 @@ struct FilterState: Equatable, Codable {
                 }
 
             case .ownerAny:
-                guard case .number(let sid) = rule.value, sid >= 0 else {
+                guard case let .number(sid) = rule.value, sid >= 0 else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
@@ -556,7 +547,7 @@ struct FilterState: Equatable, Codable {
                 let id = UInt(sid)
 
                 switch owner {
-                case .anyOf(let ids):
+                case let .anyOf(ids):
                     owner = .anyOf(ids: ids + [id])
                 case .noneOf, .notAssigned:
                     let ownerCopy = owner
@@ -567,7 +558,7 @@ struct FilterState: Equatable, Codable {
                 }
 
             case .ownerDoesNotInclude:
-                guard case .number(let sid) = rule.value, sid >= 0 else {
+                guard case let .number(sid) = rule.value, sid >= 0 else {
                     Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
                     remaining.append(rule)
                     break
@@ -576,7 +567,7 @@ struct FilterState: Equatable, Codable {
                 let id = UInt(sid)
 
                 switch owner {
-                case .noneOf(let ids):
+                case let .noneOf(ids):
                     owner = .noneOf(ids: ids + [id])
                 case .anyOf, .notAssigned:
                     let ownerCopy = owner
@@ -603,14 +594,14 @@ struct FilterState: Equatable, Codable {
             return filter
         }
 
-        guard let id = id else {
+        guard let id else {
             Logger.shared.error("hasDocumentTypeAny with nil id")
             remaining.append(rule)
             return filter
         }
 
         switch filter {
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             return .anyOf(ids: ids + [id])
         case .noneOf:
             Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
@@ -627,14 +618,14 @@ struct FilterState: Equatable, Codable {
             return filter
         }
 
-        guard let id = id else {
+        guard let id else {
             Logger.shared.error("doesNotHaveDocumentType with nil id")
             remaining.append(rule)
             return filter
         }
 
         switch filter {
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             return .noneOf(ids: ids + [id])
         case .anyOf:
             Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
@@ -658,13 +649,13 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .correspondent, value: .correspondent(id: nil))
             )
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: id))
                 )
             }
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: id))
@@ -678,13 +669,13 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .documentType, value: .documentType(id: nil))
             )
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: id))
                 )
             }
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: id))
@@ -697,12 +688,12 @@ struct FilterState: Equatable, Codable {
         case .notAssigned:
             result.append(
                 .init(ruleType: .storagePath, value: .storagePath(id: nil)))
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .hasStoragePathAny, value: .storagePath(id: id)))
             }
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: id)))
@@ -716,7 +707,7 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .hasAnyTag, value: .boolean(value: false))
             )
-        case .allOf(let include, let exclude):
+        case let .allOf(include, exclude):
             for id in include {
                 result.append(
                     .init(ruleType: .hasTagsAll, value: .tag(id: id)))
@@ -726,7 +717,7 @@ struct FilterState: Equatable, Codable {
                     .init(ruleType: .doesNotHaveTag, value: .tag(id: id)))
             }
 
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             for id in ids {
                 result.append(
                     .init(ruleType: .hasTagsAny, value: .tag(id: id)))
@@ -739,11 +730,11 @@ struct FilterState: Equatable, Codable {
             result.append(
                 .init(ruleType: .ownerIsnull, value: .boolean(value: true))
             )
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             for id in ids {
                 result.append(.init(ruleType: .ownerAny, value: .number(value: Int(id))))
             }
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             for id in ids {
                 result.append(.init(ruleType: .ownerDoesNotInclude, value: .number(value: Int(id))))
             }
@@ -753,7 +744,7 @@ struct FilterState: Equatable, Codable {
     }
 
     var filtering: Bool {
-        return self != FilterState()
+        self != FilterState()
     }
 
     var ruleCount: Int {

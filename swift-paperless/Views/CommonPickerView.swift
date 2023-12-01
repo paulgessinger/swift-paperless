@@ -21,15 +21,15 @@ struct CommonPicker: View {
     var notAssignedLabel: String
 
     init(selection: Binding<FilterState.Filter>, elements: [(UInt, String)], notAssignedLabel: String = "Not assigned") {
-        self._selection = selection
+        _selection = selection
         self.elements = elements
         self.notAssignedLabel = notAssignedLabel
 
         switch self.selection {
         case .any, .anyOf, .notAssigned:
-            self._mode = State(initialValue: .anyOf)
+            _mode = State(initialValue: .anyOf)
         case .noneOf:
-            self._mode = State(initialValue: .noneOf)
+            _mode = State(initialValue: .noneOf)
         }
     }
 
@@ -70,9 +70,9 @@ struct CommonPicker: View {
 
     private func selected(id: UInt) -> Bool {
         switch selection {
-        case .anyOf(let ids):
+        case let .anyOf(ids):
             return ids.contains(id)
-        case .noneOf(let ids):
+        case let .noneOf(ids):
             return ids.contains(id)
         default:
             return false
@@ -104,14 +104,14 @@ struct CommonPicker: View {
                                 selection = .anyOf(ids: [id])
                             case .notAssigned:
                                 selection = .anyOf(ids: [id])
-                            case .anyOf(var ids):
+                            case var .anyOf(ids):
                                 if ids.contains(id) {
                                     ids = ids.filter { $0 != id }
                                     selection = ids.isEmpty ? .any : .anyOf(ids: ids)
                                 } else {
                                     selection = .anyOf(ids: [id] + ids)
                                 }
-                            case .noneOf(var ids):
+                            case var .noneOf(ids):
                                 if ids.contains(id) {
                                     ids = ids.filter { $0 != id }
                                     selection = ids.isEmpty ? .any : .noneOf(ids: ids)
@@ -155,7 +155,7 @@ struct CommonPicker: View {
             switch newValue {
             case .anyOf:
                 switch selection {
-                case .noneOf(let ids):
+                case let .noneOf(ids):
                     selection = .anyOf(ids: ids)
                 case .anyOf:
                     // noop
@@ -165,7 +165,7 @@ struct CommonPicker: View {
                 }
             case .noneOf:
                 switch selection {
-                case .anyOf(let ids):
+                case let .anyOf(ids):
                     selection = .noneOf(ids: ids)
                 case .noneOf:
                     // noop
@@ -195,8 +195,8 @@ protocol Pickable {
 extension Correspondent: Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> = \.correspondents
 
-    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
-        return \.correspondent
+    static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        \.correspondent
     }
 
     static var notAssignedFilter = LocalizedStrings.Filter.Correspondent.notAssignedFilter
@@ -209,8 +209,8 @@ extension Correspondent: Pickable {
 extension DocumentType: Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> = \.documentTypes
 
-    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
-        return \.documentType
+    static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        \.documentType
     }
 
     static var notAssignedFilter = LocalizedStrings.Filter.DocumentType.notAssignedFilter
@@ -223,8 +223,8 @@ extension DocumentType: Pickable {
 extension StoragePath: Pickable {
     static var storePath: KeyPath<DocumentStore, [UInt: StoragePath]> = \.storagePaths
 
-    static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
-        return \.storagePath
+    static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
+        \.storagePath
     }
 
     static var notAssignedFilter = LocalizedStrings.Filter.StoragePath.notAssignedFilter
@@ -265,14 +265,14 @@ struct CommonPickerEdit<Manager, D>: View
         return all.filter { $0.1.range(of: searchDebounce.debouncedText, options: .caseInsensitive) != nil }
     }
 
-    init(manager: Manager.Type, document: Binding<D>, store: DocumentStore) {
-        self._document = document
+    init(manager _: Manager.Type, document: Binding<D>, store: DocumentStore) {
+        _document = document
         self.store = store
-        self.model = .init(store: store)
+        model = .init(store: store)
     }
 
     private func row(_ label: String, value: UInt?) -> some View {
-        return HStack {
+        HStack {
             Button(action: {
                 // set new value
                 document[keyPath: Element.documentPath(D.self)] = value
@@ -364,7 +364,7 @@ private struct FilterViewPreviewHelper<T: Pickable>: View {
     var elementKeyPath: KeyPath<DocumentStore, [UInt: T]>
 
     init(elements: KeyPath<DocumentStore, [UInt: T]>) {
-        self.elementKeyPath = elements
+        elementKeyPath = elements
     }
 
     var body: some View {

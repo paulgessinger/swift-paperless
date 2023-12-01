@@ -36,7 +36,7 @@ private struct DetailsView: View {
 
     init(connectionManager: ConnectionManager) {
         self.connectionManager = connectionManager
-        self._extraHeaders = State(initialValue: connectionManager.extraHeaders)
+        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
     }
 
     var body: some View {
@@ -210,7 +210,7 @@ struct LoginView: View {
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
-                        case .error(let info):
+                        case let .error(info):
                             Label(LocalizedStrings.Login.PaperlessUrl.error, systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
@@ -330,7 +330,7 @@ struct DetailsView_Previews: PreviewProvider {
     struct Container: View {
         @State var headers: [(String, String)] = [
             ("header1", "value1"),
-            ("Header2", "other value")
+            ("Header2", "other value"),
         ]
 
         var body: some View {

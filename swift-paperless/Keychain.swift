@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Keychain {
+enum Keychain {
     enum KeychainError: Error {
         case duplicateItem
         case itemNotFound

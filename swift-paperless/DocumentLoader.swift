@@ -26,9 +26,8 @@ struct DocumentLoader<Content: View>: View {
     var body: some View {
         VStack {
             if document != nil {
-                content(Binding(unwrapping: self.$document)!)
-            }
-            else {
+                content(Binding(unwrapping: $document)!)
+            } else {
                 ProgressView()
             }
         }

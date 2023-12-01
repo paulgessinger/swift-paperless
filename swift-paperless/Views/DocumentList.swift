@@ -56,12 +56,12 @@ class DocumentListViewModel: ObservableObject {
     init(store: DocumentStore, filterState: FilterState) {
         self.store = store
         self.filterState = filterState
-        self.source = store.repository.documents(filter: filterState)
+        source = store.repository.documents(filter: filterState)
     }
 
     @MainActor
     func load() async {
-        guard documents.isEmpty && !loading else { return }
+        guard documents.isEmpty, !loading else { return }
         loading = true
         let batch = await source.fetch(limit: initialBatchSize)
         documents = batch
@@ -115,7 +115,7 @@ class DocumentListViewModel: ObservableObject {
 
     func removeInboxTags(document: Document) async {
         var document = document
-        let inboxTags = store.tags.values.filter { $0.isInboxTag }
+        let inboxTags = store.tags.values.filter(\.isInboxTag)
         for tag in inboxTags {
             document.tags.removeAll(where: { $0 == tag.id })
         }
@@ -137,9 +137,9 @@ struct DocumentList: View {
 
     init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>) {
         self.store = store
-        self._navPath = navPath
-        self._filterState = filterState
-        self._viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue))
+        _navPath = navPath
+        _filterState = filterState
+        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue))
     }
 
     struct Cell: View {
@@ -153,8 +153,7 @@ struct DocumentList: View {
         private func onDeleteButtonPressed() async {
             if documentDeleteConfirmation {
                 documentToDelete = document
-            }
-            else {
+            } else {
                 try? await store.deleteDocument(document)
             }
         }
@@ -234,8 +233,7 @@ struct DocumentList: View {
             VStack {
                 if !viewModel.ready {
                     LoadingDocumentList()
-                }
-                else {
+                } else {
                     let documents = viewModel.documents
                     if !documents.isEmpty {
                         List(
@@ -252,8 +250,7 @@ struct DocumentList: View {
                                 }
                         }
                         .listStyle(.plain)
-                    }
-                    else {
+                    } else {
                         List {
                             HStack {
                                 Spacer()
@@ -267,7 +264,7 @@ struct DocumentList: View {
                     }
                 }
 
-                if viewModel.ready && viewModel.loading {
+                if viewModel.ready, viewModel.loading {
                     ProgressView()
                 }
             }
@@ -294,9 +291,9 @@ struct DocumentList: View {
 
         .onReceive(store.documentEventPublisher) { event in
             switch event {
-            case .deleted(let document):
+            case let .deleted(document):
                 viewModel.removed(document: document)
-            case .changed(let document):
+            case let .changed(document):
                 viewModel.updated(document: document)
             case .changeReceived:
                 Task { await viewModel.refresh(retain: true) }

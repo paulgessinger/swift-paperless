@@ -251,7 +251,7 @@ enum FilterRuleType: Int, Equatable, CaseIterable {
     }
 
     static func allMultiples() -> Set<FilterRuleType> {
-        return [
+        [
             .hasCorrespondentAny,
             .doesNotHaveCorrespondent,
             .hasStoragePathAny,

@@ -19,7 +19,7 @@ struct Connection: Equatable {
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
 
-    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme: ConnectionScheme = .https) {
+    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme _: ConnectionScheme = .https) {
         self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
@@ -77,7 +77,7 @@ class ConnectionManager: ObservableObject {
     }
 
     var connection: Connection? {
-        guard let apiHost = apiHost, var url = URL(string: apiHost) else {
+        guard let apiHost, var url = URL(string: apiHost) else {
             return nil
         }
 
@@ -138,7 +138,7 @@ class ConnectionManager: ObservableObject {
     }
 }
 
-extension Array where Element == ConnectionManager.HeaderValue {
+extension [ConnectionManager.HeaderValue] {
     func apply(toRequest req: inout URLRequest) {
         for kv in self {
             req.setValue(kv.value, forHTTPHeaderField: kv.key)

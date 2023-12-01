@@ -20,7 +20,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     }
 
     private func valid() -> Bool {
-        return !element.name.isEmpty
+        !element.name.isEmpty
     }
 
     var body: some View {
@@ -37,8 +37,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
                 Button(saveLabel) {
                     do {
                         try onSave(element)
-                    }
-                    catch {
+                    } catch {
                         print("Save document type error: \(error)")
                     }
                 }

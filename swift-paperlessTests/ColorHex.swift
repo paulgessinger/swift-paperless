@@ -48,7 +48,7 @@ final class ColorHex: XCTestCase {
         ("#000000", Color.black),
         ("#ff0000", Color(.sRGB, red: 1, green: 0, blue: 0)),
         ("#00ff00", Color(.sRGB, red: 0, green: 1, blue: 0)),
-        ("#0000ff", Color(.sRGB, red: 0, green: 0, blue: 1))
+        ("#0000ff", Color(.sRGB, red: 0, green: 0, blue: 1)),
     ]
 
     func testFromJson() throws {

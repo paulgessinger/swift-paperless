@@ -45,7 +45,7 @@ struct MultiPartFormDataRequest {
         body.append("\r\n")
     }
 
-    func add(name: String, url: URL, mimeType: String? = nil) throws {
+    func add(name _: String, url: URL, mimeType: String? = nil) throws {
         guard url.isFileURL else {
             throw Error.notAFile(url: url)
         }

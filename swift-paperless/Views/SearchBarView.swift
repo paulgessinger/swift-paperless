@@ -21,8 +21,7 @@ struct SearchBarView: View {
     var barColor: Color {
         if colorScheme == .dark {
             return Color.secondarySystemGroupedBackground
-        }
-        else {
+        } else {
             return Color.systemGroupedBackground
         }
     }
@@ -62,7 +61,7 @@ struct SearchBarView: View {
             )
 
             Group {
-                if showCancel && cancelEnabled {
+                if showCancel, cancelEnabled {
                     Text("Cancel")
                         .foregroundColor(.accentColor)
                         .onTapGesture {
@@ -82,7 +81,7 @@ struct SearchBarView: View {
         .transition(.opacity)
 
         .onChange(of: focused) { newValue in
-            if let isFocused = isFocused {
+            if let isFocused {
                 isFocused.wrappedValue = newValue
             }
 
