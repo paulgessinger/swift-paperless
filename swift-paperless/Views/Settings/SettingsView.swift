@@ -18,6 +18,10 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            Section("Active server") {
+                Text(connectionManager.apiHost ?? "No server")
+            }
+
             Section(LocalizedStrings.Settings.organization) {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
