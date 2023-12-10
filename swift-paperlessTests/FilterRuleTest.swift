@@ -12,11 +12,12 @@ private func datetime(year: Int, month: Int, day: Int) -> Date {
     dateComponents.year = year
     dateComponents.month = month
     dateComponents.day = day
-    dateComponents.timeZone = TimeZone.current
+    dateComponents.timeZone = TimeZone(abbreviation: "UTC")
     dateComponents.hour = 0
     dateComponents.minute = 0
 
-    return Calendar(identifier: .gregorian).date(from: dateComponents)!
+    let date = Calendar.current.date(from: dateComponents)!
+    return date
 }
 
 struct DecodeHelper: Codable, Equatable {
@@ -67,7 +68,7 @@ final class FilterRuleTest: XCTestCase {
         ]
         """.data(using: .utf8)!
 
-        let result = try decoder.decode([FilterRule].self, from: input)
+        let result = try makeDecoder(tz: .init(abbreviation: "UTC")!).decode([FilterRule].self, from: input)
 
         let expected: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),

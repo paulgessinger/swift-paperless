@@ -7,7 +7,7 @@
 
 import Foundation
 
-let decoder: JSONDecoder = {
+func makeDecoder(tz: TimeZone) -> JSONDecoder {
     let d = JSONDecoder()
     d.dateDecodingStrategy = .custom { decoder -> Date in
         let container = try decoder.singleValueContainer()
@@ -19,7 +19,7 @@ let decoder: JSONDecoder = {
         }
 
         let df = DateFormatter()
-        df.timeZone = TimeZone.current
+        df.timeZone = tz
         df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSZZZZZ"
 
         if let res = df.date(from: dateStr) {
@@ -38,4 +38,6 @@ let decoder: JSONDecoder = {
     }
 //    d.keyDecodingStrategy = .convertFromSnakeCase
     return d
-}()
+}
+
+let decoder: JSONDecoder = makeDecoder(tz: .current)
