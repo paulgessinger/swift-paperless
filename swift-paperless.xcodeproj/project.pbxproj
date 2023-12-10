@@ -155,6 +155,9 @@
 		7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 7AD353B02A8036E200AFFAFE /* demo3.pdf */; };
 		7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD353AC2A8018FE00AFFAFE /* PDFView.swift */; };
 		7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD8FC5729E4B37B00157217 /* FilterBar.swift */; };
+		7ADA9ABB2B263797002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
+		7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
+		7ADA9AC42B2637BE002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
 		7AEBA7A929EDBFBF006D5620 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 7AEBA7A829EDBFBF006D5620 /* SwiftUINavigation */; };
 		7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
 		7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691129CF80F600414BA7 /* LogoView.swift */; };
@@ -304,6 +307,7 @@
 		7AE6C20E2AE414FB00B8FC36 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/MainInterface.strings; sourceTree = "<group>"; };
 		7AE6C20F2AE414FC00B8FC36 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7AE6C2102AE414FC00B8FC36 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		7ADA9ABA2B263797002C303C /* Decoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Decoder.swift; sourceTree = "<group>"; };
 		7AEF690F29CF7FA800414BA7 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7AEF691129CF80F600414BA7 /* LogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoView.swift; sourceTree = "<group>"; };
 		7AEF691429CF967900414BA7 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
@@ -518,6 +522,7 @@
 				7AF2E08729F56F3D0092948B /* Endpoint.swift */,
 				7A4648022A1D5ABC00078968 /* ListResponse.swift */,
 				7A2E12212B14F3A000E7704A /* DeriveUrl.swift */,
+				7ADA9ABA2B263797002C303C /* Decoder.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -834,6 +839,7 @@
 				7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A8E1F7B2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
 				7A8E1F882A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
+				7ADA9AC42B2637BE002C303C /* Decoder.swift in Sources */,
 				7A297FB129FE78750021A1ED /* CorrespondentEditView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -880,6 +886,7 @@
 				7AF6688729A137EA0016BC31 /* Api.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
 				7AB0577A2AA48BA700ABA6B1 /* PrivacyView.swift in Sources */,
+				7ADA9ABB2B263797002C303C /* Decoder.swift in Sources */,
 				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */,
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
@@ -933,6 +940,7 @@
 				7AF2E07229F3ECE40092948B /* SavedViewTest.swift in Sources */,
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
+				7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */,
 				7AF2E07729F3F02E0092948B /* Repository.swift in Sources */,
 				7A2E12262B14F42200E7704A /* DeriveUrlTest.swift in Sources */,
 				7A8E1F7C2A1A8F60002A7CB3 /* DocumentModel.swift in Sources */,
