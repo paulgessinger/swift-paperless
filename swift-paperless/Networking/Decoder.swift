@@ -29,7 +29,9 @@ let decoder: JSONDecoder = {
         df.dateFormat = "yyyy-MM-dd"
 
         if let res = df.date(from: dateStr) {
-            return res
+            if let res = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: res) {
+                return res
+            }
         }
 
         throw DateDecodingError.invalidDate(string: dateStr)

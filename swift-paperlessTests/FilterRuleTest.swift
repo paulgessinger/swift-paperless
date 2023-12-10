@@ -67,7 +67,7 @@ final class FilterRuleTest: XCTestCase {
         ]
         """.data(using: .utf8)!
 
-        let result = try JSONDecoder().decode([FilterRule].self, from: input)
+        let result = try decoder.decode([FilterRule].self, from: input)
 
         let expected: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),
