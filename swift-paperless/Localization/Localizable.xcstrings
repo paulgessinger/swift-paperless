@@ -180,6 +180,17 @@
         }
       }
     },
+    "deleteDocumentName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete document \"%@\""
+          }
+        }
+      }
+    },
     "descending" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -222,6 +233,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "#%u"
+          }
+        }
+      }
+    },
+    "documentDelete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete document"
           }
         }
       }

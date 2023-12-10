@@ -301,15 +301,15 @@ struct DocumentList: View {
         }
 
         // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
-        .confirmationDialog(title: { _ in Text("Delete document") }, unwrapping: $documentToDelete) { document in
+        .confirmationDialog(title: { _ in Text(.localizable.documentDelete) }, unwrapping: $documentToDelete) { document in
             Button(role: .destructive) {
                 Task { try? await store.deleteDocument(document) }
-            } label: { Text("Delete document") }
+            } label: { Text(.localizable.documentDelete) }
             Button(role: .cancel) {
                 documentToDelete = nil
-            } label: { Text("Cancel") }
+            } label: { Text(.localizable.cancel) }
         } message: { document in
-            Text("Delete document \"\(document.title)\"")
+            Text(.localizable.deleteDocumentName(document.title))
         }
     }
 }
