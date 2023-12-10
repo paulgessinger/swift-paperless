@@ -12,11 +12,16 @@ private func datetime(year: Int, month: Int, day: Int) -> Date {
     dateComponents.year = year
     dateComponents.month = month
     dateComponents.day = day
-    dateComponents.timeZone = TimeZone(abbreviation: "UTC")
+    dateComponents.timeZone = TimeZone.current
     dateComponents.hour = 0
     dateComponents.minute = 0
 
     return Calendar(identifier: .gregorian).date(from: dateComponents)!
+}
+
+struct DecodeHelper: Codable, Equatable {
+    let rule_type: Int
+    let value: String?
 }
 
 final class FilterRuleTest: XCTestCase {
@@ -79,9 +84,11 @@ final class FilterRuleTest: XCTestCase {
     func testEncoding() throws {
         let input = FilterRule(ruleType: .hasTagsAll, value: .tag(id: 6))
 
-        let data = try String(data: JSONEncoder().encode(input), encoding: .utf8)!
+        let data = try JSONEncoder().encode(input)
 
-        XCTAssertEqual(data, "{\"rule_type\":6,\"value\":\"6\"}")
+        let dict = try JSONDecoder().decode(DecodeHelper.self, from: data)
+
+        XCTAssertEqual(dict, DecodeHelper(rule_type: 6, value: "6"))
     }
 
     func testEncodingMultiple() throws {
@@ -95,38 +102,16 @@ final class FilterRuleTest: XCTestCase {
         ]
 
         let encoder = JSONEncoder()
-        let actual = try String(data: encoder.encode(input), encoding: .utf8)!
+        let actual = try JSONDecoder().decode([DecodeHelper].self, from: encoder.encode(input))
 
-        let expected = """
-        [
-          {
-            "rule_type": 0,
-            "value": "shantel"
-          },
-          {
-            "rule_type": 6,
-            "value": "66"
-          },
-          {
-            "rule_type": 6,
-            "value": "71"
-          },
-          {
-            "rule_type": 17,
-            "value": "75"
-          },
-          {
-            "rule_type": 3,
-            "value": null
-          },
-          {
-            "rule_type": 14,
-            "value": "2023-01-01"
-          }
+        let expected: [DecodeHelper] = [
+            .init(rule_type: 0, value: "shantel"),
+            .init(rule_type: 6, value: "66"),
+            .init(rule_type: 6, value: "71"),
+            .init(rule_type: 17, value: "75"),
+            .init(rule_type: 3, value: nil),
+            .init(rule_type: 14, value: "2023-01-01"),
         ]
-        """
-        .replacingOccurrences(of: " ", with: "")
-        .replacingOccurrences(of: "\n", with: "")
 
         XCTAssertEqual(actual, expected)
     }
