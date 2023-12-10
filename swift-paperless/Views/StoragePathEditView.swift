@@ -37,7 +37,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
                     .textInputAutocapitalization(.never)
 
             } header: {
-                Text(.localizable.storagePathPropertiesLabel)
+                Text(.localizable.properties)
             } footer: {
                 Text(.localizable.storagePathFormatExplanation)
             }

@@ -1,157 +1,200 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "activeServer" : {
+    "algorithm" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Active server"
+            "value" : "Matching algorithm"
           }
         }
       }
     },
-    "advanced" : {
+    "algorithmAll" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Advanced"
+            "value" : "All"
           }
         }
       }
     },
-    "detailsFeedback" : {
+    "algorithmAny" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Feedback"
+            "value" : "Any"
           }
         }
       }
     },
-    "detailsLibraries" : {
+    "algorithmAuto" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Libraries"
+            "value" : "Auto"
           }
         }
       }
     },
-    "detailsLibrariesLoadError" : {
+    "algorithmExact" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unable to load used library details"
+            "value" : "Exact"
           }
         }
       }
     },
-    "detailsPrivacy" : {
+    "algorithmFuzzy" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Privacy"
+            "value" : "Fuzzy"
           }
         }
       }
     },
-    "detailsPrivacyLoadError" : {
+    "algorithmNone" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+            "value" : "None"
           }
         }
       }
     },
-    "detailsSourceCode" : {
+    "algorithmRegEx" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Source code"
+            "value" : "RegEx"
           }
         }
       }
     },
-    "detailsTitle" : {
+    "caseInsensitive" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Case insensitive"
           }
         }
       }
     },
-    "documentDeleteConfirmationLabel" : {
+    "explanationAll" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Document delete confirmation"
+            "value" : "Document contains all of these words (space separated)"
           }
         }
       }
     },
-    "documentDeleteConfirmationLabelDescription" : {
+    "explanationAny" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ask for confirmation before deleting a document"
+            "value" : "Document contains any of these words (space separated)"
           }
         }
       }
     },
-    "organization" : {
+    "explanationAuto" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Organization"
+            "value" : "Learn matching automatically"
           }
         }
       }
     },
-    "preferences" : {
+    "explanationExact" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preferences"
+            "value" : "Document contains this string"
+          }
+        }
+      }
+    },
+    "explanationFuzzy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document contains a word similar to this word"
+          }
+        }
+      }
+    },
+    "explanationNone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No automatic matching"
+          }
+        }
+      }
+    },
+    "explanationRegEx" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document matches this regular expression"
+          }
+        }
+      }
+    },
+    "pattern" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pattern"
           }
         }
       }
     },
     "title" : {
-      "comment" : "Details menu",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings"
+            "value" : "Matching"
           }
         }
       }

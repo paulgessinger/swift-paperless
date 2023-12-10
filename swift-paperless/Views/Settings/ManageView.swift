@@ -147,7 +147,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                 NavigationLink {
                     Create(model: model)
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label(String(localized: .localizable.add), systemImage: "plus")
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {

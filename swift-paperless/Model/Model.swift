@@ -30,40 +30,38 @@ enum MatchingAlgorithm: Int, Codable, CaseIterable {
     var title: String {
         switch self {
         case .none:
-            String(localized: "matching_algorithm_none", comment: "Matching algorithm")
+            String(localized: .matching.algorithmNone)
         case .any:
-            String(localized: "matching_algorithm_any", comment: "Matching algorithm")
+            String(localized: .matching.algorithmAny)
         case .all:
-            String(localized: "matching_algorithm_all", comment: "Matching algorithm")
+            String(localized: .matching.algorithmAll)
         case .literal:
-            String(localized: "matching_algorithm_exact", comment: "Matching algorithm")
+            String(localized: .matching.algorithmExact)
         case .regex:
-            String(localized: "matching_algorithm_regEx", comment: "Matching algorithm")
+            String(localized: .matching.algorithmRegEx)
         case .fuzzy:
-            String(localized: "matching_algorithm_fuzzy", comment: "Matching algorithm")
+            String(localized: .matching.algorithmFuzzy)
         case .auto:
-            String(localized: "matching_algorithm_auto", comment: "Matching algorithm")
+            String(localized: .matching.algorithmAuto)
         }
     }
 
     var label: String {
-        var result = ""
         switch self {
         case .none:
-            result += String(localized: "matching_explanation_none", comment: "Matching algorithm")
+            String(localized: .matching.explanationNone)
         case .any:
-            result += String(localized: "matching_explanation_any", comment: "Matching algorithm")
+            String(localized: .matching.explanationAny)
         case .all:
-            result += String(localized: "matching_explanation_all", comment: "Matching algorithm")
+            String(localized: .matching.explanationAny)
         case .literal:
-            result += String(localized: "matching_explanation_literal", comment: "Matching algorithm")
+            String(localized: .matching.explanationExact)
         case .regex:
-            result += String(localized: "matching_explanation_regex", comment: "Matching algorithm")
+            String(localized: .matching.explanationRegEx)
         case .fuzzy:
-            result += String(localized: "matching_explanation_fuzzy", comment: "Matching algorithm")
+            String(localized: .matching.explanationFuzzy)
         case .auto:
-            result += String(localized: "matching_explanation_auto", comment: "Matching algorithm")
+            String(localized: .matching.explanationAuto)
         }
-        return result
     }
 }

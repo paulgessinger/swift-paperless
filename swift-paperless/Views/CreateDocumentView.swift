@@ -138,7 +138,7 @@ struct CreateDocumentView<Title: View>: View {
                             )
                         }) {
                             HStack {
-                                Text("Storage path")
+                                Text(.localizable.storagePath)
                                 Spacer()
                                 Group {
                                     if let id = document.storagePath {
@@ -153,10 +153,10 @@ struct CreateDocumentView<Title: View>: View {
 
                         NavigationLink(destination: {
                             DocumentTagEditView(document: $document)
-                                .navigationTitle("Tags")
+                                .navigationTitle(Text(.localizable.tags))
                         }) {
                             if document.tags.isEmpty {
-                                Text("No tags")
+                                Text(.localizable.createDocumentNoTags)
                             } else {
                                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
                                     .contentShape(Rectangle())
@@ -176,7 +176,7 @@ struct CreateDocumentView<Title: View>: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     switch status {
                     case .none:
-                        Button("Save") {
+                        Button(String(localized: .localizable.save)) {
                             Task {
                                 withAnimation {
                                     status = .uploading
@@ -192,11 +192,11 @@ struct CreateDocumentView<Title: View>: View {
                             .transition(.opacity)
 
                     case .complete:
-                        Label("Upload complete", systemImage: "checkmark.circle.fill")
+                        Label(String(localized: .localizable.documentUploadComplete), systemImage: "checkmark.circle.fill")
                             .foregroundColor(.accentColor)
                             .labelStyle(.iconOnly)
                     case .error:
-                        Label("Upload error", systemImage: "exclamationmark.triangle")
+                        Label(String(localized: .localizable.documentUploadError), systemImage: "exclamationmark.triangle")
                             .labelStyle(.iconOnly)
                     }
                 }

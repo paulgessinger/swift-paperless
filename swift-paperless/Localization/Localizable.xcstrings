@@ -45,6 +45,28 @@
         }
       }
     },
+    "asnPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASN:"
+          }
+        }
+      }
+    },
+    "asnSpecific" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASN: %u"
+          }
+        }
+      }
+    },
     "cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -63,6 +85,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clear filters"
+          }
+        }
+      }
+    },
+    "clearText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear text"
+          }
+        }
+      }
+    },
+    "color" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color"
           }
         }
       }
@@ -169,6 +213,51 @@
         }
       }
     },
+    "createDocumentNoTags" : {
+      "comment" : "No other label so need to include that it's about tags",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tags"
+          }
+        }
+      }
+    },
+    "dataScannerInvalidAsn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid ASN: %u"
+          }
+        }
+      }
+    },
+    "dataScannerNoAsn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ASN: %@"
+          }
+        }
+      }
+    },
+    "dataScannerTypeInAsn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type in ASN"
+          }
+        }
+      }
+    },
     "delete" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -221,6 +310,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discard changes"
+          }
+        }
+      }
+    },
+    "documentAdd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add document"
           }
         }
       }
@@ -358,6 +458,28 @@
         }
       }
     },
+    "documentUploadComplete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload complete"
+          }
+        }
+      }
+    },
+    "documentUploadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload error"
+          }
+        }
+      }
+    },
     "done" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -380,6 +502,29 @@
         }
       }
     },
+    "elementIsSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element is selected"
+          }
+        }
+      }
+    },
+    "elementSelectionMode" : {
+      "comment" : "Common element selection mode (include/exclude",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selection mode"
+          }
+        }
+      }
+    },
     "error" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -387,6 +532,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Error"
+          }
+        }
+      }
+    },
+    "excludeElement" : {
+      "comment" : "Common element selection mode (include/exclude",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exclude element"
           }
         }
       }
@@ -426,6 +583,18 @@
         }
       }
     },
+    "includeElement" : {
+      "comment" : "Common element selection mode (include/exclude",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include element"
+          }
+        }
+      }
+    },
     "loading" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -455,6 +624,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Name"
+          }
+        }
+      }
+    },
+    "noDocuments" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No documents"
           }
         }
       }
@@ -489,6 +669,17 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
           }
         }
       }
@@ -604,6 +795,17 @@
         }
       }
     },
+    "properties" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Properties"
+          }
+        }
+      }
+    },
     "remove" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -637,6 +839,17 @@
         }
       }
     },
+    "savedViewCreateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create saved view"
+          }
+        }
+      }
+    },
     "savedViewDeleteConfirmationText" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -655,6 +868,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete saved view"
+          }
+        }
+      }
+    },
+    "savedViewEditTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit saved view"
           }
         }
       }
@@ -690,6 +914,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit saved views"
+          }
+        }
+      }
+    },
+    "savedViewShowInSidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in sidebar"
+          }
+        }
+      }
+    },
+    "savedViewShowOnDashboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show on dashboard"
           }
         }
       }
@@ -738,6 +984,17 @@
         }
       }
     },
+    "sorting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorting"
+          }
+        }
+      }
+    },
     "sortMenuLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -749,13 +1006,46 @@
         }
       }
     },
-    "sortOrdering" : {
+    "sortOrder" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sort ordering"
+            "value" : "Sort order"
+          }
+        }
+      }
+    },
+    "sortOrderAdded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added"
+          }
+        }
+      }
+    },
+    "sortOrderCreated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created"
+          }
+        }
+      }
+    },
+    "sortOrderModified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modified"
           }
         }
       }
@@ -837,17 +1127,6 @@
         }
       }
     },
-    "storagePathPropertiesLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Properties"
-          }
-        }
-      }
-    },
     "storagePaths" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -877,6 +1156,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add tag"
+          }
+        }
+      }
+    },
+    "tagColorRandom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Random color"
           }
         }
       }
@@ -936,6 +1226,17 @@
         }
       }
     },
+    "tagIsInbox" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inbox tag"
+          }
+        }
+      }
+    },
     "tagIsNotSelected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -954,6 +1255,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag is selected"
+          }
+        }
+      }
+    },
+    "tagName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag name"
           }
         }
       }
@@ -1032,6 +1344,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not assigned"
+          }
+        }
+      }
+    },
+    "tasksPending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u pending task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u pending tasks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "tasksProcessing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing \"%@\""
           }
         }
       }

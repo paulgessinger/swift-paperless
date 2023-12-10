@@ -122,7 +122,7 @@ private struct FilterMenu<Content: View>: View {
                     if !store.savedViews.isEmpty {
                         Divider()
                     }
-                    Text(.localizable.filtersApplied(filterState.ruleCount))
+                    Text(.localizable.filtersApplied(UInt(filterState.ruleCount)))
                     Divider()
                     Button(role: .destructive) {
                         Haptics.shared.notification(.success)
@@ -625,7 +625,7 @@ struct FilterBar: View {
                         }
                     }
 
-                    Picker(String(localized: .localizable.sortOrdering), selection: $filterState.sortOrder) {
+                    Picker(String(localized: .localizable.sortOrder), selection: $filterState.sortOrder) {
                         Label(String(localized: .localizable.ascending), systemImage: "arrow.up")
                             .tag(SortOrder.ascending)
                         Label(String(localized: .localizable.descending), systemImage: "arrow.down")

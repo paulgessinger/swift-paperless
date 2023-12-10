@@ -254,7 +254,8 @@ struct DocumentList: View {
                         List {
                             HStack {
                                 Spacer()
-                                Text("No documents")
+                                // @TODO: Make nice whimsy display
+                                Text(.localizable.noDocuments)
                                 Spacer()
                             }
                             .listRowInsets(EdgeInsets())

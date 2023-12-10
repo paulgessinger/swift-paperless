@@ -37,12 +37,12 @@ struct TaskActivityToolbar: View {
                     Menu {
                         ForEach(store.activeTasks.filter { $0.status == .STARTED }, id: \.id) { task in
                             let name = (task.taskFileName ?? task.taskName) ?? "unknown task"
-                            Text("Processing \(name)")
+                            Text(.localizable.tasksProcessing(name))
                         }
                         let queued = store.activeTasks.filter { $0.status != .STARTED }.count
                         if queued > 0 {
                             Divider()
-                            Text("\(queued) pending task(s)")
+                            Text(.localizable.tasksPending(UInt(queued)))
                         }
                     } label: {
                         TaskActivityView(text: "\(number)")
@@ -258,7 +258,7 @@ struct DocumentView: View {
                             Task { await store.fetchTasks() }
                         },
                         title: {
-                            Text("Add document")
+                            Text(.localizable.documentAdd)
                         }
                     )
                     .environmentObject(store)
@@ -277,10 +277,10 @@ struct DocumentView: View {
 //                })) {}
 
                 .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
-                    Button("Logout", role: .destructive) {
+                    Button(String(localized: .localizable.logout), role: .destructive) {
                         connectionManager.logout()
                     }
-                    Button("Cancel", role: .cancel) {}
+                    Button(String(localized: .localizable.cancel), role: .cancel) {}
                 }
 
                 .task {

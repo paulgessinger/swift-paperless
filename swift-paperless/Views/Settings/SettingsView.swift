@@ -18,7 +18,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("Active server") {
+            Section(String(localized: .settings.activeServer)) {
                 Text(connectionManager.apiHost ?? "No server")
             }
             Section(String(localized: .settings.organization)) {

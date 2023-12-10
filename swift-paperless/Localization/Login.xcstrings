@@ -1,6 +1,6 @@
 {
   "sourceLanguage" : "en",
-    "strings" : {
+  "strings" : {
     "apiInUrlNotice" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -74,6 +74,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Extra headers"
+          }
+        }
+      }
+    },
+    "extraHeadersDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+          }
+        }
+      }
+    },
+    "extraHeadersKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key"
+          }
+        }
+      }
+    },
+    "extraHeadersValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Value"
           }
         }
       }
@@ -165,7 +198,7 @@
           }
         }
       }
-    },
-    },
+    }
+  },
   "version" : "1.0"
 }

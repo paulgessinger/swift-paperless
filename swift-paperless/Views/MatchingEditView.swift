@@ -16,23 +16,23 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
     var body: some View {
         Group {
             Section {
-                Picker("Matching algorithm", selection: $element.matchingAlgorithm) {
+                Picker(String(localized: .matching.algorithm), selection: $element.matchingAlgorithm) {
                     ForEach(MatchingAlgorithm.allCases, id: \.self) { alg in
                         Text(alg.title).tag(alg)
                     }
                 }
             } header: {
-                Text("Matching")
+                Text(.matching.title)
             } footer: {
                 Text(element.matchingAlgorithm.label)
                     .lineLimit(3, reservesSpace: true)
             }
 
             if showTextField {
-                TextField(String(localized: "Matching pattern", comment: "Matching algorithm"), text: $element.match)
+                TextField(String(localized: .matching.pattern), text: $element.match)
                     .clearable($element.match)
 
-                Toggle(String(localized: "Case insensitive", comment: "Matching algorithm"), isOn: $element.isInsensitive)
+                Toggle(String(localized: .matching.caseInsensitive), isOn: $element.isInsensitive)
             }
         }
         .onChange(of: element.matchingAlgorithm) { value in

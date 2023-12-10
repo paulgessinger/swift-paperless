@@ -52,7 +52,7 @@ struct CommonPicker: View {
                 .foregroundColor(.primary)
                 Spacer()
                 if selected {
-                    Label("Element is selected", systemImage: "checkmark")
+                    Label(String(localized: .localizable.elementIsSelected), systemImage: "checkmark")
                         .labelStyle(.iconOnly)
                 }
             }
@@ -122,9 +122,9 @@ struct CommonPicker: View {
                         }
                     }
                 } header: {
-                    Picker(String(localized: "Selection mode", comment: "Common element selection mode (include/exclude)"), selection: $mode) {
-                        Text("Include element").tag(Mode.anyOf)
-                        Text("Exclude element").tag(Mode.noneOf)
+                    Picker(String(localized: .localizable.elementSelectionMode), selection: $mode) {
+                        Text(.localizable.includeElement).tag(Mode.anyOf)
+                        Text(.localizable.excludeElement).tag(Mode.noneOf)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
@@ -282,7 +282,7 @@ struct CommonPickerEdit<Manager, D>: View
             .foregroundColor(.primary)
             Spacer()
             if document[keyPath: Element.documentPath(D.self)] == value {
-                Label("Element is selected", systemImage: "checkmark")
+                Label(String(localized: .localizable.elementIsSelected), systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -349,7 +349,7 @@ struct CommonPickerEdit<Manager, D>: View
                     CreateView(document: $document,
                                model: model)
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label(String(localized: .localizable.add), systemImage: "plus")
                 }
             }
         }
