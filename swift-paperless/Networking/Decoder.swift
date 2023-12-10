@@ -29,9 +29,7 @@ func makeDecoder(tz: TimeZone) -> JSONDecoder {
         df.dateFormat = "yyyy-MM-dd"
 
         if let res = df.date(from: dateStr) {
-            if let res = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: res) {
-                return res
-            }
+            return res
         }
 
         throw DateDecodingError.invalidDate(string: dateStr)
