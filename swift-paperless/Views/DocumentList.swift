@@ -182,10 +182,9 @@ struct DocumentList: View {
 
             .swipeActions(edge: .leading) {
                 Button {
-                    print("Remove INBOX")
                     Task { await viewModel.removeInboxTags(document: document) }
                 } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
+                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
                 }
                 .tint(.accentColor)
             }
@@ -194,19 +193,19 @@ struct DocumentList: View {
                 Button {
                     navPath.append(NavigationState.detail(document: document))
                 } label: {
-                    Label("Edit", systemImage: "pencil")
+                    Label(String(localized: .localizable.edit), systemImage: "pencil")
                 }
 
                 Button {
                     Task { await viewModel.removeInboxTags(document: document) }
                 } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
+                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
                 }
 
                 Button(role: .destructive) {
                     Task { await onDeleteButtonPressed() }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
 
             } preview: {
@@ -218,7 +217,7 @@ struct DocumentList: View {
                 Button(role: documentDeleteConfirmation ? .none : .destructive) {
                     Task { await onDeleteButtonPressed() }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
                 .tint(.red)
             }

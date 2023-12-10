@@ -124,7 +124,7 @@ class DocumentStore: ObservableObject {
                 currentUser = user
             }
         } catch {
-            Logger.shared.error("Unable to get current user")
+            Logger.shared.error("Unable to get current user: \(error)")
 //            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
         }
     }

@@ -1348,6 +1348,17 @@
         }
       }
     },
+    "tagsRemoveInbox" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove inbox tags"
+          }
+        }
+      }
+    },
     "tasksPending" : {
       "extractionState" : "manual",
       "localizations" : {
