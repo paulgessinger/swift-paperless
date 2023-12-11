@@ -53,3 +53,28 @@ jobs:
 
       - name: Run tests
         run: fastlane tests
+
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      PRE_COMMIT_HOME: ${{ env.GITHUB_WORKSPACE }}/pre-commit
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
