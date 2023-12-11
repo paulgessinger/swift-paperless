@@ -14,14 +14,14 @@ struct ExtraHeadersView: View {
         @Binding var header: ConnectionManager.HeaderValue
         var body: some View {
             Form {
-                Section("Key") {
-                    TextField("Key", text: $header.key)
+                Section(String(localized: .login.extraHeadersKey)) {
+                    TextField(String(localized: .login.extraHeadersKey), text: $header.key)
                         .clearable($header.key)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
                 }
-                Section("Value") {
-                    TextField("Value", text: $header.value)
+                Section(String(localized: .login.extraHeadersValue)) {
+                    TextField(String(localized: .login.extraHeadersValue), text: $header.value)
                         .clearable($header.value)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
@@ -45,7 +45,7 @@ struct ExtraHeadersView: View {
                     }
                 }
             } footer: {
-                Text("extra_headers_description")
+                Text(.login.extraHeadersDescription)
             }
         }
 
@@ -56,13 +56,13 @@ struct ExtraHeadersView: View {
                         headers.append(.init(key: "Header", value: "Value"))
                     }
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label(String(localized: .localizable.add), systemImage: "plus")
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 EditButton()
             }
         }
-        .navigationTitle("Extra headers")
+        .navigationTitle(Text(.login.extraHeaders))
     }
 }

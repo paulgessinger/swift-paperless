@@ -52,7 +52,7 @@ struct CommonPicker: View {
                 .foregroundColor(.primary)
                 Spacer()
                 if selected {
-                    Label("Element is selected", systemImage: "checkmark")
+                    Label(String(localized: .localizable.elementIsSelected), systemImage: "checkmark")
                         .labelStyle(.iconOnly)
                 }
             }
@@ -87,7 +87,7 @@ struct CommonPicker: View {
                 .padding(.vertical, 2)
             Form {
                 Section {
-                    Row(String(localized: "Any"), selected: selection == FilterState.Filter.any) {
+                    Row(String(localized: .localizable.commonFilterAny), selected: selection == FilterState.Filter.any) {
                         selection = .any
                     }
                     Row(notAssignedLabel, selected: selection == FilterState.Filter.notAssigned) {
@@ -122,9 +122,9 @@ struct CommonPicker: View {
                         }
                     }
                 } header: {
-                    Picker(String(localized: "Selection mode", comment: "Common element selection mode (include/exclude)"), selection: $mode) {
-                        Text("Include element").tag(Mode.anyOf)
-                        Text("Exclude element").tag(Mode.noneOf)
+                    Picker(String(localized: .localizable.elementSelectionMode), selection: $mode) {
+                        Text(.localizable.includeElement).tag(Mode.anyOf)
+                        Text(.localizable.excludeElement).tag(Mode.noneOf)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
@@ -199,11 +199,11 @@ extension Correspondent: Pickable {
         \.correspondent
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.Correspondent.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.Correspondent.notAssignedPicker
-    static var singularLabel = String(localized: "Correspondent")
-    static var pluralLabel = String(localized: "Correspondents")
-    static var excludeLabel = String(localized: "Exclude correspondent")
+    static var notAssignedFilter = String(localized: .localizable.correspondentNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.correspondentNotAssignedPicker)
+    static var singularLabel = String(localized: .localizable.correspondent)
+    static var pluralLabel = String(localized: .localizable.correspondents)
+    static var excludeLabel = String(localized: .localizable.correspondentExclude)
 }
 
 extension DocumentType: Pickable {
@@ -213,11 +213,11 @@ extension DocumentType: Pickable {
         \.documentType
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.DocumentType.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.DocumentType.notAssignedPicker
-    static var singularLabel = String(localized: "Document type")
-    static var pluralLabel = String(localized: "Document types")
-    static var excludeLabel = String(localized: "Exclude document type")
+    static var notAssignedFilter = String(localized: .localizable.documentTypeNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.documentTypeNotAssignedPicker)
+    static var singularLabel = String(localized: .localizable.documentType)
+    static var pluralLabel = String(localized: .localizable.documentTypes)
+    static var excludeLabel = String(localized: .localizable.documentTypeExclude)
 }
 
 extension StoragePath: Pickable {
@@ -227,11 +227,11 @@ extension StoragePath: Pickable {
         \.storagePath
     }
 
-    static var notAssignedFilter = LocalizedStrings.Filter.StoragePath.notAssignedFilter
-    static var notAssignedPicker = LocalizedStrings.Filter.StoragePath.notAssignedPicker
-    static var singularLabel = String(localized: "Storage path")
-    static var pluralLabel = String(localized: "Storage paths")
-    static var excludeLabel = String(localized: "Exclude storage path")
+    static var notAssignedFilter = String(localized: .localizable.storagePathNotAssignedFilter)
+    static var notAssignedPicker = String(localized: .localizable.storagePathNotAssignedPicker)
+    static var singularLabel = String(localized: .localizable.storagePath)
+    static var pluralLabel = String(localized: .localizable.storagePaths)
+    static var excludeLabel = String(localized: .localizable.storagePathExclude)
 }
 
 struct CommonPickerEdit<Manager, D>: View
@@ -282,7 +282,7 @@ struct CommonPickerEdit<Manager, D>: View
             .foregroundColor(.primary)
             Spacer()
             if document[keyPath: Element.documentPath(D.self)] == value {
-                Label("Element is selected", systemImage: "checkmark")
+                Label(String(localized: .localizable.elementIsSelected), systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -349,7 +349,7 @@ struct CommonPickerEdit<Manager, D>: View
                     CreateView(document: $document,
                                model: model)
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label(String(localized: .localizable.add), systemImage: "plus")
                 }
             }
         }

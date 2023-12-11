@@ -14,7 +14,7 @@ import SwiftUI
 class DocumentStore: ObservableObject {
     // MARK: Publishers
 
-    @Published var documents: [UInt: Document] = [:]
+    @Published private(set) var documents: [UInt: Document] = [:]
     @Published private(set) var correspondents: [UInt: Correspondent] = [:]
     @Published private(set) var documentTypes: [UInt: DocumentType] = [:]
     @Published private(set) var tags: [UInt: Tag] = [:]
@@ -54,6 +54,7 @@ class DocumentStore: ObservableObject {
         }
     }
 
+    @MainActor
     func clearDocuments() {
         documents = [:]
     }
@@ -123,7 +124,7 @@ class DocumentStore: ObservableObject {
                 currentUser = user
             }
         } catch {
-            Logger.shared.error("Unable to get current user")
+            Logger.shared.error("Unable to get current user: \(error)")
 //            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
         }
     }

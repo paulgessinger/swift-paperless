@@ -18,93 +18,92 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("Active server") {
+            Section(String(localized: .settings.activeServer)) {
                 Text(connectionManager.apiHost ?? "No server")
             }
-
-            Section(LocalizedStrings.Settings.organization) {
+            Section(String(localized: .settings.organization)) {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
-                        .navigationTitle("Tags")
+                        .navigationTitle(Text(.localizable.tags))
                         .task { Task.detached { await store.fetchAllTags() }}
                 } label: {
-                    Label("Tags", systemImage: "tag.fill")
+                    Label(String(localized: .localizable.tags), systemImage: "tag.fill")
                 }
 
                 NavigationLink {
                     ManageView<CorrespondentManager>(store: store)
-                        .navigationTitle("Correspondents")
+                        .navigationTitle(Text(.localizable.correspondents))
                         .task { Task.detached { await store.fetchAllCorrespondents() }}
                 } label: {
-                    Label("Correspondents", systemImage: "person.fill")
+                    Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
                 }
 
                 NavigationLink {
                     ManageView<DocumentTypeManager>(store: store)
-                        .navigationTitle("Document types")
+                        .navigationTitle(Text(.localizable.documentTypes))
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
-                    Label("Document types", systemImage: "doc.fill")
+                    Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
                 }
 
                 NavigationLink {
                     ManageView<SavedViewManager>(store: store)
-                        .navigationTitle("Saved views")
+                        .navigationTitle(Text(.localizable.savedViews))
                         .task { Task.detached { await store.fetchAllDocumentTypes() }}
                 } label: {
-                    Label("Saved views", systemImage: "line.3.horizontal.decrease.circle.fill")
+                    Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
                 }
 
                 NavigationLink {
                     ManageView<StoragePathManager>(store: store)
-                        .navigationTitle("Storage paths")
+                        .navigationTitle(Text(.localizable.storagePaths))
                         .task { Task.detached { await store.fetchAllStoragePaths() }}
                 } label: {
-                    Label("Storage paths", systemImage: "archivebox.fill")
+                    Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
                 }
             }
 
-            Section(LocalizedStrings.Settings.preferences) {
+            Section(String(localized: .settings.preferences)) {
                 NavigationLink {
                     PreferencesView()
-                        .navigationTitle(LocalizedStrings.Settings.preferences)
+                        .navigationTitle(Text(.settings.preferences))
                 } label: {
-                    Label(LocalizedStrings.Settings.preferences, systemImage: "dial.low.fill")
+                    Label(String(localized: .settings.preferences), systemImage: "dial.low.fill")
                 }
             }
 
-            Section(LocalizedStrings.Settings.advanced) {
+            Section(String(localized: .settings.advanced)) {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Label("Extra headers", systemImage: "list.bullet.rectangle.fill")
+                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
             }
 
-            Section(LocalizedStrings.Settings.Details.title) {
+            Section(String(localized: .settings.detailsTitle)) {
                 NavigationLink {
                     LibrariesView()
                 } label: {
-                    Label(LocalizedStrings.Settings.Details.libraries, systemImage: "books.vertical.fill")
+                    Label(String(localized: .settings.detailsLibraries), systemImage: "books.vertical.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
                 } label: {
-                    Label(LocalizedStrings.Settings.Details.sourceCode, systemImage: "terminal.fill")
+                    Label(String(localized: .settings.detailsSourceCode), systemImage: "terminal.fill")
                         .accentColor(.primary)
                 }
 
                 NavigationLink {
                     PrivacyView()
                 } label: {
-                    Label(LocalizedStrings.Settings.Details.privacy, systemImage: "hand.raised.fill")
+                    Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
                 }
 
                 Button {
                     UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
                 } label: {
-                    Label(LocalizedStrings.Settings.Details.feedback, systemImage: "paperplane.fill")
+                    Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
                         .accentColor(.primary)
                 }
             }
@@ -119,7 +118,7 @@ struct SettingsView: View {
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }
 
-        .navigationTitle(LocalizedStrings.Settings.title)
+        .navigationTitle(Text(.settings.title))
     }
 }
 

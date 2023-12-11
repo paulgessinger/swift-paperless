@@ -16,7 +16,7 @@ struct LibrariesView: View {
         do {
             text = try String(contentsOfFile: filepath)
         } catch {
-            fatalError(LocalizedStrings.Settings.Details.librariesLoadError)
+            fatalError(String(localized: .settings.detailsLibrariesLoadError))
         }
     }
 
@@ -24,7 +24,7 @@ struct LibrariesView: View {
         ScrollView(.vertical) {
             Markdown(text)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .navigationTitle(LocalizedStrings.Settings.Details.libraries)
+                .navigationTitle(Text(.settings.detailsLibraries))
                 .padding()
         }
     }

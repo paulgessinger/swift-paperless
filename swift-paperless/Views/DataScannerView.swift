@@ -88,7 +88,7 @@ struct HighlightView: View {
                 HStack(spacing: 10) {
                     ProgressView()
                     if let asn {
-                        Text("ASN: \(String(asn))")
+                        Text(.localizable.asnSpecific(asn))
                             .fixedSize()
                     }
                 }
@@ -142,11 +142,11 @@ struct HighlightView: View {
                 .transition(.identity.combined(with: .opacity).animation(.default.delay(0.2)))
 
             case .noAsn:
-                Text("No ASN: \(text)")
+                Text(.localizable.dataScannerNoAsn(text))
                     .fixedSize()
                     .padding()
             case let .invalidAsn(asn):
-                Text("Invalid ASN \(asn)")
+                Text(.localizable.dataScannerInvalidAsn(asn))
                     .fixedSize()
                     .padding()
             }
@@ -363,7 +363,8 @@ struct TypeAsnView: View {
         case none
         case loading(asn: UInt)
         case valid(document: Document)
-        case invalid
+        case notAnAsn(asn: String)
+        case invalid(asn: UInt)
     }
 
     @StateObject private var debounce = DebounceObject(delay: 0.1)
@@ -378,6 +379,18 @@ struct TypeAsnView: View {
             return UInt(debounce.text)
         }
         return nil
+    }
+
+    private func errorLabel(_ label: String) -> some View {
+        Label(label, systemImage: "xmark")
+            .labelStyle(.iconOnly)
+            .padding(10)
+            .foregroundColor(.white)
+            .background(
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.red)
+            )
+            .padding(10)
     }
 
     var body: some View {
@@ -398,10 +411,10 @@ struct TypeAsnView: View {
                     .padding(.bottom, 0)
             }
             HStack {
-                Text("ASN:")
+                Text(.localizable.asnPlaceholder)
                     .padding(.leading)
                     .padding(.vertical, 19)
-                TextField("1234", text: $debounce.text)
+                TextField(String("1234"), text: $debounce.text)
                     .focused($focused)
                     .keyboardType(.numberPad)
                     .padding(.vertical, 19)
@@ -413,7 +426,7 @@ struct TypeAsnView: View {
                     ProgressView()
                         .padding(20)
                 case let .valid(document):
-                    Button("Open") {
+                    Button(String(localized: .localizable.open)) {
                         action(document)
                     }
                     .padding(10)
@@ -423,16 +436,10 @@ struct TypeAsnView: View {
                             .fill(Color.accentColor)
                     )
                     .padding(10)
-                case .invalid:
-                    Label("Invalid ASN", systemImage: "xmark")
-                        .labelStyle(.iconOnly)
-                        .padding(10)
-                        .foregroundColor(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color.red)
-                        )
-                        .padding(10)
+                case let .notAnAsn(asn):
+                    errorLabel(String(localized: .localizable.dataScannerNoAsn(asn)))
+                case let .invalid(asn):
+                    errorLabel(String(localized: .localizable.dataScannerInvalidAsn(asn)))
                 }
             }
         }
@@ -454,7 +461,7 @@ struct TypeAsnView: View {
 
             guard let asn else {
                 withAnimation {
-                    status = .invalid
+                    status = .notAnAsn(asn: debounce.text)
                 }
                 return
             }
@@ -470,7 +477,7 @@ struct TypeAsnView: View {
                     }
                 } else {
                     withAnimation {
-                        status = .invalid
+                        status = .invalid(asn: asn)
                     }
                 }
             }
@@ -502,7 +509,7 @@ struct DataScannerView: View {
                 Button(role: .cancel) {
                     dismiss()
                 } label: {
-                    Label("Cancel", systemImage: "xmark")
+                    Label(String(localized: .localizable.cancel), systemImage: "xmark")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .padding(15)
@@ -528,7 +535,7 @@ struct DataScannerView: View {
                         }
                     }
                 } label: {
-                    Label("Type in ASN", systemImage: "keyboard")
+                    Label(String(localized: .localizable.dataScannerTypeInAsn), systemImage: "keyboard")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .padding(15)

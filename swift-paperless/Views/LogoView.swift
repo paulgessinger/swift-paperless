@@ -12,7 +12,7 @@ struct LogoView: View {
         HStack {
             Image(systemName: "leaf.fill")
                 .foregroundColor(.accentColor)
-            Text("Paperless")
+            Text(.localizable.appName)
         }
     }
 }

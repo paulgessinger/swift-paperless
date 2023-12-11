@@ -182,10 +182,9 @@ struct DocumentList: View {
 
             .swipeActions(edge: .leading) {
                 Button {
-                    print("Remove INBOX")
                     Task { await viewModel.removeInboxTags(document: document) }
                 } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
+                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
                 }
                 .tint(.accentColor)
             }
@@ -194,19 +193,19 @@ struct DocumentList: View {
                 Button {
                     navPath.append(NavigationState.detail(document: document))
                 } label: {
-                    Label("Edit", systemImage: "pencil")
+                    Label(String(localized: .localizable.edit), systemImage: "pencil")
                 }
 
                 Button {
                     Task { await viewModel.removeInboxTags(document: document) }
                 } label: {
-                    Label("Remove inbox tags", systemImage: "tray")
+                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
                 }
 
                 Button(role: .destructive) {
                     Task { await onDeleteButtonPressed() }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
 
             } preview: {
@@ -218,7 +217,7 @@ struct DocumentList: View {
                 Button(role: documentDeleteConfirmation ? .none : .destructive) {
                     Task { await onDeleteButtonPressed() }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
                 .tint(.red)
             }
@@ -254,7 +253,8 @@ struct DocumentList: View {
                         List {
                             HStack {
                                 Spacer()
-                                Text("No documents")
+                                // @TODO: Make nice whimsy display
+                                Text(.localizable.noDocuments)
                                 Spacer()
                             }
                             .listRowInsets(EdgeInsets())
@@ -300,15 +300,16 @@ struct DocumentList: View {
             }
         }
 
-        .confirmationDialog(title: { _ in Text("Delete document") }, unwrapping: $documentToDelete) { document in
+        // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
+        .confirmationDialog(title: { _ in Text(.localizable.documentDelete) }, unwrapping: $documentToDelete) { document in
             Button(role: .destructive) {
                 Task { try? await store.deleteDocument(document) }
-            } label: { Text("Delete document") }
+            } label: { Text(.localizable.documentDelete) }
             Button(role: .cancel) {
                 documentToDelete = nil
-            } label: { Text("Cancel") }
+            } label: { Text(.localizable.cancel) }
         } message: { document in
-            Text("Delete document \"\(document.title)\"")
+            Text(.localizable.deleteDocumentName(document.title))
         }
     }
 }

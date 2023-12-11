@@ -37,12 +37,12 @@ struct TaskActivityToolbar: View {
                     Menu {
                         ForEach(store.activeTasks.filter { $0.status == .STARTED }, id: \.id) { task in
                             let name = (task.taskFileName ?? task.taskName) ?? "unknown task"
-                            Text("Processing \(name)")
+                            Text(.localizable.tasksProcessing(name))
                         }
                         let queued = store.activeTasks.filter { $0.status != .STARTED }.count
                         if queued > 0 {
                             Divider()
-                            Text("\(queued) pending task(s)")
+                            Text(.localizable.tasksPending(UInt(queued)))
                         }
                     } label: {
                         TaskActivityView(text: "\(number)")
@@ -197,7 +197,7 @@ struct DocumentView: View {
                         Button {
                             showFileImporter = true
                         } label: {
-                            Label("Add", systemImage: "plus")
+                            Label(String(localized: .localizable.add), systemImage: "plus")
                         }
                     }
 
@@ -207,7 +207,7 @@ struct DocumentView: View {
                     ToolbarItemGroup(placement: .navigationBarLeading) {
                         Menu {
                             NavigationLink(value: NavigationState.settings) {
-                                Label(LocalizedStrings.Settings.title, systemImage: "gear")
+                                Label(String(localized: .settings.title), systemImage: "gear")
                             }
 
                             Divider()
@@ -215,11 +215,11 @@ struct DocumentView: View {
                             Button(role: .destructive) {
                                 logoutRequested = true
                             } label: {
-                                Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                                Label(String(localized: .localizable.logout), systemImage: "rectangle.portrait.and.arrow.right")
                             }
 
                         } label: {
-                            Label(String(localized: "Menu of more options", comment: "'More' menu"), systemImage: "ellipsis.circle")
+                            Label(String(localized: .localizable.detailsMenuLabel), systemImage: "ellipsis.circle")
                                 .labelStyle(.iconOnly)
                         }
 
@@ -230,7 +230,7 @@ struct DocumentView: View {
                                     showDataScanner = true
                                 }
                             } label: {
-                                Label("document_view.toolbar.asn", systemImage: "number.circle")
+                                Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
                             }
                         } else {
                             Button {
@@ -238,7 +238,7 @@ struct DocumentView: View {
                                     showTypeAsn.toggle()
                                 }
                             } label: {
-                                Label("document_view.toolbar.asn", systemImage: "number.circle")
+                                Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
                             }
                         }
                     }
@@ -258,7 +258,7 @@ struct DocumentView: View {
                             Task { await store.fetchTasks() }
                         },
                         title: {
-                            Text("Add document")
+                            Text(.localizable.documentAdd)
                         }
                     )
                     .environmentObject(store)
@@ -268,18 +268,19 @@ struct DocumentView: View {
                     DataScannerView()
                 }
 
-                .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
-                    value in
-                    if !value {
-                        error = nil
-                    }
-                })) {}
+                // @TODO: What was this for?
+//                .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
+//                    value in
+//                    if !value {
+//                        error = nil
+//                    }
+//                })) {}
 
-                .confirmationDialog(String(localized: "Are you sure?", comment: "Logout confirmation"), isPresented: $logoutRequested, titleVisibility: .visible) {
-                    Button("Logout", role: .destructive) {
+                .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
+                    Button(String(localized: .localizable.logout), role: .destructive) {
                         connectionManager.logout()
                     }
-                    Button("Cancel", role: .cancel) {}
+                    Button(String(localized: .localizable.cancel), role: .cancel) {}
                 }
 
                 .task {

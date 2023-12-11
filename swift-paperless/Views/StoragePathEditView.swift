@@ -18,7 +18,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     {
         _storagePath = State(initialValue: storagePath)
         self.onSave = onSave
-        saveLabel = String(localized: "Save", comment: "Storage path edit")
+        saveLabel = String(localized: .localizable.save)
     }
 
     var isValid: Bool {
@@ -28,18 +28,18 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     var body: some View {
         Form {
             Section {
-                TextField("Title", text: $storagePath.name)
+                TextField(String(localized: .localizable.title), text: $storagePath.name)
                     .clearable($storagePath.name)
 
-                TextField("Path", text: $storagePath.path)
+                TextField(String(localized: .localizable.path), text: $storagePath.path)
                     .clearable($storagePath.path)
                     .autocorrectionDisabled(true)
                     .textInputAutocapitalization(.never)
 
             } header: {
-                Text("Properties")
+                Text(.localizable.properties)
             } footer: {
-                Text("storage_path_format_explanation")
+                Text(.localizable.storagePathFormatExplanation)
             }
 
             MatchEditView(element: $storagePath)
@@ -59,7 +59,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
             }
         }
 
-        .navigationTitle(Element.self is SavedView.Type ? "Edit storage path" : "Create storage path")
+        .navigationTitle(Element.self is SavedView.Type ? String(localized: .localizable.storagePathEditTitle) : String(localized: .localizable.storagePathCreateTitle))
 
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -68,7 +68,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 extension StoragePathEditView where Element == ProtoStoragePath {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoStoragePath(), onSave: onSave)
-        saveLabel = String(localized: "Add", comment: "Save storage path")
+        saveLabel = String(localized: .localizable.add)
     }
 }
 
