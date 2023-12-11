@@ -38,7 +38,8 @@ jobs:
         run: 'fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
-    runs-on: macos-latest
+    runs-on: macos-13
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
