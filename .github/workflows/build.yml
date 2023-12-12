@@ -3,9 +3,6 @@ name: Build and test the application
 on:
   push:
   
-env:
-  HOMEBREW_NO_AUTO_UPDATE: 1 
-
 jobs:
   build:
     runs-on: macos-13
