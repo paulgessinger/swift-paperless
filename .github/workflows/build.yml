@@ -35,10 +35,10 @@ jobs:
           xcode-version: ${{ matrix.xcode }}
 
       - name: Install dependencies
-        run: brew install fastlane
+        run: bundle install
 
       - name: Compile the main application
-        run: 'fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
+        run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
     runs-on: macos-13
@@ -52,10 +52,10 @@ jobs:
           xcode-version: "15.0.1"
 
       - name: Install dependencies
-        run: brew install fastlane
+        run: bundle install
 
       - name: Run tests
-        run: fastlane tests
+        run: bundle exec fastlane tests
 
   lint:
     runs-on: ubuntu-latest
