@@ -1,7 +1,11 @@
-name: Build and test the application
+name: Build
 
 on:
   push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -32,19 +36,49 @@ jobs:
           xcode-version: ${{ matrix.xcode }}
 
       - name: Install dependencies
-        run: brew install fastlane
+        run: bundle install
 
       - name: Compile the main application
-        run: fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"
+        run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
-    runs-on: macos-latest
+    runs-on: macos-13
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "15.0.1"
+
       - name: Install dependencies
-        run: brew install fastlane
+        run: bundle install
 
       - name: Run tests
-        run: fastlane tests
+        run: bundle exec fastlane tests
+
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      PRE_COMMIT_HOME: '${{ github.workspace }}/pre-commit'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure

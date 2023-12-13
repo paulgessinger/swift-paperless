@@ -70,6 +70,7 @@ platform :ios do
     build_app(
       scheme: "swift-paperless",
       destination: "platform=iOS Simulator,OS=#{ios},name=#{device}",
+      xcargs: "-skipPackagePluginValidation"
     )
   end
 end
