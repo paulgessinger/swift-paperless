@@ -158,7 +158,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         .confirmationDialog(title: {
             _ in Text(String(localized: .localizable.confirmationPromptTitle))
         }, unwrapping: $elementToDelete, actions: { e in
-            Button(String(localized: .localizable.cancel), role: .destructive) {
+            Button(String(localized: .localizable.delete), role: .destructive) {
                 withAnimation {
                     elements.removeAll(where: { $0 == e })
                 }
