@@ -111,15 +111,15 @@ struct LoginView: View {
     @State private var showDetails: Bool = false
 
     private func checkUrl(string value: String) async {
-        Logger.shared.debug("Checking backend URL \(value)")
+        Logger.shared.info("Checking backend URL \(value)")
         guard !value.isEmpty else {
-            Logger.shared.trace("Value is empty")
+            Logger.shared.info("Value is empty")
             urlState = .empty
             return
         }
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
-            Logger.shared.trace("Cannot convert to url")
+            Logger.shared.info("Cannot convert to URL: \(value)")
             urlState = .error(info: "Could not convert to URL: \(value)")
             return
         }
@@ -132,7 +132,7 @@ struct LoginView: View {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.debug("Checking API status was not 200 but \(statusCode)")
+                Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
                 urlState = .error(info: "Request to \(apiUrl) returned \(statusCode)")
                 return
             }
@@ -140,20 +140,20 @@ struct LoginView: View {
             let _ = try JSONDecoder().decode(Response.self, from: data)
             urlState = .valid
         } catch {
-            Logger.shared.debug("Checking API error: \(error)")
+            Logger.shared.error("Checking API error: \(error)")
             urlState = .error(info: "Request to \(apiUrl) gave error:\n\(error)")
             return
         }
     }
 
     private func login() async -> Bool {
-        Logger.shared.trace("Attempting login with url \(url.text)")
+        Logger.shared.info("Attempting login with url \(url.text)")
 
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
-                Logger.shared.debug("Error making URL for logging in")
+                Logger.shared.error("Error making URL for logging in (url: \(url.text)")
                 return false
             }
 
@@ -168,13 +168,13 @@ struct LoginView: View {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.debug("Token request response was not 200 but \(statusCode)")
+                Logger.shared.error("Token request response was not 200 but \(statusCode)")
                 return false
             }
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-            Logger.shared.trace("Login successful")
+            Logger.shared.info("Login successful")
 
             withAnimation { loginState = .valid }
 
@@ -185,7 +185,7 @@ struct LoginView: View {
             return true
 
         } catch {
-            Logger.shared.error("\(error)")
+            Logger.shared.error("Error during login with url \(error)")
         }
         return false
     }
@@ -328,19 +328,6 @@ struct LoginView: View {
             }
         }
 
-        .toast(isPresenting: $showError, duration: 3, offsetY: 5) {
-            AlertToast(displayMode: .hud, type: .error(.red),
-                       title: "an error", subTitle: "Tap for more information")
-        } onTap: {
-            showErrorDetail = true
-        }
-
-        .alert("Here is a bunch more detail. This is a lot more. I could even print the whole error message here, I don't even care", isPresented: $showErrorDetail) {
-            Button("Copy to clipboard") {
-                UIPasteboard.general.string = "I am the error string"
-            }
-            Button("ok", role: .cancel) {}
-        }
     }
 }
 
