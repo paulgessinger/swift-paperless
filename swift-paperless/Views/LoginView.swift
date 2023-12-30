@@ -264,17 +264,18 @@ struct LoginView: View {
 
                 Section {
                     Button(action: {
-                        Task {
 //                            showError = true
 //                            errorController.push(error: GenericError(message: "Manager test"))
-                            errorController.push(title: "Error logging in")
+                        errorController.push(message: "Test error",
+                                             details: "Some more info!")
+//                            errorController.push(title: "Error logging in")
+//                            print("ERROR SIM")
 
-                            if await login() {
-                                withAnimation { loginState = .valid }
-                            } else {
-                                withAnimation { loginState = .error }
-                            }
-                        }
+//                            if await login() {
+//                                withAnimation { loginState = .valid }
+//                            } else {
+//                                withAnimation { loginState = .error }
+//                            }
                     }) {
                         HStack {
                             Spacer()
@@ -326,8 +327,18 @@ struct LoginView: View {
             .sheet(isPresented: $showDetails) {
                 DetailsView(connectionManager: connectionManager)
             }
-        }
 
+//            .toast(isPresenting: $errorController.show) {
+//                errorController.toast
+//            }
+//
+//            .onReceive(errorController.$toast) {_ in
+//                print("Receive")
+//                errorController.show = true
+//            }
+
+//            .errorOverlay(errorController: errorController)
+        }
     }
 }
 
