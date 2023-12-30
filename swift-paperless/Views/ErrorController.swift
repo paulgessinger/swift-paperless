@@ -5,7 +5,20 @@ struct ErrorDisplay: ViewModifier {
     @ObservedObject var errorController: ErrorController
     @State private var detail: DisplayableError? = nil
     @State private var alertOffset = CGSize.zero
-    @State private var dragInitiated = false
+
+    @State private var dismissTask: Task<Void, Never>? = nil
+    @State private var ready = false
+
+    func createAutoDismissTask(duration: Double) -> Task<Void, Never> {
+        Task {
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else {
+                return
+            }
+            print("Check dismiss")
+            errorController.clear()
+        }
+    }
 
     func body(content: Content) -> some View {
         content
@@ -50,9 +63,9 @@ struct ErrorDisplay: ViewModifier {
                     .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
                         .onChanged { gesture in
                             alertOffset = gesture.translation
-                            dragInitiated = true
+                            dismissTask?.cancel()
                         }
-                        .onEnded({ _ in
+                        .onEnded { _ in
                             print("Drag end \(alertOffset)")
                             if alertOffset.height < -30 {
                                 print("Clear only")
@@ -64,26 +77,32 @@ struct ErrorDisplay: ViewModifier {
                                     errorController.clear(animate: false)
                                 }
                             } else if alertOffset == .zero {
-                                print("Clear and how")
+                                print("Clear and show")
                                 if error.details != nil {
                                     detail = error
                                 }
                                 errorController.clear()
                             } else {
                                 print("Animate back")
-                                withAnimation(.spring) {
+                                dismissTask?.cancel()
+                                withAnimation(.spring(duration: 0.3)) {
                                     alertOffset = .zero
+                                }
+                                Task {
+                                    try? await Task.sleep(for: .seconds(0.31))
+                                    dismissTask = createAutoDismissTask(duration: duration)
                                 }
                             }
                         }
-                        ))
+                    )
+
+                    .disabled(!ready)
 
                     .task {
-                        try? await Task.sleep(for: .seconds(duration))
-                        print(alertOffset)
-                        if alertOffset == .zero, !dragInitiated {
-                            errorController.clear()
-                        }
+                        ready = false
+                        dismissTask = createAutoDismissTask(duration: duration)
+                        try? await Task.sleep(for: .seconds(0.75))
+                        ready = true
                     }
 
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -93,17 +112,16 @@ struct ErrorDisplay: ViewModifier {
                 }
             }
 
-            .alert(title: { detail in Text(detail.message) }, unwrapping: $detail,
-                   actions: { detail in
+            .alert(title: { detail in Text(detail.message) }, unwrapping: $detail) { detail in
+                Button("Copy to clipboard") {
+                    UIPasteboard.general.string = detail.details
+                }
 
-                       Button("Copy to clipboard") {
-                           UIPasteboard.general.string = detail.details
-                       }
+                Button("Ok", role: .cancel) {}
 
-                       Button("Ok", role: .cancel) {}
-
-                   },
-                   message: { detail in Text(detail.details!) })
+            } message: { detail in
+                Text(detail.details!)
+            }
 
             .onReceive(errorController.$state) { value in
                 if case .none = value {
