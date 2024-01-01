@@ -92,13 +92,18 @@ struct LoginView: View {
         }
     }
 
-    private enum LoginState {
-        case none
-        case valid
-        case error
-    }
+    private enum LoginError: DisplayableError, Equatable {
+        case urlInvalid
+        case invalidLogin
 
-    @State private var loginState = LoginState.none
+        var message: String {
+            "LoginError"
+        }
+
+        var details: String? {
+            nil
+        }
+    }
 
     @State private var showError = false
     @State private var showErrorDetail = false
@@ -128,11 +133,13 @@ struct LoginView: View {
         connectionManager.extraHeaders.apply(toRequest: &request)
 
         do {
+            Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
+                errorController.push(error: LoginError.invalidLogin)
                 urlState = .error(info: "Request to \(apiUrl) returned \(statusCode)")
                 return
             }
@@ -154,6 +161,7 @@ struct LoginView: View {
 
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.error("Error making URL for logging in (url: \(url.text)")
+                errorController.push(error: LoginError.urlInvalid)
                 return false
             }
 
@@ -175,8 +183,6 @@ struct LoginView: View {
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
             Logger.shared.info("Login successful")
-
-            withAnimation { loginState = .valid }
 
             try await Task.sleep(for: .seconds(0.5))
 
@@ -264,43 +270,17 @@ struct LoginView: View {
 
                 Section {
                     Button(action: {
-//                            showError = true
-//                            errorController.push(error: GenericError(message: "Manager test"))
-                        errorController.push(message: "Test error",
-                                             details: "Some more info!")
-//                            errorController.push(title: "Error logging in")
-//                            print("ERROR SIM")
-
-//                            if await login() {
-//                                withAnimation { loginState = .valid }
-//                            } else {
-//                                withAnimation { loginState = .error }
-//                            }
+                        Task {
+                            await login()
+                        }
                     }) {
                         HStack {
                             Spacer()
                             Text(.login.buttonLabel)
-                            if loginState == .valid {
-                                Label(String(localized: .login.buttonValid), systemImage: "checkmark.circle.fill")
-                                    .labelStyle(.iconOnly)
-                            } else if loginState == .error {
-                                Label(String(localized: .login.buttonError), systemImage: "xmark.circle.fill")
-                                    .labelStyle(.iconOnly)
-                            }
                             Spacer()
                         }
-                        .foregroundColor({
-                            switch loginState {
-                            case .valid:
-                                Color.accentColor
-                            case .error:
-                                Color.red
-                            case .none:
-                                Color.primary
-                            }
-                        }())
                     }
-//                    .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
+                    .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
                 }
             }
             .onChange(of: url.debouncedText) { value in
@@ -311,8 +291,6 @@ struct LoginView: View {
                     }
                 }
             }
-            .onChange(of: username) { _ in withAnimation { loginState = .none }}
-            .onChange(of: password) { _ in withAnimation { loginState = .none }}
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -327,17 +305,6 @@ struct LoginView: View {
             .sheet(isPresented: $showDetails) {
                 DetailsView(connectionManager: connectionManager)
             }
-
-//            .toast(isPresenting: $errorController.show) {
-//                errorController.toast
-//            }
-//
-//            .onReceive(errorController.$toast) {_ in
-//                print("Receive")
-//                errorController.show = true
-//            }
-
-//            .errorOverlay(errorController: errorController)
         }
     }
 }
