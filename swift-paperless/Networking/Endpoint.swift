@@ -67,6 +67,10 @@ extension Endpoint {
         Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
     }
 
+    static func nextAsn() -> Endpoint {
+        Endpoint(path: "/api/documents/next_asn", queryItems: [])
+    }
+
     static func searchAutocomplete(term: String, limit: UInt = 10) -> Endpoint {
         Endpoint(
             path: "/api/search/autocomplete",

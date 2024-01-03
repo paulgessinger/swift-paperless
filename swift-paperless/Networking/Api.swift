@@ -481,7 +481,8 @@ extension ApiRepository: Repository {
         }
     }
 
-    func nextAsn() async -> UInt {
+    private func nextAsnCompatibility() async -> UInt {
+        Logger.shared.info("Getting next ASN with legacy compatibility method")
         var fs = FilterState()
         fs.sortField = .asn
         fs.sortOrder = .descending
@@ -495,7 +496,7 @@ extension ApiRepository: Repository {
             let (data, res) = try await URLSession.shared.data(for: request)
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
                 Logger.shared.error("Error fetching document by for next ASN: status code != 200")
-                return 1
+                return 0
             }
 
             let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
@@ -506,6 +507,39 @@ extension ApiRepository: Repository {
         }
 
         return 0
+    }
+
+    private func nextAsnDirectEndpoint() async -> UInt {
+        Logger.shared.info("Getting next ASN with dedicated endpoint")
+        let request = request(.nextAsn())
+
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+            let code = (res as? HTTPURLResponse)?.statusCode ?? 0
+            guard code == 200 else {
+                Logger.shared.error("Error fetching next ASN: status code \(code) != 200")
+                return 0
+            }
+
+            let asn = try decoder.decode(UInt.self, from: data)
+            Logger.shared.info("Have next ASN \(asn)")
+            return asn
+        } catch {
+            Logger.shared.error("Error fetching next ASN: \(error)")
+            return 0
+        }
+    }
+
+    func nextAsn() async -> UInt {
+        if apiVersion == nil || backendVersion == nil {
+            await ensureBackendVersions()
+        }
+
+        if let backendVersion, backendVersion >= (2, 0, 0) {
+            return await nextAsnDirectEndpoint()
+        } else {
+            return await nextAsnCompatibility()
+        }
     }
 
     func users() async -> [User] { await all(User.self) }
