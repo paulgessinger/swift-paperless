@@ -158,9 +158,22 @@ class ApiDocumentSource: DocumentSource {
 class ApiRepository {
     let connection: Connection
 
+    private var apiVersion: UInt?
+    private var backendVersion: (UInt, UInt, UInt)?
+
     init(connection: Connection) {
         self.connection = connection
         Logger.shared.trace("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+
+        Task {
+            await ensureBackendVersions()
+
+            if let apiVersion, let backendVersion {
+                Logger.shared.info("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
+            } else {
+                Logger.shared.error("Did not get backend version info")
+            }
+        }
     }
 
     private var apiToken: String {
@@ -184,7 +197,7 @@ class ApiRepository {
         Logger.shared.trace("Creating API request for URL \(url)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json; version=2", forHTTPHeaderField: "Accept")
+        request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         return request
     }
@@ -608,8 +621,52 @@ extension ApiRepository: Repository {
 
             return try decoder.decode([PaperlessTask].self, from: data)
         } catch {
-            Logger.shared.debug("Unable to load tasks: \(error)")
+            Logger.shared.error("Unable to load tasks: \(error)")
             return []
+        }
+    }
+
+    private func ensureBackendVersions() async {
+        let request = request(.root())
+        do {
+            let (data, res) = try await URLSession.shared.data(for: request)
+
+            guard let res = res as? HTTPURLResponse else {
+                Logger.shared.error("Unable to get API and backend version: Not an HTTP response")
+                return
+            }
+
+            let code: Int? = res.statusCode
+
+            guard code == 200 else {
+                Logger.shared.error("Unable to get API and backend version: status code: \(code ?? 0), \(data)")
+                return
+            }
+
+            guard let backend = res.value(forHTTPHeaderField: "X-Version") else {
+                Logger.shared.error("Unable to get API and backend version: X-Version not found")
+                return
+            }
+
+            let parts = backend.components(separatedBy: ".").compactMap { UInt($0) }
+            guard parts.count == 3 else {
+                Logger.shared.error("Unable to get API and backend version: Invalid format \(backend)")
+                return
+            }
+
+            let backendVersion = (parts[0], parts[1], parts[2])
+
+            guard let apiVersion = res.value(forHTTPHeaderField: "X-Api-Version"), let apiVersion = UInt(apiVersion) else {
+                Logger.shared.error("Unable to get API and backend version: X-Api-Version not found")
+                return
+            }
+
+            self.apiVersion = apiVersion
+            self.backendVersion = backendVersion
+
+        } catch {
+            Logger.shared.error("Unable to get API and backend version: status code: \(error)")
+            return
         }
     }
 }

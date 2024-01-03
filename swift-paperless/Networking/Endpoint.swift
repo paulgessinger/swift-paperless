@@ -19,6 +19,10 @@ struct Endpoint {
 }
 
 extension Endpoint {
+    static func root() -> Endpoint {
+        Endpoint(path: "/api", queryItems: [])
+    }
+
     static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = 50) -> Endpoint {
         let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
 
