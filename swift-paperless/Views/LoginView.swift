@@ -116,16 +116,16 @@ struct LoginView: View {
     @State private var showDetails: Bool = false
 
     private func checkUrl(string value: String) async {
-        Logger.shared.info("Checking backend URL \(value)")
+        Logger.shared.notice("Checking backend URL \(value)")
         guard !value.isEmpty else {
-            Logger.shared.info("Value is empty")
+            Logger.shared.notice("Value is empty")
             urlState = .empty
             return
         }
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
-            Logger.shared.info("Cannot convert to URL: \(value)")
-            urlState = .error(info: "Could not convert to URL: \(value)")
+            Logger.shared.notice("Cannot convert to URL: \(value)")
+            urlState = .error(info: String(localized: .login.errorCouldNotConvertURL(value)))
             return
         }
 
@@ -133,7 +133,7 @@ struct LoginView: View {
         connectionManager.extraHeaders.apply(toRequest: &request)
 
         do {
-            Logger.shared.info("Checking valid-looking URL \(apiUrl)")
+            Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
             let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -154,13 +154,13 @@ struct LoginView: View {
     }
 
     private func login() async -> Bool {
-        Logger.shared.info("Attempting login with url \(url.text)")
+        Logger.shared.notice("Attempting login with url \(url.text)")
 
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
-                Logger.shared.error("Error making URL for logging in (url: \(url.text)")
+                Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
                 errorController.push(error: LoginError.urlInvalid)
                 return false
             }
@@ -182,11 +182,10 @@ struct LoginView: View {
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-            Logger.shared.info("Login successful")
+            Logger.shared.notice("Login successful")
 
             try await Task.sleep(for: .seconds(0.5))
 
-            // @TODO Change scheme!
             try connectionManager.set(base: baseUrl, token: tokenResponse.token)
             return true
 

@@ -198,11 +198,11 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
 
         func dataScanner(_: DataScannerViewController, didTapOn item: RecognizedItem) {
             guard case let .barcode(text) = item else {
-                Logger.shared.trace("Tapped on none-barcode element")
+                Logger.shared.notice("Tapped on none-barcode element")
                 return
             }
             guard let payload = text.observation.payloadStringValue else {
-                Logger.shared.trace("Tapped on element without payload")
+                Logger.shared.notice("Tapped on element without payload")
                 return
             }
 
@@ -212,7 +212,7 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             }
 
             guard let asn = extractAsn(payload, patterns: patterns) else {
-                Logger.shared.trace("Tapped on element but failed to extract ASN")
+                Logger.shared.notice("Tapped on element but failed to extract ASN")
                 return
             }
 

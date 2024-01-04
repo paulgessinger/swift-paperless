@@ -26,7 +26,7 @@ class FilterModel: ObservableObject {
             Logger.shared.trace("Decoded filter state from UserDefaults: \(String(decoding: data, as: UTF8.self)) -> \(String(describing: value)) -> ")
             return value
         } catch {
-            Logger.shared.trace("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
+            Logger.shared.warning("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
             return FilterState()
         }
     }() {
@@ -37,7 +37,7 @@ class FilterModel: ObservableObject {
             }
 
             guard let s = try? JSONEncoder().encode(filterState) else {
-                Logger.shared.trace("Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
+                Logger.shared.warning("Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
                 return
             }
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")

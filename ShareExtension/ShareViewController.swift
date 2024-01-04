@@ -66,15 +66,15 @@ private extension AttachmentManager {
             return
         }
 
-        Logger.shared.trace("Load attach")
+        Logger.shared.notice("Load attach")
         attachment.loadItem(forTypeIdentifier: "com.adobe.pdf", options: nil,
                             completionHandler: didLoadItem)
 
-        Logger.shared.trace("Load preview")
+        Logger.shared.notice("Load preview")
         attachment.loadPreviewImage(options: [:], completionHandler: { sc, error in
-            Logger.shared.trace("Preview completion")
+            Logger.shared.notice("Preview completion")
             if error != nil || sc == nil {
-                Logger.shared.trace("No preview: error: \(String(describing: error))")
+                Logger.shared.notice("No preview: error: \(String(describing: error))")
                 return
             }
 
@@ -95,7 +95,7 @@ class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        Logger.shared.trace("Paperless share extension viewDidLoad fired")
+        Logger.shared.notice("Paperless share extension viewDidLoad fired")
 
         let shareView = ShareView(attachmentManager: attachmentManager,
                                   callback: {
