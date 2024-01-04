@@ -166,7 +166,7 @@ class ErrorController: ObservableObject {
     var details: String? = nil
 
     // @TODO: Change this to localized
-    private static let defaultTitle = "An error occurred"
+    private static let defaultTitle = String(localized: .localizable.errorDefaultMessage)
 
     func push(error: Error, message: String? = nil) {
         if let le = error as? LocalizedError {
@@ -218,7 +218,7 @@ class ErrorController: ObservableObject {
 }
 
 private struct PreviewError: LocalizedError {
-    var errorDescription: String? { "Some kind of error ocurred!" }
+    var errorDescription: String? { String(localized: .localizable.errorDefaultMessage) }
 }
 
 struct ErrorOverlay_Previews: PreviewProvider {
