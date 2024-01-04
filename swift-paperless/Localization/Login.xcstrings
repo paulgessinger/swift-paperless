@@ -1,420 +1,528 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "apiInUrlNotice": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitte `\/api\/` aus der URL entfernen"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "apiInUrlNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte `/api/` aus der URL entfernen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do not include `\/api` in the URL"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do not include `/api` in the URL"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne pas inclure `\/api` dans l'URL"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas inclure `/api` dans l'URL"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie dodawaj `/api` do adresu URL"
           }
         }
       }
     },
-    "buttonError": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fehler beim Login"
+    "buttonError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler beim Login"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login error"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login error"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erreur de connexion"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreur de connexion"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błąd logowania"
           }
         }
       }
     },
-    "buttonLabel": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einloggen"
+    "buttonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einloggen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log in"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log in"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se connecter"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj"
           }
         }
       }
     },
-    "buttonValid": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login gültig"
+    "buttonValid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login gültig"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login valid"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login valid"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connexion valide"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion valide"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie prawidłowe"
           }
         }
       }
     },
-    "credentials": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugangsdaten"
+    "credentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugangsdaten"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Credentials"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credentials"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Identifiants"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiants"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dane uwierzytelniające"
           }
         }
       }
     },
-    "detailsTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Details"
+    "detailsTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Details"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Détails"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szczegóły"
           }
         }
       }
     },
-    "extraHeaders": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zusätzliche *Header*"
+    "extraHeaders" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusätzliche *Header*"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extra headers"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra headers"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En-têtes supplémentaires"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En-têtes supplémentaires"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodatkowe nagłówki"
           }
         }
       }
     },
-    "extraHeadersDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explizite zusätzliche Header die in alle Anfragen and die Schnittstelle mitgegeben werden."
+    "extraHeadersDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explizite zusätzliche Header die in alle Anfragen and die Schnittstelle mitgegeben werden."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extra headers to include in all API requests that the app makes to your installation."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra headers to include in all API requests that the app makes to your installation."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En-têtes supplémentaires à inclure dans toutes les requêtes API que l'application fait à votre installation."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En-têtes supplémentaires à inclure dans toutes les requêtes API que l'application fait à votre installation."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodatkowe nagłówki do uwzględnienia we wszystkich żądaniach API wysyłanych przez aplikację do twojego serwera."
           }
         }
       }
     },
-    "extraHeadersKey": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schlüssel"
+    "extraHeadersKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clé"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagłówek"
           }
         }
       }
     },
-    "extraHeadersValue": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wert"
+    "extraHeadersValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Value"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Value"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Valeur"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeur"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartość"
           }
         }
       }
     },
-    "httpWarning": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitte nur zu lokalen Installationen per HTTP verbinden."
+    "httpWarning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte nur zu lokalen Installationen per HTTP verbinden."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If at all possible, use HTTPS to connect to the API."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If at all possible, use HTTPS to connect to the API."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Si possible, utilisez HTTPS pour vous connecter à l'API."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si possible, utilisez HTTPS pour vous connecter à l'API."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli to możliwe, użyj HTTPS do połączenia z API."
           }
         }
       }
     },
-    "moreToolbarButtonLabel": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mehr"
+    "moreToolbarButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Więcej"
           }
         }
       }
     },
-    "password": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passwort"
+    "password" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Password"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mot de passe"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mot de passe"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasło"
           }
         }
       }
     },
-    "passwordStorageNotice": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dass Passwort wird nur zum Login benutzt, und nicht gespeichert!"
+    "passwordStorageNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dass Passwort wird nur zum Login benutzt, und nicht gespeichert!"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your password is only used to log in, and not stored!"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your password is only used to log in, and not stored!"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre mot de passe n'est utilisé que pour la connexion et n'est pas stocké!"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre mot de passe n'est utilisé que pour la connexion et n'est pas stocké!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoje hasło jest używane tylko do logowania, nie jest przechowywane!"
           }
         }
       }
     },
-    "urlError": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL ungültig"
+    "urlError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL ungültig"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL invalid"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL invalid"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL invalide"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL invalide"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy adres URL"
           }
         }
       }
     },
-    "urlPlaceholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paperless URL"
+    "urlPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless URL"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paperless URL"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless URL"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL de Paperless"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL de Paperless"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres URL serwera Paperless"
           }
         }
       }
     },
-    "urlValid": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL gültig"
+    "urlValid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL gültig"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL valid"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL valid"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL valide"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL valide"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prawidłowy adres URL"
           }
         }
       }
     },
-    "username": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Benutzername"
+    "username" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Username"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Username"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nom d'utilisateur"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom d'utilisateur"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
