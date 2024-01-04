@@ -60,6 +60,7 @@ platform :ios do
   lane :tests do
     run_tests(
       scheme: "swift-paperlessTests",
+      xcargs: "-skipPackagePluginValidation"
     )
   end
 
