@@ -631,7 +631,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A2E12122B14BBDB00E7704A /* PBXTargetDependency */,
+				7A47864B2B4714A100C13C26 /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -982,13 +982,13 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7A2E12122B14BBDB00E7704A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */;
-		};
 		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
+		};
+		7A47864B2B4714A100C13C26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1572,12 +1572,12 @@
 			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
 			productName = SwiftUINavigation;
 		};
-		7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */ = {
+		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
+		7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
