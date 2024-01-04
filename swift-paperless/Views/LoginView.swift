@@ -97,7 +97,12 @@ struct LoginView: View {
         case invalidLogin
 
         var message: String {
-            "LoginError"
+            switch self {
+            case .urlInvalid:
+                return String(localized: .login.errorUrlInvalid)
+            case .invalidLogin:
+                return String(localized: .login.errorLoginInvalid)
+            }
         }
 
         var details: String? {
@@ -139,8 +144,7 @@ struct LoginView: View {
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                errorController.push(error: LoginError.invalidLogin)
-                urlState = .error(info: "Request to \(apiUrl) returned \(statusCode)")
+                urlState = .error(info: String(localized: .login.errorInvalidResponse(value, statusCode)))
                 return
             }
 
@@ -148,7 +152,7 @@ struct LoginView: View {
             urlState = .valid
         } catch {
             Logger.shared.error("Checking API error: \(error)")
-            urlState = .error(info: "Request to \(apiUrl) gave error:\n\(error)")
+            urlState = .error(info: String(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
             return
         }
     }
@@ -165,8 +169,6 @@ struct LoginView: View {
                 return false
             }
 
-//            print(url)
-
             var request = URLRequest(url: tokenUrl)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -174,9 +176,13 @@ struct LoginView: View {
             connectionManager.extraHeaders.apply(toRequest: &request)
 
             let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode
 
-            if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.error("Token request response was not 200 but \(statusCode)")
+            if statusCode != 200 {
+                Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1), \(String(decoding: data, as: UTF8.self))")
+                if statusCode == 400 {
+                    errorController.push(error: LoginError.invalidLogin)
+                }
                 return false
             }
 
@@ -191,6 +197,7 @@ struct LoginView: View {
 
         } catch {
             Logger.shared.error("Error during login with url \(error)")
+            errorController.push(error: error)
         }
         return false
     }
@@ -221,14 +228,11 @@ struct LoginView: View {
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
-                        case let .error(info):
+                        case .error:
                             Label(String(localized: .login.urlError), systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.red)
-                                .onTapGesture {
-                                    UIPasteboard.general.string = info
-                                }
                         case .empty:
                             EmptyView()
                         }
@@ -248,6 +252,15 @@ struct LoginView: View {
                                 Image(systemName: "info.circle")
                                 Text(.login.httpWarning)
                             }
+                        }
+
+                        if case let .error(info) = urlState {
+                            HStack(alignment: .top) {
+                                Image(systemName: "xmark")
+                                    .offset(y: 2)
+                                Text(info)
+                            }
+                            .foregroundColor(.red)
                         }
                     }
                     .transition(.opacity)

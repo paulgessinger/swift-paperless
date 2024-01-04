@@ -15,7 +15,6 @@ struct ErrorDisplay: ViewModifier {
             guard !Task.isCancelled else {
                 return
             }
-            print("Check dismiss")
             errorController.clear()
         }
     }
@@ -36,7 +35,7 @@ struct ErrorDisplay: ViewModifier {
                             Text(error.message)
                                 .bold()
                             if error.details != nil {
-                                Text("Tap for details!")
+                                Text(.localizable.errorAlertTapForDetails)
                                     .font(Font.custom("", size: 14))
                             }
                         }
@@ -66,9 +65,7 @@ struct ErrorDisplay: ViewModifier {
                             dismissTask?.cancel()
                         }
                         .onEnded { _ in
-                            print("Drag end \(alertOffset)")
                             if alertOffset.height < -30 {
-                                print("Clear only")
                                 withAnimation(.linear(duration: 0.3)) {
                                     alertOffset.height = -100
                                 }
@@ -77,13 +74,11 @@ struct ErrorDisplay: ViewModifier {
                                     errorController.clear(animate: false)
                                 }
                             } else if alertOffset == .zero {
-                                print("Clear and show")
                                 if error.details != nil {
                                     detail = error
                                 }
                                 errorController.clear()
                             } else {
-                                print("Animate back")
                                 dismissTask?.cancel()
                                 withAnimation(.spring(duration: 0.3)) {
                                     alertOffset = .zero
@@ -113,11 +108,11 @@ struct ErrorDisplay: ViewModifier {
             }
 
             .alert(title: { detail in Text(detail.message) }, unwrapping: $detail) { detail in
-                Button("Copy to clipboard") {
+                Button(String(localized: .localizable.errorAlertCopyToClipboard)) {
                     UIPasteboard.general.string = detail.details
                 }
 
-                Button("Ok", role: .cancel) {}
+                Button(String(localized: .localizable.ok), role: .cancel) {}
 
             } message: { detail in
                 Text(detail.details!)
@@ -178,7 +173,7 @@ class ErrorController: ObservableObject {
                 push(error: le)
             }
         } else {
-            push(message: message ?? Self.defaultTitle, details: String(describing: error))
+            push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
         }
     }
 
@@ -216,6 +211,8 @@ class ErrorController: ObservableObject {
         }
     }
 }
+
+// MARK: Previews
 
 private struct PreviewError: LocalizedError {
     var errorDescription: String? { String(localized: .localizable.errorDefaultMessage) }

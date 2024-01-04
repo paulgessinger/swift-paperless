@@ -1112,6 +1112,28 @@
         }
       }
     },
+    "errorAlertCopyToClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy to clipboard"
+          }
+        }
+      }
+    },
+    "errorAlertTapForDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap for details!"
+          }
+        }
+      }
+    },
     "errorDefaultMessage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1424,6 +1446,17 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         }
       }
