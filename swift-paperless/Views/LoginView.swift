@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 25.03.23.
 //
 
-import AlertToast
 import os
 import SwiftUI
 
@@ -110,15 +109,13 @@ struct LoginView: View {
         }
     }
 
-    @State private var showError = false
-    @State private var showErrorDetail = false
-
     @State private var apiInUrl = false
 
     @State private var username: String = ""
     @State private var password: String = ""
 
     @State private var showDetails: Bool = false
+    @State private var showSuccessOverlay = false
 
     private func checkUrl(string value: String) async {
         Logger.shared.notice("Checking backend URL \(value)")
@@ -157,7 +154,7 @@ struct LoginView: View {
         }
     }
 
-    private func login() async -> Bool {
+    private func login() async {
         Logger.shared.notice("Attempting login with url \(url.text)")
 
         do {
@@ -166,7 +163,7 @@ struct LoginView: View {
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
                 errorController.push(error: LoginError.urlInvalid)
-                return false
+                return
             }
 
             var request = URLRequest(url: tokenUrl)
@@ -183,23 +180,22 @@ struct LoginView: View {
                 if statusCode == 400 {
                     errorController.push(error: LoginError.invalidLogin)
                 }
-                return false
+                return
             }
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
             Logger.shared.notice("Login successful")
 
-            try await Task.sleep(for: .seconds(0.5))
+            Haptics.shared.notification(.success)
+            showSuccessOverlay = true
+            try await Task.sleep(for: .seconds(2.3))
 
             try connectionManager.set(base: baseUrl, token: tokenResponse.token)
-            return true
-
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             errorController.push(error: error)
         }
-        return false
     }
 
     var body: some View {
@@ -295,6 +291,7 @@ struct LoginView: View {
                     .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
                 }
             }
+
             .onChange(of: url.debouncedText) { value in
                 Task {
                     await checkUrl(string: value)
@@ -316,6 +313,10 @@ struct LoginView: View {
 
             .sheet(isPresented: $showDetails) {
                 DetailsView(connectionManager: connectionManager)
+            }
+
+            .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
+                Text(.login.success)
             }
         }
     }

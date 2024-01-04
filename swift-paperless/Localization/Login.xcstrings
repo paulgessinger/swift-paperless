@@ -401,6 +401,17 @@
         }
       }
     },
+    "success" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login successful"
+          }
+        }
+      }
+    },
     "urlError" : {
       "extractionState" : "manual",
       "localizations" : {
