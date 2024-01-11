@@ -1322,6 +1322,39 @@
         }
       }
     },
+    "logsExport" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export logs"
+          }
+        }
+      }
+    },
+    "logsExportLoading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecting logs"
+          }
+        }
+      }
+    },
+    "logsExportReady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share logs"
+          }
+        }
+      }
+    },
     "name" : {
       "extractionState" : "manual",
       "localizations" : {
