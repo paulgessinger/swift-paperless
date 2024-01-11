@@ -24,12 +24,26 @@ struct CrudApiError<Element>: Error, LocalizedError {
     var status: Int?
     var body: String? = nil
 
+    init(operation: CrudOperation, type: Element.Type, status: Int? = nil, body: String? = nil) {
+        self.operation = operation
+        self.type = type
+        self.status = status
+        self.body = body
+    }
+
+    init(operation: CrudOperation, type: Element.Type, status: Int? = nil, data: Data) {
+        self.operation = operation
+        self.type = type
+        self.status = status
+        body = String(decoding: data, as: UTF8.self)
+    }
+
     var errorDescription: String? {
         "Failed to \(operation.rawValue) \(type)"
     }
 
     var failureReason: String? {
-        "Backend replied with unexpected status: \(String(describing: status))"
+        "Backend replied with unexpected status: \(String(describing: status))" + (body != nil ? " \(body!)" : "")
     }
 }
 
@@ -163,15 +177,15 @@ class ApiRepository {
 
     init(connection: Connection) {
         self.connection = connection
-        Logger.shared.trace("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+        Logger.shared.notice("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
 
         Task {
             await ensureBackendVersions()
 
             if let apiVersion, let backendVersion {
-                Logger.shared.info("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
+                Logger.shared.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
             } else {
-                Logger.shared.error("Did not get backend version info")
+                Logger.shared.warning("Did not get backend version info")
             }
         }
     }
@@ -369,17 +383,17 @@ extension ApiRepository: Repository {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if (response as? HTTPURLResponse)?.statusCode != 200 {
-                Logger.shared.trace("Downloading document: Status was not 200")
+                Logger.shared.error("Downloading document: Status was not 200: \(String(decoding: data, as: UTF8.self))")
                 return nil
             }
 
             guard let response = response as? HTTPURLResponse else {
-                Logger.shared.trace("Cannot get http response")
+                Logger.shared.error("Cannot get http response")
                 return nil
             }
 
             guard let suggestedFilename = response.suggestedFilename else {
-                Logger.shared.trace("Cannot get ")
+                Logger.shared.error("Cannot get suggested filename from response")
                 return nil
             }
 
@@ -463,7 +477,7 @@ extension ApiRepository: Repository {
             let (data, res) = try await URLSession.shared.data(for: request)
 
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                Logger.shared.error("Error fetching document by ASN \(asn): status code != 200")
+                Logger.shared.error("Error fetching document by ASN \(asn): status code != 200. \(String(decoding: data, as: UTF8.self))")
                 return nil
             }
 
@@ -471,6 +485,7 @@ extension ApiRepository: Repository {
 
             guard decoded.count > 0, !decoded.results.isEmpty else {
                 // this means the ASN was not found
+                Logger.shared.notice("Got empty document result (ASN not found)")
                 return nil
             }
             return decoded.results.first
@@ -482,20 +497,20 @@ extension ApiRepository: Repository {
     }
 
     private func nextAsnCompatibility() async -> UInt {
-        Logger.shared.info("Getting next ASN with legacy compatibility method")
+        Logger.shared.trace("Getting next ASN with legacy compatibility method")
         var fs = FilterState()
         fs.sortField = .asn
         fs.sortOrder = .descending
         let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
         let url = url(endpoint)
-        Logger.shared.trace("\(url)")
+        Logger.shared.notice("\(url)")
 
         let request = request(endpoint)
 
         do {
             let (data, res) = try await URLSession.shared.data(for: request)
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                Logger.shared.error("Error fetching document by for next ASN: status code != 200")
+                Logger.shared.error("Error fetching document for next ASN: status code != 200. \(String(decoding: data, as: UTF8.self))")
                 return 0
             }
 
@@ -510,7 +525,7 @@ extension ApiRepository: Repository {
     }
 
     private func nextAsnDirectEndpoint() async -> UInt {
-        Logger.shared.info("Getting next ASN with dedicated endpoint")
+        Logger.shared.trace("Getting next ASN with dedicated endpoint")
         let request = request(.nextAsn())
 
         do {
@@ -522,7 +537,7 @@ extension ApiRepository: Repository {
             }
 
             let asn = try decoder.decode(UInt.self, from: data)
-            Logger.shared.info("Have next ASN \(asn)")
+            Logger.shared.trace("Have next ASN \(asn)")
             return asn
         } catch {
             Logger.shared.error("Error fetching next ASN: \(error)")
@@ -585,7 +600,7 @@ extension ApiRepository: Repository {
 
             return try decoder.decode(Suggestions.self, from: data)
         } catch {
-            Logger.shared.debug("Unable to load suggestions: \(error)")
+            Logger.shared.error("Unable to load suggestions: \(error)")
             return .init()
         }
     }

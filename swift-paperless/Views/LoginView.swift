@@ -47,6 +47,8 @@ private struct DetailsView: View {
                 } label: {
                     Text(.login.extraHeaders)
                 }
+
+                LogRecordDownloadButton()
             }
             .navigationTitle(Text(.login.detailsTitle))
             .navigationBarTitleDisplayMode(.inline)
@@ -69,6 +71,8 @@ private struct DetailsView: View {
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
 
+    @EnvironmentObject var errorController: ErrorController
+
     @StateObject private var url = DebounceObject(delay: 1)
 
     private enum UrlState {
@@ -89,13 +93,23 @@ struct LoginView: View {
         }
     }
 
-    private enum LoginState {
-        case none
-        case valid
-        case error
-    }
+    private enum LoginError: DisplayableError, Equatable {
+        case urlInvalid
+        case invalidLogin
 
-    @State private var loginState = LoginState.none
+        var message: String {
+            switch self {
+            case .urlInvalid:
+                return String(localized: .login.errorUrlInvalid)
+            case .invalidLogin:
+                return String(localized: .login.errorLoginInvalid)
+            }
+        }
+
+        var details: String? {
+            nil
+        }
+    }
 
     @State private var apiInUrl = false
 
@@ -103,18 +117,19 @@ struct LoginView: View {
     @State private var password: String = ""
 
     @State private var showDetails: Bool = false
+    @State private var showSuccessOverlay = false
 
     private func checkUrl(string value: String) async {
-        Logger.shared.debug("Checking backend URL \(value)")
+        Logger.shared.notice("Checking backend URL \(value)")
         guard !value.isEmpty else {
-            Logger.shared.trace("Value is empty")
+            Logger.shared.notice("Value is empty")
             urlState = .empty
             return
         }
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
-            Logger.shared.trace("Cannot convert to url")
-            urlState = .error(info: "Could not convert to URL: \(value)")
+            Logger.shared.notice("Cannot convert to URL: \(value)")
+            urlState = .error(info: String(localized: .login.errorCouldNotConvertURL(value)))
             return
         }
 
@@ -122,36 +137,36 @@ struct LoginView: View {
         connectionManager.extraHeaders.apply(toRequest: &request)
 
         do {
+            Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.debug("Checking API status was not 200 but \(statusCode)")
-                urlState = .error(info: "Request to \(apiUrl) returned \(statusCode)")
+                Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
+                urlState = .error(info: String(localized: .login.errorInvalidResponse(value, statusCode)))
                 return
             }
 
             let _ = try JSONDecoder().decode(Response.self, from: data)
             urlState = .valid
         } catch {
-            Logger.shared.debug("Checking API error: \(error)")
-            urlState = .error(info: "Request to \(apiUrl) gave error:\n\(error)")
+            Logger.shared.error("Checking API error: \(error)")
+            urlState = .error(info: String(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
             return
         }
     }
 
-    private func login() async -> Bool {
-        Logger.shared.trace("Attempting login with url \(url.text)")
+    private func login() async {
+        Logger.shared.notice("Attempting login with url \(url.text)")
 
         do {
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
-                Logger.shared.debug("Error making URL for logging in")
-                return false
+                Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
+                errorController.push(error: LoginError.urlInvalid)
+                return
             }
-
-//            print(url)
 
             var request = URLRequest(url: tokenUrl)
             request.httpMethod = "POST"
@@ -160,28 +175,29 @@ struct LoginView: View {
             connectionManager.extraHeaders.apply(toRequest: &request)
 
             let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode
 
-            if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.debug("Token request response was not 200 but \(statusCode)")
-                return false
+            if statusCode != 200 {
+                Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1), \(String(decoding: data, as: UTF8.self))")
+                if statusCode == 400 {
+                    errorController.push(error: LoginError.invalidLogin)
+                }
+                return
             }
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-            Logger.shared.trace("Login successful")
+            Logger.shared.notice("Login successful")
 
-            withAnimation { loginState = .valid }
+            Haptics.shared.notification(.success)
+            showSuccessOverlay = true
+            try await Task.sleep(for: .seconds(2.3))
 
-            try await Task.sleep(for: .seconds(0.5))
-
-            // @TODO Change scheme!
             try connectionManager.set(base: baseUrl, token: tokenResponse.token)
-            return true
-
         } catch {
-            Logger.shared.error("\(error)")
+            Logger.shared.error("Error during login with url \(error)")
+            errorController.push(error: error)
         }
-        return false
     }
 
     var body: some View {
@@ -210,14 +226,11 @@ struct LoginView: View {
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
-                        case let .error(info):
+                        case .error:
                             Label(String(localized: .login.urlError), systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.red)
-                                .onTapGesture {
-                                    UIPasteboard.general.string = info
-                                }
                         case .empty:
                             EmptyView()
                         }
@@ -237,6 +250,15 @@ struct LoginView: View {
                                 Image(systemName: "info.circle")
                                 Text(.login.httpWarning)
                             }
+                        }
+
+                        if case let .error(info) = urlState {
+                            HStack(alignment: .top) {
+                                Image(systemName: "xmark")
+                                    .offset(y: 2)
+                                Text(info)
+                            }
+                            .foregroundColor(.red)
                         }
                     }
                     .transition(.opacity)
@@ -259,39 +281,19 @@ struct LoginView: View {
                 Section {
                     Button(action: {
                         Task {
-                            if await login() {
-                                withAnimation { loginState = .valid }
-                            } else {
-                                withAnimation { loginState = .error }
-                            }
+                            await login()
                         }
                     }) {
                         HStack {
                             Spacer()
                             Text(.login.buttonLabel)
-                            if loginState == .valid {
-                                Label(String(localized: .login.buttonValid), systemImage: "checkmark.circle.fill")
-                                    .labelStyle(.iconOnly)
-                            } else if loginState == .error {
-                                Label(String(localized: .login.buttonError), systemImage: "xmark.circle.fill")
-                                    .labelStyle(.iconOnly)
-                            }
                             Spacer()
                         }
-                        .foregroundColor({
-                            switch loginState {
-                            case .valid:
-                                Color.accentColor
-                            case .error:
-                                Color.red
-                            case .none:
-                                Color.primary
-                            }
-                        }())
                     }
                     .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
                 }
             }
+
             .onChange(of: url.debouncedText) { value in
                 Task {
                     await checkUrl(string: value)
@@ -300,8 +302,6 @@ struct LoginView: View {
                     }
                 }
             }
-            .onChange(of: username) { _ in withAnimation { loginState = .none }}
-            .onChange(of: password) { _ in withAnimation { loginState = .none }}
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -315,6 +315,10 @@ struct LoginView: View {
 
             .sheet(isPresented: $showDetails) {
                 DetailsView(connectionManager: connectionManager)
+            }
+
+            .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
+                Text(.login.success)
             }
         }
     }

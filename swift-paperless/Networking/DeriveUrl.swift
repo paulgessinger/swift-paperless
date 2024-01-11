@@ -10,8 +10,7 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
         let scheme = matches.1
         let rest = matches.2
         if scheme != "http", scheme != "https" {
-            // @TODO: Add proper error handling
-            Logger.shared.debug("Encountered invalid scheme \(scheme)")
+            Logger.shared.error("Encountered invalid scheme \(scheme)")
             return nil
         }
         url = URL(string: "\(scheme)://\(rest)")
@@ -20,21 +19,19 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
     }
 
     guard var url else {
-        Logger.shared.debug("Derived url \(value) was invalid")
+        Logger.shared.notice("Derived URL \(value) was invalid")
         return nil
     }
 
     let base = url
 
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-        // @TODO: Add proper error handling
-        Logger.shared.debug("Could not parse URL \(url) into components")
+        Logger.shared.notice("Could not parse URL \(url) into components")
         return nil
     }
 
     guard let host = components.host, !host.isEmpty else {
-        // @TODO: Add proper error handling
-        Logger.shared.debug("URL \(url) had empty host")
+        Logger.shared.error("URL \(url) had empty host")
         return nil
     }
 
@@ -45,7 +42,7 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
         url = url.appending(component: suffix, directoryHint: .isDirectory)
     }
 
-    Logger.shared.trace("Derive url: \(value) + \(suffix) -> \(url)")
+    Logger.shared.notice("Derive URL: \(value) + \(suffix) -> \(url)")
 
     return (base, url)
 }

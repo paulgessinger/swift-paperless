@@ -11,10 +11,10 @@ import SwiftUINavigation
 // MARK: - Settings View
 
 struct SettingsView: View {
-    @EnvironmentObject var store: DocumentStore
-    @EnvironmentObject var connectionManager: ConnectionManager
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var connectionManager: ConnectionManager
 
-    @State var extraHeaders: [ConnectionManager.HeaderValue] = []
+    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     var body: some View {
         List {
@@ -78,6 +78,8 @@ struct SettingsView: View {
                 } label: {
                     Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
+
+                LogRecordDownloadButton()
             }
 
             Section(String(localized: .settings.detailsTitle)) {

@@ -41,7 +41,7 @@ struct MainView: View {
         }
         .fullScreenCover(isPresented: $showLoginScreen) {
             LoginView(connectionManager: manager)
-                .modifier(ErrorDisplay(errorController: errorController))
+                .errorOverlay(errorController: errorController)
                 .environmentObject(errorController)
         }
 

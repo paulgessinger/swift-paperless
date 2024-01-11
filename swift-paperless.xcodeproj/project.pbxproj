@@ -148,6 +148,10 @@
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
+		7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */; };
+		7ACFB2BA2B4734CD009DED79 /* SuccessOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */; };
+		7ACFB2D72B4756FC009DED79 /* LogRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2D62B4756FC009DED79 /* LogRecord.swift */; };
+		7ACFB2D82B4756FC009DED79 /* LogRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2D62B4756FC009DED79 /* LogRecord.swift */; };
 		7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD353AC2A8018FE00AFFAFE /* PDFView.swift */; };
 		7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 7AD353B02A8036E200AFFAFE /* demo3.pdf */; };
 		7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD353AC2A8018FE00AFFAFE /* PDFView.swift */; };
@@ -299,6 +303,8 @@
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
+		7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessOverlay.swift; sourceTree = "<group>"; };
+		7ACFB2D62B4756FC009DED79 /* LogRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRecord.swift; sourceTree = "<group>"; };
 		7AD353AC2A8018FE00AFFAFE /* PDFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFView.swift; sourceTree = "<group>"; };
 		7AD353B02A8036E200AFFAFE /* demo3.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = demo3.pdf; sourceTree = "<group>"; };
 		7AD8FC5729E4B37B00157217 /* FilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBar.swift; sourceTree = "<group>"; };
@@ -558,6 +564,8 @@
 				7A2831B92A63DDDF009E86CE /* DocumentList.swift */,
 				7A83F6E22A6BE3D7002B5CF6 /* DataScannerView.swift */,
 				7AD353AC2A8018FE00AFFAFE /* PDFView.swift */,
+				7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */,
+				7ACFB2D62B4756FC009DED79 /* LogRecord.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -626,7 +634,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A2E12122B14BBDB00E7704A /* PBXTargetDependency */,
+				7A47864B2B4714A100C13C26 /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -796,6 +804,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AEF78C62A799B81002AB0E1 /* SuggestionsModel.swift in Sources */,
+				7ACFB2D82B4756FC009DED79 /* LogRecord.swift in Sources */,
 				7A297FB429FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */,
 				7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
@@ -827,6 +836,7 @@
 				7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
 				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
+				7ACFB2BA2B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
 				7A4AA91529BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7A8E1F842A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7A4AA91229BE202800D845A2 /* PreviewModel.swift in Sources */,
@@ -863,6 +873,7 @@
 				7A2831BA2A63DDDF009E86CE /* DocumentList.swift in Sources */,
 				7A4AA91129BE202800D845A2 /* PreviewModel.swift in Sources */,
 				7A297FB329FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */,
+				7ACFB2D72B4756FC009DED79 /* LogRecord.swift in Sources */,
 				7A81C5AC2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */,
 				7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */,
@@ -924,6 +935,7 @@
 				7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */,
 				7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A8E1F862A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
+				7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
 				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -975,13 +987,13 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7A2E12122B14BBDB00E7704A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */;
-		};
 		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
+		};
+		7A47864B2B4714A100C13C26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1547,12 +1559,12 @@
 			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
 			productName = SwiftUINavigation;
 		};
-		7A2E12112B14BBDB00E7704A /* XCStringsToolPlugin */ = {
+		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
+		7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
