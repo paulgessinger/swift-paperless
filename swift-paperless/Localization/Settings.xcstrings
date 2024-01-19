@@ -254,6 +254,17 @@
         }
       }
     },
+    "feedbackDone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks!"
+          }
+        }
+      }
+    },
     "feedbackSendEmail" : {
       "extractionState" : "manual",
       "localizations" : {

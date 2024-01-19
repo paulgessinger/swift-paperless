@@ -121,27 +121,23 @@ struct SettingsView: View {
                         case .loading:
                             LogRecordExportButton.loadingView()
 
-                        case let .loaded(logs):
-                            Button {
-                                feedbackLogs = logs
-                            } label: {
-                                Label(String(localized: .settings.feedbackSendEmail), systemImage: "paperplane.fill")
-                                    .accentColor(.primary)
-                            }
+                        case .loaded:
+                            Label(String(localized: .settings.feedbackDone), systemImage: "checkmark.circle.fill")
+                                .accentColor(.primary)
 
                         case let .error(error):
                             Label(error.localizedDescription, systemImage: "xmark.circle.fill")
                                 .foregroundStyle(.red)
                         }
+                    } change: { state in
+                        switch state {
+                        case let .loaded(logs):
+                            feedbackLogs = logs
+                        default:
+                            break
+                        }
                     }
                 }
-
-//                Button {
-//                    UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
-//                } label: {
-//                    Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
-//                        .accentColor(.primary)
-//                }
             }
         }
 
@@ -155,9 +151,9 @@ struct SettingsView: View {
         }
 
         .sheet(isPresented: $showMailSheet) {
+            // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
             MailVilew(result: $result, isPresented: $showMailSheet) { vc in
                 vc.setToRecipients(["swift-paperless@paulgessinger.com"])
-//                vc.setSubject("Swift Paperless Feedback")
                 if let data = feedbackLogs?.data(using: .utf8) {
                     vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
                 }

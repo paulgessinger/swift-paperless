@@ -34,16 +34,20 @@ struct LogRecordExportButton: View {
 
     let content: (LogState, @escaping () -> Void) -> AnyView
 
-    init(@ViewBuilder content: @escaping (LogState, @escaping () -> Void) -> some View) {
+    let change: (LogState) -> Void
+
+    init(@ViewBuilder content: @escaping (LogState, @escaping () -> Void) -> some View, change: ((LogState) -> Void)? = nil) {
         self.content = { state, export in
             AnyView(content(state, export))
         }
+        self.change = change ?? { _ in }
     }
 
-    init() {
+    init(change: ((LogState) -> Void)? = nil) {
         content = { state, export in
             AnyView(Self.defaultContent(state: state, export: export))
         }
+        self.change = change ?? { _ in }
     }
 
     @ViewBuilder static func loadingView() -> some View {
@@ -82,6 +86,7 @@ struct LogRecordExportButton: View {
 
     private func load() {
         state = .loading
+        change(state)
         do {
             let store = try OSLogStore(scope: .currentProcessIdentifier)
             let position = store.position(timeIntervalSinceLatestBoot: 1)
@@ -91,10 +96,12 @@ struct LogRecordExportButton: View {
                 .filter { $0.subsystem == Bundle.main.bundleIdentifier! }
                 .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
                 .joined(separator: "\n"))
+            change(state)
             Haptics.shared.notification(.success)
         } catch {
             Logger.shared.warning("\(error.localizedDescription, privacy: .public)")
             state = .error(error: error)
+            change(state)
             Haptics.shared.notification(.error)
         }
     }

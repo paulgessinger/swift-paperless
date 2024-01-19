@@ -17,9 +17,7 @@ struct MailVilew: UIViewControllerRepresentable {
         }
 
         func mailComposeController(_: MFMailComposeViewController, didFinishWith _: MFMailComposeResult, error _: Error?) {
-//            defer {
             isPresented = false
-//            }
         }
     }
 
