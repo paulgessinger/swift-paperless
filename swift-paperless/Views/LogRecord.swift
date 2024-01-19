@@ -3,7 +3,7 @@ import Foundation
 import OSLog
 import SwiftUI
 
-private class LogRecords: Transferable, ObservableObject {
+class LogRecords: Transferable, ObservableObject {
     var logs: String
 
     init(logs: String) {
@@ -22,7 +22,7 @@ private class LogRecords: Transferable, ObservableObject {
     }
 }
 
-struct LogRecordDownloadButton: View {
+struct LogRecordExportButton: View {
     enum LogState {
         case none
         case loading
@@ -31,6 +31,54 @@ struct LogRecordDownloadButton: View {
     }
 
     @State private var state = LogState.none
+
+    let content: (LogState, @escaping () -> Void) -> AnyView
+
+    init(@ViewBuilder content: @escaping (LogState, @escaping () -> Void) -> some View) {
+        self.content = { state, export in
+            AnyView(content(state, export))
+        }
+    }
+
+    init() {
+        content = { state, export in
+            AnyView(Self.defaultContent(state: state, export: export))
+        }
+    }
+
+    @ViewBuilder static func loadingView() -> some View {
+        if #available(iOS 17.0, *) {
+            Label(String(localized: .localizable.logsExportLoading), systemImage: "ellipsis")
+                .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing)
+        } else {
+            Label(String(localized: .localizable.logsExportLoading), systemImage: "ellipsis")
+        }
+    }
+
+    @ViewBuilder private static func defaultContent(state: LogState, export: @escaping () -> Void) -> some View {
+        switch state {
+        case .none:
+            Button {
+                export()
+            } label: {
+                Label(String(localized: .localizable.logsExport), systemImage: "text.word.spacing")
+                    .accentColor(.primary)
+            }
+
+        case .loading:
+            loadingView()
+
+        case let .loaded(logs):
+            ShareLink(item: LogRecords(logs: logs), preview: SharePreview("Logs")) {
+                Label(String(localized: .localizable.logsExportReady), systemImage: "checkmark.circle.fill")
+                    .accentColor(.primary)
+            }
+
+        case let .error(error):
+            Label(error.localizedDescription, systemImage: "xmark.circle.fill")
+                .foregroundStyle(.red)
+        }
+    }
 
     private func load() {
         state = .loading
@@ -51,37 +99,14 @@ struct LogRecordDownloadButton: View {
         }
     }
 
-    var body: some View {
-        switch state {
-        case .none:
-            Button {
-                Logger.shared.notice("Requesting log export")
-                DispatchQueue.global().async {
-                    load()
-                }
-            } label: {
-                Label(String(localized: .localizable.logsExport), systemImage: "text.word.spacing")
-                    .accentColor(.primary)
-            }
-
-        case .loading:
-            VStack(alignment: .center) {
-                HStack {
-                    ProgressView()
-                        .padding(.trailing)
-                    Text(.localizable.logsExportLoading)
-                }
-            }
-
-        case let .loaded(logs):
-            ShareLink(item: LogRecords(logs: logs), preview: SharePreview("Logs")) {
-                Label(String(localized: .localizable.logsExportReady), systemImage: "checkmark.circle.fill")
-                    .accentColor(.primary)
-            }
-
-        case let .error(error):
-            Label(error.localizedDescription, systemImage: "xmark.circle.fill")
-                .foregroundStyle(.red)
+    private func export() {
+        Logger.shared.notice("Requesting log export")
+        DispatchQueue.global().async {
+            load()
         }
+    }
+
+    var body: some View {
+        content(state, export)
     }
 }

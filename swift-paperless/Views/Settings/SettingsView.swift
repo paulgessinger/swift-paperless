@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 23.04.23.
 //
 
+import MessageUI
 import SwiftUI
 import SwiftUINavigation
 
@@ -15,6 +16,10 @@ struct SettingsView: View {
     @EnvironmentObject private var connectionManager: ConnectionManager
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
+
+    @State private var feedbackLogs: String? = nil
+    @State private var showMailSheet: Bool = false
+    @State private var result: Result<MFMailComposeResult, Error>? = nil
 
     var body: some View {
         List {
@@ -79,7 +84,7 @@ struct SettingsView: View {
                     Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
 
-                LogRecordDownloadButton()
+                LogRecordExportButton()
             }
 
             Section(String(localized: .settings.detailsTitle)) {
@@ -102,12 +107,41 @@ struct SettingsView: View {
                     Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
                 }
 
-                Button {
-                    UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
-                } label: {
-                    Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
-                        .accentColor(.primary)
+                if MFMailComposeViewController.canSendMail() {
+                    LogRecordExportButton { (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
+                        switch state {
+                        case .none:
+                            Button {
+                                export()
+                            } label: {
+                                Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
+                                    .accentColor(.primary)
+                            }
+
+                        case .loading:
+                            LogRecordExportButton.loadingView()
+
+                        case let .loaded(logs):
+                            Button {
+                                feedbackLogs = logs
+                            } label: {
+                                Label(String(localized: .settings.feedbackSendEmail), systemImage: "paperplane.fill")
+                                    .accentColor(.primary)
+                            }
+
+                        case let .error(error):
+                            Label(error.localizedDescription, systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
+                        }
+                    }
                 }
+
+//                Button {
+//                    UIApplication.shared.open(URL(string: "mailto:swift-paperless@paulgessinger.com")!)
+//                } label: {
+//                    Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
+//                        .accentColor(.primary)
+//                }
             }
         }
 
@@ -118,6 +152,20 @@ struct SettingsView: View {
         .onChange(of: extraHeaders) { value in
             connectionManager.extraHeaders = value
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
+        }
+
+        .sheet(isPresented: $showMailSheet) {
+            MailVilew(result: $result, isPresented: $showMailSheet) { vc in
+                vc.setToRecipients(["swift-paperless@paulgessinger.com"])
+//                vc.setSubject("Swift Paperless Feedback")
+                if let data = feedbackLogs?.data(using: .utf8) {
+                    vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
+                }
+            }
+        }
+
+        .onChange(of: feedbackLogs) { _ in
+            showMailSheet = true
         }
 
         .navigationTitle(Text(.settings.title))

@@ -1,329 +1,340 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "activeServer": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktiver Server"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "activeServer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiver Server"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Active server"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active server"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serveur actif"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur actif"
           }
         }
       }
     },
-    "advanced": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erweitert"
+    "advanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweitert"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Advanced"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avancé"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avancé"
           }
         }
       }
     },
-    "detailsFeedback": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Feedback"
+    "detailsFeedback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Feedback"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retour d'information"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour d'information"
           }
         }
       }
     },
-    "detailsLibraries": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bibliotheken"
+    "detailsLibraries" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bibliotheken"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Libraries"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libraries"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bibliothèques"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bibliothèques"
           }
         }
       }
     },
-    "detailsLibrariesLoadError": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bibliothekdetails konnten nicht geladen werden"
+    "detailsLibrariesLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bibliothekdetails konnten nicht geladen werden"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unable to load used library details"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load used library details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de charger les détails des bibliothèques utilisées"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger les détails des bibliothèques utilisées"
           }
         }
       }
     },
-    "detailsPrivacy": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Datenschutz"
+    "detailsPrivacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenschutz"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Privacy"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confidentialité"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confidentialité"
           }
         }
       }
     },
-    "detailsPrivacyLoadError": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "# Datenschutz\\nDas Laden der Datenschutzinformationen ist fehlgeschlagen. Probieren Sie sie [hier](%@) zu finden."
+    "detailsPrivacyLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# Datenschutz\\nDas Laden der Datenschutzinformationen ist fehlgeschlagen. Probieren Sie sie [hier](%@) zu finden."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "# Confidentialité\nImpossible de charger l'URL de confidentialité. Veuillez naviguer [ici](%@) pour la trouver."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# Confidentialité\nImpossible de charger l'URL de confidentialité. Veuillez naviguer [ici](%@) pour la trouver."
           }
         }
       }
     },
-    "detailsSourceCode": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quellcode"
+    "detailsSourceCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellcode"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source code"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source code"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Code source"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code source"
           }
         }
       }
     },
-    "detailsTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Details"
+    "detailsTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Details"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Détails"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails"
           }
         }
       }
     },
-    "documentDeleteConfirmationLabel": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Löschbestätigung Dokumente"
+    "documentDeleteConfirmationLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschbestätigung Dokumente"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document delete confirmation"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document delete confirmation"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirmer la suppression du document"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmer la suppression du document"
           }
         }
       }
     },
-    "documentDeleteConfirmationLabelDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nach Bestätigung fragen, bevor ein Dokument gelöscht wird"
+    "documentDeleteConfirmationLabelDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Bestätigung fragen, bevor ein Dokument gelöscht wird"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask for confirmation before deleting a document"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask for confirmation before deleting a document"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demander une confirmation avant de supprimer un document"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander une confirmation avant de supprimer un document"
           }
         }
       }
     },
-    "organization": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organization"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organisation"
+    "feedbackSendEmail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send mail"
           }
         }
       }
     },
-    "preferences": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Präferenzen"
+    "organization" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisation"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preferences"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organization"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Préférences"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisation"
           }
         }
       }
     },
-    "title": {
-      "comment": "Details menu",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einstellungen"
+    "preferences" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Präferenzen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferences"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paramètres"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préférences"
+          }
+        }
+      }
+    },
+    "title" : {
+      "comment" : "Details menu",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paramètres"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

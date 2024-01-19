@@ -48,7 +48,7 @@ private struct DetailsView: View {
                     Text(.login.extraHeaders)
                 }
 
-                LogRecordDownloadButton()
+                LogRecordExportButton()
             }
             .navigationTitle(Text(.login.detailsTitle))
             .navigationBarTitleDisplayMode(.inline)
