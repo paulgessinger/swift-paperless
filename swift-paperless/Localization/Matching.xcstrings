@@ -1,420 +1,636 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "algorithm": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zuweisungsalgorithmus"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "algorithm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuweisungsalgorithmus"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Matching algorithm"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching algorithm"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algorithme de rapprochement"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algorithme de rapprochement"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching algoritme"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algorytm dopasowania"
           }
         }
       }
     },
-    "algorithmAll": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle"
+    "algorithmAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tous"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wszystkie"
           }
         }
       }
     },
-    "algorithmAny": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beliebig"
+    "algorithmAny" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebig"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Any"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "N'importe lequel"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N'importe lequel"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elke"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dowolny"
           }
         }
       }
     },
-    "algorithmAuto": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Automatisch"
+    "algorithmAuto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Automatique"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatique"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatyczny"
           }
         }
       }
     },
-    "algorithmExact": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exakt"
+    "algorithmExact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exakt"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exact"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exact"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Concordance exacte"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concordance exacte"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exact"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokładny"
           }
         }
       }
     },
-    "algorithmFuzzy": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ungenau"
+    "algorithmFuzzy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungenau"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fuzzy"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuzzy"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mot approximatif"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mot approximatif"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuzzy"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozmyte"
           }
         }
       }
     },
-    "algorithmNone": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keiner"
+    "algorithmNone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keiner"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "None"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak"
           }
         }
       }
     },
-    "algorithmRegEx": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Regulärer Ausdruck"
+    "algorithmRegEx" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regulärer Ausdruck"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RegEx"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RegEx"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expression régulière"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expression régulière"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RegEx"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyrażenie regularne"
           }
         }
       }
     },
-    "caseInsensitive": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ignoriert Groß- und Kleinschreibung"
+    "caseInsensitive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignoriert Groß- und Kleinschreibung"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Case insensitive"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Case insensitive"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Insensible à la casse"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insensible à la casse"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet-hoofdlettergevoelig"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwzględniający wielkości liter"
           }
         }
       }
     },
-    "explanationAll": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokument enthält alle folgenden Wörter (mit Leerzeichen getrennt)"
+    "explanationAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument enthält alle folgenden Wörter (mit Leerzeichen getrennt)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document contains all of these words (space separated)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document contains all of these words (space separated)"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le document contient tous ces mots (séparés par des espaces)"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document contient tous ces mots (séparés par des espaces)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document bevat al deze woorden (gescheiden door spaties)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zawiera wszystkie poniższe słowa (oddzielone spacją)"
           }
         }
       }
     },
-    "explanationAny": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokument enthält eines der folgenden Wörter (mit Leerzeichen getrennt)"
+    "explanationAny" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument enthält eines der folgenden Wörter (mit Leerzeichen getrennt)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document contains any of these words (space separated)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document contains any of these words (space separated)"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le document contient l'un de ces mots (séparés par des espaces)"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document contient l'un de ces mots (séparés par des espaces)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document bevat één of meerdere van deze woorden (spatie gescheiden)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zawiera dowolne z tych słów (oddzielone spacją)"
           }
         }
       }
     },
-    "explanationAuto": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zuweisung automatisch erlernen"
+    "explanationAuto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuweisung automatisch erlernen"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Learn matching automatically"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn matching automatically"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apprentissage automatique du rapprochement"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apprentissage automatique du rapprochement"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch overeenkomsten aanleren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ucz się dopasowywać automatycznie"
           }
         }
       }
     },
-    "explanationExact": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokument enthält die folgende Zeichenkette"
+    "explanationExact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument enthält die folgende Zeichenkette"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document contains this string"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document contains this string"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le document contient cette chaîne de caractères"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document contient cette chaîne de caractères"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document bevat deze tekenreeks"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zawiera ten ciąg znaków"
           }
         }
       }
     },
-    "explanationFuzzy": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokument enthält ein zum folgenden Wort ähnliches Wort"
+    "explanationFuzzy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument enthält ein zum folgenden Wort ähnliches Wort"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document contains a word similar to this word"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document contains a word similar to this word"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le document contient un mot similaire à ce mot"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document contient un mot similaire à ce mot"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document bevat een woord dat lijkt op dit woord"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zawiera słowo podobne do tego słowa"
           }
         }
       }
     },
-    "explanationNone": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine automatische Zuweisung"
+    "explanationNone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine automatische Zuweisung"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No automatic matching"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No automatic matching"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Désactiver le rapprochement automatique"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactiver le rapprochement automatique"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet automatisch matchen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak automatycznego dopasowania"
           }
         }
       }
     },
-    "explanationRegEx": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokument passt zum folgenden Ausdruck"
+    "explanationRegEx" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument passt zum folgenden Ausdruck"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document matches this regular expression"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document matches this regular expression"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le document correspond à cette expression regulère"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document correspond à cette expression regulère"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document komt overeen met deze regular expression (RegEx)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument pasuje do tego wyrażenia regularnego"
           }
         }
       }
     },
-    "pattern": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Muster"
+    "pattern" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muster"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pattern"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pattern"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motif"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motif"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patroon"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wzorzec dopasowania"
           }
         }
       }
     },
-    "title": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zuweisung"
+    "title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuweisung"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Matching"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rapprochement"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapprochement"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matchen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopasowanie"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
