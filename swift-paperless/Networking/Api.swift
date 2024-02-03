@@ -47,28 +47,6 @@ struct CrudApiError<Element>: Error, LocalizedError {
     }
 }
 
-// enum CrudApiError<Element>: Error, LocalizedError {
-//    case put(type: Element.Type, status: Int, body: String)
-//    case delete(type: Element.Type, status: Int, body: String)
-//    case post(type: Element.Type, status: Int, body: String)
-//    case post(type: Element.Type, status: Int, body: String)
-//
-//    var operation: String {
-//        switch self {
-//        case .put:
-//            return "update"
-//        case .delete:
-//            return "delete"
-//        case .post:
-//            return "create"
-//        }
-//    }
-//
-//    var errorDescription: String? {
-//        return "Failed to \(operation) object \(Element.self)"
-//    }
-// }
-
 class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
     private var nextPage: URL?
     private let repository: ApiRepository
@@ -95,52 +73,42 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         await semaphore.wait()
         defer { semaphore.signal() }
 
-//        xprint("ENTER next")
         guard !Task.isCancelled else {
+            Logger.shared.notice("API sequence next task was cancelled.")
             return nil
         }
 
         // if we have a current page loaded, return next element from that
         if let buffer, bufferIndex < buffer.count {
-//            xprint("Return from buffer")
             defer { bufferIndex += 1 }
             return buffer[bufferIndex]
         }
 
         guard let url = nextPage else {
-//            xprint("No next page")
+            Logger.shared.notice("API sequence has reached end (nextPage is nil)")
             hasMore = false
             return nil
         }
 
         do {
-//            xprint("Fetch more")
             let request = repository.request(url: url)
             let (data, _) = try await URLSession.shared.data(for: request)
 
             let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
 
             guard !decoded.results.isEmpty else {
-//                xprint("Fetch was empty")
+                Logger.shared.notice("API sequence fetch was empty")
                 hasMore = false
                 return nil
             }
 
-//            if Element.self is Document.Type {
-//                print(url)
-//                print("Got \(decoded.results.count)")
-//            }
-
-//            xprint("Fetch was good, returning")
             nextPage = decoded.next
-//            print("next: \(nextPage)")
             buffer = decoded.results
             bufferIndex = 1 // set to one because we return the first element immediately
             return decoded.results[0]
 
         } catch {
-//            xprint("Got error")
-            print("ERROR: \(error)")
+            Logger.shared.error("Error in API sequence: \(error)")
             return nil
         }
     }
@@ -202,7 +170,6 @@ class ApiRepository {
 
     let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
-//        encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601
         return encoder
     }()
@@ -227,14 +194,14 @@ class ApiRepository {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if (response as? HTTPURLResponse)?.statusCode != 200 {
-                print("Getting correspondent: Status was not 200")
+                Logger.shared.error("Getting \(type) with id \(id): Status was not 200")
                 return nil
             }
 
             let correspondent = try decoder.decode(type, from: data)
             return correspondent
         } catch {
-            print("Error getting \(type) with id \(id): \(error)")
+            Logger.shared.error("Error getting \(type) with id \(id): \(error)")
             return nil
         }
     }
@@ -247,10 +214,8 @@ class ApiRepository {
 
     private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type) async throws -> Element where Element: Decodable {
         var request = request(endpoint)
-//        print("Create: \(request.url!)")
 
         let body = try JSONEncoder().encode(element)
-//        print("Create \(returns): \(String(describing: String(data: body, encoding: .utf8)!))")
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
@@ -270,7 +235,7 @@ class ApiRepository {
             let created = try decoder.decode(returns, from: data)
             return created
         } catch {
-            print("Error creating \(returns): \(error)")
+            Logger.shared.error("Api create \(returns) failed: \(error)")
             throw error
         }
     }
@@ -298,7 +263,7 @@ class ApiRepository {
             return try decoder.decode(Element.self, from: data)
 
         } catch {
-            print(error)
+            Logger.shared.error("Api update \(Element.self) failed: \(error)")
             throw error
         }
     }
@@ -320,7 +285,7 @@ class ApiRepository {
             }
 
         } catch {
-            print(error)
+            Logger.shared.error("Api delete \(Element.self) failed: \(error)")
             throw error
         }
     }
@@ -357,11 +322,11 @@ extension ApiRepository: Repository {
 
             if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
                 let body = String(data: data, encoding: .utf8) ?? "No body"
-                Logger.shared.notice("Create response return code \(hres.statusCode) and body \(body)")
-                throw CrudApiError(operation: .create, type: Document.self, status: hres.statusCode)
+                Logger.shared.error("Create response return code \(hres.statusCode) and body \(body)")
+                throw CrudApiError(operation: .create, type: Document.self, status: hres.statusCode, body: body)
             }
         } catch {
-            print("Error uploading: \(error)")
+            Logger.shared.error("Error uploading document: \(error)")
             throw error
         }
     }
@@ -405,7 +370,7 @@ extension ApiRepository: Repository {
             return temporaryFileURL
 
         } catch {
-            print(error)
+            Logger.shared.error("Error downloading document: \(error)")
             return nil
         }
     }
@@ -561,9 +526,11 @@ extension ApiRepository: Repository {
 
     func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
+            Logger.shared.error("Did not get thumbnail data")
             return nil
         }
         guard let uiImage = UIImage(data: data) else {
+            Logger.shared.error("Thumbnail data did not decode as image")
             return nil
         }
         let image = Image(uiImage: uiImage)
@@ -581,11 +548,15 @@ extension ApiRepository: Repository {
             let (data, res) = try await URLSession.shared.data(for: request)
 
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
+                Logger.shared.error("Status code for thumbnail data was not 200: \(res)")
                 return nil
             }
 
             return data
-        } catch { return nil }
+        } catch {
+            Logger.shared.error("Error getting thumbnail data for document: \(error)")
+            return nil
+        }
     }
 
     func suggestions(documentId: UInt) async -> Suggestions {
@@ -651,7 +622,8 @@ extension ApiRepository: Repository {
         let (data, res) = try await URLSession.shared.data(for: request)
 
         guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-            throw CrudApiError(operation: .read, type: UiSettingsResponse.self, status: nil)
+            let body = String(data: data, encoding: .utf8) ?? "No body"
+            throw CrudApiError(operation: .read, type: UiSettingsResponse.self, status: (res as? HTTPURLResponse)?.statusCode, body: body)
         }
 
         let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
@@ -665,7 +637,8 @@ extension ApiRepository: Repository {
             let (data, res) = try await URLSession.shared.data(for: request)
 
             guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: nil)
+                let body = String(data: data, encoding: .utf8) ?? "No body"
+                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: (res as? HTTPURLResponse)?.statusCode, body: body)
             }
 
             return try decoder.decode([PaperlessTask].self, from: data)
@@ -692,10 +665,14 @@ extension ApiRepository: Repository {
                 return
             }
 
-            guard let backend = res.value(forHTTPHeaderField: "X-Version") else {
+            let backend1 = res.value(forHTTPHeaderField: "X-Version")
+            let backend2 = res.value(forHTTPHeaderField: "x-version")
+
+            guard let backend1, let backend2 else {
                 Logger.shared.error("Unable to get API and backend version: X-Version not found")
                 return
             }
+            let backend = [backend1, backend2].compactMap { $0 }.first!
 
             let parts = backend.components(separatedBy: ".").compactMap { UInt($0) }
             guard parts.count == 3 else {
