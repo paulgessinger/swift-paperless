@@ -1972,6 +1972,23 @@
         }
       }
     },
+    "importDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument importieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import document"
+          }
+        }
+      }
+    },
     "includeElement" : {
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",
@@ -3269,6 +3286,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pokaż w kokpicie"
+          }
+        }
+      }
+    },
+    "scanDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument scannen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan document"
           }
         }
       }
