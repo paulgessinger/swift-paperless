@@ -88,35 +88,44 @@ struct DocumentView: View {
     @State private var filterState = FilterState()
     @State private var refreshRequested = false
     @State private var showFileImporter = false
-    @State var showCreateModal = false
-    @State var importUrl: URL?
+    @State private var showDocumentScanner = false
+    @State private var showCreateModal = false
+    @State private var importUrl: URL?
     @State private var error: String?
     @State private var logoutRequested = false
 
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
 
-    func importFile(result: Result<[URL], Error>) {
+    func importFile(result: Result<[URL], Error>, isSecurityScoped: Bool) {
         do {
             guard let selectedFile: URL = try result.get().first else { return }
-            if selectedFile.startAccessingSecurityScopedResource() {
-                defer { selectedFile.stopAccessingSecurityScopedResource() }
-
-                let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-                let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
-
-                if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
-                    try FileManager.default.removeItem(at: temporaryFileURL)
+  
+            showFileImporter = false
+            showDocumentScanner = false
+            
+            if isSecurityScoped {
+                if selectedFile.startAccessingSecurityScopedResource() {
+                    defer { selectedFile.stopAccessingSecurityScopedResource() }
+                    
+                    let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                    let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
+                    
+                    if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
+                        try FileManager.default.removeItem(at: temporaryFileURL)
+                    }
+                    try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
+                    
+                    importUrl = temporaryFileURL
+                    showCreateModal = true
+                } else {
+                    print("Access denied")
+                    error = "Cannot access selected file"
+                    // Handle denied access
                 }
-                try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
-
-                importUrl = temporaryFileURL
-                showFileImporter = false
-                showCreateModal = true
             } else {
-                print("Access denied")
-                error = "Cannot access selected file"
-                // Handle denied access
+                importUrl = selectedFile
+                showCreateModal = true
             }
         } catch {
             // Handle failure.
@@ -194,10 +203,21 @@ struct DocumentView: View {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         TaskActivityToolbar()
 
-                        Button {
-                            showFileImporter = true
-                        } label: {
-                            Label(String(localized: .localizable.add), systemImage: "plus")
+                        if DocumentScannerView.isAvailable {
+                            Menu {
+                                Button(String(localized: .localizable.scanDocument)) {
+                                    showDocumentScanner = true
+                                }
+                                Button(String(localized: .localizable.importDocument)) {
+                                    showFileImporter = true
+                                }
+                            } label: {
+                                Label(String(localized: .localizable.add), systemImage: "plus")
+                            }
+                        } else {
+                            Button(String(localized: .localizable.add), systemImage: "plus") {
+                                showFileImporter = true
+                            }
                         }
                     }
 
@@ -248,9 +268,17 @@ struct DocumentView: View {
                 .fileImporter(isPresented: $showFileImporter,
                               allowedContentTypes: [.pdf],
                               allowsMultipleSelection: false,
-                              onCompletion: importFile)
-
-                .sheet(isPresented: $showCreateModal, onDismiss: {}) {
+                              onCompletion: { result in
+                    importFile(result: result, isSecurityScoped: true)
+                })
+            
+                .fullScreenCover(isPresented: $showDocumentScanner) {
+                    DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
+                        importFile(result: result, isSecurityScoped: false)
+                    }).ignoresSafeArea()
+                }
+            
+                .sheet(isPresented: $showCreateModal) { [importUrl] in
                     CreateDocumentView(
                         sourceUrl: importUrl!,
                         callback: {

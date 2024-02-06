@@ -198,6 +198,7 @@
 		7AFB7BAB2A8978650013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
+		939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -336,6 +337,7 @@
 		7AFB7BA62A89773B0013196B /* SettingsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsKeys.swift; sourceTree = "<group>"; };
 		7AFB7BA92A89783F0013196B /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		7AFD3F5F2A87F482002789C2 /* FilterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterModel.swift; sourceTree = "<group>"; };
+		939739772B72966E0041F08A /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -570,6 +572,7 @@
 				7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */,
 				7ACFB2D62B4756FC009DED79 /* LogRecord.swift */,
 				7A2F65582B5ADB25000A75D9 /* MailView.swift */,
+				939739772B72966E0041F08A /* DocumentScannerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -923,6 +926,7 @@
 				7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */,
 				7A2E12222B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A83F6E32A6BE3D7002B5CF6 /* DataScannerView.swift in Sources */,
+				939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */,
 				7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */,
 				7A8E1F822A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7AEF691C29D049D900414BA7 /* PositionObservingView.swift in Sources */,
