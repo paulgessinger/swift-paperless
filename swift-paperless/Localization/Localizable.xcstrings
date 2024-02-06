@@ -1986,6 +1986,24 @@
             "state" : "translated",
             "value" : "Import document"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer un document"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import document"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import document"
+          }
         }
       }
     },
@@ -3302,6 +3320,24 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Scan document"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numériser un document"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan document"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Scan document"
           }
         }
