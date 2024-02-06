@@ -100,22 +100,22 @@ struct DocumentView: View {
     func importFile(result: Result<[URL], Error>, isSecurityScoped: Bool) {
         do {
             guard let selectedFile: URL = try result.get().first else { return }
-  
+
             showFileImporter = false
             showDocumentScanner = false
-            
+
             if isSecurityScoped {
                 if selectedFile.startAccessingSecurityScopedResource() {
                     defer { selectedFile.stopAccessingSecurityScopedResource() }
-                    
+
                     let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
                     let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
-                    
+
                     if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
                         try FileManager.default.removeItem(at: temporaryFileURL)
                     }
                     try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
-                    
+
                     importUrl = temporaryFileURL
                     showCreateModal = true
                 } else {
@@ -205,11 +205,15 @@ struct DocumentView: View {
 
                         if DocumentScannerView.isAvailable {
                             Menu {
-                                Button(String(localized: .localizable.scanDocument)) {
+                                Button {
                                     showDocumentScanner = true
+                                } label: {
+                                    Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
                                 }
-                                Button(String(localized: .localizable.importDocument)) {
+                                Button {
                                     showFileImporter = true
+                                } label: {
+                                    Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
                                 }
                             } label: {
                                 Label(String(localized: .localizable.add), systemImage: "plus")
@@ -269,15 +273,15 @@ struct DocumentView: View {
                               allowedContentTypes: [.pdf],
                               allowsMultipleSelection: false,
                               onCompletion: { result in
-                    importFile(result: result, isSecurityScoped: true)
-                })
-            
+                                  importFile(result: result, isSecurityScoped: true)
+                              })
+
                 .fullScreenCover(isPresented: $showDocumentScanner) {
                     DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
                         importFile(result: result, isSecurityScoped: false)
                     }).ignoresSafeArea()
                 }
-            
+
                 .sheet(isPresented: $showCreateModal) { [importUrl] in
                     CreateDocumentView(
                         sourceUrl: importUrl!,
