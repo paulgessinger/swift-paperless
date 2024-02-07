@@ -415,8 +415,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thanks!"
+            "state" : "translated",
+            "value" : "Dzięki!"
           }
         }
       }
@@ -450,8 +450,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Send mail"
+            "state" : "translated",
+            "value" : "Wyślij e-mail"
           }
         }
       }

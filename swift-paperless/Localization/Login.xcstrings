@@ -217,7 +217,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konnte \"%@\" nicht in URL konvertieren"
+            "value" : "\"%@\" ist keine gültige URL"
           }
         },
         "en" : {
@@ -240,8 +240,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not convert \"%@\" to URL"
+            "state" : "translated",
+            "value" : "Nie można zinterpretować \"%@\" jako adres URL"
           }
         }
       }
@@ -275,8 +275,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Request to \"%@\" returned invalid response code %d"
+            "state" : "translated",
+            "value" : "Żądanie do \"%@\" zwróciło nieprawidłowy kod odpowiedzi %d"
           }
         }
       }
@@ -310,8 +310,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid credentials"
+            "state" : "translated",
+            "value" : "Nieprawidłowe dane logowania"
           }
         }
       }
@@ -322,7 +322,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anderer Fehler"
+            "value" : "Unerwarteter Fehler"
           }
         },
         "en" : {
@@ -345,8 +345,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other error"
+            "state" : "translated",
+            "value" : "Nieoczekiwany błąd"
           }
         }
       }
@@ -380,8 +380,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid."
+            "state" : "translated",
+            "value" : "Podany adres URL jest nieprawidłowy."
           }
         }
       }
@@ -415,8 +415,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid: %@"
+            "state" : "translated",
+            "value" : "Podany adres URL jest nieprawidłowy: %@"
           }
         }
       }
@@ -730,8 +730,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login successful"
+            "state" : "translated",
+            "value" : "Logowanie udane"
           }
         }
       }

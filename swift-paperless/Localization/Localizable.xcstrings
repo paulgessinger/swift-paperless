@@ -1717,8 +1717,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy to clipboard"
+            "state" : "translated",
+            "value" : "Kopiuj do schowka"
           }
         }
       }
@@ -1752,8 +1752,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tap for details!"
+            "state" : "translated",
+            "value" : "Dotknij, aby zobaczyć szczegóły!"
           }
         }
       }
@@ -1787,8 +1787,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred"
+            "state" : "translated",
+            "value" : "Wystąpił błąd"
           }
         }
       }
@@ -1995,14 +1995,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import document"
+            "state" : "translated",
+            "value" : "Document importeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import document"
+            "state" : "translated",
+            "value" : "Importuj dokument"
           }
         }
       }
@@ -2142,8 +2142,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Export logs"
+            "state" : "translated",
+            "value" : "Eksportuj logi"
           }
         }
       }
@@ -2177,8 +2177,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting logs"
+            "state" : "translated",
+            "value" : "Zbieranie logów"
           }
         }
       }
@@ -2212,8 +2212,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share logs"
+            "state" : "translated",
+            "value" : "Udostępnij logi"
           }
         }
       }
@@ -2459,7 +2459,7 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "OK"
           }
         }
@@ -3331,14 +3331,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan document"
+            "state" : "translated",
+            "value" : "Document scannen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan document"
+            "state" : "translated",
+            "value" : "Skanuj dokument"
           }
         }
       }
