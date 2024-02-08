@@ -18,11 +18,6 @@ jobs:
         ios:
           - "16.4"
           - "17.0.1"
-        include:
-          - ios: "16.4"
-            xcode: "14.3.1"
-          - ios: "17.0.1"
-            xcode: "15.0.1"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
@@ -33,7 +28,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: ${{ matrix.xcode }}
+          xcode-version: "15.0.1"
 
       - name: Install dependencies
         run: bundle install
