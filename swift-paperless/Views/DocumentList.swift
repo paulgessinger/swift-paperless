@@ -263,10 +263,6 @@ struct DocumentList: View {
                         .listStyle(.plain)
                     }
                 }
-
-                if viewModel.ready, viewModel.loading {
-                    ProgressView()
-                }
             }
 
             .onChange(of: filterState) { filter in
