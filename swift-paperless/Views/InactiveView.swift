@@ -17,7 +17,7 @@ struct InactiveView: View {
                 .frame(width: 100, height: 100)
                 .foregroundColor(.white)
                 .shadow(radius: 10)
-                .padding(.bottom, 200)
+                .padding(.bottom, 100)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
