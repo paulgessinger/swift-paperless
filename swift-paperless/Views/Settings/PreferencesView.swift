@@ -9,9 +9,16 @@ struct PreferencesView: View {
     @AppStorage(SettingsKeys.enableBiometricAppLock)
     private var enableBiometricAppLock: Bool = false
 
+    @State private var enableBiometricToggle = false
+
     @State private var biometricName: String? = nil
 
     @EnvironmentObject private var errorController: ErrorController
+
+    init() {
+        _enableBiometricToggle = State(initialValue: enableBiometricAppLock)
+        _biometricName = State(initialValue: getBiometricName())
+    }
 
     var body: some View {
         Form {
@@ -23,16 +30,15 @@ struct PreferencesView: View {
 
             if let biometricName {
                 Section {
-                    Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $enableBiometricAppLock)
+                    Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $enableBiometricToggle)
                 }
             }
         }
 
-        .task { biometricName = getBiometricName() }
-
-        .onChange(of: enableBiometricAppLock) { value in
+        .onChange(of: enableBiometricToggle) { value in
             if !value {
                 Logger.shared.notice("Biometric lock disabled")
+                enableBiometricAppLock = false
                 return
             }
 
@@ -47,14 +53,16 @@ struct PreferencesView: View {
                 do {
                     if try await biometricAuthenticate() {
                         Logger.shared.notice("Biometric lock enabled successfully")
+                        try? await Task.sleep(for: .seconds(2))
+                        enableBiometricAppLock = true
                     } else {
                         Logger.shared.notice("Biometric lock could not be enabled")
-                        enableBiometricAppLock = false
+                        enableBiometricToggle = false
                     }
                 } catch {
                     Logger.shared.error("Error enabling biometric lock: \(error)")
                     errorController.push(error: error, message: String(localized: .settings.biometricLockEnableFailure(biometricName)))
-                    enableBiometricAppLock = false
+                    enableBiometricToggle = false
                 }
             }
         }

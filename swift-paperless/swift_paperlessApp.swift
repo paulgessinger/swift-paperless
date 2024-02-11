@@ -32,16 +32,19 @@ struct MainView: View {
 
     var body: some View {
         Group {
-            if !enableBiometricAppLock || (lockState == .unlocked && scenePhase != .inactive) {
-                if manager.state == .valid, storeReady {
-                    DocumentView()
-                        .errorOverlay(errorController: errorController)
-                        .environmentObject(store!)
-                        .environmentObject(manager)
-                        .environmentObject(filterModel)
-                }
-            } else {
-                InactiveView()
+            if manager.state == .valid, storeReady {
+                DocumentView()
+                    .errorOverlay(errorController: errorController)
+                    .environmentObject(store!)
+                    .environmentObject(manager)
+                    .environmentObject(filterModel)
+
+                    .overlay {
+                        if enableBiometricAppLock, lockState == .locked || scenePhase == .inactive {
+                            InactiveView(center: true)
+                                .transition(.opacity)
+                        }
+                    }
             }
         }
         .environmentObject(errorController)
@@ -89,7 +92,10 @@ struct MainView: View {
 
                             if try await biometricAuthenticate() {
                                 Logger.shared.notice("App is unlocked by biometric")
-                                lockState = .unlocked
+//                                try? await Task.sleep(for: .seconds(2))
+                                withAnimation {
+                                    lockState = .unlocked
+                                }
                             }
                         } catch {
                             Logger.shared.error("Error during biometric unlock: \(error)")
