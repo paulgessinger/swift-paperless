@@ -12,8 +12,10 @@ struct InactiveView: View {
         VStack {
             Spacer()
             Image(systemName: "leaf.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
                 .foregroundColor(.white)
-                .scaleEffect(5)
                 .shadow(radius: 10)
                 .padding(.bottom, 200)
         }
