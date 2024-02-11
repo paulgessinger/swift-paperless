@@ -29,6 +29,7 @@ struct MainView: View {
     }
 
     @State private var lockState = LockState.initial
+    @State private var unlocking = false
 
     var body: some View {
         Group {
@@ -41,7 +42,7 @@ struct MainView: View {
 
                     .overlay {
                         if enableBiometricAppLock, lockState == .locked || scenePhase == .inactive {
-                            InactiveView(center: true)
+                            InactiveView()
                                 .transition(.opacity)
                         }
                     }
@@ -87,12 +88,17 @@ struct MainView: View {
                 Logger.shared.notice("App becomes active")
                 if enableBiometricAppLock, lockState == .locked {
                     Task {
+                        if unlocking {
+                            return
+                        }
+                        unlocking = true
+                        defer { unlocking = false }
                         do {
                             Logger.shared.notice("App is locked, attempt biometric unlock")
 
                             if try await biometricAuthenticate() {
                                 Logger.shared.notice("App is unlocked by biometric")
-//                                try? await Task.sleep(for: .seconds(2))
+                                try? await Task.sleep(for: .seconds(1.0))
                                 withAnimation {
                                     lockState = .unlocked
                                 }
