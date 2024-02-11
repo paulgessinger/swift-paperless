@@ -148,6 +148,8 @@
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
+		7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52B52B791E6400AE218B /* Biometric.swift */; };
+		7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52C92B79314700AE218B /* InactiveView.swift */; };
 		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
 		7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */; };
@@ -195,7 +197,6 @@
 		7AFB7BA72A89773B0013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
 		7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
 		7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
-		7AFB7BAB2A8978650013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
@@ -305,6 +306,8 @@
 		7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagers.swift; sourceTree = "<group>"; };
 		7AB057792AA48BA700ABA6B1 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		7ABA52B52B791E6400AE218B /* Biometric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Biometric.swift; sourceTree = "<group>"; };
+		7ABA52C92B79314700AE218B /* InactiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveView.swift; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessOverlay.swift; sourceTree = "<group>"; };
@@ -508,6 +511,7 @@
 				7A898ECD2A03000D0003DFBD /* UserDefaults.swift */,
 				7A898ED02A0303140003DFBD /* Logging.swift */,
 				7A25773F2A87D32400B15626 /* NullCodable.swift */,
+				7ABA52B52B791E6400AE218B /* Biometric.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -573,6 +577,7 @@
 				7ACFB2D62B4756FC009DED79 /* LogRecord.swift */,
 				7A2F65582B5ADB25000A75D9 /* MailView.swift */,
 				939739772B72966E0041F08A /* DocumentScannerView.swift */,
+				7ABA52C92B79314700AE218B /* InactiveView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -641,7 +646,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A47864B2B4714A100C13C26 /* PBXTargetDependency */,
+				7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -859,7 +864,6 @@
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */,
-				7AFB7BAB2A8978650013196B /* PreferencesView.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
 				7A2831B82A63DC97009E86CE /* TaskModel.swift in Sources */,
 				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
@@ -901,6 +905,7 @@
 				7A8E1F7E2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
+				7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */,
 				7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A2F65592B5ADB25000A75D9 /* MailView.swift in Sources */,
 				7AF2E08229F480310092948B /* TagEditView.swift in Sources */,
@@ -944,6 +949,7 @@
 				7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */,
 				7AF2E08529F553360092948B /* MatchingEditView.swift in Sources */,
 				7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */,
+				7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */,
 				7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A8E1F862A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
 				7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
@@ -1235,6 +1241,7 @@
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1283,6 +1290,7 @@
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

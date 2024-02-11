@@ -62,9 +62,6 @@ class ConnectionManager: ObservableObject {
     @UserDefaultBacked(key: "ApiPath", storage: .group)
     var apiPath: String? = nil
 
-//    @UserDefaultBacked(key: "ConnectionScheme", storage: .group)
-//    var scheme: ConnectionScheme = .https
-
     func check() async {
         await MainActor.run {
             guard connection != nil else {
@@ -128,7 +125,7 @@ class ConnectionManager: ObservableObject {
             try Keychain.delete(service: host,
                                 account: keychainAccount)
         } catch {
-            print(error)
+            Logger.shared.error("Error logging out: \(error)")
         }
 
         apiHost = nil
