@@ -74,7 +74,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         defer { semaphore.signal() }
 
         guard !Task.isCancelled else {
-            Logger.shared.notice("API sequence next task was cancelled.")
+            Logger.api.notice("API sequence next task was cancelled.")
             return nil
         }
 
@@ -85,7 +85,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         guard let url = nextPage else {
-            Logger.shared.notice("API sequence has reached end (nextPage is nil)")
+            Logger.api.notice("API sequence has reached end (nextPage is nil)")
             hasMore = false
             return nil
         }
@@ -97,7 +97,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
 
             guard !decoded.results.isEmpty else {
-                Logger.shared.notice("API sequence fetch was empty")
+                Logger.api.notice("API sequence fetch was empty")
                 hasMore = false
                 return nil
             }
@@ -108,7 +108,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch {
-            Logger.shared.error("Error in API sequence: \(error)")
+            Logger.api.error("Error in API sequence: \(error)")
             return nil
         }
     }
@@ -145,15 +145,15 @@ class ApiRepository {
 
     init(connection: Connection) {
         self.connection = connection
-        Logger.shared.notice("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+        Logger.api.notice("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
 
         Task {
             await ensureBackendVersions()
 
             if let apiVersion, let backendVersion {
-                Logger.shared.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
+                Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
             } else {
-                Logger.shared.warning("Did not get backend version info")
+                Logger.api.warning("Did not get backend version info")
             }
         }
     }
@@ -164,7 +164,7 @@ class ApiRepository {
 
     func url(_ endpoint: Endpoint) -> URL {
         let connection = connection
-        Logger.shared.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
+        Logger.api.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
         return endpoint.url(url: connection.url)!
     }
 
@@ -175,7 +175,7 @@ class ApiRepository {
     }()
 
     fileprivate func request(url: URL) -> URLRequest {
-        Logger.shared.trace("Creating API request for URL \(url)")
+        Logger.api.trace("Creating API request for URL \(url)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
@@ -201,7 +201,7 @@ class ApiRepository {
             let correspondent = try decoder.decode(type, from: data)
             return correspondent
         } catch {
-            Logger.shared.error("Error getting \(type) with id \(id): \(error)")
+            Logger.api.error("Error getting \(type) with id \(id): \(error)")
             return nil
         }
     }
@@ -235,7 +235,7 @@ class ApiRepository {
             let created = try decoder.decode(returns, from: data)
             return created
         } catch {
-            Logger.shared.error("Api create \(returns) failed: \(error)")
+            Logger.api.error("Api create \(returns) failed: \(error)")
             throw error
         }
     }
@@ -263,7 +263,7 @@ class ApiRepository {
             return try decoder.decode(Element.self, from: data)
 
         } catch {
-            Logger.shared.error("Api update \(Element.self) failed: \(error)")
+            Logger.api.error("Api update \(Element.self) failed: \(error)")
             throw error
         }
     }
@@ -285,7 +285,7 @@ class ApiRepository {
             }
 
         } catch {
-            Logger.shared.error("Api delete \(Element.self) failed: \(error)")
+            Logger.api.error("Api delete \(Element.self) failed: \(error)")
             throw error
         }
     }
@@ -297,6 +297,7 @@ extension ApiRepository: Repository {
     }
 
     func create(document: ProtoDocument, file: URL) async throws {
+        Logger.api.notice("Creating document")
         var request = request(.createDocument())
 
         let mp = MultiPartFormDataRequest()
@@ -326,22 +327,25 @@ extension ApiRepository: Repository {
                 throw CrudApiError(operation: .create, type: Document.self, status: hres.statusCode, body: body)
             }
         } catch {
-            Logger.shared.error("Error uploading document: \(error)")
+            Logger.api.error("Error uploading document: \(error)")
             throw error
         }
     }
 
     func delete(document: Document) async throws {
+        Logger.api.notice("Deleting document")
         try await delete(element: document, endpoint: .document(id: document.id))
     }
 
     func documents(filter: FilterState) -> any DocumentSource {
-        ApiDocumentSource(
+        Logger.api.notice("Getting document sequence for filter")
+        return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
     }
 
     func download(documentID: UInt) async -> URL? {
+        Logger.api.notice("Downloading document")
         let request = request(.download(documentId: documentID))
 
         do {
@@ -358,7 +362,7 @@ extension ApiRepository: Repository {
             }
 
             guard let suggestedFilename = response.suggestedFilename else {
-                Logger.shared.error("Cannot get suggested filename from response")
+                Logger.api.error("Cannot get suggested filename from response")
                 return nil
             }
 
@@ -370,7 +374,7 @@ extension ApiRepository: Repository {
             return temporaryFileURL
 
         } catch {
-            Logger.shared.error("Error downloading document: \(error)")
+            Logger.api.error("Error downloading document: \(error)")
             return nil
         }
     }
@@ -434,6 +438,7 @@ extension ApiRepository: Repository {
     func document(id: UInt) async -> Document? { await get(Document.self, id: id) }
 
     func document(asn: UInt) async -> Document? {
+        Logger.api.notice("Getting document by ASN")
         let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
 
         let request = request(endpoint)
@@ -450,25 +455,25 @@ extension ApiRepository: Repository {
 
             guard decoded.count > 0, !decoded.results.isEmpty else {
                 // this means the ASN was not found
-                Logger.shared.notice("Got empty document result (ASN not found)")
+                Logger.api.notice("Got empty document result (ASN not found)")
                 return nil
             }
             return decoded.results.first
 
         } catch {
-            Logger.shared.error("Error fetching document by ASN \(asn): \(error)")
+            Logger.api.error("Error fetching document by ASN \(asn): \(error)")
             return nil
         }
     }
 
     private func nextAsnCompatibility() async -> UInt {
-        Logger.shared.trace("Getting next ASN with legacy compatibility method")
+        Logger.api.notice("Getting next ASN with legacy compatibility method")
         var fs = FilterState()
         fs.sortField = .asn
         fs.sortOrder = .descending
         let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
         let url = url(endpoint)
-        Logger.shared.notice("\(url)")
+        Logger.api.notice("\(url)")
 
         let request = request(endpoint)
 
@@ -483,14 +488,14 @@ extension ApiRepository: Repository {
 
             return (decoded.results.first?.asn ?? 0) + 1
         } catch {
-            Logger.shared.error("Error fetching document for next ASN: \(error)")
+            Logger.api.error("Error fetching document for next ASN: \(error)")
         }
 
         return 0
     }
 
     private func nextAsnDirectEndpoint() async -> UInt {
-        Logger.shared.trace("Getting next ASN with dedicated endpoint")
+        Logger.api.notice("Getting next ASN with dedicated endpoint")
         let request = request(.nextAsn())
 
         do {
@@ -502,10 +507,10 @@ extension ApiRepository: Repository {
             }
 
             let asn = try decoder.decode(UInt.self, from: data)
-            Logger.shared.trace("Have next ASN \(asn)")
+            Logger.api.notice("Have next ASN \(asn)")
             return asn
         } catch {
-            Logger.shared.error("Error fetching next ASN: \(error)")
+            Logger.api.error("Error fetching next ASN: \(error)")
             return 0
         }
     }
@@ -526,11 +531,11 @@ extension ApiRepository: Repository {
 
     func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
-            Logger.shared.error("Did not get thumbnail data")
+            Logger.api.error("Did not get thumbnail data")
             return nil
         }
         guard let uiImage = UIImage(data: data) else {
-            Logger.shared.error("Thumbnail data did not decode as image")
+            Logger.api.error("Thumbnail data did not decode as image")
             return nil
         }
         let image = Image(uiImage: uiImage)
@@ -538,6 +543,7 @@ extension ApiRepository: Repository {
     }
 
     func thumbnailData(document: Document) async -> Data? {
+        Logger.api.notice("Get thumbnail")
         let url = url(Endpoint.thumbnail(documentId: document.id))
 
         var request = URLRequest(url: url)
@@ -554,12 +560,13 @@ extension ApiRepository: Repository {
 
             return data
         } catch {
-            Logger.shared.error("Error getting thumbnail data for document: \(error)")
+            Logger.api.error("Error getting thumbnail data for document: \(error)")
             return nil
         }
     }
 
     func suggestions(documentId: UInt) async -> Suggestions {
+        Logger.api.notice("Get suggestions")
         let request = request(.suggestions(documentId: documentId))
 
         do {
@@ -571,7 +578,7 @@ extension ApiRepository: Repository {
 
             return try decoder.decode(Suggestions.self, from: data)
         } catch {
-            Logger.shared.error("Unable to load suggestions: \(error)")
+            Logger.api.error("Unable to load suggestions: \(error)")
             return .init()
         }
     }
@@ -643,18 +650,19 @@ extension ApiRepository: Repository {
 
             return try decoder.decode([PaperlessTask].self, from: data)
         } catch {
-            Logger.shared.error("Unable to load tasks: \(error)")
+            Logger.api.error("Unable to load tasks: \(error)")
             return []
         }
     }
 
     private func ensureBackendVersions() async {
+        Logger.api.notice("Getting backend versions")
         let request = request(.root())
         do {
             let (data, res) = try await URLSession.shared.data(for: request)
 
             guard let res = res as? HTTPURLResponse else {
-                Logger.shared.error("Unable to get API and backend version: Not an HTTP response")
+                Logger.api.error("Unable to get API and backend version: Not an HTTP response")
                 return
             }
 
@@ -669,21 +677,21 @@ extension ApiRepository: Repository {
             let backend2 = res.value(forHTTPHeaderField: "x-version")
 
             guard let backend1, let backend2 else {
-                Logger.shared.error("Unable to get API and backend version: X-Version not found")
+                Logger.api.error("Unable to get API and backend version: X-Version not found")
                 return
             }
             let backend = [backend1, backend2].compactMap { $0 }.first!
 
             let parts = backend.components(separatedBy: ".").compactMap { UInt($0) }
             guard parts.count == 3 else {
-                Logger.shared.error("Unable to get API and backend version: Invalid format \(backend)")
+                Logger.api.error("Unable to get API and backend version: Invalid format \(backend)")
                 return
             }
 
             let backendVersion = (parts[0], parts[1], parts[2])
 
             guard let apiVersion = res.value(forHTTPHeaderField: "X-Api-Version"), let apiVersion = UInt(apiVersion) else {
-                Logger.shared.error("Unable to get API and backend version: X-Api-Version not found")
+                Logger.api.error("Unable to get API and backend version: X-Api-Version not found")
                 return
             }
 
@@ -691,7 +699,7 @@ extension ApiRepository: Repository {
             self.backendVersion = backendVersion
 
         } catch {
-            Logger.shared.error("Unable to get API and backend version: status code: \(error)")
+            Logger.api.error("Unable to get API and backend version, error: \(error)")
             return
         }
     }
