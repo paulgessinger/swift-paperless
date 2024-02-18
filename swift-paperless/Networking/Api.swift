@@ -18,33 +18,10 @@ enum CrudOperation: String {
     case delete
 }
 
-struct CrudApiError<Element>: Error, LocalizedError {
-    var operation: CrudOperation
-    var type: Element.Type
-    var status: Int?
-    var body: String? = nil
-
-    init(operation: CrudOperation, type: Element.Type, status: Int? = nil, body: String? = nil) {
-        self.operation = operation
-        self.type = type
-        self.status = status
-        self.body = body
-    }
-
-    init(operation: CrudOperation, type: Element.Type, status: Int? = nil, data: Data) {
-        self.operation = operation
-        self.type = type
-        self.status = status
-        body = String(decoding: data, as: UTF8.self)
-    }
-
-    var errorDescription: String? {
-        "Failed to \(operation.rawValue) \(type)"
-    }
-
-    var failureReason: String? {
-        "Backend replied with unexpected status: \(String(describing: status))" + (body != nil ? " \(body!)" : "")
-    }
+private enum RequestError: Error {
+    case invalidRequest
+    case invalidResponse
+    case unexpectedStatusCode(code: Int)
 }
 
 class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
@@ -178,7 +155,7 @@ class ApiRepository {
         Logger.api.trace("Creating API request for URL \(url)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
+        request.setValue("application/json; version=5", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         return request
     }
@@ -187,16 +164,47 @@ class ApiRepository {
         request(url: url(endpoint))
     }
 
+    private func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
+        guard let url = request.url else {
+            Logger.api.error("Request URL is nil")
+            throw RequestError.invalidRequest
+        }
+        Logger.api.trace("Fetching request data for \(url)")
+
+        let result: (Data, URLResponse)
+        do {
+            result = try await URLSession.shared.data(for: request)
+        } catch {
+            Logger.api.error("Caught error fetching \(url): \(error)")
+            throw error
+        }
+
+        let (data, response) = result
+
+        Logger.api.trace("Checking response of url \(url)")
+
+        guard let response = response as? HTTPURLResponse else {
+            let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
+            Logger.api.error("Response to \(url) is not HTTPURLResponse, body: \(body)")
+            throw RequestError.invalidResponse
+        }
+
+        if response.statusCode != code {
+            let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
+            Logger.api.error("URLResponse to \(url) has status code \(response.statusCode) != \(code), body: \(body)")
+            throw RequestError.unexpectedStatusCode(code: response.statusCode)
+        }
+
+        Logger.api.trace("URLResponse has status code \(code) as expected")
+
+        return (data, response)
+    }
+
     private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
         let request = request(.single(T.self, id: id))
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if (response as? HTTPURLResponse)?.statusCode != 200 {
-                Logger.shared.error("Getting \(type) with id \(id): Status was not 200")
-                return nil
-            }
+            let (data, _) = try await fetchData(for: request)
 
             let correspondent = try decoder.decode(type, from: data)
             return correspondent
@@ -221,16 +229,7 @@ class ApiRepository {
         request.httpBody = body
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 201 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw CrudApiError(operation: .create,
-                                   type: returns,
-                                   status: hres.statusCode,
-                                   body: body)
-            }
+            let (data, _) = try await fetchData(for: request, code: 201)
 
             let created = try decoder.decode(returns, from: data)
             return created
@@ -249,17 +248,7 @@ class ApiRepository {
         request.httpBody = body
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw CrudApiError(operation: .update,
-                                   type: Element.self,
-                                   status: hres.statusCode,
-                                   body: body)
-            }
-
+            let (data, _) = try await fetchData(for: request)
             return try decoder.decode(Element.self, from: data)
 
         } catch {
@@ -273,17 +262,7 @@ class ApiRepository {
         request.httpMethod = "DELETE"
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 204 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-
-                throw CrudApiError(operation: .delete,
-                                   type: Element.self,
-                                   status: hres.statusCode,
-                                   body: body)
-            }
-
+            _ = try await fetchData(for: request, code: 204)
         } catch {
             Logger.api.error("Api delete \(Element.self) failed: \(error)")
             throw error
@@ -319,13 +298,7 @@ extension ApiRepository: Repository {
         mp.addTo(request: &request)
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let hres = response as? HTTPURLResponse, hres.statusCode != 200 {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-                Logger.shared.error("Create response return code \(hres.statusCode) and body \(body)")
-                throw CrudApiError(operation: .create, type: Document.self, status: hres.statusCode, body: body)
-            }
+            let _ = try await fetchData(for: request, code: 200)
         } catch {
             Logger.api.error("Error uploading document: \(error)")
             throw error
@@ -349,17 +322,7 @@ extension ApiRepository: Repository {
         let request = request(.download(documentId: documentID))
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if (response as? HTTPURLResponse)?.statusCode != 200 {
-                Logger.shared.error("Downloading document: Status was not 200: \(String(decoding: data, as: UTF8.self))")
-                return nil
-            }
-
-            guard let response = response as? HTTPURLResponse else {
-                Logger.shared.error("Cannot get http response")
-                return nil
-            }
+            let (data, response) = try await fetchData(for: request, code: 200)
 
             guard let suggestedFilename = response.suggestedFilename else {
                 Logger.api.error("Cannot get suggested filename from response")
@@ -444,12 +407,7 @@ extension ApiRepository: Repository {
         let request = request(endpoint)
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                Logger.shared.error("Error fetching document by ASN \(asn): status code != 200. \(String(decoding: data, as: UTF8.self))")
-                return nil
-            }
+            let (data, _) = try await fetchData(for: request)
 
             let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
 
@@ -478,11 +436,7 @@ extension ApiRepository: Repository {
         let request = request(endpoint)
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                Logger.shared.error("Error fetching document for next ASN: status code != 200. \(String(decoding: data, as: UTF8.self))")
-                return 0
-            }
+            let (data, _) = try await fetchData(for: request)
 
             let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
 
@@ -499,13 +453,7 @@ extension ApiRepository: Repository {
         let request = request(.nextAsn())
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-            let code = (res as? HTTPURLResponse)?.statusCode ?? 0
-            guard code == 200 else {
-                Logger.shared.error("Error fetching next ASN: status code \(code) != 200")
-                return 0
-            }
-
+            let (data, _) = try await fetchData(for: request)
             let asn = try decoder.decode(UInt.self, from: data)
             Logger.api.notice("Have next ASN \(asn)")
             return asn
@@ -546,18 +494,13 @@ extension ApiRepository: Repository {
         Logger.api.notice("Get thumbnail")
         let url = url(Endpoint.thumbnail(documentId: document.id))
 
+        // @TODO: Can this be a regular request?
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         connection.extraHeaders.apply(toRequest: &request)
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                Logger.shared.error("Status code for thumbnail data was not 200: \(res)")
-                return nil
-            }
-
+            let (data, _) = try await fetchData(for: request)
             return data
         } catch {
             Logger.api.error("Error getting thumbnail data for document: \(error)")
@@ -570,11 +513,7 @@ extension ApiRepository: Repository {
         let request = request(.suggestions(documentId: documentId))
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: nil)
-            }
+            let (data, _) = try await fetchData(for: request)
 
             return try decoder.decode(Suggestions.self, from: data)
         } catch {
@@ -625,14 +564,7 @@ extension ApiRepository: Repository {
 
     func currentUser() async throws -> User {
         let request = request(.uiSettings())
-
-        let (data, res) = try await URLSession.shared.data(for: request)
-
-        guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "No body"
-            throw CrudApiError(operation: .read, type: UiSettingsResponse.self, status: (res as? HTTPURLResponse)?.statusCode, body: body)
-        }
-
+        let (data, _) = try await fetchData(for: request)
         let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
         return uiSettings.user
     }
@@ -641,13 +573,7 @@ extension ApiRepository: Repository {
         let request = request(.tasks())
 
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
-
-            guard (res as? HTTPURLResponse)?.statusCode == 200 else {
-                let body = String(data: data, encoding: .utf8) ?? "No body"
-                throw CrudApiError(operation: .read, type: [PaperlessTask].self, status: (res as? HTTPURLResponse)?.statusCode, body: body)
-            }
-
+            let (data, _) = try await fetchData(for: request)
             return try decoder.decode([PaperlessTask].self, from: data)
         } catch {
             Logger.api.error("Unable to load tasks: \(error)")
@@ -659,17 +585,11 @@ extension ApiRepository: Repository {
         Logger.api.notice("Getting backend versions")
         let request = request(.root())
         do {
-            let (data, res) = try await URLSession.shared.data(for: request)
+            let (_, res) = try await fetchData(for: request)
 
+            // fetchData should have already ensured this
             guard let res = res as? HTTPURLResponse else {
                 Logger.api.error("Unable to get API and backend version: Not an HTTP response")
-                return
-            }
-
-            let code: Int? = res.statusCode
-
-            guard code == 200 else {
-                Logger.shared.error("Unable to get API and backend version: status code: \(code ?? 0), \(data)")
                 return
             }
 
