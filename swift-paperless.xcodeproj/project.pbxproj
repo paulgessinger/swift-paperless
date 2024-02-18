@@ -97,6 +97,14 @@
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
+		7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
+		7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
+		7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A56F26A2B8270BE00BE9361 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A56F26B2B8270C000BE9361 /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
+		7A56F26C2B8270C000BE9361 /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
+		7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
+		7A56F26E2B8270C300BE9361 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
 		7A58A24829E19BF400986FE9 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
@@ -684,6 +692,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A56F2422B826F6300BE9361 /* PBXTargetDependency */,
 				7A5482BE299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessTests";
@@ -702,6 +711,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A56F2402B826F5E00BE9361 /* PBXTargetDependency */,
 				7A5482C8299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessUITests";
@@ -807,6 +817,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */,
+				7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */,
+				7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */,
+				7A56F26B2B8270C000BE9361 /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -814,6 +828,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A56F26E2B8270C300BE9361 /* Matching.xcstrings in Resources */,
+				7A56F26A2B8270BE00BE9361 /* Settings.xcstrings in Resources */,
+				7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */,
+				7A56F26C2B8270C000BE9361 /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1030,6 +1048,14 @@
 			isa = PBXTargetDependency;
 			target = 7A5482AA299AD56C00D5061E /* swift-paperless */;
 			targetProxy = 7A5482C7299AD56E00D5061E /* PBXContainerItemProxy */;
+		};
+		7A56F2402B826F5E00BE9361 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */;
+		};
+		7A56F2422B826F6300BE9361 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
 		};
 		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1602,6 +1628,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
+		};
+		7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
 		};
 		7A5C138929AA7E2F00D71F51 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;
