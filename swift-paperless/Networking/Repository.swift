@@ -19,7 +19,7 @@ protocol Repository {
     func create(tag: ProtoTag) async throws -> Tag
     func update(tag: Tag) async throws -> Tag
     func delete(tag: Tag) async throws
-    func tags() async -> [Tag]
+    func tags() async throws -> [Tag]
 
     // MARK: Correspondent
 
@@ -27,7 +27,7 @@ protocol Repository {
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent
     func update(correspondent: Correspondent) async throws -> Correspondent
     func delete(correspondent: Correspondent) async throws
-    func correspondents() async -> [Correspondent]
+    func correspondents() async throws -> [Correspondent]
 
     // MARK: Document type
 
@@ -35,7 +35,7 @@ protocol Repository {
     func create(documentType: ProtoDocumentType) async throws -> DocumentType
     func update(documentType: DocumentType) async throws -> DocumentType
     func delete(documentType: DocumentType) async throws
-    func documentTypes() async -> [DocumentType]
+    func documentTypes() async throws -> [DocumentType]
 
     // MARK: Documents
 
@@ -55,22 +55,22 @@ protocol Repository {
 
     // MARK: Saved views
 
-    func savedViews() async -> [SavedView]
+    func savedViews() async throws -> [SavedView]
     func create(savedView: ProtoSavedView) async throws -> SavedView
     func update(savedView: SavedView) async throws -> SavedView
     func delete(savedView: SavedView) async throws
 
     // MARK: Storage paths
 
-    func storagePaths() async -> [StoragePath]
+    func storagePaths() async throws -> [StoragePath]
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath
     func update(storagePath: StoragePath) async throws -> StoragePath
     func delete(storagePath: StoragePath) async throws
 
     func currentUser() async throws -> User
-    func users() async -> [User]
+    func users() async throws -> [User]
 
-    func tasks() async -> [PaperlessTask]
+    func tasks() async throws -> [PaperlessTask]
 }
 
 class NullRepository: Repository {
@@ -133,11 +133,11 @@ class NullRepository: Repository {
 
 // - MARK: DocumentSource
 protocol DocumentSource {
-    func fetch(limit: UInt) async -> [Document]
+    func fetch(limit: UInt) async throws -> [Document]
     func hasMore() async -> Bool
 }
 
 class NullDocumentSource: DocumentSource {
-    func fetch(limit _: UInt) async -> [Document] { [] }
+    func fetch(limit _: UInt) async throws -> [Document] { [] }
     func hasMore() async -> Bool { false }
 }

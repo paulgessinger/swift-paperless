@@ -334,7 +334,12 @@ struct DocumentEditView: View {
             .task {
                 Task.detached {
                     await gather([
-                        store.fetchAll,
+                        {
+                            do { try await store.fetchAll() }
+                            catch {
+                                await errorController.push(error: error)
+                            }
+                        },
                         {
                             if await suggestions == nil {
                                 let suggestions = await store.repository.suggestions(documentId: document.id)

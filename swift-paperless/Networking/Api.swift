@@ -46,7 +46,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
     }
 
-    func next() async -> Element? {
+    func next() async throws -> Element? {
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -69,9 +69,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
 
         do {
             let request = repository.request(url: url)
-            let (data, _) = try await URLSession.shared.data(for: request)
-
-            let decoded = try decoder.decode(ListResponse<Element>.self, from: data)
+            let decoded = try await repository.fetchData(for: request, as: ListResponse<Element>.self)
 
             guard !decoded.results.isEmpty else {
                 Logger.api.notice("API sequence fetch was empty")
@@ -86,7 +84,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
 
         } catch {
             Logger.api.error("Error in API sequence: \(error)")
-            return nil
+            throw error
         }
     }
 
@@ -104,11 +102,11 @@ class ApiDocumentSource: DocumentSource {
         self.sequence = sequence
     }
 
-    func fetch(limit: UInt) async -> [Document] {
+    func fetch(limit: UInt) async throws -> [Document] {
         guard sequence.hasMore else {
             return []
         }
-        return await Array(sequence.prefix(Int(limit)))
+        return try await Array(sequence.prefix(Int(limit)))
     }
 
     func hasMore() async -> Bool { sequence.hasMore }
@@ -164,7 +162,7 @@ class ApiRepository {
         request(url: url(endpoint))
     }
 
-    private func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
+    fileprivate func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
         guard let url = request.url else {
             Logger.api.error("Request URL is nil")
             throw RequestError.invalidRequest
@@ -200,24 +198,33 @@ class ApiRepository {
         return (data, response)
     }
 
+    fileprivate func fetchData<T: Decodable>(for request: URLRequest, as type: T.Type, code: Int = 200) async throws -> T {
+        let (data, _) = try await fetchData(for: request, code: code)
+        do {
+            return try decoder.decode(type, from: data)
+        } catch let error as DecodingError {
+            let url = request.url!
+            let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
+            Logger.api.error("Unable to decode response to \(url) as \(T.self) from body \(body): \(error)")
+            throw error
+        }
+    }
+
     private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
         let request = request(.single(T.self, id: id))
 
         do {
-            let (data, _) = try await fetchData(for: request)
-
-            let correspondent = try decoder.decode(type, from: data)
-            return correspondent
+            return try await fetchData(for: request, as: type)
         } catch {
             Logger.api.error("Error getting \(type) with id \(id): \(error)")
             return nil
         }
     }
 
-    private func all<T: Decodable & Model>(_: T.Type) async -> [T] {
+    private func all<T: Decodable & Model>(_: T.Type) async throws -> [T] {
         let sequence = ApiSequence<T>(repository: self,
                                       url: url(.listAll(T.self)))
-        return await Array(sequence)
+        return try await Array(sequence)
     }
 
     private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type) async throws -> Element where Element: Decodable {
@@ -248,9 +255,7 @@ class ApiRepository {
         request.httpBody = body
 
         do {
-            let (data, _) = try await fetchData(for: request)
-            return try decoder.decode(Element.self, from: data)
-
+            return try await fetchData(for: request, as: Element.self)
         } catch {
             Logger.api.error("Api update \(Element.self) failed: \(error)")
             throw error
@@ -356,7 +361,7 @@ extension ApiRepository: Repository {
         try await delete(element: tag, endpoint: .tag(id: tag.id))
     }
 
-    func tags() async -> [Tag] { await all(Tag.self) }
+    func tags() async throws -> [Tag] { try await all(Tag.self) }
 
     func correspondent(id: UInt) async -> Correspondent? { await get(Correspondent.self, id: id) }
 
@@ -376,7 +381,7 @@ extension ApiRepository: Repository {
                          endpoint: .correspondent(id: correspondent.id))
     }
 
-    func correspondents() async -> [Correspondent] { await all(Correspondent.self) }
+    func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
 
     func documentType(id: UInt) async -> DocumentType? { await get(DocumentType.self, id: id) }
 
@@ -396,7 +401,7 @@ extension ApiRepository: Repository {
                          endpoint: .documentType(id: documentType.id))
     }
 
-    func documentTypes() async -> [DocumentType] { await all(DocumentType.self) }
+    func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
 
     func document(id: UInt) async -> Document? { await get(Document.self, id: id) }
 
@@ -407,9 +412,7 @@ extension ApiRepository: Repository {
         let request = request(endpoint)
 
         do {
-            let (data, _) = try await fetchData(for: request)
-
-            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+            let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
 
             guard decoded.count > 0, !decoded.results.isEmpty else {
                 // this means the ASN was not found
@@ -436,9 +439,7 @@ extension ApiRepository: Repository {
         let request = request(endpoint)
 
         do {
-            let (data, _) = try await fetchData(for: request)
-
-            let decoded = try decoder.decode(ListResponse<Document>.self, from: data)
+            let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
 
             return (decoded.results.first?.asn ?? 0) + 1
         } catch {
@@ -453,8 +454,7 @@ extension ApiRepository: Repository {
         let request = request(.nextAsn())
 
         do {
-            let (data, _) = try await fetchData(for: request)
-            let asn = try decoder.decode(UInt.self, from: data)
+            let asn = try await fetchData(for: request, as: UInt.self)
             Logger.api.notice("Have next ASN \(asn)")
             return asn
         } catch {
@@ -475,7 +475,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func users() async -> [User] { await all(User.self) }
+    func users() async throws -> [User] { try await all(User.self) }
 
     func thumbnail(document: Document) async -> Image? {
         guard let data = await thumbnailData(document: document) else {
@@ -513,9 +513,7 @@ extension ApiRepository: Repository {
         let request = request(.suggestions(documentId: documentId))
 
         do {
-            let (data, _) = try await fetchData(for: request)
-
-            return try decoder.decode(Suggestions.self, from: data)
+            return try await fetchData(for: request, as: Suggestions.self)
         } catch {
             Logger.api.error("Unable to load suggestions: \(error)")
             return .init()
@@ -524,8 +522,8 @@ extension ApiRepository: Repository {
 
     // MARK: Saved views
 
-    func savedViews() async -> [SavedView] {
-        await all(SavedView.self)
+    func savedViews() async throws -> [SavedView] {
+        try await all(SavedView.self)
     }
 
     func create(savedView view: ProtoSavedView) async throws -> SavedView {
@@ -542,8 +540,8 @@ extension ApiRepository: Repository {
 
     // MARK: Storage paths
 
-    func storagePaths() async -> [StoragePath] {
-        await all(StoragePath.self)
+    func storagePaths() async throws -> [StoragePath] {
+        try await all(StoragePath.self)
     }
 
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
@@ -573,8 +571,7 @@ extension ApiRepository: Repository {
         let request = request(.tasks())
 
         do {
-            let (data, _) = try await fetchData(for: request)
-            return try decoder.decode([PaperlessTask].self, from: data)
+            return try await fetchData(for: request, as: [PaperlessTask].self)
         } catch {
             Logger.api.error("Unable to load tasks: \(error)")
             return []

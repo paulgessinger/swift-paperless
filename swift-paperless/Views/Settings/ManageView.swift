@@ -173,7 +173,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: .localizable.cancel), role: .cancel) {
                 withAnimation {
                     elements = model.load()
                 }
@@ -181,9 +181,13 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }, message: { _ in })
 
         .refreshable {
-            await store.fetchAll()
-            withAnimation {
-                elements = model.load()
+            do {
+                try await store.fetchAll()
+                withAnimation {
+                    elements = model.load()
+                }
+            } catch {
+                errorController.push(error: error)
             }
         }
 

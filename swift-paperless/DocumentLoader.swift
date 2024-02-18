@@ -32,7 +32,7 @@ struct DocumentLoader<Content: View>: View {
             }
         }
         .task {
-            document = await store.repository.documents(filter: .init()).fetch(limit: 999).first!
+            document = try! await store.repository.documents(filter: .init()).fetch(limit: 999).first!
         }
     }
 }

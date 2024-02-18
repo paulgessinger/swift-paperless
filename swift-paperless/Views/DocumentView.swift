@@ -150,7 +150,8 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             DocumentList(store: store, navPath: $navPath,
-                         filterState: $filterModel.filterState)
+                         filterState: $filterModel.filterState,
+                         errorController: errorController)
 
                 .layoutPriority(1)
 
@@ -326,7 +327,11 @@ struct DocumentView: View {
                 }
 
                 .task {
-                    await store.fetchAll()
+                    do {
+                        try await store.fetchAll()
+                    } catch {
+                        errorController.push(error: error)
+                    }
                 }
 
 //            .onChange(of: store.documents) { _ in

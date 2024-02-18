@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 import SwiftUI
 
 struct LoadingDocumentList: View {
@@ -33,7 +34,7 @@ struct LoadingDocumentList: View {
         .environmentObject(store)
         .task {
 //            documents = await store.fetchDocuments(clear: true, filter: FilterState(), pageSize: 10)
-            documents = await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
+            documents = try! await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
         }
     }
 }
@@ -41,6 +42,7 @@ struct LoadingDocumentList: View {
 class DocumentListViewModel: ObservableObject {
     private var store: DocumentStore
     private var filterState: FilterState
+    private var errorController: ErrorController
 
     @Published var documents: [Document] = []
     @Published var loading = false
@@ -53,9 +55,10 @@ class DocumentListViewModel: ObservableObject {
     private var batchSize: UInt = 100
     private var fetchMargin = 10
 
-    init(store: DocumentStore, filterState: FilterState) {
+    init(store: DocumentStore, filterState: FilterState, errorController: ErrorController) {
         self.store = store
         self.filterState = filterState
+        self.errorController = errorController
         source = store.repository.documents(filter: filterState)
     }
 
@@ -63,10 +66,15 @@ class DocumentListViewModel: ObservableObject {
     func load() async {
         guard documents.isEmpty, !loading else { return }
         loading = true
-        let batch = await source.fetch(limit: initialBatchSize)
-        documents = batch
-        ready = true
-        loading = false
+        do {
+            let batch = try await source.fetch(limit: initialBatchSize)
+            documents = batch
+            ready = true
+            loading = false
+        } catch {
+            Logger.shared.error("DocumentList failed to load documents: \(error)")
+            errorController.push(error: error)
+        }
     }
 
     func fetchMoreIfNeeded(currentIndex: Int) async {
@@ -75,16 +83,21 @@ class DocumentListViewModel: ObservableObject {
             guard !loading else { return }
             await MainActor.run { loading = true }
             Task.detached {
-                let batch = await self.source.fetch(limit: self.batchSize)
-                if batch.isEmpty {
-                    self.exhausted = true
-                    await MainActor.run { self.loading = false }
-                    return
-                }
+                do {
+                    let batch = try await self.source.fetch(limit: self.batchSize)
+                    if batch.isEmpty {
+                        self.exhausted = true
+                        await MainActor.run { self.loading = false }
+                        return
+                    }
 
-                await MainActor.run {
-                    self.documents += batch
-                    self.loading = false
+                    await MainActor.run {
+                        self.documents += batch
+                        self.loading = false
+                    }
+                } catch {
+                    Logger.shared.error("DocumentList failed to load more if needed: \(error)")
+                    self.errorController.push(error: error)
                 }
             }
         }
@@ -97,8 +110,13 @@ class DocumentListViewModel: ObservableObject {
         }
         exhausted = false
         source = store.repository.documents(filter: filterState)
-        let batch = await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
-        documents = batch
+        do {
+            let batch = try await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
+            documents = batch
+        } catch {
+            Logger.shared.error("DocumentList failed to refresh: \(error)")
+            errorController.push(error: error)
+        }
     }
 
     @MainActor
@@ -135,11 +153,11 @@ struct DocumentList: View {
     @AppStorage(SettingsKeys.documentDeleteConfirmation)
     var documentDeleteConfirmation: Bool = true
 
-    init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>) {
+    init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>, errorController: ErrorController) {
         self.store = store
         _navPath = navPath
         _filterState = filterState
-        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue))
+        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue, errorController: errorController))
     }
 
     struct Cell: View {
