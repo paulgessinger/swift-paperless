@@ -153,7 +153,7 @@ class ApiRepository {
         Logger.api.trace("Creating API request for URL \(url)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json; version=5", forHTTPHeaderField: "Accept")
+        request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         return request
     }
