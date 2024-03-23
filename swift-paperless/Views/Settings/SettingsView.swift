@@ -6,6 +6,7 @@
 //
 
 import MessageUI
+import os
 import SwiftUI
 import SwiftUINavigation
 
@@ -152,11 +153,8 @@ struct SettingsView: View {
             }
         }
 
-        .task {
-            extraHeaders = connectionManager.extraHeaders
-        }
-
         .onChange(of: extraHeaders) { value in
+            Logger.shared.trace("Saving new set of extra headers: \(value)")
             connectionManager.extraHeaders = value
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }
