@@ -34,6 +34,12 @@ struct Connection: Equatable {
     }
 }
 
+struct StoredConnection: Codable {
+    let url: URL
+    let extraHeaders: [ConnectionManager.HeaderValue]
+    let label: String
+}
+
 class ConnectionManager: ObservableObject {
     enum LoginState {
         case none
@@ -50,8 +56,15 @@ class ConnectionManager: ObservableObject {
     private let keychainAccount = "PaperlessAccount"
 
     struct HeaderValue: Codable, Equatable {
+        var id: UUID
         var key: String
         var value: String
+
+        init(key: String, value: String) {
+            id = .init()
+            self.key = key
+            self.value = value
+        }
     }
 
     @UserDefaultBacked(key: "ExtraHeaders", storage: .group)
@@ -66,8 +79,21 @@ class ConnectionManager: ObservableObject {
         }
     }
 
+    // @TODO: Remove in a few versions
     @UserDefaultBacked(key: "ApiPath", storage: .group)
     var apiPath: String? = nil
+
+    @UserDefaultBacked(key: "ApiPaths", storage: .group)
+    var apiPaths: [String] = []
+
+    @UserDefaultBacked(key: "ActiveApiPath", storage: .group)
+    var activeApiPath: String? = nil
+
+    init() {
+        if let apiPath {
+            Logger.shared.notice("Connection manager has ApiPath UserDefault: migrating to multi-server scheme")
+        }
+    }
 
     func check() async {
         await MainActor.run {
