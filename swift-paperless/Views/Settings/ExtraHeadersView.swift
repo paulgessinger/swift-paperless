@@ -5,10 +5,13 @@
 //  Created by Paul Gessinger on 07.05.23.
 //
 
+import os
 import SwiftUI
 
 struct ExtraHeadersView: View {
-    @Binding var headers: [ConnectionManager.HeaderValue]
+    @EnvironmentObject private var connectionManager: ConnectionManager
+
+    @State private var headers: [ConnectionManager.HeaderValue] = []
 
     private struct SingleView: View {
         @Binding var header: ConnectionManager.HeaderValue
@@ -63,6 +66,17 @@ struct ExtraHeadersView: View {
                 EditButton()
             }
         }
+
+        .task {
+            extraHeaders = connectionManager.extraHeaders
+        }
+
+        .onChange(of: headers) { value in
+            Logger.shared.trace("Saving new set of extra headers: \(value)")
+            connectionManager.extraHeaders = value
+            store.set(repository: ApiRepository(connection: connectionManager.connection!))
+        }
+
         .navigationTitle(Text(.login.extraHeaders))
     }
 }

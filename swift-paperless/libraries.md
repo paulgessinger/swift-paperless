@@ -25,3 +25,7 @@
 ### MarkdownUI
 [GitHub](https://github.com/gonzalezreal/swift-markdown-ui)
 *MIT license*
+
+### XCStrings Tool
+[GitHub](https://github.com/liamnichols/xcstrings-tool)
+*MIT license*

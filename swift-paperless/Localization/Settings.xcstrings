@@ -71,6 +71,30 @@
         }
       }
     },
+    "biometricLockEnableFailure" : {
+      "comment" : "Shown in error pill when auth fails",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ could not be enabled"
+          }
+        }
+      }
+    },
+    "biometricReason" : {
+      "comment" : "Shown to user when TouchID is used. ",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authenticate with TouchID to use the app"
+          }
+        }
+      }
+    },
     "detailsFeedback" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -558,6 +582,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ustawienia"
+          }
+        }
+      }
+    },
+    "useBiometricLock" : {
+      "comment" : "Placeholder refers to biometric type (as of writing) FaceID or TouchID",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock app with %@"
           }
         }
       }

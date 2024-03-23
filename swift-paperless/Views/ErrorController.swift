@@ -153,7 +153,7 @@ struct GenericError: DisplayableError {
 class ErrorController: ObservableObject {
     enum State {
         case none
-        case active(error: DisplayableError, duration: Double = 2.0)
+        case active(error: DisplayableError, duration: Double = 5.0)
     }
 
     @Published var state: State = .none
@@ -175,6 +175,10 @@ class ErrorController: ObservableObject {
         } else {
             push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
         }
+    }
+
+    func push(error: Error, message: LocalizedStringResource) {
+        push(error: error, message: String(localized: message))
     }
 
     func push(error: LocalizedError) {

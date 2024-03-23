@@ -76,6 +76,7 @@ struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var filterModel: FilterModel
     @EnvironmentObject private var connectionManager: ConnectionManager
+    @EnvironmentObject private var errorController: ErrorController
 
     // MARK: State
 
@@ -91,15 +92,14 @@ struct DocumentView: View {
     @State private var showDocumentScanner = false
     @State private var showCreateModal = false
     @State private var importUrl: URL?
-    @State private var error: String?
     @State private var logoutRequested = false
 
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
 
-    func importFile(result: Result<[URL], Error>, isSecurityScoped: Bool) {
+    func importFile(result: [URL], isSecurityScoped: Bool) {
         do {
-            guard let selectedFile: URL = try result.get().first else { return }
+            guard let selectedFile: URL = result.first else { return }
 
             showFileImporter = false
             showDocumentScanner = false
@@ -119,9 +119,8 @@ struct DocumentView: View {
                     importUrl = temporaryFileURL
                     showCreateModal = true
                 } else {
-                    print("Access denied")
-                    error = "Cannot access selected file"
-                    // Handle denied access
+                    Logger.shared.error("Document import: Access denied")
+                    errorController.push(message: String(localized: .localizable.errorDefaultMessage))
                 }
             } else {
                 importUrl = selectedFile
@@ -129,9 +128,8 @@ struct DocumentView: View {
             }
         } catch {
             // Handle failure.
-            print("Unable to read file contents")
-            print(error.localizedDescription)
-            self.error = "Unable to read file contents: \(error.localizedDescription)"
+            Logger.shared.error("Unable to read file contents: \(error)")
+            errorController.push(error: error)
         }
     }
 
@@ -152,7 +150,8 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             DocumentList(store: store, navPath: $navPath,
-                         filterState: $filterModel.filterState)
+                         filterState: $filterModel.filterState,
+                         errorController: errorController)
 
                 .layoutPriority(1)
 
@@ -273,13 +272,25 @@ struct DocumentView: View {
                               allowedContentTypes: [.pdf],
                               allowsMultipleSelection: false,
                               onCompletion: { result in
-                                  importFile(result: result, isSecurityScoped: true)
+
+                                  switch result {
+                                  case let .success(urls):
+                                      importFile(result: urls, isSecurityScoped: true)
+                                  case let .failure(failure):
+                                      errorController.push(error: failure)
+                                  }
                               })
 
                 .fullScreenCover(isPresented: $showDocumentScanner) {
                     DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
-                        importFile(result: result, isSecurityScoped: false)
-                    }).ignoresSafeArea()
+                        switch result {
+                        case let .success(urls):
+                            importFile(result: urls, isSecurityScoped: false)
+                        case let .failure(failure):
+                            errorController.push(error: failure)
+                        }
+                    })
+                    .ignoresSafeArea()
                 }
 
                 .sheet(isPresented: $showCreateModal) { [importUrl] in
@@ -316,7 +327,11 @@ struct DocumentView: View {
                 }
 
                 .task {
-                    await store.fetchAll()
+                    do {
+                        try await store.fetchAll()
+                    } catch {
+                        errorController.push(error: error)
+                    }
                 }
 
 //            .onChange(of: store.documents) { _ in

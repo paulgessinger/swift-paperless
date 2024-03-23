@@ -93,6 +93,8 @@ class ShareViewController: UIViewController {
 
     let attachmentManager = AttachmentManager()
 
+    var childView: UIViewController? = nil
+
     override func viewDidLoad() {
         super.viewDidLoad()
         Logger.shared.notice("Paperless share extension viewDidLoad fired")
@@ -102,9 +104,11 @@ class ShareViewController: UIViewController {
                                       self.extensionContext!.completeRequest(returningItems: nil, completionHandler: nil)
                                   })
 
-        let childView = UIHostingController(rootView: shareView)
+        childView = UIHostingController(rootView: shareView)
+        guard let childView else {
+            fatalError("Inconsistency")
+        }
         addChild(childView)
-        childView.view.frame = container.bounds
         container.addSubview(childView.view)
         childView.didMove(toParent: self)
 
@@ -121,6 +125,17 @@ class ShareViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+    }
+
+    override public func viewDidLayoutSubviews() {
+        // offset is empirical and probably wrong
+        let offset: CGFloat
+        if traitCollection.horizontalSizeClass == .regular {
+            offset = 40
+        } else {
+            offset = 80
+        }
+        childView?.view.frame = CGRect(x: container.bounds.origin.x, y: container.bounds.origin.y, width: container.bounds.width, height: container.bounds.height + offset)
     }
 }
 

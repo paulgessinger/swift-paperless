@@ -9,5 +9,6 @@ import Foundation
 import os
 
 extension Logger {
-    static let shared = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "SwiftPaperless")
+    static let shared = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "General")
+    static let api = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "API")
 }

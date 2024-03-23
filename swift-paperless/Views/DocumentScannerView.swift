@@ -1,3 +1,4 @@
+import os
 import PDFKit
 import SwiftUI
 import VisionKit
@@ -20,15 +21,19 @@ struct DocumentScannerView: UIViewControllerRepresentable {
         }
 
         func documentCameraViewController(_: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+            Logger.shared.notice("Document scanner receives scan")
             do {
+                Logger.shared.notice("Attempt to make PDF")
                 let url = try createPDF(from: scan)
                 isPresented = false
                 DispatchQueue.main.async {
+                    Logger.shared.notice("PDF conversion success")
                     self.completionHandler(.success([url]))
                 }
             } catch {
                 isPresented = false
                 DispatchQueue.main.async {
+                    Logger.shared.error("PDF conversion failure: \(error)")
                     self.completionHandler(.failure(error))
                 }
             }
@@ -39,8 +44,10 @@ struct DocumentScannerView: UIViewControllerRepresentable {
         }
 
         func documentCameraViewController(_: VNDocumentCameraViewController, didFailWithError error: Error) {
+            Logger.shared.notice("Document scanner receives error")
             isPresented = false
             DispatchQueue.main.async {
+                Logger.shared.error("Document scanner error: \(error)")
                 self.completionHandler(.failure(error))
             }
         }
@@ -72,6 +79,15 @@ struct DocumentScannerView: UIViewControllerRepresentable {
     enum DocumentScannerError: LocalizedError {
         case pdfWriteFailed
         case pdfCreatePageFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .pdfCreatePageFailed:
+                return String(localized: .localizable.documentScanErrorCreatePageFailed)
+            case .pdfWriteFailed:
+                return String(localized: .localizable.documentScanErrorWriteFailed)
+            }
+        }
     }
 
     func makeCoordinator() -> Coordinator {

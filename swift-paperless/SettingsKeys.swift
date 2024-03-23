@@ -7,4 +7,6 @@
 
 enum SettingsKeys {
     static let documentDeleteConfirmation = "documentDeleteConfirmation"
+
+    static let enableBiometricAppLock = "enableBiometricAppLock"
 }

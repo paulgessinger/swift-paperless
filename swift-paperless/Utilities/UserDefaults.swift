@@ -22,22 +22,28 @@ struct UserDefaultBacked<Value> where Value: Codable {
 
     var wrappedValue: Value {
         get {
+            Logger.shared.trace("Getting UserDefaultBacked(\(key))")
             guard let obj = storage.object(forKey: key) as? Data else {
+                Logger.shared.trace("UserDefaultBacked(\(key)) not found returning default")
                 return defaultValue
             }
-            guard let value = try? JSONDecoder().decode(Value.self, from: obj) else {
+            do {
+                return try JSONDecoder().decode(Value.self, from: obj)
+            } catch {
+                Logger.shared.error("UserDefaultBacked(\(key)): unable to decode, returning default value")
+                Logger.shared.trace("Stored value: \(String(data: obj, encoding: .utf8) ?? "No value")")
                 return defaultValue
             }
-
-            return value
         }
 
         nonmutating set {
-            guard let data = try? JSONEncoder().encode(newValue) else {
-                Logger.shared.error("Unable to set value to UserDefaults for key \(key, privacy: .public)")
-                return
+            Logger.shared.trace("Setting UserDefaultBacked(\(key, privacy: .public)) to \(String(describing: newValue), privacy: .private)")
+            do {
+                let data = try JSONEncoder().encode(newValue)
+                storage.set(data, forKey: key)
+            } catch {
+                Logger.shared.error("Unable to set value to UserDefaults for key \(key, privacy: .public), \(error)")
             }
-            storage.set(data, forKey: key)
         }
     }
 

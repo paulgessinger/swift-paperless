@@ -78,7 +78,9 @@ class DocumentStore: ObservableObject {
     }
 
     func fetchTasks() async {
-        let tasks = await repository.tasks()
+        guard let tasks = try? await repository.tasks() else {
+            return
+        }
         let activeTasks = tasks.filter(\.isActive)
 //        let inactiveTasks = tasks.filter { !$0.isActive }
 
@@ -87,32 +89,32 @@ class DocumentStore: ObservableObject {
         }
     }
 
-    func fetchAllCorrespondents() async {
-        await fetchAll(elements: repository.correspondents(),
-                       collection: \.correspondents)
+    func fetchAllCorrespondents() async throws {
+        try await fetchAll(elements: repository.correspondents(),
+                           collection: \.correspondents)
     }
 
-    func fetchAllDocumentTypes() async {
-        await fetchAll(elements: repository.documentTypes(),
-                       collection: \.documentTypes)
+    func fetchAllDocumentTypes() async throws {
+        try await fetchAll(elements: repository.documentTypes(),
+                           collection: \.documentTypes)
     }
 
-    func fetchAllTags() async {
-        await fetchAll(elements: repository.tags(),
-                       collection: \.tags)
+    func fetchAllTags() async throws {
+        try await fetchAll(elements: repository.tags(),
+                           collection: \.tags)
     }
 
-    func fetchAllSavedViews() async {
-        await fetchAll(elements: repository.savedViews(),
-                       collection: \.savedViews)
+    func fetchAllSavedViews() async throws {
+        try await fetchAll(elements: repository.savedViews(),
+                           collection: \.savedViews)
     }
 
-    func fetchAllStoragePaths() async {
-        await fetchAll(elements: repository.storagePaths(),
-                       collection: \.storagePaths)
+    func fetchAllStoragePaths() async throws {
+        try await fetchAll(elements: repository.storagePaths(),
+                           collection: \.storagePaths)
     }
 
-    func fetchCurrentUser() async {
+    func fetchCurrentUser() async throws {
         if currentUser != nil {
             // We don't expect this to change
             return
@@ -129,12 +131,12 @@ class DocumentStore: ObservableObject {
         }
     }
 
-    func fetchAllUsers() async {
-        await fetchAll(elements: repository.users(),
-                       collection: \.users)
+    func fetchAllUsers() async throws {
+        try await fetchAll(elements: repository.users(),
+                           collection: \.users)
     }
 
-    func fetchAll() async {
+    func fetchAll() async throws {
         // @TODO: This gets called concurrently during startup, maybe debounce
         Logger.shared.notice("Fetch all store request")
         await fetchAllSemaphore.wait()
@@ -151,12 +153,14 @@ class DocumentStore: ObservableObject {
             fetchAllUsers,
         ]
 
-        await withTaskGroup(of: Void.self) { g in
+        try await withThrowingTaskGroup(of: Void.self) { g in
             for fn in funcs {
                 g.addTask {
-                    await fn()
+                    try await fn()
                 }
             }
+
+            try await g.waitForAll()
         }
         Logger.shared.notice("Fetch all store complete")
     }

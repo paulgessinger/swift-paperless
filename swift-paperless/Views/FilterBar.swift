@@ -113,7 +113,13 @@ private struct FilterMenu<Content: View>: View {
                 NavigationLink {
                     ManageView<SavedViewManager>(store: store)
                         .navigationTitle(Text(.localizable.savedViews))
-                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
+                        .task { Task {
+                            do {
+                                try await store.fetchAllDocumentTypes()
+                            } catch {
+                                errorController.push(error: error)
+                            }
+                        }}
                 } label: {
                     Label(String(localized: .localizable.savedViewsEditButtonLabel), systemImage: "list.bullet")
                 }

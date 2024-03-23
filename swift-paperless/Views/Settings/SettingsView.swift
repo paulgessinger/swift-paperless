@@ -6,6 +6,7 @@
 //
 
 import MessageUI
+import os
 import SwiftUI
 import SwiftUINavigation
 
@@ -14,12 +15,23 @@ import SwiftUINavigation
 struct SettingsView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var connectionManager: ConnectionManager
+    @EnvironmentObject private var errorController: ErrorController
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     @State private var feedbackLogs: String? = nil
     @State private var showMailSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, Error>? = nil
+
+    private func checkedDetached(_ fn: @escaping () async throws -> Void) async {
+        Task.detached {
+            do {
+                try await fn()
+            } catch {
+                await errorController.push(error: error)
+            }
+        }
+    }
 
     var body: some View {
         List {
@@ -30,7 +42,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<TagManager>(store: store)
                         .navigationTitle(Text(.localizable.tags))
-                        .task { Task.detached { await store.fetchAllTags() }}
+                        .task { await checkedDetached(store.fetchAllTags) }
                 } label: {
                     Label(String(localized: .localizable.tags), systemImage: "tag.fill")
                 }
@@ -38,7 +50,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<CorrespondentManager>(store: store)
                         .navigationTitle(Text(.localizable.correspondents))
-                        .task { Task.detached { await store.fetchAllCorrespondents() }}
+                        .task { await checkedDetached(store.fetchAllCorrespondents) }
                 } label: {
                     Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
                 }
@@ -46,7 +58,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<DocumentTypeManager>(store: store)
                         .navigationTitle(Text(.localizable.documentTypes))
-                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
+                        .task { await checkedDetached(store.fetchAllDocumentTypes) }
                 } label: {
                     Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
                 }
@@ -54,7 +66,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<SavedViewManager>(store: store)
                         .navigationTitle(Text(.localizable.savedViews))
-                        .task { Task.detached { await store.fetchAllDocumentTypes() }}
+                        .task { await checkedDetached(store.fetchAllDocumentTypes) }
                 } label: {
                     Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
                 }
@@ -62,7 +74,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageView<StoragePathManager>(store: store)
                         .navigationTitle(Text(.localizable.storagePaths))
-                        .task { Task.detached { await store.fetchAllStoragePaths() }}
+                        .task { await checkedDetached(store.fetchAllStoragePaths) }
                 } label: {
                     Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
                 }
@@ -141,11 +153,8 @@ struct SettingsView: View {
             }
         }
 
-        .task {
-            extraHeaders = connectionManager.extraHeaders
-        }
-
         .onChange(of: extraHeaders) { value in
+            Logger.shared.trace("Saving new set of extra headers: \(value)")
             connectionManager.extraHeaders = value
             store.set(repository: ApiRepository(connection: connectionManager.connection!))
         }

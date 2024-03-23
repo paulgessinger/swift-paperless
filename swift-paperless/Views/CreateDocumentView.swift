@@ -202,7 +202,11 @@ struct CreateDocumentView<Title: View>: View {
                 }
             }
             .task {
-                await store.fetchAll()
+                do {
+                    try await store.fetchAll()
+                } catch {
+                    errorController.push(error: error)
+                }
             }
         }
 

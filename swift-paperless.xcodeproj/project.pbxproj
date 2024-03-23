@@ -97,6 +97,14 @@
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
+		7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
+		7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
+		7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A56F26A2B8270BE00BE9361 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
+		7A56F26B2B8270C000BE9361 /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
+		7A56F26C2B8270C000BE9361 /* Login.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460F22B19F8380074BAAB /* Login.xcstrings */; };
+		7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
+		7A56F26E2B8270C300BE9361 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
 		7A58A24829E19BF400986FE9 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B8029A68A20008E8F79 /* Utilities.swift */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
@@ -148,6 +156,8 @@
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
+		7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52B52B791E6400AE218B /* Biometric.swift */; };
+		7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52C92B79314700AE218B /* InactiveView.swift */; };
 		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
 		7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */; };
@@ -195,7 +205,6 @@
 		7AFB7BA72A89773B0013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
 		7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
 		7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
-		7AFB7BAB2A8978650013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
@@ -305,6 +314,8 @@
 		7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagers.swift; sourceTree = "<group>"; };
 		7AB057792AA48BA700ABA6B1 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		7ABA52B52B791E6400AE218B /* Biometric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Biometric.swift; sourceTree = "<group>"; };
+		7ABA52C92B79314700AE218B /* InactiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveView.swift; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessOverlay.swift; sourceTree = "<group>"; };
@@ -418,6 +429,7 @@
 		7A5482A2299AD56C00D5061E = {
 			isa = PBXGroup;
 			children = (
+				7AA6A2C42B8266F70023EF0C /* ci_scripts */,
 				7A5482AD299AD56C00D5061E /* swift-paperless */,
 				7A5482BF299AD56E00D5061E /* swift-paperlessTests */,
 				7A5482C9299AD56E00D5061E /* swift-paperlessUITests */,
@@ -508,6 +520,7 @@
 				7A898ECD2A03000D0003DFBD /* UserDefaults.swift */,
 				7A898ED02A0303140003DFBD /* Logging.swift */,
 				7A25773F2A87D32400B15626 /* NullCodable.swift */,
+				7ABA52B52B791E6400AE218B /* Biometric.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -527,6 +540,13 @@
 				7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		7AA6A2C42B8266F70023EF0C /* ci_scripts */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ci_scripts;
 			sourceTree = "<group>";
 		};
 		7AB060DC29C6621E004E6C63 /* Networking */ = {
@@ -573,6 +593,7 @@
 				7ACFB2D62B4756FC009DED79 /* LogRecord.swift */,
 				7A2F65582B5ADB25000A75D9 /* MailView.swift */,
 				939739772B72966E0041F08A /* DocumentScannerView.swift */,
+				7ABA52C92B79314700AE218B /* InactiveView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -641,7 +662,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A47864B2B4714A100C13C26 /* PBXTargetDependency */,
+				7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -671,6 +692,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A56F2422B826F6300BE9361 /* PBXTargetDependency */,
 				7A5482BE299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessTests";
@@ -689,6 +711,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A56F2402B826F5E00BE9361 /* PBXTargetDependency */,
 				7A5482C8299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessUITests";
@@ -794,6 +817,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */,
+				7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */,
+				7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */,
+				7A56F26B2B8270C000BE9361 /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -801,6 +828,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A56F26E2B8270C300BE9361 /* Matching.xcstrings in Resources */,
+				7A56F26A2B8270BE00BE9361 /* Settings.xcstrings in Resources */,
+				7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */,
+				7A56F26C2B8270C000BE9361 /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -859,7 +890,6 @@
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */,
-				7AFB7BAB2A8978650013196B /* PreferencesView.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
 				7A2831B82A63DC97009E86CE /* TaskModel.swift in Sources */,
 				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
@@ -901,6 +931,7 @@
 				7A8E1F7E2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
+				7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */,
 				7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A2F65592B5ADB25000A75D9 /* MailView.swift in Sources */,
 				7AF2E08229F480310092948B /* TagEditView.swift in Sources */,
@@ -944,6 +975,7 @@
 				7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */,
 				7AF2E08529F553360092948B /* MatchingEditView.swift in Sources */,
 				7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */,
+				7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */,
 				7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A8E1F862A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
 				7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
@@ -1002,10 +1034,6 @@
 			isa = PBXTargetDependency;
 			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
 		};
-		7A47864B2B4714A100C13C26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */;
-		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
@@ -1020,6 +1048,18 @@
 			isa = PBXTargetDependency;
 			target = 7A5482AA299AD56C00D5061E /* swift-paperless */;
 			targetProxy = 7A5482C7299AD56E00D5061E /* PBXContainerItemProxy */;
+		};
+		7A56F2402B826F5E00BE9361 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */;
+		};
+		7A56F2422B826F6300BE9361 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
+		};
+		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1042,20 +1082,20 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShareExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless.ShareExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1072,20 +1112,20 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShareExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperless.ShareExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1101,6 +1141,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1164,6 +1205,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1225,7 +1267,7 @@
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
@@ -1235,6 +1277,7 @@
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1245,7 +1288,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
@@ -1273,7 +1316,7 @@
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
@@ -1283,6 +1326,7 @@
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1293,7 +1337,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
@@ -1318,11 +1362,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperlessTests";
@@ -1344,11 +1388,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperlessTests";
@@ -1369,11 +1413,11 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperlessUITests";
@@ -1394,11 +1438,11 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.paulgessinger.swift-paperlessUITests";
@@ -1575,11 +1619,6 @@
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A47864A2B4714A100C13C26 /* XCStringsToolPlugin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
-			productName = "plugin:XCStringsToolPlugin";
-		};
 		7A4AA90229BE048800D845A2 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
@@ -1589,6 +1628,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
+		};
+		7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
 		};
 		7A5C138929AA7E2F00D71F51 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1614,6 +1663,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
+		};
+		7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
 		};
 		7AEBA7A829EDBFBF006D5620 /* SwiftUINavigation */ = {
 			isa = XCSwiftPackageProductDependency;

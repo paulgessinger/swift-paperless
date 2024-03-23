@@ -1197,6 +1197,28 @@
         }
       }
     },
+    "documentScanErrorCreatePageFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save PDF"
+          }
+        }
+      }
+    },
+    "documentScanErrorWriteFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not create page in PDF"
+          }
+        }
+      }
+    },
     "documentType" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1763,31 +1785,31 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Ein Fehler ist aufgetreten"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An error occurred"
+            "value" : "An unexpected error occurred"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Une erreur est survenue"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Er is een fout opgetreden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Wystąpił błąd"
           }
         }
