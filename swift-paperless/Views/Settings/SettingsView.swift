@@ -33,51 +33,109 @@ struct SettingsView: View {
         }
     }
 
+    private var organizationSection: some View {
+        Section(String(localized: .settings.organization)) {
+            NavigationLink {
+                ManageView<TagManager>(store: store)
+                    .navigationTitle(Text(.localizable.tags))
+                    .task { await checkedDetached(store.fetchAllTags) }
+            } label: {
+                Label(String(localized: .localizable.tags), systemImage: "tag.fill")
+            }
+
+            NavigationLink {
+                ManageView<CorrespondentManager>(store: store)
+                    .navigationTitle(Text(.localizable.correspondents))
+                    .task { await checkedDetached(store.fetchAllCorrespondents) }
+            } label: {
+                Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
+            }
+
+            NavigationLink {
+                ManageView<DocumentTypeManager>(store: store)
+                    .navigationTitle(Text(.localizable.documentTypes))
+                    .task { await checkedDetached(store.fetchAllDocumentTypes) }
+            } label: {
+                Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
+            }
+
+            NavigationLink {
+                ManageView<SavedViewManager>(store: store)
+                    .navigationTitle(Text(.localizable.savedViews))
+                    .task { await checkedDetached(store.fetchAllDocumentTypes) }
+            } label: {
+                Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
+            }
+
+            NavigationLink {
+                ManageView<StoragePathManager>(store: store)
+                    .navigationTitle(Text(.localizable.storagePaths))
+                    .task { await checkedDetached(store.fetchAllStoragePaths) }
+            } label: {
+                Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
+            }
+        }
+    }
+
+    private var detailSection: some View {
+        Section(String(localized: .settings.detailsTitle)) {
+            NavigationLink {
+                LibrariesView()
+            } label: {
+                Label(String(localized: .settings.detailsLibraries), systemImage: "books.vertical.fill")
+            }
+
+            Button {
+                UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
+            } label: {
+                Label(String(localized: .settings.detailsSourceCode), systemImage: "terminal.fill")
+                    .accentColor(.primary)
+            }
+
+            NavigationLink {
+                PrivacyView()
+            } label: {
+                Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
+            }
+
+            if MFMailComposeViewController.canSendMail() {
+                LogRecordExportButton { (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
+                    switch state {
+                    case .none:
+                        Button {
+                            export()
+                        } label: {
+                            Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
+                                .accentColor(.primary)
+                        }
+
+                    case .loading:
+                        LogRecordExportButton.loadingView()
+
+                    case .loaded:
+                        Label(String(localized: .settings.feedbackDone), systemImage: "checkmark.circle.fill")
+                            .accentColor(.primary)
+
+                    case let .error(error):
+                        Label(error.localizedDescription, systemImage: "xmark.circle.fill")
+                            .foregroundStyle(.red)
+                    }
+                } change: { state in
+                    switch state {
+                    case let .loaded(logs):
+                        feedbackLogs = logs
+                    default:
+                        break
+                    }
+                }
+            }
+        }
+    }
+
     var body: some View {
         List {
             Section(String(localized: .settings.activeServer)) {
                 Text(connectionManager.apiHost ?? "No server")
-            }
-            Section(String(localized: .settings.organization)) {
-                NavigationLink {
-                    ManageView<TagManager>(store: store)
-                        .navigationTitle(Text(.localizable.tags))
-                        .task { await checkedDetached(store.fetchAllTags) }
-                } label: {
-                    Label(String(localized: .localizable.tags), systemImage: "tag.fill")
-                }
-
-                NavigationLink {
-                    ManageView<CorrespondentManager>(store: store)
-                        .navigationTitle(Text(.localizable.correspondents))
-                        .task { await checkedDetached(store.fetchAllCorrespondents) }
-                } label: {
-                    Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
-                }
-
-                NavigationLink {
-                    ManageView<DocumentTypeManager>(store: store)
-                        .navigationTitle(Text(.localizable.documentTypes))
-                        .task { await checkedDetached(store.fetchAllDocumentTypes) }
-                } label: {
-                    Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
-                }
-
-                NavigationLink {
-                    ManageView<SavedViewManager>(store: store)
-                        .navigationTitle(Text(.localizable.savedViews))
-                        .task { await checkedDetached(store.fetchAllDocumentTypes) }
-                } label: {
-                    Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
-                }
-
-                NavigationLink {
-                    ManageView<StoragePathManager>(store: store)
-                        .navigationTitle(Text(.localizable.storagePaths))
-                        .task { await checkedDetached(store.fetchAllStoragePaths) }
-                } label: {
-                    Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
-                }
             }
 
             Section(String(localized: .settings.preferences)) {
@@ -91,7 +149,7 @@ struct SettingsView: View {
 
             Section(String(localized: .settings.advanced)) {
                 NavigationLink {
-                    ExtraHeadersView(headers: $extraHeaders)
+                    ExtraHeadersView()
                 } label: {
                     Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
@@ -99,58 +157,9 @@ struct SettingsView: View {
                 LogRecordExportButton()
             }
 
-            Section(String(localized: .settings.detailsTitle)) {
-                NavigationLink {
-                    LibrariesView()
-                } label: {
-                    Label(String(localized: .settings.detailsLibraries), systemImage: "books.vertical.fill")
-                }
+            organizationSection
 
-                Button {
-                    UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
-                } label: {
-                    Label(String(localized: .settings.detailsSourceCode), systemImage: "terminal.fill")
-                        .accentColor(.primary)
-                }
-
-                NavigationLink {
-                    PrivacyView()
-                } label: {
-                    Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
-                }
-
-                if MFMailComposeViewController.canSendMail() {
-                    LogRecordExportButton { (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
-                        switch state {
-                        case .none:
-                            Button {
-                                export()
-                            } label: {
-                                Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
-                                    .accentColor(.primary)
-                            }
-
-                        case .loading:
-                            LogRecordExportButton.loadingView()
-
-                        case .loaded:
-                            Label(String(localized: .settings.feedbackDone), systemImage: "checkmark.circle.fill")
-                                .accentColor(.primary)
-
-                        case let .error(error):
-                            Label(error.localizedDescription, systemImage: "xmark.circle.fill")
-                                .foregroundStyle(.red)
-                        }
-                    } change: { state in
-                        switch state {
-                        case let .loaded(logs):
-                            feedbackLogs = logs
-                        default:
-                            break
-                        }
-                    }
-                }
-            }
+            detailSection
         }
 
         .onChange(of: extraHeaders) { value in
