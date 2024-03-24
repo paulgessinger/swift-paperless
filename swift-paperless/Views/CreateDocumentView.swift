@@ -165,7 +165,6 @@ struct CreateDocumentView<Title: View>: View {
                         .contentShape(Rectangle())
                     }
                 }
-                .errorOverlay(errorController: errorController)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -210,6 +209,6 @@ struct CreateDocumentView<Title: View>: View {
             }
         }
 
-        .errorOverlay(errorController: errorController)
+        .errorOverlay(errorController: errorController, offset: 20)
     }
 }

@@ -3,8 +3,16 @@ import SwiftUI
 
 struct ErrorDisplay: ViewModifier {
     @ObservedObject var errorController: ErrorController
+
+    // Additional offset applied to pill view
+    let offset: CGFloat
+
     @State private var detail: DisplayableError? = nil
-    @State private var alertOffset = CGSize.zero
+    @State private var alertOffsetRaw: CGFloat
+
+    private var alertOffset: CGFloat {
+        alertOffsetRaw - offset
+    }
 
     @State private var dismissTask: Task<Void, Never>? = nil
     @State private var ready = false
@@ -17,6 +25,12 @@ struct ErrorDisplay: ViewModifier {
             }
             errorController.clear()
         }
+    }
+
+    init(errorController: ErrorController, offset: CGFloat = 0) {
+        self.errorController = errorController
+        self.offset = offset
+        _alertOffsetRaw = State(initialValue: offset)
     }
 
     func body(content: Content) -> some View {
@@ -55,19 +69,19 @@ struct ErrorDisplay: ViewModifier {
                         )
                     )
 
-                    .offset(y: min(0, alertOffset.height))
+                    .offset(y: min(offset, alertOffsetRaw))
 
-                    .opacity(min(1, max(0, 1 - (alertOffset.height + 10.0) / -30.0)))
+                    .opacity(min(1, max(0, 1 - (alertOffset + 10.0) / -30.0)))
 
                     .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
                         .onChanged { gesture in
-                            alertOffset = gesture.translation
+                            alertOffsetRaw = gesture.translation.height + offset
                             dismissTask?.cancel()
                         }
                         .onEnded { _ in
-                            if alertOffset.height < -30 {
+                            if alertOffset < -30 {
                                 withAnimation(.linear(duration: 0.3)) {
-                                    alertOffset.height = -100
+                                    alertOffsetRaw = -100 + offset
                                 }
                                 Task {
                                     try? await Task.sleep(for: .seconds(0.3))
@@ -81,7 +95,7 @@ struct ErrorDisplay: ViewModifier {
                             } else {
                                 dismissTask?.cancel()
                                 withAnimation(.spring(duration: 0.3)) {
-                                    alertOffset = .zero
+                                    alertOffsetRaw = offset
                                 }
                                 Task {
                                     try? await Task.sleep(for: .seconds(0.31))
@@ -122,7 +136,7 @@ struct ErrorDisplay: ViewModifier {
                 if case .none = value {
                     Task {
                         try? await Task.sleep(for: .seconds(0.3))
-                        alertOffset = .zero
+                        alertOffsetRaw = offset
                     }
                 }
             }
@@ -130,8 +144,8 @@ struct ErrorDisplay: ViewModifier {
 }
 
 extension View {
-    func errorOverlay(errorController: ErrorController) -> some View {
-        modifier(ErrorDisplay(errorController: errorController))
+    func errorOverlay(errorController: ErrorController, offset: CGFloat = 0) -> some View {
+        modifier(ErrorDisplay(errorController: errorController, offset: offset))
     }
 }
 
