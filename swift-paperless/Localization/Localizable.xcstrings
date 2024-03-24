@@ -4,6 +4,12 @@
     "add" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39,6 +45,12 @@
     "appName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +86,12 @@
     "ascending" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stigende"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -109,6 +127,12 @@
     "asn" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASN"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -144,6 +168,12 @@
     "asnPlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASN:"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -179,6 +209,12 @@
     "asnSpecific" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASN: %u"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -214,6 +250,12 @@
     "cancel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuller"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -249,6 +291,12 @@
     "clearFilters" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulstil filtre"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -284,6 +332,12 @@
     "clearText" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryd tekst"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -319,6 +373,12 @@
     "color" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farve"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -355,6 +415,12 @@
       "comment" : "No filtering on this property. Shared between Correspondent, Document Type, Storage Path and Owner",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -376,7 +442,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elke"
+            "value" : "Alle"
           }
         },
         "pl" : {
@@ -390,6 +456,12 @@
     "confirmationPromptTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er du sikker?"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -425,6 +497,12 @@
     "correspondent" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korrespondent"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -460,6 +538,12 @@
     "correspondentCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opret korrespondent"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -495,6 +579,12 @@
     "correspondentEditTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rediger korrespondent"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -530,6 +620,12 @@
     "correspondentExclude" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekskluder korrespondent"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -566,6 +662,12 @@
       "comment" : "In the filter menu mode",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -602,6 +704,12 @@
       "comment" : "In the picker menu mode",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke tildelt"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -637,6 +745,12 @@
     "correspondents" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korrespondenter"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -673,6 +787,12 @@
       "comment" : "No other label so need to include that it's about tags",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen tags"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -708,6 +828,12 @@
     "dataScannerInvalidAsn" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig ASN: %u"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -743,6 +869,12 @@
     "dataScannerNoAsn" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen ASN: %@"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -778,6 +910,12 @@
     "dataScannerTypeInAsn" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtast ASN"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -813,6 +951,12 @@
     "delete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slet"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -848,6 +992,12 @@
     "deleteDocumentName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slet dokument \"%@\""
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -883,6 +1033,12 @@
     "descending" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faldende"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -919,6 +1075,12 @@
       "comment" : "'More' menu",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu med flere valgmuligheder"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -954,6 +1116,12 @@
     "discardChanges" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kassér ændringer"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -989,6 +1157,12 @@
     "documentAdd" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj dokument"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1025,6 +1199,12 @@
       "comment" : "ASN display in document context",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "#%u"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1060,6 +1240,12 @@
     "documentDelete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slet dokument"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1095,6 +1281,12 @@
     "documentDeleted" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slettet"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1130,6 +1322,12 @@
     "documentEditCreatedDateLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oprettelsesdato"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1165,6 +1363,12 @@
     "documentEditTitleLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1200,10 +1404,40 @@
     "documentScanErrorCreatePageFailed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not create page in PDF"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF Konvertierung fehlgeschlagen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Could not create page in PDF"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de créer une page dans le PDF"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan de pagina niet aanmaken in PDF"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można utworzyć strony w pliku PDF"
           }
         }
       }
@@ -1211,10 +1445,40 @@
     "documentScanErrorWriteFailed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not save PDF"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF konnte nicht gespeichert werden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Could not save PDF"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d'enregistrer le PDF"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF kon niet worden opgeslagen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można zapisać pliku PDF"
           }
         }
       }
@@ -1222,6 +1486,12 @@
     "documentType" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttype"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1243,7 +1513,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenttype"
+            "value" : "Documentsoort"
           }
         },
         "pl" : {
@@ -1257,6 +1527,12 @@
     "documentTypeCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opret dokumenttype"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1278,7 +1554,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenttype aanmaken"
+            "value" : "Documentsoort aanmaken"
           }
         },
         "pl" : {
@@ -1292,6 +1568,12 @@
     "documentTypeEditTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rediger dokumenttype"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1313,7 +1595,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenttype bewerken"
+            "value" : "Documentsoort bewerken"
           }
         },
         "pl" : {
@@ -1327,6 +1609,12 @@
     "documentTypeExclude" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekskluder dokumenttype"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1348,7 +1636,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenttype uitsluiten"
+            "value" : "Documentsoort uitsluiten"
           }
         },
         "pl" : {
@@ -1362,6 +1650,12 @@
     "documentTypeNotAssignedFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1397,6 +1691,12 @@
     "documentTypeNotAssignedPicker" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke tildelt"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1432,6 +1732,12 @@
     "documentTypes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttyper"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1453,7 +1759,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenttypen"
+            "value" : "Documentsoorten"
           }
         },
         "pl" : {
@@ -1467,6 +1773,12 @@
     "documentUploadComplete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload fuldført"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1502,6 +1814,12 @@
     "documentUploadError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload-fejl"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1537,6 +1855,12 @@
     "done" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udført"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1572,6 +1896,12 @@
     "edit" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rediger"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1607,6 +1937,12 @@
     "elementIsSelected" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elementet er valgt"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1628,7 +1964,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Element is geselecteerd"
+            "value" : "Soort is geselecteerd"
           }
         },
         "pl" : {
@@ -1643,6 +1979,12 @@
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markeringstilstand"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1678,6 +2020,12 @@
     "error" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fejl"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1713,6 +2061,12 @@
     "errorAlertCopyToClipboard" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopier til udklipsholder"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1748,6 +2102,12 @@
     "errorAlertTapForDetails" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryk for detaljer!"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1783,9 +2143,15 @@
     "errorDefaultMessage" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der opstod en fejl"
+          }
+        },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ein Fehler ist aufgetreten"
           }
         },
@@ -1797,19 +2163,19 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Une erreur est survenue"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Er is een fout opgetreden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wystąpił błąd"
           }
         }
@@ -1819,6 +2185,12 @@
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekskludér elementer"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1840,7 +2212,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Element uitsluiten"
+            "value" : "Soort uitsluiten"
           }
         },
         "pl" : {
@@ -1855,6 +2227,12 @@
       "comment" : "Filter bar extra menu label",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrering"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1890,6 +2268,24 @@
     "filtersApplied" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u filter anvendt"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u filters applied"
+                }
+              }
+            }
+          }
+        },
         "de" : {
           "variations" : {
             "plural" : {
@@ -1997,6 +2393,12 @@
     "importDocument" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importér dokument"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2033,6 +2435,12 @@
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inkludér element"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2054,7 +2462,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Element toevoegen"
+            "value" : "Soort toevoegen"
           }
         },
         "pl" : {
@@ -2068,6 +2476,12 @@
     "loading" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indlæser"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2103,6 +2517,12 @@
     "logout" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log ud"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2138,6 +2558,12 @@
     "logsExport" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksporter logs"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2173,6 +2599,12 @@
     "logsExportLoading" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indsamler logs"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2208,6 +2640,12 @@
     "logsExportReady" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del logs"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2243,6 +2681,12 @@
     "name" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navn"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2278,6 +2722,12 @@
     "noDocuments" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen dokumenter"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2310,9 +2760,56 @@
         }
       }
     },
+    "noDocumentsDescriptionFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your current filter did not match any documents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für den aktuellen Filter wurden keine Dokumente gefunden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your current filter did not match any documents"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre filtre actuel ne correspond à aucun document"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uw huidige filter kwam niet overeen met documenten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bieżący filtr nie pasuje do żadnych dokumentów"
+          }
+        }
+      }
+    },
     "noElementsFound" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen elementer fundet"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2334,7 +2831,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geen elementen gevonden"
+            "value" : "Geen documentsoorten gevonden"
           }
         },
         "pl" : {
@@ -2348,6 +2845,24 @@
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%d tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%d tags"
+                }
+              }
+            }
+          }
+        },
         "de" : {
           "variations" : {
             "plural" : {
@@ -2455,6 +2970,12 @@
     "ok" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "OK"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2490,6 +3011,12 @@
     "open" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2525,6 +3052,12 @@
     "ownerAll" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2561,6 +3094,12 @@
       "comment" : "Filter state additional information popup",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Owner filter is in explicit user mode."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2596,6 +3135,12 @@
     "ownerMultipleUsers" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Users"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2631,6 +3176,12 @@
     "ownerMyDocuments" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "My documents"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2666,6 +3217,12 @@
     "ownerNotAssignedFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2701,6 +3258,12 @@
     "ownerNotAssignedPicker" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2736,6 +3299,12 @@
     "ownerSharedWithMe" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shared with me"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2771,6 +3340,12 @@
     "ownerUnowned" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unowned"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2806,6 +3381,12 @@
     "path" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Path"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2841,6 +3422,12 @@
     "permissions" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Permissions"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2876,6 +3463,12 @@
     "properties" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Properties"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2911,6 +3504,12 @@
     "remove" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2946,6 +3545,12 @@
     "save" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Save"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2981,6 +3586,12 @@
     "savedView" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Saved view"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3016,6 +3627,12 @@
     "savedViewCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create saved view"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3051,6 +3668,12 @@
     "savedViewDeleteConfirmationText" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Are you sure you want to delete %@?"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3086,6 +3709,12 @@
     "savedViewDeleteConfirmationTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete saved view"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3121,6 +3750,12 @@
     "savedViewEditTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit saved view"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3157,6 +3792,12 @@
       "comment" : "Indicates modified saved view in the filter bar",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@*"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3192,6 +3833,12 @@
     "savedViews" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Saved views"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3228,6 +3875,12 @@
       "comment" : "Saved view edit menu button",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit saved views"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3263,6 +3916,12 @@
     "savedViewShowInSidebar" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show in sidebar"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3298,6 +3957,12 @@
     "savedViewShowOnDashboard" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show on dashboard"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3333,6 +3998,12 @@
     "scanDocument" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan document"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3368,6 +4039,12 @@
     "search" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3403,6 +4080,12 @@
     "searchClear" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear search"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3438,6 +4121,12 @@
     "selected" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Selected"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3473,6 +4162,12 @@
     "sortBy" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3508,6 +4203,12 @@
     "sorting" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sorting"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3543,6 +4244,12 @@
     "sortMenuLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort menu"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3578,6 +4285,12 @@
     "sortOrder" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort order"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3613,6 +4326,12 @@
     "sortOrderAdded" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Added"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3648,6 +4367,12 @@
     "sortOrderCreated" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Created"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3683,6 +4408,12 @@
     "sortOrderModified" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Modified"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3718,6 +4449,12 @@
     "storagePath" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opbevaringssti"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3753,6 +4490,12 @@
     "storagePathCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opret opbevaringssti"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3788,6 +4531,12 @@
     "storagePathEditTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit storage path"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3823,6 +4572,12 @@
     "storagePathExclude" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude storage path"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3858,6 +4613,12 @@
     "storagePathFormatExplanation" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3893,6 +4654,12 @@
     "storagePathNotAssignedFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3928,6 +4695,12 @@
     "storagePathNotAssignedPicker" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3963,6 +4736,12 @@
     "storagePaths" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Storage paths"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3998,6 +4777,12 @@
     "tag" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4033,6 +4818,12 @@
     "tagAdd" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4068,6 +4859,12 @@
     "tagColorRandom" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Random color"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4103,6 +4900,12 @@
     "tagCreateTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opret tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4138,6 +4941,12 @@
     "tagEditTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rediger tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4173,6 +4982,12 @@
     "tagExclude" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekskludér tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4208,6 +5023,12 @@
     "tagExcluded" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag ekskluderet"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4243,6 +5064,12 @@
     "tagIncluded" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag inkluderet"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4278,6 +5105,12 @@
     "tagIsInbox" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indbakke tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4313,6 +5146,12 @@
     "tagIsNotSelected" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag er ikke valgt"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4348,6 +5187,12 @@
     "tagIsSelected" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag is selected"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4383,6 +5228,12 @@
     "tagName" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag name"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4418,6 +5269,12 @@
     "tags" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tags"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4453,6 +5310,12 @@
     "tagsAll" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All tags"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4488,6 +5351,12 @@
     "tagsAny" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any tag"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4524,6 +5393,12 @@
       "comment" : "No filtering on tags",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4545,7 +5420,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elke"
+            "value" : "Alle"
           }
         },
         "pl" : {
@@ -4559,6 +5434,12 @@
     "tagsFilterMode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag filter mode"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4594,6 +5475,12 @@
     "tagsNotAssignedFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4629,6 +5516,12 @@
     "tagsNotAssignedPicker" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4664,6 +5557,12 @@
     "tagsRemoveInbox" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove inbox tags"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4699,6 +5598,24 @@
     "tasksPending" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u pending task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u pending tasks"
+                }
+              }
+            }
+          }
+        },
         "de" : {
           "variations" : {
             "plural" : {
@@ -4806,6 +5723,12 @@
     "tasksProcessing" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Processing \"%@\""
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4841,6 +5764,12 @@
     "title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4876,6 +5805,12 @@
     "toolbarAsnButton" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ASN"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",

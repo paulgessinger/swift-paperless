@@ -4,6 +4,12 @@
     "apiInUrlNotice" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Do not include `/api` in the URL"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39,6 +45,12 @@
     "buttonError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login error"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +86,12 @@
     "buttonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Log in"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -109,6 +127,12 @@
     "buttonValid" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login valid"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -144,6 +168,12 @@
     "credentials" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Credentials"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -179,6 +209,12 @@
     "detailsTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -214,6 +250,12 @@
     "errorCouldNotConvertURL" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not convert \"%@\" to URL"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -249,6 +291,12 @@
     "errorInvalidResponse" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Request to \"%@\" returned invalid response code %d"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -284,6 +332,12 @@
     "errorLoginInvalid" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid credentials"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -319,6 +373,12 @@
     "errorOther" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other error"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -354,6 +414,12 @@
     "errorUrlInvalid" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The entered URL is invalid."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -389,6 +455,12 @@
     "errorUrlInvalidOther" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The entered URL is invalid: %@"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -424,6 +496,12 @@
     "extraHeaders" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extra headers"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -459,6 +537,12 @@
     "extraHeadersDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -494,6 +578,12 @@
     "extraHeadersKey" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Key"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -529,6 +619,12 @@
     "extraHeadersValue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Value"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -564,6 +660,12 @@
     "httpWarning" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If at all possible, use HTTPS to connect to the API."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -599,6 +701,12 @@
     "moreToolbarButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -634,6 +742,12 @@
     "password" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Password"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -669,6 +783,12 @@
     "passwordStorageNotice" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your password is only used to log in, and not stored!"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -704,6 +824,12 @@
     "success" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login successful"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -739,6 +865,12 @@
     "urlError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL invalid"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -774,6 +906,12 @@
     "urlPlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Paperless URL"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -809,6 +947,12 @@
     "urlValid" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL valid"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -844,6 +988,12 @@
     "username" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Username"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",

@@ -4,6 +4,12 @@
     "algorithm" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Matching algorithm"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39,6 +45,12 @@
     "algorithmAll" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +86,12 @@
     "algorithmAny" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -95,7 +113,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elke"
+            "value" : "Alle"
           }
         },
         "pl" : {
@@ -109,6 +127,12 @@
     "algorithmAuto" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Auto"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -144,6 +168,12 @@
     "algorithmExact" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exact"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -179,6 +209,12 @@
     "algorithmFuzzy" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fuzzy"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -214,6 +250,12 @@
     "algorithmNone" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -249,6 +291,12 @@
     "algorithmRegEx" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RegEx"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -284,6 +332,12 @@
     "caseInsensitive" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Case insensitive"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -319,6 +373,12 @@
     "explanationAll" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains all of these words (space separated)"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -354,6 +414,12 @@
     "explanationAny" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains any of these words (space separated)"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -389,6 +455,12 @@
     "explanationAuto" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Learn matching automatically"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -424,6 +496,12 @@
     "explanationExact" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains this string"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -459,6 +537,12 @@
     "explanationFuzzy" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains a word similar to this word"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -494,6 +578,12 @@
     "explanationNone" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No automatic matching"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -529,6 +619,12 @@
     "explanationRegEx" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document matches this regular expression"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -564,6 +660,12 @@
     "pattern" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pattern"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -599,6 +701,12 @@
     "title" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Matching"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
