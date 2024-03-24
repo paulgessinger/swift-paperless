@@ -62,7 +62,11 @@ struct DocumentScannerView: UIViewControllerRepresentable {
                 }
             }
 
-            let date = Date().formatted(date: .numeric, time: .standard)
+            let date = Date().formatted(.verbatim(
+                "\(year: .extended())-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .oneBased)).\(minute: .twoDigits).\(second: .twoDigits)",
+                timeZone: TimeZone.current,
+                calendar: .current
+            ))
 
             let url = FileManager.default.temporaryDirectory
                 .appending(component: "Scan \(date)")

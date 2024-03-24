@@ -1203,7 +1203,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not save PDF"
+            "value" : "Could not create page in PDF"
           }
         }
       }
@@ -1214,7 +1214,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not create page in PDF"
+            "value" : "Could not save PDF"
           }
         }
       }

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ExtraHeadersView: View {
     @EnvironmentObject private var connectionManager: ConnectionManager
+    @EnvironmentObject private var store: DocumentStore
 
     @State private var headers: [ConnectionManager.HeaderValue] = []
 
@@ -68,7 +69,7 @@ struct ExtraHeadersView: View {
         }
 
         .task {
-            extraHeaders = connectionManager.extraHeaders
+            headers = connectionManager.extraHeaders
         }
 
         .onChange(of: headers) { value in

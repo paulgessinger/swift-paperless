@@ -43,7 +43,7 @@ private struct DetailsView: View {
         NavigationStack {
             List {
                 NavigationLink {
-                    ExtraHeadersView(headers: $extraHeaders)
+                    ExtraHeadersView()
                 } label: {
                     Text(.login.extraHeaders)
                 }
