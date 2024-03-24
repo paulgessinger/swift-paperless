@@ -174,7 +174,6 @@ class ErrorController: ObservableObject {
 
     var details: String? = nil
 
-    // @TODO: Change this to localized
     private static let defaultTitle = String(localized: .localizable.errorDefaultMessage)
 
     func push(error: Error, message: String? = nil) {
@@ -186,9 +185,16 @@ class ErrorController: ObservableObject {
             } else {
                 push(error: le)
             }
-        } else {
-            push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
+            return
         }
+
+        if let de = error as? DisplayableError {
+            Task {
+                await push(error: de)
+            }
+            return
+        }
+        push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
     }
 
     func push(error: Error, message: LocalizedStringResource) {

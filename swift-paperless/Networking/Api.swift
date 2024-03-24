@@ -304,6 +304,8 @@ extension ApiRepository: Repository {
 
         do {
             let _ = try await fetchData(for: request, code: 200)
+        } catch let RequestError.unexpectedStatusCode(code) where code == 413 {
+            throw DocumentCreateError.tooLarge
         } catch {
             Logger.api.error("Error uploading document: \(error)")
             throw error

@@ -8,6 +8,24 @@
 import Foundation
 import SwiftUI
 
+enum DocumentCreateError: DisplayableError {
+    case tooLarge
+
+    var message: String {
+        switch self {
+        case .tooLarge:
+            return String(localized: .localizable.documentCreateFailedTooLarge)
+        }
+    }
+
+    var details: String? {
+        switch self {
+        case .tooLarge:
+            return String(localized: .localizable.documentCreateFailedTooLargeDetails)
+        }
+    }
+}
+
 protocol Repository {
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws

@@ -1237,6 +1237,88 @@
         }
       }
     },
+    "documentCreateFailedTooLarge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document too large"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zu groß"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document too large"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document trop volumineux"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document te groot"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument zbyt duży"
+          }
+        }
+      }
+    },
+    "documentCreateFailedTooLargeDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The document you are trying to upload was rejected as being too large. Please check your Paperless-ngx and/or reverse proxy settings."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Dokument, das Sie hochzuladen versuchen, wurde als zu groß abgelehnt. Bitte überprüfen Sie Ihre Paperless-ngx- und/oder Reverse-Proxy-Einstellungen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The document you are trying to upload was rejected as being too large. Please check your Paperless-ngx and/or reverse proxy settings."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le document que vous essayez de télécharger a été rejeté car il est trop volumineux. Veuillez vérifier les paramètres de votre Paperless-ngx et/ou de votre proxy inverse."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het document dat u probeert te uploaden is geweigerd omdat het te groot is. Controleer uw Paperless-ngx en/of reverse proxy-instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument, który próbujesz przesłać, został odrzucony jako zbyt duży. Sprawdź ustawienia Paperless-ngx i/lub odwrotnego proxy."
+          }
+        }
+      }
+    },
     "documentDelete" : {
       "extractionState" : "manual",
       "localizations" : {
