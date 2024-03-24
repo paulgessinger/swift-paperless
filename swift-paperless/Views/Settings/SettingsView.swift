@@ -149,7 +149,10 @@ struct SettingsView: View {
 
             Section(String(localized: .settings.advanced)) {
                 NavigationLink {
-                    ExtraHeadersView()
+                    ExtraHeadersView(headers: connectionManager.extraHeaders, onChange: { value in
+                        connectionManager.extraHeaders = value
+                        store.set(repository: ApiRepository(connection: connectionManager.connection!))
+                    })
                 } label: {
                     Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }

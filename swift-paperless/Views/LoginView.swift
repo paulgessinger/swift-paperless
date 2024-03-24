@@ -43,7 +43,10 @@ private struct DetailsView: View {
         NavigationStack {
             List {
                 NavigationLink {
-                    ExtraHeadersView()
+                    ExtraHeadersView(headers: extraHeaders, onChange: { value in
+                        extraHeaders = value
+                        connectionManager.extraHeaders = value
+                    })
                 } label: {
                     Text(.login.extraHeaders)
                 }
@@ -60,10 +63,6 @@ private struct DetailsView: View {
                     }
                 }
             }
-        }
-
-        .onChange(of: extraHeaders) { value in
-            connectionManager.extraHeaders = value
         }
     }
 }

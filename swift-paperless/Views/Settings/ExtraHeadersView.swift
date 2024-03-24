@@ -9,10 +9,13 @@ import os
 import SwiftUI
 
 struct ExtraHeadersView: View {
-    @EnvironmentObject private var connectionManager: ConnectionManager
-    @EnvironmentObject private var store: DocumentStore
+    @State var headers: [ConnectionManager.HeaderValue] = []
+    let onChange: (([ConnectionManager.HeaderValue]) -> Void)?
 
-    @State private var headers: [ConnectionManager.HeaderValue] = []
+    init(headers: [ConnectionManager.HeaderValue], onChange: (([ConnectionManager.HeaderValue]) -> Void)? = nil) {
+        _headers = State(initialValue: headers)
+        self.onChange = onChange
+    }
 
     private struct SingleView: View {
         @Binding var header: ConnectionManager.HeaderValue
@@ -68,14 +71,9 @@ struct ExtraHeadersView: View {
             }
         }
 
-        .task {
-            headers = connectionManager.extraHeaders
-        }
-
         .onChange(of: headers) { value in
             Logger.shared.trace("Saving new set of extra headers: \(value)")
-            connectionManager.extraHeaders = value
-            store.set(repository: ApiRepository(connection: connectionManager.connection!))
+            onChange?(value)
         }
 
         .navigationTitle(Text(.login.extraHeaders))
