@@ -4,6 +4,12 @@
     "activeServer" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Active server"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -39,6 +45,12 @@
     "advanced" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Advanced"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -75,10 +87,40 @@
       "comment" : "Shown in error pill when auth fails",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be enabled"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konnte nicht aktiviert werden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ could not be enabled"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n'a pas pu être activée"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ kon niet worden ingeschakeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nie może zostać aktywowany"
           }
         }
       }
@@ -87,10 +129,40 @@
       "comment" : "Shown to user when TouchID is used. ",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Authenticate with TouchID to use the app"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit TouchID authentifizieren, um App zu benutzen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authenticate with TouchID to use the app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S'authentifier avec TouchID pour utiliser l'application"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifieer met TouchID om de app te gebruiken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się z TouchID, by użyć aplikacji"
           }
         }
       }
@@ -98,6 +170,12 @@
     "detailsFeedback" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Feedback"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -133,6 +211,12 @@
     "detailsLibraries" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Libraries"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -168,6 +252,12 @@
     "detailsLibrariesLoadError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unable to load used library details"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -203,6 +293,12 @@
     "detailsPrivacy" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Privacy"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -238,6 +334,12 @@
     "detailsPrivacyLoadError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -273,6 +375,12 @@
     "detailsSourceCode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Source code"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -308,6 +416,12 @@
     "detailsTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -343,6 +457,12 @@
     "documentDeleteConfirmationLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document delete confirmation"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -378,6 +498,12 @@
     "documentDeleteConfirmationLabelDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ask for confirmation before deleting a document"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -413,6 +539,12 @@
     "feedbackDone" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Thanks!"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -448,6 +580,12 @@
     "feedbackSendEmail" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Send mail"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -483,6 +621,12 @@
     "organization" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Organization"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -518,6 +662,12 @@
     "preferences" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Preferences"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -554,6 +704,12 @@
       "comment" : "Details menu",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -590,10 +746,40 @@
       "comment" : "Placeholder refers to biometric type (as of writing) FaceID or TouchID",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Lock app with %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App mit %@ sperren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lock app with %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verrouiller l'appli avec %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergrendel app met %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zablokuj aplikację z %@"
           }
         }
       }

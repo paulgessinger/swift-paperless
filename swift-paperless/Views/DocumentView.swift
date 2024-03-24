@@ -153,8 +153,6 @@ struct DocumentView: View {
                          filterState: $filterModel.filterState,
                          errorController: errorController)
 
-                .layoutPriority(1)
-
                 .safeAreaInset(edge: .top) {
                     VStack {
                         SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}

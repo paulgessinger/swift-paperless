@@ -245,6 +245,44 @@ struct DocumentList: View {
         }
     }
 
+    private struct NoDocumentsView: View, Equatable {
+        var filtering: Bool
+
+        // Workaround to make SwiftUI call the == func to skip rerendering this view
+        @State private var dummy = 5
+
+        var body: some View {
+            if #available(iOS 17.0, macOS 14.0, *) {
+                ContentUnavailableView {
+                    Label(String(localized: .localizable.noDocuments), systemImage: "tray.fill")
+                } description: {
+                    if filtering {
+                        Text(.localizable.noDocumentsDescriptionFilter)
+                    }
+                }
+            } else {
+                VStack(alignment: .center) {
+                    Image(systemName: "tray.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.gray)
+                        .frame(width: 75)
+                    Text(.localizable.noDocuments)
+                        .font(.title2)
+                        .bold()
+                    if filtering {
+                        Text(.localizable.noDocumentsDescriptionFilter)
+                            .font(.callout)
+                    }
+                }
+            }
+        }
+
+        static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool {
+            true
+        }
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
             VStack {
@@ -268,17 +306,9 @@ struct DocumentList: View {
                         }
                         .listStyle(.plain)
                     } else {
-                        List {
-                            HStack {
-                                Spacer()
-                                // @TODO: Make nice whimsy display
-                                Text(.localizable.noDocuments)
-                                Spacer()
-                            }
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-                        }
-                        .listStyle(.plain)
+                        NoDocumentsView(filtering: filterState.filtering)
+                            .equatable()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     }
                 }
             }
