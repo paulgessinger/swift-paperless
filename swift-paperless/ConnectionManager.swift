@@ -9,17 +9,12 @@ import AuthenticationServices
 import Foundation
 import os
 
-enum ConnectionScheme: String, Codable {
-    case http
-    case https
-}
-
 struct Connection: Equatable {
     let url: URL
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
 
-    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], scheme _: ConnectionScheme = .https) {
+    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = []) {
         self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
@@ -38,7 +33,6 @@ class ConnectionManager: ObservableObject {
     }
 
     @Published var state: LoginState = .none
-//    @Published var connection: Connection?
 
     private let keychainAccount = "PaperlessAccount"
 
