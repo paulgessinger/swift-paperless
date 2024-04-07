@@ -114,7 +114,6 @@
 		7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
-		7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */ = {isa = PBXBuildFile; fileRef = 7A6F31DC29DE936C00186A87 /* generate_filterrules.py */; };
 		7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
@@ -764,7 +763,7 @@
 			mainGroup = 7A5482A2299AD56C00D5061E;
 			packageReferences = (
 				7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */,
-				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections.git" */,
+				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */,
@@ -809,7 +808,6 @@
 				7AF0C7DE2BAF6ED300FCD5AA /* PrivacyInfo.xcprivacy in Resources */,
 				7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */,
 				7AEBB5392B26589700845B73 /* Matching.xcstrings in Resources */,
-				7A6F31DD29DE936C00186A87 /* generate_filterrules.py in Resources */,
 				7A4D9F3829D4B78500B25A63 /* demo.pdf in Resources */,
 				7AB0576E2AA3934C00ABA6B1 /* libraries.md in Resources */,
 				7A1460F32B19F8380074BAAB /* Login.xcstrings in Resources */,
@@ -1038,7 +1036,7 @@
 /* Begin PBXTargetDependency section */
 		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */;
+			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1057,15 +1055,15 @@
 		};
 		7A56F2402B826F5E00BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */;
+			productRef = 7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */;
 		};
 		7A56F2422B826F6300BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */;
+			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
 		};
 		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */;
+			productRef = 7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1555,7 +1553,7 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections.git" */ = {
+		7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
 			requirement = {
@@ -1620,7 +1618,7 @@
 			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
 			productName = SwiftUINavigation;
 		};
-		7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */ = {
+		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1635,12 +1633,12 @@
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
 		};
-		7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */ = {
+		7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */ = {
+		7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1670,7 +1668,7 @@
 			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
 		};
-		7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */ = {
+		7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
