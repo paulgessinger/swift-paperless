@@ -19,6 +19,19 @@ struct Connection: Equatable {
         self.token = token
         self.extraHeaders = extraHeaders
     }
+
+    var scheme: String {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.api.error("Unable to decompose connection URL for scheme, returning https")
+            return "https"
+        }
+        guard let scheme = components.scheme else {
+            Logger.api.error("Connection URL does not have scheme, returning https")
+            return "https"
+        }
+
+        return scheme
+    }
 }
 
 class ConnectionManager: ObservableObject {
