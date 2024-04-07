@@ -40,10 +40,20 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         nextPage = url
     }
 
-    func xprint(_ s: String) {
-        if Element.self == Document.self {
-            print(s)
+    private func fixUrl(_ url: URL) -> URL {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.api.error("Unable to decompose next-page URL for sequence URL fix, continuing with original URL")
+            return url
         }
+
+        components.scheme = repository.connection.scheme
+
+        guard let result = components.url else {
+            Logger.api.error("Could not reassemble URL after sequence URL fix, continuing with original URL")
+            return url
+        }
+
+        return result
     }
 
     func next() async throws -> Element? {
@@ -77,7 +87,13 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
                 return nil
             }
 
-            nextPage = decoded.next
+            // Workaround for https://github.com/paulgessinger/swift-paperless/issues/68
+            Logger.api.trace("Fixing URL to next page with configured backend scheme")
+
+            nextPage = nil
+            if let next = decoded.next {
+                nextPage = fixUrl(next)
+            }
             buffer = decoded.results
             bufferIndex = 1 // set to one because we return the first element immediately
             return decoded.results[0]
@@ -120,7 +136,7 @@ class ApiRepository {
 
     init(connection: Connection) {
         self.connection = connection
-        Logger.api.notice("Initializing ApiRespository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+        Logger.api.notice("Initializing ApiRepository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
 
         Task {
             await ensureBackendVersions()
