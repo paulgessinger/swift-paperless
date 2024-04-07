@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active server"
+            "state" : "translated",
+            "value" : "Aktive servere"
           }
         },
         "de" : {
@@ -47,8 +47,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Avanceret"
           }
         },
         "de" : {
@@ -89,8 +89,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ could not be enabled"
+            "state" : "translated",
+            "value" : "%@ kunne ikke aktiveres"
           }
         },
         "de" : {
@@ -131,8 +131,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Authenticate with TouchID to use the app"
+            "state" : "translated",
+            "value" : "Godkend med TouchID for at bruge appen"
           }
         },
         "de" : {
@@ -172,7 +172,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Feedback"
           }
         },
@@ -213,8 +213,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Libraries"
+            "state" : "translated",
+            "value" : "Biblioteker"
           }
         },
         "de" : {
@@ -254,8 +254,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load used library details"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse detaljer om brugte biblioteker"
           }
         },
         "de" : {
@@ -295,8 +295,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Privacy"
+            "state" : "translated",
+            "value" : "Privatliv"
           }
         },
         "de" : {
@@ -336,8 +336,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+            "state" : "translated",
+            "value" : "# Privatliv\\\\nKunne ikke indlæse privatlivs-URL. Naviger venligst [her](%@) for at finde den."
           }
         },
         "de" : {
@@ -377,8 +377,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Source code"
+            "state" : "translated",
+            "value" : "Kildekode"
           }
         },
         "de" : {
@@ -418,8 +418,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Detaljer"
           }
         },
         "de" : {
@@ -459,8 +459,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document delete confirmation"
+            "state" : "translated",
+            "value" : "Bekræft sletning af dokument"
           }
         },
         "de" : {
@@ -500,8 +500,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Ask for confirmation before deleting a document"
+            "state" : "translated",
+            "value" : "Bed om bekræftelse inden sletning af et dokument"
           }
         },
         "de" : {
@@ -541,8 +541,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thanks!"
+            "state" : "translated",
+            "value" : "Tak!"
           }
         },
         "de" : {
@@ -582,8 +582,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Send mail"
+            "state" : "translated",
+            "value" : "Send e-mail"
           }
         },
         "de" : {
@@ -623,8 +623,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Organization"
+            "state" : "translated",
+            "value" : "Organisation"
           }
         },
         "de" : {
@@ -664,8 +664,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preferences"
+            "state" : "translated",
+            "value" : "Præferencer"
           }
         },
         "de" : {
@@ -706,8 +706,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings"
+            "state" : "translated",
+            "value" : "Indstillinger"
           }
         },
         "de" : {
@@ -748,8 +748,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Lock app with %@"
+            "state" : "translated",
+            "value" : "Lås app med %@"
           }
         },
         "de" : {

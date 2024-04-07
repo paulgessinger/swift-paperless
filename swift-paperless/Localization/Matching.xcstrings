@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Matching algorithm"
+            "state" : "translated",
+            "value" : "Matchningsalgoritme"
           }
         },
         "de" : {
@@ -47,8 +47,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "de" : {
@@ -88,8 +88,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Enhver"
           }
         },
         "de" : {
@@ -129,7 +129,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Auto"
           }
         },
@@ -170,8 +170,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exact"
+            "state" : "translated",
+            "value" : "Præcis"
           }
         },
         "de" : {
@@ -211,7 +211,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Fuzzy"
           }
         },
@@ -252,8 +252,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Ingen"
           }
         },
         "de" : {
@@ -293,7 +293,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "RegEx"
           }
         },
@@ -334,8 +334,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Case insensitive"
+            "state" : "translated",
+            "value" : "Skelner ikke mellem store og små bogstaver"
           }
         },
         "de" : {
@@ -375,8 +375,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains all of these words (space separated)"
+            "state" : "translated",
+            "value" : "Dokumentet indeholder alle disse ord (separeret af mellemrum)"
           }
         },
         "de" : {
@@ -416,8 +416,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains any of these words (space separated)"
+            "state" : "translated",
+            "value" : "Dokumentet indeholder et af disse ord (separeret af mellemrum)"
           }
         },
         "de" : {
@@ -457,8 +457,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn matching automatically"
+            "state" : "translated",
+            "value" : "Lær at matche automatisk"
           }
         },
         "de" : {
@@ -498,8 +498,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains this string"
+            "state" : "translated",
+            "value" : "Dokumentet indeholder denne streng"
           }
         },
         "de" : {
@@ -539,8 +539,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains a word similar to this word"
+            "state" : "translated",
+            "value" : "Dokumentet indeholder et ord, der ligner dette ord"
           }
         },
         "de" : {
@@ -580,8 +580,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No automatic matching"
+            "state" : "translated",
+            "value" : "Ingen automatisk matchning"
           }
         },
         "de" : {
@@ -621,8 +621,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document matches this regular expression"
+            "state" : "translated",
+            "value" : "Dokumentet matcher dette regulære udtryk"
           }
         },
         "de" : {
@@ -662,8 +662,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pattern"
+            "state" : "translated",
+            "value" : "Mønster"
           }
         },
         "de" : {
@@ -703,8 +703,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Matching"
+            "state" : "translated",
+            "value" : "Matcher"
           }
         },
         "de" : {

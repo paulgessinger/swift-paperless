@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Do not include `/api` in the URL"
+            "state" : "translated",
+            "value" : "Inkluder ikke `/api` i URL'en"
           }
         },
         "de" : {
@@ -47,8 +47,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login error"
+            "state" : "translated",
+            "value" : "Loginfejl"
           }
         },
         "de" : {
@@ -88,8 +88,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Log in"
+            "state" : "translated",
+            "value" : "Log ind"
           }
         },
         "de" : {
@@ -129,8 +129,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login valid"
+            "state" : "translated",
+            "value" : "Gyldigt login"
           }
         },
         "de" : {
@@ -170,8 +170,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Credentials"
+            "state" : "translated",
+            "value" : "Loginoplysninger"
           }
         },
         "de" : {
@@ -211,8 +211,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Detaljer"
           }
         },
         "de" : {
@@ -252,8 +252,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not convert \"%@\" to URL"
+            "state" : "translated",
+            "value" : "Kunne ikke konvertere \"%@\" til URL"
           }
         },
         "de" : {
@@ -293,8 +293,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Request to \"%@\" returned invalid response code %d"
+            "state" : "translated",
+            "value" : "Anmodning til \"%@\" returnerede ugyldig svarkode %d"
           }
         },
         "de" : {
@@ -334,8 +334,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid credentials"
+            "state" : "translated",
+            "value" : "Ugyldige loginoplysninger"
           }
         },
         "de" : {
@@ -375,8 +375,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other error"
+            "state" : "translated",
+            "value" : "Anden fejl"
           }
         },
         "de" : {
@@ -416,8 +416,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid."
+            "state" : "translated",
+            "value" : "Den angivne URL er ugyldig."
           }
         },
         "de" : {
@@ -457,8 +457,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid: %@"
+            "state" : "translated",
+            "value" : "Den angivne URL er ugyldig: %@"
           }
         },
         "de" : {
@@ -498,8 +498,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Extra headers"
+            "state" : "translated",
+            "value" : "Ekstra headere"
           }
         },
         "de" : {
@@ -539,8 +539,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+            "state" : "translated",
+            "value" : "Ekstra headere der skal inkluderes i alle API-anmodninger, som appen sender til din installation."
           }
         },
         "de" : {
@@ -580,8 +580,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Key"
+            "state" : "translated",
+            "value" : "Nøgle"
           }
         },
         "de" : {
@@ -621,8 +621,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Value"
+            "state" : "translated",
+            "value" : "Værdi"
           }
         },
         "de" : {
@@ -662,8 +662,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If at all possible, use HTTPS to connect to the API."
+            "state" : "translated",
+            "value" : "Hvis det overhovedet er muligt, brug HTTPS til at oprette forbindelse til API'et."
           }
         },
         "de" : {
@@ -703,8 +703,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Mere"
           }
         },
         "de" : {
@@ -744,8 +744,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Password"
+            "state" : "translated",
+            "value" : "Adgangskode"
           }
         },
         "de" : {
@@ -785,8 +785,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your password is only used to log in, and not stored!"
+            "state" : "translated",
+            "value" : "Din adgangskode bruges kun til at logge ind og gemmes ikke!"
           }
         },
         "de" : {
@@ -826,8 +826,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login successful"
+            "state" : "translated",
+            "value" : "Login lykkedes"
           }
         },
         "de" : {
@@ -867,8 +867,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "URL invalid"
+            "state" : "translated",
+            "value" : "Ugyldig URL"
           }
         },
         "de" : {
@@ -908,7 +908,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Paperless URL"
           }
         },
@@ -949,8 +949,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "URL valid"
+            "state" : "translated",
+            "value" : "Gyldig URL"
           }
         },
         "de" : {
@@ -990,8 +990,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username"
+            "state" : "translated",
+            "value" : "Brugernavn"
           }
         },
         "de" : {

@@ -790,7 +790,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingen tags"
+            "value" : "Ingen etiketter"
           }
         },
         "de" : {
@@ -1242,8 +1242,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document too large"
+            "state" : "translated",
+            "value" : "Dokument for stort"
           }
         },
         "de" : {
@@ -1283,8 +1283,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document you are trying to upload was rejected as being too large. Please check your Paperless-ngx and/or reverse proxy settings."
+            "state" : "translated",
+            "value" : "Det dokument, du forsøger at uploade, blev afvist som værende for stort. Tjek venligst dine Paperless-ngx indstillinger og/eller dine reverse-proxy indstillinger."
           }
         },
         "de" : {
@@ -1488,8 +1488,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not create page in PDF"
+            "state" : "translated",
+            "value" : "Kunne ikke oprette side i PDF"
           }
         },
         "de" : {
@@ -1529,8 +1529,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not save PDF"
+            "state" : "translated",
+            "value" : "Kunne ikke gemme PDF"
           }
         },
         "de" : {
@@ -2361,8 +2361,8 @@
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u filters applied"
+                  "state" : "translated",
+                  "value" : "%u filtre anvendt"
                 }
               }
             }
@@ -2847,8 +2847,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your current filter did not match any documents"
+            "state" : "translated",
+            "value" : "Dit nuværende filter matchede ikke nogen dokumenter"
           }
         },
         "de" : {
@@ -2933,13 +2933,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%d tag"
+                  "value" : "%d etiket"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d tags"
+                  "state" : "translated",
+                  "value" : "%d etiketter"
                 }
               }
             }
@@ -3054,7 +3054,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "OK"
           }
         },
@@ -3095,8 +3095,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Åbn"
           }
         },
         "de" : {
@@ -3136,8 +3136,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "de" : {
@@ -3178,8 +3178,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner filter is in explicit user mode."
+            "state" : "translated",
+            "value" : "Ejerfilteret er i eksplicit brugertilstand."
           }
         },
         "de" : {
@@ -3219,8 +3219,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Brugere"
           }
         },
         "de" : {
@@ -3260,8 +3260,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "My documents"
+            "state" : "translated",
+            "value" : "Mine dokumenter"
           }
         },
         "de" : {
@@ -3301,8 +3301,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Ingen"
           }
         },
         "de" : {
@@ -3342,8 +3342,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Ikke tildelt"
           }
         },
         "de" : {
@@ -3383,8 +3383,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared with me"
+            "state" : "translated",
+            "value" : "Delt med mig"
           }
         },
         "de" : {
@@ -3424,8 +3424,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unowned"
+            "state" : "translated",
+            "value" : "Ikke ejet"
           }
         },
         "de" : {
@@ -3465,8 +3465,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Path"
+            "state" : "translated",
+            "value" : "Sti"
           }
         },
         "de" : {
@@ -3506,8 +3506,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "Tilladelser"
           }
         },
         "de" : {
@@ -3547,8 +3547,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Properties"
+            "state" : "translated",
+            "value" : "Egenskaber"
           }
         },
         "de" : {
@@ -3588,8 +3588,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
+            "state" : "translated",
+            "value" : "Fjern"
           }
         },
         "de" : {
@@ -3629,8 +3629,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Save"
+            "state" : "translated",
+            "value" : "Gem"
           }
         },
         "de" : {
@@ -3670,8 +3670,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved view"
+            "state" : "translated",
+            "value" : "Gemt visning"
           }
         },
         "de" : {
@@ -3711,8 +3711,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create saved view"
+            "state" : "translated",
+            "value" : "Opret gemt visning"
           }
         },
         "de" : {
@@ -3752,8 +3752,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Are you sure you want to delete %@?"
+            "state" : "translated",
+            "value" : "Er du sikker på, at du vil slette %@?"
           }
         },
         "de" : {
@@ -3793,8 +3793,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete saved view"
+            "state" : "translated",
+            "value" : "Slet gemt visning"
           }
         },
         "de" : {
@@ -3834,8 +3834,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved view"
+            "state" : "translated",
+            "value" : "Rediger gemt visning"
           }
         },
         "de" : {
@@ -3876,7 +3876,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%@*"
           }
         },
@@ -3917,8 +3917,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved views"
+            "state" : "translated",
+            "value" : "Gemte visninger"
           }
         },
         "de" : {
@@ -3959,8 +3959,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved views"
+            "state" : "translated",
+            "value" : "Rediger gemte visninger"
           }
         },
         "de" : {
@@ -4000,8 +4000,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show in sidebar"
+            "state" : "translated",
+            "value" : "Vis i sidepanel"
           }
         },
         "de" : {
@@ -4041,8 +4041,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show on dashboard"
+            "state" : "translated",
+            "value" : "Vis på dashboard"
           }
         },
         "de" : {
@@ -4082,8 +4082,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan document"
+            "state" : "translated",
+            "value" : "Scan dokument"
           }
         },
         "de" : {
@@ -4123,8 +4123,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search"
+            "state" : "translated",
+            "value" : "Søg"
           }
         },
         "de" : {
@@ -4164,8 +4164,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear search"
+            "state" : "translated",
+            "value" : "Ryd søgning"
           }
         },
         "de" : {
@@ -4205,8 +4205,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Valgt"
           }
         },
         "de" : {
@@ -4246,8 +4246,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort by"
+            "state" : "translated",
+            "value" : "Sortér efter"
           }
         },
         "de" : {
@@ -4287,8 +4287,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sorting"
+            "state" : "translated",
+            "value" : "Sortering"
           }
         },
         "de" : {
@@ -4328,8 +4328,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort menu"
+            "state" : "translated",
+            "value" : "Sorterings menu"
           }
         },
         "de" : {
@@ -4369,8 +4369,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort order"
+            "state" : "translated",
+            "value" : "Sorteringsrækkefølge"
           }
         },
         "de" : {
@@ -4410,8 +4410,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Added"
+            "state" : "translated",
+            "value" : "Tilføjet"
           }
         },
         "de" : {
@@ -4451,8 +4451,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Oprettet"
           }
         },
         "de" : {
@@ -4492,8 +4492,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Modified"
+            "state" : "translated",
+            "value" : "Ændret"
           }
         },
         "de" : {
@@ -4534,7 +4534,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opbevaringssti"
+            "value" : "Lagersti"
           }
         },
         "de" : {
@@ -4575,7 +4575,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opret opbevaringssti"
+            "value" : "Opret lagersti"
           }
         },
         "de" : {
@@ -4615,8 +4615,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit storage path"
+            "state" : "translated",
+            "value" : "Rediger lagersti"
           }
         },
         "de" : {
@@ -4656,8 +4656,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude storage path"
+            "state" : "translated",
+            "value" : "Ekskludér lagersti"
           }
         },
         "de" : {
@@ -4697,8 +4697,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list."
+            "state" : "translated",
+            "value" : "f.eks. {created_year}-{title} eller brug skråstreger for at tilføje mapper, f.eks. {created_year}/{correspondent}/{title}. Se [dokumentationen](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for den fulde liste."
           }
         },
         "de" : {
@@ -4738,8 +4738,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Ingen"
           }
         },
         "de" : {
@@ -4779,8 +4779,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default"
+            "state" : "translated",
+            "value" : "Standard"
           }
         },
         "de" : {
@@ -4820,8 +4820,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage paths"
+            "state" : "translated",
+            "value" : "Lagerstier"
           }
         },
         "de" : {
@@ -4862,7 +4862,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag"
+            "value" : "Etiket"
           }
         },
         "de" : {
@@ -4903,7 +4903,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tilføj tag"
+            "value" : "Tilføj etiket"
           }
         },
         "de" : {
@@ -4943,8 +4943,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Random color"
+            "state" : "translated",
+            "value" : "Tilfældig farve"
           }
         },
         "de" : {
@@ -4985,7 +4985,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opret tag"
+            "value" : "Opret etiket"
           }
         },
         "de" : {
@@ -5026,7 +5026,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rediger tag"
+            "value" : "Redigér etiket"
           }
         },
         "de" : {
@@ -5067,7 +5067,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekskludér tag"
+            "value" : "Ekskludér etiket"
           }
         },
         "de" : {
@@ -5108,7 +5108,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag ekskluderet"
+            "value" : "Etiket ekskluderet"
           }
         },
         "de" : {
@@ -5149,7 +5149,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag inkluderet"
+            "value" : "Etiket inkluderet"
           }
         },
         "de" : {
@@ -5190,7 +5190,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Indbakke tag"
+            "value" : "Indbakke etiket"
           }
         },
         "de" : {
@@ -5231,7 +5231,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag er ikke valgt"
+            "value" : "Etiket er ikke valgt"
           }
         },
         "de" : {
@@ -5271,8 +5271,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag is selected"
+            "state" : "translated",
+            "value" : "Etiket er valgt"
           }
         },
         "de" : {
@@ -5312,8 +5312,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag name"
+            "state" : "translated",
+            "value" : "Etiket navn"
           }
         },
         "de" : {
@@ -5353,8 +5353,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etiketter"
           }
         },
         "de" : {
@@ -5394,8 +5394,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tags"
+            "state" : "translated",
+            "value" : "Alle etiketter"
           }
         },
         "de" : {
@@ -5435,8 +5435,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any tag"
+            "state" : "translated",
+            "value" : "Alle etiketter"
           }
         },
         "de" : {
@@ -5477,8 +5477,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "de" : {
@@ -5518,8 +5518,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag filter mode"
+            "state" : "translated",
+            "value" : "Etiket filtertilstand"
           }
         },
         "de" : {
@@ -5559,8 +5559,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Ingen"
           }
         },
         "de" : {
@@ -5600,8 +5600,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Ikke tildelt"
           }
         },
         "de" : {
@@ -5641,8 +5641,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove inbox tags"
+            "state" : "translated",
+            "value" : "Fjern indbakke etiketter"
           }
         },
         "de" : {
@@ -5685,14 +5685,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending task"
+                  "state" : "translated",
+                  "value" : "%u afventende opgave"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending tasks"
+                  "state" : "translated",
+                  "value" : "%u afventende opgaver"
                 }
               }
             }
@@ -5807,8 +5807,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Processing \"%@\""
+            "state" : "translated",
+            "value" : "Behandler \"%@\""
           }
         },
         "de" : {
@@ -5848,8 +5848,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titel"
           }
         },
         "de" : {
@@ -5889,7 +5889,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN"
           }
         },
