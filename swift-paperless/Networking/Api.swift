@@ -150,7 +150,8 @@ class ApiRepository {
     }()
 
     fileprivate func request(url: URL) -> URLRequest {
-        Logger.api.trace("Creating API request for URL \(url)")
+        let sanitizedUrl = sanitizeUrlForLog(url)
+        Logger.api.trace("Creating API request for URL \(sanitizedUrl, privacy: .public)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
@@ -162,38 +163,55 @@ class ApiRepository {
         request(url: url(endpoint))
     }
 
+    private func sanitizeUrlForLog(_ url: URL) -> String {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.api.error("sanitizeUrlForLog failed")
+            return "<private>"
+        }
+
+        components.host = "example.com"
+        guard let result = components.url else {
+            Logger.api.error("sanitizeUrlForLog failed")
+            return "<private>"
+        }
+
+        return result.absoluteString
+    }
+
     fileprivate func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
         guard let url = request.url else {
             Logger.api.error("Request URL is nil")
             throw RequestError.invalidRequest
         }
-        Logger.api.trace("Fetching request data for \(url)")
+
+        let sanitizedUrl = sanitizeUrlForLog(url)
+        Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
 
         let result: (Data, URLResponse)
         do {
             result = try await URLSession.shared.data(for: request)
         } catch {
-            Logger.api.error("Caught error fetching \(url): \(error)")
+            Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(error)")
             throw error
         }
 
         let (data, response) = result
 
-        Logger.api.trace("Checking response of url \(url)")
+        Logger.api.trace("Checking response of url \(sanitizedUrl, privacy: .public)")
 
         guard let response = response as? HTTPURLResponse else {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.api.error("Response to \(url) is not HTTPURLResponse, body: \(body)")
+            Logger.api.error("Response to \(sanitizedUrl, privacy: .public) is not HTTPURLResponse, body: \(body, privacy: .public)")
             throw RequestError.invalidResponse
         }
 
         if response.statusCode != code {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.api.error("URLResponse to \(url) has status code \(response.statusCode) != \(code), body: \(body)")
+            Logger.api.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
             throw RequestError.unexpectedStatusCode(code: response.statusCode)
         }
 
-        Logger.api.trace("URLResponse has status code \(code) as expected")
+        Logger.api.trace("URLResponse for \(sanitizedUrl, privacy: .public) has status code \(code) as expected")
 
         return (data, response)
     }
@@ -205,7 +223,7 @@ class ApiRepository {
         } catch let error as DecodingError {
             let url = request.url!
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.api.error("Unable to decode response to \(url) as \(T.self) from body \(body): \(error)")
+            Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self) from body \(body, privacy: .public): \(error)")
             throw error
         }
     }
