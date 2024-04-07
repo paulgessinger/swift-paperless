@@ -1281,6 +1281,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -1330,6 +1331,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "swift-paperless/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Paperless;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Your camera is used to scan for ASNs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Protect access to documents in the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
