@@ -99,7 +99,8 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch {
-            Logger.api.error("Error in API sequence: \(repository.sanitizedError(error), privacy: .public)")
+            let sanitizedError = repository.sanitizedError(error)
+            Logger.api.error("Error in API sequence: \(sanitizedError, privacy: .public)")
             throw error
         }
     }
@@ -219,7 +220,8 @@ class ApiRepository {
         do {
             result = try await URLSession.shared.data(for: request)
         } catch {
-            Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError(error), privacy: .public)")
+            let sanitizedError = sanitizedError(error)
+            Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)")
             throw error
         }
 
