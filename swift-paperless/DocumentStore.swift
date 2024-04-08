@@ -48,10 +48,6 @@ class DocumentStore: ObservableObject {
         self.repository = repository
 //        documentSource = NullDocumentSource()
 //        documentSource = repository.documents(filter: FilterState())
-
-        Task {
-            async let _ = await fetchAll()
-        }
     }
 
     @MainActor

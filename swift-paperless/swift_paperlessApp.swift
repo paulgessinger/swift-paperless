@@ -69,6 +69,9 @@ struct MainView: View {
             showLoginScreen = value == .invalid
             if let conn = manager.connection {
                 store = DocumentStore(repository: ApiRepository(connection: conn))
+                Task.detached {
+                    try? await store!.fetchAll()
+                }
                 storeReady = true
             }
         }
