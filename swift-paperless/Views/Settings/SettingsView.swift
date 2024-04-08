@@ -149,8 +149,9 @@ struct SettingsView: View {
 
             Section(String(localized: .settings.advanced)) {
                 NavigationLink {
-                    ExtraHeadersView(headers: connectionManager.extraHeaders, onChange: { value in
+                    ExtraHeadersView(headers: extraHeaders, onChange: { value in
                         connectionManager.extraHeaders = value
+                        extraHeaders = value
                         store.set(repository: ApiRepository(connection: connectionManager.connection!))
                     })
                 } label: {
@@ -165,10 +166,8 @@ struct SettingsView: View {
             detailSection
         }
 
-        .onChange(of: extraHeaders) { value in
-            Logger.shared.trace("Saving new set of extra headers: \(value)")
-            connectionManager.extraHeaders = value
-            store.set(repository: ApiRepository(connection: connectionManager.connection!))
+        .onAppear {
+            extraHeaders = connectionManager.extraHeaders
         }
 
         .sheet(isPresented: $showMailSheet) {
