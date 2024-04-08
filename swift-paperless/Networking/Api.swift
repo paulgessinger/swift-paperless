@@ -99,7 +99,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch {
-            Logger.api.error("Error in API sequence: \(error)")
+            Logger.api.error("Error in API sequence: \(repository.sanitizedError(error), privacy: .public)")
             throw error
         }
     }
@@ -180,18 +180,30 @@ class ApiRepository {
     }
 
     private func sanitizeUrlForLog(_ url: URL) -> String {
-        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.api.error("sanitizeUrlForLog failed")
-            return "<private>"
-        }
+        #if DEBUG
+            return url.absoluteString
+        #else
+            guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+                Logger.api.error("sanitizeUrlForLog failed")
+                return "<private>"
+            }
 
-        components.host = "example.com"
-        guard let result = components.url else {
-            Logger.api.error("sanitizeUrlForLog failed")
-            return "<private>"
-        }
+            components.host = "example.com"
+            guard let result = components.url else {
+                Logger.api.error("sanitizeUrlForLog failed")
+                return "<private>"
+            }
 
-        return result.absoluteString
+            return result.absoluteString
+        #endif
+    }
+
+    fileprivate func sanitizedError(_ error: Error) -> String {
+        #if DEBUG
+            return String(describing: error)
+        #else
+            return String(describing: error).replacingOccurrences(of: connection.url.absoluteString, with: "\(connection.scheme)://example.com")
+        #endif
     }
 
     fileprivate func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
@@ -207,7 +219,7 @@ class ApiRepository {
         do {
             result = try await URLSession.shared.data(for: request)
         } catch {
-            Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(error)")
+            Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError(error), privacy: .public)")
             throw error
         }
 
@@ -527,7 +539,7 @@ extension ApiRepository: Repository {
     }
 
     func thumbnailData(document: Document) async -> Data? {
-        Logger.api.notice("Get thumbnail")
+        Logger.api.notice("Get thumbnail for document \(document.id, privacy: .public)")
         let url = url(Endpoint.thumbnail(documentId: document.id))
 
         // @TODO: Can this be a regular request?
@@ -539,7 +551,7 @@ extension ApiRepository: Repository {
             let (data, _) = try await fetchData(for: request)
             return data
         } catch {
-            Logger.api.error("Error getting thumbnail data for document: \(error)")
+            Logger.api.error("Error getting thumbnail data for document \(document.id, privacy: .public): \(error)")
             return nil
         }
     }
