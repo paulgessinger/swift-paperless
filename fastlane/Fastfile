@@ -27,7 +27,7 @@ platform :ios do
       in_house: false,
     )
 
-    ensure_git_branch(branch: "main")
+    ensure_git_branch(branch: "^main|develop\/.+$")
     ensure_git_status_clean
     git_pull(rebase: true)
 
