@@ -219,8 +219,9 @@ class ApiRepository {
         let result: (Data, URLResponse)
         do {
             result = try await URLSession.shared.data(for: request)
-        } catch is CancellationError {
+        } catch let error as CancellationError {
             Logger.api.trace("Fetch request task was cancelled")
+            throw error
         } catch {
             let sanitizedError = sanitizedError(error)
             Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)")
