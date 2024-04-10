@@ -219,6 +219,8 @@ class ApiRepository {
         let result: (Data, URLResponse)
         do {
             result = try await URLSession.shared.data(for: request)
+        } catch is CancellationError {
+            Logger.api.trace("Fetch request task was cancelled")
         } catch {
             let sanitizedError = sanitizedError(error)
             Logger.api.error("Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)")
@@ -552,6 +554,9 @@ extension ApiRepository: Repository {
         do {
             let (data, _) = try await fetchData(for: request)
             return data
+        } catch is CancellationError {
+            Logger.api.trace("Thumbnail data request task was cancelled")
+            return nil
         } catch {
             Logger.api.error("Error getting thumbnail data for document \(document.id, privacy: .public): \(error)")
             return nil
