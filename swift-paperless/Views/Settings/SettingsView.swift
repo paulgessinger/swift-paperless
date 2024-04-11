@@ -17,8 +17,6 @@ struct SettingsView: View {
     @EnvironmentObject private var connectionManager: ConnectionManager
     @EnvironmentObject private var errorController: ErrorController
 
-    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
-
     @State private var feedbackLogs: String? = nil
     @State private var showMailSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, Error>? = nil
@@ -135,11 +133,7 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section(String(localized: .settings.activeServer)) {
-                if let stored = connectionManager.storedConnection {
-                    Text(stored.label)
-                } else {
-                    Text(connectionManager.apiHost ?? "No server")
-                }
+                ConnectionsView(connectionManager: connectionManager)
             }
 
             Section(String(localized: .settings.preferences)) {
@@ -152,26 +146,12 @@ struct SettingsView: View {
             }
 
             Section(String(localized: .settings.advanced)) {
-                NavigationLink {
-                    ExtraHeadersView(headers: extraHeaders, onChange: { value in
-                        connectionManager.extraHeaders = value
-                        extraHeaders = value
-                        store.set(repository: ApiRepository(connection: connectionManager.connection!))
-                    })
-                } label: {
-                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
-                }
-
                 LogRecordExportButton()
             }
 
             organizationSection
 
             detailSection
-        }
-
-        .onAppear {
-            extraHeaders = connectionManager.extraHeaders
         }
 
         .sheet(isPresented: $showMailSheet) {

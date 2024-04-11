@@ -168,11 +168,11 @@ class ApiRepository {
 
     fileprivate func request(url: URL) -> URLRequest {
         let sanitizedUrl = sanitizeUrlForLog(url)
-        Logger.api.trace("Creating API request for URL \(sanitizedUrl, privacy: .public)")
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
+        Logger.api.trace("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(request.allHTTPHeaderFields ?? [:])")
         return request
     }
 

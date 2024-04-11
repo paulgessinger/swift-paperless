@@ -89,6 +89,7 @@ struct MainView: View {
         }
 
         .onChange(of: manager.activeConnectionId) { _ in refreshConnection() }
+        .onChange(of: manager.connections) { _ in refreshConnection() }
 
         .onChange(of: scenePhase) { value in
             switch value {

@@ -30,25 +30,22 @@ private struct TokenResponse: Decodable {
 }
 
 private struct DetailsView: View {
-    @ObservedObject var connectionManager: ConnectionManager
-    @State private var extraHeaders: [ConnectionManager.HeaderValue]
+//    @ObservedObject var connectionManager: ConnectionManager
+    @Binding var extraHeaders: [ConnectionManager.HeaderValue]
     @Environment(\.dismiss) private var dismiss
 
-    init(connectionManager: ConnectionManager) {
-        self.connectionManager = connectionManager
-        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
-    }
+//    init(connectionManager: ConnectionManager) {
+//        self.connectionManager = connectionManager
+//        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
+//    }
 
     var body: some View {
         NavigationStack {
             List {
                 NavigationLink {
-                    ExtraHeadersView(headers: extraHeaders, onChange: { value in
-                        extraHeaders = value
-                        connectionManager.extraHeaders = value
-                    })
+                    ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Text(.login.extraHeaders)
+                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
 
                 LogRecordExportButton()
@@ -118,6 +115,8 @@ struct LoginView: View {
     @State private var showDetails: Bool = false
     @State private var showSuccessOverlay = false
 
+    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
+
     private func checkUrl(string value: String) async {
         Logger.shared.notice("Checking backend URL \(value)")
         guard !value.isEmpty else {
@@ -133,7 +132,9 @@ struct LoginView: View {
         }
 
         var request = URLRequest(url: apiUrl)
-        connectionManager.extraHeaders.apply(toRequest: &request)
+        extraHeaders.apply(toRequest: &request)
+
+        Logger.api.trace("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
 
         do {
             Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
@@ -327,7 +328,8 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(connectionManager: connectionManager)
+//                DetailsView(connectionManager: connectionManager)
+                DetailsView(extraHeaders: $extraHeaders)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
@@ -345,13 +347,13 @@ struct LoginView_Previews: PreviewProvider {
 
 struct DetailsView_Previews: PreviewProvider {
     struct Container: View {
-        @State var headers: [(String, String)] = [
-            ("header1", "value1"),
-            ("Header2", "other value"),
+        @State private var extraHeaders: [ConnectionManager.HeaderValue] = [
+            .init(key: "header1", value: "value1"),
+            .init(key: "Header2", value: "other value"),
         ]
 
         var body: some View {
-            DetailsView(connectionManager: ConnectionManager())
+            DetailsView(extraHeaders: $extraHeaders)
         }
     }
 

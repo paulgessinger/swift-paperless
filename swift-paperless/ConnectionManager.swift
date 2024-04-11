@@ -239,6 +239,16 @@ class ConnectionManager: ObservableObject {
         activeConnectionId = connection.id
     }
 
+    func setExtraHeaders(_ headers: [HeaderValue]) {
+        guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+            Logger.api.warning("Tried to set extra headers but have no active connection (?)")
+            return
+        }
+        Logger.api.trace("Updating extra headers in \(stored.id) to \(headers)")
+        stored.extraHeaders = headers
+        connections[stored.id] = stored
+    }
+
 //    func set(base: URL, token: String) throws {
 //        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
 //            Logger.shared.error("Previously ok'ed URL could not be parsed")
@@ -298,6 +308,7 @@ class ConnectionManager: ObservableObject {
 extension [ConnectionManager.HeaderValue] {
     func apply(toRequest req: inout URLRequest) {
         for kv in self {
+            if kv.key.contains(" ") || kv.key.isEmpty { continue }
             req.setValue(kv.value, forHTTPHeaderField: kv.key)
         }
     }
