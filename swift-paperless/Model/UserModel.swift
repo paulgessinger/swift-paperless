@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Codable, Model, Identifiable {
+struct User: Codable, Model, Identifiable, Equatable {
     var id: UInt
     var isSuperUser: Bool
     var username: String

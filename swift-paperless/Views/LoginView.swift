@@ -186,13 +186,27 @@ struct LoginView: View {
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-            Logger.shared.notice("Login successful")
+            Logger.shared.info("Login credentials are valid")
 
             Haptics.shared.notification(.success)
             showSuccessOverlay = true
             try await Task.sleep(for: .seconds(2.3))
 
-            try connectionManager.set(base: baseUrl, token: tokenResponse.token)
+            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: connectionManager.extraHeaders)
+
+            let repository = ApiRepository(connection: connection)
+
+            let currentUser = try await repository.currentUser()
+
+            if currentUser.username != username {
+                Logger.api.warning("Username from login and logged in username not the same")
+            }
+
+            let stored = StoredConnection(url: baseUrl, extraHeaders: connectionManager.extraHeaders, user: currentUser)
+            try stored.setToken(connection.token)
+
+            try connectionManager.login(stored)
+            Logger.api.info("Logging successful")
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             errorController.push(error: error)

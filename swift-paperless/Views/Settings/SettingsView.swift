@@ -135,7 +135,11 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section(String(localized: .settings.activeServer)) {
-                Text(connectionManager.apiHost ?? "No server")
+                if let stored = connectionManager.storedConnection {
+                    Text(stored.label)
+                } else {
+                    Text(connectionManager.apiHost ?? "No server")
+                }
             }
 
             Section(String(localized: .settings.preferences)) {

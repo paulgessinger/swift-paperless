@@ -159,7 +159,7 @@ struct ShareView: View {
 
     var body: some View {
         Group {
-            if connectionManager.state == .valid {
+            if connectionManager.connection != nil {
                 if let error = attachmentManager.error {
                     Text(String(describing: error))
                 }
@@ -178,7 +178,7 @@ struct ShareView: View {
                         .accentColor(Color("AccentColor"))
                     }
                 }
-            } else if connectionManager.state == .invalid {
+            } else {
                 VStack {
                     Spacer()
                     HStack {
@@ -197,7 +197,7 @@ struct ShareView: View {
         }
 
         .task {
-            await connectionManager.check()
+//            await connectionManager.check()
             if let conn = connectionManager.connection {
                 store.set(repository: ApiRepository(connection: conn))
             }
