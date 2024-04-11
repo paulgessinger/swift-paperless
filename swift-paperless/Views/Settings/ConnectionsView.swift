@@ -33,9 +33,9 @@ struct ConnectionsView: View {
                 connectionManager.setExtraHeaders(extraHeaders)
             }
 
-        } else {
+        } else if let compat = connectionManager.connection {
             // @TODO: (multi-server) remove in a few versions
-            Text(connectionManager.apiHost ?? "No server")
+            Text(compat.url.absoluteString)
         }
     }
 }

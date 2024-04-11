@@ -126,10 +126,10 @@ class ConnectionManager: ObservableObject {
 
     // @TODO: (multi-server) Remove in a few versions
     @UserDefaultBacked(key: "ExtraHeaders", storage: .group)
-    var extraHeaders: [HeaderValue] = []
+    private var extraHeaders: [HeaderValue] = []
 
     // @TODO: (multi-server) Remove in a few versions
-    private(set) var apiHost: String? {
+    private var apiHost: String? {
         get {
             UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.string(forKey: "ApiHost")
         }
@@ -140,7 +140,7 @@ class ConnectionManager: ObservableObject {
 
     // @TODO: (multi-server) Remove in a few versions
     @UserDefaultBacked(key: "ApiPath", storage: .group)
-    var apiPath: String? = nil
+    private var apiPath: String? = nil
 
     @UserDefaultBacked(key: "Connections", storage: .group)
     private(set) var connections: [UUID: StoredConnection] = [:] {
@@ -203,6 +203,7 @@ class ConnectionManager: ObservableObject {
             }
         }
 
+        // @TODO: (multi-server) Remove in a few versions
         Logger.api.debug("Making compatibility connection from parts")
 
         guard let apiHost, var url = URL(string: apiHost) else {
@@ -248,27 +249,6 @@ class ConnectionManager: ObservableObject {
         stored.extraHeaders = headers
         connections[stored.id] = stored
     }
-
-//    func set(base: URL, token: String) throws {
-//        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
-//            Logger.shared.error("Previously ok'ed URL could not be parsed")
-//            return
-//        }
-//
-//        let path = (components.path == "" || components.path == "/") ? nil : components.path
-//        components.path = ""
-//
-//        let host = base.absoluteString
-//
-//        apiHost = host
-//        apiPath = path
-//
-//        try Keychain.saveOrUpdate(service: host,
-//                                  account: keychainAccount,
-//                                  value: token.data(using: .utf8)!)
-//
-//        state = .valid
-//    }
 
     func logout() {
         Logger.api.info("Requested logout from current server")

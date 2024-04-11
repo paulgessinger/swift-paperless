@@ -172,7 +172,7 @@ struct LoginView: View {
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = json
-            connectionManager.extraHeaders.apply(toRequest: &request)
+            extraHeaders.apply(toRequest: &request)
 
             let (data, response) = try await URLSession.shared.data(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
@@ -193,7 +193,7 @@ struct LoginView: View {
             showSuccessOverlay = true
             try await Task.sleep(for: .seconds(2.3))
 
-            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: connectionManager.extraHeaders)
+            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders)
 
             let repository = ApiRepository(connection: connection)
 
@@ -203,7 +203,7 @@ struct LoginView: View {
                 Logger.api.warning("Username from login and logged in username not the same")
             }
 
-            let stored = StoredConnection(url: baseUrl, extraHeaders: connectionManager.extraHeaders, user: currentUser)
+            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser)
             try stored.setToken(connection.token)
 
             try connectionManager.login(stored)
