@@ -57,36 +57,37 @@ private struct FilterMenu<Content: View>: View {
     var body: some View {
         VStack {
             Menu {
-                Text(.localizable.savedViews)
-                if !store.savedViews.isEmpty {
-                    ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }, id: \.id) { savedView in
-                        if filterModel.filterState.savedView == savedView.id {
-                            Menu {
-                                if filterModel.filterState.modified {
-                                    Button(String(localized: .localizable.save)) { saveSavedView(savedView) }
-                                    Button {
-                                        filterModel.filterState = .init(savedView: savedView)
-                                    } label: {
-                                        Label(String(localized: .localizable.discardChanges), systemImage: "arrow.counterclockwise")
+                Section(String(localized: .localizable.savedViews)) {
+                    if !store.savedViews.isEmpty {
+                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }, id: \.id) { savedView in
+                            if filterModel.filterState.savedView == savedView.id {
+                                Menu {
+                                    if filterModel.filterState.modified {
+                                        Button(String(localized: .localizable.save)) { saveSavedView(savedView) }
+                                        Button {
+                                            filterModel.filterState = .init(savedView: savedView)
+                                        } label: {
+                                            Label(String(localized: .localizable.discardChanges), systemImage: "arrow.counterclockwise")
+                                        }
+                                    }
+                                    Button(String(localized: .localizable.delete), role: .destructive) {
+                                        showDeletePrompt = true
+                                    }
+                                } label: {
+                                    if filterModel.filterState.modified {
+                                        Label(String(localized: .localizable.savedViewModified(savedView.name)), systemImage: "checkmark")
+                                    } else {
+                                        Label(savedView.name, systemImage: "checkmark")
                                     }
                                 }
-                                Button(String(localized: .localizable.delete), role: .destructive) {
-                                    showDeletePrompt = true
+                            } else {
+                                Button {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        filterModel.filterState = .init(savedView: savedView)
+                                    }
+                                } label: {
+                                    Text(savedView.name)
                                 }
-                            } label: {
-                                if filterModel.filterState.modified {
-                                    Label(String(localized: .localizable.savedViewModified(savedView.name)), systemImage: "checkmark")
-                                } else {
-                                    Label(savedView.name, systemImage: "checkmark")
-                                }
-                            }
-                        } else {
-                            Button {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    filterModel.filterState = .init(savedView: savedView)
-                                }
-                            } label: {
-                                Text(savedView.name)
                             }
                         }
                     }
