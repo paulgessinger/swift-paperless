@@ -190,6 +190,7 @@ enum SortField: String, Codable, CaseIterable {
     case created
     case added
     case modified
+    case storagePath = "storage_path__name"
 
     var label: String {
         switch self {
@@ -207,6 +208,8 @@ enum SortField: String, Codable, CaseIterable {
             return String(localized: .localizable.sortOrderAdded)
         case .modified:
             return String(localized: .localizable.sortOrderModified)
+        case .storagePath:
+            return String(localized: .localizable.sortOrderStoragePath)
         }
     }
 }

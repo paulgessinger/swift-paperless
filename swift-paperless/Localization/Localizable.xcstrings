@@ -4528,6 +4528,17 @@
         }
       }
     },
+    "sortOrderStoragePath" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage path"
+          }
+        }
+      }
+    },
     "storagePath" : {
       "extractionState" : "manual",
       "localizations" : {
