@@ -67,7 +67,7 @@ private struct DetailsView: View {
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
 
-    @EnvironmentObject var errorController: ErrorController
+    @EnvironmentObject private var errorController: ErrorController
 
     @StateObject private var url = DebounceObject(delay: 1)
 

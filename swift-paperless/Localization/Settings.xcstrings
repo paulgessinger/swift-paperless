@@ -192,6 +192,17 @@
         }
       }
     },
+    "chooseServerAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose server"
+          }
+        }
+      }
+    },
     "detailsFeedback" : {
       "extractionState" : "manual",
       "localizations" : {

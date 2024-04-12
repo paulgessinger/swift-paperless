@@ -35,7 +35,7 @@ struct Connection: Equatable {
     }
 }
 
-struct StoredConnection: Equatable, Codable {
+struct StoredConnection: Equatable, Codable, Identifiable {
     var id: UUID = .init()
     var url: URL
     var extraHeaders: [ConnectionManager.HeaderValue]
@@ -150,7 +150,7 @@ class ConnectionManager: ObservableObject {
     }
 
     @UserDefaultBacked(key: "ActiveConnectionId", storage: .group)
-    private(set) var activeConnectionId: UUID? = nil {
+    var activeConnectionId: UUID? = nil {
         willSet {
             objectWillChange.send()
         }

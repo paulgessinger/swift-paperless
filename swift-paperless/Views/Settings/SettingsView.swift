@@ -132,9 +132,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section(String(localized: .settings.activeServer)) {
-                ConnectionsView(connectionManager: connectionManager)
-            }
+            ConnectionsView(connectionManager: connectionManager)
 
             Section(String(localized: .settings.preferences)) {
                 NavigationLink {
@@ -145,11 +143,11 @@ struct SettingsView: View {
                 }
             }
 
+            organizationSection
+
             Section(String(localized: .settings.advanced)) {
                 LogRecordExportButton()
             }
-
-            organizationSection
 
             detailSection
         }

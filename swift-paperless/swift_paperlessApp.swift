@@ -34,11 +34,21 @@ struct MainView: View {
     private func refreshConnection() {
         Logger.api.info("Connection info changed, reloading!")
 
+        storeReady = false
         if let conn = manager.connection {
             Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
-            store = DocumentStore(repository: ApiRepository(connection: conn))
-            Task.detached {
-                try? await store!.fetchAll()
+            if let store {
+                Task {
+                    store.documentEventPublisher.send(.repositoryWillChange)
+                    try? await Task.sleep(for: .seconds(0.3))
+                    store.set(repository: ApiRepository(connection: conn))
+                    try? await store.fetchAll()
+                }
+            } else {
+                store = DocumentStore(repository: ApiRepository(connection: conn))
+                Task.detached {
+                    try? await store!.fetchAll()
+                }
             }
             storeReady = true
             showLoginScreen = false

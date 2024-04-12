@@ -231,6 +231,8 @@ struct DocumentView: View {
                                 Label(String(localized: .settings.title), systemImage: "gear")
                             }
 
+                            ConnectionQuickChangeMenu()
+
                             Divider()
 
                             Button(role: .destructive) {
