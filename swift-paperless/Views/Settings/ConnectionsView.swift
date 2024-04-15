@@ -27,16 +27,17 @@ private struct ConnectionSelectionMenu: View {
 }
 
 struct ConnectionsView: View {
-    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
     @ObservedObject private var connectionManager: ConnectionManager
+    @Binding var showLoginSheet: Bool
 
     @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
 
-    @State private var showLoginScreen = false
+    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
-    init(connectionManager: ConnectionManager) {
+    init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
         self.connectionManager = connectionManager
         _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
+        _showLoginSheet = showLoginSheet
     }
 
     var body: some View {
@@ -82,7 +83,7 @@ struct ConnectionsView: View {
                 Text(.settings.activeServer)
                 Spacer()
                 Button {
-                    showLoginScreen = true
+                    showLoginSheet = true
                 } label: {
                     Image(systemName: "plus.circle").resizable()
                         .frame(width: plusIconSize, height: plusIconSize)
@@ -91,11 +92,6 @@ struct ConnectionsView: View {
                 .buttonStyle(BorderlessButtonStyle())
             }
         }
-
-        .sheet(isPresented: $showLoginScreen) {
-            // @TODO: Dismiss
-            LoginView(connectionManager: connectionManager)
-        }
     }
 }
 
@@ -103,7 +99,7 @@ struct ConnectionQuickChangeMenu: View {
     @EnvironmentObject private var connectionManager: ConnectionManager
 
     var body: some View {
-        if let stored = connectionManager.storedConnection {
+        if connectionManager.connections.count > 1 {
             Menu {
                 ConnectionSelectionMenu(connectionManager: connectionManager)
             } label: {

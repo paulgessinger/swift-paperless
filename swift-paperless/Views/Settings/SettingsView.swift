@@ -19,6 +19,7 @@ struct SettingsView: View {
 
     @State private var feedbackLogs: String? = nil
     @State private var showMailSheet: Bool = false
+    @State private var showLoginSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, Error>? = nil
 
     private func checkedDetached(_ fn: @escaping () async throws -> Void) async {
@@ -131,8 +132,9 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        List {
-            ConnectionsView(connectionManager: connectionManager)
+        Form {
+            ConnectionsView(connectionManager: connectionManager,
+                            showLoginSheet: $showLoginSheet)
 
             Section(String(localized: .settings.preferences)) {
                 NavigationLink {
@@ -160,6 +162,10 @@ struct SettingsView: View {
                     vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
                 }
             }
+        }
+
+        .sheet(isPresented: $showLoginSheet) {
+            LoginView(connectionManager: connectionManager, initial: false)
         }
 
         .onChange(of: feedbackLogs) { _ in

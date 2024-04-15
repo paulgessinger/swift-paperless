@@ -66,8 +66,11 @@ private struct DetailsView: View {
 
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
+    var initial = true
 
     @EnvironmentObject private var errorController: ErrorController
+
+    @Environment(\.dismiss) private var dismiss
 
     @StateObject private var url = DebounceObject(delay: 1)
 
@@ -80,7 +83,7 @@ struct LoginView: View {
 
     @State private var urlState = UrlState.empty
 
-    var urlStateValid: Bool {
+    private var urlStateValid: Bool {
         switch urlState {
         case .valid:
             return true
@@ -208,6 +211,11 @@ struct LoginView: View {
 
             try connectionManager.login(stored)
             Logger.api.info("Logging successful")
+
+            if !initial {
+                dismiss()
+            }
+
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             errorController.push(error: error)
@@ -217,14 +225,17 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             Form {
-                HStack {
-                    Spacer()
-                    LogoView()
-                    Spacer()
+                if initial {
+                    HStack {
+                        Spacer()
+                        LogoView()
+                            .font(.title)
+                        Spacer()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .background(Color.systemGroupedBackground)
                 }
-                .listRowInsets(EdgeInsets())
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .background(Color.systemGroupedBackground)
 
                 Section {
                     HStack {
@@ -308,6 +319,20 @@ struct LoginView: View {
                 }
             }
 
+            .if(!initial) { view in
+                view
+                    .navigationTitle(String(localized: .login.additionalTitle))
+                    .navigationBarTitleDisplayMode(.inline)
+
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button(String(localized: .localizable.cancel)) {
+                                dismiss()
+                            }
+                        }
+                    }
+            }
+
             .onChange(of: url.debouncedText) { value in
                 Task {
                     await checkUrl(string: value)
@@ -328,7 +353,6 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-//                DetailsView(connectionManager: connectionManager)
                 DetailsView(extraHeaders: $extraHeaders)
             }
 
@@ -339,25 +363,10 @@ struct LoginView: View {
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView(connectionManager: ConnectionManager())
-    }
+#Preview("Initial") {
+    LoginView(connectionManager: ConnectionManager())
 }
 
-struct DetailsView_Previews: PreviewProvider {
-    struct Container: View {
-        @State private var extraHeaders: [ConnectionManager.HeaderValue] = [
-            .init(key: "header1", value: "value1"),
-            .init(key: "Header2", value: "other value"),
-        ]
-
-        var body: some View {
-            DetailsView(extraHeaders: $extraHeaders)
-        }
-    }
-
-    static var previews: some View {
-        Container()
-    }
+#Preview("Additional") {
+    LoginView(connectionManager: ConnectionManager(), initial: false)
 }
