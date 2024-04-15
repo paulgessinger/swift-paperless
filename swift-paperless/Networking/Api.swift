@@ -256,7 +256,7 @@ class ApiRepository {
         } catch let error as DecodingError {
             let url = request.url!
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self) from body \(body, privacy: .public): \(error)")
+            Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
             throw error
         }
     }
