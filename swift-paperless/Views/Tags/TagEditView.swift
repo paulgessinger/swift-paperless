@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-struct TagEditView<Element>: View where Element: TagProtocol {
+struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     var onSave: (Element) throws -> Void
 
 //    @Environment(\.dismiss) private var dismiss

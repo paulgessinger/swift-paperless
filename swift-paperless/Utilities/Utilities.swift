@@ -27,7 +27,8 @@ class DebounceObject: ObservableObject {
     }
 }
 
-class ThrottleObject<T: Equatable>: ObservableObject {
+@MainActor
+final class ThrottleObject<T: Equatable & Sendable>: ObservableObject, Sendable {
     @Published var value: T
     @Published var throttledValue: T
 
@@ -242,39 +243,55 @@ extension View {
     }
 }
 
-struct Haptics {
-    static let shared = Haptics()
+@MainActor
+private struct HapticsInternal {
+    @MainActor
+    static let shared = HapticsInternal()
 
-    private var impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
+    let impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator]
 
-    private let notificationGenerator = UINotificationFeedbackGenerator()
+    let notificationGenerator: UINotificationFeedbackGenerator
 
-    private init() {
+    @MainActor
+    init() {
+        notificationGenerator = UINotificationFeedbackGenerator()
         let styles = [UIImpactFeedbackGenerator.FeedbackStyle]([
             .light, .heavy, .medium, .rigid, .soft,
         ])
 
+        var impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
         for style in styles {
             impactGenerators[style] = UIImpactFeedbackGenerator(style: style)
         }
+        self.impactGenerators = impactGenerators
     }
+}
+
+struct Haptics {
+    static let shared = Haptics()
 
     func prepare() {
-        for (_, gen) in impactGenerators {
-            gen.prepare()
+        Task { @MainActor in
+            for (_, gen) in HapticsInternal.shared.impactGenerators {
+                gen.prepare()
+            }
+            HapticsInternal.shared.notificationGenerator.prepare()
         }
-        notificationGenerator.prepare()
     }
 
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        notificationGenerator.notificationOccurred(type)
+        Task { @MainActor in
+            HapticsInternal.shared.notificationGenerator.notificationOccurred(type)
+        }
     }
 
     func impact(style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        guard let gen = impactGenerators[style] else {
-            fatalError("Invalid feedback style")
+        Task { @MainActor in
+            guard let gen = HapticsInternal.shared.impactGenerators[style] else {
+                fatalError("Invalid feedback style")
+            }
+            gen.impactOccurred()
         }
-        gen.impactOccurred()
     }
 }
 
@@ -329,15 +346,15 @@ extension EquatableNoop: Codable where Value: Codable {
     }
 }
 
-func gather<Return>(_ functions: (() async -> Return)...) async -> [Return] {
+func gather<Return: Sendable>(_ functions: (@Sendable () async -> Return)...) async -> [Return] {
     await gather(functions)
 }
 
-func gather(_ functions: (() async -> Void)...) async {
+func gather(_ functions: (@Sendable () async -> Void)...) async {
     await gather(functions)
 }
 
-func gather<Return>(_ functions: [() async -> Return]) async -> [Return] {
+func gather<Return: Sendable>(_ functions: [@Sendable () async -> Return]) async -> [Return] {
     await withTaskGroup(of: Return.self, returning: [Return].self) { g in
         var result: [Return] = []
         for fn in functions {
@@ -350,7 +367,7 @@ func gather<Return>(_ functions: [() async -> Return]) async -> [Return] {
     }
 }
 
-func gather(_ functions: [() async -> Void]) async {
+func gather(_ functions: [@Sendable () async -> Void]) async {
     await withTaskGroup(of: Void.self) { g in
         for fn in functions {
             g.addTask { await fn() }

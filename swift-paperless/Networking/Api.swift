@@ -78,7 +78,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         do {
-            let request = repository.request(url: url)
+            let request = await repository.request(url: url)
             let decoded = try await repository.fetchData(for: request, as: ListResponse<Element>.self)
 
             guard !decoded.results.isEmpty else {
@@ -99,7 +99,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch {
-            let sanitizedError = repository.sanitizedError(error)
+            let sanitizedError = await repository.sanitizedError(error)
             Logger.api.error("Error in API sequence: \(sanitizedError, privacy: .public)")
             throw error
         }
@@ -110,7 +110,7 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
     }
 }
 
-class ApiDocumentSource: DocumentSource {
+final class ApiDocumentSource: DocumentSource {
     typealias DocumentSequence = ApiSequence<Document>
 
     var sequence: DocumentSequence
@@ -129,7 +129,8 @@ class ApiDocumentSource: DocumentSource {
     func hasMore() async -> Bool { sequence.hasMore }
 }
 
-class ApiRepository {
+actor ApiRepository {
+    nonisolated
     let connection: Connection
 
     private var apiVersion: UInt?
@@ -142,7 +143,7 @@ class ApiRepository {
         Task {
             await ensureBackendVersions()
 
-            if let apiVersion, let backendVersion {
+            if let apiVersion = await apiVersion, let backendVersion = await backendVersion {
                 Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
             } else {
                 Logger.api.warning("Did not get backend version info")
@@ -154,6 +155,7 @@ class ApiRepository {
         connection.token
     }
 
+    nonisolated
     func url(_ endpoint: Endpoint) -> URL {
         let connection = connection
         Logger.api.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
@@ -368,7 +370,7 @@ extension ApiRepository: Repository {
         try await delete(element: document, endpoint: .document(id: document.id))
     }
 
-    func documents(filter: FilterState) -> any DocumentSource {
+    nonisolated func documents(filter: FilterState) -> any DocumentSource {
         Logger.api.notice("Getting document sequence for filter")
         return ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,

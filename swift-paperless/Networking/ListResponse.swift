@@ -7,11 +7,15 @@
 
 import Foundation
 
-struct ListResponse<Element>: Decodable
-    where Element: Decodable
-{
+struct ListResponse<Element> {
     var count: UInt
     var next: URL?
     var previous: URL?
     var results: [Element]
 }
+
+extension ListResponse: Decodable
+    where Element: Decodable
+{}
+
+extension ListResponse: Sendable where Element: Sendable {}

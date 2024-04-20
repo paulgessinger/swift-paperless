@@ -11,7 +11,8 @@ import os
 import Semaphore
 import SwiftUI
 
-class DocumentStore: ObservableObject {
+@MainActor
+final class DocumentStore: ObservableObject, Sendable {
     // MARK: Publishers
 
     @Published private(set) var documents: [UInt: Document] = [:]

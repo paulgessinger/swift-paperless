@@ -26,7 +26,7 @@ enum DocumentCreateError: DisplayableError {
     }
 }
 
-protocol Repository {
+protocol Repository: Sendable, Actor {
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws
     func create(document: ProtoDocument, file: URL) async throws
@@ -59,7 +59,8 @@ protocol Repository {
 
     func document(id: UInt) async -> Document?
     func document(asn: UInt) async -> Document?
-    func documents(filter: FilterState) -> any DocumentSource
+
+    nonisolated func documents(filter: FilterState) -> any DocumentSource
 
     func nextAsn() async -> UInt
 
@@ -91,7 +92,7 @@ protocol Repository {
     func tasks() async throws -> [PaperlessTask]
 }
 
-class NullRepository: Repository {
+actor NullRepository: Repository {
     struct NotImplemented: Error {}
 
     func update(document: Document) async throws -> Document { document }
@@ -122,7 +123,8 @@ class NullRepository: Repository {
 
     func document(id _: UInt) async -> Document? { nil }
     func document(asn _: UInt) async -> Document? { nil }
-    func documents(filter _: FilterState) -> any DocumentSource {
+
+    nonisolated func documents(filter _: FilterState) -> any DocumentSource {
         NullDocumentSource()
     }
 
@@ -150,12 +152,12 @@ class NullRepository: Repository {
 }
 
 // - MARK: DocumentSource
-protocol DocumentSource {
+protocol DocumentSource: Sendable {
     func fetch(limit: UInt) async throws -> [Document]
     func hasMore() async -> Bool
 }
 
-class NullDocumentSource: DocumentSource {
+final class NullDocumentSource: DocumentSource {
     func fetch(limit _: UInt) async throws -> [Document] { [] }
     func hasMore() async -> Bool { false }
 }

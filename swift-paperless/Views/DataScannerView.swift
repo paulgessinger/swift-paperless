@@ -27,6 +27,7 @@ private func extractAsn(_ value: String, patterns: [Regex<AnyRegexOutput>] = [])
     return nil
 }
 
+@MainActor
 private func makeAsnUrlPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
     guard let fullHost = (store.repository as? ApiRepository)?.connection.url else {
         return nil

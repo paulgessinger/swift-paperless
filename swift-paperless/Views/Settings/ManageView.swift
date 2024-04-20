@@ -7,12 +7,13 @@
 
 import SwiftUI
 
-protocol ManagerModel {
-    associatedtype Element: Hashable, Identifiable
-    associatedtype ProtoElement
+protocol ManagerModel: Sendable {
+    associatedtype Element: Hashable, Identifiable, Sendable
+    associatedtype ProtoElement: Sendable
 
     init(store: DocumentStore)
 
+    @MainActor
     func load() -> [Element]
     func update(_ element: Element) async throws
     func create(_ element: ProtoElement) async throws -> Element
@@ -20,17 +21,17 @@ protocol ManagerModel {
 }
 
 protocol RowViewProtocol: View {
-    associatedtype Element
+    associatedtype Element: Sendable
     init(element: Element)
 }
 
 protocol EditViewProtocol: View {
-    associatedtype Element
+    associatedtype Element: Sendable
     init(element: Element, onSave: @escaping (Element) throws -> Void)
 }
 
 protocol CreateViewProtocol: View {
-    associatedtype Element
+    associatedtype Element: Sendable
     init(onSave: @escaping (Element) throws -> Void)
 }
 
