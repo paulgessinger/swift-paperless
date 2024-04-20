@@ -18,7 +18,7 @@ class FilterModel: ObservableObject {
     @Published var filterState: FilterState = {
         Logger.shared.trace("Loading FilterState")
         guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
-            print("No default")
+            Logger.shared.trace("No default")
             return FilterState()
         }
         do {

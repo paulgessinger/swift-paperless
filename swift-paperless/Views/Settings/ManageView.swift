@@ -144,14 +144,15 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink {
-                    Create(model: model)
-                } label: {
-                    Label(String(localized: .localizable.add), systemImage: "plus")
+                HStack {
+                    NavigationLink {
+                        Create(model: model)
+                    } label: {
+                        Label(String(localized: .localizable.add), systemImage: "plus")
+                    }
+
+                    EditButton()
                 }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                EditButton()
             }
         }
 

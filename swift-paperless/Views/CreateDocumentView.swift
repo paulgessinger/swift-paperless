@@ -16,22 +16,25 @@ struct CreateDocumentView<Title: View>: View {
         case error
     }
 
-    var sourceUrl: URL
+    let sourceUrl: URL
     private var title: () -> Title
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
+    @EnvironmentObject private var connectionManager: ConnectionManager
 
     @State private var document = ProtoDocument()
     @State private var status = Status.none
 
-    var callback: () -> Void
+    let callback: () -> Void
+    let share: Bool
 
-    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
+    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
         sourceUrl = url
         _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
         self.title = title
         self.callback = callback
+        self.share = share
     }
 
     func upload() async {
@@ -61,6 +64,14 @@ struct CreateDocumentView<Title: View>: View {
         callback()
     }
 
+    private func resetDocument() {
+        document.asn = nil
+        document.documentType = nil
+        document.correspondent = nil
+        document.tags = []
+        document.storagePath = nil
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -81,6 +92,25 @@ struct CreateDocumentView<Title: View>: View {
                 Spacer()
 
                 Form {
+                    if share, let stored = connectionManager.storedConnection {
+                        HStack {
+                            Text(.settings.activeServer)
+                            Menu {
+                                ConnectionSelectionMenu(connectionManager: connectionManager)
+                            } label: {
+                                Text(stored.url.absoluteString)
+                                    .font(.body)
+                                    .foregroundStyle(.gray)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+
+                                Label(String(localized: .settings.chooseServerAccessibilityLabel),
+                                      systemImage: "chevron.up.chevron.down")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                    }
+
                     Section {
                         TextField(String(localized: .localizable.documentEditTitleLabel), text: $document.title) {}
                         DatePicker(String(localized: .localizable.documentEditCreatedDateLabel), selection: $document.created, displayedComponents: .date)
@@ -205,6 +235,14 @@ struct CreateDocumentView<Title: View>: View {
                     try await store.fetchAll()
                 } catch {
                     errorController.push(error: error)
+                }
+            }
+
+            .onReceive(store.documentEventPublisher) { event in
+                switch event {
+                case .repositoryWillChange:
+                    resetDocument()
+                default: break
                 }
             }
         }

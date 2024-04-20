@@ -86,7 +86,6 @@ struct DocumentView: View {
     @State private var searchSuggestions: [String] = []
     @State private var initialLoad = true
     @State private var isLoading = false
-    @State private var filterState = FilterState()
     @State private var refreshRequested = false
     @State private var showFileImporter = false
     @State private var showDocumentScanner = false
@@ -96,6 +95,8 @@ struct DocumentView: View {
 
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
+
+    @State private var filterBarVisible = true
 
     func importFile(result: [URL], isSecurityScoped: Bool) {
         do {
@@ -160,6 +161,8 @@ struct DocumentView: View {
 
                         FilterBar()
                             .padding(.bottom, 3)
+                            .opacity(filterBarVisible ? 1.0 : 0.0)
+                            .animation(.default, value: filterBarVisible)
                     }
 
                     .background(
@@ -230,6 +233,8 @@ struct DocumentView: View {
                             NavigationLink(value: NavigationState.settings) {
                                 Label(String(localized: .settings.title), systemImage: "gear")
                             }
+
+                            ConnectionQuickChangeMenu()
 
                             Divider()
 
@@ -309,13 +314,19 @@ struct DocumentView: View {
                     DataScannerView()
                 }
 
-                // @TODO: What was this for?
-//                .alert(error ?? "", isPresented: Binding<Bool>(get: { error != nil }, set: {
-//                    value in
-//                    if !value {
-//                        error = nil
-//                    }
-//                })) {}
+                .onReceive(store.documentEventPublisher) { event in
+                    switch event {
+                    case .repositoryWillChange:
+                        filterBarVisible = false
+                    case .repositoryChanged:
+                        filterModel.filterState.clear()
+                        Task {
+                            try? await Task.sleep(for: .seconds(0.5))
+                            filterBarVisible = true
+                        }
+                    default: break
+                    }
+                }
 
                 .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
                     Button(String(localized: .localizable.logout), role: .destructive) {
@@ -331,10 +342,6 @@ struct DocumentView: View {
                         errorController.push(error: error)
                     }
                 }
-
-//            .onChange(of: store.documents) { _ in
-//                documents = documents.compactMap { store.documents[$0.id] }
-//            }
         }
     }
 }

@@ -2,6 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "activeServer" : {
+      "comment" : "Active server display section title",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -38,6 +39,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wybrany serwer"
+          }
+        }
+      }
+    },
+    "activeServerUrl" : {
+      "comment" : "Active server display URL label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        }
+      }
+    },
+    "activeServerUsername" : {
+      "comment" : "Active server display user name label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User"
           }
         }
       }
@@ -163,6 +188,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaloguj się z TouchID, by użyć aplikacji"
+          }
+        }
+      }
+    },
+    "chooseServerAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose server"
           }
         }
       }

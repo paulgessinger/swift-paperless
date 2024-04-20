@@ -31,9 +31,36 @@ struct MainView: View {
     @State private var lockState = LockState.initial
     @State private var unlocking = false
 
+    private func refreshConnection() {
+        Logger.api.info("Connection info changed, reloading!")
+
+        storeReady = false
+        if let conn = manager.connection {
+            Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
+            if let store {
+                Task {
+                    store.documentEventPublisher.send(.repositoryWillChange)
+                    try? await Task.sleep(for: .seconds(0.3))
+                    store.set(repository: ApiRepository(connection: conn))
+                    try? await store.fetchAll()
+                }
+            } else {
+                store = DocumentStore(repository: ApiRepository(connection: conn))
+                Task.detached {
+                    try? await store!.fetchAll()
+                }
+            }
+            storeReady = true
+            showLoginScreen = false
+        } else {
+            Logger.shared.trace("App does not have any active connection, show login screen")
+            showLoginScreen = true
+        }
+    }
+
     var body: some View {
         Group {
-            if manager.state == .valid, storeReady {
+            if manager.connection != nil, storeReady {
                 DocumentView()
                     .errorOverlay(errorController: errorController)
                     .environmentObject(store!)
@@ -62,19 +89,17 @@ struct MainView: View {
             }
 
             Logger.shared.notice("Checking login status")
-            await manager.check()
-        }
+            refreshConnection()
 
-        .onChange(of: manager.state) { value in
-            showLoginScreen = value == .invalid
-            if let conn = manager.connection {
-                store = DocumentStore(repository: ApiRepository(connection: conn))
-                Task.detached {
-                    try? await store!.fetchAll()
-                }
-                storeReady = true
+            // @TODO: Remove in a few versions
+            Task.detached {
+                try? await Task.sleep(for: .seconds(3))
+                await manager.migrateToMultiServer()
             }
         }
+
+        .onChange(of: manager.activeConnectionId) { _ in refreshConnection() }
+        .onChange(of: manager.connections) { _ in refreshConnection() }
 
         .onChange(of: scenePhase) { value in
             switch value {

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.07.23.
 //
 
+import Combine
 import Foundation
 import os
 import SwiftUI
@@ -60,6 +61,13 @@ class DocumentListViewModel: ObservableObject {
         self.filterState = filterState
         self.errorController = errorController
         source = store.repository.documents(filter: filterState)
+    }
+
+    @MainActor
+    func reload() async {
+        source = store.repository.documents(filter: filterState)
+        documents = []
+        await load()
     }
 
     @MainActor
@@ -341,6 +349,15 @@ struct DocumentList: View {
                 viewModel.updated(document: document)
             case .changeReceived:
                 Task { await viewModel.refresh(retain: true) }
+            case .repositoryWillChange:
+                withAnimation {
+                    viewModel.ready = false
+                }
+            case .repositoryChanged:
+                Task {
+                    try? await Task.sleep(for: .seconds(0.5))
+                    await viewModel.reload()
+                }
             }
         }
 

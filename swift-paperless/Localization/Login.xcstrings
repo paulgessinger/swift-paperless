@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "additionalTitle" : {
+      "comment" : "Login screen when title when it's not the first connection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add server"
+          }
+        }
+      }
+    },
     "apiInUrlNotice" : {
       "extractionState" : "manual",
       "localizations" : {

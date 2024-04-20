@@ -157,9 +157,24 @@ struct ShareView: View {
         self.callback = callback
     }
 
+    private func refreshConnection() {
+        Logger.api.info("Connection info changed, reloading!")
+
+        if let conn = connectionManager.connection {
+            Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
+            Task {
+                store.documentEventPublisher.send(.repositoryWillChange)
+                store.set(repository: ApiRepository(connection: conn))
+                try? await store.fetchAll()
+            }
+        } else {
+            Logger.shared.trace("App does not have any active connection")
+        }
+    }
+
     var body: some View {
         Group {
-            if connectionManager.state == .valid {
+            if connectionManager.connection != nil {
                 if let error = attachmentManager.error {
                     Text(String(describing: error))
                 }
@@ -168,17 +183,19 @@ struct ShareView: View {
                     VStack {
                         CreateDocumentView(
                             sourceUrl: url,
-                            callback: callback
+                            callback: callback,
+                            share: true
                         )
                         // @FIXME: Gives a white band at the bottom, not ideal
                         .padding(.bottom, 40)
 
                         .environmentObject(store)
                         .environmentObject(errorController)
+                        .environmentObject(connectionManager)
                         .accentColor(Color("AccentColor"))
                     }
                 }
-            } else if connectionManager.state == .invalid {
+            } else {
                 VStack {
                     Spacer()
                     HStack {
@@ -197,7 +214,7 @@ struct ShareView: View {
         }
 
         .task {
-            await connectionManager.check()
+//            await connectionManager.check()
             if let conn = connectionManager.connection {
                 store.set(repository: ApiRepository(connection: conn))
             }
@@ -208,5 +225,8 @@ struct ShareView: View {
 //                document.title = url.lastPathComponent
 //            }
         }
+
+        .onChange(of: connectionManager.activeConnectionId) { _ in refreshConnection() }
+        .onChange(of: connectionManager.connections) { _ in refreshConnection() }
     }
 }

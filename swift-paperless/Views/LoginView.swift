@@ -30,25 +30,22 @@ private struct TokenResponse: Decodable {
 }
 
 private struct DetailsView: View {
-    @ObservedObject var connectionManager: ConnectionManager
-    @State private var extraHeaders: [ConnectionManager.HeaderValue]
+//    @ObservedObject var connectionManager: ConnectionManager
+    @Binding var extraHeaders: [ConnectionManager.HeaderValue]
     @Environment(\.dismiss) private var dismiss
 
-    init(connectionManager: ConnectionManager) {
-        self.connectionManager = connectionManager
-        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
-    }
+//    init(connectionManager: ConnectionManager) {
+//        self.connectionManager = connectionManager
+//        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
+//    }
 
     var body: some View {
         NavigationStack {
             List {
                 NavigationLink {
-                    ExtraHeadersView(headers: extraHeaders, onChange: { value in
-                        extraHeaders = value
-                        connectionManager.extraHeaders = value
-                    })
+                    ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Text(.login.extraHeaders)
+                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
 
                 LogRecordExportButton()
@@ -69,8 +66,11 @@ private struct DetailsView: View {
 
 struct LoginView: View {
     @ObservedObject var connectionManager: ConnectionManager
+    var initial = true
 
-    @EnvironmentObject var errorController: ErrorController
+    @EnvironmentObject private var errorController: ErrorController
+
+    @Environment(\.dismiss) private var dismiss
 
     @StateObject private var url = DebounceObject(delay: 1)
 
@@ -83,7 +83,7 @@ struct LoginView: View {
 
     @State private var urlState = UrlState.empty
 
-    var urlStateValid: Bool {
+    private var urlStateValid: Bool {
         switch urlState {
         case .valid:
             return true
@@ -118,6 +118,8 @@ struct LoginView: View {
     @State private var showDetails: Bool = false
     @State private var showSuccessOverlay = false
 
+    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
+
     private func checkUrl(string value: String) async {
         Logger.shared.notice("Checking backend URL \(value)")
         guard !value.isEmpty else {
@@ -133,7 +135,9 @@ struct LoginView: View {
         }
 
         var request = URLRequest(url: apiUrl)
-        connectionManager.extraHeaders.apply(toRequest: &request)
+        extraHeaders.apply(toRequest: &request)
+
+        Logger.api.trace("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
 
         do {
             Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
@@ -171,7 +175,7 @@ struct LoginView: View {
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = json
-            connectionManager.extraHeaders.apply(toRequest: &request)
+            extraHeaders.apply(toRequest: &request)
 
             let (data, response) = try await URLSession.shared.data(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
@@ -186,13 +190,32 @@ struct LoginView: View {
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
-            Logger.shared.notice("Login successful")
+            Logger.shared.info("Login credentials are valid")
 
             Haptics.shared.notification(.success)
             showSuccessOverlay = true
             try await Task.sleep(for: .seconds(2.3))
 
-            try connectionManager.set(base: baseUrl, token: tokenResponse.token)
+            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders)
+
+            let repository = ApiRepository(connection: connection)
+
+            let currentUser = try await repository.currentUser()
+
+            if currentUser.username != username {
+                Logger.api.warning("Username from login and logged in username not the same")
+            }
+
+            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser)
+            try stored.setToken(connection.token)
+
+            try connectionManager.login(stored)
+            Logger.api.info("Logging successful")
+
+            if !initial {
+                dismiss()
+            }
+
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             errorController.push(error: error)
@@ -202,14 +225,17 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             Form {
-                HStack {
-                    Spacer()
-                    LogoView()
-                    Spacer()
+                if initial {
+                    HStack {
+                        Spacer()
+                        LogoView()
+                            .font(.title)
+                        Spacer()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .background(Color.systemGroupedBackground)
                 }
-                .listRowInsets(EdgeInsets())
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .background(Color.systemGroupedBackground)
 
                 Section {
                     HStack {
@@ -293,6 +319,20 @@ struct LoginView: View {
                 }
             }
 
+            .if(!initial) { view in
+                view
+                    .navigationTitle(String(localized: .login.additionalTitle))
+                    .navigationBarTitleDisplayMode(.inline)
+
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button(String(localized: .localizable.cancel)) {
+                                dismiss()
+                            }
+                        }
+                    }
+            }
+
             .onChange(of: url.debouncedText) { value in
                 Task {
                     await checkUrl(string: value)
@@ -313,7 +353,7 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(connectionManager: connectionManager)
+                DetailsView(extraHeaders: $extraHeaders)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
@@ -323,25 +363,10 @@ struct LoginView: View {
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView(connectionManager: ConnectionManager())
-    }
+#Preview("Initial") {
+    LoginView(connectionManager: ConnectionManager())
 }
 
-struct DetailsView_Previews: PreviewProvider {
-    struct Container: View {
-        @State var headers: [(String, String)] = [
-            ("header1", "value1"),
-            ("Header2", "other value"),
-        ]
-
-        var body: some View {
-            DetailsView(connectionManager: ConnectionManager())
-        }
-    }
-
-    static var previews: some View {
-        Container()
-    }
+#Preview("Additional") {
+    LoginView(connectionManager: ConnectionManager(), initial: false)
 }

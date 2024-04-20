@@ -28,14 +28,17 @@ class DocumentStore: ObservableObject {
 
     // MARK: Members
 
-    enum DocumentEvent {
+    enum Event {
         case deleted(document: Document)
         case changed(document: Document)
         case changeReceived(document: Document)
+
+        case repositoryWillChange
+        case repositoryChanged
     }
 
     var documentEventPublisher =
-        PassthroughSubject<DocumentEvent, Never>()
+        PassthroughSubject<Event, Never>()
 
     let semaphore = AsyncSemaphore(value: 1)
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
@@ -55,8 +58,24 @@ class DocumentStore: ObservableObject {
         documents = [:]
     }
 
+    @MainActor
+    func clear() {
+        documents = [:]
+        correspondents = [:]
+        documentTypes = [:]
+        tags = [:]
+        savedViews = [:]
+        storagePaths = [:]
+        users = [:]
+        currentUser = nil
+        activeTasks = []
+    }
+
+    @MainActor
     func set(repository: Repository) {
         self.repository = repository
+        documentEventPublisher.send(.repositoryChanged)
+        clear()
     }
 
     @MainActor
