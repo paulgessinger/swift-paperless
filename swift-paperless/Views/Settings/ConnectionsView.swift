@@ -8,7 +8,7 @@
 import os
 import SwiftUI
 
-private struct ConnectionSelectionMenu: View {
+struct ConnectionSelectionMenu: View {
     @ObservedObject var connectionManager: ConnectionManager
 
     var body: some View {

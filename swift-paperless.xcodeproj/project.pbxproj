@@ -68,6 +68,7 @@
 		7A4648092A1D5AED00078968 /* DateDecodingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4648062A1D5AED00078968 /* DateDecodingError.swift */; };
 		7A46887629D4DD3D001AEB7C /* DocumentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */; };
 		7A46887729D4DD5D001AEB7C /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
+		7A495C792BD4136C00A2E5CF /* ConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */; };
 		7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA8E629BB969400D845A2 /* ShareViewController.swift */; };
 		7A4AA8EA29BB969400D845A2 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A4AA8E829BB969400D845A2 /* MainInterface.storyboard */; };
 		7A4AA8EE29BB969400D845A2 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -867,6 +868,7 @@
 				7AB057782AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
+				7A495C792BD4136C00A2E5CF /* ConnectionsView.swift in Sources */,
 				7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */,
 				7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
