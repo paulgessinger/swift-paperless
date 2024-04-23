@@ -101,6 +101,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
 }
 
 extension TagEditView where Element == ProtoTag {
+    @MainActor
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(tag: ProtoTag(color: HexColor(Self.randomColor())),
                   onSave: onSave)

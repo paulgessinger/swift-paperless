@@ -152,12 +152,12 @@ actor NullRepository: Repository {
 }
 
 // - MARK: DocumentSource
-protocol DocumentSource: Sendable {
+protocol DocumentSource: Actor {
     func fetch(limit: UInt) async throws -> [Document]
     func hasMore() async -> Bool
 }
 
-final class NullDocumentSource: DocumentSource {
+actor NullDocumentSource: DocumentSource {
     func fetch(limit _: UInt) async throws -> [Document] { [] }
     func hasMore() async -> Bool { false }
 }

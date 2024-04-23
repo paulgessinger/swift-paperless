@@ -100,6 +100,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
     }
 }
 
+@MainActor
 class ConnectionManager: ObservableObject {
     struct HeaderValue: Codable, Equatable {
         // @TODO: (multi-server) Replace with direct field
@@ -179,10 +180,8 @@ class ConnectionManager: ObservableObject {
                     let newConnection = StoredConnection(url: connection.url, extraHeaders: connection.extraHeaders, user: currentUser)
                     logger.info("Connection to store is: \(String(describing: newConnection))")
 
-                    await MainActor.run {
-                        connections[newConnection.id] = newConnection
-                        activeConnectionId = newConnection.id
-                    }
+                    connections[newConnection.id] = newConnection
+                    activeConnectionId = newConnection.id
                 } catch {
                     logger.error("An error was encountered: \(error)")
                 }

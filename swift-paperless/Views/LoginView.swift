@@ -142,7 +142,7 @@ struct LoginView: View {
         do {
             Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.getData(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
@@ -177,7 +177,7 @@ struct LoginView: View {
             request.httpBody = json
             extraHeaders.apply(toRequest: &request)
 
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
             if statusCode != 200 {

@@ -33,27 +33,17 @@ import UIKit
 }
 
 private extension AttachmentManager {
-    func didLoadItem(data: NSSecureCoding?, error _: Error?) {
-        setLoading(false)
+    @Sendable
+    nonisolated func didLoadItem(data: NSSecureCoding?, error _: Error?) {
+        Task { @MainActor in
+            isLoading = false
+        }
         switch data {
         case let url as URL:
             Logger.shared.debug("Received url \(url)")
-            if previewImage == nil {
-//                if let preview = pdfPreview(url: url) {
-//                    Logger.shared.debug("Have custom pdf render preview")
-//                    setPreviewImage(preview)
-//                }
-//                else {
-//                    Task {
-//                        // this is on the main actor already anyway
-//                        if let image = await makePreviewImage() {
-//                            Logger.shared.debug("Have preview image and can set")
-//                            setPreviewImage(image)
-//                        }
-//                    }
-//                }
+            Task { @MainActor in
+                documentUrl = url
             }
-            setDocumentUrl(url)
         default:
             Logger.shared.debug("Got attachment data \(String(describing: data)) but cannot handle")
         }

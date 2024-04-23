@@ -12,25 +12,10 @@ enum AttachmentError {
     case invalidAttachment
 }
 
+@MainActor
 class AttachmentManager: ObservableObject {
     @Published var isLoading = true
     @Published var error: AttachmentError? = nil
     @Published private(set) var previewImage: Image?
     @Published var documentUrl: URL?
-
-    func setDocumentUrl(_ url: URL) {
-        Task { await MainActor.run { documentUrl = url }}
-    }
-
-    func setLoading(_ value: Bool) {
-        Task { await MainActor.run { isLoading = value }}
-    }
-
-    func setPreviewImage(_ image: Image) {
-        Task {
-            await MainActor.run {
-                previewImage = image
-            }
-        }
-    }
 }

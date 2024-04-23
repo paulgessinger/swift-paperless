@@ -22,13 +22,11 @@ struct SettingsView: View {
     @State private var showLoginSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, Error>? = nil
 
-    private func checkedDetached(_ fn: @escaping () async throws -> Void) async {
-        Task.detached {
-            do {
-                try await fn()
-            } catch {
-                await errorController.push(error: error)
-            }
+    private func checked(_ fn: @escaping () async throws -> Void) async {
+        do {
+            try await fn()
+        } catch {
+            errorController.push(error: error)
         }
     }
 
@@ -37,7 +35,7 @@ struct SettingsView: View {
             NavigationLink {
                 ManageView<TagManager>(store: store)
                     .navigationTitle(Text(.localizable.tags))
-                    .task { await checkedDetached(store.fetchAllTags) }
+                    .task { await checked(store.fetchAllTags) }
             } label: {
                 Label(String(localized: .localizable.tags), systemImage: "tag.fill")
             }
@@ -45,7 +43,7 @@ struct SettingsView: View {
             NavigationLink {
                 ManageView<CorrespondentManager>(store: store)
                     .navigationTitle(Text(.localizable.correspondents))
-                    .task { await checkedDetached(store.fetchAllCorrespondents) }
+                    .task { await checked(store.fetchAllCorrespondents) }
             } label: {
                 Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
             }
@@ -53,7 +51,7 @@ struct SettingsView: View {
             NavigationLink {
                 ManageView<DocumentTypeManager>(store: store)
                     .navigationTitle(Text(.localizable.documentTypes))
-                    .task { await checkedDetached(store.fetchAllDocumentTypes) }
+                    .task { await checked(store.fetchAllDocumentTypes) }
             } label: {
                 Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
             }
@@ -61,7 +59,7 @@ struct SettingsView: View {
             NavigationLink {
                 ManageView<SavedViewManager>(store: store)
                     .navigationTitle(Text(.localizable.savedViews))
-                    .task { await checkedDetached(store.fetchAllDocumentTypes) }
+                    .task { await checked(store.fetchAllDocumentTypes) }
             } label: {
                 Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
             }
@@ -69,7 +67,7 @@ struct SettingsView: View {
             NavigationLink {
                 ManageView<StoragePathManager>(store: store)
                     .navigationTitle(Text(.localizable.storagePaths))
-                    .task { await checkedDetached(store.fetchAllStoragePaths) }
+                    .task { await checked(store.fetchAllStoragePaths) }
             } label: {
                 Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
             }

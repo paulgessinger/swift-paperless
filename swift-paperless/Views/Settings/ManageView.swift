@@ -22,16 +22,22 @@ protocol ManagerModel: Sendable {
 
 protocol RowViewProtocol: View {
     associatedtype Element: Sendable
+
+    @MainActor
     init(element: Element)
 }
 
 protocol EditViewProtocol: View {
     associatedtype Element: Sendable
+
+    @MainActor
     init(element: Element, onSave: @escaping (Element) throws -> Void)
 }
 
 protocol CreateViewProtocol: View {
     associatedtype Element: Sendable
+
+    @MainActor
     init(onSave: @escaping (Element) throws -> Void)
 }
 

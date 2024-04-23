@@ -334,6 +334,8 @@ struct EquatableNoop<Value>: Equatable {
     }
 }
 
+extension EquatableNoop: Sendable where Value: Sendable {}
+
 extension EquatableNoop: Codable where Value: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()

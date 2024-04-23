@@ -24,7 +24,7 @@ private enum RequestError: Error {
     case unexpectedStatusCode(code: Int)
 }
 
-class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable {
+actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable & Sendable {
     private var nextPage: URL?
     private let repository: ApiRepository
 
@@ -105,28 +105,29 @@ class ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
     }
 
+    nonisolated
     func makeAsyncIterator() -> ApiSequence {
         self
     }
 }
 
-final class ApiDocumentSource: DocumentSource {
+actor ApiDocumentSource: DocumentSource {
     typealias DocumentSequence = ApiSequence<Document>
 
-    var sequence: DocumentSequence
+    private let sequence: DocumentSequence
 
     init(sequence: DocumentSequence) {
         self.sequence = sequence
     }
 
     func fetch(limit: UInt) async throws -> [Document] {
-        guard sequence.hasMore else {
+        guard await sequence.hasMore else {
             return []
         }
         return try await Array(sequence.prefix(Int(limit)))
     }
 
-    func hasMore() async -> Bool { sequence.hasMore }
+    func hasMore() async -> Bool { await sequence.hasMore }
 }
 
 actor ApiRepository {
@@ -220,7 +221,7 @@ actor ApiRepository {
 
         let result: (Data, URLResponse)
         do {
-            result = try await URLSession.shared.data(for: request)
+            result = try await URLSession.shared.getData(for: request)
         } catch let error as CancellationError {
             Logger.api.trace("Fetch request task was cancelled")
             throw error
@@ -274,7 +275,7 @@ actor ApiRepository {
         }
     }
 
-    private func all<T: Decodable & Model>(_: T.Type) async throws -> [T] {
+    private func all<T: Decodable & Model & Sendable>(_: T.Type) async throws -> [T] {
         let sequence = ApiSequence<T>(repository: self,
                                       url: url(.listAll(T.self)))
         return try await Array(sequence)

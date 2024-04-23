@@ -46,7 +46,7 @@ struct MainView: View {
                 }
             } else {
                 store = DocumentStore(repository: ApiRepository(connection: conn))
-                Task.detached {
+                Task {
                     try? await store!.fetchAll()
                 }
             }
@@ -92,7 +92,7 @@ struct MainView: View {
             refreshConnection()
 
             // @TODO: Remove in a few versions
-            Task.detached {
+            Task {
                 try? await Task.sleep(for: .seconds(3))
                 await manager.migrateToMultiServer()
             }

@@ -9,9 +9,10 @@ import MarkdownUI
 import SwiftUI
 
 struct PrivacyView: View {
-    private static var url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/privacy.md")!
+    private static let url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/privacy.md")!
 
     @State var text: String? = nil
+
     var body: some View {
         ScrollView(.vertical) {
             if let text {
@@ -24,16 +25,13 @@ struct PrivacyView: View {
         }
         .navigationTitle(Text(.settings.detailsPrivacy))
         .task {
-            Task.detached {
-                do {
-                    let result = try String(contentsOf: PrivacyView.url)
-                    await MainActor.run {
-                        text = result
-                    }
-                } catch {
-                    await MainActor.run {
-                        text = String(localized: .settings.detailsPrivacyLoadError(PrivacyView.url.absoluteString))
-                    }
+            do {
+                let request = URLRequest(url: PrivacyView.url)
+                let (data, _) = try await URLSession.shared.getData(for: request)
+                text = String(decoding: data, as: UTF8.self)
+            } catch {
+                await MainActor.run {
+                    text = String(localized: .settings.detailsPrivacyLoadError(PrivacyView.url.absoluteString))
                 }
             }
         }

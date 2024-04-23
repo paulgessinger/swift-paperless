@@ -8,7 +8,7 @@
 import GameplayKit
 import SwiftUI
 
-struct PreviewDocumentSource: DocumentSource {
+actor PreviewDocumentSource: DocumentSource {
     typealias DocumentSequence = [Document]
 
     var sequence: DocumentSequence
@@ -208,7 +208,7 @@ actor PreviewRepository: Repository {
         let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/200")!)
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await URLSession.shared.getData(for: request)
 
             return data
         } catch {

@@ -12,12 +12,15 @@ import SwiftUI
 
 extension TagView: RowViewProtocol {
     typealias Element = Tag
+
+    @MainActor
     init(element: Tag) {
         self.init(tag: element)
     }
 }
 
 extension TagEditView: EditViewProtocol where Element == Tag {
+    @MainActor
     init(element: Tag, onSave: @escaping (Element) throws -> Void) {
         self.init(tag: element, onSave: onSave)
     }
@@ -55,7 +58,7 @@ struct TagManager: ManagerProtocol {
         }
     }
 
-    static let elementName: KeyPath<Tag, String> = \.name
+    static var elementName: KeyPath<Tag, String> { \.name }
 
     typealias RowView = TagView
     typealias EditView = TagEditView<Tag>
@@ -69,7 +72,7 @@ extension CorrespondentEditView: EditViewProtocol where Element == Correspondent
 extension CorrespondentEditView: CreateViewProtocol where Element == ProtoCorrespondent {}
 
 struct CorrespondentManager: ManagerProtocol {
-    static let elementName: KeyPath<Correspondent, String> = \.name
+    static var elementName: KeyPath<Correspondent, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = Correspondent
@@ -119,7 +122,7 @@ extension DocumentTypeEditView: EditViewProtocol where Element == DocumentType {
 extension DocumentTypeEditView: CreateViewProtocol where Element == ProtoDocumentType {}
 
 struct DocumentTypeManager: ManagerProtocol {
-    static let elementName: KeyPath<Model.Element, String> = \.name
+    static var elementName: KeyPath<Model.Element, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = DocumentType
@@ -169,7 +172,7 @@ extension SavedViewEditView: EditViewProtocol where Element == SavedView {}
 extension SavedViewEditView: CreateViewProtocol where Element == ProtoSavedView {}
 
 struct SavedViewManager: ManagerProtocol {
-    static let elementName: KeyPath<SavedView, String> = \.name
+    static var elementName: KeyPath<SavedView, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = SavedView
@@ -219,7 +222,7 @@ extension StoragePathEditView: EditViewProtocol where Element == StoragePath {}
 extension StoragePathEditView: CreateViewProtocol where Element == ProtoStoragePath {}
 
 struct StoragePathManager: ManagerProtocol {
-    static let elementName: KeyPath<StoragePath, String> = \.name
+    static var elementName: KeyPath<StoragePath, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = StoragePath

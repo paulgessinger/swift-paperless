@@ -179,11 +179,13 @@ struct DocumentList: View {
         @Binding var documentToDelete: Document?
         var viewModel: DocumentListViewModel
 
-        private func onDeleteButtonPressed() async {
+        private func onDeleteButtonPressed() {
             if documentDeleteConfirmation {
                 documentToDelete = document
             } else {
-                try? await store.deleteDocument(document)
+                Task { [store = self.store, document = self.document] in
+                    try? await store.deleteDocument(document)
+                }
             }
         }
 
@@ -232,7 +234,7 @@ struct DocumentList: View {
                 }
 
                 Button(role: .destructive) {
-                    Task { await onDeleteButtonPressed() }
+                    onDeleteButtonPressed()
                 } label: {
                     Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
@@ -244,7 +246,7 @@ struct DocumentList: View {
 
             .swipeActions(edge: .trailing) {
                 Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    Task { await onDeleteButtonPressed() }
+                    onDeleteButtonPressed()
                 } label: {
                     Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
