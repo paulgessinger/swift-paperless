@@ -28,7 +28,6 @@
 		7A2577412A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577422A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577432A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
-		7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2831AF2A61D30B009E86CE /* CasePaths */; };
 		7A2831B22A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B32A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B52A63CEE6009E86CE /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -389,7 +388,6 @@
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
-				7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
 				7AB057752AA482D200ABA6B1 /* MarkdownUI in Frameworks */,
@@ -694,7 +692,6 @@
 				7A1C32BE2A5EAF1A00C18B44 /* Nuke */,
 				7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */,
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
-				7A2831AF2A61D30B009E86CE /* CasePaths */,
 				7AB057742AA482D200ABA6B1 /* MarkdownUI */,
 			);
 			productName = "swift-paperless";
@@ -785,7 +782,6 @@
 				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
-				7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 				7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 			);
@@ -1557,14 +1553,6 @@
 				minimumVersion = 12.0.0;
 			};
 		};
-		7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-case-paths";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.1;
-			};
-		};
 		7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
@@ -1635,11 +1623,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
-		};
-		7A2831AF2A61D30B009E86CE /* CasePaths */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */;
-			productName = CasePaths;
 		};
 		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
