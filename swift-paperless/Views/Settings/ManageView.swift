@@ -165,32 +165,31 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: Binding(present: $elementToDelete), actions: {
-            if let elementToDelete {
-                Button(String(localized: .localizable.delete), role: .destructive) {
-                    withAnimation {
-                        elements.removeAll(where: { $0 == elementToDelete })
-                    }
-                    Task {
-                        do {
-                            try await model.delete(elementToDelete)
-                            self.elementToDelete = nil
-                        } catch {
-                            print(error)
-                            errorController.push(error: error)
-                            elements = model.load()
-                        }
-                    }
-                }
-                Button(String(localized: .localizable.cancel), role: .cancel) {
-                    withAnimation {
-                        elements = model.load()
-                    }
-                }
-            } else {
-                EmptyView()
-            }
-        }, message: {})
+        .confirmationDialog(item: $elementToDelete,
+                            title: { _ in String(localized: .localizable.delete) },
+                            actions: { $item in
+                                Button(String(localized: .localizable.delete), role: .destructive) {
+                                    withAnimation {
+                                        elements.removeAll(where: { $0 == item })
+                                    }
+                                    let item = item
+                                    Task {
+                                        do {
+                                            try await model.delete(item)
+                                            elementToDelete = nil
+                                        } catch {
+                                            Logger.shared.error("Error deleting element: \(error)")
+                                            errorController.push(error: error)
+                                            elements = model.load()
+                                        }
+                                    }
+                                }
+                                Button(String(localized: .localizable.cancel), role: .cancel) {
+                                    withAnimation {
+                                        elements = model.load()
+                                    }
+                                }
+                            })
 
         .refreshable {
             do {
