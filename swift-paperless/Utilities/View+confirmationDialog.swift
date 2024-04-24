@@ -41,7 +41,7 @@ private struct ConfirmationDialogModifier<Item, M: View, A: View>: ViewModifier 
 
 extension View {
     func confirmationDialog<Item>(
-        item: Binding<Item?>,
+        unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> String,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View,
         @ViewBuilder message: @escaping (Binding<Item>) -> some View
@@ -50,7 +50,7 @@ extension View {
     }
 
     func confirmationDialog<Item>(
-        item: Binding<Item?>,
+        unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> String,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View
     ) -> some View {

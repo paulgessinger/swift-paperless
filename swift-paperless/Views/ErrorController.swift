@@ -121,17 +121,20 @@ struct ErrorDisplay: ViewModifier {
                 }
             }
 
-            .alert(Text(detail!.message), isPresented: Binding(present: $detail)) {
-                let detail = detail!
-                Button(String(localized: .localizable.errorAlertCopyToClipboard)) {
-                    UIPasteboard.general.string = detail.details
-                }
+            .alert(unwrapping: $detail,
+                   title: { $detail in
+                       Text(detail.message)
+                   },
+                   actions: { $detail in
+                       Button(String(localized: .localizable.errorAlertCopyToClipboard)) {
+                           UIPasteboard.general.string = detail.details
+                       }
 
-                Button(String(localized: .localizable.ok), role: .cancel) {}
-
-            } message: {
-                Text(detail!.details!)
-            }
+                       Button(String(localized: .localizable.ok), role: .cancel) {}
+                   },
+                   message: { $detail in
+                       Text(detail.details!)
+                   })
 
             .onReceive(errorController.$state) { value in
                 if case .none = value {

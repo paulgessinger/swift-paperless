@@ -165,7 +165,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog(item: $elementToDelete,
+        .confirmationDialog(unwrapping: $elementToDelete,
                             title: { _ in String(localized: .localizable.delete) },
                             actions: { $item in
                                 Button(String(localized: .localizable.delete), role: .destructive) {
