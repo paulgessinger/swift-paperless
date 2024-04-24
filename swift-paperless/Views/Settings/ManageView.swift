@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 29.04.23.
 //
 
+import os
 import SwiftUI
 
 protocol ManagerModel: Sendable {
@@ -58,6 +59,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var model: Manager.Model
     @State private var elementToDelete: Element?
+
     @State private var elements: [Element] = []
 
     @State private var searchText: String = ""
@@ -163,30 +165,31 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog(title: {
-            _ in Text(String(localized: .localizable.confirmationPromptTitle))
-        }, unwrapping: $elementToDelete, actions: { e in
-            Button(String(localized: .localizable.delete), role: .destructive) {
-                withAnimation {
-                    elements.removeAll(where: { $0 == e })
-                }
-                Task {
-                    do {
-                        try await model.delete(e)
-                        elementToDelete = nil
-                    } catch {
-                        print(error)
-                        errorController.push(error: error)
-                        elements = model.load()
-                    }
-                }
-            }
-            Button(String(localized: .localizable.cancel), role: .cancel) {
-                withAnimation {
-                    elements = model.load()
-                }
-            }
-        }, message: { _ in })
+        .confirmationDialog(unwrapping: $elementToDelete,
+                            title: { _ in String(localized: .localizable.delete) },
+                            actions: { $item in
+                                Button(String(localized: .localizable.delete), role: .destructive) {
+                                    withAnimation {
+                                        elements.removeAll(where: { $0 == item })
+                                    }
+                                    let item = item
+                                    Task {
+                                        do {
+                                            try await model.delete(item)
+                                            elementToDelete = nil
+                                        } catch {
+                                            Logger.shared.error("Error deleting element: \(error)")
+                                            errorController.push(error: error)
+                                            elements = model.load()
+                                        }
+                                    }
+                                }
+                                Button(String(localized: .localizable.cancel), role: .cancel) {
+                                    withAnimation {
+                                        elements = model.load()
+                                    }
+                                }
+                            })
 
         .refreshable {
             do {

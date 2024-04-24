@@ -356,7 +356,7 @@ private struct PreviewHelper: View {
     var body: some View {
         VStack {
             if document != nil {
-                DocumentEditView(document: Binding(unwrapping: $document)!, navPath: $navPath)
+                DocumentEditView(document: Binding($document)!, navPath: $navPath)
             }
         }
         .task {

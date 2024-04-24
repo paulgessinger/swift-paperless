@@ -9,7 +9,6 @@ import Combine
 import Foundation
 import os
 import SwiftUI
-import SwiftUINavigation
 
 // @TODO: Add UI for FilterState with remaining rules!
 
@@ -715,7 +714,7 @@ struct FilterBar: View {
             }
         }
 
-        .sheet(unwrapping: $savedView) { $view in
+        .sheet(item: $savedView) { view in
             AddSavedViewSheet(savedView: view)
         }
 

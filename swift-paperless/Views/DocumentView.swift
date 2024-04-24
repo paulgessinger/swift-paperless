@@ -238,6 +238,17 @@ struct DocumentView: View {
 
                             ConnectionQuickChangeMenu()
 
+                            #if DEBUG
+                                Section("Debug") {
+                                    Button("Trigger error without details") {
+                                        errorController.push(message: "An error", details: nil)
+                                    }
+                                    Button("Trigger error with details") {
+                                        errorController.push(message: "An error", details: "Some details")
+                                    }
+                                }
+                            #endif
+
                             Divider()
 
                             Button(role: .destructive) {

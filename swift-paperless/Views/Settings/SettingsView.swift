@@ -8,7 +8,6 @@
 import MessageUI
 import os
 import SwiftUI
-import SwiftUINavigation
 
 // MARK: - Settings View
 

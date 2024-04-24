@@ -28,7 +28,6 @@
 		7A2577412A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577422A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577432A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
-		7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2831AF2A61D30B009E86CE /* CasePaths */; };
 		7A2831B22A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B32A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B52A63CEE6009E86CE /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -40,7 +39,6 @@
 		7A297FB329FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */; };
 		7A297FB429FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */; };
 		7A297FB529FE9AC80021A1ED /* ManageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04034129FD68E8009604E4 /* ManageView.swift */; };
-		7A297FB829FE9C870021A1ED /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 7A297FB729FE9C870021A1ED /* SwiftUINavigation */; };
 		7A2A113D29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A13252A087AD00088808E /* ExtraHeadersView.swift */; };
@@ -71,6 +69,16 @@
 		7A495C792BD4136C00A2E5CF /* ConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */; };
 		7A495C8D2BD7FFF200A2E5CF /* Compatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */; };
 		7A495C8E2BD7FFF200A2E5CF /* Compatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */; };
+		7A495CDB2BD940A200A2E5CF /* Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CDA2BD940A200A2E5CF /* Binding.swift */; };
+		7A495CDC2BD940A200A2E5CF /* Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CDA2BD940A200A2E5CF /* Binding.swift */; };
+		7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CF82BD94D6C00A2E5CF /* View+confirmationDialog.swift */; };
+		7A495CFA2BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CF82BD94D6C00A2E5CF /* View+confirmationDialog.swift */; };
+		7A495D0E2BD956F100A2E5CF /* View+alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495D0D2BD956F100A2E5CF /* View+alert.swift */; };
+		7A495D182BD9589800A2E5CF /* View+alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495D0D2BD956F100A2E5CF /* View+alert.swift */; };
+		7A495D222BD958A300A2E5CF /* View+alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495D0D2BD956F100A2E5CF /* View+alert.swift */; };
+		7A495D232BD958A300A2E5CF /* View+alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495D0D2BD956F100A2E5CF /* View+alert.swift */; };
+		7A495D3F2BD969F600A2E5CF /* Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CDA2BD940A200A2E5CF /* Binding.swift */; };
+		7A495D402BD969F700A2E5CF /* Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A495CDA2BD940A200A2E5CF /* Binding.swift */; };
 		7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA8E629BB969400D845A2 /* ShareViewController.swift */; };
 		7A4AA8EA29BB969400D845A2 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A4AA8E829BB969400D845A2 /* MainInterface.storyboard */; };
 		7A4AA8EE29BB969400D845A2 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -175,7 +183,6 @@
 		7ADA9ABB2B263797002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
 		7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
 		7ADA9AC42B2637BE002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
-		7AEBA7A929EDBFBF006D5620 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 7AEBA7A829EDBFBF006D5620 /* SwiftUINavigation */; };
 		7AEBB5392B26589700845B73 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
 		7AEBB5492B26597500845B73 /* Matching.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AEBB5382B26589700845B73 /* Matching.xcstrings */; };
 		7AEF691029CF7FA800414BA7 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
@@ -280,6 +287,9 @@
 		7A4648022A1D5ABC00078968 /* ListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListResponse.swift; sourceTree = "<group>"; };
 		7A4648062A1D5AED00078968 /* DateDecodingError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateDecodingError.swift; sourceTree = "<group>"; };
 		7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compatibility.swift; sourceTree = "<group>"; };
+		7A495CDA2BD940A200A2E5CF /* Binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Binding.swift; sourceTree = "<group>"; };
+		7A495CF82BD94D6C00A2E5CF /* View+confirmationDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+confirmationDialog.swift"; sourceTree = "<group>"; };
+		7A495D0D2BD956F100A2E5CF /* View+alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+alert.swift"; sourceTree = "<group>"; };
 		7A4AA8E429BB969400D845A2 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4AA8E629BB969400D845A2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		7A4AA8E929BB969400D845A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
@@ -368,7 +378,6 @@
 				7A4AA90329BE048800D845A2 /* Flow in Frameworks */,
 				7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */,
 				7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */,
-				7A297FB829FE9C870021A1ED /* SwiftUINavigation in Frameworks */,
 				7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -381,8 +390,6 @@
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
-				7A2831B02A61D30B009E86CE /* CasePaths in Frameworks */,
-				7AEBA7A929EDBFBF006D5620 /* SwiftUINavigation in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
 				7AB057752AA482D200ABA6B1 /* MarkdownUI in Frameworks */,
@@ -532,6 +539,9 @@
 				7A25773F2A87D32400B15626 /* NullCodable.swift */,
 				7ABA52B52B791E6400AE218B /* Biometric.swift */,
 				7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */,
+				7A495CDA2BD940A200A2E5CF /* Binding.swift */,
+				7A495CF82BD94D6C00A2E5CF /* View+confirmationDialog.swift */,
+				7A495D0D2BD956F100A2E5CF /* View+alert.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -655,7 +665,6 @@
 				7A4AA90229BE048800D845A2 /* Flow */,
 				7A4AA91929BE730B00D845A2 /* Semaphore */,
 				7AB060DA29C62395004E6C63 /* AsyncAlgorithms */,
-				7A297FB729FE9C870021A1ED /* SwiftUINavigation */,
 				7A1C32C42A5EB08D00C18B44 /* NukeUI */,
 			);
 			productName = ShareExtension;
@@ -682,11 +691,9 @@
 				7A5C138929AA7E2F00D71F51 /* Semaphore */,
 				7A68F0B229B4B94B00878223 /* Flow */,
 				7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */,
-				7AEBA7A829EDBFBF006D5620 /* SwiftUINavigation */,
 				7A1C32BE2A5EAF1A00C18B44 /* Nuke */,
 				7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */,
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
-				7A2831AF2A61D30B009E86CE /* CasePaths */,
 				7AB057742AA482D200ABA6B1 /* MarkdownUI */,
 			);
 			productName = "swift-paperless";
@@ -776,9 +783,7 @@
 				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
-				7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */,
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
-				7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 				7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 			);
@@ -866,6 +871,7 @@
 				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */,
 				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
+				7A495D182BD9589800A2E5CF /* View+alert.swift in Sources */,
 				7A2F655A2B5ADB25000A75D9 /* MailView.swift in Sources */,
 				7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */,
 				7A2831B32A62748D009E86CE /* UserModel.swift in Sources */,
@@ -887,6 +893,7 @@
 				7A297FB529FE9AC80021A1ED /* ManageView.swift in Sources */,
 				7A2A13272A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7A2577432A87D32400B15626 /* NullCodable.swift in Sources */,
+				7A495CDC2BD940A200A2E5CF /* Binding.swift in Sources */,
 				7A8E1F802A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
@@ -899,6 +906,7 @@
 				7A495C8E2BD7FFF200A2E5CF /* Compatibility.swift in Sources */,
 				7A898ECF2A03000D0003DFBD /* UserDefaults.swift in Sources */,
 				7A4AA91829BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */,
+				7A495CFA2BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
 				7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */,
 				7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */,
@@ -957,6 +965,7 @@
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A15D7702BC8010E001E3A86 /* ConnectionsView.swift in Sources */,
+				7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */,
 				7AFB7BA72A89773B0013196B /* SettingsKeys.swift in Sources */,
 				7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */,
@@ -974,6 +983,7 @@
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */,
 				7A2E12222B14F3A000E7704A /* DeriveUrl.swift in Sources */,
+				7A495CDB2BD940A200A2E5CF /* Binding.swift in Sources */,
 				7A83F6E32A6BE3D7002B5CF6 /* DataScannerView.swift in Sources */,
 				939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */,
 				7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */,
@@ -996,6 +1006,7 @@
 				7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */,
 				7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */,
 				7A8E1F862A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
+				7A495D0E2BD956F100A2E5CF /* View+alert.swift in Sources */,
 				7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
 				7AF6688929A138330016BC31 /* Model.swift in Sources */,
 			);
@@ -1010,6 +1021,7 @@
 				7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
 				7A2577412A87D32400B15626 /* NullCodable.swift in Sources */,
+				7A495D232BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */,
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
 				7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */,
@@ -1023,6 +1035,7 @@
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
 				7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */,
+				7A495D3F2BD969F600A2E5CF /* Binding.swift in Sources */,
 				7AF2E07729F3F02E0092948B /* Repository.swift in Sources */,
 				7A2E12262B14F42200E7704A /* DeriveUrlTest.swift in Sources */,
 				7A8E1F7C2A1A8F60002A7CB3 /* DocumentModel.swift in Sources */,
@@ -1041,8 +1054,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A2577422A87D32400B15626 /* NullCodable.swift in Sources */,
+				7A495D222BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */,
 				7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */,
+				7A495D402BD969F700A2E5CF /* Binding.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1542,14 +1557,6 @@
 				minimumVersion = 12.0.0;
 			};
 		};
-		7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-case-paths";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.1;
-			};
-		};
 		7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
@@ -1598,14 +1605,6 @@
 				minimumVersion = 0.1.0;
 			};
 		};
-		7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swiftui-navigation";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.7.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1628,16 +1627,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
-		};
-		7A2831AF2A61D30B009E86CE /* CasePaths */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A2831AE2A61D30B009E86CE /* XCRemoteSwiftPackageReference "swift-case-paths" */;
-			productName = CasePaths;
-		};
-		7A297FB729FE9C870021A1ED /* SwiftUINavigation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
-			productName = SwiftUINavigation;
 		};
 		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1693,11 +1682,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
-		};
-		7AEBA7A829EDBFBF006D5620 /* SwiftUINavigation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7AEBA7A729EDBFBF006D5620 /* XCRemoteSwiftPackageReference "swiftui-navigation" */;
-			productName = SwiftUINavigation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

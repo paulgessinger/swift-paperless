@@ -396,17 +396,3 @@ struct TagFilterView_Previews: PreviewProvider {
         .environmentObject(store)
     }
 }
-
-struct DocumentTagEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-
-    static var previews: some View {
-        DocumentLoader(id: 3) { document in
-            NavigationStack {
-                DocumentTagEditView(document: document)
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-        }
-        .environmentObject(store)
-    }
-}
