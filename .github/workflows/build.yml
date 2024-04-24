@@ -38,7 +38,7 @@ jobs:
         run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
       - name: Checkout
@@ -46,7 +46,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.0.1"
+          xcode-version: "15.3"
 
       - name: Install dependencies
         run: bundle install
