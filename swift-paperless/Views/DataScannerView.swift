@@ -555,8 +555,8 @@ struct DataScannerView: View {
             }
         }
 
-        .sheet(unwrapping: $document) { document in
-            DetailView(document: document.wrappedValue)
+        .sheet(item: $document) { document in
+            DetailView(document: document)
         }
 
 //        .sheet(isPresented: $showTypeAsn) {

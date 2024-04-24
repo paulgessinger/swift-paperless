@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 29.04.23.
 //
 
+import os
 import SwiftUI
 
 protocol ManagerModel: Sendable {
@@ -58,6 +59,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var model: Manager.Model
     @State private var elementToDelete: Element?
+
     @State private var elements: [Element] = []
 
     @State private var searchText: String = ""
@@ -163,30 +165,32 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
-        .confirmationDialog(title: {
-            _ in Text(String(localized: .localizable.confirmationPromptTitle))
-        }, unwrapping: $elementToDelete, actions: { e in
-            Button(String(localized: .localizable.delete), role: .destructive) {
-                withAnimation {
-                    elements.removeAll(where: { $0 == e })
+        .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: Binding(present: $elementToDelete), actions: {
+            if let elementToDelete {
+                Button(String(localized: .localizable.delete), role: .destructive) {
+                    withAnimation {
+                        elements.removeAll(where: { $0 == elementToDelete })
+                    }
+                    Task {
+                        do {
+                            try await model.delete(elementToDelete)
+                            self.elementToDelete = nil
+                        } catch {
+                            print(error)
+                            errorController.push(error: error)
+                            elements = model.load()
+                        }
+                    }
                 }
-                Task {
-                    do {
-                        try await model.delete(e)
-                        elementToDelete = nil
-                    } catch {
-                        print(error)
-                        errorController.push(error: error)
+                Button(String(localized: .localizable.cancel), role: .cancel) {
+                    withAnimation {
                         elements = model.load()
                     }
                 }
+            } else {
+                EmptyView()
             }
-            Button(String(localized: .localizable.cancel), role: .cancel) {
-                withAnimation {
-                    elements = model.load()
-                }
-            }
-        }, message: { _ in })
+        }, message: {})
 
         .refreshable {
             do {

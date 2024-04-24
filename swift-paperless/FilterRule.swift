@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 06.04.23.
 //
 
-import CasePaths
 import Foundation
 import os
 
@@ -47,6 +46,33 @@ enum FilterRuleValue: Codable, Equatable {
             s = value
         }
         return s
+    }
+
+    var correspondentId: UInt? {
+        switch self {
+        case let .correspondent(id):
+            return id
+        default:
+            return nil
+        }
+    }
+
+    var documentTypeId: UInt? {
+        switch self {
+        case let .documentType(id):
+            return id
+        default:
+            return nil
+        }
+    }
+
+    var storagePathId: UInt? {
+        switch self {
+        case let .storagePath(id):
+            return id
+        default:
+            return nil
+        }
     }
 }
 
@@ -377,12 +403,12 @@ struct FilterState: Equatable, Codable, Sendable {
                 correspondent = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasCorrespondentAny:
-                correspondent = handleElementAny(case: /FilterRuleValue.correspondent,
+                correspondent = handleElementAny(id: rule.value.correspondentId,
                                                  filter: correspondent,
                                                  rule: rule)
 
             case .doesNotHaveCorrespondent:
-                correspondent = handleElementNone(case: /FilterRuleValue.correspondent,
+                correspondent = handleElementNone(id: rule.value.correspondentId,
                                                   filter: correspondent,
                                                   rule: rule)
 
@@ -396,12 +422,12 @@ struct FilterState: Equatable, Codable, Sendable {
                 documentType = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasDocumentTypeAny:
-                documentType = handleElementAny(case: /FilterRuleValue.documentType,
+                documentType = handleElementAny(id: rule.value.documentTypeId,
                                                 filter: documentType,
                                                 rule: rule)
 
             case .doesNotHaveDocumentType:
-                documentType = handleElementNone(case: /FilterRuleValue.documentType,
+                documentType = handleElementNone(id: rule.value.documentTypeId,
                                                  filter: documentType,
                                                  rule: rule)
 
@@ -414,12 +440,12 @@ struct FilterState: Equatable, Codable, Sendable {
                 storagePath = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasStoragePathAny:
-                storagePath = handleElementAny(case: /FilterRuleValue.storagePath,
+                storagePath = handleElementAny(id: rule.value.storagePathId,
                                                filter: storagePath,
                                                rule: rule)
 
             case .doesNotHaveStoragePath:
-                storagePath = handleElementNone(case: /FilterRuleValue.storagePath,
+                storagePath = handleElementNone(id: rule.value.storagePathId,
                                                 filter: storagePath,
                                                 rule: rule)
 
@@ -588,17 +614,11 @@ struct FilterState: Equatable, Codable, Sendable {
 
     // MARK: Methods
 
-    mutating func handleElementAny(case casePath: CasePath<FilterRuleValue, UInt?>, filter: Filter,
+    mutating func handleElementAny(id: UInt?, filter: Filter,
                                    rule: FilterRule) -> Filter
     {
-        guard let id = casePath.extract(from: rule.value) else {
-            Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
-            remaining.append(rule)
-            return filter
-        }
-
         guard let id else {
-            Logger.shared.error("hasDocumentTypeAny with nil id")
+            Logger.shared.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
             remaining.append(rule)
             return filter
         }
@@ -614,15 +634,9 @@ struct FilterState: Equatable, Codable, Sendable {
         }
     }
 
-    mutating func handleElementNone(case casePath: CasePath<FilterRuleValue, UInt?>, filter: Filter, rule: FilterRule) -> Filter {
-        guard let id = casePath.extract(from: rule.value) else {
-            Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
-            remaining.append(rule)
-            return filter
-        }
-
+    mutating func handleElementNone(id: UInt?, filter: Filter, rule: FilterRule) -> Filter {
         guard let id else {
-            Logger.shared.error("doesNotHaveDocumentType with nil id")
+            Logger.shared.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
             remaining.append(rule)
             return filter
         }
