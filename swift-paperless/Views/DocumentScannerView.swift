@@ -5,17 +5,18 @@ import VisionKit
 
 struct DocumentScannerView: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
-    let onCompletion: (_ result: Result<[URL], Error>) -> Void
+    let onCompletion: @Sendable (_ result: Result<[URL], Error>) -> Void
 
+    @MainActor
     static var isAvailable: Bool {
         VNDocumentCameraViewController.isSupported
     }
 
     class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
         @Binding var isPresented: Bool
-        let completionHandler: (_ result: Result<[URL], Error>) -> Void
+        let completionHandler: @Sendable (_ result: Result<[URL], Error>) -> Void
 
-        init(isPresented: Binding<Bool>, onCompletion: @escaping (_ result: Result<[URL], Error>) -> Void) {
+        init(isPresented: Binding<Bool>, onCompletion: @Sendable @escaping (_ result: Result<[URL], Error>) -> Void) {
             _isPresented = isPresented
             completionHandler = onCompletion
         }
@@ -26,15 +27,15 @@ struct DocumentScannerView: UIViewControllerRepresentable {
                 Logger.shared.notice("Attempt to make PDF")
                 let url = try createPDF(from: scan)
                 isPresented = false
-                DispatchQueue.main.async {
+                Task { [completionHandler = self.completionHandler] in
                     Logger.shared.notice("PDF conversion success")
-                    self.completionHandler(.success([url]))
+                    completionHandler(.success([url]))
                 }
             } catch {
                 isPresented = false
-                DispatchQueue.main.async {
+                Task { [completionHandler = self.completionHandler] in
                     Logger.shared.error("PDF conversion failure: \(error)")
-                    self.completionHandler(.failure(error))
+                    completionHandler(.failure(error))
                 }
             }
         }
@@ -46,9 +47,9 @@ struct DocumentScannerView: UIViewControllerRepresentable {
         func documentCameraViewController(_: VNDocumentCameraViewController, didFailWithError error: Error) {
             Logger.shared.notice("Document scanner receives error")
             isPresented = false
-            DispatchQueue.main.async {
+            Task { [completionHandler = self.completionHandler] in
                 Logger.shared.error("Document scanner error: \(error)")
-                self.completionHandler(.failure(error))
+                completionHandler(.failure(error))
             }
         }
 

@@ -15,7 +15,7 @@ protocol DocumentProtocol: Codable {
     var storagePath: UInt? { get set }
 }
 
-struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol {
+struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sendable {
     var id: UInt
     var title: String
 

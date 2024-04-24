@@ -40,6 +40,7 @@ struct LoadingDocumentList: View {
     }
 }
 
+@MainActor
 class DocumentListViewModel: ObservableObject {
     private var store: DocumentStore
     private var filterState: FilterState
@@ -63,15 +64,16 @@ class DocumentListViewModel: ObservableObject {
         source = store.repository.documents(filter: filterState)
     }
 
-    @MainActor
     func reload() async {
         source = store.repository.documents(filter: filterState)
         documents = []
         await load()
     }
 
-    @MainActor
     func load() async {
+//        guard let source else {
+//
+//        }
         guard documents.isEmpty, !loading else { return }
         loading = true
         do {
@@ -94,8 +96,10 @@ class DocumentListViewModel: ObservableObject {
                 do {
                     let batch = try await self.source.fetch(limit: self.batchSize)
                     if batch.isEmpty {
-                        self.exhausted = true
-                        await MainActor.run { self.loading = false }
+                        await MainActor.run {
+                            self.exhausted = true
+                            self.loading = false
+                        }
                         return
                     }
 
@@ -105,13 +109,12 @@ class DocumentListViewModel: ObservableObject {
                     }
                 } catch {
                     Logger.shared.error("DocumentList failed to load more if needed: \(error)")
-                    self.errorController.push(error: error)
+                    await self.errorController.push(error: error)
                 }
             }
         }
     }
 
-    @MainActor
     func refresh(filter: FilterState? = nil, retain: Bool = false) async {
         if let filter {
             filterState = filter
@@ -176,11 +179,13 @@ struct DocumentList: View {
         @Binding var documentToDelete: Document?
         var viewModel: DocumentListViewModel
 
-        private func onDeleteButtonPressed() async {
+        private func onDeleteButtonPressed() {
             if documentDeleteConfirmation {
                 documentToDelete = document
             } else {
-                try? await store.deleteDocument(document)
+                Task { [store = self.store, document = self.document] in
+                    try? await store.deleteDocument(document)
+                }
             }
         }
 
@@ -229,7 +234,7 @@ struct DocumentList: View {
                 }
 
                 Button(role: .destructive) {
-                    Task { await onDeleteButtonPressed() }
+                    onDeleteButtonPressed()
                 } label: {
                     Label(String(localized: .localizable.delete), systemImage: "trash")
                 }
@@ -241,7 +246,7 @@ struct DocumentList: View {
 
             .swipeActions(edge: .trailing) {
                 Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    Task { await onDeleteButtonPressed() }
+                    onDeleteButtonPressed()
                 } label: {
                     Label(String(localized: .localizable.delete), systemImage: "trash")
                 }

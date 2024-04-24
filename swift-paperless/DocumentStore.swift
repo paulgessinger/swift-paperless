@@ -11,7 +11,8 @@ import os
 import Semaphore
 import SwiftUI
 
-class DocumentStore: ObservableObject {
+@MainActor
+final class DocumentStore: ObservableObject, Sendable {
     // MARK: Publishers
 
     @Published private(set) var documents: [UInt: Document] = [:]
@@ -53,12 +54,10 @@ class DocumentStore: ObservableObject {
 //        documentSource = repository.documents(filter: FilterState())
     }
 
-    @MainActor
     func clearDocuments() {
         documents = [:]
     }
 
-    @MainActor
     func clear() {
         documents = [:]
         correspondents = [:]
@@ -71,21 +70,18 @@ class DocumentStore: ObservableObject {
         activeTasks = []
     }
 
-    @MainActor
     func set(repository: Repository) {
         self.repository = repository
         documentEventPublisher.send(.repositoryChanged)
         clear()
     }
 
-    @MainActor
     func updateDocument(_ document: Document) async throws {
         documentEventPublisher.send(.changed(document: document))
         documents[document.id] = try await repository.update(document: document)
         documentEventPublisher.send(.changeReceived(document: document))
     }
 
-    @MainActor
     func deleteDocument(_ document: Document) async throws {
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
@@ -158,29 +154,19 @@ class DocumentStore: ObservableObject {
         defer { fetchAllSemaphore.signal() }
         Logger.shared.notice("Fetch all store")
 
-        let funcs = [
-            fetchAllCorrespondents,
-            fetchAllDocumentTypes,
-            fetchAllTags,
-            fetchAllSavedViews,
-            fetchAllStoragePaths,
-            fetchCurrentUser,
-            fetchAllUsers,
-        ]
+        async let correspondents: Void = fetchAllCorrespondents()
+        async let documentTypes: Void = fetchAllDocumentTypes()
+        async let tags: Void = fetchAllTags()
+        async let savedViews: Void = fetchAllSavedViews()
+        async let storagePaths: Void = fetchAllStoragePaths()
+        async let currentUser: Void = fetchCurrentUser()
+        async let users: Void = fetchAllUsers()
 
-        try await withThrowingTaskGroup(of: Void.self) { g in
-            for fn in funcs {
-                g.addTask {
-                    try await fn()
-                }
-            }
+        _ = try await (correspondents, documentTypes, tags, savedViews, storagePaths, currentUser, users)
 
-            try await g.waitForAll()
-        }
         Logger.shared.notice("Fetch all store complete")
     }
 
-    @MainActor
     private func fetchAll<T>(elements: [T],
                              collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>) async
         where T: Decodable, T: Identifiable, T.ID == UInt, T: Model
@@ -194,8 +180,7 @@ class DocumentStore: ObservableObject {
         self[keyPath: collection] = copy
     }
 
-//    @MainActor
-    private func getSingleCached<T>( //        _ type: T.Type,
+    private func getSingleCached<T: Sendable>(
         get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
     ) async -> (Bool, T)? where T: Decodable, T: Model {
         if let element = self[keyPath: cache][id] {
@@ -241,10 +226,9 @@ class DocumentStore: ObservableObject {
         return (allCached, tags)
     }
 
-    @MainActor
-    private func create<E, R>(_: R.Type, from element: E,
-                              store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
-                              method: (E) async throws -> R) async throws -> R
+    private func create<E: Sendable, R: Sendable>(_: R.Type, from element: E,
+                                                  store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
+                                                  method: (E) async throws -> R) async throws -> R
         where R: Identifiable
     {
         let created = try await method(element)
@@ -252,24 +236,21 @@ class DocumentStore: ObservableObject {
         return created
     }
 
-    @MainActor
-    private func update<E>(_ element: E,
-                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
-                           method: (E) async throws -> E) async throws where E: Identifiable
+    private func update<E: Sendable>(_ element: E,
+                                     store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                                     method: (E) async throws -> E) async throws where E: Identifiable
     {
         self[keyPath: store][element.id] = try await method(element)
     }
 
-    @MainActor
-    private func delete<E>(_ element: E,
-                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
-                           method: (E) async throws -> Void) async throws where E: Identifiable
+    private func delete<E: Sendable>(_ element: E,
+                                     store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                                     method: (E) async throws -> Void) async throws where E: Identifiable
     {
         try await method(element)
         self[keyPath: store].removeValue(forKey: element.id)
     }
 
-    @MainActor
     func create(tag: ProtoTag) async throws -> Tag {
         try await create(Tag.self,
                          from: tag,
@@ -277,17 +258,14 @@ class DocumentStore: ObservableObject {
                          method: repository.create(tag:))
     }
 
-    @MainActor
     func update(tag: Tag) async throws {
         try await update(tag, store: \.tags, method: repository.update(tag:))
     }
 
-    @MainActor
     func delete(tag: Tag) async throws {
         try await delete(tag, store: \.tags, method: repository.delete(tag:))
     }
 
-    @MainActor
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
         try await create(Correspondent.self,
                          from: correspondent,
@@ -295,21 +273,18 @@ class DocumentStore: ObservableObject {
                          method: repository.create(correspondent:))
     }
 
-    @MainActor
     func update(correspondent: Correspondent) async throws {
         try await update(correspondent,
                          store: \.correspondents,
                          method: repository.update(correspondent:))
     }
 
-    @MainActor
     func delete(correspondent: Correspondent) async throws {
         try await delete(correspondent,
                          store: \.correspondents,
                          method: repository.delete(correspondent:))
     }
 
-    @MainActor
     func create(documentType: ProtoDocumentType) async throws -> DocumentType {
         try await create(DocumentType.self,
                          from: documentType,
@@ -317,39 +292,33 @@ class DocumentStore: ObservableObject {
                          method: repository.create(documentType:))
     }
 
-    @MainActor
     func update(documentType: DocumentType) async throws {
         try await update(documentType,
                          store: \.documentTypes,
                          method: repository.update(documentType:))
     }
 
-    @MainActor
     func delete(documentType: DocumentType) async throws {
         try await delete(documentType,
                          store: \.documentTypes,
                          method: repository.delete(documentType:))
     }
 
-    @MainActor
     func create(savedView: ProtoSavedView) async throws -> SavedView {
         let created = try await repository.create(savedView: savedView)
         savedViews[created.id] = created
         return created
     }
 
-    @MainActor
     func update(savedView: SavedView) async throws {
         savedViews[savedView.id] = try await repository.update(savedView: savedView)
     }
 
-    @MainActor
     func delete(savedView: SavedView) async throws {
         try await repository.delete(savedView: savedView)
         savedViews.removeValue(forKey: savedView.id)
     }
 
-    @MainActor
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
         try await create(StoragePath.self,
                          from: storagePath,
@@ -357,14 +326,12 @@ class DocumentStore: ObservableObject {
                          method: repository.create(storagePath:))
     }
 
-    @MainActor
     func update(storagePath: StoragePath) async throws {
         try await update(storagePath,
                          store: \.storagePaths,
                          method: repository.update(storagePath:))
     }
 
-    @MainActor
     func delete(storagePath: StoragePath) async throws {
         try await delete(storagePath,
                          store: \.storagePaths,

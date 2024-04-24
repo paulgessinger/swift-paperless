@@ -179,7 +179,9 @@ struct CommonPicker: View {
 }
 
 protocol Pickable {
+    @MainActor
     static var storePath: KeyPath<DocumentStore, [UInt: Self]> { get }
+
     static func documentPath<D>(_ type: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol
 
     static var notAssignedFilter: String { get }
@@ -193,45 +195,48 @@ protocol Pickable {
 }
 
 extension Correspondent: Pickable {
-    static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> = \.correspondents
+    @MainActor
+    static var storePath: KeyPath<DocumentStore, [UInt: Correspondent]> { \.correspondents }
 
     static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
         \.correspondent
     }
 
-    static var notAssignedFilter = String(localized: .localizable.correspondentNotAssignedFilter)
-    static var notAssignedPicker = String(localized: .localizable.correspondentNotAssignedPicker)
-    static var singularLabel = String(localized: .localizable.correspondent)
-    static var pluralLabel = String(localized: .localizable.correspondents)
-    static var excludeLabel = String(localized: .localizable.correspondentExclude)
+    static let notAssignedFilter = String(localized: .localizable.correspondentNotAssignedFilter)
+    static let notAssignedPicker = String(localized: .localizable.correspondentNotAssignedPicker)
+    static let singularLabel = String(localized: .localizable.correspondent)
+    static let pluralLabel = String(localized: .localizable.correspondents)
+    static let excludeLabel = String(localized: .localizable.correspondentExclude)
 }
 
 extension DocumentType: Pickable {
-    static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> = \.documentTypes
+    @MainActor
+    static var storePath: KeyPath<DocumentStore, [UInt: DocumentType]> { \.documentTypes }
 
     static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
         \.documentType
     }
 
-    static var notAssignedFilter = String(localized: .localizable.documentTypeNotAssignedFilter)
-    static var notAssignedPicker = String(localized: .localizable.documentTypeNotAssignedPicker)
-    static var singularLabel = String(localized: .localizable.documentType)
-    static var pluralLabel = String(localized: .localizable.documentTypes)
-    static var excludeLabel = String(localized: .localizable.documentTypeExclude)
+    static let notAssignedFilter = String(localized: .localizable.documentTypeNotAssignedFilter)
+    static let notAssignedPicker = String(localized: .localizable.documentTypeNotAssignedPicker)
+    static let singularLabel = String(localized: .localizable.documentType)
+    static let pluralLabel = String(localized: .localizable.documentTypes)
+    static let excludeLabel = String(localized: .localizable.documentTypeExclude)
 }
 
 extension StoragePath: Pickable {
-    static var storePath: KeyPath<DocumentStore, [UInt: StoragePath]> = \.storagePaths
+    @MainActor
+    static var storePath: KeyPath<DocumentStore, [UInt: StoragePath]> { \.storagePaths }
 
     static func documentPath<D>(_: D.Type) -> WritableKeyPath<D, UInt?> where D: DocumentProtocol {
         \.storagePath
     }
 
-    static var notAssignedFilter = String(localized: .localizable.storagePathNotAssignedFilter)
-    static var notAssignedPicker = String(localized: .localizable.storagePathNotAssignedPicker)
-    static var singularLabel = String(localized: .localizable.storagePath)
-    static var pluralLabel = String(localized: .localizable.storagePaths)
-    static var excludeLabel = String(localized: .localizable.storagePathExclude)
+    static let notAssignedFilter = String(localized: .localizable.storagePathNotAssignedFilter)
+    static let notAssignedPicker = String(localized: .localizable.storagePathNotAssignedPicker)
+    static let singularLabel = String(localized: .localizable.storagePath)
+    static let pluralLabel = String(localized: .localizable.storagePaths)
+    static let excludeLabel = String(localized: .localizable.storagePathExclude)
 }
 
 struct CommonPickerEdit<Manager, D>: View

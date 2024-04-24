@@ -16,6 +16,8 @@ struct NullCodable<T> {
     }
 }
 
+extension NullCodable: Sendable where T: Sendable {}
+
 extension NullCodable: Encodable where T: Encodable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()

@@ -332,25 +332,15 @@ struct DocumentEditView: View {
             }
 
             .task {
-                Task.detached {
-                    await gather([
-                        {
-                            do { try await store.fetchAll() }
-                            catch {
-                                await errorController.push(error: error)
-                            }
-                        },
-                        {
-                            if await suggestions == nil {
-                                let suggestions = await store.repository.suggestions(documentId: document.id)
-                                await MainActor.run {
-                                    withAnimation {
-                                        self.suggestions = suggestions
-                                    }
-                                }
-                            }
-                        },
-                    ])
+                do {
+                    let store = store
+                    async let _ = try await store.fetchAll()
+                    let suggestions = await store.repository.suggestions(documentId: document.id)
+                    withAnimation {
+                        self.suggestions = suggestions
+                    }
+                } catch {
+                    errorController.push(error: error)
                 }
             }
         }

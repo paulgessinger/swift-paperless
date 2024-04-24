@@ -144,7 +144,7 @@ struct ErrorDisplay: ViewModifier {
 }
 
 extension View {
-    func errorOverlay(errorController: ErrorController, offset: CGFloat = 0) -> some View {
+    @MainActor func errorOverlay(errorController: ErrorController, offset: CGFloat = 0) -> some View {
         modifier(ErrorDisplay(errorController: errorController, offset: offset))
     }
 }
@@ -164,6 +164,7 @@ struct GenericError: DisplayableError {
     }
 }
 
+@MainActor
 class ErrorController: ObservableObject {
     enum State {
         case none
@@ -180,7 +181,7 @@ class ErrorController: ObservableObject {
         if let le = error as? LocalizedError {
             if let message {
                 Task {
-                    await push(error: GenericError(message: message, details: String(describing: error)))
+                    push(error: GenericError(message: message, details: String(describing: error)))
                 }
             } else {
                 push(error: le)
@@ -189,9 +190,7 @@ class ErrorController: ObservableObject {
         }
 
         if let de = error as? DisplayableError {
-            Task {
-                await push(error: de)
-            }
+            push(error: de)
             return
         }
         push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
@@ -202,12 +201,9 @@ class ErrorController: ObservableObject {
     }
 
     func push(error: LocalizedError) {
-        Task {
-            await push(error: GenericError(message: error.errorDescription ?? Self.defaultTitle, details: error.failureReason))
-        }
+        push(error: GenericError(message: error.errorDescription ?? Self.defaultTitle, details: error.failureReason))
     }
 
-    @MainActor
     func push(error: DisplayableError) {
         Haptics.shared.notification(.error)
         withAnimation(.spring(duration: 0.3)) {
@@ -216,9 +212,7 @@ class ErrorController: ObservableObject {
     }
 
     func push(message: String, details: String? = nil) {
-        Task {
-            await push(error: GenericError(message: message, details: details))
-        }
+        push(error: GenericError(message: message, details: details))
     }
 
     func clear(animate: Bool = true) {

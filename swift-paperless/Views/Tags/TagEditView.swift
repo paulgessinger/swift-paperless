@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-struct TagEditView<Element>: View where Element: TagProtocol {
+struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     var onSave: (Element) throws -> Void
 
 //    @Environment(\.dismiss) private var dismiss
@@ -101,6 +101,7 @@ struct TagEditView<Element>: View where Element: TagProtocol {
 }
 
 extension TagEditView where Element == ProtoTag {
+    @MainActor
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(tag: ProtoTag(color: HexColor(Self.randomColor())),
                   onSave: onSave)

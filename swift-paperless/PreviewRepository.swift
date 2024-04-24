@@ -8,7 +8,7 @@
 import GameplayKit
 import SwiftUI
 
-struct PreviewDocumentSource: DocumentSource {
+actor PreviewDocumentSource: DocumentSource {
     typealias DocumentSequence = [Document]
 
     var sequence: DocumentSequence
@@ -40,15 +40,15 @@ struct SeededGenerator: RandomNumberGenerator {
     }
 }
 
-class PreviewRepository: Repository {
-    private var documents: [UInt: Document]
-    private var tags: [UInt: Tag]
-    private var documentTypes: [UInt: DocumentType]
-    private var correspondents: [UInt: Correspondent]
-    private var storagePaths: [UInt: StoragePath]
+actor PreviewRepository: Repository {
+    private let documents: [UInt: Document]
+    private let tags: [UInt: Tag]
+    private let documentTypes: [UInt: DocumentType]
+    private let correspondents: [UInt: Correspondent]
+    private let storagePaths: [UInt: StoragePath]
 
     init() {
-        tags = [Tag]([
+        let tags = [Tag]([
             .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
             .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: Color.blue.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
             .init(id: 3, isInboxTag: false, name: "Travel Document", slug: "traveldoc", color: Color.green.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
@@ -59,7 +59,7 @@ class PreviewRepository: Repository {
             $0[$1.id] = $1
         }
 
-        correspondents = [Correspondent]([
+        let correspondents = [Correspondent]([
             .init(id: 1, documentCount: 2, name: "McMillan", slug: "mcmillan", matchingAlgorithm: .auto, match: "", isInsensitive: true),
             .init(id: 2, documentCount: 21, name: "Credit Suisse", slug: "cs", matchingAlgorithm: .auto, match: "", isInsensitive: true),
             .init(id: 3, documentCount: 66, name: "UBS", slug: "ubs", matchingAlgorithm: .auto, match: "", isInsensitive: true),
@@ -68,7 +68,7 @@ class PreviewRepository: Repository {
             $0[$1.id] = $1
         }
 
-        documentTypes = [DocumentType]([
+        let documentTypes = [DocumentType]([
             .init(id: 1, name: "Letter", slug: "letter", match: "", matchingAlgorithm: .none, isInsensitive: false),
             .init(id: 2, name: "Invoice", slug: "invoice", match: "", matchingAlgorithm: .none, isInsensitive: false),
             .init(id: 3, name: "Receipt", slug: "receipt", match: "", matchingAlgorithm: .none, isInsensitive: false),
@@ -77,14 +77,14 @@ class PreviewRepository: Repository {
             $0[$1.id] = $1
         }
 
-        storagePaths = [StoragePath]([
+        let storagePaths = [StoragePath]([
             .init(id: 1, name: "Path A", path: "aaa", slug: "path_a", matchingAlgorithm: .auto, match: "", isInsensitive: true),
             .init(id: 2, name: "Path B", path: "bbb", slug: "path_b", matchingAlgorithm: .auto, match: "", isInsensitive: true),
         ]).reduce(into: [UInt: StoragePath]()) {
             $0[$1.id] = $1
         }
 
-        documents = [:]
+        var documents: [UInt: Document] = [:]
 
         var generator = SeededGenerator(seed: 43)
 
@@ -92,7 +92,7 @@ class PreviewRepository: Repository {
             if Float.random(in: 0 ..< 1.0, using: &generator) < 0.2 {
                 return nil
             }
-            return self.documentTypes.map(\.value.id).sorted().randomElement(using: &generator)
+            return documentTypes.map(\.value.id).sorted().randomElement(using: &generator)
         }
 
         let corr = { () -> UInt? in
@@ -101,13 +101,13 @@ class PreviewRepository: Repository {
             }
             //            return UInt(self.correspondents.count)
             //            return UInt(Int.random(in: 1..<self.correspondents.count + 1, using: &generator))
-            return self.correspondents.map(\.value.id).sorted().randomElement(using: &generator)
+            return correspondents.map(\.value.id).sorted().randomElement(using: &generator)
         }
 
         let t = { () -> [UInt] in
             var result: Set<UInt> = []
             for _ in 0 ..< Int.random(in: 0 ..< 4, using: &generator) {
-                if let id = self.tags.map(\.value.id).sorted().randomElement(using: &generator) {
+                if let id = tags.map(\.value.id).sorted().randomElement(using: &generator) {
                     result.insert(id)
                 }
             }
@@ -118,7 +118,7 @@ class PreviewRepository: Repository {
             if Float.random(in: 0 ..< 1.0, using: &generator) < 0.2 {
                 return nil
             }
-            return self.storagePaths.map(\.value.id).sorted().randomElement(using: &generator)
+            return storagePaths.map(\.value.id).sorted().randomElement(using: &generator)
         }
 
         var maxAsn: UInt = 0
@@ -142,6 +142,12 @@ class PreviewRepository: Repository {
         }
 
         documents[2]?.title = "I am a very long document title that will not fit into a single line."
+
+        self.documents = documents
+        self.correspondents = correspondents
+        self.tags = tags
+        self.documentTypes = documentTypes
+        self.storagePaths = storagePaths
     }
 
     func nextAsn() async -> UInt {
@@ -182,7 +188,7 @@ class PreviewRepository: Repository {
         documents.first(where: { $0.value.asn == asn })?.value
     }
 
-    func documents(filter _: FilterState) -> any DocumentSource {
+    nonisolated func documents(filter _: FilterState) -> any DocumentSource {
         PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
     }
 
@@ -202,7 +208,7 @@ class PreviewRepository: Repository {
         let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/200")!)
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await URLSession.shared.getData(for: request)
 
             return data
         } catch {

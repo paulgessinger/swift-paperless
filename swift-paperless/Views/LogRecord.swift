@@ -22,6 +22,45 @@ class LogRecords: Transferable, ObservableObject {
     }
 }
 
+@MainActor
+private class LogRecordViewModel: ObservableObject {
+    @Published private(set) var state = LogRecordExportButton.LogState.none
+    let change: ((LogRecordExportButton.LogState) -> Void)?
+
+    init(change: ((LogRecordExportButton.LogState) -> Void)? = nil) {
+        self.change = change
+    }
+
+    func load() {
+        state = .loading
+        change?(state)
+        Task.detached {
+            do {
+                let store = try OSLogStore(scope: .currentProcessIdentifier)
+                let position = store.position(timeIntervalSinceLatestBoot: 1)
+                let state: LogRecordExportButton.LogState = try .loaded(logs: store
+                    .getEntries(at: position)
+                    .compactMap { $0 as? OSLogEntryLog }
+                    .filter { $0.subsystem == Bundle.main.bundleIdentifier! }
+                    .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
+                    .joined(separator: "\n"))
+                await MainActor.run {
+                    self.change?(state)
+                    self.state = state
+                    Haptics.shared.notification(.success)
+                }
+            } catch {
+                Logger.shared.warning("\(error.localizedDescription, privacy: .public)")
+                await MainActor.run {
+                    self.state = .error(error: error)
+                    self.change?(self.state)
+                    Haptics.shared.notification(.error)
+                }
+            }
+        }
+    }
+}
+
 struct LogRecordExportButton: View {
     enum LogState {
         case none
@@ -30,24 +69,22 @@ struct LogRecordExportButton: View {
         case error(error: Error)
     }
 
-    @State private var state = LogState.none
+    @ObservedObject private var viewModel: LogRecordViewModel
 
     let content: (LogState, @escaping () -> Void) -> AnyView
-
-    let change: (LogState) -> Void
 
     init(@ViewBuilder content: @escaping (LogState, @escaping () -> Void) -> some View, change: ((LogState) -> Void)? = nil) {
         self.content = { state, export in
             AnyView(content(state, export))
         }
-        self.change = change ?? { _ in }
+        viewModel = LogRecordViewModel(change: change)
     }
 
     init(change: ((LogState) -> Void)? = nil) {
         content = { state, export in
             AnyView(Self.defaultContent(state: state, export: export))
         }
-        self.change = change ?? { _ in }
+        viewModel = LogRecordViewModel(change: change)
     }
 
     @ViewBuilder static func loadingView() -> some View {
@@ -84,36 +121,12 @@ struct LogRecordExportButton: View {
         }
     }
 
-    private func load() {
-        state = .loading
-        change(state)
-        do {
-            let store = try OSLogStore(scope: .currentProcessIdentifier)
-            let position = store.position(timeIntervalSinceLatestBoot: 1)
-            state = try .loaded(logs: store
-                .getEntries(at: position)
-                .compactMap { $0 as? OSLogEntryLog }
-                .filter { $0.subsystem == Bundle.main.bundleIdentifier! }
-                .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
-                .joined(separator: "\n"))
-            change(state)
-            Haptics.shared.notification(.success)
-        } catch {
-            Logger.shared.warning("\(error.localizedDescription, privacy: .public)")
-            state = .error(error: error)
-            change(state)
-            Haptics.shared.notification(.error)
-        }
-    }
-
     private func export() {
         Logger.shared.notice("Requesting log export")
-        DispatchQueue.global().async {
-            load()
-        }
+        viewModel.load()
     }
 
     var body: some View {
-        content(state, export)
+        content(viewModel.state, export)
     }
 }

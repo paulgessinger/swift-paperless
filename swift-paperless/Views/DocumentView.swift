@@ -72,6 +72,7 @@ struct TaskActivityToolbar: View {
     }
 }
 
+@MainActor
 struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var filterModel: FilterModel
@@ -98,6 +99,7 @@ struct DocumentView: View {
 
     @State private var filterBarVisible = true
 
+    // @TODO: Separate view model which does the copying on a background thread
     func importFile(result: [URL], isSecurityScoped: Bool) {
         do {
             guard let selectedFile: URL = result.first else { return }
@@ -286,11 +288,13 @@ struct DocumentView: View {
 
                 .fullScreenCover(isPresented: $showDocumentScanner) {
                     DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
-                        switch result {
-                        case let .success(urls):
-                            importFile(result: urls, isSecurityScoped: false)
-                        case let .failure(failure):
-                            errorController.push(error: failure)
+                        Task {
+                            switch result {
+                            case let .success(urls):
+                                await importFile(result: urls, isSecurityScoped: false)
+                            case let .failure(failure):
+                                await errorController.push(error: failure)
+                            }
                         }
                     })
                     .ignoresSafeArea()

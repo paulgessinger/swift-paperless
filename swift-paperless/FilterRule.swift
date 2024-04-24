@@ -249,7 +249,7 @@ enum SortOrder: Codable {
 
 // MARK: - FilterState
 
-struct FilterState: Equatable, Codable {
+struct FilterState: Equatable, Codable, Sendable {
     enum Filter: Equatable, Hashable, Codable {
         case any
         case notAssigned

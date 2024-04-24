@@ -12,12 +12,15 @@ import SwiftUI
 
 extension TagView: RowViewProtocol {
     typealias Element = Tag
+
+    @MainActor
     init(element: Tag) {
         self.init(tag: element)
     }
 }
 
 extension TagEditView: EditViewProtocol where Element == Tag {
+    @MainActor
     init(element: Tag, onSave: @escaping (Element) throws -> Void) {
         self.init(tag: element, onSave: onSave)
     }
@@ -30,7 +33,7 @@ struct TagManager: ManagerProtocol {
         typealias Element = Tag
         typealias ProtoElement = ProtoTag
 
-        private var store: DocumentStore
+        private let store: DocumentStore
 
         init(store: DocumentStore) {
             self.store = store
@@ -55,7 +58,7 @@ struct TagManager: ManagerProtocol {
         }
     }
 
-    static var elementName: KeyPath<Tag, String> = \.name
+    static var elementName: KeyPath<Tag, String> { \.name }
 
     typealias RowView = TagView
     typealias EditView = TagEditView<Tag>
@@ -69,13 +72,13 @@ extension CorrespondentEditView: EditViewProtocol where Element == Correspondent
 extension CorrespondentEditView: CreateViewProtocol where Element == ProtoCorrespondent {}
 
 struct CorrespondentManager: ManagerProtocol {
-    static var elementName: KeyPath<Correspondent, String> = \.name
+    static var elementName: KeyPath<Correspondent, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = Correspondent
         typealias ProtoElement = ProtoCorrespondent
 
-        private var store: DocumentStore
+        private let store: DocumentStore
 
         init(store: DocumentStore) {
             self.store = store
@@ -119,13 +122,13 @@ extension DocumentTypeEditView: EditViewProtocol where Element == DocumentType {
 extension DocumentTypeEditView: CreateViewProtocol where Element == ProtoDocumentType {}
 
 struct DocumentTypeManager: ManagerProtocol {
-    static var elementName: KeyPath<Model.Element, String> = \.name
+    static var elementName: KeyPath<Model.Element, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = DocumentType
         typealias ProtoElement = ProtoDocumentType
 
-        private var store: DocumentStore
+        private let store: DocumentStore
 
         init(store: DocumentStore) {
             self.store = store
@@ -169,13 +172,13 @@ extension SavedViewEditView: EditViewProtocol where Element == SavedView {}
 extension SavedViewEditView: CreateViewProtocol where Element == ProtoSavedView {}
 
 struct SavedViewManager: ManagerProtocol {
-    static var elementName: KeyPath<SavedView, String> = \.name
+    static var elementName: KeyPath<SavedView, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = SavedView
         typealias ProtoElement = ProtoSavedView
 
-        private var store: DocumentStore
+        private let store: DocumentStore
 
         init(store: DocumentStore) {
             self.store = store
@@ -219,18 +222,19 @@ extension StoragePathEditView: EditViewProtocol where Element == StoragePath {}
 extension StoragePathEditView: CreateViewProtocol where Element == ProtoStoragePath {}
 
 struct StoragePathManager: ManagerProtocol {
-    static var elementName: KeyPath<StoragePath, String> = \.name
+    static var elementName: KeyPath<StoragePath, String> { \.name }
 
     final class Model: ManagerModel {
         typealias Element = StoragePath
         typealias ProtoElement = ProtoStoragePath
 
-        private var store: DocumentStore
+        private let store: DocumentStore
 
         init(store: DocumentStore) {
             self.store = store
         }
 
+        @MainActor
         func load() -> [StoragePath] {
             store.storagePaths
                 .map(\.value)

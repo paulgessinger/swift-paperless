@@ -8,7 +8,11 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
+#if swift(>=6.0)
+    #warning("Reevaluate whether this decoration is necessary.")
+#endif
+private nonisolated(unsafe)
+let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
 
 extension UserDefaults {
     static let group = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!
