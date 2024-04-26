@@ -42,6 +42,18 @@
         }
       }
     },
+    "allDocuments" : {
+      "comment" : "Used in the saved view selector",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All documents"
+          }
+        }
+      }
+    },
     "apiDataTypeOther" : {
       "extractionState" : "manual",
       "localizations" : {

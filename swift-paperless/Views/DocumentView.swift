@@ -217,10 +217,20 @@ struct DocumentView: View {
 
                 .toolbarTitleMenu {
                     if !store.savedViews.isEmpty {
+                        Button {
+                            withAnimation {
+                                filterModel.filterState.clear()
+                            }
+                        } label: {
+                            Text(.localizable.allDocuments)
+                        }
+                        Divider()
                         ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
                             Button {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    filterModel.filterState = .init(savedView: savedView)
+                                    withAnimation {
+                                        filterModel.filterState = .init(savedView: savedView)
+                                    }
                                 }
                             } label: {
                                 Text(savedView.name)

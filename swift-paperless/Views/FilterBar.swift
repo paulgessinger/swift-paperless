@@ -402,7 +402,9 @@ struct FilterBar: View {
                 Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
                     Label(String(localized: .localizable.filtering), systemImage: "line.3.horizontal.decrease")
                         .labelStyle(.iconOnly)
-                    CircleCounter(value: filterState.ruleCount)
+                    if filterModel.filterState.filtering {
+                        CircleCounter(value: filterModel.filterState.ruleCount)
+                    }
                 }
                 .opacity(filterMenuHit ? 0.5 : 1.0)
                 .overlay {
