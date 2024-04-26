@@ -42,6 +42,41 @@
         }
       }
     },
+    "apiDataTypeOther" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "apiForbiddenDetails" : {
+      "comment" : "Argument 1 is the localized resource name (e.g. User, Document type), argument 2 is the detail error string reported by the backend",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. \n\nThe backend reported: %@"
+          }
+        }
+      }
+    },
+    "apiForbiddenErrorMessage" : {
+      "comment" : "Argument is the localized resource name (e.g. User, Document type)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No access: %@"
+          }
+        }
+      }
+    },
     "appName" : {
       "extractionState" : "manual",
       "localizations" : {

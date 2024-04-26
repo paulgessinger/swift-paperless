@@ -22,9 +22,26 @@ private enum RequestError: Error {
     case invalidRequest
     case invalidResponse
     case unexpectedStatusCode(code: Int)
+    case forbidden(detail: String)
 }
 
-actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Decodable & Sendable {
+struct ResourceForbidden<Resource: Model>: DisplayableError {
+    init(_: Resource.Type, response: String) {
+        self.response = response
+    }
+
+    let response: String
+
+    var message: String {
+        String(localized: .localizable.apiForbiddenErrorMessage(Resource.localizedName))
+    }
+
+    var details: String? {
+        String(localized: .localizable.apiForbiddenDetails(Resource.localizedName, response))
+    }
+}
+
+actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Model & Decodable & Sendable {
     private var nextPage: URL?
     private let repository: ApiRepository
 
@@ -72,7 +89,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         guard let url = nextPage else {
-            Logger.api.notice("API sequence has reached end (nextPage is nil)")
+            Logger.api.notice("\(Element.self) API sequence has reached end (nextPage is nil)")
             hasMore = false
             return nil
         }
@@ -82,7 +99,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             let decoded = try await repository.fetchData(for: request, as: ListResponse<Element>.self)
 
             guard !decoded.results.isEmpty else {
-                Logger.api.notice("API sequence fetch was empty")
+                Logger.api.notice("\(Element.self) API sequence fetch was empty")
                 hasMore = false
                 return nil
             }
@@ -98,9 +115,12 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             bufferIndex = 1 // set to one because we return the first element immediately
             return decoded.results[0]
 
+        } catch let RequestError.forbidden(details) {
+            Logger.api.error("Error in \(Element.self) API sequence: Forbidden")
+            throw ResourceForbidden(Element.self, response: details)
         } catch {
             let sanitizedError = await repository.sanitizedError(error)
-            Logger.api.error("Error in API sequence: \(sanitizedError, privacy: .public)")
+            Logger.api.error("Error in \(Element.self) API sequence: \(sanitizedError, privacy: .public)")
             throw error
         }
     }
@@ -210,6 +230,19 @@ actor ApiRepository {
         #endif
     }
 
+    private func decodeForbidden(_ data: Data) -> String {
+        struct Details: Decodable {
+            var detail: String
+        }
+
+        do {
+            let details = try decoder.decode(Details.self, from: data)
+            return details.detail
+        } catch {
+            return String(data: data, encoding: .utf8) ?? "[NO BODY]"
+        }
+    }
+
     fileprivate func fetchData(for request: URLRequest, code: Int = 200) async throws -> (Data, URLResponse) {
         guard let url = request.url else {
             Logger.api.error("Request URL is nil")
@@ -244,7 +277,11 @@ actor ApiRepository {
         if response.statusCode != code {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             Logger.api.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
-            throw RequestError.unexpectedStatusCode(code: response.statusCode)
+            if response.statusCode == 403 {
+                throw RequestError.forbidden(detail: decodeForbidden(data))
+            } else {
+                throw RequestError.unexpectedStatusCode(code: response.statusCode)
+            }
         }
 
         Logger.api.trace("URLResponse for \(sanitizedUrl, privacy: .public) has status code \(code) as expected")
