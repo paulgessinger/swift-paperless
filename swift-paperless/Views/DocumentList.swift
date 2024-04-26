@@ -155,7 +155,7 @@ class DocumentListViewModel: ObservableObject {
 struct DocumentList: View {
     var store: DocumentStore
     @Binding var navPath: NavigationPath
-    @Binding var filterState: FilterState
+    @ObservedObject var filterModel: FilterModel
 
     @State private var documentToDelete: Document?
 
@@ -164,11 +164,11 @@ struct DocumentList: View {
     @AppStorage(SettingsKeys.documentDeleteConfirmation)
     var documentDeleteConfirmation: Bool = true
 
-    init(store: DocumentStore, navPath: Binding<NavigationPath>, filterState: Binding<FilterState>, errorController: ErrorController) {
+    init(store: DocumentStore, navPath: Binding<NavigationPath>, filterModel: FilterModel, errorController: ErrorController) {
         self.store = store
         _navPath = navPath
-        _filterState = filterState
-        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterState.wrappedValue, errorController: errorController))
+        self.filterModel = filterModel
+        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterModel.filterState, errorController: errorController))
     }
 
     struct Cell: View {
@@ -319,14 +319,14 @@ struct DocumentList: View {
                         }
                         .listStyle(.plain)
                     } else {
-                        NoDocumentsView(filtering: filterState.filtering)
+                        NoDocumentsView(filtering: filterModel.filterState.filtering)
                             .equatable()
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     }
                 }
             }
 
-            .onChange(of: filterState) { filter in
+            .onChange(of: filterModel.filterState) { filter in
                 Task {
                     await viewModel.refresh(filter: filter)
                     withAnimation {
@@ -357,11 +357,17 @@ struct DocumentList: View {
             case .repositoryWillChange:
                 withAnimation {
                     viewModel.ready = false
+                    filterModel.ready = false
                 }
             case .repositoryChanged:
                 Task {
                     try? await Task.sleep(for: .seconds(0.5))
                     await viewModel.reload()
+                }
+                Task {
+                    filterModel.filterState.clear()
+                    try? await Task.sleep(for: .seconds(0.5))
+                    filterModel.ready = true
                 }
             }
         }

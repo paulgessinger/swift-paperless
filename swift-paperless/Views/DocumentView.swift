@@ -97,8 +97,6 @@ struct DocumentView: View {
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
 
-    @State private var filterBarVisible = true
-
     // @TODO: Separate view model which does the copying on a background thread
     func importFile(result: [URL], isSecurityScoped: Bool) {
         do {
@@ -153,7 +151,7 @@ struct DocumentView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             DocumentList(store: store, navPath: $navPath,
-                         filterState: $filterModel.filterState,
+                         filterModel: filterModel,
                          errorController: errorController)
 
                 .safeAreaInset(edge: .top) {
@@ -163,8 +161,8 @@ struct DocumentView: View {
 
                         FilterBar()
                             .padding(.bottom, 3)
-                            .opacity(filterBarVisible ? 1.0 : 0.0)
-                            .animation(.default, value: filterBarVisible)
+                            .opacity(filterModel.ready ? 1.0 : 0.0)
+                            .animation(.default, value: filterModel.ready)
                     }
 
                     .background(
@@ -327,20 +325,6 @@ struct DocumentView: View {
 
                 .sheet(isPresented: $showDataScanner, onDismiss: {}) {
                     DataScannerView()
-                }
-
-                .onReceive(store.documentEventPublisher) { event in
-                    switch event {
-                    case .repositoryWillChange:
-                        filterBarVisible = false
-                    case .repositoryChanged:
-                        filterModel.filterState.clear()
-                        Task {
-                            try? await Task.sleep(for: .seconds(0.5))
-                            filterBarVisible = true
-                        }
-                    default: break
-                    }
                 }
 
                 .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
