@@ -29,6 +29,8 @@ struct StoragePath: StoragePathProtocol, Model, Identifiable, Hashable, Named {
         case matchingAlgorithm = "matching_algorithm"
         case isInsensitive = "is_insensitive"
     }
+
+    static var localizedName: String { String(localized: .localizable.storagePath) }
 }
 
 struct ProtoStoragePath: StoragePathProtocol {

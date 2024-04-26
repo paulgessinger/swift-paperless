@@ -32,6 +32,8 @@ struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProto
         case matchingAlgorithm = "matching_algorithm"
         case isInsensitive = "is_insensitive"
     }
+
+    static var localizedName: String { String(localized: .localizable.correspondent) }
 }
 
 struct ProtoCorrespondent: Codable, CorrespondentProtocol, Hashable {

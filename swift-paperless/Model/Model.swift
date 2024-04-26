@@ -18,6 +18,8 @@ protocol MatchingModel {
 
 protocol Model: Identifiable {
     var id: UInt { get }
+
+    static var localizedName: String { get }
 }
 
 protocol Named {

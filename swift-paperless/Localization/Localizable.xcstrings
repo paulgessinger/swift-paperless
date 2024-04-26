@@ -1154,6 +1154,17 @@
         }
       }
     },
+    "document" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document"
+          }
+        }
+      }
+    },
     "documentAdd" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5932,6 +5943,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ASN"
+          }
+        }
+      }
+    },
+    "user" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User"
           }
         }
       }
