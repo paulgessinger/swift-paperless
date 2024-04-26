@@ -11,6 +11,14 @@ import SwiftUI
 struct ConnectionSelectionMenu: View {
     @ObservedObject var connectionManager: ConnectionManager
 
+    func isServerUnique(_ url: URL) -> Bool {
+        let allUrls = connectionManager.connections.values.map(\.url.absoluteString)
+        let url = url.absoluteString
+        let num = allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 }
+        print("ServerUnique: \(url) \(allUrls) -> \(num)")
+        return num == 1
+    }
+
     var body: some View {
         ForEach(connectionManager.connections.values.sorted(by: { $0.url.absoluteString < $1.url.absoluteString })) { conn in
             Button {
@@ -19,7 +27,8 @@ struct ConnectionSelectionMenu: View {
                 }
             } label: {
                 // Bit of a hack to have by-character line breaks
-                Text(conn.label.map { String($0) }.joined(separator: "\u{200B}"))
+                let label = isServerUnique(conn.url) ? conn.shortLabel : conn.label
+                Text(label.map { String($0) }.joined(separator: "\u{200B}"))
             }
             .disabled(conn.id == connectionManager.activeConnectionId)
         }

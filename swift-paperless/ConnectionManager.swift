@@ -61,7 +61,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         }
     }
 
-    var label: String {
+    var fullLabel: String {
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             Logger.api.error("Valid stored connection's URL could not be decomposed")
             return "\(user.username)@\(url)"
@@ -74,9 +74,39 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         return urlString
     }
 
+    var label: String {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.api.error("Valid stored connection's URL could not be decomposed")
+            return "\(user.username)@\(url)"
+        }
+
+        guard var urlString = components.host else {
+            return "\(user.username)@\(url)"
+        }
+
+        if components.path != "" {
+            urlString += "/\(components.path)"
+        }
+        return "\(user.username)@\(urlString)"
+    }
+
+    var shortLabel: String {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            Logger.api.error("Valid stored connection's URL could not be decomposed")
+            return "\(user.username)@\(url)"
+        }
+        guard var urlString = components.host else {
+            return "\(user.username)@\(url)"
+        }
+        if components.path != "" {
+            urlString += "/\(components.path)"
+        }
+        return urlString
+    }
+
     var redactedLabel: String {
         #if DEBUG
-            return label
+            return fullLabel
         #else
             let pid = ProcessInfo.processInfo.processIdentifier
 
