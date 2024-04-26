@@ -146,6 +146,22 @@ struct DocumentView: View {
         }
     }
 
+    private var savedViewNavigationTitle: String {
+        guard let id = filterModel.filterState.savedView else {
+            // No saved view active
+            return String(localized: .localizable.documents)
+        }
+        guard let savedView = store.savedViews[id] else {
+            Logger.shared.error("Active saved view id \(id) not found in saved views")
+            return String(localized: .localizable.documents)
+        }
+        if filterModel.filterState.modified {
+            return String(localized: .localizable.savedViewModified(savedView.name))
+        } else {
+            return savedView.name
+        }
+    }
+
     // MARK: Main View Body
 
     var body: some View {
@@ -199,6 +215,22 @@ struct DocumentView: View {
 
                 // MARK: Main toolbar
 
+                .toolbarTitleMenu {
+                    if !store.savedViews.isEmpty {
+                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
+                            Button {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    filterModel.filterState = .init(savedView: savedView)
+                                }
+                            } label: {
+                                Text(savedView.name)
+                            }
+                        }
+                    }
+                }
+
+                .navigationTitle(savedViewNavigationTitle)
+
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         TaskActivityToolbar()
@@ -225,9 +257,6 @@ struct DocumentView: View {
                         }
                     }
 
-                    ToolbarItem(placement: .principal) {
-                        LogoView()
-                    }
                     ToolbarItemGroup(placement: .navigationBarLeading) {
                         Menu {
                             NavigationLink(value: NavigationState.settings) {

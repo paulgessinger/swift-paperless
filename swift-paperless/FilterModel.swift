@@ -34,7 +34,7 @@ class FilterModel: ObservableObject {
     }() {
         didSet {
             Logger.shared.trace("FilterState modified")
-            if filterState == oldValue {
+            if filterState == oldValue, filterState.modified == oldValue.modified {
                 return
             }
 

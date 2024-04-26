@@ -34,7 +34,8 @@ private struct FilterMenu<Content: View>: View {
 
     @State private var showDeletePrompt = false
 
-    func saveSavedView(_: SavedView) {
+    private func saveSavedView() {
+        Logger.shared.info("Saving active saved view")
         guard let id = filterModel.filterState.savedView, var updated = store.savedViews[id] else {
             errorController.push(message: "Unable to save active saved view")
             return
@@ -48,65 +49,56 @@ private struct FilterMenu<Content: View>: View {
                 try await store.update(savedView: updated)
                 filterModel.filterState = .init(savedView: updated)
             } catch {
-                print(error)
+                Logger.shared.error("Error saving saved view: \(error)")
             }
         }
+        Logger.shared.info("Finished saving active saved view \(String(describing: updated))")
+    }
+
+    private var menuSavedViewSectionTitle: String {
+        if let savedViewId = filterModel.filterState.savedView, let savedView = store.savedViews[savedViewId] {
+            let indicator: String
+            if filterModel.filterState.modified {
+                indicator = String(localized: .localizable.savedViewModified(savedView.name))
+            } else {
+                indicator = savedView.name
+            }
+            return "\(String(localized: .localizable.savedView)): \(indicator)"
+        }
+        return String(localized: .localizable.savedViews)
     }
 
     var body: some View {
         VStack {
             Menu {
-                Section(String(localized: .localizable.savedViews)) {
-                    if !store.savedViews.isEmpty {
-                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }, id: \.id) { savedView in
-                            if filterModel.filterState.savedView == savedView.id {
-                                Menu {
-                                    if filterModel.filterState.modified {
-                                        Button(String(localized: .localizable.save)) { saveSavedView(savedView) }
-                                        Button {
-                                            filterModel.filterState = .init(savedView: savedView)
-                                        } label: {
-                                            Label(String(localized: .localizable.discardChanges), systemImage: "arrow.counterclockwise")
-                                        }
-                                    }
-                                    Button(String(localized: .localizable.delete), role: .destructive) {
-                                        showDeletePrompt = true
-                                    }
-                                } label: {
-                                    if filterModel.filterState.modified {
-                                        Label(String(localized: .localizable.savedViewModified(savedView.name)), systemImage: "checkmark")
-                                    } else {
-                                        Label(savedView.name, systemImage: "checkmark")
-                                    }
-                                }
-                            } else {
-                                Button {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        filterModel.filterState = .init(savedView: savedView)
-                                    }
-                                } label: {
-                                    Text(savedView.name)
-                                }
+                if filterModel.filterState.filtering, filterModel.filterState.modified {
+                    Section(menuSavedViewSectionTitle) {
+                        if let savedViewId = filterModel.filterState.savedView, let savedView = store.savedViews[savedViewId] {
+                            Button {
+                                saveSavedView()
+                            } label: {
+                                Label(String(localized: .localizable.save), systemImage: "square.and.arrow.down")
+                            }
+                            Button {
+                                filterModel.filterState = .init(savedView: savedView)
+                            } label: {
+                                Label(String(localized: .localizable.discardChanges), systemImage: "arrow.counterclockwise")
                             }
                         }
-                    }
-                }
 
-                Divider()
-                if filterState.filtering, filterState.savedView == nil || filterState.modified {
-                    Button {
-                        let proto = ProtoSavedView(
-                            name: "",
-                            sortField: filterModel.filterState.sortField,
-                            sortOrder: filterModel.filterState.sortOrder,
-                            filterRules: filterModel.filterState.rules
-                        )
+                        Button {
+                            let proto = ProtoSavedView(
+                                name: "",
+                                sortField: filterModel.filterState.sortField,
+                                sortOrder: filterModel.filterState.sortOrder,
+                                filterRules: filterModel.filterState.rules
+                            )
 
-                        savedView = proto
-                        //                    showSavedViewModal = true
+                            savedView = proto
 
-                    } label: {
-                        Label(String(localized: .localizable.add), systemImage: "plus.circle")
+                        } label: {
+                            Label(String(localized: .localizable.add), systemImage: "plus.circle")
+                        }
                     }
                 }
 
@@ -410,17 +402,7 @@ struct FilterBar: View {
                 Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
                     Label(String(localized: .localizable.filtering), systemImage: "line.3.horizontal.decrease")
                         .labelStyle(.iconOnly)
-                    if let savedViewId = filterState.savedView,
-                       let savedView = store.savedViews[savedViewId]
-                    {
-                        if filterState.modified {
-                            Text(String(localized: .localizable.savedViewModified(savedView.name)))
-                        } else {
-                            Text(savedView.name)
-                        }
-                    } else if filterState.ruleCount > 0 {
-                        CircleCounter(value: filterState.ruleCount)
-                    }
+                    CircleCounter(value: filterState.ruleCount)
                 }
                 .opacity(filterMenuHit ? 0.5 : 1.0)
                 .overlay {

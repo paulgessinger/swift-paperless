@@ -1529,6 +1529,17 @@
         }
       }
     },
+    "documents" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents"
+          }
+        }
+      }
+    },
     "documentScanErrorCreatePageFailed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3917,7 +3928,7 @@
       }
     },
     "savedViewModified" : {
-      "comment" : "Indicates modified saved view in the filter bar",
+      "comment" : "Indicates modified saved view in the saved view menu",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
