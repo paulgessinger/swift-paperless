@@ -14,9 +14,7 @@ struct ConnectionSelectionMenu: View {
     func isServerUnique(_ url: URL) -> Bool {
         let allUrls = connectionManager.connections.values.map(\.url.absoluteString)
         let url = url.absoluteString
-        let num = allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 }
-        print("ServerUnique: \(url) \(allUrls) -> \(num)")
-        return num == 1
+        return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
     }
 
     var body: some View {
