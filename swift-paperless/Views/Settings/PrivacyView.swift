@@ -9,7 +9,7 @@ import MarkdownUI
 import SwiftUI
 
 struct PrivacyView: View {
-    private static let url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/privacy.md")!
+    private static let url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/docs/privacy.md")!
 
     @State var text: String? = nil
 
