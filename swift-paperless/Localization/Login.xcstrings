@@ -341,6 +341,17 @@
         }
       }
     },
+    "errorLocalNetworkDenied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app has not been granted access to the local network."
+          }
+        }
+      }
+    },
     "errorLoginInvalid" : {
       "extractionState" : "manual",
       "localizations" : {

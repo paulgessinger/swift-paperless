@@ -30,14 +30,8 @@ private struct TokenResponse: Decodable {
 }
 
 private struct DetailsView: View {
-//    @ObservedObject var connectionManager: ConnectionManager
     @Binding var extraHeaders: [ConnectionManager.HeaderValue]
     @Environment(\.dismiss) private var dismiss
-
-//    init(connectionManager: ConnectionManager) {
-//        self.connectionManager = connectionManager
-//        _extraHeaders = State(initialValue: connectionManager.extraHeaders)
-//    }
 
     var body: some View {
         NavigationStack {
@@ -120,6 +114,35 @@ struct LoginView: View {
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
+    private static func isLocalNetworkDenied(_ error: NSError) -> Bool {
+        Logger.shared.debug("Checking API NSError: \(error)")
+        guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else {
+            return false
+        }
+        Logger.shared.debug("Checking API underlying NSError: \(underlying)")
+
+        guard let reason = (underlying.userInfo["_NSURLErrorNWPathKey"] as? NSObject)?.value(forKey: "reason") as? Int else {
+            return false
+        }
+
+        Logger.shared.debug("Unsatisfied reason code is: \(reason)")
+        return reason == 29
+    }
+
+    private static func isLocalAddress(_ url: String) -> Bool {
+        guard let components = URLComponents(string: url), let host = components.host else {
+            return false
+        }
+
+        guard let match = try? /(\d+)\.(\d+)\.(\d+)\.(\d+)/.wholeMatch(in: host) else {
+            return false
+        }
+
+        let ip = (UInt(match.1)!, UInt(match.2)!, UInt(match.3)!, UInt(match.4)!)
+
+        return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
+    }
+
     private func checkUrl(string value: String) async {
         Logger.shared.notice("Checking backend URL \(value)")
         guard !value.isEmpty else {
@@ -142,6 +165,7 @@ struct LoginView: View {
         do {
             Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
+
             let (data, response) = try await URLSession.shared.getData(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
@@ -152,6 +176,11 @@ struct LoginView: View {
 
             let _ = try JSONDecoder().decode(Response.self, from: data)
             urlState = .valid
+
+        } catch let error as NSError where LoginView.isLocalNetworkDenied(error) {
+            Logger.shared.error("Unable to connect to API: local network access denied")
+            urlState = .error(info: String(localized:
+                .login.errorLocalNetworkDenied))
         } catch {
             Logger.shared.error("Checking API error: \(error)")
             urlState = .error(info: String(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
@@ -270,7 +299,7 @@ struct LoginView: View {
                             }
                         }
 
-                        if url.debouncedText.starts(with: "http://") {
+                        if url.debouncedText.starts(with: "http://"), !LoginView.isLocalAddress(url.debouncedText) {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
                                 Text(.login.httpWarning)
