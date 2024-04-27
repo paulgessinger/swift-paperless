@@ -1,4 +1,6 @@
 site_name: Swift Paperless
+site_url: https://paulgessinger.github.io/swift-paperless/
+
 
 theme: material
 
