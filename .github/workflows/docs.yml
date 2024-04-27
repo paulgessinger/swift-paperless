@@ -30,7 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Build documentation
-        runs: |
+        run: |
           pip install -r docs/requirements.txt
           mkdocs build
 
