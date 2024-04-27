@@ -356,9 +356,6 @@ struct DocumentView: View {
                         callback: {
                             showCreateModal = false
                             Task { await store.fetchTasks() }
-                        },
-                        title: {
-                            Text(.localizable.documentAdd)
                         }
                     )
                     .environmentObject(store)

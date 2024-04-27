@@ -8,7 +8,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct CreateDocumentView<Title: View>: View {
+struct CreateDocumentView: View {
     private enum Status {
         case none
         case uploading
@@ -17,7 +17,6 @@ struct CreateDocumentView<Title: View>: View {
     }
 
     let sourceUrl: URL
-    private var title: () -> Title
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
@@ -29,10 +28,9 @@ struct CreateDocumentView<Title: View>: View {
     let callback: () -> Void
     let share: Bool
 
-    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, @ViewBuilder title: @escaping () -> Title = { LogoView() }) {
+    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false) {
         sourceUrl = url
         _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
-        self.title = title
         self.callback = callback
         self.share = share
     }
@@ -144,6 +142,7 @@ struct CreateDocumentView<Title: View>: View {
                                 document: $document,
                                 store: store
                             )
+                            .navigationTitle(Text(.localizable.documentType))
                         }) {
                             HStack {
                                 Text(.localizable.documentType)
@@ -156,7 +155,6 @@ struct CreateDocumentView<Title: View>: View {
                                     }
                                 }
                                 .foregroundColor(.gray)
-                                .navigationTitle(Text(.localizable.documentType))
                             }
                         }
 
@@ -196,12 +194,12 @@ struct CreateDocumentView<Title: View>: View {
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    title()
-                }
 
+            .navigationBarTitleDisplayMode(.inline)
+
+            .navigationTitle(String(localized: .localizable.documentAdd))
+
+            .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     switch status {
                     case .none:
