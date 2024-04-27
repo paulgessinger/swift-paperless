@@ -2332,6 +2332,18 @@
         }
       }
     },
+    "errorMoreInfo" : {
+      "comment" : "Shown in error detail popup in case an error has documentation attached",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More info"
+          }
+        }
+      }
+    },
     "excludeElement" : {
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",

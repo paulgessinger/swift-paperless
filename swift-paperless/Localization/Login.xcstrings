@@ -342,12 +342,13 @@
       }
     },
     "errorLocalNetworkDenied" : {
+      "comment" : "Variable gets replaced with documentation URL",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The app has not been granted access to the local network."
+            "value" : "The app has not been granted access to the local network. See [here](%@) for details."
           }
         }
       }

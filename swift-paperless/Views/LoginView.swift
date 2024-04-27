@@ -72,7 +72,7 @@ struct LoginView: View {
         case empty
         case checking
         case valid
-        case error(info: String)
+        case error(info: AttributedString)
     }
 
     @State private var urlState = UrlState.empty
@@ -153,7 +153,7 @@ struct LoginView: View {
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
             Logger.shared.notice("Cannot convert to URL: \(value)")
-            urlState = .error(info: String(localized: .login.errorCouldNotConvertURL(value)))
+            urlState = .error(info: AttributedString(localized: .login.errorCouldNotConvertURL(value)))
             return
         }
 
@@ -170,7 +170,7 @@ struct LoginView: View {
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                urlState = .error(info: String(localized: .login.errorInvalidResponse(value, statusCode)))
+                urlState = .error(info: AttributedString(localized: .login.errorInvalidResponse(value, statusCode)))
                 return
             }
 
@@ -178,12 +178,13 @@ struct LoginView: View {
             urlState = .valid
 
         } catch let error as NSError where LoginView.isLocalNetworkDenied(error) {
+            print(DocumentationLinks.localNetworkDenied.absoluteString)
             Logger.shared.error("Unable to connect to API: local network access denied")
-            urlState = .error(info: String(localized:
-                .login.errorLocalNetworkDenied))
+            urlState = .error(info: AttributedString(localized:
+                .login.errorLocalNetworkDenied(DocumentationLinks.localNetworkDenied.absoluteString)))
         } catch {
             Logger.shared.error("Checking API error: \(error)")
-            urlState = .error(info: String(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
+            urlState = .error(info: AttributedString(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
             return
         }
     }

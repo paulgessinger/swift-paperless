@@ -130,6 +130,10 @@ struct ErrorDisplay: ViewModifier {
                            UIPasteboard.general.string = detail.details
                        }
 
+                       if let link = detail.documentationLink {
+                           Link(String(localized: .localizable.errorMoreInfo), destination: link)
+                       }
+
                        Button(String(localized: .localizable.ok), role: .cancel) {}
                    },
                    message: { $detail in
@@ -156,6 +160,11 @@ extension View {
 protocol DisplayableError: Error {
     var message: String { get }
     var details: String? { get }
+    var documentationLink: URL? { get }
+}
+
+extension DisplayableError {
+    var documentationLink: URL? { nil }
 }
 
 struct GenericError: DisplayableError {

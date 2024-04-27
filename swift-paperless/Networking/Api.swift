@@ -39,6 +39,8 @@ struct ResourceForbidden<Resource: Model>: DisplayableError {
     var details: String? {
         String(localized: .localizable.apiForbiddenDetails(Resource.localizedName, response))
     }
+
+    var documentationLink: URL? { DocumentationLinks.forbidden }
 }
 
 actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Model & Decodable & Sendable {
