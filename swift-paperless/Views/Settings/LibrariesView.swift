@@ -14,7 +14,9 @@ struct LibrariesView: View {
     init() {
         let filepath = Bundle.main.path(forResource: "libraries", ofType: "md")!
         do {
-            text = try String(contentsOfFile: filepath)
+            let raw = try String(contentsOfFile: filepath)
+            let begin = raw.range(of: "---")!.upperBound
+            text = String(raw.suffix(from: begin))
         } catch {
             fatalError(String(localized: .settings.detailsLibrariesLoadError))
         }
@@ -30,8 +32,6 @@ struct LibrariesView: View {
     }
 }
 
-struct LibrariesView_Previews: PreviewProvider {
-    static var previews: some View {
-        LibrariesView()
-    }
+#Preview {
+    LibrariesView()
 }
