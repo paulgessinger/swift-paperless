@@ -124,6 +124,7 @@
 		7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C139029ABFC3F00D71F51 /* TagView.swift */; };
 		7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B62A63D6E2009E86CE /* TaskModel.swift */; };
 		7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
+		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
@@ -157,8 +158,6 @@
 		7A9086F32BC31055006FC837 /* ErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E07D29F46C950092948B /* ErrorController.swift */; };
 		7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
-		7AB0576E2AA3934C00ABA6B1 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7AB0576D2AA3934C00ABA6B1 /* libraries.md */; };
-		7AB0576F2AA3934C00ABA6B1 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7AB0576D2AA3934C00ABA6B1 /* libraries.md */; };
 		7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057702AA481A700ABA6B1 /* LibrariesView.swift */; };
 		7AB057752AA482D200ABA6B1 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB057742AA482D200ABA6B1 /* MarkdownUI */; };
 		7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */; };
@@ -314,6 +313,7 @@
 		7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
+		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
 		7A6F31DC29DE936C00186A87 /* generate_filterrules.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = generate_filterrules.py; sourceTree = SOURCE_ROOT; };
 		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
@@ -327,7 +327,6 @@
 		7A8E1F7D2A1A8F7D002A7CB3 /* DocumentTypeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTypeModel.swift; sourceTree = "<group>"; };
 		7A8E1F812A1A8F90002A7CB3 /* TagModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagModel.swift; sourceTree = "<group>"; };
 		7A8E1F852A1A8FD4002A7CB3 /* SavedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewModel.swift; sourceTree = "<group>"; };
-		7AB0576D2AA3934C00ABA6B1 /* libraries.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = libraries.md; sourceTree = "<group>"; };
 		7AB057702AA481A700ABA6B1 /* LibrariesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrariesView.swift; sourceTree = "<group>"; };
 		7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagers.swift; sourceTree = "<group>"; };
 		7AB057792AA48BA700ABA6B1 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
@@ -447,6 +446,7 @@
 			children = (
 				7AA6A2C42B8266F70023EF0C /* ci_scripts */,
 				7A5482AD299AD56C00D5061E /* swift-paperless */,
+				7A64771B2BDD50D200217C18 /* libraries.md */,
 				7A5482BF299AD56E00D5061E /* swift-paperlessTests */,
 				7A5482C9299AD56E00D5061E /* swift-paperlessUITests */,
 				7A4AA8E529BB969400D845A2 /* ShareExtension */,
@@ -493,7 +493,6 @@
 				7A4648062A1D5AED00078968 /* DateDecodingError.swift */,
 				7AFD3F5F2A87F482002789C2 /* FilterModel.swift */,
 				7AFB7BA62A89773B0013196B /* SettingsKeys.swift */,
-				7AB0576D2AA3934C00ABA6B1 /* libraries.md */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -808,7 +807,6 @@
 				7A2E120E2B14B9C900E7704A /* Localizable.xcstrings in Resources */,
 				7AEBB5492B26597500845B73 /* Matching.xcstrings in Resources */,
 				7A4AA8EA29BB969400D845A2 /* MainInterface.storyboard in Resources */,
-				7AB0576F2AA3934C00ABA6B1 /* libraries.md in Resources */,
 				7A1460E92B19F76D0074BAAB /* Settings.xcstrings in Resources */,
 				7AF0C7DF2BAF6ED300FCD5AA /* PrivacyInfo.xcprivacy in Resources */,
 				7A1460F42B19F8380074BAAB /* Login.xcstrings in Resources */,
@@ -824,10 +822,10 @@
 				7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */,
 				7AEBB5392B26589700845B73 /* Matching.xcstrings in Resources */,
 				7A4D9F3829D4B78500B25A63 /* demo.pdf in Resources */,
-				7AB0576E2AA3934C00ABA6B1 /* libraries.md in Resources */,
 				7A1460F32B19F8380074BAAB /* Login.xcstrings in Resources */,
 				7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */,
 				7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */,
+				7A64771C2BDD50D200217C18 /* libraries.md in Resources */,
 				7A2E120D2B14B9C900E7704A /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

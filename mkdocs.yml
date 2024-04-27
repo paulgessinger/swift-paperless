@@ -1,0 +1,14 @@
+site_name: Swift Paperless
+
+theme: material
+
+repo_url: https://github.com/paulgessinger/swift-paperless
+
+plugins:
+  - privacy
+
+markdown_extensions:
+  - pymdownx.snippets:
+
+extra_css:
+  - extra.css

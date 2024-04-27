@@ -15,11 +15,12 @@ struct PrivacyView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            if let text {
-                Markdown(text)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-            } else {
+            Markdown(text ?? "")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+        }
+        .overlay {
+            if text == nil {
                 ProgressView(String(localized: .localizable.loading))
             }
         }
@@ -28,9 +29,11 @@ struct PrivacyView: View {
             do {
                 let request = URLRequest(url: PrivacyView.url)
                 let (data, _) = try await URLSession.shared.getData(for: request)
-                text = String(decoding: data, as: UTF8.self)
+                withAnimation {
+                    text = String(decoding: data, as: UTF8.self)
+                }
             } catch {
-                await MainActor.run {
+                withAnimation {
                     text = String(localized: .settings.detailsPrivacyLoadError(PrivacyView.url.absoluteString))
                 }
             }
@@ -38,8 +41,6 @@ struct PrivacyView: View {
     }
 }
 
-struct PrivacyView_Previews: PreviewProvider {
-    static var previews: some View {
-        PrivacyView()
-    }
+#Preview {
+    PrivacyView()
 }
