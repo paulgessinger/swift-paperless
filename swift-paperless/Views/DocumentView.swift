@@ -243,26 +243,28 @@ struct DocumentView: View {
 
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
-                        TaskActivityToolbar()
+                        HStack {
+                            TaskActivityToolbar()
 
-                        if DocumentScannerView.isAvailable {
-                            Menu {
-                                Button {
-                                    showDocumentScanner = true
+                            if DocumentScannerView.isAvailable {
+                                Menu {
+                                    Button {
+                                        showDocumentScanner = true
+                                    } label: {
+                                        Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                                    }
+                                    Button {
+                                        showFileImporter = true
+                                    } label: {
+                                        Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
+                                    }
                                 } label: {
-                                    Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                                    Label(String(localized: .localizable.add), systemImage: "plus")
                                 }
-                                Button {
+                            } else {
+                                Button(String(localized: .localizable.add), systemImage: "plus") {
                                     showFileImporter = true
-                                } label: {
-                                    Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
                                 }
-                            } label: {
-                                Label(String(localized: .localizable.add), systemImage: "plus")
-                            }
-                        } else {
-                            Button(String(localized: .localizable.add), systemImage: "plus") {
-                                showFileImporter = true
                             }
                         }
                     }
