@@ -91,7 +91,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
         }
 
         guard let url = nextPage else {
-            Logger.api.notice("\(Element.self) API sequence has reached end (nextPage is nil)")
+            Logger.api.notice("\(Element.self, privacy: .public) API sequence has reached end (nextPage is nil)")
             hasMore = false
             return nil
         }
@@ -101,7 +101,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             let decoded = try await repository.fetchData(for: request, as: ListResponse<Element>.self)
 
             guard !decoded.results.isEmpty else {
-                Logger.api.notice("\(Element.self) API sequence fetch was empty")
+                Logger.api.notice("\(Element.self, privacy: .public) API sequence fetch was empty")
                 hasMore = false
                 return nil
             }
@@ -118,11 +118,11 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: 
             return decoded.results[0]
 
         } catch let RequestError.forbidden(details) {
-            Logger.api.error("Error in \(Element.self) API sequence: Forbidden")
+            Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: Forbidden")
             throw ResourceForbidden(Element.self, response: details)
         } catch {
             let sanitizedError = await repository.sanitizedError(error)
-            Logger.api.error("Error in \(Element.self) API sequence: \(sanitizedError, privacy: .public)")
+            Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: \(sanitizedError, privacy: .public)")
             throw error
         }
     }
