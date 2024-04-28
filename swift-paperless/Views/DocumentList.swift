@@ -34,7 +34,6 @@ struct LoadingDocumentList: View {
         }
         .environmentObject(store)
         .task {
-//            documents = await store.fetchDocuments(clear: true, filter: FilterState(), pageSize: 10)
             documents = try! await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
         }
     }
@@ -71,9 +70,6 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func load() async {
-//        guard let source else {
-//
-//        }
         guard documents.isEmpty, !loading else { return }
         loading = true
         do {
@@ -130,12 +126,10 @@ class DocumentListViewModel: ObservableObject {
         }
     }
 
-    @MainActor
     func removed(document: Document) {
         documents.removeAll(where: { $0.id == document.id })
     }
 
-    @MainActor
     func updated(document: Document) {
         if let target = documents.firstIndex(where: { $0.id == document.id }) {
             documents[target] = document
@@ -329,15 +323,14 @@ struct DocumentList: View {
             .onChange(of: filterModel.filterState) { filter in
                 Task {
                     await viewModel.refresh(filter: filter)
-                    withAnimation {
-                        if let document = viewModel.documents.first {
-                            proxy.scrollTo(document.id, anchor: .top)
-                        }
+                    if let document = viewModel.documents.first {
+                        proxy.scrollTo(document.id, anchor: .top)
                     }
                 }
             }
 
-            .animation(.default, value: viewModel.documents)
+            // @TODO: Re-evaluate if we want an animation here
+//            .animation(.default, value: viewModel.documents)
         }
         .refreshable {
             Task { await viewModel.refresh() }
