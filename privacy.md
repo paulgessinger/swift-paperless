@@ -1,6 +1,6 @@
 # Privacy
 
-SwiftPaperless does not collect any data from users. Login data provided during setup
+Swift Paperless does not collect any data from users. Login data provided during setup
 is only ever send to the instance of [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)
 given in the URL field.
 Documents shared with the app via the share sheet extensions are only ever uploaded

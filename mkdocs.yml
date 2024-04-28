@@ -1,16 +1,26 @@
 site_name: Swift Paperless
-site_url: https://paulgessinger.github.io/swift-paperless/
+site_url: https://swift-paperless.gessinger.dev
 
-
-theme: material
+theme:
+  name: material
 
 repo_url: https://github.com/paulgessinger/swift-paperless
 
 plugins:
   - privacy
+  - exclude:
+      glob:
+        - "requirements.*"
+  - literate-nav
 
 markdown_extensions:
   - pymdownx.snippets:
 
 extra_css:
   - extra.css
+
+nav:
+  - index.md
+  - Common Issues: common-issues/
+  - privacy.md
+  - libraries.md

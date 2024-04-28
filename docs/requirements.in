@@ -1,3 +1,5 @@
 mkdocs
 mkdocs-material
 pymdown-extensions
+mkdocs-literate-nav
+mkdocs-exclude
