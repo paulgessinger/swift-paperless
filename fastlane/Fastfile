@@ -36,7 +36,15 @@ platform :ios do
 
     last_tag = last_git_tag()
 
-    changelog = sh("./changelog.py", last_tag)
+    changelog = sh("git", "cliff", "--unreleased", "--strip=header")
+
+    changelog.prepend(<<HEADER
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+HEADER
+    )
 
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
