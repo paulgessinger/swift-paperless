@@ -334,11 +334,12 @@ struct DocumentEditView: View {
             .task {
                 do {
                     let store = store
-                    async let _ = try await store.fetchAll()
+                    async let all: Void = store.fetchAll()
                     let suggestions = await store.repository.suggestions(documentId: document.id)
                     withAnimation {
                         self.suggestions = suggestions
                     }
+                    try await all
                 } catch {
                     errorController.push(error: error)
                 }
