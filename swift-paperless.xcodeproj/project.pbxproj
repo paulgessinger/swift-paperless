@@ -1070,7 +1070,7 @@
 /* Begin PBXTargetDependency section */
 		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
+			productRef = 7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1089,15 +1089,15 @@
 		};
 		7A56F2402B826F5E00BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */;
+			productRef = 7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */;
 		};
 		7A56F2422B826F6300BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
+			productRef = 7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */;
 		};
 		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */;
+			productRef = 7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1632,7 +1632,7 @@
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
 		};
-		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
+		7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1647,12 +1647,12 @@
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
 		};
-		7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */ = {
+		7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */ = {
+		7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1682,7 +1682,7 @@
 			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
 		};
-		7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */ = {
+		7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";

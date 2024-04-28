@@ -36,7 +36,7 @@ platform :ios do
 
     last_tag = last_git_tag()
 
-    changelog = sh("git", "cliff", "--unreleased", "--strip=header")
+    changelog = sh("git", "cliff", "--unreleased", "--strip", "header")
 
     changelog.prepend(<<HEADER
 PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
