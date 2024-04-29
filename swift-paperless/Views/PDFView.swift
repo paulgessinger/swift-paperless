@@ -63,7 +63,7 @@ struct PDFPreview: View {
 }
 
 struct PDFThumbnail: View {
-    private let document: PDFDocument
+    let document: PDFDocument
     let aspectRatio: CGFloat
 
     let file: URL

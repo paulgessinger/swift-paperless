@@ -93,7 +93,8 @@ struct DocumentView: View {
     @State private var isDocumentScannerAvailable = false
     @State private var showDocumentScanner = false
     @State private var showCreateModal = false
-    @State private var importUrl: URL?
+    @State private var importUrls: [URL] = []
+    @State private var totalUrls = 0
     @State private var logoutRequested = false
 
     @State private var showPhotosPicker = false
@@ -105,37 +106,78 @@ struct DocumentView: View {
     // @TODO: Separate view model which does the copying on a background thread
     func importFile(result: [URL], isSecurityScoped: Bool) {
         do {
-            guard let selectedFile: URL = result.first else { return }
-
             showFileImporter = false
             showDocumentScanner = false
 
-            if isSecurityScoped {
-                if selectedFile.startAccessingSecurityScopedResource() {
-                    defer { selectedFile.stopAccessingSecurityScopedResource() }
+            var images: [UIImage] = []
 
-                    let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-                    let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
+            for selectedFile in result {
+                if isSecurityScoped {
+                    if selectedFile.startAccessingSecurityScopedResource() {
+                        defer { selectedFile.stopAccessingSecurityScopedResource() }
 
-                    if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
-                        try FileManager.default.removeItem(at: temporaryFileURL)
+                        let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+                        let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
+
+                        if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
+                            try FileManager.default.removeItem(at: temporaryFileURL)
+                        }
+
+                        // Try to find out what we got
+                        guard let typeID = try selectedFile.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier, let supertypes = UTType(typeID)?.supertypes else {
+                            Logger.shared.error("Unable to get structured type info for imported file")
+                            errorController.push(message: String(localized: .localizable.errorDefaultMessage))
+                            return
+                        }
+
+                        Logger.shared.debug("Have structured type info: \(supertypes)")
+                        if supertypes.contains(.image) {
+                            Logger.shared.debug("Have image")
+                            let data = try Data(contentsOf: selectedFile)
+                            if let image = UIImage(data: data) {
+                                images.append(image)
+                            } else {
+                                Logger.shared.error("Could not load image from: \(selectedFile)")
+                            }
+                        } else {
+                            Logger.shared.debug("Have PDF -> copy file ")
+                            try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
+                            importUrls.append(temporaryFileURL)
+                            totalUrls += 1
+                        }
+
+                    } else {
+                        Logger.shared.error("Document import: Access denied")
+                        errorController.push(message: String(localized: .localizable.errorDefaultMessage))
                     }
-                    try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
-
-                    importUrl = temporaryFileURL
-                    showCreateModal = true
                 } else {
-                    Logger.shared.error("Document import: Access denied")
-                    errorController.push(message: String(localized: .localizable.errorDefaultMessage))
+                    importUrls.append(selectedFile)
+                    totalUrls += 1
                 }
-            } else {
-                importUrl = selectedFile
-                showCreateModal = true
             }
+
+            if !images.isEmpty {
+                let pdf = try createPDFFrom(images: images)
+                importUrls.append(pdf)
+                totalUrls += 1
+            }
+
+            showCreateModal = true
         } catch {
             // Handle failure.
             Logger.shared.error("Unable to read file contents: \(error)")
             errorController.push(error: error)
+        }
+    }
+
+    private func createCallback() {
+        Task { await store.fetchTasks() }
+        if !importUrls.isEmpty {
+            importUrls.removeFirst()
+        }
+        if importUrls.isEmpty {
+            showCreateModal = false
+            totalUrls = 0
         }
     }
 
@@ -164,6 +206,15 @@ struct DocumentView: View {
             return String(localized: .localizable.savedViewModified(savedView.name))
         } else {
             return savedView.name
+        }
+    }
+
+    private var createDocumentTitle: String {
+        let remaining = totalUrls - importUrls.count + 1
+        if totalUrls > 1 {
+            return "\(String(localized: .localizable.documentAdd)) (\(remaining) / \(totalUrls))"
+        } else {
+            return String(localized: .localizable.documentAdd)
         }
     }
 
@@ -332,8 +383,8 @@ struct DocumentView: View {
                 .navigationBarTitleDisplayMode(.inline)
 
                 .fileImporter(isPresented: $showFileImporter,
-                              allowedContentTypes: [.pdf],
-                              allowsMultipleSelection: false,
+                              allowedContentTypes: [.pdf, .image],
+                              allowsMultipleSelection: true,
                               onCompletion: { result in
                                   switch result {
                                   case let .success(urls):
@@ -357,15 +408,19 @@ struct DocumentView: View {
                     .ignoresSafeArea()
                 }
 
-                .sheet(isPresented: $showCreateModal) { [importUrl] in
-                    CreateDocumentView(
-                        sourceUrl: importUrl!,
-                        callback: {
-                            showCreateModal = false
-                            Task { await store.fetchTasks() }
-                        }
-                    )
-                    .environmentObject(store)
+                .sheet(isPresented: $showCreateModal, onDismiss: {
+                    importUrls = []
+                    totalUrls = 0
+                }) {
+                    if let url = importUrls.first {
+                        CreateDocumentView(
+                            sourceUrl: url,
+                            callback: createCallback,
+                            title: createDocumentTitle
+                        )
+                        .id(url)
+                        .environmentObject(store)
+                    }
                 }
 
                 .sheet(isPresented: $showDataScanner, onDismiss: {}) {

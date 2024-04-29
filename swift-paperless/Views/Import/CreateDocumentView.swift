@@ -29,12 +29,15 @@ struct CreateDocumentView: View {
     let share: Bool
     let title: String
 
+    private var thumbnailView: PDFThumbnail
+
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, title: String = String(localized: .localizable.documentAdd)) {
         sourceUrl = url
         _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
         self.callback = callback
         self.share = share
         self.title = title
+        thumbnailView = PDFThumbnail(file: sourceUrl)!
     }
 
     func upload() async {
@@ -77,7 +80,7 @@ struct CreateDocumentView: View {
             VStack {
                 HStack {
                     Group {
-                        PDFThumbnail(file: sourceUrl)
+                        thumbnailView
                             .background(.white)
                             .frame(width: 100, height: 100, alignment: .top)
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -85,7 +88,12 @@ struct CreateDocumentView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .stroke(.gray, lineWidth: 1))
 
-                    Text(document.title)
+                    VStack(alignment: .leading) {
+                        Text(document.title)
+                            .font(.headline)
+                        Text(.localizable.pages(thumbnailView.document.pageCount))
+                            .font(.subheadline)
+                    }
                     Spacer()
                 }
                 .padding()
