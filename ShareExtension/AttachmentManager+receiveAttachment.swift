@@ -23,6 +23,23 @@ extension AttachmentManager {
                 case let url as URL:
                     Logger.shared.info("Received url \(url)")
                     continuation.resume(returning: url)
+                case let data as NSData:
+                    Logger.shared.info("Received data \(data.count)")
+                    guard type == "com.adobe.pdf" else {
+                        Logger.shared.error("Type is \(type, privacy: .public), unable to add extension")
+                        fallthrough
+                    }
+
+                    let url = FileManager.default.temporaryDirectory
+                        .appending(component: formattedImportFilename(prefix: "Import"))
+                        .appendingPathExtension("pdf")
+
+                    do {
+                        try data.write(to: url)
+                        continuation.resume(returning: url)
+                    } catch {
+                        Logger.shared.error("Unable to store data to temporary file")
+                    }
                 default:
                     Logger.shared.error("Got attachment data \(String(describing: data)) but cannot handle")
                     continuation.resume(throwing: InvalidAttachmentContent())
@@ -49,7 +66,7 @@ extension AttachmentManager {
                         let url = try await Self.loadItem(attachment: attachment, type: "com.adobe.pdf")
                         importUrls.append(url)
                     } catch {
-                        Logger.shared.error("Error getting PDF attachment")
+                        Logger.shared.error("Error getting PDF attachment: \(error)")
                         self.error = .invalidAttachment
                     }
                 }
@@ -74,12 +91,14 @@ extension AttachmentManager {
                 }
             }
 
-            do {
-                let pdf = try createPDFFrom(images: images)
-                Logger.shared.notice("Created PDF from \(images.count) images")
-                importUrls.append(pdf)
-            } catch {
-                Logger.shared.error("Could not create PDF from images: \(error)")
+            if !images.isEmpty {
+                do {
+                    let pdf = try createPDFFrom(images: images)
+                    Logger.shared.notice("Created PDF from \(images.count) images")
+                    importUrls.append(pdf)
+                } catch {
+                    Logger.shared.error("Could not create PDF from images: \(error)")
+                }
             }
         }
     }

@@ -50,6 +50,15 @@ struct ShareView: View {
         }
     }
 
+    private var createTitle: String {
+        let remaining = totalInputs - attachmentManager.importUrls.count + 1
+        if totalInputs == 1 {
+            return String(localized: .localizable.documentAdd)
+        } else {
+            return "\(String(localized: .localizable.documentAdd)) (\(remaining) / \(totalInputs))"
+        }
+    }
+
     var body: some View {
         Group {
             if connectionManager.connection != nil {
@@ -58,14 +67,12 @@ struct ShareView: View {
                 }
 
                 if let url = attachmentManager.importUrls.first {
-                    let remaining = totalInputs - attachmentManager.importUrls.count + 1
-                    let title = "\(String(localized: .localizable.documentAdd)) (\(remaining) / \(totalInputs))"
                     VStack {
                         CreateDocumentView(
                             sourceUrl: url,
                             callback: internalCallback,
                             share: true,
-                            title: title
+                            title: createTitle
                         )
                         .id(url)
                         // @FIXME: Gives a white band at the bottom, not ideal
