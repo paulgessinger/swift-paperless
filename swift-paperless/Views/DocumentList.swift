@@ -111,7 +111,7 @@ class DocumentListViewModel: ObservableObject {
         }
     }
 
-    func refresh(filter: FilterState? = nil, retain: Bool = false) async {
+    func refresh(filter: FilterState? = nil, retain: Bool = false) async throws -> [Document] {
         if let filter {
             filterState = filter
         }
@@ -119,11 +119,16 @@ class DocumentListViewModel: ObservableObject {
         source = store.repository.documents(filter: filterState)
         do {
             let batch = try await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
-            documents = batch
+            return batch
         } catch {
             Logger.shared.error("DocumentList failed to refresh: \(error)")
             errorController.push(error: error)
+            throw error
         }
+    }
+
+    func replace(documents: [Document]) {
+        self.documents = documents
     }
 
     func removed(document: Document) {
@@ -322,9 +327,11 @@ struct DocumentList: View {
 
             .onChange(of: filterModel.filterState) { filter in
                 Task {
-                    await viewModel.refresh(filter: filter)
-                    if let document = viewModel.documents.first {
-                        proxy.scrollTo(document.id, anchor: .top)
+                    if let documents = try? await viewModel.refresh(filter: filter) {
+                        viewModel.replace(documents: documents)
+                        if let document = viewModel.documents.first {
+                            proxy.scrollTo(document.id, anchor: .top)
+                        }
                     }
                 }
             }
@@ -333,7 +340,13 @@ struct DocumentList: View {
 //            .animation(.default, value: viewModel.documents)
         }
         .refreshable {
-            Task { await viewModel.refresh() }
+            Task {
+                if let documents = try? await viewModel.refresh() {
+                    withAnimation {
+                        viewModel.replace(documents: documents)
+                    }
+                }
+            }
         }
         .task {
             await viewModel.load()
@@ -342,11 +355,19 @@ struct DocumentList: View {
         .onReceive(store.documentEventPublisher) { event in
             switch event {
             case let .deleted(document):
-                viewModel.removed(document: document)
+                withAnimation {
+                    viewModel.removed(document: document)
+                }
             case let .changed(document):
                 viewModel.updated(document: document)
             case .changeReceived:
-                Task { await viewModel.refresh(retain: true) }
+                Task {
+                    if let documents = try? await viewModel.refresh(retain: true) {
+                        withAnimation {
+                            viewModel.replace(documents: documents)
+                        }
+                    }
+                }
             case .repositoryWillChange:
                 withAnimation {
                     viewModel.ready = false
@@ -371,7 +392,9 @@ struct DocumentList: View {
                             actions: { $item in
                                 let document = item
                                 Button(role: .destructive) {
-                                    Task { try? await store.deleteDocument(document) }
+                                    Task {
+                                        try? await store.deleteDocument(document)
+                                    }
                                 } label: { Text(.localizable.documentDelete) }
                                 Button(role: .cancel) {
                                     documentToDelete = nil
