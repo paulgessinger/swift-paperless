@@ -7,6 +7,7 @@
 
 import Combine
 import os
+import PhotosUI
 import QuickLook
 import SwiftUI
 
@@ -89,10 +90,14 @@ struct DocumentView: View {
     @State private var isLoading = false
     @State private var refreshRequested = false
     @State private var showFileImporter = false
+    @State private var isDocumentScannerAvailable = false
     @State private var showDocumentScanner = false
     @State private var showCreateModal = false
     @State private var importUrl: URL?
     @State private var logoutRequested = false
+
+    @State private var showPhotosPicker = false
+    @State private var selectedPhotos: [PhotosPickerItem] = []
 
     @State private var showDataScanner = false
     @State private var showTypeAsn = false
@@ -246,25 +251,28 @@ struct DocumentView: View {
                         HStack {
                             TaskActivityToolbar()
 
-                            if DocumentScannerView.isAvailable {
-                                Menu {
+                            Menu {
+                                if isDocumentScannerAvailable {
                                     Button {
                                         showDocumentScanner = true
                                     } label: {
                                         Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
                                     }
-                                    Button {
-                                        showFileImporter = true
-                                    } label: {
-                                        Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
-                                    }
-                                } label: {
-                                    Label(String(localized: .localizable.add), systemImage: "plus")
                                 }
-                            } else {
-                                Button(String(localized: .localizable.add), systemImage: "plus") {
+
+                                Button {
                                     showFileImporter = true
+                                } label: {
+                                    Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
                                 }
+
+                                Button {
+                                    showPhotosPicker = true
+                                } label: {
+                                    Label(String(localized: .localizable.importPhotos), systemImage: "photo")
+                                }
+                            } label: {
+                                Label(String(localized: .localizable.add), systemImage: "plus")
                             }
                         }
                     }
@@ -327,7 +335,6 @@ struct DocumentView: View {
                               allowedContentTypes: [.pdf],
                               allowsMultipleSelection: false,
                               onCompletion: { result in
-
                                   switch result {
                                   case let .success(urls):
                                       importFile(result: urls, isSecurityScoped: true)
@@ -365,6 +372,26 @@ struct DocumentView: View {
                     DataScannerView()
                 }
 
+                .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos)
+
+                .onChange(of: selectedPhotos) { _ in
+                    Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
+                    guard !selectedPhotos.isEmpty else {
+                        Logger.shared.debug("No photos, nothing to do")
+                        return
+                    }
+
+                    Task {
+                        do {
+                            let url = try await createPDFFrom(photos: selectedPhotos)
+                            importFile(result: [url], isSecurityScoped: false)
+                        } catch {
+                            Logger.shared.error("Got error when creating PDF from photos: \(error)")
+                            errorController.push(error: error)
+                        }
+                    }
+                }
+
                 .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
                     Button(String(localized: .localizable.logout), role: .destructive) {
                         connectionManager.logout()
@@ -374,7 +401,11 @@ struct DocumentView: View {
 
                 .task {
                     do {
-                        try await store.fetchAll()
+                        async let fetch: Void = store.fetchAll()
+
+                        isDocumentScannerAvailable = await DocumentScannerView.isAvailable
+
+                        try await fetch
                     } catch {
                         errorController.push(error: error)
                     }

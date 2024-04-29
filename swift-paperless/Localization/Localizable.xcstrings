@@ -2764,6 +2764,7 @@
       }
     },
     "importDocument" : {
+      "comment" : "Document add menu item for adding files",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -2800,6 +2801,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importuj dokument"
+          }
+        }
+      }
+    },
+    "importPhotos" : {
+      "comment" : "Document add menu item for adding photo library images",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import photos"
           }
         }
       }
@@ -3829,6 +3842,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uprawnienia"
+          }
+        }
+      }
+    },
+    "photosReceivalFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error when receiving picked photos"
           }
         }
       }
