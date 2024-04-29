@@ -10,6 +10,8 @@ import SwiftUI
 
 enum AttachmentError {
     case invalidAttachment
+    case invalidImage
+    case noAttachments
 }
 
 @MainActor
@@ -18,4 +20,6 @@ class AttachmentManager: ObservableObject {
     @Published var error: AttachmentError? = nil
     @Published private(set) var previewImage: Image?
     @Published var documentUrl: URL?
+
+    @Published var importUrls: [URL] = []
 }

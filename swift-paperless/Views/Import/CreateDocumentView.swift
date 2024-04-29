@@ -27,12 +27,14 @@ struct CreateDocumentView: View {
 
     let callback: () -> Void
     let share: Bool
+    let title: String
 
-    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false) {
+    init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, title: String = String(localized: .localizable.documentAdd)) {
         sourceUrl = url
         _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
         self.callback = callback
         self.share = share
+        self.title = title
     }
 
     func upload() async {
@@ -197,7 +199,7 @@ struct CreateDocumentView: View {
 
             .navigationBarTitleDisplayMode(.inline)
 
-            .navigationTitle(String(localized: .localizable.documentAdd))
+            .navigationTitle(title)
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

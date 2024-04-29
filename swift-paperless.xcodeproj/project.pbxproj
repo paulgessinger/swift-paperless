@@ -135,6 +135,8 @@
 		7A7080CF2BDF8EE30095BD56 /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
 		7A7080D12BDF8EF90095BD56 /* Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080D02BDF8EF90095BD56 /* Import.swift */; };
 		7A7080D22BDF8EFC0095BD56 /* Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080D02BDF8EF90095BD56 /* Import.swift */; };
+		7A7080DD2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080DC2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift */; };
+		7A7080E82BDFE0A50095BD56 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080E72BDFE0A50095BD56 /* ShareView.swift */; };
 		7A81C5AC2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AE2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
@@ -324,6 +326,8 @@
 		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
 		7A6FD1A62BDD6668002AA467 /* DocumentationLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentationLinks.swift; sourceTree = "<group>"; };
 		7A7080D02BDF8EF90095BD56 /* Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import.swift; sourceTree = "<group>"; };
+		7A7080DC2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AttachmentManager+receiveAttachment.swift"; sourceTree = "<group>"; };
+		7A7080E72BDFE0A50095BD56 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
 		7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathModel.swift; sourceTree = "<group>"; };
 		7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathEditView.swift; sourceTree = "<group>"; };
 		7A83F6E22A6BE3D7002B5CF6 /* DataScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataScannerView.swift; sourceTree = "<group>"; };
@@ -435,8 +439,10 @@
 			children = (
 				7AEF691729CFA2BA00414BA7 /* ShareExtension.entitlements */,
 				7A4AA8E629BB969400D845A2 /* ShareViewController.swift */,
+				7A7080DC2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift */,
 				7A4AA8E829BB969400D845A2 /* MainInterface.storyboard */,
 				7A4AA8EB29BB969400D845A2 /* Info.plist */,
+				7A7080E72BDFE0A50095BD56 /* ShareView.swift */,
 			);
 			path = ShareExtension;
 			sourceTree = "<group>";
@@ -886,6 +892,7 @@
 				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */,
 				7AF2E08329F480310092948B /* TagEditView.swift in Sources */,
+				7A7080E82BDFE0A50095BD56 /* ShareView.swift in Sources */,
 				7A495D182BD9589800A2E5CF /* View+alert.swift in Sources */,
 				7A2F655A2B5ADB25000A75D9 /* MailView.swift in Sources */,
 				7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */,
@@ -932,6 +939,7 @@
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
+				7A7080DD2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift in Sources */,
 				7A2831B82A63DC97009E86CE /* TaskModel.swift in Sources */,
 				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
 				7A4AA8FF29BE042700D845A2 /* Api.swift in Sources */,
@@ -1086,7 +1094,7 @@
 /* Begin PBXTargetDependency section */
 		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */;
+			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1105,15 +1113,15 @@
 		};
 		7A56F2402B826F5E00BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */;
+			productRef = 7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */;
 		};
 		7A56F2422B826F6300BE9361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */;
+			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
 		};
 		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */;
+			productRef = 7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1648,7 +1656,7 @@
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
 		};
-		7A2E12132B14BBE200E7704A /* plugin:XCStringsToolPlugin */ = {
+		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1663,12 +1671,12 @@
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
 		};
-		7A56F23F2B826F5E00BE9361 /* plugin:XCStringsToolPlugin */ = {
+		7A56F23F2B826F5E00BE9361 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A56F2412B826F6300BE9361 /* plugin:XCStringsToolPlugin */ = {
+		7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1698,7 +1706,7 @@
 			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
 		};
-		7ABA52AA2B791D4B00AE218B /* plugin:XCStringsToolPlugin */ = {
+		7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
