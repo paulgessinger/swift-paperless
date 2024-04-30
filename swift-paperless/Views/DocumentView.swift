@@ -105,6 +105,7 @@ struct DocumentView: View {
 
     // @TODO: Separate view model which does the copying on a background thread
     func importFile(result: [URL], isSecurityScoped: Bool) {
+        Logger.shared.debug("Initiate import of \(result.count) URLs")
         do {
             showFileImporter = false
             showDocumentScanner = false
@@ -439,6 +440,7 @@ struct DocumentView: View {
                     Task {
                         do {
                             let url = try await createPDFFrom(photos: selectedPhotos)
+                            Logger.shared.debug("Have PDF at \(url)")
                             importFile(result: [url], isSecurityScoped: false)
                             selectedPhotos = []
                         } catch {

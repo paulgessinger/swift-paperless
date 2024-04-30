@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 import PDFKit
 import PhotosUI
 import SwiftUI
@@ -47,6 +48,7 @@ private func loadTransferableImage(item: PhotosPickerItem) async throws -> Image
 
 @MainActor
 func createPDFFrom(photos: [PhotosPickerItem]) async throws -> URL {
+    Logger.shared.debug("Creating PDF from \(photos.count) PhotosPickerItems")
     var images: [UIImage] = []
     for item in photos {
         guard let image = try await loadTransferableImage(item: item) else {
