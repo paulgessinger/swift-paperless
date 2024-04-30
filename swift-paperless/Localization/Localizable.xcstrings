@@ -4741,6 +4741,28 @@
         }
       }
     },
+    "shareSheetInvalidAttachmentDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+          }
+        }
+      }
+    },
+    "shareSheetInvalidAttachmentTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid attachment"
+          }
+        }
+      }
+    },
     "sortBy" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -10,7 +10,6 @@ import SwiftUI
 
 enum AttachmentError {
     case invalidAttachment
-    case invalidImage
     case noAttachments
 }
 
