@@ -4744,9 +4744,39 @@
     "shareSheetInvalidAttachmentDetail" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Fehler ist bei der Verarbeitung des geteilten Objektes aufgetreten.\n\nDas sollte eigentlich nicht passieren, ist es aber!\n\nWenn Sie mir bei der Fehlersuche weiter helfen wollen, dann teilen Sie bitte die Logs weiter unten:"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une erreur s'est produite lors du traitement de l'élément partagé.\n\nIdéalement, cela ne devrait pas se produire, mais c'est le cas !\n\nSi vous souhaitez contribuer à la résolution de ce problème, veuillez partager les journaux ci-dessous :"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is een fout opgetreden bij het verwerken van het gedeelde element.\n\nIdealiter zou dit niet moeten gebeuren, maar het gebeurde wel!\n\nAls u wilt helpen dit probleem op te lossen, deel dan de logbestanden hieronder:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
           }
         }
@@ -4755,9 +4785,39 @@
     "shareSheetInvalidAttachmentTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid attachment"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Anhang"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Invalid attachment"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pièce jointe non valide"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige bijlage"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Invalid attachment"
           }
         }
