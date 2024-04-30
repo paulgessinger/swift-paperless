@@ -16,3 +16,4 @@ fastlane/README.md
 fastlane/test_output/report.junit
 swift-paperless.xcodeproj/project.xcworkspace/xcuserdata/*
 *.afdesign~lock~
+swift-paperless.xcodeproj/xcuserdata
