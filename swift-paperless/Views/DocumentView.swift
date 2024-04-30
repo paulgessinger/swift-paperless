@@ -199,7 +199,7 @@ struct DocumentView: View {
             return String(localized: .localizable.documents)
         }
         guard let savedView = store.savedViews[id] else {
-            Logger.shared.error("Active saved view id \(id) not found in saved views")
+            // Not necessarily an error, might be still loading
             return String(localized: .localizable.documents)
         }
         if filterModel.filterState.modified {
@@ -440,6 +440,7 @@ struct DocumentView: View {
                         do {
                             let url = try await createPDFFrom(photos: selectedPhotos)
                             importFile(result: [url], isSecurityScoped: false)
+                            selectedPhotos = []
                         } catch {
                             Logger.shared.error("Got error when creating PDF from photos: \(error)")
                             errorController.push(error: error)

@@ -13,6 +13,7 @@ private struct InvalidAttachmentContent: Error {}
 extension AttachmentManager {
     private static func loadItem(attachment: NSItemProvider, type: String) async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
+            Logger.shared.info("Loading item for type \(type, privacy: .public)")
             attachment.loadItem(forTypeIdentifier: type, options: nil, completionHandler: { data, error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -21,18 +22,33 @@ extension AttachmentManager {
 
                 switch data {
                 case let url as URL:
-                    Logger.shared.info("Received url \(url)")
+                    Logger.shared.info("Received url \(url, privacy: .public)")
                     continuation.resume(returning: url)
+
                 case let data as NSData:
-                    Logger.shared.info("Received data \(data.count)")
-                    guard type == "com.adobe.pdf" else {
-                        Logger.shared.error("Type is \(type, privacy: .public), unable to add extension")
-                        fallthrough
+                    Logger.shared.info("Received data length \(data.count) bytes, writing to temporary file")
+                    let mime = data.mimeType
+                    Logger.shared.info("Got mime type \(mime, privacy: .public)")
+
+                    let ext: String
+                    switch mime {
+                    case "application/pdf":
+                        ext = "pdf"
+                    case "image/png":
+                        ext = "png"
+                    case "image/jpeg":
+                        ext = "jpg"
+                    case "image/gif":
+                        ext = "gif"
+                    default:
+                        Logger.shared.error("Got mime type \(mime, privacy: .public) but cannot handle")
+                        continuation.resume(throwing: InvalidAttachmentContent())
+                        return
                     }
 
                     let url = FileManager.default.temporaryDirectory
                         .appending(component: formattedImportFilename(prefix: "Import"))
-                        .appendingPathExtension("pdf")
+                        .appendingPathExtension(ext)
 
                     do {
                         try data.write(to: url)
@@ -40,8 +56,26 @@ extension AttachmentManager {
                     } catch {
                         Logger.shared.error("Unable to store data to temporary file")
                     }
+
+                case let image as UIImage:
+                    Logger.shared.info("Received UIImage, saving as PNG")
+
+                    if let data = image.pngData() {
+                        let url = FileManager.default.temporaryDirectory
+                            .appending(component: formattedImportFilename(prefix: "Import"))
+                            .appendingPathExtension("png")
+                        do {
+                            try data.write(to: url)
+                            continuation.resume(returning: url)
+                        } catch {
+                            Logger.shared.error("Unable to store data to temporary file")
+                        }
+                    } else {
+                        Logger.shared.error("Unable to convert image to PNG")
+                        continuation.resume(throwing: InvalidAttachmentContent())
+                    }
                 default:
-                    Logger.shared.error("Got attachment data \(String(describing: data)) but cannot handle")
+                    Logger.shared.error("Got attachment data \(String(describing: data), privacy: .public) but cannot handle")
                     continuation.resume(throwing: InvalidAttachmentContent())
                 }
             })
@@ -54,14 +88,12 @@ extension AttachmentManager {
             return
         }
 
-        Logger.shared.notice("Receiving \(attachments.count) attachments")
+        Logger.shared.info("Receiving \(attachments.count) attachments")
 
         Task {
-            var images: [UIImage] = []
-
             for attachment in attachments {
                 if attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") {
-                    Logger.shared.notice("Attachment has type PDF")
+                    Logger.shared.info("Attachment has type PDF")
                     do {
                         let url = try await Self.loadItem(attachment: attachment, type: "com.adobe.pdf")
                         importUrls.append(url)
@@ -72,32 +104,14 @@ extension AttachmentManager {
                 }
 
                 if attachment.hasItemConformingToTypeIdentifier("public.image") {
-                    Logger.shared.notice("Attachment has type image")
+                    Logger.shared.info("Attachment has type image")
                     do {
                         let url = try await Self.loadItem(attachment: attachment, type: "public.image")
-                        Logger.shared.notice("URL is \(url)")
-                        let data = try Data(contentsOf: url)
-                        if let image = UIImage(data: data) {
-                            images.append(image)
-                        } else {
-                            Logger.shared.error("Image at \(url) could not be loaded")
-                            self.error = .invalidImage
-                            return
-                        }
+                        importUrls.append(url)
                     } catch {
                         Logger.shared.error("Error getting Image attachment: \(error)")
                         self.error = .invalidAttachment
                     }
-                }
-            }
-
-            if !images.isEmpty {
-                do {
-                    let pdf = try createPDFFrom(images: images)
-                    Logger.shared.notice("Created PDF from \(images.count) images")
-                    importUrls.append(pdf)
-                } catch {
-                    Logger.shared.error("Could not create PDF from images: \(error)")
                 }
             }
         }

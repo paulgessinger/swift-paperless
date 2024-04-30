@@ -8,6 +8,37 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+private struct ThumbnailView: View {
+    let sourceUrl: URL
+
+    private var pdfView: PDFThumbnail? = nil
+
+    init(sourceUrl: URL) {
+        self.sourceUrl = sourceUrl
+        if sourceUrl.pathExtension == "pdf" {
+            pdfView = PDFThumbnail(file: sourceUrl)
+        }
+    }
+
+    var pageCount: Int {
+        pdfView?.document.pageCount ?? 1
+    }
+
+    var body: some View {
+        if let pdfView {
+            pdfView
+        } else {
+            if let data = try? Data(contentsOf: sourceUrl), let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(1.0, contentMode: .fill)
+            } else {
+                Text("ERROR")
+            }
+        }
+    }
+}
+
 struct CreateDocumentView: View {
     private enum Status {
         case none
@@ -29,7 +60,7 @@ struct CreateDocumentView: View {
     let share: Bool
     let title: String
 
-    private var thumbnailView: PDFThumbnail
+    private var thumbnailView: ThumbnailView
 
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, title: String = String(localized: .localizable.documentAdd)) {
         sourceUrl = url
@@ -37,7 +68,7 @@ struct CreateDocumentView: View {
         self.callback = callback
         self.share = share
         self.title = title
-        thumbnailView = PDFThumbnail(file: sourceUrl)!
+        thumbnailView = ThumbnailView(sourceUrl: sourceUrl)
     }
 
     func upload() async {
@@ -91,7 +122,7 @@ struct CreateDocumentView: View {
                     VStack(alignment: .leading) {
                         Text(document.title)
                             .font(.headline)
-                        Text(.localizable.pages(thumbnailView.document.pageCount))
+                        Text(.localizable.pages(thumbnailView.pageCount))
                             .font(.subheadline)
                     }
                     Spacer()

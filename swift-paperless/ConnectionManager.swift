@@ -188,13 +188,12 @@ class ConnectionManager: ObservableObject {
     }
 
     func migrateToMultiServer() async {
-        let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "MultiServerMigration")
-        logger.trace("Checking migration status")
+        Logger.migration.trace("Checking migration status")
         if activeConnectionId == nil, apiHost != nil {
-            logger.info("Connection manager has prior connection: migrating to multi-server scheme")
+            Logger.migration.info("Connection manager has prior connection: migrating to multi-server scheme")
 
             guard let connection else {
-                logger.warning("Existing connection was invalid")
+                Logger.migration.warning("Existing connection was invalid")
                 return
             }
 
@@ -202,22 +201,22 @@ class ConnectionManager: ObservableObject {
             // Migration runs asynchronously, this should be fine, since the active connection in memory
             // will stay valid while we're trying.
             Task {
-                logger.info("Getting current user to populate newly stored connection")
+                Logger.migration.info("Getting current user to populate newly stored connection")
                 do {
                     let currentUser = try await repository.currentUser()
-                    logger.info("Got current user: \(String(describing: currentUser))")
+                    Logger.migration.info("Got current user: \(String(describing: currentUser))")
 
                     let newConnection = StoredConnection(url: connection.url, extraHeaders: connection.extraHeaders, user: currentUser)
-                    logger.info("Connection to store is: \(String(describing: newConnection))")
+                    Logger.migration.info("Connection to store is: \(String(describing: newConnection))")
 
                     connections[newConnection.id] = newConnection
                     activeConnectionId = newConnection.id
                 } catch {
-                    logger.error("An error was encountered: \(error)")
+                    Logger.migration.error("An error was encountered: \(error)")
                 }
             }
         } else {
-            logger.info("Skipping migration")
+            Logger.migration.info("Skipping migration")
         }
     }
 
