@@ -212,14 +212,12 @@ extension Endpoint {
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return nil
         }
-        
-        // Remove leading slashes from the path
+        // Remove trailing slashes from the path
         components.path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         
-        if (components.url == nil) {
+        if components.url == nil {
             return nil
         }
-        
         var result = components.url!.appending(path: path, directoryHint: .isDirectory)
         if !queryItems.isEmpty {
             result.append(queryItems: queryItems)
