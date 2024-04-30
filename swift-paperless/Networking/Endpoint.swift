@@ -214,7 +214,6 @@ extension Endpoint {
         }
         // Remove trailing slashes from the path
         components.path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        
         if components.url == nil {
             return nil
         }
