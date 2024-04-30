@@ -59,29 +59,58 @@ struct ShareView: View {
         }
     }
 
+    @ScaledMetric(relativeTo: .title) private var emojiScale = 50.0
+
+    func errorView(_: AttachmentError) -> some View {
+        VStack {
+            Text(.localizable.shareSheetInvalidAttachmentTitle)
+                .font(.title)
+                .padding()
+            Text("🫣")
+                .font(.system(size: emojiScale))
+
+            Text(.localizable.shareSheetInvalidAttachmentDetail)
+                .multilineTextAlignment(.center)
+                .padding(.top)
+
+            LogRecordExportButton()
+                .foregroundColor(.white)
+                .padding(.horizontal, 15)
+                .padding(.vertical, 10)
+                .background {
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(Color.accentColor)
+                }
+                .padding(.top, 30)
+//                            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .accentColor(Color("AccentColor"))
+    }
+
     var body: some View {
         Group {
             if connectionManager.connection != nil {
                 if let error = attachmentManager.error {
-                    Text(String(describing: error))
-                }
+                    errorView(error)
+                } else {
+                    if let url = attachmentManager.importUrls.first {
+                        VStack {
+                            CreateDocumentView(
+                                sourceUrl: url,
+                                callback: internalCallback,
+                                share: true,
+                                title: createTitle
+                            )
+                            .id(url)
+                            // @FIXME: Gives a white band at the bottom, not ideal
+                            .padding(.bottom, 40)
 
-                if let url = attachmentManager.importUrls.first {
-                    VStack {
-                        CreateDocumentView(
-                            sourceUrl: url,
-                            callback: internalCallback,
-                            share: true,
-                            title: createTitle
-                        )
-                        .id(url)
-                        // @FIXME: Gives a white band at the bottom, not ideal
-                        .padding(.bottom, 40)
-
-                        .environmentObject(store)
-                        .environmentObject(errorController)
-                        .environmentObject(connectionManager)
-                        .accentColor(Color("AccentColor"))
+                            .environmentObject(store)
+                            .environmentObject(errorController)
+                            .environmentObject(connectionManager)
+                            .accentColor(Color("AccentColor"))
+                        }
                     }
                 }
             } else {

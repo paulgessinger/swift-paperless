@@ -45,6 +45,7 @@ extension AttachmentManager {
                         continuation.resume(throwing: InvalidAttachmentContent())
                         return
                     }
+                    Logger.shared.info("Mapped mime \(mime, privacy: .public) to extension \(ext, privacy: .public)")
 
                     let url = FileManager.default.temporaryDirectory
                         .appending(component: formattedImportFilename(prefix: "Import"))
@@ -54,7 +55,7 @@ extension AttachmentManager {
                         try data.write(to: url)
                         continuation.resume(returning: url)
                     } catch {
-                        Logger.shared.error("Unable to store data to temporary file")
+                        Logger.shared.error("Unable to store data to temporary file: \(error, privacy: .public)")
                     }
 
                 case let image as UIImage:
@@ -68,7 +69,7 @@ extension AttachmentManager {
                             try data.write(to: url)
                             continuation.resume(returning: url)
                         } catch {
-                            Logger.shared.error("Unable to store data to temporary file")
+                            Logger.shared.error("Unable to store data to temporary file: \(error, privacy: .public)")
                         }
                     } else {
                         Logger.shared.error("Unable to convert image to PNG")
