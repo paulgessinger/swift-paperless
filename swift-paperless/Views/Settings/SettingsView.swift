@@ -163,6 +163,8 @@ struct SettingsView: View {
 
         .sheet(isPresented: $showLoginSheet) {
             LoginView(connectionManager: connectionManager, initial: false)
+                .environmentObject(errorController)
+                .errorOverlay(errorController: errorController, offset: 15)
         }
 
         .onChange(of: feedbackLogs) { _ in
