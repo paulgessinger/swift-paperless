@@ -178,7 +178,6 @@ struct LoginView: View {
             urlState = .valid
 
         } catch let error as NSError where LoginView.isLocalNetworkDenied(error) {
-            print(DocumentationLinks.localNetworkDenied.absoluteString)
             Logger.shared.error("Unable to connect to API: local network access denied")
             urlState = .error(info: AttributedString(localized:
                 .login.errorLocalNetworkDenied(DocumentationLinks.localNetworkDenied.absoluteString)))
@@ -240,7 +239,7 @@ struct LoginView: View {
             try stored.setToken(connection.token)
 
             try connectionManager.login(stored)
-            Logger.api.info("Logging successful")
+            Logger.api.info("Login successful")
 
             if !initial {
                 dismiss()
