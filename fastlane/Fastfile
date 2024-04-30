@@ -45,14 +45,6 @@ platform :ios do
 
     changelog = sh("git", "cliff", "-w", "..", "--unreleased", "--strip", "header")
 
-    changelog.prepend(<<HEADER
-PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
-Redact screenshots to not include information that you do not wish to expose.
-
----
-HEADER
-    )
-
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
       build_number: current_build_number
