@@ -440,6 +440,7 @@ struct DocumentView: View {
                         do {
                             let url = try await createPDFFrom(photos: selectedPhotos)
                             importFile(result: [url], isSecurityScoped: false)
+                            selectedPhotos = []
                         } catch {
                             Logger.shared.error("Got error when creating PDF from photos: \(error)")
                             errorController.push(error: error)
