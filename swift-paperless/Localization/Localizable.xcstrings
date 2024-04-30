@@ -632,7 +632,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sind Sie sicher?"
+            "value" : "Bist Du sicher?"
           }
         },
         "en" : {
@@ -1498,7 +1498,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Dokument, das Sie hochzuladen versuchen, wurde als zu groß abgelehnt. Bitte überprüfen Sie Ihre Paperless-ngx- und/oder Reverse-Proxy-Einstellungen."
+            "value" : "Das Dokument, das Du hochzuladen versuchst, wurde als zu groß abgelehnt. Bitte überprüfe Deine Paperless-ngx- und/oder Reverse-Proxy-Einstellungen."
           }
         },
         "en" : {
@@ -4259,7 +4259,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wollen Sie %@ wirklich löschen?"
+            "value" : "Willst Du %@ wirklich löschen?"
           }
         },
         "en" : {
@@ -4753,7 +4753,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein Fehler ist bei der Verarbeitung des geteilten Objektes aufgetreten.\n\nDas sollte eigentlich nicht passieren, ist es aber!\n\nWenn Sie mir bei der Fehlersuche weiter helfen wollen, dann teilen Sie bitte die Logs weiter unten:"
+            "value" : "Ein Fehler ist bei der Verarbeitung des geteilten Objektes aufgetreten.\n\nDas sollte eigentlich nicht passieren, ist es aber!\n\nWenn Du mir bei der Fehlersuche weiter helfen wollen, dann teile bitte die Logs weiter unten:"
           }
         },
         "en" : {
@@ -5327,7 +5327,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "z. B. {created_year}-{title} oder benutzen Sie Schrägstriche, um bspw. Verzeichnisse hinzuzufügen {created_year}/{correspondent}/{title}. Siehe [Dokumentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) für eine vollständige Liste."
+            "value" : "z. B. {created_year}-{title} oder benutze Schrägstriche, um bspw. Verzeichnisse hinzuzufügen {created_year}/{correspondent}/{title}. Siehe [Dokumentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) für eine vollständige Liste."
           }
         },
         "en" : {
