@@ -17,4 +17,6 @@ extension Logger {
     static let shared = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "General")
     nonisolated(unsafe)
     static let api = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "API")
+    nonisolated(unsafe)
+    static let migration = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Migration")
 }
