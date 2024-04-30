@@ -27,6 +27,13 @@ platform :ios do
       in_house: false,
     )
 
+    sync_code_signing(
+      type: "appstore",
+      app_identifier: [
+        "com.paulgessinger.swift-paperless",
+        "com.paulgessinger.swift-paperless.ShareExtension"
+    ])
+
     ensure_git_branch(branch: "^main|develop\/.+$")
     ensure_git_status_clean
     git_pull(rebase: true)
