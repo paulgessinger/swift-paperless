@@ -33,7 +33,7 @@ struct DocumentPreviewImage: View {
             .stroke(.gray, lineWidth: 0.33))
 
         .task {
-            guard let data = await store.repository.thumbnailData(document: document) else {
+            guard let data = try? await store.repository.thumbnailData(document: document) else {
                 return
             }
 

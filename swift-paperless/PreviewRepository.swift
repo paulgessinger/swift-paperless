@@ -6,6 +6,7 @@
 //
 
 import GameplayKit
+import os
 import SwiftUI
 
 actor PreviewDocumentSource: DocumentSource {
@@ -192,11 +193,8 @@ actor PreviewRepository: Repository {
         PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
     }
 
-    func thumbnail(document: Document) async -> Image? {
-        guard let data = await thumbnailData(document: document) else {
-            print("No thumb data returned")
-            return nil
-        }
+    func thumbnail(document: Document) async throws -> Image? {
+        let data = try await thumbnailData(document: document)
 
         guard let uiImage = UIImage(data: data) else { return nil }
         let image = Image(uiImage: uiImage)
@@ -204,7 +202,7 @@ actor PreviewRepository: Repository {
         return image
     }
 
-    func thumbnailData(document: Document) async -> Data? {
+    func thumbnailData(document: Document) async throws -> Data {
         let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/200")!)
 
         do {
@@ -212,8 +210,8 @@ actor PreviewRepository: Repository {
 
             return data
         } catch {
-            print(error)
-            return nil
+            Logger.shared.error("Unable to get preview document thumbnail (somehow): \(error)")
+            throw error
         }
     }
 

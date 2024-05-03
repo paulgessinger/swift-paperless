@@ -181,13 +181,13 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     private func getSingleCached<T: Sendable>(
-        get: (UInt) async -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
-    ) async -> (Bool, T)? where T: Decodable, T: Model {
+        get: (UInt) async throws -> T?, id: UInt, cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
+    ) async throws -> (Bool, T)? where T: Decodable, T: Model {
         if let element = self[keyPath: cache][id] {
             return (true, element)
         }
 
-        guard let element = await get(id) else {
+        guard let element = try await get(id) else {
             return nil
         }
 
@@ -195,30 +195,30 @@ final class DocumentStore: ObservableObject, Sendable {
         return (false, element)
     }
 
-    func getCorrespondent(id: UInt) async -> (Bool, Correspondent)? {
-        await getSingleCached(get: { await repository.correspondent(id: $0) }, id: id,
-                              cache: \.correspondents)
+    func getCorrespondent(id: UInt) async throws -> (Bool, Correspondent)? {
+        try await getSingleCached(get: { try await repository.correspondent(id: $0) }, id: id,
+                                  cache: \.correspondents)
     }
 
-    func getDocumentType(id: UInt) async -> (Bool, DocumentType)? {
-        await getSingleCached(get: { await repository.documentType(id: $0) }, id: id,
-                              cache: \.documentTypes)
+    func getDocumentType(id: UInt) async throws -> (Bool, DocumentType)? {
+        try await getSingleCached(get: { try await repository.documentType(id: $0) }, id: id,
+                                  cache: \.documentTypes)
     }
 
-    func document(id: UInt) async -> Document? {
-        await repository.document(id: id)
+    func document(id: UInt) async throws -> Document? {
+        try await repository.document(id: id)
     }
 
-    func getTag(id: UInt) async -> (Bool, Tag)? {
-        await getSingleCached(get: { await repository.tag(id: $0) }, id: id,
-                              cache: \.tags)
+    func getTag(id: UInt) async throws -> (Bool, Tag)? {
+        try await getSingleCached(get: { try await repository.tag(id: $0) }, id: id,
+                                  cache: \.tags)
     }
 
-    func getTags(_ ids: [UInt]) async -> (Bool, [Tag]) {
+    func getTags(_ ids: [UInt]) async throws -> (Bool, [Tag]) {
         var tags: [Tag] = []
         var allCached = true
         for id in ids {
-            if let (cached, tag) = await getTag(id: id) {
+            if let (cached, tag) = try await getTag(id: id) {
                 tags.append(tag)
                 allCached = allCached && cached
             }

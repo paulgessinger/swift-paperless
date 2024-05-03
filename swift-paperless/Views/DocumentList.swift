@@ -49,7 +49,7 @@ class DocumentListViewModel: ObservableObject {
     @Published var loading = false
     @Published var ready = false
 
-    private var source: DocumentSource
+    private var source: DocumentSource?
     private var exhausted: Bool = false
 
     private var initialBatchSize: UInt = 20
@@ -60,20 +60,27 @@ class DocumentListViewModel: ObservableObject {
         self.store = store
         self.filterState = filterState
         self.errorController = errorController
-        source = store.repository.documents(filter: filterState)
     }
 
     func reload() async {
-        source = store.repository.documents(filter: filterState)
-        documents = []
-        await load()
+        do {
+            source = try await store.repository.documents(filter: filterState)
+            documents = []
+            await load()
+        } catch {
+            Logger.shared.error("Error getting reloaded document source: \(error)")
+            errorController.push(error: error)
+        }
     }
 
     func load() async {
         guard documents.isEmpty, !loading else { return }
         loading = true
         do {
-            let batch = try await source.fetch(limit: initialBatchSize)
+            if source == nil {
+                source = try await store.repository.documents(filter: filterState)
+            }
+            let batch = try await source!.fetch(limit: initialBatchSize)
             documents = batch
             ready = true
             loading = false
@@ -90,7 +97,10 @@ class DocumentListViewModel: ObservableObject {
             await MainActor.run { loading = true }
             Task.detached {
                 do {
-                    let batch = try await self.source.fetch(limit: self.batchSize)
+                    guard let source = await self.source else {
+                        return
+                    }
+                    let batch = try await source.fetch(limit: self.batchSize)
                     if batch.isEmpty {
                         await MainActor.run {
                             self.exhausted = true
@@ -116,8 +126,11 @@ class DocumentListViewModel: ObservableObject {
             filterState = filter
         }
         exhausted = false
-        source = store.repository.documents(filter: filterState)
         do {
+            source = try await store.repository.documents(filter: filterState)
+            guard let source else {
+                return []
+            }
             let batch = try await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
             return batch
         } catch {

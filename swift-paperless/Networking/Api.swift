@@ -178,11 +178,15 @@ actor ApiRepository {
         connection.token
     }
 
-    nonisolated
-    func url(_ endpoint: Endpoint) -> URL {
+    func url(_ endpoint: Endpoint) throws -> URL {
         let connection = connection
         Logger.api.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
-        return endpoint.url(url: connection.url)!
+        guard let url = endpoint.url(url: connection.url) else {
+            let sanitizedUrl = sanitizeUrlForLog(connection.url)
+            Logger.api.error("Unable to make URL: \(sanitizedUrl, privacy: .public)")
+            throw RequestError.invalidRequest
+        }
+        return url
     }
 
     let encoder: JSONEncoder = {
@@ -201,8 +205,8 @@ actor ApiRepository {
         return request
     }
 
-    fileprivate func request(_ endpoint: Endpoint) -> URLRequest {
-        request(url: url(endpoint))
+    fileprivate func request(_ endpoint: Endpoint) throws -> URLRequest {
+        try request(url: url(endpoint))
     }
 
     private func sanitizeUrlForLog(_ url: URL) -> String {
@@ -303,25 +307,25 @@ actor ApiRepository {
         }
     }
 
-    private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async -> T? {
-        let request = request(.single(T.self, id: id))
+    private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async throws -> T? {
+        let request = try request(.single(T.self, id: id))
 
         do {
             return try await fetchData(for: request, as: type)
         } catch {
-            Logger.api.error("Error getting \(type) with id \(id): \(error)")
+            Logger.api.error("Error getting \(type, privacy: .public) with id \(id, privacy: .public): \(error)")
             return nil
         }
     }
 
     private func all<T: Decodable & Model & Sendable>(_: T.Type) async throws -> [T] {
-        let sequence = ApiSequence<T>(repository: self,
-                                      url: url(.listAll(T.self)))
+        let sequence = try ApiSequence<T>(repository: self,
+                                          url: url(.listAll(T.self)))
         return try await Array(sequence)
     }
 
     private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type) async throws -> Element where Element: Decodable {
-        var request = request(endpoint)
+        var request = try request(endpoint)
 
         let body = try JSONEncoder().encode(element)
         request.httpMethod = "POST"
@@ -340,7 +344,7 @@ actor ApiRepository {
     }
 
     private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element where Element: Codable {
-        var request = request(endpoint)
+        var request = try request(endpoint)
 
         let body = try encoder.encode(element)
         request.httpMethod = "PATCH"
@@ -356,7 +360,7 @@ actor ApiRepository {
     }
 
     private func delete<Element>(element _: Element, endpoint: Endpoint) async throws {
-        var request = request(endpoint)
+        var request = try request(endpoint)
         request.httpMethod = "DELETE"
 
         do {
@@ -375,7 +379,7 @@ extension ApiRepository: Repository {
 
     func create(document: ProtoDocument, file: URL) async throws {
         Logger.api.notice("Creating document")
-        var request = request(.createDocument())
+        var request = try request(.createDocument())
 
         let mp = MultiPartFormDataRequest()
         mp.add(name: "title", string: document.title)
@@ -410,18 +414,17 @@ extension ApiRepository: Repository {
         try await delete(element: document, endpoint: .document(id: document.id))
     }
 
-    nonisolated func documents(filter: FilterState) -> any DocumentSource {
+    func documents(filter: FilterState) throws -> any DocumentSource {
         Logger.api.notice("Getting document sequence for filter")
-        return ApiDocumentSource(
+        return try ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
     }
 
     func download(documentID: UInt) async -> URL? {
         Logger.api.notice("Downloading document")
-        let request = request(.download(documentId: documentID))
-
         do {
+            let request = try request(.download(documentId: documentID))
             let (data, response) = try await fetchData(for: request, code: 200)
 
             guard let suggestedFilename = response.suggestedFilename else {
@@ -442,7 +445,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func tag(id: UInt) async -> Tag? { await get(Tag.self, id: id) }
+    func tag(id: UInt) async throws -> Tag? { try await get(Tag.self, id: id) }
 
     func create(tag: ProtoTag) async throws -> Tag {
         try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
@@ -458,7 +461,7 @@ extension ApiRepository: Repository {
 
     func tags() async throws -> [Tag] { try await all(Tag.self) }
 
-    func correspondent(id: UInt) async -> Correspondent? { await get(Correspondent.self, id: id) }
+    func correspondent(id: UInt) async throws -> Correspondent? { try await get(Correspondent.self, id: id) }
 
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
         try await create(element: correspondent,
@@ -478,7 +481,7 @@ extension ApiRepository: Repository {
 
     func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
 
-    func documentType(id: UInt) async -> DocumentType? { await get(DocumentType.self, id: id) }
+    func documentType(id: UInt) async throws -> DocumentType? { try await get(DocumentType.self, id: id) }
 
     func create(documentType: ProtoDocumentType) async throws -> DocumentType {
         try await create(element: documentType,
@@ -498,13 +501,13 @@ extension ApiRepository: Repository {
 
     func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
 
-    func document(id: UInt) async -> Document? { await get(Document.self, id: id) }
+    func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
 
-    func document(asn: UInt) async -> Document? {
+    func document(asn: UInt) async throws -> Document? {
         Logger.api.notice("Getting document by ASN")
         let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
 
-        let request = request(endpoint)
+        let request = try request(endpoint)
 
         do {
             let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
@@ -522,16 +525,16 @@ extension ApiRepository: Repository {
         }
     }
 
-    private func nextAsnCompatibility() async -> UInt {
+    private func nextAsnCompatibility() async throws -> UInt {
         Logger.api.notice("Getting next ASN with legacy compatibility method")
         var fs = FilterState()
         fs.sortField = .asn
         fs.sortOrder = .descending
         let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
-        let url = url(endpoint)
+        let url = try url(endpoint)
         Logger.api.notice("\(url)")
 
-        let request = request(endpoint)
+        let request = try request(endpoint)
 
         do {
             let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
@@ -544,9 +547,9 @@ extension ApiRepository: Repository {
         return 0
     }
 
-    private func nextAsnDirectEndpoint() async -> UInt {
+    private func nextAsnDirectEndpoint() async throws -> UInt {
         Logger.api.notice("Getting next ASN with dedicated endpoint")
-        let request = request(.nextAsn())
+        let request = try request(.nextAsn())
 
         do {
             let asn = try await fetchData(for: request, as: UInt.self)
@@ -558,25 +561,22 @@ extension ApiRepository: Repository {
         }
     }
 
-    func nextAsn() async -> UInt {
+    func nextAsn() async throws -> UInt {
         if apiVersion == nil || backendVersion == nil {
             await ensureBackendVersions()
         }
 
         if let backendVersion, backendVersion >= (2, 0, 0) {
-            return await nextAsnDirectEndpoint()
+            return try await nextAsnDirectEndpoint()
         } else {
-            return await nextAsnCompatibility()
+            return try await nextAsnCompatibility()
         }
     }
 
     func users() async throws -> [User] { try await all(User.self) }
 
-    func thumbnail(document: Document) async -> Image? {
-        guard let data = await thumbnailData(document: document) else {
-            Logger.api.error("Did not get thumbnail data")
-            return nil
-        }
+    func thumbnail(document: Document) async throws -> Image? {
+        let data = try await thumbnailData(document: document)
         guard let uiImage = UIImage(data: data) else {
             Logger.api.error("Thumbnail data did not decode as image")
             return nil
@@ -585,9 +585,9 @@ extension ApiRepository: Repository {
         return image
     }
 
-    func thumbnailData(document: Document) async -> Data? {
+    func thumbnailData(document: Document) async throws -> Data {
         Logger.api.notice("Get thumbnail for document \(document.id, privacy: .public)")
-        let url = url(Endpoint.thumbnail(documentId: document.id))
+        let url = try url(Endpoint.thumbnail(documentId: document.id))
 
         // @TODO: Can this be a regular request?
         var request = URLRequest(url: url)
@@ -599,16 +599,16 @@ extension ApiRepository: Repository {
             return data
         } catch is CancellationError {
             Logger.api.trace("Thumbnail data request task was cancelled")
-            return nil
+            throw CancellationError()
         } catch {
             Logger.api.error("Error getting thumbnail data for document \(document.id, privacy: .public): \(error)")
-            return nil
+            throw error
         }
     }
 
-    func suggestions(documentId: UInt) async -> Suggestions {
+    func suggestions(documentId: UInt) async throws -> Suggestions {
         Logger.api.notice("Get suggestions")
-        let request = request(.suggestions(documentId: documentId))
+        let request = try request(.suggestions(documentId: documentId))
 
         do {
             return try await fetchData(for: request, as: Suggestions.self)
@@ -659,14 +659,14 @@ extension ApiRepository: Repository {
     }
 
     func currentUser() async throws -> User {
-        let request = request(.uiSettings())
+        let request = try request(.uiSettings())
         let (data, _) = try await fetchData(for: request)
         let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
         return uiSettings.user
     }
 
-    func tasks() async -> [PaperlessTask] {
-        let request = request(.tasks())
+    func tasks() async throws -> [PaperlessTask] {
+        let request = try request(.tasks())
 
         do {
             return try await fetchData(for: request, as: [PaperlessTask].self)
@@ -678,8 +678,9 @@ extension ApiRepository: Repository {
 
     private func ensureBackendVersions() async {
         Logger.api.notice("Getting backend versions")
-        let request = request(.root())
         do {
+            let request = try request(.root())
+
             let (_, res) = try await fetchData(for: request)
 
             // fetchData should have already ensured this

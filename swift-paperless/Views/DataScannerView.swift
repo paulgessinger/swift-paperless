@@ -55,6 +55,7 @@ struct HighlightView: View {
         case loaded(document: Document)
         case noAsn
         case invalidAsn(asn: UInt)
+        case error(error: Error)
     }
 
     @State private var status = Status.loading
@@ -150,6 +151,10 @@ struct HighlightView: View {
                 Text(.localizable.dataScannerInvalidAsn(asn))
                     .fixedSize()
                     .padding()
+            case let .error(error):
+                Text(error.localizedDescription)
+                    .fixedSize()
+                    .padding()
             }
         }
 
@@ -167,15 +172,22 @@ struct HighlightView: View {
                 status = .noAsn
                 return
             }
-            guard let document = await store.repository.document(asn: asn) else {
-                if haptics { Haptics.shared.notification(.error) }
-                status = .invalidAsn(asn: asn)
-                return
-            }
+            do {
+                guard let document = try await store.repository.document(asn: asn) else {
+                    if haptics { Haptics.shared.notification(.error) }
+                    status = .invalidAsn(asn: asn)
+                    return
+                }
 
-            if haptics { Haptics.shared.notification(.success) }
-            withAnimation {
-                status = .loaded(document: document)
+                if haptics { Haptics.shared.notification(.success) }
+                withAnimation {
+                    status = .loaded(document: document)
+                }
+
+            } catch {
+                Logger.shared.error("Error getting document by ASN \(asn): \(error)")
+                status = .error(error: error)
+                return
             }
         }
 
@@ -218,11 +230,15 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
             }
 
             Task {
-                guard let document = await parent.store.repository.document(asn: asn) else {
-                    return
-                }
+                do {
+                    guard let document = try await parent.store.repository.document(asn: asn) else {
+                        return
+                    }
 
-                parent.action?(document)
+                    parent.action?(document)
+                } catch {
+                    Logger.shared.error("Error getting document by ASN \(asn): \(error)")
+                }
             }
         }
 
@@ -366,6 +382,7 @@ struct TypeAsnView: View {
         case valid(document: Document)
         case notAnAsn(asn: String)
         case invalid(asn: UInt)
+        case error(error: Error)
     }
 
     @StateObject private var debounce = DebounceObject(delay: 0.1)
@@ -441,6 +458,8 @@ struct TypeAsnView: View {
                     errorLabel(String(localized: .localizable.dataScannerNoAsn(asn)))
                 case let .invalid(asn):
                     errorLabel(String(localized: .localizable.dataScannerInvalidAsn(asn)))
+                case let .error(error):
+                    errorLabel(error.localizedDescription)
                 }
             }
         }
@@ -472,14 +491,19 @@ struct TypeAsnView: View {
             }
 
             Task {
-                if let document = await store.repository.document(asn: asn) {
-                    withAnimation {
-                        status = .valid(document: document)
+                do {
+                    if let document = try await store.repository.document(asn: asn) {
+                        withAnimation {
+                            status = .valid(document: document)
+                        }
+                    } else {
+                        withAnimation {
+                            status = .invalid(asn: asn)
+                        }
                     }
-                } else {
-                    withAnimation {
-                        status = .invalid(asn: asn)
-                    }
+                } catch {
+                    Logger.shared.error("Error getting document by ASN \(asn): \(error)")
+                    status = .error(error: error)
                 }
             }
         }

@@ -80,9 +80,14 @@ struct DocumentEditView: View {
     }
 
     func asnPlusOne() async {
-        let nextAsn = await store.repository.nextAsn()
-        withAnimation {
-            document.asn = nextAsn
+        do {
+            let nextAsn = try await store.repository.nextAsn()
+            withAnimation {
+                document.asn = nextAsn
+            }
+        } catch {
+            Logger.shared.error("Error getting next ASN: \(error)")
+            errorController.push(error: error)
         }
     }
 
@@ -335,12 +340,13 @@ struct DocumentEditView: View {
                 do {
                     let store = store
                     async let all: Void = store.fetchAll()
-                    let suggestions = await store.repository.suggestions(documentId: document.id)
+                    let suggestions = try await store.repository.suggestions(documentId: document.id)
                     withAnimation {
                         self.suggestions = suggestions
                     }
                     try await all
                 } catch {
+                    Logger.shared.error("Error getting suggestions: \(error)")
                     errorController.push(error: error)
                 }
             }
@@ -361,7 +367,7 @@ private struct PreviewHelper: View {
             }
         }
         .task {
-            document = await store.document(id: 1)
+            document = try? await store.document(id: 1)
             guard document != nil else {
                 fatalError()
             }

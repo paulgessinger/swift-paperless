@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import os
 import SwiftUI
 
 private enum DownloadState {
@@ -32,16 +33,24 @@ private struct IntegratedDocumentPreview: View {
         switch download {
         case .initial:
             download = .loading
-            guard let url = await store.repository.download(documentID: document.id) else {
+            do {
+                guard let url = try await store.repository.download(documentID: document.id) else {
+                    download = .error
+                    return
+                }
+
+                guard let view = PDFThumbnail(file: url) else {
+                    download = .error
+                    return
+                }
+                withAnimation {
+                    download = .loaded(view)
+                }
+
+            } catch {
                 download = .error
+                Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
                 return
-            }
-            guard let view = PDFThumbnail(file: url) else {
-                download = .error
-                return
-            }
-            withAnimation {
-                download = .loaded(view)
             }
 
         default:
@@ -53,7 +62,7 @@ private struct IntegratedDocumentPreview: View {
         ZStack {
             HStack {
                 AuthAsyncImage {
-                    await store.repository.thumbnail(document: document)
+                    try? await store.repository.thumbnail(document: document)
                 } content: { image in
                     image
                         .resizable()
@@ -134,6 +143,7 @@ struct DocumentDetailView: View {
     @State private var relatedDocuments: [Document]? = nil
 
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var errorController: ErrorController
 
     var gray: Color {
         if colorScheme == .dark {
@@ -217,8 +227,13 @@ struct DocumentDetailView: View {
         }
 
         .refreshable {
-            if let document = await store.document(id: document.id) {
-                self.document = document
+            do {
+                if let document = try await store.document(id: document.id) {
+                    self.document = document
+                }
+            } catch {
+                Logger.shared.error("Error refreshing document \(document.id): \(error)")
+                errorController.push(error: error)
             }
         }
 
@@ -272,7 +287,7 @@ private struct PreviewHelper: View {
                 }
             }
             .task {
-                document = await store.document(id: 1)
+                document = try? await store.document(id: 1)
             }
         }
     }

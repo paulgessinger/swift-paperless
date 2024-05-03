@@ -33,7 +33,7 @@ protocol Repository: Sendable, Actor {
 
     // MARK: Tags
 
-    func tag(id: UInt) async -> Tag?
+    func tag(id: UInt) async throws -> Tag?
     func create(tag: ProtoTag) async throws -> Tag
     func update(tag: Tag) async throws -> Tag
     func delete(tag: Tag) async throws
@@ -41,7 +41,7 @@ protocol Repository: Sendable, Actor {
 
     // MARK: Correspondent
 
-    func correspondent(id: UInt) async -> Correspondent?
+    func correspondent(id: UInt) async throws -> Correspondent?
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent
     func update(correspondent: Correspondent) async throws -> Correspondent
     func delete(correspondent: Correspondent) async throws
@@ -49,7 +49,7 @@ protocol Repository: Sendable, Actor {
 
     // MARK: Document type
 
-    func documentType(id: UInt) async -> DocumentType?
+    func documentType(id: UInt) async throws -> DocumentType?
     func create(documentType: ProtoDocumentType) async throws -> DocumentType
     func update(documentType: DocumentType) async throws -> DocumentType
     func delete(documentType: DocumentType) async throws
@@ -57,20 +57,20 @@ protocol Repository: Sendable, Actor {
 
     // MARK: Documents
 
-    func document(id: UInt) async -> Document?
-    func document(asn: UInt) async -> Document?
+    func document(id: UInt) async throws -> Document?
+    func document(asn: UInt) async throws -> Document?
 
-    nonisolated func documents(filter: FilterState) -> any DocumentSource
+    func documents(filter: FilterState) throws -> any DocumentSource
 
-    func nextAsn() async -> UInt
+    func nextAsn() async throws -> UInt
 
     // @TODO: Remove UIImage
-    func thumbnail(document: Document) async -> Image?
-    func thumbnailData(document: Document) async -> Data?
+    func thumbnail(document: Document) async throws -> Image?
+    func thumbnailData(document: Document) async throws -> Data
 
-    func download(documentID: UInt) async -> URL?
+    func download(documentID: UInt) async throws -> URL?
 
-    func suggestions(documentId: UInt) async -> Suggestions
+    func suggestions(documentId: UInt) async throws -> Suggestions
 
     // MARK: Saved views
 
@@ -131,7 +131,7 @@ actor NullRepository: Repository {
     func nextAsn() async -> UInt { 1 }
 
     func thumbnail(document _: Document) async -> Image? { nil }
-    func thumbnailData(document _: Document) async -> Data? { nil }
+    func thumbnailData(document _: Document) async throws -> Data { throw NotImplemented() }
 
     func savedViews() async -> [SavedView] { [] }
     func create(savedView _: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
