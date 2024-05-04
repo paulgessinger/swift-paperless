@@ -47,6 +47,7 @@ actor PreviewRepository: Repository {
     private let documentTypes: [UInt: DocumentType]
     private let correspondents: [UInt: Correspondent]
     private let storagePaths: [UInt: StoragePath]
+    private let tasks: [PaperlessTask]
 
     init() {
         let tags = [Tag]([
@@ -149,6 +150,45 @@ actor PreviewRepository: Repository {
         self.tags = tags
         self.documentTypes = documentTypes
         self.storagePaths = storagePaths
+
+        tasks = [
+            PaperlessTask(
+                id: 2748,
+                taskId: UUID(uuidString: "ef16d8fb-c495-4850-92b8-73a64109674e")!,
+                taskFileName: "2021-05-04--Letter_Vorläufiger Bescheid Promotion__DOCT.pdf",
+                dateCreated: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
+                dateDone: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
+                type: .file,
+                status: .SUCCESS,
+                result: "Success. New document id 2232 created",
+                acknowledged: false,
+                relatedDocument: "22"
+            ),
+            PaperlessTask(
+                id: 2749,
+                taskId: UUID(uuidString: "ef16d8fb-c495-4850-92b8-73a64109674e")!,
+                taskFileName: nil,
+                dateCreated: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
+                dateDone: nil,
+                type: .file,
+                status: .SUCCESS,
+                result: "Success. New document id 2232 created",
+                acknowledged: false,
+                relatedDocument: "11"
+            ),
+            PaperlessTask(
+                id: 2750,
+                taskId: UUID(uuidString: "ef16d8fb-c495-4850-92b8-73a64109674e")!,
+                taskFileName: "2022-12-22--Statement_ELSTER - ESt unbeschränkt (ESt 1 A) - Einkommensteuererklärung unbeschränkte SteSteuer__Steuer.pdf",
+                dateCreated: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
+                dateDone: nil,
+                type: .file,
+                status: .FAILURE,
+                result: "2024-04-30 ING Ertragsabrechnung_20240430.pdf.pdf: Not consuming 2024-04-30 ING Ertragsabrechnung_20240430.pdf.pdf: It is a duplicate of Ertragsabrechnung_20240430.pdf (#2488)",
+                acknowledged: false,
+                relatedDocument: nil
+            ),
+        ]
     }
 
     func nextAsn() async -> UInt {
@@ -237,5 +277,8 @@ actor PreviewRepository: Repository {
 
     func users() async -> [User] { [] }
 
-    func tasks() async -> [PaperlessTask] { [] }
+    func tasks() async -> [PaperlessTask] { tasks }
+    func task(id _: UInt) async throws -> PaperlessTask? { nil }
+
+    func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
 }

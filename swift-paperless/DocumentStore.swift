@@ -44,11 +44,11 @@ final class DocumentStore: ObservableObject, Sendable {
     let semaphore = AsyncSemaphore(value: 1)
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
 
-    private(set) var repository: Repository
+    private(set) var repository: any Repository
 
     // MARK: Methods
 
-    init(repository: Repository) {
+    init(repository: some Repository) {
         self.repository = repository
 //        documentSource = NullDocumentSource()
 //        documentSource = repository.documents(filter: FilterState())
@@ -70,7 +70,7 @@ final class DocumentStore: ObservableObject, Sendable {
         activeTasks = []
     }
 
-    func set(repository: Repository) {
+    func set(repository: some Repository) {
         self.repository = repository
         documentEventPublisher.send(.repositoryChanged)
         clear()
