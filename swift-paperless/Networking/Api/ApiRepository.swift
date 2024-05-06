@@ -560,6 +560,24 @@ extension ApiRepository: Repository {
         return try await fetchData(for: request, as: PaperlessTask.self)
     }
 
+    func acknowledge(tasks ids: [UInt]) async throws {
+        var request = try request(.acknowlegdeTasks())
+
+        let payload: [String: [UInt]] = ["tasks": ids]
+
+        let body = try JSONEncoder().encode(payload)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            _ = try await fetchData(for: request, code: 200)
+        } catch {
+            Logger.api.error("Api acknowledge failed: \(error)")
+            throw error
+        }
+    }
+
     private func ensureBackendVersions() async {
         Logger.api.notice("Getting backend versions")
         do {

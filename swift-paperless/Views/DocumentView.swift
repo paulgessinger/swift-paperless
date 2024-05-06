@@ -455,6 +455,7 @@ struct DocumentView: View {
             fatalError("Invalid task view navigation state pushed")
         }
         return TasksView(navPath: navPath)
+            .errorOverlay(errorController: errorController, offset: 15)
     }
 }
 

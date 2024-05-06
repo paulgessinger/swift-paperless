@@ -129,6 +129,8 @@ protocol Repository: Sendable, Actor {
 
     func task(id: UInt) async throws -> PaperlessTask?
     func tasks() async throws -> [PaperlessTask]
+
+    func acknowledge(tasks: [UInt]) async throws
 }
 
 // - MARK: DocumentSource

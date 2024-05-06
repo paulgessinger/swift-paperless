@@ -176,15 +176,17 @@ struct TaskDetailView: View {
                             .stroke(.gray, lineWidth: 0.33))
                     }
                     .padding()
+                } else {
+                    if let id = task.relatedDocument, !id.isEmpty {
+                        Text(.tasks.missingDocument(id))
+                            .padding()
+                            .italic()
+                    }
                 }
             }
         }
-//        .frame(maxHeight: .infinity, alignment: .top)
-//        .padding()
-//        }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-//        .scrollContentBackground(.hidden)
 
         .task {
             guard let id = task.relatedDocument, let id = UInt(id) else {
@@ -207,7 +209,6 @@ struct TasksView: View {
     @State var navPath: NavigationPath
 
     @EnvironmentObject private var store: DocumentStore
-    @Environment(\.dismiss) private var dismiss
 
     init(navPath: NavigationPath = NavigationPath()) {
         _navPath = State(initialValue: navPath)
@@ -230,13 +231,6 @@ struct TasksView: View {
                         Text("Empty")
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(String(localized: .localizable.done)) {
-                            dismiss()
-                        }
-                    }
-                }
                 .animation(.default, value: store.tasks)
         }
 
@@ -254,6 +248,11 @@ private struct TaskList: View {
     @State private var errorTask: PaperlessTask? = nil
 
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selection = Set<UInt>()
+    @State var editMode: EditMode = .inactive
 
     private var fmt: DateFormatter {
         let fmt = DateFormatter()
@@ -263,55 +262,103 @@ private struct TaskList: View {
     }
 
     var body: some View {
-        List {
-            ForEach(tasks, id: \.id) { task in
-                NavigationLink(value: NavigationState.task(task)) {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(String("Task #\(task.id)"))
-                            if let created = task.dateCreated {
-                                Text("\(fmt.string(from: created))")
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
+        List(tasks, selection: $selection) { task in
+            NavigationLink(value: NavigationState.task(task)) {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(String("Task #\(task.id)"))
+                        if let created = task.dateCreated {
+                            Text("\(fmt.string(from: created))")
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                    }
+                    .foregroundColor(.gray)
+
+                    let name = task.taskFileName ?? String(localized: .tasks.unknownFileName)
+                    HStack(alignment: .top) {
+                        task.status.label
+                            .labelStyle(.iconOnly)
+                        Text("\(name)")
+                    }
+                    .bold()
+                    .font(.body)
+                }
+
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        Task {
+                            do {
+                                try await store.acknowledge(tasks: [task.id])
+                            } catch {
+                                Logger.shared.error("Error acknowledging task \(task.id): \(error)")
+                                errorController.push(error: error)
                             }
                         }
-                        .foregroundColor(.gray)
-
-                        let name = task.taskFileName ?? String(localized: .tasks.unknownFileName)
-                        HStack(alignment: .top) {
-                            task.status.label
-                                .labelStyle(.iconOnly)
-                            Text("\(name)")
-                        }
-                        .bold()
-                        .font(.body)
-
-//                        if let result = task.result {
-//                            Text(result)
-//                                .italic()
-//                        }
+                    } label: {
+                        Label(localized: .tasks.acknowledge, systemImage: "checkmark")
                     }
-                    //                .overlay {
-                    //                    if let id = task.relatedDocument, let id = UInt(id) {
-                    //                        Button {
-                    //                            Task {
-                    //                                if let document = try await store.document(id: id) {
-                    //                                    navPath.append(NavigationState.detail(document: document))
-                    //                                }
-                    //                                else {
-                    //                                    errorTask = task
-                    //                                }
-                    //                            }
-                    //                        } label: {
-                    //                            NavigationLink(destination: EmptyView(), label: {EmptyView()})
-                    //                        }
-                    //                    }
-                    //                }
                 }
             }
         }
+
+        .refreshable {
+            store.startTaskPolling()
+        }
+
+        .animation(.default, value: editMode)
+        .animation(.default, value: store.tasks)
+
+        .environment(\.editMode, $editMode)
+
         .alert(unwrapping: $errorTask,
                title: { task in Text(.tasks.missingDocument(String(task.id))) },
                actions: { _ in })
+
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                if editMode == .inactive {
+                    Button(String(localized: .localizable.back)) {
+                        dismiss()
+                    }
+                } else {
+                    if selection.isEmpty {
+                        Button(String(localized: .tasks.acknowledgeAll), role: .destructive) {
+                            Task {
+                                do {
+                                    try await store.acknowledge(tasks: store.tasks.map(\.id))
+                                } catch {
+                                    Logger.shared.error("Error dismissing \(store.tasks.count) tasks: \(error)")
+                                    errorController.push(error: error)
+                                }
+                            }
+                        }
+                    } else {
+                        Button(String(localized: .tasks.acknowledge), role: .destructive) {
+                            Task {
+                                do {
+                                    try await store.acknowledge(tasks: Array(selection))
+                                } catch {
+                                    Logger.shared.error("Error dismissing \(selection.count) tasks: \(error)")
+                                    errorController.push(error: error)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                if editMode == .inactive {
+                    Button(String(localized: .localizable.select)) {
+                        editMode = .active
+                    }
+                } else {
+                    Button(String(localized: .localizable.done)) {
+                        editMode = .inactive
+                    }
+                }
+            }
+        }
     }
 }
 

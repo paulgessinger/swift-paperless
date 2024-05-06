@@ -232,6 +232,15 @@ struct DocumentList: View {
                 .tint(.accentColor)
             }
 
+            .swipeActions(edge: .trailing) {
+                Button(role: documentDeleteConfirmation ? .none : .destructive) {
+                    onDeleteButtonPressed()
+                } label: {
+                    Label(String(localized: .localizable.delete), systemImage: "trash")
+                }
+                .tint(.red)
+            }
+
             .contextMenu {
                 Button {
                     navPath.append(NavigationState.detail(document: document))
@@ -254,15 +263,6 @@ struct DocumentList: View {
             } preview: {
                 DocumentPreview(document: document)
                     .environmentObject(store)
-            }
-
-            .swipeActions(edge: .trailing) {
-                Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    onDeleteButtonPressed()
-                } label: {
-                    Label(String(localized: .localizable.delete), systemImage: "trash")
-                }
-                .tint(.red)
             }
 
             .listRowSeparator(.hidden)

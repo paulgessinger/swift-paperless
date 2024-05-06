@@ -174,7 +174,7 @@ actor PreviewRepository: Repository {
                 status: .SUCCESS,
                 result: "Success. New document id 2232 created",
                 acknowledged: false,
-                relatedDocument: "11"
+                relatedDocument: "1999991"
             ),
             PaperlessTask(
                 id: 2750,
@@ -281,4 +281,6 @@ actor PreviewRepository: Repository {
     func task(id _: UInt) async throws -> PaperlessTask? { nil }
 
     func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
+
+    func acknowledge(tasks _: [UInt]) async throws {}
 }

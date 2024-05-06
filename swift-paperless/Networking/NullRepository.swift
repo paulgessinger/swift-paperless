@@ -64,6 +64,8 @@ actor NullRepository: Repository {
     func task(id _: UInt) async throws -> PaperlessTask? { nil }
     func tasks() async -> [PaperlessTask] { [] }
 
+    func acknowledge(tasks _: [UInt]) async throws {}
+
     func suggestions(documentId _: UInt) async -> Suggestions { .init() }
 }
 

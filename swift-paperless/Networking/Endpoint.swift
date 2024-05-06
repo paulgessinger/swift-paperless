@@ -188,6 +188,10 @@ extension Endpoint {
         .init(path: "/api/tasks/\(id)")
     }
 
+    static func acknowlegdeTasks() -> Endpoint {
+        .init(path: "/api/acknowledge_tasks")
+    }
+
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
         var segment = ""
         switch type {

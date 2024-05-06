@@ -120,6 +120,11 @@ final class DocumentStore: ObservableObject, Sendable {
         self.tasks = tasks
     }
 
+    func acknowledge(tasks ids: [UInt]) async throws {
+        try await repository.acknowledge(tasks: ids)
+        await fetchTasks()
+    }
+
     func fetchAllCorrespondents() async throws {
         try await fetchAll(elements: repository.correspondents(),
                            collection: \.correspondents)

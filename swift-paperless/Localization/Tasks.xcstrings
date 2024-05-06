@@ -1,6 +1,28 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "acknowledge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss"
+          }
+        }
+      }
+    },
+    "acknowledgeAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss all"
+          }
+        }
+      }
+    },
     "createdLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -51,7 +73,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The document with ID #%@ associated with this task does not exist.\n\nMaybe it was deleted in the meantime."
+            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
           }
         }
       }
