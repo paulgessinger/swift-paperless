@@ -43,11 +43,13 @@ struct MainView: View {
                     try? await Task.sleep(for: .seconds(0.3))
                     store.set(repository: ApiRepository(connection: conn))
                     try? await store.fetchAll()
+                    store.startTaskPolling()
                 }
             } else {
                 store = DocumentStore(repository: ApiRepository(connection: conn))
                 Task {
                     try? await store!.fetchAll()
+                    store!.startTaskPolling()
                 }
             }
             storeReady = true
@@ -113,6 +115,8 @@ struct MainView: View {
                     lockState = .locked
                 }
             case .active:
+                store?.startTaskPolling()
+
                 Logger.shared.notice("App becomes active")
                 if enableBiometricAppLock, lockState == .locked {
                     Task {
@@ -141,6 +145,7 @@ struct MainView: View {
                         }
                     }
                 }
+
             default:
                 break
             }

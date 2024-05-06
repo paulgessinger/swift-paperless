@@ -208,7 +208,6 @@ struct TasksView: View {
 
     @EnvironmentObject private var store: DocumentStore
     @Environment(\.dismiss) private var dismiss
-    @State private var tasks: [PaperlessTask] = []
 
     init(navPath: NavigationPath = NavigationPath()) {
         _navPath = State(initialValue: navPath)
@@ -216,7 +215,7 @@ struct TasksView: View {
 
     var body: some View {
         NavigationStack(path: $navPath) {
-            TaskList(tasks: tasks, navPath: $navPath)
+            TaskList(tasks: store.tasks, navPath: $navPath)
 
                 .navigationTitle(String(localized: .tasks.title))
                 .navigationBarTitleDisplayMode(.inline)
@@ -238,17 +237,11 @@ struct TasksView: View {
                         }
                     }
                 }
+                .animation(.default, value: store.tasks)
         }
 
         .task {
-            do {
-                let tasks = try await store.repository.tasks()
-                withAnimation {
-                    self.tasks = tasks
-                }
-            } catch {
-                Logger.shared.error("Error getting task sequence")
-            }
+            store.startTaskPolling()
         }
     }
 }

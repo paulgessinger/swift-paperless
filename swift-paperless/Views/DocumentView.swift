@@ -142,7 +142,6 @@ struct DocumentView: View {
     }
 
     private func createCallback() {
-        Task { await store.fetchTasks() }
         if !importUrls.isEmpty {
             importUrls.removeFirst()
         }
