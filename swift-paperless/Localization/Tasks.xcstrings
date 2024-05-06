@@ -12,6 +12,17 @@
         }
       }
     },
+    "doneLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        }
+      }
+    },
     "filenameLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -45,6 +56,17 @@
         }
       }
     },
+    "relatedDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related document"
+          }
+        }
+      }
+    },
     "result" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -67,6 +89,72 @@
         }
       }
     },
+    "statusFailure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failure"
+          }
+        }
+      }
+    },
+    "statusPending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending"
+          }
+        }
+      }
+    },
+    "statusRetry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
+    "statusRevoked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoked"
+          }
+        }
+      }
+    },
+    "statusStarted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Started"
+          }
+        }
+      }
+    },
+    "statusSuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Success"
+          }
+        }
+      }
+    },
     "task" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -74,6 +162,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Task #%@"
+          }
+        }
+      }
+    },
+    "tasksMenuAllLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tasks"
+          }
+        }
+      }
+    },
+    "tasksMenuMoreLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%llu more tasks"
           }
         }
       }

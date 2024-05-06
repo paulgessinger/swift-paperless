@@ -14,7 +14,6 @@
 		7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */; };
 		7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF690F29CF7FA800414BA7 /* LoginView.swift */; };
 		7A0772062BE5370700DCC8CD /* TaskActivityToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772052BE5370700DCC8CD /* TaskActivityToolbar.swift */; };
-		7A0772072BE5370700DCC8CD /* TaskActivityToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772052BE5370700DCC8CD /* TaskActivityToolbar.swift */; };
 		7A07721C2BE5380100DCC8CD /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A07721B2BE5380100DCC8CD /* TasksView.swift */; };
 		7A07722B2BE6495600DCC8CD /* NullRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A07722A2BE6495600DCC8CD /* NullRepository.swift */; };
 		7A07722C2BE6495600DCC8CD /* NullRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A07722A2BE6495600DCC8CD /* NullRepository.swift */; };
@@ -24,6 +23,8 @@
 		7A0772452BE64CB200DCC8CD /* ApiSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772432BE64CB200DCC8CD /* ApiSequence.swift */; };
 		7A0772622BE66E0500DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
 		7A0772632BE66E0500DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
+		7A0772922BE934D200DCC8CD /* Label+init.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772912BE934D200DCC8CD /* Label+init.swift */; };
+		7A0772932BE934D200DCC8CD /* Label+init.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772912BE934D200DCC8CD /* Label+init.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
@@ -289,6 +290,7 @@
 		7A0772402BE64C9200DCC8CD /* ApiError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiError.swift; sourceTree = "<group>"; };
 		7A0772432BE64CB200DCC8CD /* ApiSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiSequence.swift; sourceTree = "<group>"; };
 		7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Tasks.xcstrings; sourceTree = "<group>"; };
+		7A0772912BE934D200DCC8CD /* Label+init.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Label+init.swift"; sourceTree = "<group>"; };
 		7A1460E72B19F76D0074BAAB /* Settings.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Settings.xcstrings; sourceTree = "<group>"; };
 		7A1460F22B19F8380074BAAB /* Login.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Login.xcstrings; sourceTree = "<group>"; };
 		7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsView.swift; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 				7A6FD1A62BDD6668002AA467 /* DocumentationLinks.swift */,
 				7A7080D02BDF8EF90095BD56 /* Import.swift */,
 				7A7080FB2BE0F4EB0095BD56 /* NSData+mimeType.swift */,
+				7A0772912BE934D200DCC8CD /* Label+init.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -942,7 +945,6 @@
 				7A2F655A2B5ADB25000A75D9 /* MailView.swift in Sources */,
 				7A04EE4C2A67F9DE00C9CAE3 /* LoginView.swift in Sources */,
 				7A2831B32A62748D009E86CE /* UserModel.swift in Sources */,
-				7A0772072BE5370700DCC8CD /* TaskActivityToolbar.swift in Sources */,
 				7AB057782AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */,
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
@@ -981,6 +983,7 @@
 				7A495CFA2BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7A7080CF2BDF8EE30095BD56 /* DocumentScannerView.swift in Sources */,
 				7A4AA8F529BDEAFA00D845A2 /* AttachmentManager.swift in Sources */,
+				7A0772932BE934D200DCC8CD /* Label+init.swift in Sources */,
 				7AD353B22A80392400AFFAFE /* PDFView.swift in Sources */,
 				7AF2E08629F553360092948B /* MatchingEditView.swift in Sources */,
 				7A2E12242B14F3A000E7704A /* DeriveUrl.swift in Sources */,
@@ -1062,6 +1065,7 @@
 				7ADA9ABB2B263797002C303C /* Decoder.swift in Sources */,
 				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,
 				7AF04B7D29A689E1008E8F79 /* DocumentDetailView.swift in Sources */,
+				7A0772922BE934D200DCC8CD /* Label+init.swift in Sources */,
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */,
 				7A2E12222B14F3A000E7704A /* DeriveUrl.swift in Sources */,

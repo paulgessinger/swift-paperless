@@ -9,6 +9,23 @@ import os
 import SwiftUI
 
 extension TaskStatus {
+    var icon: String {
+        switch self {
+        case .PENDING:
+            "clock"
+        case .STARTED:
+            "clock.badge.checkmark"
+        case .SUCCESS:
+            "checkmark.circle"
+        case .FAILURE:
+            "x.circle"
+        case .RETRY:
+            "clock.arrow.circlepath"
+        case .REVOKED:
+            "clock.badge.xmark"
+        }
+    }
+
     var label: some View {
         let image: String
         let color: Color
@@ -16,7 +33,6 @@ extension TaskStatus {
         case .PENDING:
             image = "clock"
             color = .primary
-
         case .STARTED:
             image = "clock.badge.checkmark"
             color = .primary
@@ -40,6 +56,25 @@ extension TaskStatus {
         )
         .foregroundColor(color)
     }
+
+    var name: String {
+        let res: LocalizedStringResource = switch self {
+        case .PENDING:
+            .tasks.statusPending
+        case .STARTED:
+            .tasks.statusStarted
+        case .SUCCESS:
+            .tasks.statusSuccess
+        case .FAILURE:
+            .tasks.statusFailure
+        case .RETRY:
+            .tasks.statusRetry
+        case .REVOKED:
+            .tasks.statusRevoked
+        }
+
+        return String(localized: res)
+    }
 }
 
 struct TaskDetailView: View {
@@ -60,59 +95,96 @@ struct TaskDetailView: View {
     }
 
     var body: some View {
-        Form {
+        ScrollView(.vertical) {
             VStack(alignment: .leading) {
-                Text(.tasks.filenameLabel)
-                    .foregroundStyle(.gray)
-                Text(task.taskFileName ?? String(localized: .tasks.unknownFileName))
-                    .bold()
-            }
-
-            HStack {
-                Text(.tasks.idLabel)
-                    .foregroundStyle(.gray)
-                Text(String(task.id))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-
-            if let created = task.dateCreated {
-                HStack {
-                    Text(.tasks.createdLabel)
-                        .foregroundStyle(.gray)
-                    Spacer()
-                    Text("\(fmt.string(from: created))")
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-            }
-
-            HStack {
-                Text(.tasks.status)
-                    .foregroundStyle(.gray)
-                Spacer()
-                task.status.label
-                    .labelStyle(.iconOnly)
-                Text("\(task.status)".capitalized)
-            }
-
-            if let result = task.result {
                 VStack(alignment: .leading) {
-                    Text(.tasks.result)
-                        .foregroundStyle(.gray)
-                    Text(result)
-                        .italic()
-                }
-            }
+                    Text(task.taskFileName ?? String(localized: .tasks.unknownFileName))
+                        .font(.headline)
 
-            if let document {
-                Section(String(localized: .localizable.document)) {
-                    NavigationLink(value: NavigationState.detail(document: document)) {
-                        DocumentCell(document: document)
+                    Divider()
+
+                    HStack {
+                        Text(.tasks.idLabel)
+                            .foregroundStyle(.gray)
+                        Text(String(task.id))
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                     }
+
+                    Divider()
+
+                    if let created = task.dateCreated {
+                        HStack {
+                            Text(.tasks.createdLabel)
+                                .foregroundStyle(.gray)
+                            Spacer()
+                            Text("\(fmt.string(from: created))")
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                        Divider()
+                    }
+
+                    HStack {
+                        Text(.tasks.status)
+                            .foregroundStyle(.gray)
+                        Spacer()
+                        task.status.label
+                            .labelStyle(.iconOnly)
+                        Text(task.status.name)
+                    }
+
+                    if let result = task.result {
+                        Divider()
+                        VStack(alignment: .leading) {
+                            Text(.tasks.result)
+                                .foregroundStyle(.gray)
+                            Text(result)
+                                .italic()
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(white: 0.98))
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(.gray, lineWidth: 0.33))
+                .shadow(color: Color(white: 0.9), radius: 10)
+                .padding()
+
+                if let document {
+                    VStack {
+                        Text(.tasks.relatedDocument)
+                            .font(.headline)
+                            .padding(.top, 30)
+                            .frame(maxWidth: .infinity, alignment: .center)
+
+                        NavigationLink(value: NavigationState.detail(document: document)) {
+                            HStack {
+                                DocumentCell(document: document)
+                                Label(localized: .localizable.more, systemImage: "chevron.right")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundColor(.gray)
+                                    .font(.callout)
+                            }
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        .padding(.horizontal)
+                        .padding(.vertical, 15)
+
+                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(.gray, lineWidth: 0.33))
+                    }
+                    .padding()
                 }
             }
         }
+//        .frame(maxHeight: .infinity, alignment: .top)
+//        .padding()
+//        }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+//        .scrollContentBackground(.hidden)
 
         .task {
             guard let id = task.relatedDocument, let id = UInt(id) else {

@@ -189,6 +189,10 @@ struct DocumentView: View {
         }
     }
 
+//    var taskActivityToolbar: some View {
+//        TaskActivityToolbar(navState: $taskViewNavState)
+//    }
+
     // MARK: Main View Body
 
     var body: some View {
@@ -242,64 +246,60 @@ struct DocumentView: View {
 
                 // MARK: Main toolbar
 
-                .toolbarTitleMenu {
-                    if !store.savedViews.isEmpty {
-                        Button {
-                            withAnimation {
-                                filterModel.filterState.clear()
-                            }
-                        } label: {
-                            Text(.localizable.allDocuments)
-                        }
-                        Divider()
-                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
-                            Button {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    withAnimation {
-                                        filterModel.filterState = .init(savedView: savedView)
-                                    }
-                                }
-                            } label: {
-                                Text(savedView.name)
-                            }
-                        }
-                    }
-                }
+//                .toolbarTitleMenu {
+//                    if !store.savedViews.isEmpty {
+//                        Button {
+//                            withAnimation {
+//                                filterModel.filterState.clear()
+//                            }
+//                        } label: {
+//                            Text(.localizable.allDocuments)
+//                        }
+//                        Divider()
+//                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
+//                            Button {
+//                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                                    withAnimation {
+//                                        filterModel.filterState = .init(savedView: savedView)
+//                                    }
+//                                }
+//                            } label: {
+//                                Text(savedView.name)
+//                            }
+//                        }
+//                    }
+//                }
 
-                .navigationTitle(savedViewNavigationTitle)
+//                .navigationTitle(savedViewNavigationTitle)
+                .navigationBarTitleDisplayMode(.inline)
 
                 .toolbar {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
-                        HStack {
-//                            TaskActivityToolbar()
-                            Button("Tasks") {
-                                taskViewNavState = .tasks
-                            }
-
-                            Menu {
-                                if isDocumentScannerAvailable {
-                                    Button {
-                                        showDocumentScanner = true
-                                    } label: {
-                                        Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                        TaskActivityToolbar(navState: $taskViewNavState)
+                        Label(String(localized: .localizable.add), systemImage: "plus")
+                            .overlay {
+                                Menu {
+                                    if isDocumentScannerAvailable {
+                                        Button {
+                                            showDocumentScanner = true
+                                        } label: {
+                                            Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                                        }
                                     }
-                                }
 
-                                Button {
-                                    showFileImporter = true
-                                } label: {
-                                    Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
-                                }
+                                    Button {
+                                        showFileImporter = true
+                                    } label: {
+                                        Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
+                                    }
 
-                                Button {
-                                    showPhotosPicker = true
-                                } label: {
-                                    Label(String(localized: .localizable.importPhotos), systemImage: "photo")
-                                }
-                            } label: {
-                                Label(String(localized: .localizable.add), systemImage: "plus")
+                                    Button {
+                                        showPhotosPicker = true
+                                    } label: {
+                                        Label(String(localized: .localizable.importPhotos), systemImage: "photo")
+                                    }
+                                } label: {}
                             }
-                        }
                     }
 
                     ToolbarItemGroup(placement: .navigationBarLeading) {
@@ -354,7 +354,6 @@ struct DocumentView: View {
                         }
                     }
                 }
-                .navigationBarTitleDisplayMode(.inline)
 
                 .fileImporter(isPresented: $showFileImporter,
                               allowedContentTypes: [.pdf, .image],

@@ -20,7 +20,7 @@ enum TaskType: String, Codable {
     case file
 }
 
-struct PaperlessTask: Model, Codable, Equatable, Hashable {
+struct PaperlessTask: Model, Codable, Equatable, Hashable, Identifiable {
     static var localizedName: String { "FileTask" }
 
     var id: UInt

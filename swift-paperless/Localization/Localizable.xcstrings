@@ -3094,6 +3094,17 @@
         }
       }
     },
+    "more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
     "name" : {
       "extractionState" : "manual",
       "localizations" : {
