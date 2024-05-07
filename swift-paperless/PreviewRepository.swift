@@ -243,7 +243,7 @@ actor PreviewRepository: Repository {
     }
 
     func thumbnailData(document: Document) async throws -> Data {
-        let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/200")!)
+        let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
 
         do {
             let (data, _) = try await URLSession.shared.getData(for: request)

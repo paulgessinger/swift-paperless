@@ -15,22 +15,20 @@ struct DocumentPreviewImage: View {
     @StateObject private var image = FetchImage()
 
     var body: some View {
-        ZStack {
-            Rectangle()
-                .fill(Color(white: 0.8))
-//                .aspectRatio(contentMode: .fill)
-                .overlay(ProgressView())
-//                .frame(width: 100, height: 150, alignment: .top)
+        ZStack(alignment: .top) {
+            if image.image == nil {
+                ProgressView()
+            }
 
             image.image?
                 .resizable()
-//                .aspectRatio(contentMode: .fill)
-//                .frame(width: 100, height: 150, alignment: .top)
-        }
+                .scaledToFit()
 
-        .cornerRadius(10)
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .stroke(.gray, lineWidth: 0.33))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(.gray, lineWidth: 0.33))
+                .shadow(color: Color("ImageShadow"), radius: 5)
+        }
 
         .task {
             guard let data = try? await store.repository.thumbnailData(document: document) else {
@@ -38,12 +36,11 @@ struct DocumentPreviewImage: View {
             }
 
             image.load(ImageRequest(id: "\(document.id)", data: { data }, processors: [
-                .resize(size: CGSize(width: 200, height: 200)),
             ]))
         }
 
         .transition(.opacity)
-        .animation(.default, value: image.image)
+        .animation(.linear(duration: 0.1), value: image.image)
     }
 }
 
@@ -96,13 +93,11 @@ struct DocumentCell: View {
                     .cornerRadius(10)
                     .aspectRatio(2 / 3, contentMode: .fit)
                     .shadow(color: Color("ImageShadow"), radius: 5)
-                    .frame(height: 200)
+                    .frame(width: 130)
             } else {
                 DocumentPreviewImage(store: store,
                                      document: document)
-                    .aspectRatio(2 / 3, contentMode: .fit)
-                    .shadow(color: Color("ImageShadow"), radius: 5)
-                    .frame(height: 200)
+                    .frame(maxWidth: 130, minHeight: 100)
             }
 
             VStack(alignment: .leading) {
@@ -149,6 +144,7 @@ struct DocumentCell: View {
             .layoutPriority(1)
             .padding(.horizontal, 5)
         }
+        .frame(height: 190, alignment: .top)
     }
 }
 
@@ -157,12 +153,19 @@ private struct HelperView: View {
     @State var documents = [Document]()
 
     var body: some View {
-        VStack {
-            ForEach(documents.prefix(5), id: \.id) { document in
-                DocumentCell(document: document)
-                    .padding()
+        ScrollView(.vertical) {
+            VStack {
+                ForEach(documents.prefix(5), id: \.id) { document in
+                    DocumentCell(document: document)
+                }
+
+                if let doc = documents.first {
+                    DocumentCell(document: doc)
+                        .redacted(reason: .placeholder)
+                }
+                Spacer()
             }
-            Spacer()
+            .padding()
         }
         .task {
             // @TODO: Fix this preview

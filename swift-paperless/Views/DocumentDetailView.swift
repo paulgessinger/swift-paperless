@@ -68,11 +68,16 @@ private struct IntegratedDocumentPreview: View {
                         .resizable()
                         .scaledToFit()
                         .blur(radius: 5)
+
+                        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .stroke(.gray, lineWidth: 0.33))
+                        .shadow(color: Color("ImageShadow"), radius: 15)
                 }
                 placeholder: {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .aspectRatio(0.75, contentMode: .fit)
+                        .aspectRatio(1.0, contentMode: .fit)
                 }
             }
 
@@ -90,6 +95,10 @@ private struct IntegratedDocumentPreview: View {
             case let .loaded(view):
                 view
                     .background(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(.gray, lineWidth: 0.33))
+                    .shadow(color: Color("ImageShadow"), radius: 15)
 
             default:
                 EmptyView()
@@ -212,10 +221,6 @@ struct DocumentDetailView: View {
                 .padding()
 
                 IntegratedDocumentPreview(download: $download, document: document)
-                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .stroke(.gray, lineWidth: 0.33))
-                    .shadow(color: Color("ImageShadow"), radius: 15)
                     .padding()
 
                     .onTapGesture {
@@ -293,11 +298,9 @@ private struct PreviewHelper: View {
     }
 }
 
-struct DocumentDetailsView_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: PreviewRepository())
+#Preview("DocumentDetailsView") {
+    let store = DocumentStore(repository: PreviewRepository())
 
-    static var previews: some View {
-        PreviewHelper()
-            .environmentObject(store)
-    }
+    return PreviewHelper()
+        .environmentObject(store)
 }

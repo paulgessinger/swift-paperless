@@ -52,7 +52,7 @@ class DocumentListViewModel: ObservableObject {
     private var source: DocumentSource?
     private var exhausted: Bool = false
 
-    private var initialBatchSize: UInt = 20
+    private var initialBatchSize: UInt = 100
     private var batchSize: UInt = 100
     private var fetchMargin = 10
 
@@ -390,7 +390,7 @@ struct DocumentList: View {
             }
 
             // @TODO: Re-evaluate if we want an animation here
-//            .animation(.default, value: viewModel.documents)
+            .animation(.default, value: viewModel.documents)
         }
         .refreshable {
             Task {
