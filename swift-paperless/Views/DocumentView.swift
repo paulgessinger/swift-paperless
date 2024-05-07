@@ -234,6 +234,12 @@ struct DocumentView: View {
                         Button("Trigger error with details") {
                             errorController.push(message: "An error", details: "Some details")
                         }
+
+                        Button("Trigger many errors") {
+                            for i in 0 ..< 10 {
+                                errorController.push(message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
+                            }
+                        }
                     }
                 #endif
 

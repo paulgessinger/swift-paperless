@@ -28,6 +28,8 @@
 		7A0772DF2BEA2DF800DCC8CD /* ErrorParsingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */; };
 		7A0772EF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
 		7A0772FF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
+		7A0773382BEA607000DCC8CD /* ErrorDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */; };
+		7A0773392BEA607000DCC8CD /* ErrorDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
@@ -295,6 +297,7 @@
 		7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Tasks.xcstrings; sourceTree = "<group>"; };
 		7A0772912BE934D200DCC8CD /* Label+init.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Label+init.swift"; sourceTree = "<group>"; };
 		7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorParsingTest.swift; sourceTree = "<group>"; };
+		7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorDisplay.swift; sourceTree = "<group>"; };
 		7A1460E72B19F76D0074BAAB /* Settings.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Settings.xcstrings; sourceTree = "<group>"; };
 		7A1460F22B19F8380074BAAB /* Login.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Login.xcstrings; sourceTree = "<group>"; };
 		7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsView.swift; sourceTree = "<group>"; };
@@ -466,6 +469,15 @@
 				7A0772432BE64CB200DCC8CD /* ApiSequence.swift */,
 			);
 			path = Api;
+			sourceTree = "<group>";
+		};
+		7A07732B2BEA606100DCC8CD /* Error */ = {
+			isa = PBXGroup;
+			children = (
+				7AF2E07D29F46C950092948B /* ErrorController.swift */,
+				7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */,
+			);
+			path = Error;
 			sourceTree = "<group>";
 		};
 		7A1460E62B19F7580074BAAB /* Localization */ = {
@@ -660,6 +672,7 @@
 		7AF04B7929A6898C008E8F79 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7A07732B2BEA606100DCC8CD /* Error */,
 				7A297FB229FE8A320021A1ED /* DocumentTypeEditView.swift */,
 				7A297FAF29FE78750021A1ED /* CorrespondentEditView.swift */,
 				7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */,
@@ -678,7 +691,6 @@
 				7AEF690F29CF7FA800414BA7 /* LoginView.swift */,
 				7AEF691129CF80F600414BA7 /* LogoView.swift */,
 				7AD8FC5729E4B37B00157217 /* FilterBar.swift */,
-				7AF2E07D29F46C950092948B /* ErrorController.swift */,
 				7AF2E08429F553360092948B /* MatchingEditView.swift */,
 				7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */,
 				7A2831B92A63DDDF009E86CE /* DocumentList.swift */,
@@ -958,6 +970,7 @@
 				7A495C792BD4136C00A2E5CF /* ConnectionsView.swift in Sources */,
 				7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */,
 				7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
+				7A0773392BEA607000DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7A0772422BE64C9200DCC8CD /* ApiError.swift in Sources */,
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
@@ -1056,6 +1069,7 @@
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A15D7702BC8010E001E3A86 /* ConnectionsView.swift in Sources */,
+				7A0773382BEA607000DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A7080FC2BE0F4EB0095BD56 /* NSData+mimeType.swift in Sources */,
 				7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */,
@@ -1700,7 +1714,7 @@
 			repositoryURL = "https://github.com/apple/swift-async-algorithms";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
