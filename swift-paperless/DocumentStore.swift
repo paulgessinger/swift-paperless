@@ -25,7 +25,11 @@ final class DocumentStore: ObservableObject, Sendable {
     @Published private(set) var users: [UInt: User] = [:]
     @Published private(set) var currentUser: User?
 
-    @Published private(set) var activeTasks: [PaperlessTask] = []
+    @Published private(set) var tasks: [PaperlessTask] = []
+
+    var activeTasks: [PaperlessTask] {
+        tasks.filter(\.isActive)
+    }
 
     // MARK: Members
 
@@ -36,22 +40,62 @@ final class DocumentStore: ObservableObject, Sendable {
 
         case repositoryWillChange
         case repositoryChanged
+        case taskError(task: PaperlessTask)
     }
 
-    var documentEventPublisher =
+    var eventPublisher =
         PassthroughSubject<Event, Never>()
 
     let semaphore = AsyncSemaphore(value: 1)
     let fetchAllSemaphore = AsyncSemaphore(value: 1)
 
-    private(set) var repository: Repository
+    private(set) var repository: any Repository
+
+    private var taskUpdateTask: Task<Void, Never>?
 
     // MARK: Methods
 
-    init(repository: Repository) {
+    init(repository: some Repository) {
         self.repository = repository
-//        documentSource = NullDocumentSource()
-//        documentSource = repository.documents(filter: FilterState())
+    }
+
+    deinit {
+        taskUpdateTask?.cancel()
+    }
+
+    @Sendable
+    private func taskPoller() async {
+        Logger.shared.debug("Task poller initialize")
+        repeat {
+            guard !Task.isCancelled else { break }
+            Logger.shared.debug("Polling tasks")
+
+            let currentActiveTasks = Set(tasks.filter(\.isActive).map(\.id))
+            Logger.shared.debug("Current active: \(currentActiveTasks)")
+            await fetchTasks()
+            let newErrors: [PaperlessTask] = tasks.filter { $0.status == .FAILURE && currentActiveTasks.contains($0.id) }
+            Logger.shared.debug("New errors: \(newErrors)")
+
+            if !newErrors.isEmpty {
+                Task {
+                    // don't send the errors all at once if there's multiple
+                    for task in newErrors {
+                        eventPublisher.send(.taskError(task: task))
+                        try? await Task.sleep(for: .seconds(2))
+                    }
+                }
+            }
+
+            let duration: Duration = .seconds(activeTasks.isEmpty ? 60 : 2.5)
+            Logger.shared.debug("Task poller sleeping for \(duration)")
+            try? await Task.sleep(for: duration)
+        } while !Task.isCancelled
+        Logger.shared.debug("Task poller terminating")
+    }
+
+    func startTaskPolling() {
+        taskUpdateTask?.cancel()
+        taskUpdateTask = Task(operation: taskPoller)
     }
 
     func clearDocuments() {
@@ -67,37 +111,37 @@ final class DocumentStore: ObservableObject, Sendable {
         storagePaths = [:]
         users = [:]
         currentUser = nil
-        activeTasks = []
+        tasks = []
     }
 
-    func set(repository: Repository) {
+    func set(repository: some Repository) {
         self.repository = repository
-        documentEventPublisher.send(.repositoryChanged)
+        eventPublisher.send(.repositoryChanged)
         clear()
     }
 
     func updateDocument(_ document: Document) async throws {
-        documentEventPublisher.send(.changed(document: document))
+        eventPublisher.send(.changed(document: document))
         documents[document.id] = try await repository.update(document: document)
-        documentEventPublisher.send(.changeReceived(document: document))
+        eventPublisher.send(.changeReceived(document: document))
     }
 
     func deleteDocument(_ document: Document) async throws {
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
-        documentEventPublisher.send(.deleted(document: document))
+        eventPublisher.send(.deleted(document: document))
     }
 
     func fetchTasks() async {
         guard let tasks = try? await repository.tasks() else {
             return
         }
-        let activeTasks = tasks.filter(\.isActive)
-//        let inactiveTasks = tasks.filter { !$0.isActive }
+        self.tasks = tasks
+    }
 
-        await MainActor.run {
-            self.activeTasks = activeTasks
-        }
+    func acknowledge(tasks ids: [UInt]) async throws {
+        try await repository.acknowledge(tasks: ids)
+        await fetchTasks()
     }
 
     func fetchAllCorrespondents() async throws {
@@ -308,6 +352,11 @@ final class DocumentStore: ObservableObject, Sendable {
         let created = try await repository.create(savedView: savedView)
         savedViews[created.id] = created
         return created
+    }
+
+    func create(document: ProtoDocument, file: URL) async throws {
+        try await repository.create(document: document, file: file)
+        startTaskPolling()
     }
 
     func update(savedView: SavedView) async throws {

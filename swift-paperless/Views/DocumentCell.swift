@@ -166,26 +166,24 @@ private struct HelperView: View {
         }
         .task {
             // @TODO: Fix this preview
-//            documents = await store.fetchDocuments(clear: true, filter: FilterState())
+            if let documents = try? await store.repository.documents(filter: FilterState()).fetch(limit: 3) {
+                self.documents = documents
+            }
         }
     }
 }
 
-struct DocumentCell_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: PreviewRepository())
+#Preview("DocumentCell") {
+    let store = DocumentStore(repository: PreviewRepository())
 
-    static var previews: some View {
-        HelperView()
-            .environmentObject(store)
-    }
+    return HelperView()
+        .environmentObject(store)
 }
 
-struct DocumentCellRedacted_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: PreviewRepository())
+#Preview("DocumentCellRedacted") {
+    let store = DocumentStore(repository: PreviewRepository())
 
-    static var previews: some View {
-        HelperView()
-            .redacted(reason: .placeholder)
-            .environmentObject(store)
-    }
+    return HelperView()
+        .redacted(reason: .placeholder)
+        .environmentObject(store)
 }

@@ -20,7 +20,9 @@ enum TaskType: String, Codable {
     case file
 }
 
-struct PaperlessTask: Codable, Equatable {
+struct PaperlessTask: Model, Codable, Equatable, Hashable, Identifiable {
+    static var localizedName: String { "FileTask" }
+
     var id: UInt
     var taskId: UUID
     var taskFileName: String?
@@ -51,5 +53,22 @@ struct PaperlessTask: Codable, Equatable {
         default:
             return false
         }
+    }
+
+    var localizedResult: String? {
+        guard let result else {
+            return nil
+        }
+
+        // @TODO: More sophisticated parsing of errors
+        let fileName = taskFileName ?? String(localized: .tasks.unknownFileName)
+
+        let duplicatePattern = /(.*): Not consuming (.*): It is a duplicate of (.*) \(#(\d*)\)/
+
+        if (try? duplicatePattern.wholeMatch(in: result)) != nil {
+            return String(localized: .tasks.errorDuplicate(fileName))
+        }
+
+        return String(stringLiteral: result)
     }
 }
