@@ -30,6 +30,7 @@
 		7A0772FF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
 		7A0773382BEA607000DCC8CD /* ErrorDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */; };
 		7A0773392BEA607000DCC8CD /* ErrorDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */; };
+		7A07733A2BEA734C00DCC8CD /* ErrorDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0773372BEA607000DCC8CD /* ErrorDisplay.swift */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
@@ -1138,6 +1139,7 @@
 				7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */,
 				7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */,
 				7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */,
+				7A07733A2BEA734C00DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A8E1F832A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */,
 				7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */,
