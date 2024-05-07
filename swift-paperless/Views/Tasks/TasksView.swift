@@ -81,7 +81,13 @@ struct TaskDetailView: View {
     let task: PaperlessTask
 
     @EnvironmentObject private var store: DocumentStore
-    @State private var document: Document? = nil
+
+    private enum DocumentResult {
+        case document(_: Document)
+        case missing(_: UInt)
+    }
+
+    @State private var document: DocumentResult?
 
     private var title: String {
         String(localized: .tasks.task(String(task.id)))
@@ -143,21 +149,22 @@ struct TaskDetailView: View {
                     }
                 }
                 .padding()
-                .background(Color(white: 0.98))
+                .background(Color.systemBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(color: .imageShadow, radius: 10)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(.gray, lineWidth: 0.33))
-                .shadow(color: Color(white: 0.9), radius: 10)
                 .padding()
 
                 if let document {
-                    VStack {
-                        Text(.tasks.relatedDocument)
-                            .font(.headline)
-                            .padding(.top, 30)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                    switch document {
+                    case let .document(document):
+                        VStack {
+                            Text(.tasks.relatedDocument)
+                                .font(.headline)
+                                .padding(.top, 30)
+                                .frame(maxWidth: .infinity, alignment: .center)
 
-                        NavigationLink(value: NavigationState.detail(document: document)) {
                             HStack {
                                 DocumentCell(document: document)
                                 Label(localized: .localizable.more, systemImage: "chevron.right")
@@ -165,22 +172,25 @@ struct TaskDetailView: View {
                                     .foregroundColor(.gray)
                                     .font(.callout)
                             }
-                            .foregroundStyle(.black)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .padding(.vertical, 15)
+                            .overlay {
+                                NavigationLink(value: NavigationState.detail(document: document)) {
+                                    Color.clear
+                                }
+                            }
+
+                            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(.gray, lineWidth: 0.33))
                         }
+                        .padding()
 
-                        .padding(.horizontal)
-                        .padding(.vertical, 15)
-
-                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(.gray, lineWidth: 0.33))
-                    }
-                    .padding()
-                } else {
-                    if let id = task.relatedDocument, !id.isEmpty {
-                        Text(.tasks.missingDocument(id))
+                    case let .missing(id):
+                        Text(.tasks.missingDocument(String(id)))
                             .padding()
                             .italic()
+                            .multilineTextAlignment(.center)
                     }
                 }
             }
@@ -194,9 +204,14 @@ struct TaskDetailView: View {
                 return
             }
             do {
-                let document = try await store.document(id: id)
-                withAnimation {
-                    self.document = document
+                if let document = try await store.document(id: id) {
+                    withAnimation {
+                        self.document = .document(document)
+                    }
+                } else {
+                    withAnimation {
+                        document = .missing(id)
+                    }
                 }
             } catch {
                 Logger.shared.error("Unable to get document for related document ID \(id, privacy: .public): \(error)")
@@ -326,6 +341,7 @@ private struct TaskList: View {
                             Task {
                                 do {
                                     try await store.acknowledge(tasks: store.tasks.map(\.id))
+                                    editMode = .inactive
                                 } catch {
                                     Logger.shared.error("Error dismissing \(store.tasks.count) tasks: \(error)")
                                     errorController.push(error: error)
@@ -333,7 +349,7 @@ private struct TaskList: View {
                             }
                         }
                     } else {
-                        Button(String(localized: .tasks.acknowledge), role: .destructive) {
+                        Button(String(localized: .tasks.acknowledgeN(UInt(selection.count))), role: .destructive) {
                             Task {
                                 do {
                                     try await store.acknowledge(tasks: Array(selection))

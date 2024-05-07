@@ -25,6 +25,9 @@
 		7A0772632BE66E0500DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
 		7A0772922BE934D200DCC8CD /* Label+init.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772912BE934D200DCC8CD /* Label+init.swift */; };
 		7A0772932BE934D200DCC8CD /* Label+init.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772912BE934D200DCC8CD /* Label+init.swift */; };
+		7A0772DF2BEA2DF800DCC8CD /* ErrorParsingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */; };
+		7A0772EF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
+		7A0772FF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */; };
 		7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A11DEFA29FFDAB800FFD705 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF691E29D06D6A00414BA7 /* PreviewRepository.swift */; };
 		7A1460E82B19F76D0074BAAB /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
@@ -291,6 +294,7 @@
 		7A0772432BE64CB200DCC8CD /* ApiSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiSequence.swift; sourceTree = "<group>"; };
 		7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Tasks.xcstrings; sourceTree = "<group>"; };
 		7A0772912BE934D200DCC8CD /* Label+init.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Label+init.swift"; sourceTree = "<group>"; };
+		7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorParsingTest.swift; sourceTree = "<group>"; };
 		7A1460E72B19F76D0074BAAB /* Settings.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Settings.xcstrings; sourceTree = "<group>"; };
 		7A1460F22B19F8380074BAAB /* Login.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Login.xcstrings; sourceTree = "<group>"; };
 		7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsView.swift; sourceTree = "<group>"; };
@@ -571,6 +575,7 @@
 				7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */,
 				7AF2E07129F3ECE40092948B /* SavedViewTest.swift */,
 				7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */,
+				7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */,
 			);
 			path = "swift-paperlessTests";
 			sourceTree = "<group>";
@@ -905,6 +910,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A0772FF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */,
 				7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */,
 				7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */,
 				7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */,
@@ -916,6 +922,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A0772EF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */,
 				7A56F26E2B8270C300BE9361 /* Matching.xcstrings in Resources */,
 				7A56F26A2B8270BE00BE9361 /* Settings.xcstrings in Resources */,
 				7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */,
@@ -1112,6 +1119,7 @@
 				7A495D232BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */,
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
+				7A0772DF2BEA2DF800DCC8CD /* ErrorParsingTest.swift in Sources */,
 				7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */,
 				7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */,
 				7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */,

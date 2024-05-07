@@ -188,9 +188,88 @@ struct DocumentView: View {
         }
     }
 
-//    var taskActivityToolbar: some View {
-//        TaskActivityToolbar(navState: $taskViewNavState)
-//    }
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .navigationBarTrailing) {
+            TaskActivityToolbar(navState: $taskViewNavState)
+            Label(String(localized: .localizable.add), systemImage: "plus")
+                .overlay {
+                    Menu {
+                        if isDocumentScannerAvailable {
+                            Button {
+                                showDocumentScanner = true
+                            } label: {
+                                Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                            }
+                        }
+
+                        Button {
+                            showFileImporter = true
+                        } label: {
+                            Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
+                        }
+
+                        Button {
+                            showPhotosPicker = true
+                        } label: {
+                            Label(String(localized: .localizable.importPhotos), systemImage: "photo")
+                        }
+                    } label: {}
+                }
+        }
+
+        ToolbarItemGroup(placement: .navigationBarLeading) {
+            Menu {
+                NavigationLink(value: NavigationState.settings) {
+                    Label(String(localized: .settings.title), systemImage: "gear")
+                }
+
+                ConnectionQuickChangeMenu()
+
+                #if DEBUG
+                    Section("Debug") {
+                        Button("Trigger error without details") {
+                            errorController.push(message: "An error")
+                        }
+                        Button("Trigger error with details") {
+                            errorController.push(message: "An error", details: "Some details")
+                        }
+                    }
+                #endif
+
+                Divider()
+
+                Button(role: .destructive) {
+                    logoutRequested = true
+                } label: {
+                    Label(String(localized: .localizable.logout), systemImage: "rectangle.portrait.and.arrow.right")
+                }
+
+            } label: {
+                Label(String(localized: .localizable.detailsMenuLabel), systemImage: "ellipsis.circle")
+                    .labelStyle(.iconOnly)
+            }
+
+            if DataScannerView.isAvailable {
+                Button {
+                    Task {
+                        try? await Task.sleep(for: .seconds(0.1))
+                        showDataScanner = true
+                    }
+                } label: {
+                    Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
+                }
+            } else {
+                Button {
+                    withAnimation(.spring(response: 0.5)) {
+                        showTypeAsn.toggle()
+                    }
+                } label: {
+                    Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
+                }
+            }
+        }
+    }
 
     // MARK: Main View Body
 
@@ -245,113 +324,35 @@ struct DocumentView: View {
 
                 // MARK: Main toolbar
 
-//                .toolbarTitleMenu {
-//                    if !store.savedViews.isEmpty {
-//                        Button {
-//                            withAnimation {
-//                                filterModel.filterState.clear()
-//                            }
-//                        } label: {
-//                            Text(.localizable.allDocuments)
-//                        }
-//                        Divider()
-//                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
-//                            Button {
-//                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                                    withAnimation {
-//                                        filterModel.filterState = .init(savedView: savedView)
-//                                    }
-//                                }
-//                            } label: {
-//                                Text(savedView.name)
-//                            }
-//                        }
-//                    }
-//                }
+                .toolbarTitleMenu {
+                    if !store.savedViews.isEmpty {
+                        Button {
+                            withAnimation {
+                                filterModel.filterState.clear()
+                            }
+                        } label: {
+                            Text(.localizable.allDocuments)
+                        }
+                        Divider()
+                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
+                            Button {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    withAnimation {
+                                        filterModel.filterState = .init(savedView: savedView)
+                                    }
+                                }
+                            } label: {
+                                Text(savedView.name)
+                            }
+                        }
+                    }
+                }
 
-//                .navigationTitle(savedViewNavigationTitle)
+                .navigationTitle(savedViewNavigationTitle)
                 .navigationBarTitleDisplayMode(.inline)
 
                 .toolbar {
-                    ToolbarItemGroup(placement: .navigationBarTrailing) {
-                        TaskActivityToolbar(navState: $taskViewNavState)
-                        Label(String(localized: .localizable.add), systemImage: "plus")
-                            .overlay {
-                                Menu {
-                                    if isDocumentScannerAvailable {
-                                        Button {
-                                            showDocumentScanner = true
-                                        } label: {
-                                            Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
-                                        }
-                                    }
-
-                                    Button {
-                                        showFileImporter = true
-                                    } label: {
-                                        Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
-                                    }
-
-                                    Button {
-                                        showPhotosPicker = true
-                                    } label: {
-                                        Label(String(localized: .localizable.importPhotos), systemImage: "photo")
-                                    }
-                                } label: {}
-                            }
-                    }
-
-                    ToolbarItemGroup(placement: .navigationBarLeading) {
-                        Menu {
-                            NavigationLink(value: NavigationState.settings) {
-                                Label(String(localized: .settings.title), systemImage: "gear")
-                            }
-
-                            ConnectionQuickChangeMenu()
-
-                            #if DEBUG
-                                Section("Debug") {
-                                    Button("Trigger error without details") {
-                                        errorController.push(message: "An error", details: nil)
-                                    }
-                                    Button("Trigger error with details") {
-                                        errorController.push(message: "An error", details: "Some details")
-                                    }
-                                }
-                            #endif
-
-                            Divider()
-
-                            Button(role: .destructive) {
-                                logoutRequested = true
-                            } label: {
-                                Label(String(localized: .localizable.logout), systemImage: "rectangle.portrait.and.arrow.right")
-                            }
-
-                        } label: {
-                            Label(String(localized: .localizable.detailsMenuLabel), systemImage: "ellipsis.circle")
-                                .labelStyle(.iconOnly)
-                        }
-
-                        if DataScannerView.isAvailable {
-                            Button {
-                                Task {
-                                    try? await Task.sleep(for: .seconds(0.1))
-                                    showDataScanner = true
-                                }
-                            } label: {
-                                Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
-                            }
-                        } else {
-                            Button {
-                                withAnimation(.spring(response: 0.5)) {
-                                    showTypeAsn.toggle()
-                                }
-                            } label: {
-                                Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
-                            }
-                        }
-                    }
+                    toolbar
                 }
 
                 .fileImporter(isPresented: $showFileImporter,

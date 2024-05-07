@@ -173,6 +173,8 @@ struct DocumentList: View {
 
     @StateObject private var viewModel: DocumentListViewModel
 
+    @EnvironmentObject private var errorController: ErrorController
+
     @AppStorage(SettingsKeys.documentDeleteConfirmation)
     var documentDeleteConfirmation: Bool = true
 
@@ -308,6 +310,44 @@ struct DocumentList: View {
         }
     }
 
+    private func onReceiveEvent(event: DocumentStore.Event) {
+        switch event {
+        case let .deleted(document):
+            withAnimation {
+                viewModel.removed(document: document)
+            }
+        case let .changed(document):
+            viewModel.updated(document: document)
+        case .changeReceived:
+            Task {
+                if let documents = try? await viewModel.refresh(retain: true) {
+                    withAnimation {
+                        viewModel.replace(documents: documents)
+                    }
+                }
+            }
+        case .repositoryWillChange:
+            withAnimation {
+                viewModel.ready = false
+                filterModel.ready = false
+            }
+        case .repositoryChanged:
+            Task {
+                try? await Task.sleep(for: .seconds(0.5))
+                await viewModel.reload()
+            }
+            Task {
+                filterModel.filterState.clear()
+                try? await Task.sleep(for: .seconds(0.5))
+                filterModel.ready = true
+            }
+
+        case let .taskError(task: task):
+            errorController.push(message: String(localized: .tasks.errorNotificationTitle),
+                                 details: task.localizedResult)
+        }
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
             VStack {
@@ -365,39 +405,7 @@ struct DocumentList: View {
             await viewModel.load()
         }
 
-        .onReceive(store.documentEventPublisher) { event in
-            switch event {
-            case let .deleted(document):
-                withAnimation {
-                    viewModel.removed(document: document)
-                }
-            case let .changed(document):
-                viewModel.updated(document: document)
-            case .changeReceived:
-                Task {
-                    if let documents = try? await viewModel.refresh(retain: true) {
-                        withAnimation {
-                            viewModel.replace(documents: documents)
-                        }
-                    }
-                }
-            case .repositoryWillChange:
-                withAnimation {
-                    viewModel.ready = false
-                    filterModel.ready = false
-                }
-            case .repositoryChanged:
-                Task {
-                    try? await Task.sleep(for: .seconds(0.5))
-                    await viewModel.reload()
-                }
-                Task {
-                    filterModel.filterState.clear()
-                    try? await Task.sleep(for: .seconds(0.5))
-                    filterModel.ready = true
-                }
-            }
-        }
+        .onReceive(store.eventPublisher, perform: onReceiveEvent)
 
         // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
         .confirmationDialog(unwrapping: $documentToDelete,

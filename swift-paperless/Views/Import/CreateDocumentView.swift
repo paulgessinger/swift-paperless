@@ -277,7 +277,7 @@ struct CreateDocumentView: View {
                 }
             }
 
-            .onReceive(store.documentEventPublisher) { event in
+            .onReceive(store.eventPublisher) { event in
                 switch event {
                 case .repositoryWillChange:
                     resetDocument()

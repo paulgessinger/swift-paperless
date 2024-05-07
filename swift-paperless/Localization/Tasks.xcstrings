@@ -23,6 +23,17 @@
         }
       }
     },
+    "acknowledgeN" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss %llu"
+          }
+        }
+      }
+    },
     "createdLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -41,6 +52,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Completed"
+          }
+        }
+      }
+    },
+    "errorDuplicate" : {
+      "comment" : "Shown on task notification for newly failed task",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not import %@: it is a duplicate!"
+          }
+        }
+      }
+    },
+    "errorNotificationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error processing document"
           }
         }
       }

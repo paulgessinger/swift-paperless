@@ -39,7 +39,7 @@ struct MainView: View {
             Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
             if let store {
                 Task {
-                    store.documentEventPublisher.send(.repositoryWillChange)
+                    store.eventPublisher.send(.repositoryWillChange)
                     try? await Task.sleep(for: .seconds(0.3))
                     store.set(repository: ApiRepository(connection: conn))
                     try? await store.fetchAll()

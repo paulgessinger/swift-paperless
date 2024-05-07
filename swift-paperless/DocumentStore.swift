@@ -40,9 +40,10 @@ final class DocumentStore: ObservableObject, Sendable {
 
         case repositoryWillChange
         case repositoryChanged
+        case taskError(task: PaperlessTask)
     }
 
-    var documentEventPublisher =
+    var eventPublisher =
         PassthroughSubject<Event, Never>()
 
     let semaphore = AsyncSemaphore(value: 1)
@@ -66,8 +67,25 @@ final class DocumentStore: ObservableObject, Sendable {
     private func taskPoller() async {
         Logger.shared.debug("Task poller initialize")
         repeat {
+            guard !Task.isCancelled else { break }
             Logger.shared.debug("Polling tasks")
+
+            let currentActiveTasks = Set(tasks.filter(\.isActive).map(\.id))
+            Logger.shared.debug("Current active: \(currentActiveTasks)")
             await fetchTasks()
+            let newErrors: [PaperlessTask] = tasks.filter { $0.status == .FAILURE && currentActiveTasks.contains($0.id) }
+            Logger.shared.debug("New errors: \(newErrors)")
+
+            if !newErrors.isEmpty {
+                Task {
+                    // don't send the errors all at once if there's multiple
+                    for task in newErrors {
+                        eventPublisher.send(.taskError(task: task))
+                        try? await Task.sleep(for: .seconds(2))
+                    }
+                }
+            }
+
             let duration: Duration = .seconds(activeTasks.isEmpty ? 60 : 2.5)
             Logger.shared.debug("Task poller sleeping for \(duration)")
             try? await Task.sleep(for: duration)
@@ -76,6 +94,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func startTaskPolling() {
+        taskUpdateTask?.cancel()
         taskUpdateTask = Task(operation: taskPoller)
     }
 
@@ -97,20 +116,20 @@ final class DocumentStore: ObservableObject, Sendable {
 
     func set(repository: some Repository) {
         self.repository = repository
-        documentEventPublisher.send(.repositoryChanged)
+        eventPublisher.send(.repositoryChanged)
         clear()
     }
 
     func updateDocument(_ document: Document) async throws {
-        documentEventPublisher.send(.changed(document: document))
+        eventPublisher.send(.changed(document: document))
         documents[document.id] = try await repository.update(document: document)
-        documentEventPublisher.send(.changeReceived(document: document))
+        eventPublisher.send(.changeReceived(document: document))
     }
 
     func deleteDocument(_ document: Document) async throws {
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
-        documentEventPublisher.send(.deleted(document: document))
+        eventPublisher.send(.deleted(document: document))
     }
 
     func fetchTasks() async {
