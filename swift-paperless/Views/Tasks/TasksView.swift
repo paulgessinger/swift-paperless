@@ -277,41 +277,51 @@ private struct TaskList: View {
     }
 
     var body: some View {
-        List(tasks, selection: $selection) { task in
-            NavigationLink(value: NavigationState.task(task)) {
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text(String("Task #\(task.id)"))
-                        if let created = task.dateCreated {
-                            Text("\(fmt.string(from: created))")
-                                .frame(maxWidth: .infinity, alignment: .trailing)
+        Group {
+            if !tasks.isEmpty {
+                List(tasks, selection: $selection) { task in
+                    NavigationLink(value: NavigationState.task(task)) {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(String(localized: .tasks.task(String(task.id))))
+                                if let created = task.dateCreated {
+                                    Text("\(fmt.string(from: created))")
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+                            }
+                            .foregroundColor(.gray)
+
+                            let name = task.taskFileName ?? String(localized: .tasks.unknownFileName)
+                            HStack(alignment: .top) {
+                                task.status.label
+                                    .labelStyle(.iconOnly)
+                                Text("\(name)")
+                            }
+                            .bold()
+                            .font(.body)
                         }
-                    }
-                    .foregroundColor(.gray)
 
-                    let name = task.taskFileName ?? String(localized: .tasks.unknownFileName)
-                    HStack(alignment: .top) {
-                        task.status.label
-                            .labelStyle(.iconOnly)
-                        Text("\(name)")
-                    }
-                    .bold()
-                    .font(.body)
-                }
-
-                .swipeActions(edge: .trailing) {
-                    Button {
-                        Task {
-                            do {
-                                try await store.acknowledge(tasks: [task.id])
-                            } catch {
-                                Logger.shared.error("Error acknowledging task \(task.id): \(error)")
-                                errorController.push(error: error)
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                Task {
+                                    do {
+                                        try await store.acknowledge(tasks: [task.id])
+                                    } catch {
+                                        Logger.shared.error("Error acknowledging task \(task.id): \(error)")
+                                        errorController.push(error: error)
+                                    }
+                                }
+                            } label: {
+                                Label(localized: .tasks.acknowledge, systemImage: "checkmark")
                             }
                         }
-                    } label: {
-                        Label(localized: .tasks.acknowledge, systemImage: "checkmark")
                     }
+                }
+            } else {
+                if #available(iOS 17, *) {
+                    ContentUnavailableView(String(localized: .tasks.noTasks), systemImage: "list.bullet.circle")
+                } else {
+                    Text(.tasks.noTasks)
                 }
             }
         }

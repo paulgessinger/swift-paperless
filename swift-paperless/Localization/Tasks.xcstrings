@@ -112,6 +112,17 @@
         }
       }
     },
+    "noTasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tasks"
+          }
+        }
+      }
+    },
     "relatedDocument" : {
       "extractionState" : "manual",
       "localizations" : {
