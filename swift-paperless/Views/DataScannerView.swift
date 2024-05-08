@@ -590,10 +590,10 @@ struct DataScannerView: View {
     }
 
     static var isAvailable: Bool {
-        let isSupported = DataScannerViewController.isSupported
-        let isAvailable = DataScannerViewController.isAvailable
-
-        return isSupported && isAvailable
+        get async {
+            let (isSupported, isAvailable) = (DataScannerViewController.isSupported, DataScannerViewController.isAvailable)
+            return isSupported && isAvailable
+        }
     }
 }
 

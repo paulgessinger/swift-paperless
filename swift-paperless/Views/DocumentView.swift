@@ -60,6 +60,7 @@ struct DocumentView: View {
     @State private var refreshRequested = false
     @State private var showFileImporter = false
     @State private var isDocumentScannerAvailable = false
+    @State private var isDataScannerAvailable = false
     @State private var showDocumentScanner = false
     @State private var showCreateModal = false
     @State private var importUrls: [URL] = []
@@ -256,7 +257,7 @@ struct DocumentView: View {
                     .labelStyle(.iconOnly)
             }
 
-            if DataScannerView.isAvailable {
+            if isDataScannerAvailable {
                 Button {
                     Task {
                         try? await Task.sleep(for: .seconds(0.1))
@@ -441,7 +442,7 @@ struct DocumentView: View {
                     do {
                         async let fetch: Void = store.fetchAll()
 
-                        isDocumentScannerAvailable = await DocumentScannerView.isAvailable
+                        (isDataScannerAvailable, isDocumentScannerAvailable) = await (DataScannerView.isAvailable, DocumentScannerView.isAvailable)
 
                         try await fetch
                     } catch {
