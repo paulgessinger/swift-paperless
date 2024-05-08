@@ -4681,6 +4681,17 @@
         }
       }
     },
+    "searchAdvanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced"
+          }
+        }
+      }
+    },
     "searchClear" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4718,6 +4729,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyczyść wyszukiwanie"
+          }
+        }
+      }
+    },
+    "searchContent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        }
+      }
+    },
+    "searchTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        }
+      }
+    },
+    "searchTitleContent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title & Content"
           }
         }
       }

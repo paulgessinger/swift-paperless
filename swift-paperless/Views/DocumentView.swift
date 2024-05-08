@@ -45,9 +45,10 @@ extension NavigationPath {
 @MainActor
 struct DocumentView: View {
     @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var filterModel: FilterModel
     @EnvironmentObject private var connectionManager: ConnectionManager
     @EnvironmentObject private var errorController: ErrorController
+
+    @StateObject private var filterModel = FilterModel()
 
     // MARK: State
 
@@ -288,29 +289,21 @@ struct DocumentView: View {
                          errorController: errorController)
 
                 .safeAreaInset(edge: .top) {
-                    VStack {
-                        SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
-                            .padding(.horizontal)
+                    FilterAssembly(filterModel: filterModel)
 
-                        FilterBar()
-                            .padding(.bottom, 3)
-                            .opacity(filterModel.ready ? 1.0 : 0.0)
-                            .animation(.default, value: filterModel.ready)
-                    }
+                        .background(
+                            Rectangle()
+                                .fill(
+                                    Material.bar
+                                )
+                                .ignoresSafeArea(.container, edges: .top)
+                        )
 
-                    .background(
-                        Rectangle()
-                            .fill(
-                                Material.bar
-                            )
-                            .ignoresSafeArea(.container, edges: .top)
-                    )
-
-                    .overlay(alignment: .bottom) {
-                        Rectangle()
-                            .fill(.gray)
-                            .frame(height: 1, alignment: .bottom)
-                    }
+                        .overlay(alignment: .bottom) {
+                            Rectangle()
+                                .fill(.gray)
+                                .frame(height: 1, alignment: .bottom)
+                        }
                 }
 
                 .safeAreaInset(edge: .bottom) {
@@ -451,6 +444,7 @@ struct DocumentView: View {
                     }
                 }
         }
+        .environmentObject(filterModel)
     }
 
     private func tasksSheet(state: NavigationState) -> some View {
@@ -468,56 +462,82 @@ struct DocumentView: View {
     }
 }
 
+struct FilterAssembly: View {
+    @ObservedObject var filterModel: FilterModel
+
+    var body: some View {
+        VStack {
+            HStack {
+                SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
+
+                Menu {
+                    ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
+                        if filterModel.filterState.searchMode == searchMode {
+                            Label(searchMode.localizedName, systemImage: "checkmark")
+                        } else {
+                            Button(searchMode.localizedName) {
+                                filterModel.filterState.searchMode = searchMode
+                            }
+                        }
+                    }
+
+                } label: {
+                    Label("X", systemImage: "ellipsis.circle")
+                        .labelStyle(.iconOnly)
+                }
+            }
+            .padding(.horizontal)
+
+            FilterBar()
+                .padding(.bottom, 3)
+        }
+        .opacity(filterModel.ready ? 1.0 : 0.0)
+        .animation(.default, value: filterModel.ready)
+    }
+}
+
 // - MARK: Previews
 
 private struct StoreHelper<Content>: View where Content: View {
     @ViewBuilder var content: () -> Content
 
     @StateObject var store = DocumentStore(repository: PreviewRepository())
+    @StateObject var errorController = ErrorController()
+    @StateObject var connectionManager = ConnectionManager()
 
     var body: some View {
         content()
             .environmentObject(store)
+            .environmentObject(errorController)
+            .environmentObject(connectionManager)
     }
 }
 
-struct DocumentView_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: PreviewRepository())
+private struct FilterModelHelper<Content>: View where Content: View {
+    @ViewBuilder var content: (FilterModel) -> Content
 
-    static var previews: some View {
-        StoreHelper {
-            DocumentView()
-        }
-    }
-}
-
-struct FilterBar_Previews: PreviewProvider {
-    static let store = DocumentStore(repository: PreviewRepository())
-    static var previews: some View {
-        HelperView()
-            .environmentObject(store)
-    }
-}
-
-// @TODO: Fix this
-private struct HelperView: View {
-    @EnvironmentObject var store: DocumentStore
-//    @State var documents = [Document]()
-    @State var filterState = FilterState()
+    @StateObject var filterModel = FilterModel()
 
     var body: some View {
-        VStack {
-//            FilterBar()
-//            ForEach(documents.prefix(5), id: \.id) { document in
-//                DocumentCell(document: document)
-//                    .padding()
-//            }
-//            Spacer()
-        }
-        .task {
-            try? await Task.sleep(for: .seconds(0.1))
-//            documents = await store.fetchDocuments(clear: false, filter: filterState)
-            print("GOGOGO")
+        content(filterModel)
+            .environmentObject(filterModel)
+    }
+}
+
+#Preview("DocumentView") {
+    StoreHelper {
+        DocumentView()
+    }
+}
+
+#Preview("FilterBar") {
+    StoreHelper {
+        FilterModelHelper { filterModel in
+            NavigationStack {
+                ScrollView(.vertical) {
+                    FilterAssembly(filterModel: filterModel)
+                }
+            }
         }
     }
 }

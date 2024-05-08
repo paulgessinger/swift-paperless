@@ -162,10 +162,10 @@ class ConnectionManager: ObservableObject {
     // @TODO: (multi-server) Remove in a few versions
     private var apiHost: String? {
         get {
-            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.string(forKey: "ApiHost")
+            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.string(forKey: "ApiHost")
         }
         set {
-            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(newValue, forKey: "ApiHost")
+            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(newValue, forKey: "ApiHost")
         }
     }
 

@@ -66,12 +66,10 @@ struct SearchBarView: View {
                         .foregroundColor(.accentColor)
                         .onTapGesture {
                             focused = false
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                             withAnimation(.easeInOut) {
                                 text = ""
                                 showCancel = false
                             }
-//                        }
                         }
                         .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
@@ -94,34 +92,37 @@ struct SearchBarView: View {
     }
 }
 
-struct PreviewWrapper: View {
-    @State var text: String = ""
-    @State var hidden = false
+private struct PreviewHelper<Content>: View where Content: View {
+    @State private var text: String = ""
+    @State private var hidden = false
+
+    var content: (Binding<String>) -> Content
 
     var body: some View {
+        content($text)
+    }
+}
+
+#Preview("SearchBarView") {
+    PreviewHelper { $text in
         NavigationStack {
             VStack {
                 SearchBarView(text: $text)
-                Text(String("Toggle")).onTapGesture {
-                    Task {
-                        withAnimation {
-                            hidden.toggle()
-                        }
-                    }
-                }
                 Spacer()
             }
-            .toolbar(hidden ? .hidden : .automatic)
+            .padding()
         }
     }
 }
 
-struct SearchBarView_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            PreviewWrapper()
-                .padding()
-            Spacer()
+#Preview("SearchBarView (No cancel)") {
+    PreviewHelper { $text in
+        NavigationStack {
+            VStack {
+                SearchBarView(text: $text, cancelEnabled: false)
+                Spacer()
+            }
+            .padding()
         }
     }
 }

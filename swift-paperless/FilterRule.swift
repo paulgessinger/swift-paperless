@@ -290,10 +290,11 @@ struct FilterState: Equatable, Codable, Sendable {
         case anyOf(ids: [UInt])
     }
 
-    enum SearchMode: Equatable, Codable {
+    enum SearchMode: Equatable, Codable, CaseIterable {
         case title
         case content
         case titleContent
+        case advanced
 
         var ruleType: FilterRuleType {
             switch self {
@@ -303,6 +304,8 @@ struct FilterState: Equatable, Codable, Sendable {
                 return .content
             case .titleContent:
                 return .titleContent
+            case .advanced:
+                return .fulltextQuery
             }
         }
 
@@ -314,8 +317,23 @@ struct FilterState: Equatable, Codable, Sendable {
                 self = .content
             case .titleContent:
                 self = .titleContent
+            case .fulltextQuery:
+                self = .advanced
             default:
                 return nil
+            }
+        }
+
+        var localizedName: String {
+            switch self {
+            case .title:
+                String(localized: .localizable.searchTitle)
+            case .content:
+                String(localized: .localizable.searchContent)
+            case .titleContent:
+                String(localized: .localizable.searchTitleContent)
+            case .advanced:
+                String(localized: .localizable.searchAdvanced)
             }
         }
     }
@@ -377,17 +395,13 @@ struct FilterState: Equatable, Codable, Sendable {
     init(rules: [FilterRule]) {
         for rule in rules {
             switch rule.ruleType {
-            case .title:
-                fallthrough
-            case .content:
-                fallthrough
-            case .titleContent:
+            case .title, .content, .titleContent, .fulltextQuery:
                 guard let mode = SearchMode(ruleType: rule.ruleType) else {
                     fatalError("Could not convert rule type to search mode (this should not occur)")
                 }
                 searchMode = mode
                 guard case let .string(v) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
@@ -395,7 +409,7 @@ struct FilterState: Equatable, Codable, Sendable {
 
             case .correspondent:
                 guard case let .correspondent(id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
@@ -414,7 +428,7 @@ struct FilterState: Equatable, Codable, Sendable {
 
             case .documentType:
                 guard case let .documentType(id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
@@ -433,7 +447,7 @@ struct FilterState: Equatable, Codable, Sendable {
 
             case .storagePath:
                 guard case let .storagePath(id) = rule.value else {
-                    print("Invalid value for rule type")
+                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
@@ -451,7 +465,7 @@ struct FilterState: Equatable, Codable, Sendable {
 
             case .hasTagsAll:
                 guard case let .tag(id) = rule.value else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
@@ -761,7 +775,7 @@ struct FilterState: Equatable, Codable, Sendable {
     }
 
     var filtering: Bool {
-        self != FilterState()
+        ruleCount > 0
     }
 
     var ruleCount: Int {
