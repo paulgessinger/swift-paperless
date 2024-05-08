@@ -293,6 +293,50 @@
         }
       }
     },
+    "defaultSearchModeDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The default search mode for full-text search"
+          }
+        }
+      }
+    },
+    "defaultSearchModeLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default search mode"
+          }
+        }
+      }
+    },
+    "defaultSortField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default sort field"
+          }
+        }
+      }
+    },
+    "defaultSortOrder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default sort order"
+          }
+        }
+      }
+    },
     "detailsFeedback" : {
       "extractionState" : "manual",
       "localizations" : {

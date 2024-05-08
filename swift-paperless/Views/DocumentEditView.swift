@@ -62,8 +62,8 @@ struct DocumentEditView: View {
     @State private var selectedState = FilterState()
     @State private var showDeleteConfirmation = false
 
-    @AppStorage(SettingsKeys.documentDeleteConfirmation)
-    var documentDeleteConfirmation: Bool = true
+    @AppSetting(\.$documentDeleteConfirmation)
+    var documentDeleteConfirmation
 
     @State private var deleted = false
 

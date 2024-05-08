@@ -175,8 +175,8 @@ struct DocumentList: View {
 
     @EnvironmentObject private var errorController: ErrorController
 
-    @AppStorage(SettingsKeys.documentDeleteConfirmation)
-    var documentDeleteConfirmation: Bool = true
+    @AppSetting(\.$documentDeleteConfirmation)
+    var documentDeleteConfirmation
 
     init(store: DocumentStore, navPath: Binding<NavigationPath>, filterModel: FilterModel, errorController: ErrorController) {
         self.store = store

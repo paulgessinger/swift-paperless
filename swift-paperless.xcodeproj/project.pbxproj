@@ -241,8 +241,8 @@
 		7AF6688729A137EA0016BC31 /* ApiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* ApiRepository.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
-		7AFB7BA72A89773B0013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
-		7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* SettingsKeys.swift */; };
+		7AFB7BA72A89773B0013196B /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
+		7AFB7BA82A8977720013196B /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
@@ -404,7 +404,7 @@
 		7AF6688629A137EA0016BC31 /* ApiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiRepository.swift; sourceTree = "<group>"; };
 		7AF6688829A138330016BC31 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAsyncImage.swift; sourceTree = "<group>"; };
-		7AFB7BA62A89773B0013196B /* SettingsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsKeys.swift; sourceTree = "<group>"; };
+		7AFB7BA62A89773B0013196B /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		7AFB7BA92A89783F0013196B /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		7AFD3F5F2A87F482002789C2 /* FilterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterModel.swift; sourceTree = "<group>"; };
 		939739772B72966E0041F08A /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
@@ -564,7 +564,7 @@
 				7A2A113C29FE649300E9FFE3 /* Keychain.swift */,
 				7A4648062A1D5AED00078968 /* DateDecodingError.swift */,
 				7AFD3F5F2A87F482002789C2 /* FilterModel.swift */,
-				7AFB7BA62A89773B0013196B /* SettingsKeys.swift */,
+				7AFB7BA62A89773B0013196B /* AppSettings.swift */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -990,7 +990,7 @@
 				7A7080D22BDF8EFC0095BD56 /* Import.swift in Sources */,
 				7A7080FD2BE0F4EE0095BD56 /* NSData+mimeType.swift in Sources */,
 				7A0772452BE64CB200DCC8CD /* ApiSequence.swift in Sources */,
-				7AFB7BA82A8977720013196B /* SettingsKeys.swift in Sources */,
+				7AFB7BA82A8977720013196B /* AppSettings.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
 				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
 				7ACFB2BA2B4734CD009DED79 /* SuccessOverlay.swift in Sources */,
@@ -1074,7 +1074,7 @@
 				7A7080FC2BE0F4EB0095BD56 /* NSData+mimeType.swift in Sources */,
 				7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */,
-				7AFB7BA72A89773B0013196B /* SettingsKeys.swift in Sources */,
+				7AFB7BA72A89773B0013196B /* AppSettings.swift in Sources */,
 				7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */,
 				7A2831B72A63D6E2009E86CE /* TaskModel.swift in Sources */,
 				7A4648032A1D5ABC00078968 /* ListResponse.swift in Sources */,

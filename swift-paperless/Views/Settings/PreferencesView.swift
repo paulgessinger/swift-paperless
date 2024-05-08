@@ -2,12 +2,30 @@ import LocalAuthentication
 import os
 import SwiftUI
 
-struct PreferencesView: View {
-    @AppStorage(SettingsKeys.documentDeleteConfirmation)
-    private var documentDeleteConfirmation: Bool = true
+struct TestView: View {
+    @ObservedObject var settings = AppSettings.shared
 
-    @AppStorage(SettingsKeys.enableBiometricAppLock)
-    private var enableBiometricAppLock: Bool = false
+    var body: some View {
+        LabeledContent {
+            Text("\(settings.documentDeleteConfirmation)")
+        } label: {
+            Text("ObservedObject")
+        }
+    }
+}
+
+struct PreferencesView: View {
+    @AppSetting(\.$documentDeleteConfirmation)
+    var documentDeleteConfirmation
+
+    @AppSetting(\.$defaultSearchMode)
+    var defaultSearchMode
+
+    @AppSetting(\.$defaultSortOrder)
+    var defaultSortOrder
+
+    @AppSetting(\.$defaultSortField)
+    var defaultSortField
 
     @State private var enableBiometricToggle = false
 
@@ -16,14 +34,15 @@ struct PreferencesView: View {
     @EnvironmentObject private var errorController: ErrorController
 
     init() {
-        _enableBiometricToggle = State(initialValue: enableBiometricAppLock)
+        _enableBiometricToggle = State(initialValue: AppSettings.shared.enableBiometricAppLock)
         _biometricName = State(initialValue: getBiometricName())
     }
 
     var body: some View {
         Form {
             Section {
-                Toggle(String(localized: .settings.documentDeleteConfirmationLabel), isOn: $documentDeleteConfirmation)
+                Toggle(String(localized: .settings.documentDeleteConfirmationLabel),
+                       isOn: $documentDeleteConfirmation)
             } footer: {
                 Text(.settings.documentDeleteConfirmationLabelDescription)
             }
@@ -33,12 +52,42 @@ struct PreferencesView: View {
                     Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $enableBiometricToggle)
                 }
             }
+
+            Section {
+                Picker(selection: $defaultSortField) {
+                    ForEach(SortField.allCases, id: \.self) { field in
+                        Text(field.localizedName).tag(field)
+                    }
+                } label: {
+                    Text(.settings.defaultSortField)
+                }
+
+                Picker(selection: $defaultSortOrder) {
+                    Text(SortOrder.ascending.localizedName)
+                        .tag(SortOrder.ascending)
+                    Text(SortOrder.descending.localizedName)
+                        .tag(SortOrder.descending)
+                } label: {
+                    Text(.settings.defaultSortOrder)
+                }
+
+                Picker(selection: $defaultSearchMode) {
+                    ForEach(FilterState.SearchMode.allCases, id: \.self) { mode in
+                        Text(mode.localizedName).tag(mode)
+                    }
+                } label: {
+                    Text(.settings.defaultSearchModeLabel)
+                }
+            } header: {
+                Text(.localizable.filtering)
+            } footer: {
+                Text(.settings.defaultSearchModeDescription)
+            }
         }
 
         .onChange(of: enableBiometricToggle) { value in
             if !value {
                 Logger.shared.notice("Biometric lock disabled")
-                enableBiometricAppLock = false
                 return
             }
 
@@ -54,7 +103,7 @@ struct PreferencesView: View {
                     if try await biometricAuthenticate() {
                         Logger.shared.notice("Biometric lock enabled successfully")
                         try? await Task.sleep(for: .seconds(2))
-                        enableBiometricAppLock = true
+                        AppSettings.shared.enableBiometricAppLock = true
                     } else {
                         Logger.shared.notice("Biometric lock could not be enabled")
                         enableBiometricToggle = false
@@ -69,8 +118,6 @@ struct PreferencesView: View {
     }
 }
 
-struct PreferencesView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreferencesView()
-    }
+#Preview("Preferences") {
+    PreferencesView()
 }

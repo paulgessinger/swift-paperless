@@ -156,7 +156,7 @@ class ConnectionManager: ObservableObject {
     }
 
     // @TODO: (multi-server) Remove in a few versions
-    @UserDefaultBacked(key: "ExtraHeaders", storage: .group)
+    @UserDefaultsBacked(key: "ExtraHeaders", storage: .group)
     private var extraHeaders: [HeaderValue] = []
 
     // @TODO: (multi-server) Remove in a few versions
@@ -170,17 +170,17 @@ class ConnectionManager: ObservableObject {
     }
 
     // @TODO: (multi-server) Remove in a few versions
-    @UserDefaultBacked(key: "ApiPath", storage: .group)
+    @UserDefaultsBacked(key: "ApiPath", storage: .group)
     private var apiPath: String? = nil
 
-    @UserDefaultBacked(key: "Connections", storage: .group)
+    @UserDefaultsBacked(key: "Connections", storage: .group)
     private(set) var connections: [UUID: StoredConnection] = [:] {
         willSet {
             objectWillChange.send()
         }
     }
 
-    @UserDefaultBacked(key: "ActiveConnectionId", storage: .group)
+    @UserDefaultsBacked(key: "ActiveConnectionId", storage: .group)
     var activeConnectionId: UUID? = nil {
         willSet {
             objectWillChange.send()

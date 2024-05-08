@@ -218,7 +218,7 @@ enum SortField: String, Codable, CaseIterable {
     case modified
     case storagePath = "storage_path__name"
 
-    var label: String {
+    var localizedName: String {
         switch self {
         case .asn:
             return String(localized: .localizable.asn)
@@ -253,6 +253,15 @@ enum SortOrder: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(reverse)
+    }
+
+    var localizedName: String {
+        switch self {
+        case .ascending:
+            return String(localized: .localizable.ascending)
+        case .descending:
+            return String(localized: .localizable.descending)
+        }
     }
 
     var reverse: Bool {
@@ -345,8 +354,19 @@ struct FilterState: Equatable, Codable, Sendable {
 
     var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
     var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
-    var sortField: SortField = .added { didSet { modified = modified || sortField != oldValue }}
-    var sortOrder: SortOrder = .descending { didSet { modified = modified || sortOrder != oldValue }}
+
+    var sortField: SortField = AppSettings.value(for: .defaultSortField, or: .added) {
+        didSet { modified = modified || sortField != oldValue }
+    }
+
+    var sortOrder: SortOrder = AppSettings.value(for: .defaultSortOrder, or: .descending) {
+        didSet { modified = modified || sortOrder != oldValue }
+    }
+
+    var defaultSorting: Bool {
+        sortField == AppSettings.value(for: .defaultSortField, or: .added) && sortOrder == AppSettings.value(for: .defaultSortOrder, or: .descending)
+    }
+
     var savedView: UInt? = nil
 
     @EquatableNoop
@@ -358,7 +378,7 @@ struct FilterState: Equatable, Codable, Sendable {
         }
     }
 
-    var searchMode = SearchMode.titleContent {
+    var searchMode = AppSettings.value(for: .defaultSearchMode, or: SearchMode.titleContent) {
         didSet { modified = searchMode != oldValue }
     }
 
@@ -372,7 +392,7 @@ struct FilterState: Equatable, Codable, Sendable {
          remaining: [FilterRule] = [],
          savedView: UInt? = nil,
          searchText: String? = nil,
-         searchMode: SearchMode = .titleContent)
+         searchMode: SearchMode = AppSettings.value(for: .defaultSearchMode, or: .titleContent))
     {
         self.correspondent = correspondent
         self.documentType = documentType
@@ -775,7 +795,7 @@ struct FilterState: Equatable, Codable, Sendable {
     }
 
     var filtering: Bool {
-        ruleCount > 0
+        ruleCount > 0 || !defaultSorting
     }
 
     var ruleCount: Int {

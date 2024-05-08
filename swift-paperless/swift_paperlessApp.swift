@@ -20,8 +20,9 @@ struct MainView: View {
     @StateObject private var errorController = ErrorController()
 
     @Environment(\.scenePhase) var scenePhase
-    @AppStorage(SettingsKeys.enableBiometricAppLock)
-    private var enableBiometricAppLock: Bool = false
+
+    @AppSetting(\.$enableBiometricAppLock)
+    var enableBiometricAppLock
 
     private enum LockState {
         case initial, locked, unlocked

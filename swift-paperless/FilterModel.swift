@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import os
 
+@MainActor
 class FilterModel: ObservableObject {
     private var tasks = Set<AnyCancellable>()
 
@@ -54,6 +55,30 @@ class FilterModel: ObservableObject {
             .debounce(for: .seconds(0.2), scheduler: DispatchQueue.main)
             .sink { [weak self] value in
                 self?.filterStatePublisher.send(value)
+            }
+            .store(in: &tasks)
+
+        AppSettings.shared.settingsChanged
+            .sink { [weak self] in
+                guard let self else { return }
+
+                var filterState = filterState
+
+                if self.filterState.searchText.isEmpty {
+                    Logger.shared.debug("Applying search mode default change to: \(String(describing: AppSettings.shared.defaultSearchMode), privacy: .public)")
+                    // User has not typed any search text yet -> we're not changing the mode under them
+                    filterState.searchMode = AppSettings.shared.defaultSearchMode
+
+                    // Reset modified to what it was before, we're not actually modifying anything
+                    filterState.modified = self.filterState.modified
+                }
+
+                if !self.filterState.modified, self.filterState.savedView == nil {
+                    filterState.sortField = AppSettings.shared.defaultSortField
+                    filterState.sortOrder = AppSettings.shared.defaultSortOrder
+                }
+
+                self.filterState = filterState
             }
             .store(in: &tasks)
     }

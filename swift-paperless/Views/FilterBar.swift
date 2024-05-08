@@ -611,14 +611,14 @@ struct FilterBar: View {
                 Menu {
                     Picker(String(localized: .localizable.sortBy), selection: $filterState.sortField) {
                         ForEach(SortField.allCases, id: \.rawValue) { f in
-                            Text(f.label).tag(f)
+                            Text(f.localizedName).tag(f)
                         }
                     }
 
                     Picker(String(localized: .localizable.sortOrder), selection: $filterState.sortOrder) {
-                        Label(String(localized: .localizable.ascending), systemImage: "arrow.up")
+                        Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
                             .tag(SortOrder.ascending)
-                        Label(String(localized: .localizable.descending), systemImage: "arrow.down")
+                        Label(SortOrder.descending.localizedName, systemImage: "arrow.down")
                             .tag(SortOrder.descending)
                     }
                 }
@@ -626,7 +626,7 @@ struct FilterBar: View {
                     Element(label: {
                         Label(String(localized: .localizable.sortMenuLabel), systemImage: "arrow.up.arrow.down")
                             .labelStyle(.iconOnly)
-                    }, active: filterState.sortOrder != .descending || filterState.sortField != .added, action: {})
+                    }, active: !filterState.defaultSorting, action: {})
                 }
                 .onTapGesture {
                     Haptics.shared.impact(style: .light)
