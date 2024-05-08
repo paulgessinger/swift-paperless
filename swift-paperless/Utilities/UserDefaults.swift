@@ -21,21 +21,28 @@ extension UserDefaults {
 // https://www.swiftbysundell.com/articles/property-wrappers-in-swift/
 
 @propertyWrapper
-struct UserDefaultBacked<Value> where Value: Codable {
+class UserDefaultBacked<Value> where Value: Codable {
     private let key: String
     private let storage: UserDefaults
     private let defaultValue: Value
+    private var cachedValue: Value?
 
     var wrappedValue: Value {
         get {
+            let key = key
             logger.trace("Getting UserDefaultBacked(\(key))")
+            if let cachedValue {
+                return cachedValue
+            }
             guard let obj = storage.object(forKey: key) as? Data else {
                 Logger.shared.trace("UserDefaultBacked(\(key)) not found returning default")
+                cachedValue = defaultValue
                 return defaultValue
             }
             do {
                 let value = try JSONDecoder().decode(Value.self, from: obj)
                 logger.trace("UserDefaultBacked(\(key, privacy: .public)) value read: \(String(describing: value), privacy: .private)")
+                cachedValue = value
                 return value
             } catch {
                 logger.error("UserDefaultBacked(\(key)): unable to decode, returning default value (\(error))")
@@ -44,11 +51,13 @@ struct UserDefaultBacked<Value> where Value: Codable {
             }
         }
 
-        nonmutating set {
+        set {
+            let key = key
             logger.trace("Setting UserDefaultBacked(\(key, privacy: .public)) to \(String(describing: newValue), privacy: .private)")
             do {
                 let data = try JSONEncoder().encode(newValue)
                 storage.set(data, forKey: key)
+                cachedValue = newValue
             } catch {
                 logger.error("Unable to set value to UserDefaults for key \(key, privacy: .public), \(error)")
             }
