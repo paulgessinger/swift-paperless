@@ -19,12 +19,7 @@ struct TaskActivityToolbar: View {
 
     var body: some View {
         Group {
-            if store.activeTasks.count > 0 {
-                TaskActivityView(text: "\(number)")
-            } else {
-                Label(localized: .tasks.title, systemImage: "list.bullet")
-                    .labelStyle(.iconOnly)
-            }
+            Label(localized: .tasks.title, systemImage: "chart.bar.doc.horizontal")
         }
         .overlay {
             Menu {
@@ -44,11 +39,8 @@ struct TaskActivityToolbar: View {
                     navState = .tasks
                 }
 
-            } label: {
-                TaskActivityView(text: "\(number)")
-            }
+            } label: {}
         }
-        .transition(.opacity)
 
         .onChange(of: store.tasks) { _ in
             withAnimation {

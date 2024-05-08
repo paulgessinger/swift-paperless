@@ -193,6 +193,7 @@ struct DocumentView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .navigationBarTrailing) {
             TaskActivityToolbar(navState: $taskViewNavState)
+
             Label(String(localized: .localizable.add), systemImage: "plus")
                 .overlay {
                     Menu {
