@@ -114,7 +114,8 @@ struct LoginView: View {
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
-    private static func isLocalNetworkDenied(_ error: NSError) -> Bool {
+    private nonisolated
+    static func isLocalNetworkDenied(_ error: NSError) -> Bool {
         Logger.shared.debug("Checking API NSError: \(error)")
         guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else {
             return false
@@ -129,7 +130,8 @@ struct LoginView: View {
         return reason == 29
     }
 
-    private static func isLocalAddress(_ url: String) -> Bool {
+    private nonisolated
+    static func isLocalAddress(_ url: String) -> Bool {
         guard let components = URLComponents(string: url), let host = components.host else {
             return false
         }
