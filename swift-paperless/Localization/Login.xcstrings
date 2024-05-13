@@ -7,8 +7,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add server"
+            "state" : "translated",
+            "value" : "Tilføj server"
           }
         },
         "de" : {
@@ -342,7 +342,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anfrage an \"%@\" hat ungültigen Antwort-Code zurückgegeben %d"
+            "value" : "Anfrage an \"%@\" hat einen ungültigen Antwort-Code zurückgegeben %d"
           }
         },
         "en" : {
@@ -377,8 +377,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app has not been granted access to the local network. See [here](%@) for details."
+            "state" : "translated",
+            "value" : "Appen er ikke blevet tildelt adgang til det lokale netværk. Se [her](%@) for detaljer."
           }
         },
         "de" : {
