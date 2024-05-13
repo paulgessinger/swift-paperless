@@ -125,6 +125,12 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            NavigationLink {
+                AppVersionView()
+            } label: {
+                Label(localized: .settings.versionInfoLabel, systemImage: "info.bubble.fill")
+            }
         }
     }
 
@@ -153,11 +159,19 @@ struct SettingsView: View {
 
         .sheet(isPresented: $showMailSheet) {
             // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
-            MailVilew(result: $result, isPresented: $showMailSheet) { vc in
+            MailView(result: $result, isPresented: $showMailSheet) { vc in
                 vc.setToRecipients(["swift-paperless@paulgessinger.com"])
                 if let data = feedbackLogs?.data(using: .utf8) {
                     vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
                 }
+
+                let version = Bundle.main.releaseVersionNumber ?? "?"
+                let build = Bundle.main.buildVersionNumber ?? "?"
+
+                vc.setMessageBody("""
+                ---
+                App version: \(version) (\(build)), \(Bundle.main.appConfiguration.rawValue)
+                """, isHTML: false)
             }
         }
 
@@ -175,25 +189,23 @@ struct SettingsView: View {
     }
 }
 
-struct SettingsView_Previews: PreviewProvider {
-    struct Container: View {
-        @StateObject var store = DocumentStore(repository: PreviewRepository())
+private struct PreviewHelper: View {
+    @StateObject var store = DocumentStore(repository: PreviewRepository())
 
-        @StateObject var errorController = ErrorController()
-        @StateObject var connectionManager = ConnectionManager()
+    @StateObject var errorController = ErrorController()
+    @StateObject var connectionManager = ConnectionManager()
 
-        var body: some View {
-            NavigationStack {
-                SettingsView()
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-            .environmentObject(store)
-            .environmentObject(connectionManager)
-            .errorOverlay(errorController: errorController)
+    var body: some View {
+        NavigationStack {
+            SettingsView()
+                .navigationBarTitleDisplayMode(.inline)
         }
+        .environmentObject(store)
+        .environmentObject(connectionManager)
+        .errorOverlay(errorController: errorController)
     }
+}
 
-    static var previews: some View {
-        Container()
-    }
+#Preview("SettingsView") {
+    PreviewHelper()
 }

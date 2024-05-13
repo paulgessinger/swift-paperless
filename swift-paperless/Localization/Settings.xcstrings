@@ -168,6 +168,39 @@
         }
       }
     },
+    "appBuildNumberLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        }
+      }
+    },
+    "appConfigurationLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration"
+          }
+        }
+      }
+    },
+    "appVersionLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
     "biometricLockEnableFailure" : {
       "comment" : "Shown in error pill when auth fails",
       "extractionState" : "manual",
@@ -1070,6 +1103,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zablokuj aplikację z %@"
+          }
+        }
+      }
+    },
+    "versionInfoLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version info"
           }
         }
       }

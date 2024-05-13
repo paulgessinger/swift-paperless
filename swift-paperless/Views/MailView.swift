@@ -1,7 +1,7 @@
 import MessageUI
 import SwiftUI
 
-struct MailVilew: UIViewControllerRepresentable {
+struct MailView: UIViewControllerRepresentable {
     @Binding var result: Result<MFMailComposeResult, Error>?
     @Binding var isPresented: Bool
 
