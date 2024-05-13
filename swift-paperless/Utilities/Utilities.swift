@@ -161,21 +161,6 @@ extension Color {
     }
 }
 
-extension Bundle {
-    var icon: Image? {
-        if let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
-           let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
-           let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
-           let lastIcon = iconFiles.last
-        {
-            if let uiImage = UIImage(named: lastIcon) {
-                return Image(uiImage: uiImage)
-            }
-        }
-        return nil
-    }
-}
-
 // @TODO: Put this into a dispatch queue
 func pdfPreview(url: URL) -> Image? {
     var fileSize: UInt64 = 0
