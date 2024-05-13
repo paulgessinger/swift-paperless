@@ -26,6 +26,7 @@ extra_css:
 
 nav:
   - index.md
+  - Release notes: release_notes/
   - Common Issues: common_issues/
   - privacy.md
   - libraries.md
