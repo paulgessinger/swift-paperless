@@ -82,6 +82,7 @@
 		7A3E45E12BF256BB0007AB67 /* AppVersionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E45DF2BF256BB0007AB67 /* AppVersionView.swift */; };
 		7A3E46042BF25C330007AB67 /* AsyncChannel+next.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */; };
 		7A3E46052BF25C330007AB67 /* AsyncChannel+next.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */; };
+		7A3E46212BF268490007AB67 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7A4648002A1D593C00078968 /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
 		7A4648012A1D5A7D00078968 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ED02A0303140003DFBD /* Logging.swift */; };
 		7A4648032A1D5ABC00078968 /* ListResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4648022A1D5ABC00078968 /* ListResponse.swift */; };
@@ -1162,6 +1163,7 @@
 				7A07733A2BEA734C00DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A8E1F832A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7A58A24929E19C0400986FE9 /* Utilities.swift in Sources */,
+				7A3E46212BF268490007AB67 /* AppSettings.swift in Sources */,
 				7AF2E07929F3F0490092948B /* MultiPartFormDataRequest.swift in Sources */,
 				7AF2E07229F3ECE40092948B /* SavedViewTest.swift in Sources */,
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
