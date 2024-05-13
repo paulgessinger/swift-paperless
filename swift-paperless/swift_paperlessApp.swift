@@ -21,8 +21,7 @@ struct MainView: View {
 
     @Environment(\.scenePhase) var scenePhase
 
-    @AppSetting(\.$enableBiometricAppLock)
-    var enableBiometricAppLock
+    @ObservedObject private var appSettings = AppSettings.shared
 
     private enum LockState {
         case initial, locked, unlocked
@@ -69,7 +68,7 @@ struct MainView: View {
                     .environmentObject(manager)
 
                     .overlay {
-                        if enableBiometricAppLock, lockState == .locked || scenePhase == .inactive {
+                        if appSettings.enableBiometricAppLock, lockState == .locked || scenePhase == .inactive {
                             InactiveView()
                                 .transition(.opacity)
                         }
@@ -85,7 +84,7 @@ struct MainView: View {
         }
 
         .task {
-            if lockState == .initial, enableBiometricAppLock {
+            if lockState == .initial, appSettings.enableBiometricAppLock {
                 lockState = .locked
             }
 
@@ -109,7 +108,7 @@ struct MainView: View {
 
             case .background:
                 Logger.shared.notice("App goes to background")
-                if enableBiometricAppLock, lockState == .unlocked {
+                if appSettings.enableBiometricAppLock, lockState == .unlocked {
                     Logger.shared.notice("Biometric lock is enabled: locking")
                     lockState = .locked
                 }
@@ -117,7 +116,7 @@ struct MainView: View {
                 store?.startTaskPolling()
 
                 Logger.shared.notice("App becomes active")
-                if enableBiometricAppLock, lockState == .locked {
+                if appSettings.enableBiometricAppLock, lockState == .locked {
                     Task {
                         if unlocking {
                             return

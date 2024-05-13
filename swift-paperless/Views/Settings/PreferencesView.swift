@@ -15,17 +15,7 @@ struct TestView: View {
 }
 
 struct PreferencesView: View {
-    @AppSetting(\.$documentDeleteConfirmation)
-    var documentDeleteConfirmation
-
-    @AppSetting(\.$defaultSearchMode)
-    var defaultSearchMode
-
-    @AppSetting(\.$defaultSortOrder)
-    var defaultSortOrder
-
-    @AppSetting(\.$defaultSortField)
-    var defaultSortField
+    @ObservedObject private var appSettings = AppSettings.shared
 
     @State private var enableBiometricToggle = false
 
@@ -42,7 +32,7 @@ struct PreferencesView: View {
         Form {
             Section {
                 Toggle(String(localized: .settings.documentDeleteConfirmationLabel),
-                       isOn: $documentDeleteConfirmation)
+                       isOn: $appSettings.documentDeleteConfirmation)
             } footer: {
                 Text(.settings.documentDeleteConfirmationLabelDescription)
             }
@@ -54,7 +44,7 @@ struct PreferencesView: View {
             }
 
             Section {
-                Picker(selection: $defaultSortField) {
+                Picker(selection: $appSettings.defaultSortField) {
                     ForEach(SortField.allCases, id: \.self) { field in
                         Text(field.localizedName).tag(field)
                     }
@@ -62,7 +52,7 @@ struct PreferencesView: View {
                     Text(.settings.defaultSortField)
                 }
 
-                Picker(selection: $defaultSortOrder) {
+                Picker(selection: $appSettings.defaultSortOrder) {
                     Text(SortOrder.ascending.localizedName)
                         .tag(SortOrder.ascending)
                     Text(SortOrder.descending.localizedName)
@@ -71,7 +61,7 @@ struct PreferencesView: View {
                     Text(.settings.defaultSortOrder)
                 }
 
-                Picker(selection: $defaultSearchMode) {
+                Picker(selection: $appSettings.defaultSearchMode) {
                     ForEach(FilterState.SearchMode.allCases, id: \.self) { mode in
                         Text(mode.localizedName).tag(mode)
                     }

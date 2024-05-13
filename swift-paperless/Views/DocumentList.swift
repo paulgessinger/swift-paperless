@@ -175,8 +175,7 @@ struct DocumentList: View {
 
     @EnvironmentObject private var errorController: ErrorController
 
-    @AppSetting(\.$documentDeleteConfirmation)
-    var documentDeleteConfirmation
+    @ObservedObject private var appSettings = AppSettings.shared
 
     init(store: DocumentStore, navPath: Binding<NavigationPath>, filterModel: FilterModel, errorController: ErrorController) {
         self.store = store
@@ -362,7 +361,7 @@ struct DocumentList: View {
                             Cell(store: store,
                                  document: document,
                                  navPath: $navPath,
-                                 documentDeleteConfirmation: documentDeleteConfirmation,
+                                 documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
                                  documentToDelete: $documentToDelete,
                                  viewModel: viewModel)
                                 .task {

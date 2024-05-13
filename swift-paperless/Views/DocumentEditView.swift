@@ -62,8 +62,7 @@ struct DocumentEditView: View {
     @State private var selectedState = FilterState()
     @State private var showDeleteConfirmation = false
 
-    @AppSetting(\.$documentDeleteConfirmation)
-    var documentDeleteConfirmation
+    @ObservedObject private var appSettings = AppSettings.shared
 
     @State private var deleted = false
 
@@ -277,7 +276,7 @@ struct DocumentEditView: View {
 
                 Section {
                     Button(action: {
-                        if documentDeleteConfirmation {
+                        if appSettings.documentDeleteConfirmation {
                             showDeleteConfirmation = true
                         } else {
                             doDocumentDelete()
