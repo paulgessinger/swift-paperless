@@ -162,10 +162,10 @@ struct LoginView: View {
         var request = URLRequest(url: apiUrl)
         extraHeaders.apply(toRequest: &request)
 
-        Logger.api.trace("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
+        Logger.api.info("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
 
         do {
-            Logger.shared.notice("Checking valid-looking URL \(apiUrl)")
+            Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
 
             let (data, response) = try await URLSession.shared.getData(for: request)
@@ -208,11 +208,13 @@ struct LoginView: View {
             request.httpBody = json
             extraHeaders.apply(toRequest: &request)
 
+            Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
+
             let (data, response) = try await URLSession.shared.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
             if statusCode != 200 {
-                Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1), \(String(decoding: data, as: UTF8.self))")
+                Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1, privacy: .public), \(String(decoding: data, as: UTF8.self))")
                 if statusCode == 400 {
                     errorController.push(error: LoginError.invalidLogin)
                 }
