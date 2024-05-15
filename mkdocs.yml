@@ -3,6 +3,8 @@ site_url: https://swift-paperless.gessinger.dev
 
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.png
 
 repo_url: https://github.com/paulgessinger/swift-paperless
 
@@ -20,6 +22,7 @@ plugins:
 
 markdown_extensions:
   - pymdownx.snippets:
+  - attr_list
 
 extra_css:
   - extra.css
