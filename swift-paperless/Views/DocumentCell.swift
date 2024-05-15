@@ -6,6 +6,7 @@
 //
 
 import NukeUI
+import os
 import SwiftUI
 
 struct DocumentPreviewImage: View {
@@ -15,32 +16,20 @@ struct DocumentPreviewImage: View {
     @StateObject private var image = FetchImage()
 
     var body: some View {
-        ZStack(alignment: .top) {
-            if image.image == nil {
-                ProgressView()
-            }
-
+        VStack {
             image.image?
                 .resizable()
                 .scaledToFit()
-
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(.gray, lineWidth: 0.33))
-                .shadow(color: Color("ImageShadow"), radius: 5)
         }
 
         .task {
-            guard let data = try? await store.repository.thumbnailData(document: document) else {
-                return
+            image.transaction = Transaction(animation: .linear(duration: 0.1))
+            do {
+                try image.load(ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document), processors: [.resize(width: 130)]))
+            } catch {
+                Logger.shared.error("Error loading document thumbnail for cell: \(error)")
             }
-
-            image.load(ImageRequest(id: "\(document.id)", data: { data }, processors: [
-            ]))
         }
-
-        .transition(.opacity)
-        .animation(.linear(duration: 0.1), value: image.image)
     }
 }
 
@@ -65,13 +54,14 @@ struct DocumentCellAspect: View {
 }
 
 struct DocumentCell: View {
-    @EnvironmentObject var store: DocumentStore
+    var store: DocumentStore
     @Environment(\.redactionReasons) var redactionReasons
 
     var document: Document
 
-    init(document: Document) {
+    init(document: Document, store: DocumentStore) {
         self.document = document
+        self.store = store
     }
 
     static var dateFormatter: DateFormatter {
@@ -90,14 +80,22 @@ struct DocumentCell: View {
             if redactionReasons.contains(.placeholder) {
                 Rectangle()
                     .fill(Color(white: 0.8))
-                    .cornerRadius(10)
-                    .aspectRatio(2 / 3, contentMode: .fit)
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(.gray, lineWidth: 0.33))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .frame(width: 130, height: 170, alignment: .topLeading)
                     .shadow(color: Color("ImageShadow"), radius: 5)
-                    .frame(width: 130)
             } else {
                 DocumentPreviewImage(store: store,
                                      document: document)
-                    .frame(maxWidth: 130, minHeight: 100)
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(.gray, lineWidth: 0.33))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .frame(width: 130, height: 170, alignment: .topLeading)
+                    .shadow(color: Color("ImageShadow"), radius: 5)
+                    .transaction { tx in
+                        tx.animation = nil
+                    }
             }
 
             VStack(alignment: .leading) {
@@ -137,14 +135,10 @@ struct DocumentCell: View {
                 Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
-                    .padding(0)
-                    .transition(.opacity)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(1)
             .padding(.horizontal, 5)
         }
-        .frame(height: 190, alignment: .top)
     }
 }
 
@@ -156,11 +150,11 @@ private struct HelperView: View {
         ScrollView(.vertical) {
             VStack {
                 ForEach(documents.prefix(5), id: \.id) { document in
-                    DocumentCell(document: document)
+                    DocumentCell(document: document, store: store)
                 }
 
                 if let doc = documents.first {
-                    DocumentCell(document: doc)
+                    DocumentCell(document: doc, store: store)
                         .redacted(reason: .placeholder)
                 }
                 Spacer()

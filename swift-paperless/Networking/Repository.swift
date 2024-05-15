@@ -106,6 +106,9 @@ protocol Repository: Sendable, Actor {
     func thumbnail(document: Document) async throws -> Image?
     func thumbnailData(document: Document) async throws -> Data
 
+    nonisolated
+    func thumbnailRequest(document: Document) throws -> URLRequest
+
     func download(documentID: UInt) async throws -> URL?
 
     func suggestions(documentId: UInt) async throws -> Suggestions

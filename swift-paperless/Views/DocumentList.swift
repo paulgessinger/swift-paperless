@@ -15,152 +15,17 @@ struct LoadingDocumentList: View {
     @StateObject private var store = DocumentStore(repository: PreviewRepository())
 
     var body: some View {
-        VStack {
-            List(documents, id: \.self) { document in
-                VStack {
-                    DocumentCell(document: document)
-                        .redacted(reason: .placeholder)
-                        .padding(.horizontal)
-                        .padding(.vertical)
-                    Rectangle()
-                        .fill(.gray)
-                        .frame(height: 0.33)
-                        .padding(.horizontal)
-                }
-                .listRowSeparator(.hidden)
+        List(documents, id: \.self) { document in
+            DocumentCell(document: document, store: store)
+                .redacted(reason: .placeholder)
+                .padding(.horizontal)
+                .padding(.vertical)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-            }
-            .listStyle(.plain)
         }
-        .environmentObject(store)
+        .listStyle(.plain)
         .task {
             documents = try! await PreviewRepository().documents(filter: FilterState()).fetch(limit: 10)
         }
-    }
-}
-
-@MainActor
-class DocumentListViewModel: ObservableObject {
-    private var store: DocumentStore
-    private var filterState: FilterState
-    private var errorController: ErrorController
-
-    @Published var documents: [Document] = []
-    @Published var loading = false
-    @Published var ready = false
-
-    private var source: DocumentSource?
-    private var exhausted: Bool = false
-
-    private var initialBatchSize: UInt = 100
-    private var batchSize: UInt = 100
-    private var fetchMargin = 10
-
-    init(store: DocumentStore, filterState: FilterState, errorController: ErrorController) {
-        self.store = store
-        self.filterState = filterState
-        self.errorController = errorController
-    }
-
-    func reload() async {
-        do {
-            source = try await store.repository.documents(filter: filterState)
-            documents = []
-            await load()
-        } catch {
-            Logger.shared.error("Error getting reloaded document source: \(error)")
-            errorController.push(error: error)
-        }
-    }
-
-    func load() async {
-        guard documents.isEmpty, !loading else { return }
-        loading = true
-        do {
-            if source == nil {
-                source = try await store.repository.documents(filter: filterState)
-            }
-            let batch = try await source!.fetch(limit: initialBatchSize)
-            documents = batch
-            ready = true
-            loading = false
-        } catch {
-            Logger.shared.error("DocumentList failed to load documents: \(error)")
-            errorController.push(error: error)
-        }
-    }
-
-    func fetchMoreIfNeeded(currentIndex: Int) async {
-        if exhausted { return }
-        if currentIndex >= documents.count - fetchMargin {
-            guard !loading else { return }
-            await MainActor.run { loading = true }
-            Task.detached {
-                do {
-                    guard let source = await self.source else {
-                        return
-                    }
-                    let batch = try await source.fetch(limit: self.batchSize)
-                    if batch.isEmpty {
-                        await MainActor.run {
-                            self.exhausted = true
-                            self.loading = false
-                        }
-                        return
-                    }
-
-                    await MainActor.run {
-                        self.documents += batch
-                        self.loading = false
-                    }
-                } catch {
-                    Logger.shared.error("DocumentList failed to load more if needed: \(error)")
-                    await self.errorController.push(error: error)
-                }
-            }
-        }
-    }
-
-    func refresh(filter: FilterState? = nil, retain: Bool = false) async throws -> [Document] {
-        if let filter {
-            filterState = filter
-        }
-        exhausted = false
-        do {
-            source = try await store.repository.documents(filter: filterState)
-            guard let source else {
-                return []
-            }
-            let batch = try await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
-            return batch
-        } catch {
-            Logger.shared.error("DocumentList failed to refresh: \(error)")
-            errorController.push(error: error)
-            throw error
-        }
-    }
-
-    func replace(documents: [Document]) {
-        self.documents = documents
-    }
-
-    func removed(document: Document) {
-        documents.removeAll(where: { $0.id == document.id })
-    }
-
-    func updated(document: Document) {
-        if let target = documents.firstIndex(where: { $0.id == document.id }) {
-            documents[target] = document
-        }
-    }
-
-    func removeInboxTags(document: Document) async {
-        var document = document
-        let inboxTags = store.tags.values.filter(\.isInboxTag)
-        for tag in inboxTags {
-            document.tags.removeAll(where: { $0 == tag.id })
-        }
-        try? await store.updateDocument(document)
     }
 }
 
@@ -203,71 +68,58 @@ struct DocumentList: View {
         }
 
         var body: some View {
-            ZStack {
-                VStack {
-                    DocumentCell(document: document)
-                        .contentShape(Rectangle())
+            DocumentCell(document: document, store: store)
+                .contentShape(Rectangle())
 
-                        .padding(.horizontal)
-                        .padding(.vertical)
-
-                    Rectangle()
-                        .fill(.gray)
-                        .frame(height: 0.33)
-                        .padding(.horizontal)
-                }
-
-                NavigationLink(value:
-                    NavigationState.detail(document: document)
-                ) {}
-                    .frame(width: 0)
-                    .opacity(0)
-            }
-
-            .swipeActions(edge: .leading) {
-                Button {
-                    Task { await viewModel.removeInboxTags(document: document) }
-                } label: {
-                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
-                }
-                .tint(.accentColor)
-            }
-
-            .swipeActions(edge: .trailing) {
-                Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                    onDeleteButtonPressed()
-                } label: {
-                    Label(String(localized: .localizable.delete), systemImage: "trash")
-                }
-                .tint(.red)
-            }
-
-            .contextMenu {
-                Button {
+                .padding(.horizontal)
+                .padding(.vertical)
+                .onTapGesture {
                     navPath.append(NavigationState.detail(document: document))
-                } label: {
-                    Label(String(localized: .localizable.edit), systemImage: "pencil")
                 }
 
-                Button {
-                    Task { await viewModel.removeInboxTags(document: document) }
-                } label: {
-                    Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
+                .swipeActions(edge: .leading) {
+                    Button {
+                        Task { await viewModel.removeInboxTags(document: document) }
+                    } label: {
+                        Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
+                    }
+                    .tint(.accentColor)
                 }
 
-                Button(role: .destructive) {
-                    onDeleteButtonPressed()
-                } label: {
-                    Label(String(localized: .localizable.delete), systemImage: "trash")
+                .swipeActions(edge: .trailing) {
+                    Button(role: documentDeleteConfirmation ? .none : .destructive) {
+                        onDeleteButtonPressed()
+                    } label: {
+                        Label(String(localized: .localizable.delete), systemImage: "trash")
+                    }
+                    .tint(.red)
                 }
 
-            } preview: {
-                DocumentPreview(document: document)
-                    .environmentObject(store)
-            }
+                .contextMenu {
+                    Button {
+                        navPath.append(NavigationState.detail(document: document))
+                    } label: {
+                        Label(String(localized: .localizable.edit), systemImage: "pencil")
+                    }
 
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    Button {
+                        Task { await viewModel.removeInboxTags(document: document) }
+                    } label: {
+                        Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
+                    }
+
+                    Button(role: .destructive) {
+                        onDeleteButtonPressed()
+                    } label: {
+                        Label(String(localized: .localizable.delete), systemImage: "trash")
+                    }
+
+                } preview: {
+                    DocumentPreview(document: document)
+                        .environmentObject(store)
+                }
+
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
     }
 
@@ -348,49 +200,44 @@ struct DocumentList: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            VStack {
-                if !viewModel.ready {
-                    LoadingDocumentList()
+        VStack {
+            if !viewModel.ready {
+                LoadingDocumentList()
+            } else {
+                let documents = viewModel.documents
+                if !documents.isEmpty {
+                    List(
+                        Array(zip(documents.indices, documents)), id: \.1.id
+                    ) { idx, document in
+                        Cell(store: store,
+                             document: document,
+                             navPath: $navPath,
+                             documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                             documentToDelete: $documentToDelete,
+                             viewModel: viewModel)
+                            .task {
+                                await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                            }
+                    }
+                    .listStyle(.plain)
                 } else {
-                    let documents = viewModel.documents
-                    if !documents.isEmpty {
-                        List(
-                            Array(zip(documents.indices, documents)), id: \.1.id
-                        ) { idx, document in
-                            Cell(store: store,
-                                 document: document,
-                                 navPath: $navPath,
-                                 documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                                 documentToDelete: $documentToDelete,
-                                 viewModel: viewModel)
-                                .task {
-                                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
-                                }
-                        }
-                        .listStyle(.plain)
-                    } else {
-                        NoDocumentsView(filtering: filterModel.filterState.filtering)
-                            .equatable()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    }
+                    NoDocumentsView(filtering: filterModel.filterState.filtering)
+                        .equatable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
             }
-
-            .onChange(of: filterModel.filterState) { filter in
-                Task {
-                    if let documents = try? await viewModel.refresh(filter: filter) {
-                        viewModel.replace(documents: documents)
-                        if let document = viewModel.documents.first {
-                            proxy.scrollTo(document.id, anchor: .top)
-                        }
-                    }
-                }
-            }
-
-            // @TODO: Re-evaluate if we want an animation here
-            .animation(.default, value: viewModel.documents)
         }
+
+        .onChange(of: filterModel.filterState) { filter in
+            Task {
+                if let documents = try? await viewModel.refresh(filter: filter) {
+                    viewModel.replace(documents: documents)
+                }
+            }
+        }
+
+        // @TODO: Re-evaluate if we want an animation here
+        .animation(.default, value: viewModel.documents)
         .refreshable {
             Task {
                 if let documents = try? await viewModel.refresh() {

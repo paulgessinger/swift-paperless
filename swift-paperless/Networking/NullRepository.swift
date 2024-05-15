@@ -48,6 +48,9 @@ actor NullRepository: Repository {
     func thumbnail(document _: Document) async -> Image? { nil }
     func thumbnailData(document _: Document) async throws -> Data { throw NotImplemented() }
 
+    nonisolated
+    func thumbnailRequest(document _: Document) throws -> URLRequest { throw NotImplemented() }
+
     func savedViews() async -> [SavedView] { [] }
     func create(savedView _: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
     func update(savedView: SavedView) async throws -> SavedView { savedView }

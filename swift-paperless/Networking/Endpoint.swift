@@ -23,7 +23,9 @@ extension Endpoint {
         Endpoint(path: "/api", queryItems: [])
     }
 
-    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = 50) -> Endpoint {
+    private static let defaultDocumentPageSize: UInt = 250
+
+    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
         let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
 
         var ordering: String = filter.sortField.rawValue
@@ -36,7 +38,7 @@ extension Endpoint {
         return Endpoint(path: endpoint.path, queryItems: queryItems)
     }
 
-    static func documents(page: UInt, rules: [FilterRule] = [], pageSize: UInt = 100) -> Endpoint {
+    static func documents(page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
         var queryItems = [
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "truncate_content", value: "true"),

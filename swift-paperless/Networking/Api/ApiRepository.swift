@@ -52,10 +52,12 @@ actor ApiRepository {
         }
     }
 
-    private var apiToken: String {
+    private nonisolated
+    var apiToken: String {
         connection.token
     }
 
+    nonisolated
     func url(_ endpoint: Endpoint) throws -> URL {
         let connection = connection
         Logger.api.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
@@ -87,7 +89,8 @@ actor ApiRepository {
         try request(url: url(endpoint))
     }
 
-    private func sanitizeUrlForLog(_ url: URL) -> String {
+    private nonisolated
+    func sanitizeUrlForLog(_ url: URL) -> String {
         #if DEBUG
             return url.absoluteString
         #else
@@ -464,14 +467,7 @@ extension ApiRepository: Repository {
     }
 
     func thumbnailData(document: Document) async throws -> Data {
-        Logger.api.notice("Get thumbnail for document \(document.id, privacy: .public)")
-        let url = try url(Endpoint.thumbnail(documentId: document.id))
-
-        // @TODO: Can this be a regular request?
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        connection.extraHeaders.apply(toRequest: &request)
-
+        let request = try thumbnailRequest(document: document)
         do {
             let (data, _) = try await fetchData(for: request)
             return data
@@ -482,6 +478,18 @@ extension ApiRepository: Repository {
             Logger.api.error("Error getting thumbnail data for document \(document.id, privacy: .public): \(error)")
             throw error
         }
+    }
+
+    nonisolated
+    func thumbnailRequest(document: Document) throws -> URLRequest {
+        Logger.api.notice("Get thumbnail for document \(document.id, privacy: .public)")
+        let url = try url(Endpoint.thumbnail(documentId: document.id))
+
+        var request = URLRequest(url: url)
+        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        connection.extraHeaders.apply(toRequest: &request)
+
+        return request
     }
 
     func suggestions(documentId: UInt) async throws -> Suggestions {

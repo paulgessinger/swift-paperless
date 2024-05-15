@@ -415,7 +415,7 @@ struct TypeAsnView: View {
         VStack {
             // @TODO: The vertical spacing is kind of wonky. Improve layout
             if case let .valid(document) = status {
-                DocumentCell(document: document)
+                DocumentCell(document: document, store: store)
                     .padding(.top)
                     .padding(.horizontal)
                     .contentShape(Rectangle())

@@ -166,7 +166,7 @@ struct TaskDetailView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
 
                             HStack {
-                                DocumentCell(document: document)
+                                DocumentCell(document: document, store: store)
                                 Label(localized: .localizable.more, systemImage: "chevron.right")
                                     .labelStyle(.iconOnly)
                                     .foregroundColor(.gray)

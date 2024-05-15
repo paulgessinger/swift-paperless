@@ -5,14 +5,24 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import NukeUI
 import os
 import SwiftUI
 
-private enum DownloadState {
+private enum DownloadState: Equatable {
     case initial
     case loading
     case loaded(PDFThumbnail)
     case error
+
+    static func == (lhs: DownloadState, rhs: DownloadState) -> Bool {
+        switch (lhs, rhs) {
+        case (.initial, .initial), (.loading, .loading), (.loaded, .loaded), (.error, .error):
+            true
+        default:
+            false
+        }
+    }
 }
 
 struct DocumentPreview: View {
@@ -21,6 +31,7 @@ struct DocumentPreview: View {
 
     var body: some View {
         IntegratedDocumentPreview(download: $download, document: document)
+            .frame(minWidth: 200, minHeight: 200)
     }
 }
 
@@ -29,7 +40,16 @@ private struct IntegratedDocumentPreview: View {
     @Binding var download: DownloadState
     var document: Document
 
+    @StateObject private var image = FetchImage()
+
     private func loadDocument() async {
+        image.transaction = Transaction(animation: .linear(duration: 0.1))
+        do {
+            try image.load(ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document)))
+        } catch {
+            Logger.shared.error("Error loading document thumbnail: \(error)")
+        }
+
         switch download {
         case .initial:
             download = .loading
@@ -43,9 +63,7 @@ private struct IntegratedDocumentPreview: View {
                     download = .error
                     return
                 }
-                withAnimation {
-                    download = .loaded(view)
-                }
+                download = .loaded(view)
 
             } catch {
                 download = .error
@@ -58,52 +76,44 @@ private struct IntegratedDocumentPreview: View {
         }
     }
 
+    private var isLoaded: Bool {
+        if case .loaded = download {
+            return true
+        }
+        return false
+    }
+
     var body: some View {
         ZStack {
-            HStack {
-                AuthAsyncImage {
-                    try? await store.repository.thumbnail(document: document)
-                } content: { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .blur(radius: 5)
-
-                        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .stroke(.gray, lineWidth: 0.33))
-                        .shadow(color: Color("ImageShadow"), radius: 15)
-                }
-                placeholder: {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .aspectRatio(1.0, contentMode: .fit)
-                }
-            }
+            image.image?
+                .resizable()
+                .scaledToFit()
+                .blur(radius: 10)
 
             switch download {
             case .error:
-                HStack {
-                    Spacer()
-                    Label("Unable to load preview", systemImage: "eye.slash")
-                        .labelStyle(.iconOnly)
-                        .imageScale(.large)
-
-                    Spacer()
-                }
+                Label("Unable to load preview", systemImage: "eye.slash")
+                    .labelStyle(.iconOnly)
+                    .imageScale(.large)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
             case let .loaded(view):
                 view
                     .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .stroke(.gray, lineWidth: 0.33))
-                    .shadow(color: Color("ImageShadow"), radius: 15)
 
             default:
                 EmptyView()
             }
         }
+
+        .transition(.opacity)
+        .animation(.easeOut(duration: 0.8), value: download)
+
+        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
+            .stroke(.gray, lineWidth: 0.33))
+        .shadow(color: Color("ImageShadow"), radius: 15)
+
         .task {
             await loadDocument()
         }

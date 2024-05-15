@@ -255,6 +255,11 @@ actor PreviewRepository: Repository {
         }
     }
 
+    nonisolated
+    func thumbnailRequest(document: Document) throws -> URLRequest {
+        URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
+    }
+
     func suggestions(documentId _: UInt) async -> Suggestions {
         .init(correspondents: [1], tags: [2, 3], documentTypes: [4], storagePaths: [2], dates: [.now, .now.advanced(by: 86400)])
     }

@@ -9,15 +9,14 @@ import Flow
 import SwiftUI
 
 struct TagView: View {
-    @EnvironmentObject var store: DocumentStore
     @Environment(\.redactionReasons) var redactionReasons
 
-    @State var tag: Tag?
+    var tag: Tag?
 
     init(tag: Tag? = nil) {
         let dummy = Tag.placeholder(8)
 
-        _tag = State(initialValue: tag ?? dummy)
+        self.tag = tag ?? dummy
     }
 
     var body: some View {
@@ -73,7 +72,6 @@ struct TagsView: View {
                     }
                 }
             }
-            Spacer()
         }
     }
 }
