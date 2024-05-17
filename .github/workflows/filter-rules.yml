@@ -17,12 +17,20 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install -r filter_rules/requirements.txt
+        run: |
+          pip install -r filter_rules/requirements.txt
+          pip install pre-commit
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Generate filter rules
         run: |
           filter_rules/generate_filterrules.py --output swift-paperless/FilterRuleType.swift
-          pre-commit run swiftformat --files swift-paperless/FilterRuleType.swift
+          pre-commit run swiftformat --files swift-paperless/FilterRuleType.swift || true
 
       - run: git diff
 
