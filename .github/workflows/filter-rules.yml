@@ -1,0 +1,55 @@
+name: Check upstream filter rule types
+
+on:
+  schedule:
+    - cron: "7 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update_filter_rules:
+    runs-on: ubuntu-latest
+
+    env:
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r filter_rules/requirements.txt
+          pip install pre-commit
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Generate filter rules
+        run: |
+          filter_rules/generate_filterrules.py --output swift-paperless/FilterRuleType.swift
+          pre-commit run swiftformat --files swift-paperless/FilterRuleType.swift || true
+
+      - run: git diff
+
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update report
+          branch: filter-rule-type-update
+          delete-branch: true
+          title: 'chore: Update Filter Rule types'
+          body: "Automated update of Filter Rule types."
+          base: main
+          add-paths: swift-paperless/FilterRuleType.swift

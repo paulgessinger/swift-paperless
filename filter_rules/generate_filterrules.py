@@ -4,25 +4,45 @@ import sys
 import urllib.request
 import re
 import dirtyjson
-import yaml
+import json
 from pathlib import Path
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from subprocess import check_call, check_output, CalledProcessError
+import argparse
 
-url = "https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/019a2557532205a2f21e270b8186b9046dc78ac0/src-ui/src/app/data/filter-rule-type.ts"
+input_file = "src-ui/src/app/data/filter-rule-type.ts"
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", type=str, default=f"https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/dev/{input_file}")
+parser.add_argument("--output", type=argparse.FileType("w"), default=sys.stdout)
+
+args = parser.parse_args()
 
 def swiftformat(file: Path) -> None: pass
 try:
-    exe = check_output(["command", "-v", "swiftformat"]).decode("utf-8").strip()
+    exe = check_output(["which", "swiftformat"]).decode("utf-8").strip()
     def swiftformat(file: Path) -> None:
         check_call([exe, "--swiftversion", "5", str(file)])
 except CalledProcessError:
     pass
 
-response = urllib.request.urlopen(url)
+try:
+    gh = check_output(["which", "gh"]).decode("utf-8").strip()
+    raw = check_output([gh, "api",
+                        f"repos/paperless-ngx/paperless-ngx/commits?path={input_file}"]).decode("utf-8")
+    commit_info = json.loads(raw)
+    commit_sha = commit_info[0]["sha"]
+    commit_url = commit_info[0]["html_url"]
+    commit_date = commit_info[0]["commit"]["committer"]["date"]
+except CalledProcessError:
+    commit_sha = "0"
+    commit_url = "Unknown"
+    commit_date = "Unknown"
+    pass
+
+response = urllib.request.urlopen(args.url)
 
 code = response.read().decode("utf-8")
 
@@ -101,8 +121,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     file = Path(tmpdir) / "filter_rules.swift"
     with file.open("w") as f:
-        f.write(template.render(rule_types=rule_types, url=url, date=datetime.now()))
+        f.write(template.render(rule_types=rule_types, url=args.url, commit_sha=commit_sha, commit_date=commit_date, commit_url=commit_url))
 
     swiftformat(file)
 
-    print(file.read_text().strip())
+    args.output.write(file.read_text().strip()+"\n")
