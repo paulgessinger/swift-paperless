@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 def swiftformat(file: Path) -> None: pass
 try:
-    exe = check_output(["command", "-v", "swiftformat"]).decode("utf-8").strip()
+    exe = check_output(["which", "swiftformat"]).decode("utf-8").strip()
     def swiftformat(file: Path) -> None:
         check_call([exe, "--swiftversion", "5", str(file)])
 except CalledProcessError:

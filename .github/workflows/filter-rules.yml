@@ -20,8 +20,12 @@ jobs:
         run: pip install -r filter_rules/requirements.txt
 
       - name: Generate filter rules
-        run:
+        run: |
           filter_rules/generate_filterrules.py --output swift-paperless/FilterRuleType.swift
+          pre-commit run swiftformat --files swift-paperless/FilterRuleType.swift
+
+      - run: git diff
+
 
       # - name: Create Pull Request
         # id: cpr
