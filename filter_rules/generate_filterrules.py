@@ -11,8 +11,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from subprocess import check_call, check_output, CalledProcessError
+import argparse
 
-url = "https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/019a2557532205a2f21e270b8186b9046dc78ac0/src-ui/src/app/data/filter-rule-type.ts"
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", type=str, default="https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/dev/src-ui/src/app/data/filter-rule-type.ts")
+parser.add_argument("--output", type=argparse.FileType("w"), default=sys.stdout)
+
+args = parser.parse_args()
 
 def swiftformat(file: Path) -> None: pass
 try:
@@ -22,7 +27,7 @@ try:
 except CalledProcessError:
     pass
 
-response = urllib.request.urlopen(url)
+response = urllib.request.urlopen(args.url)
 
 code = response.read().decode("utf-8")
 
@@ -101,8 +106,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     file = Path(tmpdir) / "filter_rules.swift"
     with file.open("w") as f:
-        f.write(template.render(rule_types=rule_types, url=url, date=datetime.now()))
+        f.write(template.render(rule_types=rule_types, url=args.url))
 
     swiftformat(file)
 
-    print(file.read_text().strip())
+    args.output.write(file.read_text().strip()+"\n")
