@@ -6,57 +6,81 @@
 import Foundation
 
 
-enum FilterRuleType : Int, Equatable, CaseIterable {
+enum FilterRuleType : RawRepresentable, Equatable, CaseIterable, Hashable {
+  init?(rawValue: Int) {
+    self = switch rawValue {
+    {%- for rule in rule_types | sort(attribute="id") %}
+      case {{ rule.id }}: .{{ rule.swift_name }}
+    {%- endfor %}
+
+      default: .other(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    return switch self {
+      {%- for rule in rule_types %}
+      case .{{ rule.swift_name }}: {{ rule.id }}
+      {%- endfor %}
+
+      case .other(let value): value
+    }
+  }
+
+  static let allCases: [FilterRuleType] = [
+      {%- for rule in rule_types | sort(attribute="id") %}
+      .{{ rule.swift_name }},
+      {%- endfor %}
+  ]
 
   enum DataType {
       {%- for dataType in rule_types|map(attribute='datatype')|unique|sort %}
-      case {{ dataType|to_camel }}
+      case {{ dataType }}
       {%- endfor %}
   }
 
 {%- for rule in rule_types %}
-  case {{ rule.swift_name }} = {{ rule.id }}
+  case {{ rule.swift_name }}
 {%- endfor %}
+  case other(Int)
 
- func filterVar() -> String {
-    switch self {
+ func filterVar() -> String? {
+    return switch self {
       {%- for rule in rule_types %}
-      case .{{ rule.swift_name }}:
-        return "{{ rule.filtervar }}"
+      case .{{ rule.swift_name }}: "{{ rule.filtervar }}"
       {%- endfor %}
+
+      default: nil
     }
   }
 
  func dataType() -> DataType {
-    switch self {
+    return switch self {
       {%- for rule in rule_types %}
-      case .{{ rule.swift_name }}:
-        return .{{ rule.datatype|to_camel }}
+      case .{{ rule.swift_name }}: .{{ rule.datatype }}
       {%- endfor %}
+
+      default: .string
     }
   }
 
  func defaultValue() -> Bool {
-    switch self {
+    return switch self {
       {%- for rule in rule_types | selectattr("default") %}
-      case .{{ rule.swift_name }}:
-        return true
+      case .{{ rule.swift_name }}: true
       {%- endfor %}
 
-      default:
-        return false
+      default: false
     }
   }
 
  func multiple() -> Bool {
-    switch self {
+    return switch self {
       {%- for rule in rule_types | selectattr("multi") %}
-      case .{{ rule.swift_name }}:
-        return true
+      case .{{ rule.swift_name }}: true
       {%- endfor %}
 
-      default:
-        return false
+      default: false
     }
   }
 
@@ -69,14 +93,12 @@ enum FilterRuleType : Int, Equatable, CaseIterable {
   }
 
  func isNullFilterVar() -> String? {
-    switch self {
+    return switch self {
       {%- for rule in rule_types | selectattr("isnull_filtervar") %}
-      case .{{ rule.swift_name }}:
-        return "{{ rule.isnull_filtervar }}"
+      case .{{ rule.swift_name }}: "{{ rule.isnull_filtervar }}"
       {%- endfor %}
 
-      default:
-        return nil
+      default: nil
     }
   }
 }

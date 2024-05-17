@@ -145,14 +145,23 @@ struct FilterRule: Equatable {
         for (type, group) in groups {
             let values = group.compactMap { $0.value.string() }.sorted()
 
-            result.append(.init(name: type.filterVar(), value: values.joined(separator: ",")))
+            if let filterVar = type.filterVar() {
+                result.append(.init(name: filterVar, value: values.joined(separator: ",")))
+            } else {
+                Logger.shared.warning("Unable to add query item for \(String(reflecting: type), privacy: .public)")
+            }
         }
 
         for rule in rules.filter({ !$0.ruleType.multiple() }) {
+            guard let filterVar = rule.ruleType.filterVar() else {
+                Logger.shared.warning("Unable to add query item for \(String(reflecting: rule.ruleType), privacy: .public)")
+                continue
+            }
+
             if case let .boolean(value) = rule.value {
-                result.append(.init(name: rule.ruleType.filterVar(), value: value ? "1" : "0"))
+                result.append(.init(name: filterVar, value: value ? "1" : "0"))
             } else if let value = rule.value.string() {
-                result.append(.init(name: rule.ruleType.filterVar(), value: value))
+                result.append(.init(name: filterVar, value: value))
             } else {
                 guard let nullVar = rule.ruleType.isNullFilterVar() else {
                     fatalError("Rule value is null, but rule has no null filter var")

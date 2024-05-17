@@ -38,6 +38,17 @@ final class FilterRuleTest: XCTestCase {
         XCTAssertEqual(result, FilterRule(ruleType: .titleContent, value: .string(value: "shantel")))
     }
 
+    func testDecodingUnknown() throws {
+        let input = """
+        {
+          "rule_type": 9999,
+          "value": "1234"
+        }
+        """.data(using: .utf8)!
+        let result = try JSONDecoder().decode(FilterRule.self, from: input)
+        XCTAssertEqual(result, FilterRule(ruleType: .other(9999), value: .string(value: "1234")))
+    }
+
     func testDecodingMultiple() throws {
         let input = """
         [
