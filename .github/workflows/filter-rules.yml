@@ -15,6 +15,7 @@ jobs:
 
     env:
       PRE_COMMIT_HOME: '/tmp/pre-commit'
+      GH_TOKEN: ${{ github.token  }}
 
     steps:
       - uses: actions/checkout@v4
