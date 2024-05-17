@@ -1,7 +1,6 @@
 name: Check upstream filter rule types
 
 on:
-  push:
   schedule:
     - cron: "7 */6 * * *"
   workflow_dispatch:
