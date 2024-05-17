@@ -183,7 +183,11 @@ actor ApiRepository {
         } catch let error as DecodingError {
             let url = request.url!
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
+            if Bundle.main.appConfiguration == .AppStore {
+                Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
+            } else {
+                Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
+            }
             throw error
         }
     }
