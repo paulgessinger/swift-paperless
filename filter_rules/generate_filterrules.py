@@ -4,11 +4,9 @@ import sys
 import urllib.request
 import re
 import dirtyjson
-import yaml
 from pathlib import Path
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from subprocess import check_call, check_output, CalledProcessError
 import argparse
