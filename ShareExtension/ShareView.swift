@@ -28,7 +28,9 @@ struct ShareView: View {
     }
 
     private func internalCallback() {
-        attachmentManager.importUrls.removeFirst()
+        if !attachmentManager.importUrls.isEmpty {
+            attachmentManager.importUrls.removeFirst()
+        }
         Logger.shared.info("Document created \(attachmentManager.importUrls) inputs left")
         if attachmentManager.importUrls.isEmpty {
             callback()
