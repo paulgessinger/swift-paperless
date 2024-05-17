@@ -64,7 +64,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     env:
-      PRE_COMMIT_HOME: '${{ github.workspace }}/pre-commit'
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
 
     steps:
       - name: Checkout

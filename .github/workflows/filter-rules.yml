@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PRE_COMMIT_HOME: '${{ github.workspace }}/pre-commit'
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
 
     steps:
       - uses: actions/checkout@v4
@@ -53,3 +53,4 @@ jobs:
           title: 'chore: Update Filter Rule types'
           body: "Automated update of Filter Rule types."
           base: main
+          add-paths: swift-paperless/FilterRuleType.swift
