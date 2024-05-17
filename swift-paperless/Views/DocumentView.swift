@@ -64,8 +64,9 @@ struct DocumentView: View {
     @State private var isDataScannerAvailable = false
     @State private var showDocumentScanner = false
     @State private var showCreateModal = false
-    @State private var importUrls: [URL] = []
-    @State private var totalUrls = 0
+
+    @StateObject private var importModel = DocumentImportModel()
+
     @State private var logoutRequested = false
 
     @State private var showPhotosPicker = false
@@ -75,81 +76,11 @@ struct DocumentView: View {
     @State private var showTypeAsn = false
     @State private var taskViewNavState: NavigationState? = nil
 
-    // @TODO: Separate view model which does the copying on a background thread
-    func importFile(result: [URL], isSecurityScoped: Bool) {
-        Logger.shared.debug("Initiate import of \(result.count) URLs")
-        do {
-            showFileImporter = false
-            showDocumentScanner = false
-
-            var images: [UIImage] = []
-
-            for selectedFile in result {
-                if isSecurityScoped {
-                    if selectedFile.startAccessingSecurityScopedResource() {
-                        defer { selectedFile.stopAccessingSecurityScopedResource() }
-
-                        let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-                        let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(selectedFile.lastPathComponent)
-
-                        if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
-                            try FileManager.default.removeItem(at: temporaryFileURL)
-                        }
-
-                        // Try to find out what we got
-                        guard let typeID = try selectedFile.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier, let supertypes = UTType(typeID)?.supertypes else {
-                            Logger.shared.error("Unable to get structured type info for imported file")
-                            errorController.push(message: String(localized: .localizable.errorDefaultMessage))
-                            return
-                        }
-
-                        Logger.shared.debug("Have structured type info: \(supertypes)")
-                        if supertypes.contains(.image) {
-                            Logger.shared.debug("Have image")
-                            let data = try Data(contentsOf: selectedFile)
-                            if let image = UIImage(data: data) {
-                                images.append(image)
-                            } else {
-                                Logger.shared.error("Could not load image from: \(selectedFile)")
-                            }
-                        } else {
-                            Logger.shared.debug("Have PDF -> copy file ")
-                            try FileManager.default.copyItem(at: selectedFile, to: temporaryFileURL)
-                            importUrls.append(temporaryFileURL)
-                            totalUrls += 1
-                        }
-
-                    } else {
-                        Logger.shared.error("Document import: Access denied")
-                        errorController.push(message: String(localized: .localizable.errorDefaultMessage))
-                    }
-                } else {
-                    importUrls.append(selectedFile)
-                    totalUrls += 1
-                }
-            }
-
-            if !images.isEmpty {
-                let pdf = try createPDFFrom(images: images)
-                importUrls.append(pdf)
-                totalUrls += 1
-            }
-
-            showCreateModal = true
-        } catch {
-            // Handle failure.
-            Logger.shared.error("Unable to read file contents: \(error)")
-            errorController.push(error: error)
-        }
-    }
-
     private func createCallback() {
-        if !importUrls.isEmpty {
-            importUrls.removeFirst()
-        }
-        if importUrls.isEmpty {
+        importModel.pop()
+        if importModel.importUrls.isEmpty {
             showCreateModal = false
-            totalUrls = 0
+            importModel.totalUrls = 0
         }
     }
 
@@ -182,9 +113,8 @@ struct DocumentView: View {
     }
 
     private var createDocumentTitle: String {
-        let remaining = totalUrls - importUrls.count + 1
-        if totalUrls > 1 {
-            return "\(String(localized: .localizable.documentAdd)) (\(remaining) / \(totalUrls))"
+        if importModel.totalUrls > 1 {
+            return "\(String(localized: .localizable.documentAdd)) (\(importModel.remaining) / \(importModel.totalUrls))"
         } else {
             return String(localized: .localizable.documentAdd)
         }
@@ -360,22 +290,28 @@ struct DocumentView: View {
                               allowedContentTypes: [.pdf, .image],
                               allowsMultipleSelection: true,
                               onCompletion: { result in
-                                  switch result {
-                                  case let .success(urls):
-                                      importFile(result: urls, isSecurityScoped: true)
-                                  case let .failure(failure):
-                                      errorController.push(error: failure)
+                                  Task { @MainActor in
+                                      switch result {
+                                      case let .success(urls):
+                                          showFileImporter = false
+                                          await importModel.importFile(result: urls, isSecurityScoped: true, errorController: errorController)
+                                          showCreateModal = true
+                                      case let .failure(failure):
+                                          errorController.push(error: failure)
+                                      }
                                   }
                               })
 
                 .fullScreenCover(isPresented: $showDocumentScanner) {
                     DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
-                        Task {
+                        Task { @MainActor in
                             switch result {
                             case let .success(urls):
-                                await importFile(result: urls, isSecurityScoped: false)
+                                showDocumentScanner = false
+                                await importModel.importFile(result: urls, isSecurityScoped: false, errorController: errorController)
+                                showCreateModal = true
                             case let .failure(failure):
-                                await errorController.push(error: failure)
+                                errorController.push(error: failure)
                             }
                         }
                     })
@@ -383,18 +319,12 @@ struct DocumentView: View {
                 }
 
                 .sheet(isPresented: $showCreateModal, onDismiss: {
-                    importUrls = []
-                    totalUrls = 0
+                    importModel.reset()
                 }) {
-                    if let url = importUrls.first {
-                        CreateDocumentView(
-                            sourceUrl: url,
-                            callback: createCallback,
-                            title: createDocumentTitle
-                        )
-                        .id(url)
+                    DocumentModelWrapper(importModel: importModel,
+                                         callback: createCallback,
+                                         title: createDocumentTitle)
                         .environmentObject(store)
-                    }
                 }
 
                 .sheet(isPresented: $showDataScanner, onDismiss: {}) {
@@ -414,8 +344,9 @@ struct DocumentView: View {
                         do {
                             let url = try await createPDFFrom(photos: selectedPhotos)
                             Logger.shared.debug("Have PDF at \(url)")
-                            importFile(result: [url], isSecurityScoped: false)
+                            await importModel.importFile(result: [url], isSecurityScoped: false, errorController: errorController)
                             selectedPhotos = []
+                            showCreateModal = true
                         } catch {
                             Logger.shared.error("Got error when creating PDF from photos: \(error)")
                             errorController.push(error: error)
