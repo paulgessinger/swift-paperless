@@ -2,7 +2,7 @@ name: Check upstream filter rule types
 
 on:
   schedule:
-    cron: "7 */6 * * *"
+    - cron: "7 */6 * * *"
   workflow_dispatch:
 
 jobs:
