@@ -22,16 +22,11 @@ enum NavigationState: Equatable, Hashable, Identifiable {
 
     var id: UInt {
         switch self {
-        case .root:
-            1
-        case .detail:
-            2
-        case .settings:
-            3
-        case .tasks:
-            4
-        case .task:
-            5
+        case .root: 1
+        case .detail: 2
+        case .settings: 3
+        case .tasks: 4
+        case .task: 5
         }
     }
 }
