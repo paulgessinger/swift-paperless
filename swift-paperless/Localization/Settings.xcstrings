@@ -171,9 +171,39 @@
     "appBuildNumberLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Build"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Build"
           }
         }
@@ -182,9 +212,39 @@
     "appConfigurationLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguration"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguration"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Configuration"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuratie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Configuration"
           }
         }
@@ -193,9 +253,39 @@
     "appVersionLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Version"
           }
         }
@@ -1110,9 +1200,39 @@
     "versionInfoLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info om version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versionsinformation"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Version info"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informations de version"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versie-informatie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Version info"
           }
         }

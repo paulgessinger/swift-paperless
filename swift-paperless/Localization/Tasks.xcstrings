@@ -908,39 +908,123 @@
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu flere opgaver"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "1 flere opgaver"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%llu flere opgaver"
+                }
+              }
+            }
           }
         },
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu weitere Aufgaben"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "1 weitere Aufgabe"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%llu weitere Aufgaben"
+                }
+              }
+            }
           }
         },
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu more tasks"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "1 more task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%llu more tasks"
+                }
+              }
+            }
           }
         },
         "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu tâches supplémentaires"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "1 autre tâche"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%llu tâches supplémentaires"
+                }
+              }
+            }
           }
         },
         "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu taken te gaan"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "1 taak te gaan"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%llu taken te gaan"
+                }
+              }
+            }
           }
         },
         "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llu więcej zadań"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%llu more tasks"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%llu more tasks"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "1 more task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%llu more tasks"
+                }
+              }
+            }
           }
         }
       }
