@@ -13,7 +13,7 @@ extension DisplayableError {
     var documentationLink: URL? { nil }
 }
 
-struct GenericError: DisplayableError {
+private struct GenericError: DisplayableError {
     let message: String
     let details: String?
 
@@ -64,22 +64,22 @@ class ErrorController: ObservableObject {
     }
 
     func push(error: Error, message: String? = nil) {
+        if let de = error as? DisplayableError {
+            push(error: de)
+            return
+        }
+
         if let le = error as? LocalizedError {
             if let message {
                 Task {
-                    push(error: GenericError(message: message, details: String(describing: error)))
+                    push(error: GenericError(message: message, details: "\(error.localizedDescription)\n\(String(describing: error))"))
                 }
             } else {
                 push(error: le)
             }
             return
         }
-
-        if let de = error as? DisplayableError {
-            push(error: de)
-            return
-        }
-        push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
+        push(message: message ?? Self.defaultTitle, details: "\(error.localizedDescription)\n\(String(describing: error))")
     }
 
     func push(error: Error, message: LocalizedStringResource) {
