@@ -79,7 +79,7 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "URL"
           }
         }
@@ -121,8 +121,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "User"
+            "state" : "translated",
+            "value" : "Użytkownik"
           }
         }
       }
@@ -320,8 +320,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose server"
+            "state" : "translated",
+            "value" : "Wybierz serwer"
           }
         }
       }
@@ -355,14 +355,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The default search mode for full-text search"
+            "state" : "translated",
+            "value" : "De standaard zoekmodus voor het doorzoeken van hele teksten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The default search mode for full-text search"
+            "state" : "translated",
+            "value" : "Domyślny tryb wyszukiwania pełnotekstowego"
           }
         }
       }
@@ -396,14 +396,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default search mode"
+            "state" : "translated",
+            "value" : "Standaard zoekmodus"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default search mode"
+            "state" : "translated",
+            "value" : "Domyślny tryb wyszukiwania"
           }
         }
       }
@@ -437,14 +437,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort field"
+            "state" : "translated",
+            "value" : "Standaard sorteerveld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort field"
+            "state" : "translated",
+            "value" : "Domyślne pole sortowania"
           }
         }
       }
@@ -478,14 +478,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort order"
+            "state" : "translated",
+            "value" : "Standaard sorteervolgorde"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort order"
+            "state" : "translated",
+            "value" : "Domyślny porządek sortowania"
           }
         }
       }

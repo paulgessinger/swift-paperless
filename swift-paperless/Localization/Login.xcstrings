@@ -37,8 +37,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add server"
+            "state" : "translated",
+            "value" : "Dodaj serwer"
           }
         }
       }
@@ -402,13 +402,13 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De app heeft geen toegang gekregen tot het lokale netwerk. Zie [hier](%@) voor meer informatie."
+            "value" : "De app heeft geen toegang gekregen tot het lokale netwerk. Druk [hier](%@) voor meer informatie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app has not been granted access to the local network. See [here](%@) for details."
+            "state" : "translated",
+            "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej. Szczegółowe informacje można znaleźć [tutaj](%@)."
           }
         }
       }

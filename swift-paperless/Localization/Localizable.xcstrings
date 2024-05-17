@@ -78,8 +78,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All documents"
+            "state" : "translated",
+            "value" : "Wszystkie dokumenty"
           }
         }
       }
@@ -119,8 +119,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other"
+            "state" : "translated",
+            "value" : "Inny"
           }
         }
       }
@@ -156,13 +156,13 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De bron \"%@\" is niet toegankelijk met de geauthenticeerde referenties. In veel gevallen is dit een toestemmingsfout. \n\nDe backend rapporteerde: %@"
+            "value" : "De bron \"%@\" is niet toegankelijk met de geauthenticeerde credentialen. In veel gevallen is dit een toestemmingsfout. \n\nHet backend rapporteerde: %@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. \n\nThe backend reported: %@"
+            "state" : "translated",
+            "value" : "Żądany \"%@\" nie jest dostępny przy użyciu uwierzytelnionych poświadczeń. W wielu przypadkach jest to błąd uprawnień.\n\nSerwer odpowiedział: %@"
           }
         }
       }
@@ -203,8 +203,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No access: %@"
+            "state" : "translated",
+            "value" : "Brak dostępu: %@"
           }
         }
       }
@@ -443,14 +443,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Back"
+            "state" : "translated",
+            "value" : "Terug"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Back"
+            "state" : "translated",
+            "value" : "Wstecz"
           }
         }
       }
@@ -1397,8 +1397,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Dokument"
           }
         }
       }
@@ -1767,8 +1767,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents"
+            "state" : "translated",
+            "value" : "Dokumenty"
           }
         }
       }
@@ -2589,8 +2589,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info"
+            "state" : "translated",
+            "value" : "Dodatkowe informacje"
           }
         }
       }
@@ -2882,8 +2882,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import photos"
+            "state" : "translated",
+            "value" : "Importuj zdjęcia"
           }
         }
       }
@@ -3164,14 +3164,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Meer"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Więcej"
           }
         }
       }
@@ -3974,26 +3974,26 @@
             "plural" : {
               "few" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld pages"
+                  "state" : "translated",
+                  "value" : "%lld strony"
                 }
               },
               "many" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld pages"
+                  "state" : "translated",
+                  "value" : "%lld stron"
                 }
               },
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld page"
+                  "state" : "translated",
+                  "value" : "%lld strona"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld pages"
+                  "state" : "translated",
+                  "value" : "%lld stron"
                 }
               }
             }
@@ -4113,13 +4113,13 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fout bij het ontvangen van geplukte foto's"
+            "value" : "Fout bij het ontvangen van gekozen foto's"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error when receiving picked photos"
+            "state" : "translated",
+            "value" : "Błąd podczas pobierania wybranych zdjęć"
           }
         }
       }
@@ -4770,14 +4770,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Geavanceerd"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Zaawansowane"
           }
         }
       }
@@ -4852,14 +4852,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Inhoud"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Zawartość"
           }
         }
       }
@@ -4893,14 +4893,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titel"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Tytuł"
           }
         }
       }
@@ -4934,14 +4934,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title & Content"
+            "state" : "translated",
+            "value" : "Titel & Inhoud"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title & Content"
+            "state" : "translated",
+            "value" : "Tytuł i treść"
           }
         }
       }
@@ -4975,14 +4975,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Selecteer"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Wybierz"
           }
         }
       }
@@ -5063,8 +5063,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+            "state" : "translated",
+            "value" : "Wystąpił błąd podczas przetwarzania udostępnionego elementu.\n\nNajlepiej byłoby, gdyby tak się nie stało, ale tak się stało!\n\nJeśli chcesz pomóc rozwiązać ten problem, proszę podziel się logami poniżej:"
           }
         }
       }
@@ -5104,8 +5104,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid attachment"
+            "state" : "translated",
+            "value" : "Nieprawidłowy załącznik"
           }
         }
       }
@@ -5432,8 +5432,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage path"
+            "state" : "translated",
+            "value" : "Ścieżka składowania"
           }
         }
       }
@@ -6870,8 +6870,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "User"
+            "state" : "translated",
+            "value" : "Użytkownik"
           }
         }
       }

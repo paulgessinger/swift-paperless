@@ -30,14 +30,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss"
+            "state" : "translated",
+            "value" : "Negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss"
+            "state" : "translated",
+            "value" : "Odrzuć"
           }
         }
       }
@@ -71,14 +71,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss all"
+            "state" : "translated",
+            "value" : "Alles negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss all"
+            "state" : "translated",
+            "value" : "Odrzuć wszystkie"
           }
         }
       }
@@ -112,14 +112,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss %llu"
+            "state" : "translated",
+            "value" : "%llu negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss %llu"
+            "state" : "translated",
+            "value" : "Odrzuć %llu"
           }
         }
       }
@@ -153,14 +153,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Aangemaakt"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Data utworzenia"
           }
         }
       }
@@ -194,14 +194,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Completed"
+            "state" : "translated",
+            "value" : "Voltooid"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Completed"
+            "state" : "translated",
+            "value" : "Zakończone"
           }
         }
       }
@@ -236,14 +236,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not import %@: it is a duplicate!"
+            "state" : "translated",
+            "value" : "Kan %@ niet importeren: het bestaat al!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not import %@: it is a duplicate!"
+            "state" : "translated",
+            "value" : "Nie można zaimportować %@: to duplikat!"
           }
         }
       }
@@ -277,14 +277,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error processing document"
+            "state" : "translated",
+            "value" : "Fout bij het verwerken van het document"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error processing document"
+            "state" : "translated",
+            "value" : "Błąd przetwarzania dokumentu"
           }
         }
       }
@@ -318,14 +318,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "File name"
+            "state" : "translated",
+            "value" : "Bestandsnaam"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "File name"
+            "state" : "translated",
+            "value" : "Nazwa pliku"
           }
         }
       }
@@ -359,14 +359,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task ID"
+            "state" : "translated",
+            "value" : "Taak ID"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task ID"
+            "state" : "translated",
+            "value" : "ID zadania"
           }
         }
       }
@@ -400,14 +400,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
+            "state" : "translated",
+            "value" : "Het document met ID #%@ dat bij deze taak hoort, bestaat niet.\nMogelijk is het in de tussentijd verwijderd."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
+            "state" : "translated",
+            "value" : "Dokument o ID #%@ powiązany z tym zadaniem nie istnieje.\nByć może został w międzyczasie usunięty."
           }
         }
       }
@@ -441,14 +441,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No tasks"
+            "state" : "translated",
+            "value" : "Geen taken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No tasks"
+            "state" : "translated",
+            "value" : "Brak zadań"
           }
         }
       }
@@ -482,14 +482,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Related document"
+            "state" : "translated",
+            "value" : "Gerelateerde documenten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Related document"
+            "state" : "translated",
+            "value" : "Powiązany dokument"
           }
         }
       }
@@ -523,14 +523,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Result"
+            "state" : "translated",
+            "value" : "Resultaat"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Result"
+            "state" : "translated",
+            "value" : "Wynik"
           }
         }
       }
@@ -564,14 +564,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Status"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Status"
+            "state" : "translated",
+            "value" : "Stan"
           }
         }
       }
@@ -605,14 +605,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failure"
+            "state" : "translated",
+            "value" : "Mislukt"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failure"
+            "state" : "translated",
+            "value" : "Niepowodzenie"
           }
         }
       }
@@ -646,14 +646,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pending"
+            "state" : "translated",
+            "value" : "In behandeling"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pending"
+            "state" : "translated",
+            "value" : "Oczekujący"
           }
         }
       }
@@ -687,14 +687,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Opnieuw proberen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Ponów"
           }
         }
       }
@@ -728,14 +728,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revoked"
+            "state" : "translated",
+            "value" : "Ingetrokken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revoked"
+            "state" : "translated",
+            "value" : "Anulowany"
           }
         }
       }
@@ -769,14 +769,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Started"
+            "state" : "translated",
+            "value" : "Gestart"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Started"
+            "state" : "translated",
+            "value" : "Rozpoczęty"
           }
         }
       }
@@ -810,14 +810,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Success"
+            "state" : "translated",
+            "value" : "Succesvol"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Success"
+            "state" : "translated",
+            "value" : "Powodzenie"
           }
         }
       }
@@ -851,14 +851,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task #%@"
+            "state" : "translated",
+            "value" : "Taak #%@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task #%@"
+            "state" : "translated",
+            "value" : "Zadanie #%@"
           }
         }
       }
@@ -892,14 +892,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tasks"
+            "state" : "translated",
+            "value" : "Alle taken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tasks"
+            "state" : "translated",
+            "value" : "Wszystkie zadania"
           }
         }
       }
@@ -933,14 +933,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%llu more tasks"
+            "state" : "translated",
+            "value" : "%llu taken te gaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%llu more tasks"
+            "state" : "translated",
+            "value" : "%llu więcej zadań"
           }
         }
       }
@@ -974,14 +974,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tasks"
+            "state" : "translated",
+            "value" : "Taken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tasks"
+            "state" : "translated",
+            "value" : "Zadania"
           }
         }
       }
@@ -1015,14 +1015,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Onbekend"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Nieznana"
           }
         }
       }
