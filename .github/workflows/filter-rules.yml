@@ -9,6 +9,10 @@ on:
 jobs:
   update_filter_rules:
     runs-on: ubuntu-latest
+
+    env:
+      PRE_COMMIT_HOME: '${{ github.workspace }}/pre-commit'
+
     steps:
       - uses: actions/checkout@v4
 
