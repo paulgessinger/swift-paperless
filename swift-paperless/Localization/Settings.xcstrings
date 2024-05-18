@@ -203,8 +203,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Build"
+            "state" : "translated",
+            "value" : "Kompilacja"
           }
         }
       }
@@ -244,8 +244,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Configuration"
+            "state" : "translated",
+            "value" : "Konfiguracja"
           }
         }
       }
@@ -285,8 +285,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Version"
+            "state" : "translated",
+            "value" : "Wersja"
           }
         }
       }
@@ -1298,8 +1298,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Version info"
+            "state" : "translated",
+            "value" : "Informacje o wersji"
           }
         }
       }

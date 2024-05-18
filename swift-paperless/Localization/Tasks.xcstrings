@@ -694,7 +694,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ponów"
+            "value" : "Ponawianie"
           }
         }
       }
@@ -1002,26 +1002,26 @@
             "plural" : {
               "few" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%llu more tasks"
+                  "state" : "translated",
+                  "value" : "Jeszcze %llu zadania"
                 }
               },
               "many" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%llu more tasks"
+                  "state" : "translated",
+                  "value" : "Jeszcze %llu zadań"
                 }
               },
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "1 more task"
+                  "state" : "translated",
+                  "value" : "Jeszcze 1 zadanie"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%llu more tasks"
+                  "state" : "translated",
+                  "value" : "Jeszcze %llu zadań"
                 }
               }
             }
