@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 func makeDecoder(tz: TimeZone) -> JSONDecoder {
     let d = JSONDecoder()
@@ -26,12 +27,19 @@ func makeDecoder(tz: TimeZone) -> JSONDecoder {
             return res
         }
 
+        df.dateFormat = "yyyy-MM-ddTHH:mm:ss.SSSSZZZZZ"
+
+        if let res = df.date(from: dateStr) {
+            return res
+        }
+
         df.dateFormat = "yyyy-MM-dd"
 
         if let res = df.date(from: dateStr) {
             return res
         }
 
+        Logger.shared.error("Unable to decode date from string: \(dateStr, privacy: .public)")
         throw DateDecodingError.invalidDate(string: dateStr)
     }
 //    d.keyDecodingStrategy = .convertFromSnakeCase

@@ -186,6 +186,7 @@ extension FilterRule: Codable {
             dateFormatter.dateFormat = "yyyy-MM-dd"
             dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
             guard let date = dateFormatter.date(from: dateStr) else {
+                Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
                 throw DateDecodingError.invalidDate(string: dateStr)
             }
             value = .date(value: date)
