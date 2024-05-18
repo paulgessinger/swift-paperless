@@ -54,7 +54,6 @@ struct LogoChangeView: View {
                 ForEach(AppIcon.allCases, id: \.self) { icon in
                     Button {
                         guard !icon.isActive else { return }
-                        print("GO change")
                         Task { @MainActor in
                             do {
                                 let value = icon == .primary ? nil : icon.rawValue
