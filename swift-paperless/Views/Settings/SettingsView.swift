@@ -139,6 +139,12 @@ struct SettingsView: View {
             LogRecordExportButton()
 
             NavigationLink {
+                LogoChangeView()
+            } label: {
+                Label(localized: .settings.logoChangeTitle, systemImage: "leaf.fill")
+            }
+
+            NavigationLink {
                 debugMenu
             } label: {
                 Label(localized: .settings.debugMenu, systemImage: "ladybug.fill")

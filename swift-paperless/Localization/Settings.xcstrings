@@ -416,6 +416,28 @@
         }
       }
     },
+    "debugMenu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        }
+      }
+    },
+    "debugResetAppVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset stored app version"
+          }
+        }
+      }
+    },
     "defaultSearchModeDescription" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1027,6 +1049,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyślij e-mail"
+          }
+        }
+      }
+    },
+    "logoChangeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize logo"
+          }
+        }
+      }
+    },
+    "logoIsSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected icon"
+          }
+        }
+      }
+    },
+    "logoPrimary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default icon"
+          }
+        }
+      }
+    },
+    "logoVariation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icon #%llu"
           }
         }
       }

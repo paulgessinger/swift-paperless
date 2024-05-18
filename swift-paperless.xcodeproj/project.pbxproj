@@ -40,6 +40,7 @@
 		7A15D7702BC8010E001E3A86 /* ConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */; };
 		7A17104F2BF7C1BF00C2BDBF /* DocumentImportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A17104E2BF7C1BF00C2BDBF /* DocumentImportModel.swift */; };
 		7A1710502BF7C1BF00C2BDBF /* DocumentImportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A17104E2BF7C1BF00C2BDBF /* DocumentImportModel.swift */; };
+		7A17105D2BF7D19C00C2BDBF /* LogoChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A17105C2BF7D19C00C2BDBF /* LogoChangeView.swift */; };
 		7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32BE2A5EAF1A00C18B44 /* Nuke */; };
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
@@ -316,6 +317,7 @@
 		7A1460F22B19F8380074BAAB /* Login.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Login.xcstrings; sourceTree = "<group>"; };
 		7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsView.swift; sourceTree = "<group>"; };
 		7A17104E2BF7C1BF00C2BDBF /* DocumentImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentImportModel.swift; sourceTree = "<group>"; };
+		7A17105C2BF7D19C00C2BDBF /* LogoChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoChangeView.swift; sourceTree = "<group>"; };
 		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A25773F2A87D32400B15626 /* NullCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NullCodable.swift; sourceTree = "<group>"; };
 		7A2831B12A62748D009E86CE /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
@@ -749,6 +751,7 @@
 				7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */,
 				7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */,
 				7A3E45DF2BF256BB0007AB67 /* AppVersionView.swift */,
+				7A17105C2BF7D19C00C2BDBF /* LogoChangeView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1110,6 +1113,7 @@
 				7A3E46042BF25C330007AB67 /* AsyncChannel+next.swift in Sources */,
 				7A2831B72A63D6E2009E86CE /* TaskModel.swift in Sources */,
 				7A4648032A1D5ABC00078968 /* ListResponse.swift in Sources */,
+				7A17105D2BF7D19C00C2BDBF /* LogoChangeView.swift in Sources */,
 				7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A2831B22A62748D009E86CE /* UserModel.swift in Sources */,
 				7A4648072A1D5AED00078968 /* DateDecodingError.swift in Sources */,
@@ -1456,8 +1460,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconVar0 AppIconVar1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -1507,8 +1513,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconVar0 AppIconVar1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "swift-paperless/swift_paperless.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
