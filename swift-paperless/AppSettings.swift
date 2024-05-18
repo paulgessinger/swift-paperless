@@ -31,6 +31,8 @@ class AppSettings: ObservableObject {
 
         Logger.shared.info("Last app version was: \(lastVersion?.description ?? "?", privacy: .public)")
 
+        lastAppVersion = lastVersion
+
         var release = Bundle.main.releaseVersionNumber
         if release == nil {
             Logger.shared.warning("Current release version number is nil")
@@ -72,7 +74,7 @@ class AppSettings: ObservableObject {
     @PublishedUserDefaultsBacked(.defaultSortOrder)
     var defaultSortOrder = SortOrder.descending
 
-    struct Version: CustomStringConvertible, Codable {
+    struct Version: CustomStringConvertible, Codable, Equatable {
         private let releaseStored: [UInt]
 
         let build: UInt
@@ -98,12 +100,24 @@ class AppSettings: ObservableObject {
             self.build = build
         }
 
+        var release: (UInt, UInt, UInt) {
+            precondition(releaseStored.count == 3)
+            return (releaseStored[0], releaseStored[1], releaseStored[2])
+        }
+
+        var releaseString: String {
+            precondition(releaseStored.count == 3)
+            return releaseStored.map { String($0) }.joined(separator: ".")
+        }
+
         var description: String {
             "\(releaseStored.map { String($0) }.joined(separator: ".")) (\(build))"
         }
     }
 
     var lastAppVersion: Version?
+    @UserDefaultsBacked(appVersionKey)
+    var currentAppVersion: Version? = nil
 
     func resetAppVersion() {
         Logger.shared.info("Resetting stored app version")

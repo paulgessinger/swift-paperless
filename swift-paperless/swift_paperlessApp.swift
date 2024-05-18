@@ -30,6 +30,8 @@ struct MainView: View {
     @State private var lockState = LockState.initial
     @State private var unlocking = false
 
+    @StateObject private var releaseNotesModel = ReleaseNotesViewModel()
+
     init() {
         _ = AppSettings.shared
     }
@@ -85,6 +87,10 @@ struct MainView: View {
             LoginView(connectionManager: manager)
                 .errorOverlay(errorController: errorController)
                 .environmentObject(errorController)
+        }
+
+        .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
+            ReleaseNotesView(releaseNotesModel: releaseNotesModel)
         }
 
         .task {

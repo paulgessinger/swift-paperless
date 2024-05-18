@@ -88,6 +88,7 @@
 		7A3E46212BF268490007AB67 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7A3E46232BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */; };
 		7A3E46242BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */; };
+		7A4570192BF8BC6200CFB030 /* ReleaseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */; };
 		7A4648002A1D593C00078968 /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
 		7A4648012A1D5A7D00078968 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ED02A0303140003DFBD /* Logging.swift */; };
 		7A4648032A1D5ABC00078968 /* ListResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4648022A1D5ABC00078968 /* ListResponse.swift */; };
@@ -339,6 +340,7 @@
 		7A3E45DF2BF256BB0007AB67 /* AppVersionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionView.swift; sourceTree = "<group>"; };
 		7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AsyncChannel+next.swift"; sourceTree = "<group>"; };
 		7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentListViewModel.swift; sourceTree = "<group>"; };
+		7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotesView.swift; sourceTree = "<group>"; };
 		7A4648022A1D5ABC00078968 /* ListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListResponse.swift; sourceTree = "<group>"; };
 		7A4648062A1D5AED00078968 /* DateDecodingError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateDecodingError.swift; sourceTree = "<group>"; };
 		7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compatibility.swift; sourceTree = "<group>"; };
@@ -725,6 +727,7 @@
 				7A2F65582B5ADB25000A75D9 /* MailView.swift */,
 				7ABA52C92B79314700AE218B /* InactiveView.swift */,
 				7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */,
+				7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1133,6 +1136,7 @@
 				7A83F6E32A6BE3D7002B5CF6 /* DataScannerView.swift in Sources */,
 				939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */,
 				7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */,
+				7A4570192BF8BC6200CFB030 /* ReleaseNotesView.swift in Sources */,
 				7A8E1F822A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7AEF691C29D049D900414BA7 /* PositionObservingView.swift in Sources */,
 				7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */,
