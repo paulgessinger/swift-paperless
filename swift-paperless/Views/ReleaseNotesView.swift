@@ -18,13 +18,13 @@ class ReleaseNotesViewModel: ObservableObject {
 
     init() {
         Task { @MainActor in
-            if AppSettings.shared.lastAppVersion != AppSettings.shared.currentAppVersion {
+            if AppSettings.shared.lastAppVersion != AppSettings.shared.currentAppVersion, Bundle.main.appConfiguration != .TestFlight {
                 showReleaseNotes = true
             }
         }
     }
 
-    private static let baseUrl = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/docs/release_notes/")!
+    static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev/release_notes/md/")!
 
     func loadReleaseNotes() async {
         guard let version = AppSettings.shared.currentAppVersion?.releaseString else {
@@ -53,7 +53,7 @@ struct ReleaseNotesView: View {
     var body: some View {
         ScrollView(.vertical) {
             if let content = releaseNotesModel.content {
-                Markdown(content)
+                Markdown(content, baseURL: URL(string: "https://swift-paperless.gessinger.dev/release_notes/")!)
                     .frame(maxWidth: .infinity)
                     .padding()
             } else if let error = releaseNotesModel.error {
