@@ -29,6 +29,8 @@ jobs:
         run: |
           pip install -r docs/requirements.txt
           mkdocs build
+          mkdir site/release_notes/md
+          cp docs/release_notes/*.md site/release_notes/md
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
