@@ -30,6 +30,10 @@ struct MainView: View {
     @State private var lockState = LockState.initial
     @State private var unlocking = false
 
+    init() {
+        _ = AppSettings.shared
+    }
+
     private func refreshConnection() {
         Logger.api.info("Connection info changed, reloading!")
 

@@ -19,7 +19,41 @@ enum SettingsKeys: String {
 
 @MainActor
 class AppSettings: ObservableObject {
-    private init() {}
+    private static let appVersionKey = "currentAppVersion"
+    private init() {
+        let lastVersion: Version?
+        do {
+            lastVersion = try UserDefaults.standard.load(Version.self, key: Self.appVersionKey)
+        } catch {
+            Logger.shared.error("Last app version could not be read: \(error)")
+            lastVersion = nil
+        }
+
+        Logger.shared.info("Last app version was: \(lastVersion?.description ?? "?", privacy: .public)")
+
+        var release = Bundle.main.releaseVersionNumber
+        if release == nil {
+            Logger.shared.warning("Current release version number is nil")
+            release = "1.0.0"
+        }
+        var build = Bundle.main.buildVersionNumber
+        if build == nil {
+            Logger.shared.warning("Current build number is nil")
+            build = "1"
+        }
+
+        guard let currentVersion = Version(release: release!, build: build!) else {
+            return
+        }
+
+        Logger.shared.info("Current app version is: \(currentVersion, privacy: .public)")
+
+        do {
+            try UserDefaults.standard.store(currentVersion, key: Self.appVersionKey)
+        } catch {
+            Logger.shared.error("Unable to store current version (\(String(describing: currentVersion), privacy: .public): \(error)")
+        }
+    }
 
     static var shared = AppSettings()
 
@@ -37,6 +71,44 @@ class AppSettings: ObservableObject {
 
     @PublishedUserDefaultsBacked(.defaultSortOrder)
     var defaultSortOrder = SortOrder.descending
+
+    struct Version: CustomStringConvertible, Codable {
+        private let releaseStored: [UInt]
+
+        let build: UInt
+
+        enum CodingKeys: String, CodingKey {
+            case releaseStored = "release"
+            case build
+        }
+
+        init?(release: String, build: String) {
+            releaseStored = release.split(separator: ".").compactMap { UInt($0) }
+            guard releaseStored.count == 3 else {
+                return nil
+            }
+            guard let build = UInt(build) else {
+                return nil
+            }
+            self.build = build
+        }
+
+        init(release: (UInt, UInt, UInt), build: UInt) {
+            releaseStored = [release.0, release.1, release.2]
+            self.build = build
+        }
+
+        var description: String {
+            "\(releaseStored.map { String($0) }.joined(separator: ".")) (\(build))"
+        }
+    }
+
+    var lastAppVersion: Version?
+
+    func resetAppVersion() {
+        Logger.shared.info("Resetting stored app version")
+        UserDefaults.standard.removeObject(forKey: Self.appVersionKey)
+    }
 
     let settingsChanged = PassthroughSubject<Void, Never>()
 }

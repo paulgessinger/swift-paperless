@@ -134,6 +134,31 @@ struct SettingsView: View {
         }
     }
 
+    var advancedSection: some View {
+        Section(String(localized: .settings.advanced)) {
+            LogRecordExportButton()
+
+            NavigationLink {
+                debugMenu
+            } label: {
+                Label(localized: .settings.debugMenu, systemImage: "ladybug.fill")
+            }
+        }
+    }
+
+    var debugMenu: some View {
+        Form {
+            Section {
+                Button {
+                    AppSettings.shared.resetAppVersion()
+                } label: {
+                    Text(.settings.debugResetAppVersion)
+                }
+            }
+        }
+        .navigationTitle(String(localized: .settings.debugMenu))
+    }
+
     var body: some View {
         Form {
             ConnectionsView(connectionManager: connectionManager,
@@ -150,9 +175,7 @@ struct SettingsView: View {
 
             organizationSection
 
-            Section(String(localized: .settings.advanced)) {
-                LogRecordExportButton()
-            }
+            advancedSection
 
             detailSection
         }
