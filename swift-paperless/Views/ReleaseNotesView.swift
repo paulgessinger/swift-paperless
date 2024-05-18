@@ -18,13 +18,13 @@ class ReleaseNotesViewModel: ObservableObject {
 
     init() {
         Task { @MainActor in
-            if AppSettings.shared.lastAppVersion != AppSettings.shared.currentAppVersion, Bundle.main.appConfiguration != .TestFlight {
+            if AppSettings.shared.lastAppVersion != AppSettings.shared.currentAppVersion {
                 showReleaseNotes = true
             }
         }
     }
 
-    static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev/release_notes/md/")!
+    static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev/release_notes/")!
 
     func loadReleaseNotes() async {
         guard let version = AppSettings.shared.currentAppVersion?.releaseString else {
@@ -32,7 +32,7 @@ class ReleaseNotesViewModel: ObservableObject {
             return
         }
 
-        let url = Self.baseUrl.appending(path: "v\(version).md")
+        let url = Self.baseUrl.appending(path: "md").appending(path: "v\(version).md")
         let request = URLRequest(url: url)
         Logger.shared.debug("Loading release notes from \(request.url!, privacy: .public)")
 
@@ -53,7 +53,7 @@ struct ReleaseNotesView: View {
     var body: some View {
         ScrollView(.vertical) {
             if let content = releaseNotesModel.content {
-                Markdown(content, baseURL: URL(string: "https://swift-paperless.gessinger.dev/release_notes/")!)
+                Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
                     .frame(maxWidth: .infinity)
                     .padding()
             } else if let error = releaseNotesModel.error {
@@ -62,7 +62,12 @@ struct ReleaseNotesView: View {
                         .font(.title)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     Text("\(error.localizedDescription)")
+                    if Bundle.main.appConfiguration == .TestFlight {
+                        Text("This is expected on TestFlight, if the release notes have not been created yet!")
+                    }
                 }
+                .multilineTextAlignment(.center)
+                .padding()
             }
         }
 
