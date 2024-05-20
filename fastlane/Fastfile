@@ -75,8 +75,9 @@ platform :ios do
   end
 
   lane :build do |options|
-    device = options.fetch(:device, "iPhone 14 Pro")
-    ios = options.fetch(:ios, "16.4")
+    device = options.fetch(:device, "iPhone 15 Pro")
+    ios = options.fetch(:ios, "17.4")
+
 
     build_app(
       scheme: "swift-paperless",
