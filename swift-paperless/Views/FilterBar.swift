@@ -336,10 +336,13 @@ struct FilterBar: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(String(localized: .localizable.done)) {
+                        Button {
                             dismiss()
                             filterModel.filterState = filterState
                             onDismiss()
+                        } label: {
+                            Text(.localizable.done)
+                                .accessibilityIdentifier("dismissButton")
                         }
                     }
                 }
@@ -480,6 +483,7 @@ struct FilterBar: View {
                 }, active: filterState.tags != .any) {
                     present(.tags)
                 }
+                .accessibilityIdentifier("filterBarTagsFilterButton")
 
                 Element(label: {
                     CommonElementLabel(DocumentType.self,

@@ -142,7 +142,6 @@
 		7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */; };
 		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
-		7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */; };
 		7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
 		7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
 		7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A1460E72B19F76D0074BAAB /* Settings.xcstrings */; };
@@ -212,6 +211,8 @@
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52B52B791E6400AE218B /* Biometric.swift */; };
 		7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52C92B79314700AE218B /* InactiveView.swift */; };
+		7ABC73052BFB58EC0061E094 /* Screenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABC73042BFB58EC0061E094 /* Screenshots.swift */; };
+		7ABC73072BFB59490061E094 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABC73062BFB59490061E094 /* SnapshotHelper.swift */; };
 		7ACB386529D99FCE006CE102 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */; };
 		7ACFB2B92B4734CD009DED79 /* SuccessOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */; };
@@ -370,7 +371,6 @@
 		7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessTests.swift; sourceTree = "<group>"; };
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITests.swift; sourceTree = "<group>"; };
-		7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
@@ -398,6 +398,8 @@
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		7ABA52B52B791E6400AE218B /* Biometric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Biometric.swift; sourceTree = "<group>"; };
 		7ABA52C92B79314700AE218B /* InactiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveView.swift; sourceTree = "<group>"; };
+		7ABC73042BFB58EC0061E094 /* Screenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screenshots.swift; sourceTree = "<group>"; };
+		7ABC73062BFB59490061E094 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessOverlay.swift; sourceTree = "<group>"; };
@@ -622,7 +624,8 @@
 			isa = PBXGroup;
 			children = (
 				7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */,
-				7A5482CC299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift */,
+				7ABC73062BFB59490061E094 /* SnapshotHelper.swift */,
+				7ABC73042BFB58EC0061E094 /* Screenshots.swift */,
 			);
 			path = "swift-paperlessUITests";
 			sourceTree = "<group>";
@@ -1213,9 +1216,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A2577422A87D32400B15626 /* NullCodable.swift in Sources */,
+				7ABC73052BFB58EC0061E094 /* Screenshots.swift in Sources */,
+				7ABC73072BFB59490061E094 /* SnapshotHelper.swift in Sources */,
 				7A3E45D22BF255530007AB67 /* Bundle.swift in Sources */,
 				7A495D222BD958A300A2E5CF /* View+alert.swift in Sources */,
-				7A5482CD299AD56E00D5061E /* swift_paperlessUITestsLaunchTests.swift in Sources */,
 				7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */,
 				7A495D402BD969F700A2E5CF /* Binding.swift in Sources */,
 			);

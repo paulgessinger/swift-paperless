@@ -281,6 +281,7 @@ struct DocumentDetailView: View {
             Button(String(localized: .localizable.edit)) {
                 editing.toggle()
             }
+            .accessibilityIdentifier("documentEditButton")
         }
 
         .sheet(isPresented: $editing) {
