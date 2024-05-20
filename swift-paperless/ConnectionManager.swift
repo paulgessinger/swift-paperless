@@ -155,6 +155,12 @@ class ConnectionManager: ObservableObject {
         }
     }
 
+    let previewMode: Bool
+
+    init() {
+        previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+    }
+
     // @TODO: (multi-server) Remove in a few versions
     @UserDefaultsBacked("ExtraHeaders", storage: .group)
     private var extraHeaders: [HeaderValue] = []
@@ -222,6 +228,17 @@ class ConnectionManager: ObservableObject {
 
     var connection: Connection? {
         Logger.api.debug("Making connection object")
+
+        if previewMode {
+            Logger.api.info("Running in preview mode")
+            let udef = UserDefaults.standard
+            let url = URL(string: udef.string(forKey: "PreviewURL")!)!
+            let token = udef.string(forKey: "PreviewToken")!
+            return Connection(url: url,
+                              token: token,
+                              extraHeaders: extraHeaders)
+        }
+
         if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
             Logger.api.debug("Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)")
             do {

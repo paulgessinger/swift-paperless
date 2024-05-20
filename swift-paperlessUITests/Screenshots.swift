@@ -14,6 +14,7 @@ final class Screenshots: XCTestCase {
         setupSnapshot(app)
         app.launch()
 
+        sleep(1)
         snapshot("01DocumentView")
 
         app.staticTexts["filterBarTagsFilterButton"].tap()
@@ -24,6 +25,8 @@ final class Screenshots: XCTestCase {
             .buttons["dismissButton"].tap()
 
         app.collectionViews.children(matching: .cell).element(boundBy: 1).tap()
+
+        sleep(1)
 
         snapshot("03DocumentDetailView")
 
