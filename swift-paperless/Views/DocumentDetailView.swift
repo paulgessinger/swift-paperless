@@ -153,7 +153,7 @@ struct DocumentDetailView: View {
     @State var document: Document
     var navPath: Binding<NavigationPath>?
 
-    @State private var editing = false
+    @State private var editing = true
     @State private var download: DownloadState = .initial
     @State private var previewUrl: URL?
 
@@ -164,6 +164,17 @@ struct DocumentDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var errorController: ErrorController
 
+    @MainActor
+    private static let editDetents: [PresentationDetent] = [
+        //        .fraction(0.1),
+        .height(bottomPadding),
+        .medium,
+        .large,
+    ]
+    @State private var editDetent = Self.editDetents.first!
+
+    private static let bottomPadding: CGFloat = 100
+
     var gray: Color {
         if colorScheme == .dark {
             return Color.secondarySystemGroupedBackground
@@ -173,120 +184,58 @@ struct DocumentDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading) {
-                    Text(document.title)
-                        .font(.title)
-                        .bold()
-                        .padding(.bottom)
-                    HStack(alignment: .top, spacing: 25) {
-                        VStack(alignment: .leading) {
-                            if let asn = document.asn {
-                                Aspect(String(localized: .localizable.documentAsn(asn)), systemImage: "qrcode")
-                            } else {
-                                Aspect(systemImage: "qrcode") {
-                                    HStack(spacing: 2) {
-                                        Text(String("#"))
-                                        Text(String("0000"))
-                                            .redacted(reason: .placeholder)
-                                    }
-                                }
-                            }
+//        VStack {
+//            Text(document.title)
+//                .font(.title)
+//                .bold()
+//                .frame(maxWidth: .infinity, alignment: .leading)
+//                .padding()
+        DocumentQuickLookPreview(document: document)
+//                .safeAreaInset(edge: .top) {
+//                    VStack {
+//                        Text("Hi")
+//                        Text("HO")
+//                        Text("Yo")
+//                    }
+//                }
+//                .safeAreaInset(edge: .bottom) {
+//                    VStack {
+//                        Text("Hi")
+//                        Text("HO")
+//                        Text("Yo")
+//                    }
+//                }
+            .safeAreaPadding(.bottom, Self.bottomPadding)
+            .background(Color(white: 0.9)) // empirical color
 
-                            if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                Aspect(name, systemImage: "person")
-                                    .foregroundColor(Color.accentColor)
-                            } else {
-                                Aspect(String(localized: .localizable.correspondentNotAssignedPicker), systemImage: "person")
-                                    .foregroundColor(Color.gray)
-                                    .opacity(0.5)
-                            }
+//            .safeAreaInset(edge: .bottom) {
+//                Rectangle()
+//                    .fill(Color.systemBackground)
+//            }
+//            .ignoresSafeArea(.container, edges: [.top])
+//                .navigationTitle("_")
+//        }
 
-                            if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                                Aspect(name, systemImage: "doc")
-                                    .foregroundColor(Color.orange)
-                            } else {
-                                Aspect(String(localized: .localizable.documentTypeNotAssignedPicker), systemImage: "doc")
-                                    .foregroundColor(Color.gray)
-                                    .opacity(0.5)
-                            }
-                        }
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+//        .navigationTitle(document.title)
+            .navigationBarTitleDisplayMode(.inline)
 
-                        VStack(alignment: .leading) {
-                            Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
-
-                            if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                                Aspect(name, systemImage: "archivebox")
-                            } else {
-                                Aspect(String(localized: .localizable.storagePathNotAssignedPicker), systemImage: "archivebox")
-                            }
-                        }
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    TagsView(tags: document.tags.compactMap { store.tags[$0] })
-                }
-                .padding()
-
-                IntegratedDocumentPreview(download: $download, document: document)
-                    .padding()
-
-                    .onTapGesture {
-                        if case let .loaded(view) = download {
-                            previewUrl = view.file
-                        }
-                    }
-            }
-        }
-
-        .refreshable {
-            do {
-                if let document = try await store.document(id: document.id) {
+            .onChange(of: store.documents) { _ in
+                if let document = store.documents[document.id] {
                     self.document = document
                 }
-            } catch {
-                Logger.shared.error("Error refreshing document \(document.id): \(error)")
-                errorController.push(error: error)
             }
-        }
 
-        .quickLookPreview($previewUrl)
+            .toolbarBackground(.thinMaterial, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
 
-//                if let related = relatedDocuments {
-//                    Group {
-//                        Divider()
-//                        HStack {
-//                            Spacer()
-//                            Text("Related documents")
-//                                .foregroundColor(.gray)
-//                            Spacer()
-//                        }
-//                        ForEach(related) { _ in Text("Doc") }
-//                    }
-//                    .transition(
-//                        .opacity.combined(with: .move(edge: .bottom)))
-//                }
-
-        .navigationBarTitleDisplayMode(.inline)
-
-        .onChange(of: store.documents) { _ in
-            if let document = store.documents[document.id] {
-                self.document = document
+            .sheet(isPresented: $editing) {
+                DocumentEditView(document: $document, navPath: navPath)
+                    .presentationDetents(Set(Self.editDetents), selection: $editDetent)
+                    .presentationBackgroundInteraction(
+                        .enabled(upThrough: .medium)
+                    )
+                    .interactiveDismissDisabled()
             }
-        }
-
-        .toolbar {
-            Button(String(localized: .localizable.edit)) {
-                editing.toggle()
-            }
-            .accessibilityIdentifier("documentEditButton")
-        }
-
-        .sheet(isPresented: $editing) {
-            DocumentEditView(document: $document, navPath: navPath)
-        }
     }
 }
 
@@ -305,13 +254,28 @@ private struct PreviewHelper: View {
             .task {
                 document = try? await store.document(id: 1)
             }
+//        }
+//        .overlay(alignment: .top) {
+//            VStack {
+//                Text("HALLO")
+//            }
+//            .padding(.top, 70)
+//            .padding(.bottom, 5)
+//            .frame(maxWidth: .infinity)
+//            .background {
+//                Rectangle()
+//                    .fill(.thinMaterial)
+//            }
+//            .ignoresSafeArea(.container, edges: .top)
         }
     }
 }
 
 #Preview("DocumentDetailsView") {
     let store = DocumentStore(repository: PreviewRepository())
+    @StateObject var errorController = ErrorController()
 
     return PreviewHelper()
         .environmentObject(store)
+        .environmentObject(errorController)
 }
