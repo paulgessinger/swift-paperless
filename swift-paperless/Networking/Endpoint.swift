@@ -220,13 +220,13 @@ extension Endpoint {
     func url(url: URL) -> URL? {
         // Break down the URL into components
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.api.error("URL component decomposition for endpoint buildilng failed")
+            Logger.api.error("URL component decomposition for endpoint building failed")
             return nil
         }
         // Remove trailing slashes from the path
-        components.path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        components.path = components.path.replacingOccurrences(of: "/$", with: "")
         if components.url == nil {
-            Logger.api.error("URL trailing slash removal for endpoint buildilng failed")
+            Logger.api.error("URL trailing slash removal for endpoint building failed")
             return nil
         }
         var result = components.url!.appending(path: path, directoryHint: .isDirectory)
