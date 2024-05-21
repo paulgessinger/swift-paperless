@@ -72,14 +72,14 @@ class ErrorController: ObservableObject {
         if let le = error as? LocalizedError {
             if let message {
                 Task {
-                    push(error: GenericError(message: message, details: "\(error.localizedDescription)\n\(String(describing: error))"))
+                    push(error: GenericError(message: message, details: "\(error.localizedDescription)\n\n\(String(describing: error))"))
                 }
             } else {
                 push(error: le)
             }
             return
         }
-        push(message: message ?? Self.defaultTitle, details: "\(error.localizedDescription)\n\(String(describing: error))")
+        push(message: message ?? Self.defaultTitle, details: "\(error.localizedDescription)\n\n\(String(describing: error))")
     }
 
     func push(error: Error, message: LocalizedStringResource) {
