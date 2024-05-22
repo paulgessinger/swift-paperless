@@ -18,8 +18,17 @@ class ReleaseNotesViewModel: ObservableObject {
 
     init() {
         Task { @MainActor in
-            if AppSettings.shared.lastAppVersion != AppSettings.shared.currentAppVersion {
+            switch (AppSettings.shared.lastAppVersion, AppSettings.shared.currentAppVersion) {
+            case (.none, .none), (.some(_), .none):
+                // Current is somehow nil, not sure what to do
+                break
+            case (.none, .some(_)):
+                // Last is nil but have current, probably initial install
                 showReleaseNotes = true
+            case let (.some(last), .some(current)):
+                if current.release != last.release {
+                    showReleaseNotes = true
+                }
             }
         }
     }
