@@ -17,5 +17,5 @@ fastlane/test_output/report.junit
 swift-paperless.xcodeproj/project.xcworkspace/xcuserdata/*
 *.afdesign~lock~
 swift-paperless.xcodeproj/xcuserdata
-fastlane/screenshots
+fastlane/screenshots/**/*.png
 .env

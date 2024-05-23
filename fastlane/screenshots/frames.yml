@@ -1,0 +1,38 @@
+devices:
+  - name: "iPhone 15 Pro"
+    frame: "iPhone 15 Pro/iPhone 15 Pro - Natural Titanium - Portrait.png"
+    offset: [120, 120]
+    post_offset: [0, 250]
+    target_size: [1179, 2560]
+
+screens:
+  - device_pattern: ".*"
+    screen_pattern: ".*"
+
+    style:
+      background_color: "#f0f0f0"
+      text_color: "#17541F"
+      text_offset: [60, 60]
+      text_size: 100
+      font_spacing: 20
+
+  - device_pattern: "iPhone"
+    screen_pattern: ".*"
+    style:
+      text_wrap: 18
+
+  - device_pattern: ".*"
+    screen_pattern: "01DocumentView"
+    title_key: documentView
+
+  - device_pattern: ".*"
+    screen_pattern: "02TagsFilter"
+    title_key: tagsFilter
+
+  - device_pattern: ".*"
+    screen_pattern: "03DocumentDetailView"
+    title_key: documentDetailView
+
+  - device_pattern: ".*"
+    screen_pattern: "04DocumentEditing"
+    title_key: documentEditing

@@ -33,6 +33,6 @@ final class Screenshots: XCTestCase {
         let navBar = XCUIApplication().navigationBars.element(boundBy: 0)
         navBar.buttons["documentEditButton"].tap()
 
-        snapshot("03DocumentEditing")
+        snapshot("04DocumentEditing")
     }
 }

@@ -400,6 +400,7 @@
 		7ABA52C92B79314700AE218B /* InactiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveView.swift; sourceTree = "<group>"; };
 		7ABC73042BFB58EC0061E094 /* Screenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screenshots.swift; sourceTree = "<group>"; };
 		7ABC73062BFB59490061E094 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
+		7ABC73BF2BFE63240061E094 /* Screenshots.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Screenshots.xcstrings; sourceTree = "<group>"; };
 		7ACB386429D99FCE006CE102 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
 		7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleTest.swift; sourceTree = "<group>"; };
 		7ACFB2B82B4734CD009DED79 /* SuccessOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessOverlay.swift; sourceTree = "<group>"; };
@@ -514,6 +515,7 @@
 				7A1460E72B19F76D0074BAAB /* Settings.xcstrings */,
 				7A1460F22B19F8380074BAAB /* Login.xcstrings */,
 				7AEBB5382B26589700845B73 /* Matching.xcstrings */,
+				7ABC73BF2BFE63240061E094 /* Screenshots.xcstrings */,
 				7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */,
 			);
 			path = Localization;
