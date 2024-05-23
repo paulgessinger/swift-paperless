@@ -77,9 +77,11 @@ class DeviceConfig(pydantic.BaseModel):
     frame_src: Path = pydantic.Field(alias="frame")
     name: str
     frame: Annotated[Image.Image, SkipValidation]
-    offset: Point
-    post_offset: Point
+    offset: Point = Point((0, 0))
+    post_offset: Point = Point((0, 0))
     target_size: Point
+    mask_corner_radius: int
+    mask_margin: int
 
 
 class ScreenStyle(pydantic.BaseModel):
@@ -241,7 +243,7 @@ def main():
 
 
 def get_device_name(name: str):
-    return name.split("-")[0]
+    return "-".join(name.split("-")[:-1])
 
 
 def get_language(file: Path) -> str:
@@ -285,7 +287,7 @@ def frame(
     print(" -", frame_config)
 
     screen_config, screen_style = config.load_screen_config(device_name, file)
-    print(screen_style)
+    print("Combined screen style:", screen_style)
 
     screenshot_raw = Image.open(file)
     screenshot_raw = screenshot_raw.resize([*frame_config.target_size])
@@ -299,10 +301,13 @@ def frame(
     )
 
     mask = Image.new("RGBA", frame_config.frame.size)
-    x, y = 120, 120
-    w, h = screenshot_raw.size
-    w += 2
-    r = 150.0
+    x, y = frame_config.offset
+    x -= frame_config.mask_margin
+    y -= frame_config.mask_margin
+    w, h = frame_config.target_size
+    w += frame_config.mask_margin * 2
+    h += frame_config.mask_margin * 2
+    r = frame_config.mask_corner_radius
     round_rect(x, y, w, h, r, ImageDraw.Draw(mask), fill="red")
 
     shadow = Image.new("RGBA", frame_config.frame.size)
@@ -326,6 +331,7 @@ def frame(
 
     if title_key := screen_config.title_key:
         title = titles[title_key].get(lang_code, title_key.upper())
+        print("Wrap:", screen_style.text_wrap)
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
         output_draw.multiline_text(

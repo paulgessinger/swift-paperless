@@ -4,6 +4,17 @@ devices:
     offset: [120, 120]
     post_offset: [0, 250]
     target_size: [1179, 2560]
+    mask_corner_radius: 150
+    mask_margin: 0
+
+  - name: "iPad Pro (12.9-inch) (6th generation)"
+    frame: "iPad Pro 12.9/iPad Pro 12.9 - Space Gray - Portrait.png"
+    target_size: [2048, 2732]
+    offset: [121, 114]
+    post_offset: [0, 250]
+    mask_corner_radius: 50
+    mask_margin: 10
+
 
 screens:
   - device_pattern: ".*"
@@ -20,6 +31,11 @@ screens:
     screen_pattern: ".*"
     style:
       text_wrap: 18
+
+  - device_pattern: "iPad Pro \\(12.9-inch\\) \\(6th generation\\)"
+    screen_pattern: ".*"
+    style:
+      text_wrap: 35
 
   - device_pattern: ".*"
     screen_pattern: "01DocumentView"
