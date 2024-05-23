@@ -80,7 +80,7 @@ struct SearchBarView: View {
         .animation(.easeInOut, value: focused)
         .transition(.opacity)
 
-        .onChange(of: focused) { newValue in
+        .onChange(of: focused) { _, newValue in
             if let isFocused {
                 isFocused.wrappedValue = newValue
             }

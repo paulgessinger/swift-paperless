@@ -472,8 +472,7 @@ struct TypeAsnView: View {
         .padding()
         .onAppear { focused = true }
 
-        .onChange(of: debounce.debouncedText) { _ in
-
+        .onChange(of: debounce.debouncedText) {
             guard !debounce.text.isEmpty else {
                 withAnimation { status = .none }
                 return

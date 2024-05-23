@@ -153,7 +153,7 @@ struct CommonPicker: View {
 
         .navigationBarTitleDisplayMode(.inline)
 
-        .onChange(of: mode) { newValue in
+        .onChange(of: mode) { _, newValue in
             switch newValue {
             case .anyOf:
                 switch selection {
@@ -345,7 +345,7 @@ struct CommonPickerEdit<Manager, D>: View
             )
         }
 
-        .onChange(of: searchDebounce.debouncedText) { value in
+        .onChange(of: searchDebounce.debouncedText) { _, value in
             withAnimation {
                 showNone = value.isEmpty
             }

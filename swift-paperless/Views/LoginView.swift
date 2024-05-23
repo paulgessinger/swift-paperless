@@ -381,7 +381,7 @@ struct LoginView: View {
                     }
             }
 
-            .onChange(of: url.debouncedText) { value in
+            .onChange(of: url.debouncedText) { _, value in
                 Task {
                     await checkUrl(string: value)
                     withAnimation {

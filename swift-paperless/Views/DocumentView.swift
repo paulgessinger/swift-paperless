@@ -328,7 +328,7 @@ struct DocumentView: View {
 
                 .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos)
 
-                .onChange(of: selectedPhotos) { _ in
+                .onChange(of: selectedPhotos) {
                     Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
                     guard !selectedPhotos.isEmpty else {
                         Logger.shared.debug("No photos, nothing to do")

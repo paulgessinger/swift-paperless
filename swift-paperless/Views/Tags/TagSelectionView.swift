@@ -214,7 +214,7 @@ struct TagFilterView: View {
             )
         }
 
-        .onChange(of: mode) { value in
+        .onChange(of: mode) { _, value in
             switch value {
             case .all:
                 switch selectedTags {
