@@ -244,204 +244,176 @@ struct DocumentDetailView: View {
     private let openDuration = 0.3
     private let closeDuration = 0.3
     //    private let animationType: Animation = .spring()
+    @State private var text: String = ""
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack {
-//                VStack {
-//                    VStack {
-//                        if editing {
-//                            Text("Pick correspondent")
-//                                .padding(.vertical)
-//                                .frame(maxWidth: .infinity)
-//                                .foregroundStyle(.white)
-//                                .background {
-//                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-//                                        .fill(Color.orange)
-//                                    //                                    .stroke(Color.orange, lineWidth: 2)
-//                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
-//                                }
-//                        }
-//                        //                                .frame(height: 300)
-//                    }
-//                    .animation(editing ? .spring(duration: openDuration, bounce: 0.3) : .spring(duration: closeDuration, bounce: 0.3).delay(delay), value: editing)
-//
-//                    VStack {
-//                        if editing {
-//                            VStack {
-//                                //                                    ScrollView(.vertical) {
-//                                //                            ZStack {
-//                                Text("I AM THE EDITING UI")
-//                                ForEach(0..<20) { v in
-//                                    Text("\(v)")
-//                                }
-//                                Button("Done") {
-//                                    //                                withAnimation {
-//                                    editing = false
-//                                    //                                }
-//                                }
-//                                .frame(maxWidth: .infinity)
-//                                .buttonStyle(.borderedProminent)
-//                                .tint(Color.orange)
-//                                //                                    }
-//                                //                                    .frame(height: 300)
-//                            }
-//                            .transition(.opacity)
-//                        }
-//                    }
-//                    .animation(editing ? .linear(duration: 0.1).delay(delay) : .linear(duration: 0.1), value: editing)
-//
-//                }
+        VStack {
+            if !editing {
+                ScrollView(.vertical) {
+                    VStack {
+                        if !editing {
+                            Text(document.title + document.title)
+                                .font(.title)
+                                .bold()
+                                .frame(maxWidth: .infinity)
 
-                VStack {
-                    if !editing {
-                        Text(document.title + document.title)
-                            .font(.title)
-                            .bold()
-                            .frame(maxWidth: .infinity)
+                            Grid {
+                                GridRow {
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
 
-                        Grid {
-                            GridRow {
-                                HStack {
-                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
+                                    }
+
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
                                     }
                                 }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .zIndex(0)
 
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color("AccentColor"))
-                                }
+                                GridRow {
+                                    //                            if !editing {
+                                    HStack {
+                                        Label(localized: .localizable.correspondent, systemImage: "person.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
 
-                                HStack {
-                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.correspondentNotAssignedPicker)
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
                                     }
-                                }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .matchedGeometryEffect(id: "Edit", in: animation, isSource: !editing)
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color("AccentColor"))
-                                }
-                            }
-                            .zIndex(0)
-
-                            GridRow {
-                                //                            if !editing {
-                                HStack {
-                                    Label(localized: .localizable.correspondent, systemImage: "person.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(.orange)
                                     }
-                                }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    //                            .zIndex(editing ? 1 : 0)
+                                    .zIndex(1)
 
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(.orange)
-                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
-                                }
-                                //                            .zIndex(editing ? 1 : 0)
-                                .zIndex(1)
-
-                                .onTapGesture {
-                                    withAnimation {
+                                    .onTapGesture {
+//                                        withAnimation {
                                         editing = true
+//                                        }
+                                    }
+                                    //                            }
+                                    //                            else {
+                                    ////                                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                                    //                                HStack {}
+                                    //                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    //                            }
+
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
                                     }
                                 }
-                                //                            }
-                                //                            else {
-                                ////                                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                                //                                HStack {}
-                                //                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                //                            }
 
-                                HStack {
-                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.correspondentNotAssignedPicker)
-                                    }
+                                GridRow {
+                                    Text("Other")
+                                    Text("Stuff")
                                 }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color("AccentColor"))
-                                }
-
-                                //                            .zIndex(0)
-                            }
-
-                            GridRow {
-                                Text("Other")
-                                Text("Stuff")
                             }
                         }
                     }
+                    .padding()
+                    .frame(maxWidth: .infinity)
                 }
-                .padding()
-//                .padding(.vertical)
-                .frame(maxWidth: .infinity)
-
-                .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
+//                .transition(.opacity)
             }
 
-//            .padding()
-//            .safeAreaPadding(.bottom, Self.bottomPadding)
-        }
-
-        .safeAreaInset(edge: .top) {
-            VStack {
-                if editing {
-                    Text("Pick correspondent")
-                        .padding(.vertical)
-                        .frame(maxWidth: .infinity)
-                        .foregroundStyle(.white)
-                        .background {
-                            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                .fill(Color.orange)
+            if editing {
+                ScrollView(.vertical) {
+                    Text("Edit UIx")
+                    Button("Done") {
+                        editing = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .safeAreaInset(edge: .top) {
+                    VStack {
+                        if editing {
+//                                    SearchBarView(text: $text)
+//                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: editing)
+//                                        .background {
+//                                            RoundedRectangle(cornerRadius: 25, style: .continuous)
+//                                                .fill(.regularMaterial)
+//                                                .stroke(Color.orange, lineWidth: 2)
+//                                                .matchedGeometryEffect(id: "Edit", in: animation, isSource: false)
+//                                        }
+                            Text("Pick correspondent")
                                 .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
+                                .padding(.vertical)
+                                .frame(maxWidth: .infinity)
+                                .foregroundStyle(.orange)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(.regularMaterial)
+                                        .stroke(Color.orange, lineWidth: 2)
+                                        .shadow(color: Color("ImageShadow"), radius: 10)
+                                }
+                                .padding()
+                                .onTapGesture {
+                                    editing = false
+                                }
                         }
-                        .padding()
-                        .onTapGesture {
-                            editing = false
-                        }
+                    }
+                    .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
                 }
             }
-            .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
         }
+        .animation(.spring(duration: 0.2, bounce: 0.2), value: editing)
+//        .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
 
         .navigationBarTitleDisplayMode(.inline)
 
@@ -480,6 +452,11 @@ private struct PreviewHelper: View {
             }
             .task {
                 document = try? await store.document(id: 1)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") {}
+                }
             }
 //        }
 //        .overlay(alignment: .top) {
