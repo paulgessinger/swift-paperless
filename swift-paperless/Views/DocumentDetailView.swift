@@ -153,7 +153,7 @@ struct DocumentDetailView: View {
     @State var document: Document
     var navPath: Binding<NavigationPath>?
 
-    @State private var editing = true
+    @State private var showPreviewSheet = false
     @State private var download: DownloadState = .initial
     @State private var previewUrl: URL?
 
@@ -165,8 +165,8 @@ struct DocumentDetailView: View {
     @EnvironmentObject private var errorController: ErrorController
 
     @MainActor
-    private static let editDetents: [PresentationDetent] = [
-        //        .fraction(0.1),
+    fileprivate static let editDetents: [PresentationDetent] = [
+        //                .fraction(0.1),
         .height(bottomPadding),
         .medium,
         .large,
@@ -183,59 +183,286 @@ struct DocumentDetailView: View {
         }
     }
 
-    var body: some View {
-//        VStack {
-//            Text(document.title)
-//                .font(.title)
-//                .bold()
-//                .frame(maxWidth: .infinity, alignment: .leading)
-//                .padding()
-        DocumentQuickLookPreview(document: document)
-//                .safeAreaInset(edge: .top) {
-//                    VStack {
-//                        Text("Hi")
-//                        Text("HO")
-//                        Text("Yo")
-//                    }
-//                }
-//                .safeAreaInset(edge: .bottom) {
-//                    VStack {
-//                        Text("Hi")
-//                        Text("HO")
-//                        Text("Yo")
-//                    }
-//                }
-            .safeAreaPadding(.bottom, Self.bottomPadding)
-            .background(Color(white: 0.9)) // empirical color
+    private func loadDocument() async {
+        switch download {
+        case .initial:
+            download = .loading
+            do {
+                guard let url = try await store.repository.download(documentID: document.id) else {
+                    download = .error
+                    return
+                }
 
-//            .safeAreaInset(edge: .bottom) {
-//                Rectangle()
-//                    .fill(Color.systemBackground)
-//            }
-//            .ignoresSafeArea(.container, edges: [.top])
-//                .navigationTitle("_")
-//        }
+                guard let view = PDFThumbnail(file: url) else {
+                    download = .error
+                    return
+                }
+                download = .loaded(view)
+                showPreviewSheet = true
 
-//        .navigationTitle(document.title)
-            .navigationBarTitleDisplayMode(.inline)
+            } catch {
+                download = .error
+                Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
+                return
+            }
 
-            .onChange(of: store.documents) { _ in
-                if let document = store.documents[document.id] {
-                    self.document = document
+        default:
+            break
+        }
+    }
+
+    private struct PreviewWrapper: View {
+        @Binding var state: DownloadState
+        @Binding var detent: PresentationDetent
+
+        var body: some View {
+            NavigationStack {
+                if case let .loaded(thumb) = state {
+                    QuickLookPreview(url: thumb.file)
+                        //                    FullDocumentPreview(url: thumb.file)
+                        .toolbarBackground(.visible, for: .navigationBar)
+                        .toolbarBackground(Color(white: 0.4, opacity: 0.0), for: .navigationBar)
+                        .navigationTitle(String(localized: .localizable.documentDetailPreviewTitle))
+                        .ignoresSafeArea(.container, edges: [.bottom])
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .topBarTrailing) {
+                                ShareLink(item: thumb.file) {
+                                    Label(localized: .localizable.share, systemImage: "square.and.arrow.up")
+                                }
+                            }
+                        }
                 }
             }
+        }
+    }
 
-            .toolbarBackground(.thinMaterial, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+    @State var editing = false
+    @Namespace private var animation
 
-            .sheet(isPresented: $editing) {
-                DocumentEditView(document: $document, navPath: navPath)
-                    .presentationDetents(Set(Self.editDetents), selection: $editDetent)
-                    .presentationBackgroundInteraction(
-                        .enabled(upThrough: .medium)
-                    )
-                    .interactiveDismissDisabled()
+    private let delay = 0.1
+    private let openDuration = 0.3
+    private let closeDuration = 0.3
+    //    private let animationType: Animation = .spring()
+
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack {
+//                VStack {
+//                    VStack {
+//                        if editing {
+//                            Text("Pick correspondent")
+//                                .padding(.vertical)
+//                                .frame(maxWidth: .infinity)
+//                                .foregroundStyle(.white)
+//                                .background {
+//                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+//                                        .fill(Color.orange)
+//                                    //                                    .stroke(Color.orange, lineWidth: 2)
+//                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
+//                                }
+//                        }
+//                        //                                .frame(height: 300)
+//                    }
+//                    .animation(editing ? .spring(duration: openDuration, bounce: 0.3) : .spring(duration: closeDuration, bounce: 0.3).delay(delay), value: editing)
+//
+//                    VStack {
+//                        if editing {
+//                            VStack {
+//                                //                                    ScrollView(.vertical) {
+//                                //                            ZStack {
+//                                Text("I AM THE EDITING UI")
+//                                ForEach(0..<20) { v in
+//                                    Text("\(v)")
+//                                }
+//                                Button("Done") {
+//                                    //                                withAnimation {
+//                                    editing = false
+//                                    //                                }
+//                                }
+//                                .frame(maxWidth: .infinity)
+//                                .buttonStyle(.borderedProminent)
+//                                .tint(Color.orange)
+//                                //                                    }
+//                                //                                    .frame(height: 300)
+//                            }
+//                            .transition(.opacity)
+//                        }
+//                    }
+//                    .animation(editing ? .linear(duration: 0.1).delay(delay) : .linear(duration: 0.1), value: editing)
+//
+//                }
+
+                VStack {
+                    if !editing {
+                        Text(document.title + document.title)
+                            .font(.title)
+                            .bold()
+                            .frame(maxWidth: .infinity)
+
+                        Grid {
+                            GridRow {
+                                HStack {
+                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
+
+                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color("AccentColor"))
+                                }
+
+                                HStack {
+                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
+
+                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color("AccentColor"))
+                                }
+                            }
+                            .zIndex(0)
+
+                            GridRow {
+                                //                            if !editing {
+                                HStack {
+                                    Label(localized: .localizable.correspondent, systemImage: "person.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
+
+                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(.orange)
+                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
+                                }
+                                //                            .zIndex(editing ? 1 : 0)
+                                .zIndex(1)
+
+                                .onTapGesture {
+                                    withAnimation {
+                                        editing = true
+                                    }
+                                }
+                                //                            }
+                                //                            else {
+                                ////                                Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                                //                                HStack {}
+                                //                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                //                            }
+
+                                HStack {
+                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
+
+                                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.correspondentNotAssignedPicker)
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color("AccentColor"))
+                                }
+
+                                //                            .zIndex(0)
+                            }
+
+                            GridRow {
+                                Text("Other")
+                                Text("Stuff")
+                            }
+                        }
+                    }
+                }
+                .padding()
+//                .padding(.vertical)
+                .frame(maxWidth: .infinity)
+
+                .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
             }
+
+//            .padding()
+//            .safeAreaPadding(.bottom, Self.bottomPadding)
+        }
+
+        .safeAreaInset(edge: .top) {
+            VStack {
+                if editing {
+                    Text("Pick correspondent")
+                        .padding(.vertical)
+                        .frame(maxWidth: .infinity)
+                        .foregroundStyle(.white)
+                        .background {
+                            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                .fill(Color.orange)
+                                .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
+                        }
+                        .padding()
+                        .onTapGesture {
+                            editing = false
+                        }
+                }
+            }
+            .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
+        }
+
+        .navigationBarTitleDisplayMode(.inline)
+
+        .sheet(isPresented: $showPreviewSheet) {
+            PreviewWrapper(state: $download, detent: $editDetent)
+                .presentationDetents(Set(Self.editDetents), selection: $editDetent)
+                .presentationBackgroundInteraction(
+                    .enabled(upThrough: .medium)
+                )
+                .interactiveDismissDisabled()
+        }
+
+        .onChange(of: store.documents) {
+            if let document = store.documents[document.id] {
+                self.document = document
+            }
+        }
+
+        .task {
+            await loadDocument()
+        }
     }
 }
 
