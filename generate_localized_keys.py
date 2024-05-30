@@ -10,8 +10,9 @@ file = Path(sys.argv[1])
 with file.open() as fh:
     struct = yaml.safe_load(fh)
 
+
 def format_key(key: str, path: List[str]) -> str:
-    parts=key.split("_")
+    parts = key.split("_")
     parts[1:] = [part.capitalize() for part in parts[1:]]
     camel_case_key = "".join(parts)
     comment = f"\"{' '.join(path)}\""
@@ -19,6 +20,7 @@ def format_key(key: str, path: List[str]) -> str:
     full_key = ".".join([p.lower() for p in path] + [key])
 
     return f'static let {camel_case_key} = String(localized: "{full_key}", comment: {comment})'
+
 
 def process(node: Dict[str, Any], path: List[str]):
     for key, value in node.items():
@@ -35,5 +37,6 @@ def process(node: Dict[str, Any], path: List[str]):
                 elif isinstance(item, dict):
                     process(item, this_path)
         print("}")
+
 
 process(struct, [])

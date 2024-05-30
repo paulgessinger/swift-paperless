@@ -15,23 +15,34 @@ import argparse
 input_file = "src-ui/src/app/data/filter-rule-type.ts"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--url", type=str, default=f"https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/dev/{input_file}")
+parser.add_argument(
+    "--url",
+    type=str,
+    default=f"https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/dev/{input_file}",
+)
 parser.add_argument("--output", type=argparse.FileType("w"), default=sys.stdout)
 
 args = parser.parse_args()
 
-def swiftformat(file: Path) -> None: pass
+
+def swiftformat(file: Path) -> None:
+    pass
+
+
 try:
     exe = check_output(["which", "swiftformat"]).decode("utf-8").strip()
+
     def swiftformat(file: Path) -> None:
         check_call([exe, "--swiftversion", "5", str(file)])
+
 except CalledProcessError:
     pass
 
 try:
     gh = check_output(["which", "gh"]).decode("utf-8").strip()
-    raw = check_output([gh, "api",
-                        f"repos/paperless-ngx/paperless-ngx/commits?path={input_file}"]).decode("utf-8")
+    raw = check_output(
+        [gh, "api", f"repos/paperless-ngx/paperless-ngx/commits?path={input_file}"]
+    ).decode("utf-8")
     commit_info = json.loads(raw)
     commit_sha = commit_info[0]["sha"]
     commit_url = commit_info[0]["html_url"]
@@ -55,6 +66,7 @@ for name, id in re.findall(r"export const (FILTER_[A-Z_]+) = (\d+)", code):
 
 start_type_info = code.index("export const FILTER_RULE_TYPES: FilterRuleType[] = [")
 groups = re.findall(r"{.*?}", code[start_type_info:], re.MULTILINE | re.DOTALL)
+
 
 def to_camel(v: str) -> str:
     parts = v.split("_")
@@ -103,7 +115,7 @@ for group in groups[:-1]:
                 name=obj["id"],
                 filtervar=obj["filtervar"],
                 isnull_filtervar=obj.get("isnull_filtervar"),
-                datatype=obj["datatype"].lower()[0]+obj["datatype"][1:],
+                datatype=obj["datatype"].lower()[0] + obj["datatype"][1:],
                 multi=obj["multi"],
                 default=obj.get("default", False),
             )
@@ -121,8 +133,16 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     file = Path(tmpdir) / "filter_rules.swift"
     with file.open("w") as f:
-        f.write(template.render(rule_types=rule_types, url=args.url, commit_sha=commit_sha, commit_date=commit_date, commit_url=commit_url))
+        f.write(
+            template.render(
+                rule_types=rule_types,
+                url=args.url,
+                commit_sha=commit_sha,
+                commit_date=commit_date,
+                commit_url=commit_url,
+            )
+        )
 
     swiftformat(file)
 
-    args.output.write(file.read_text().strip()+"\n")
+    args.output.write(file.read_text().strip() + "\n")
