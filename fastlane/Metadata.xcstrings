@@ -1,0 +1,363 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SwiftPaperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!\n\nWith SwiftPaperless, it's easy to find, categorize and also add documents from your phone!"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SwiftPaperless ist eine native iOS-App, die mit der beliebten Dokumentenmanagement-Software Paperless-ngx interagiert. Paperless-ngx wird selbst gehostet und ist daher vollständig datenschutzkonform: Du hast die Kontrolle über Deine Daten!\n\nMit SwiftPaperless ist es einfach, Dokumente von Deinem Telefon aus zu finden, zu kategorisieren und auch hinzuzufügen!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SwiftPaperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!\n\nWith SwiftPaperless, it's easy to find, categorize and also add documents from your phone!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SwiftPaperless est une application iOS native qui interagit avec le célèbre logiciel de gestion documentaire Paperless-ngx. Paperless-ngx est auto-hébergé et préserve donc totalement la vie privée : vous contrôlez vos données !\n\nAvec SwiftPaperless, il est facile de trouver, classer et ajouter des documents depuis votre téléphone !"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SwiftPaperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!\n\nWith SwiftPaperless, it's easy to find, categorize and also add documents from your phone!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SwiftPaperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!\n\nWith SwiftPaperless, it's easy to find, categorize and also add documents from your phone!"
+          }
+        }
+      }
+    },
+    "keywords" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "document management,self hosted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentenmanagement, selbst gehostet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "document management,self hosted"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gestion de documents, auto-hébergement"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "document management,self hosted"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "document management,self hosted"
+          }
+        }
+      }
+    },
+    "marketing_url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/"
+          }
+        }
+      }
+    },
+    "name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Swift Paperless"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Swift Paperless"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Swift Paperless"
+          }
+        }
+      }
+    },
+    "privacy_url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://swift-paperless.gessinger.dev/privacy/"
+          }
+        }
+      }
+    },
+    "promotional_text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
+          }
+        }
+      }
+    },
+    "release_notes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
+          }
+        }
+      }
+    },
+    "subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Native document managament"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Native Dokumentenverwaltung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Native document managament"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestion des documents en mode natif"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Native document managament"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Native document managament"
+          }
+        }
+      }
+    },
+    "support_url" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "https://github.com/paulgessinger/swift-paperless"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
