@@ -97,7 +97,6 @@ class FilterRuleType:
 rule_types = []
 
 for group in groups[:-1]:
-
     prepped = re.sub(r"(FILTER_[A-Z_]+)", r'"\1"', group)
     prepped = re.sub(r"DataType\.(\w+)", r'"\1"', prepped)
     prepped = re.sub(r"(\w+):", r'"\1":', prepped)
@@ -130,7 +129,6 @@ env.filters["to_camel"] = to_camel
 template = env.get_template("filter_rules.swift.jinja2")
 
 with tempfile.TemporaryDirectory() as tmpdir:
-
     file = Path(tmpdir) / "filter_rules.swift"
     with file.open("w") as f:
         f.write(

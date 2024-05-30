@@ -6,7 +6,8 @@ from pathlib import Path
 import yaml
 import pydantic
 from pydantic import SkipValidation
-from typing import Annotated, Optional, IO
+from typing import Optional
+from typing_extensions import Annotated
 import re
 import textwrap
 import multiprocessing
@@ -15,35 +16,12 @@ from rich.progress import track
 import gettext
 import json
 import requests
+import typer
+from rich.console import Console
 
+from string_catalog import load as load_string_catalog
 
-class StringUnit(pydantic.BaseModel):
-    state: str
-    value: str
-
-
-class LocalizationItem(pydantic.BaseModel):
-    string_unit: StringUnit | None = pydantic.Field(alias="stringUnit")
-
-
-class StringCatalogString(pydantic.BaseModel):
-    extraction_state: str = pydantic.Field(alias="extractionState")
-    localizations: dict[str, LocalizationItem]
-
-
-class StringCatalog(pydantic.BaseModel):
-    source_language: str = pydantic.Field(alias="sourceLanguage")
-    strings: dict[str, StringCatalogString]
-
-    def as_dict(self) -> dict[str, dict[str, str]]:
-        return {
-            key: {
-                lang: item.string_unit.value
-                for lang, item in value.localizations.items()
-                if item.string_unit is not None
-            }
-            for key, value in self.strings.items()
-        }
+console = Console()
 
 
 class Point(pydantic.RootModel):
@@ -162,8 +140,8 @@ class Config(pydantic.BaseModel):
                 return True
         return False
 
-    def load_frames(self) -> None:
-        frame_dir = Path(__file__).parent / "frames"
+    def load_frames(self, base: Path) -> None:
+        frame_dir = base / "frames"
         for device in self.devices:
             device.frame = Image.open(frame_dir / device.frame_src)
 
@@ -186,39 +164,37 @@ class Config(pydantic.BaseModel):
         return config, style
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("image_folder", type=Path)
-    parser.add_argument(
-        "--config", type=Path, default=Path(__file__).parent / "frames.yml"
-    )
-    parser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count())
+root_dir = Path(__file__).parent.parent
 
-    args = parser.parse_args()
 
-    assert args.image_folder.is_dir()
-
-    with (args.config).open() as fh:
+def main(
+    image_folder: Annotated[
+        Path, typer.Argument(file_okay=False, exists=True)
+    ] = root_dir
+    / "fastlane/screenshots",
+    config_file: Annotated[
+        Path, typer.Option("--config", exists=True, dir_okay=False)
+    ] = root_dir
+    / "fastlane/screenshots/frames.yml",
+    jobs: Annotated[int, typer.Option()] = multiprocessing.cpu_count(),
+):
+    with config_file.open() as fh:
         config = Config(**yaml.safe_load(fh))
-    config.load_frames()
+    config.load_frames(config_file.parent)
 
-    string_catalog_file = (
-        Path(__file__).parent.parent.parent
-        / "swift-paperless/Localization/Screenshots.xcstrings"
-    )
-    assert string_catalog_file.is_file()
-    with (string_catalog_file).open() as fh:
-        string_catalog = StringCatalog(**json.load(fh))
+    string_catalog_file = config_file.parent / "Screenshots.xcstrings"
+    assert string_catalog_file.is_file(), "String catalog not found"
+    string_catalog = load_string_catalog(string_catalog_file.read_text())
 
     files = []
 
-    for root, dirs, file in os.walk(args.image_folder):
+    for root, dirs, file in os.walk(image_folder):
         root = Path(root)
         for f in file:
             if f.endswith(".png"):
                 files.append(root / f)
 
-    font_file = Path(__file__).parent / "helvetica-bold.ttf"
+    font_file = config_file.parent / "helvetica-bold.ttf"
     if not font_file.exists():
         font_url = "https://github.com/CartoDB/cartodb/raw/master/app/assets/fonts/helvetica-bold.ttf"
         with requests.get(font_url, stream=True) as r:
@@ -227,19 +203,24 @@ def main():
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-    with ProcessPoolExecutor(args.jobs) as executor:
+    with ProcessPoolExecutor(jobs) as executor:
         futures = []
         for f in files:
             if f.stem.endswith("-framed") or "frames" in str(f):
                 continue
-            futures.append(executor.submit(frame, f, config, string_catalog.as_dict()))
+            futures.append(
+                executor.submit(frame, f, config, string_catalog.as_dict(), font_file)
+            )
 
         for f in track(
-            as_completed(futures), description="Processing...", total=len(futures)
+            as_completed(futures),
+            description="Processing...",
+            total=len(futures),
+            console=console,
         ):
             f.result()
 
-        print("Done")
+        console.print("Done")
 
 
 def get_device_name(name: str):
@@ -272,22 +253,23 @@ def frame(
     file: Path,
     config: Config,
     titles: dict[str, dict[str, str]],
+    font_file: Path,
 ):
-    print(file)
+    console.print(file)
     device_name = get_device_name(file.stem)
     lang = get_language(file)
     lang_code, _ = lang.split("-")
-    print(" -", device_name, " ", lang)
+    console.print(" -", device_name, " ", lang)
 
     try:
         frame_config = config[device_name]
     except KeyError:
-        print(" - no frame config found")
+        console.print(" - no frame config found")
         return
-    print(" -", frame_config)
+    console.print(" -", frame_config)
 
     screen_config, screen_style = config.load_screen_config(device_name, file)
-    print("Combined screen style:", screen_style)
+    console.print("Combined screen style:", screen_style)
 
     screenshot_raw = Image.open(file)
     screenshot_raw = screenshot_raw.resize([*frame_config.target_size])
@@ -325,13 +307,11 @@ def frame(
     output_draw = ImageDraw.Draw(output)
     output_draw.rectangle([0, 0, *buffer.size], fill=screen_style.background_color)
 
-    font = ImageFont.truetype(
-        str(Path(__file__).parent / "helvetica-bold.ttf"), screen_style.text_size
-    )
+    font = ImageFont.truetype(str(font_file), screen_style.text_size)
 
     if title_key := screen_config.title_key:
         title = titles[title_key].get(lang_code, title_key.upper())
-        print("Wrap:", screen_style.text_wrap)
+        console.print("Wrap:", screen_style.text_wrap)
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
         output_draw.multiline_text(
@@ -344,12 +324,12 @@ def frame(
 
     aspect_ratio = buffer.size[0] / buffer.size[1]
 
-    print("ratio:", aspect_ratio)
+    console.print("ratio:", aspect_ratio)
     target_size = (screenshot_raw.size[0], int(screenshot_raw.size[0] / aspect_ratio))
     buffer = buffer.resize(target_size)
-    print("size:", buffer.size, "->", target_size)
+    console.print("size:", buffer.size, "->", target_size)
 
-    print(output.size)
+    console.print(output.size)
 
     output.paste(
         buffer,
@@ -360,9 +340,9 @@ def frame(
     )
 
     output_file = file.parent / f"{file.stem}-framed.png"
-    print("Saving to", output_file)
+    console.print("Saving to", output_file)
     output.save(output_file)
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

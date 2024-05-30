@@ -2,4 +2,8 @@ Pillow
 pyyaml
 pydantic
 rich
+typer
 requests
+python-dotenv
+dirtyjson
+jinja2

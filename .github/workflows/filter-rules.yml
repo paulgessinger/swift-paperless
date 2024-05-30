@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate filter rules
         run: |
-          filter_rules/generate_filterrules.py --output swift-paperless/FilterRuleType.swift
+          scripts/generate_filterrules.py --output swift-paperless/FilterRuleType.swift
           pre-commit run swiftformat --files swift-paperless/FilterRuleType.swift || true
 
       - run: git diff
