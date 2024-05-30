@@ -245,239 +245,221 @@ struct DocumentDetailView: View {
     private let closeDuration = 0.3
     //    private let animationType: Animation = .spring()
     @State private var text: String = ""
+    @FocusState private var searchFocus: Bool
 
     private var editingView: some View {
         VStack {
             if editing {
-                //                                    SearchBarView(text: $text)
-                //                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: editing)
-                //                                        .background {
-                //                                            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                //                                                .fill(.regularMaterial)
-                //                                                .stroke(Color.orange, lineWidth: 2)
-                //                                                .matchedGeometryEffect(id: "Edit", in: animation, isSource: false)
-                //                                        }
-                ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(.orange)
+                ScrollView(.vertical) {
+                    VStack {
+                        Text("Stuff")
+                        Text("Stuff")
+                        Text("Stuff")
+                        Text("Stuff")
+                        Text("Stuff")
+                        Text("Stuff")
+                        Text("Stuff")
+                    }
+                }
+                .safeAreaInset(edge: .top, alignment: .center) {
                     VStack {
                         HStack {
                             Label(localized: .localizable.correspondent, systemImage: "person.fill")
                                 .labelStyle(.iconOnly)
                                 .font(.title3)
+                                .matchedGeometryEffect(id: "EditIcon", in: animation, isSource: true)
                             Text(.localizable.correspondent)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        SearchBarView(text: $text)
-                            .padding(.top)
+//                        SearchBarView(text: $text)
+                        HStack {
+                            Label(String(localized: .localizable.search), systemImage: "magnifyingglass")
+                                .labelStyle(.iconOnly)
+                                .foregroundStyle(.white)
+                                .padding(.trailing, -2)
+                            TextField(text: $text) {
+                                Text("Search")
+                                    .foregroundStyle(.white.opacity(0.6))
+                            }
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .focused($searchFocus)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 10)
+                        .foregroundStyle(.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                .fill(.thinMaterial)
+                        )
+                        .padding(.top)
                     }
                     .padding()
-
-                    Label(localized: .localizable.done, systemImage: "xmark")
-                        .labelStyle(.iconOnly)
-                        .foregroundStyle(.primary)
-                        .padding(10)
-                        .background(Circle().fill(.thinMaterial))
-                        .padding(10)
-                        .onTapGesture { editing = false }
+                    .foregroundStyle(.white)
+                    .overlay(alignment: .topTrailing) {
+                        Label(localized: .localizable.done, systemImage: "xmark")
+                            .labelStyle(.iconOnly)
+                            .foregroundStyle(.white)
+                            .padding(10)
+                            .background(Circle().fill(.thinMaterial))
+                            .padding(10)
+                            .onTapGesture {
+                                Task {
+                                    if searchFocus {
+                                        searchFocus = false
+                                        try? await Task.sleep(for: .seconds(0.3))
+                                    }
+                                    editing = false
+                                }
+                            }
+                    }
+                    .background {
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .fill(.orange)
+                    }
+                    .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
+                    .padding(.horizontal)
+//
+//                            GeometryReader { geo in
+//                            }
+//
+//                                Label(localized: .localizable.done, systemImage: "xmark")
+//                                    .labelStyle(.iconOnly)
+//                                    .foregroundStyle(.primary)
+//                                    .padding(10)
+//                                    .background(Circle().fill(.thinMaterial))
+//                                    .padding(10)
+//                                    .onTapGesture { editing = false }
+//
+//                        }
+                    ////                        .frame(height: 200)
+//                        .padding()
+//                    }
                 }
-                .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
-                .padding(.top)
-                .frame(maxWidth: .infinity)
-                .foregroundStyle(.white)
-//                            .background {
-//                                //                                        .stroke(Color.orange, lineWidth: 2)
-//                                //                                        .shadow(color: Color("ImageShadow"), radius: 10)
-//                            }
-//                            .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
-//                            .onTapGesture {
-                ////                                withAnimation(.spring(duration: 0.3)){
-//                                    editing = false
-                ////                                }
-//                            }
+                .task {
+                    text = ""
+                    try? await Task.sleep(for: .seconds(0.3))
+                    searchFocus = true
+                }
             }
         }
-        .padding(.horizontal)
         .animation(.spring(duration: openDuration, bounce: 0.1), value: editing)
     }
 
     var body: some View {
-        ScrollView(.vertical) {
+        Group {
             editingView
 
             VStack {
                 if !editing {
-                    Grid {
-                        Text(document.title)
-                            .font(.title)
-                            .bold()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .gridCellColumns(2)
-
-                        GridRow {
-                            HStack {
-                                Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                    .labelStyle(.iconOnly)
+                    ScrollView(.vertical) {
+                        VStack {
+                            Grid {
+                                Text(document.title)
                                     .font(.title)
+                                    .bold()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .gridCellColumns(2)
 
-                                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                    Text(name)
-                                } else {
-                                    Text(.localizable.correspondentNotAssignedPicker)
+                                GridRow {
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
+                                    }
+
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
+                                    }
+                                }
+                                //                                .zIndex(0)
+
+                                GridRow {
+//                                    if !editing {
+                                    HStack {
+                                        Label(localized: .localizable.correspondent, systemImage: "person.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+                                            .matchedGeometryEffect(id: "EditIcon", in: animation, isSource: true)
+                                        Text("I am pretty long text here")
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(.orange)
+                                            .matchedGeometryEffect(id: "Edit", in: animation, isSource: !editing)
+                                    }
+
+                                    .onTapGesture { editing = true }
+//                                    }
+
+                                    HStack {
+                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title)
+
+                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                                            Text(name)
+                                        } else {
+                                            Text(.localizable.correspondentNotAssignedPicker)
+                                        }
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                            .fill(Color("AccentColor"))
+                                    }
+                                }
+
+                                GridRow {
+                                    Text("Other")
+                                    Text("Stuff")
                                 }
                             }
-                            .foregroundStyle(.white)
                             .padding()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                            .background {
-                                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                    .fill(Color("AccentColor"))
-                            }
-
-                            HStack {
-                                Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                    .labelStyle(.iconOnly)
-                                    .font(.title)
-
-                                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                    Text(name)
-                                } else {
-                                    Text(.localizable.correspondentNotAssignedPicker)
-                                }
-                            }
-                            .foregroundStyle(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                            .background {
-                                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                    .fill(Color("AccentColor"))
-                            }
-                        }
-                        //                                .zIndex(0)
-
-                        GridRow {
-                            if !editing {
-                                HStack {
-                                    Label(localized: .localizable.correspondent, systemImage: "person.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    //                                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                    //                                            Text(name)
-                                    ////                                                .fixedSize()
-                                    //                                        } else {
-                                    //                                            Text(.localizable.correspondentNotAssignedPicker)
-                                    Text("I am pretty long text here")
-                                        .fixedSize(horizontal: false, vertical: true)
-                                    //                                        }
-                                }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                //                                .matchedGeometryEffect(id: "EditText", in: animation, isSource: !editing)
-
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(.orange)
-                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: !editing)
-                                }
-                                //                            .zIndex(editing ? 1 : 0)
-                                //                                    .zIndex(1)
-
-                                .onTapGesture {
-//                                        withAnimation(.spring(duration: 0.3)) {
-                                    editing = true
-//                                        }
-                                }
-                                //                            } else {
-                                //                                HStack {}
-                                //                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            }
-
-                            HStack {
-                                Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                    .labelStyle(.iconOnly)
-                                    .font(.title)
-
-                                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                                    Text(name)
-                                } else {
-                                    Text(.localizable.correspondentNotAssignedPicker)
-                                }
-                            }
-                            .foregroundStyle(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                            .background {
-                                RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                    .fill(Color("AccentColor"))
-                            }
-                        }
-
-                        GridRow {
-                            Text("Other")
-                            Text("Stuff")
                         }
                     }
-                    .padding()
                 }
             }
             .animation(.spring(duration: openDuration, bounce: 0.1), value: editing)
-//            }
-//            .padding()
-//            .frame(maxWidth: .infinity)
         }
-        //                .transition(.opacity)
-
-        //            if editing {
-        //                ScrollView(.vertical) {
-        //                    Text("Edit UIx")
-        //                    Button("Done") {
-        //                        withAnimation(.spring(duration: 0.3)) {
-        //                            editing = false
-        //                        }
-        //                        document.correspondent = 4
-        //                    }
-        //                    .buttonStyle(.borderedProminent)
-        //                }
-        //                .safeAreaInset(edge: .top) {
-        //                    VStack {
-        //                        if editing {
-        ////                                    SearchBarView(text: $text)
-        ////                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: editing)
-        ////                                        .background {
-        ////                                            RoundedRectangle(cornerRadius: 25, style: .continuous)
-        ////                                                .fill(.regularMaterial)
-        ////                                                .stroke(Color.orange, lineWidth: 2)
-        ////                                                .matchedGeometryEffect(id: "Edit", in: animation, isSource: false)
-        ////                                        }
-        //                            Text("Pick correspondent")
-        //                                .fixedSize()
-        //                                .padding(.vertical)
-        //                                .frame(maxWidth: .infinity)
-        //                                .foregroundStyle(.white)
-        //                                .background {
-        //                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-        //                                        .fill(.orange)
-        ////                                        .stroke(Color.orange, lineWidth: 2)
-        ////                                        .shadow(color: Color("ImageShadow"), radius: 10)
-        //                                        .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
-        //                                }
-        //                                .padding()
-        //                                .onTapGesture {
-        //                                    withAnimation(.spring(duration: 0.3)){
-        //                                        editing = false
-        //                                    }
-        //                                }
-        //                        }
-        //                    }
-        ////                    .animation(editing ? .spring(duration: openDuration, bounce: 0.2) : .spring(duration: closeDuration, bounce: 0.2).delay(delay), value: editing)
-        //                }
-        //            }
-
         .navigationBarTitleDisplayMode(.inline)
 
         .sheet(isPresented: $showPreviewSheet) {
