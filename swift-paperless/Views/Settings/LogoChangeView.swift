@@ -13,6 +13,7 @@ enum AppIcon: String, CaseIterable {
     case primary = "AppIcon"
     case var0 = "AppIconVar0"
     case var1 = "AppIconVar1"
+    case var2 = "AppIconVar2"
 
     var image: Image {
         Image(uiImage: UIImage(named: rawValue)!)
@@ -23,6 +24,7 @@ enum AppIcon: String, CaseIterable {
         case .primary: String(localized: .settings.logoPrimary)
         case .var0: String(localized: .settings.logoVariation(1))
         case .var1: String(localized: .settings.logoVariation(2))
+        case .var2: String(localized: .settings.logoVariation(3))
         }
     }
 
