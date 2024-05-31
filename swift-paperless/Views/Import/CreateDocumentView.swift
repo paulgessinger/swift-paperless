@@ -64,7 +64,7 @@ struct CreateDocumentView: View {
 
     init(sourceUrl url: URL, callback: @escaping () -> Void = {}, share: Bool = false, title: String = String(localized: .localizable.documentAdd)) {
         sourceUrl = url
-        _document = State(initialValue: ProtoDocument(title: url.lastPathComponent))
+        _document = State(initialValue: ProtoDocument(title: url.deletingPathExtension().lastPathComponent))
         self.callback = callback
         self.share = share
         self.title = title
