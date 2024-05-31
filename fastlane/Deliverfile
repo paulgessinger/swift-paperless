@@ -3,7 +3,7 @@
 # https://docs.fastlane.tools/actions/deliver/
 
 
-screenshots_path "fastlane/screenshots/framed/en-US"
+screenshots_path "fastlane/screenshots/framed"
 
 skip_binary_upload true
 

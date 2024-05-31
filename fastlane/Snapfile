@@ -2,16 +2,11 @@
 
 # A list of devices you want to take the screenshots from
 devices([
-#   "iPhone 8",
-#   "iPhone 8 Plus",
-#   "iPhone SE",
-#   "iPhone X",
-#   "iPad Pro (12.9-inch)",
-#   "iPad Pro (9.7-inch)",
-#   "Apple TV 1080p",
-#   "Apple Watch Series 6 - 44mm"
   "iPhone 15 Pro",
+  "iPhone 15 Pro Max",
   "iPad Pro (12.9-inch) (6th generation)",
+  "iPad Pro (12.9-inch) (2nd generation)",
+  "iPhone 8 Plus"
 ])
 
 languages([
@@ -20,6 +15,7 @@ languages([
   "pl-PL",
   "nl-NL",
   "fr-FR",
+  "da-DA",
 ])
 
 # The name of the scheme which contains the UI Tests
@@ -41,3 +37,8 @@ launch_arguments([
 
 # For more information about all available options run
 # fastlane action snapshot
+
+concurrent_simulators(false)
+
+# only_testing(["Screenshots"])
+# testplan("Screenshots.xctestplan")

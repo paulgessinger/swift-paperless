@@ -1,10 +1,19 @@
 devices:
   - name: "iPhone 8"
     frame: "iPhone 8/Apple iPhone 8 Space Gray.png"
-    offset: [62, 219]
+    offset: [61, 219]
     post_offset: [0, 380]
     target_size: [750, 1334]
     post_margin: 20
+    mask_corner_radius: 0
+    mask_margin: 0
+
+  - name: "iPhone 8 Plus"
+    frame: "iPhone 8 Plus/Apple iPhone 8 Plus Space Grey.png"
+    offset: [200, 400]
+    post_offset: [0, 420]
+    target_size: [1242, 2208]
+    post_margin: 0
     mask_corner_radius: 0
     mask_margin: 0
 
@@ -64,11 +73,17 @@ screens:
     style:
       text_size: 90
 
-  - device_pattern: "iPhone 8"
+  - device_pattern: "iPhone 8$"
     screen_pattern: ".*"
     style:
       text_offset: [30, 30]
       text_size: 53
+
+  - device_pattern: "iPhone 8 Plus"
+    screen_pattern: ".*"
+    style:
+      text_offset: [30, 30]
+      text_size: 90
 
   - device_pattern: "iPad Pro \\(12.9-inch\\) \\(.* generation\\)"
     screen_pattern: ".*"
