@@ -10,15 +10,9 @@ venv
 .env.default
 *.p8
 
-fastlane/report.xml
-fastlane/README.md
 *.xcloc
-fastlane/test_output/report.junit
 swift-paperless.xcodeproj/project.xcworkspace/xcuserdata/*
 *.afdesign~lock~
 swift-paperless.xcodeproj/xcuserdata
-fastlane/screenshots/**/*.png
 .env
-fastlane/metadata/*/*.txt
 scripts/frames
-fastlane/Preview.html

@@ -85,7 +85,7 @@ def extract_metadata(catalog: string_catalog.StringCatalog, output_dir: Path):
     for key, value in catalog.as_dict().items():
         print(key, value)
         for lang, string in value.items():
-            if string == key:
+            if string == key or len(string) == 0:
                 continue
             locale_dir = output_dir / locale_map.get(lang, lang)
             if not locale_dir.exists():
