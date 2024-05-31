@@ -80,14 +80,12 @@ def extract_metadata(catalog: string_catalog.StringCatalog, output_dir: Path):
         "en": "en-US",
         "de": "de-DE",
         "nl": "nl-NL",
-        "da": "da-DK",
-        "pl": "pl-PL",
         "fr": "fr-FR",
     }
     for key, value in catalog.as_dict().items():
         print(key, value)
         for lang, string in value.items():
-            locale_dir = output_dir / locale_map[lang]
+            locale_dir = output_dir / locale_map.get(lang, lang)
             if not locale_dir.exists():
                 locale_dir.mkdir(parents=True)
             output = locale_dir / f"{key}.txt"
@@ -96,8 +94,11 @@ def extract_metadata(catalog: string_catalog.StringCatalog, output_dir: Path):
 
 root_dir = Path(__file__).parent.parent
 
+app = typer.Typer()
 
-def main(
+
+@app.command()
+def pull(
     crowdin_token: Annotated[str, typer.Option(envvar="CROWDIN_TOKEN")],
     project_id: Annotated[str, typer.Option(envvar="CROWDIN_PROJECT_ID")],
     localizations_directory: Annotated[
@@ -144,5 +145,18 @@ def main(
             f.truncate()
 
 
+@app.command()
+def extract(
+    fastlane_directory: Annotated[
+        Path, typer.Option(exists=True, file_okay=False)
+    ] = root_dir
+    / "fastlane",
+):
+    catalog = string_catalog.load(
+        (fastlane_directory / "Metadata.xcstrings").read_text()
+    )
+    extract_metadata(catalog, fastlane_directory / "metadata")
+
+
 if __name__ == "__main__":
-    typer.run(main)
+    app()

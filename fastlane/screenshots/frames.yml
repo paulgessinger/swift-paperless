@@ -3,9 +3,19 @@ devices:
     frame: "iPhone 15 Pro/iPhone 15 Pro - Natural Titanium - Portrait.png"
     offset: [120, 120]
     post_offset: [0, 250]
-    target_size: [1179, 2560]
+    target_size: [1179, 2556]
     mask_corner_radius: 150
     mask_margin: 0
+
+  - name: "iPhone 15 Pro Max"
+    frame: "iPhone 15 Pro Max/iPhone 15 Pro Max - Natural Titanium - Portrait.png"
+    offset: [120, 120]
+    post_offset: [0, 300]
+    target_size: [1290, 2796]
+    mask_corner_radius: 150
+    mask_margin: 10
+    shadow:
+      blur: 30
 
   - name: "iPad Pro (12.9-inch) (6th generation)"
     frame: "iPad Pro 12.9/iPad Pro 12.9 - Space Gray - Portrait.png"
@@ -15,6 +25,15 @@ devices:
     mask_corner_radius: 50
     mask_margin: 10
 
+  - name: "iPad Pro (12.9-inch) (2nd generation)"
+    frame: "iPad Pro 12.9 2G/Apple iPad Pro Space Gray.png"
+    target_size: [2048, 2732]
+    offset: [120, 217]
+    post_offset: [0, 300]
+    post_size: [2008, 2678]
+    mask_corner_radius: 0
+    mask_margin: 0
+
 
 screens:
   - device_pattern: ".*"
@@ -22,6 +41,7 @@ screens:
 
     style:
       background_color: "#f0f0f0"
+      shadow_color: "#888888"
       text_color: "#17541F"
       text_offset: [60, 60]
       text_size: 100
@@ -30,9 +50,9 @@ screens:
   - device_pattern: "iPhone"
     screen_pattern: ".*"
     style:
-      text_wrap: 18
+      text_wrap: 22
 
-  - device_pattern: "iPad Pro \\(12.9-inch\\) \\(6th generation\\)"
+  - device_pattern: "iPad Pro \\(12.9-inch\\) \\(.* generation\\)"
     screen_pattern: ".*"
     style:
       text_wrap: 35

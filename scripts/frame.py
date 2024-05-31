@@ -18,6 +18,7 @@ import json
 import requests
 import typer
 from rich.console import Console
+import numpy
 
 from string_catalog import load as load_string_catalog
 
@@ -55,11 +56,14 @@ class DeviceConfig(pydantic.BaseModel):
     frame_src: Path = pydantic.Field(alias="frame")
     name: str
     frame: Annotated[Image.Image, SkipValidation]
-    offset: Point = Point((0, 0))
-    post_offset: Point = Point((0, 0))
+    offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
+    post_offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
+    post_size: Point | None = None
     target_size: Point
     mask_corner_radius: int
     mask_margin: int
+
+    shadow_blur: int = 30
 
 
 class ScreenStyle(pydantic.BaseModel):
@@ -74,6 +78,9 @@ class ScreenStyle(pydantic.BaseModel):
     text_wrap_internal: int | None = pydantic.Field(default=None, alias="text_wrap")
     font_spacing_internal: int | None = pydantic.Field(
         default=None, alias="font_spacing"
+    )
+    shadow_color_internal: str | None = pydantic.Field(
+        default=None, alias="shadow_color"
     )
 
     @property
@@ -100,6 +107,10 @@ class ScreenStyle(pydantic.BaseModel):
     def font_spacing(self) -> int:
         return self.font_spacing_internal or 10
 
+    @property
+    def shadow_color(self) -> str:
+        return self.shadow_color_internal or "#000000"
+
     def merged(self, other: Optional["ScreenStyle"]) -> "ScreenStyle":
         if other is None:
             return self
@@ -112,6 +123,7 @@ class ScreenStyle(pydantic.BaseModel):
             text_size=other.text_size_internal or self.text_size_internal,
             text_wrap=other.text_wrap_internal or self.text_wrap_internal,
             font_spacing=other.font_spacing_internal or self.font_spacing_internal,
+            shadow_color=other.shadow_color_internal or self.shadow_color_internal,
         )
 
 
@@ -155,8 +167,6 @@ class Config(pydantic.BaseModel):
         for screen in self.screens:
             matches_screen = re.search(screen.screen_pattern, stem)
             matches_device = re.search(screen.device_pattern, device)
-            # print(" -", screen.screen_pattern, "->", matches_screen)
-            # print(" -", screen.device_pattern, "->", matches_device)
             if matches_screen and matches_device:
                 config = screen
                 style = style.merged(screen.style)
@@ -168,31 +178,39 @@ root_dir = Path(__file__).parent.parent
 
 
 def main(
-    image_folder: Annotated[
-        Path, typer.Argument(file_okay=False, exists=True)
-    ] = root_dir
+    inputs: Annotated[Path, typer.Argument(exists=True)] = root_dir
     / "fastlane/screenshots",
+    output_folder: Annotated[
+        Path, typer.Option("--output", file_okay=False, writable=True)
+    ] = root_dir
+    / "fastlane/screenshots/framed",
     config_file: Annotated[
         Path, typer.Option("--config", exists=True, dir_okay=False)
     ] = root_dir
     / "fastlane/screenshots/frames.yml",
-    jobs: Annotated[int, typer.Option()] = multiprocessing.cpu_count(),
+    jobs: Annotated[int, typer.Option("--jobs", "-j")] = multiprocessing.cpu_count(),
 ):
     with config_file.open() as fh:
         config = Config(**yaml.safe_load(fh))
-    config.load_frames(config_file.parent)
+    config.load_frames(Path(__file__).parent)
 
     string_catalog_file = config_file.parent / "Screenshots.xcstrings"
     assert string_catalog_file.is_file(), "String catalog not found"
     string_catalog = load_string_catalog(string_catalog_file.read_text())
 
+    if not output_folder.exists():
+        output_folder.mkdir(parents=True)
+
     files = []
 
-    for root, dirs, file in os.walk(image_folder):
-        root = Path(root)
-        for f in file:
-            if f.endswith(".png"):
-                files.append(root / f)
+    if inputs.is_file():
+        files.append(inputs)
+    else:
+        for root, dirs, file in os.walk(inputs):
+            root = Path(root)
+            for f in file:
+                if f.endswith(".png"):
+                    files.append(root / f)
 
     font_file = config_file.parent / "helvetica-bold.ttf"
     if not font_file.exists():
@@ -203,22 +221,28 @@ def main(
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-    with ProcessPoolExecutor(jobs) as executor:
-        futures = []
+    if jobs == 1 or len(files) == 1:
         for f in files:
-            if f.stem.endswith("-framed") or "frames" in str(f):
-                continue
-            futures.append(
-                executor.submit(frame, f, config, string_catalog.as_dict(), font_file)
-            )
+            frame(f, config, output_folder, string_catalog.as_dict(), font_file)
+    else:
+        with ProcessPoolExecutor(jobs) as executor:
+            futures = []
+            for f in files:
+                if f.stem.endswith("-framed") or "frames" in str(f):
+                    continue
+                futures.append(
+                    executor.submit(
+                        frame,
+                        f,
+                        config,
+                        output_folder,
+                        string_catalog.as_dict(),
+                        font_file,
+                    )
+                )
 
-        for f in track(
-            as_completed(futures),
-            description="Processing...",
-            total=len(futures),
-            console=console,
-        ):
-            f.result()
+            for f in as_completed(futures):
+                f.result()
 
         console.print("Done")
 
@@ -249,16 +273,54 @@ def round_rect(x, y, w, h, r, draw, **kwargs):
         draw.rectangle(b, **kwargs)
 
 
+def color_as_rgb(color: str) -> tuple[int, int, int]:
+    if color.startswith("#"):
+        color = color[1:]
+    return tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def make_shadow(image: Image.Image, blur: int, color: str) -> Image.Image:
+    shadow = image.copy()
+    data = numpy.asarray(shadow).copy()
+    r, g, b = color_as_rgb(color)
+    data[:, :, 0] = r
+    data[:, :, 1] = g
+    data[:, :, 2] = b
+
+    image = Image.fromarray(data, "RGBA")
+    image = image.filter(ImageFilter.GaussianBlur(blur))
+    return image
+
+
+def drop_shadow(image: Image.Image, blur: int, color: str, debug: bool) -> Image.Image:
+    shadow = make_shadow(image, blur, color)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(blur))
+
+    result = Image.new("RGBA", image.size)
+    result.alpha_composite(shadow)
+    result.alpha_composite(image)
+
+    if debug:
+        debug_shadow = make_shadow(image, 0, "#ff0000")
+        result.alpha_composite(debug_shadow)
+
+    return result
+
+
 def frame(
     file: Path,
     config: Config,
+    output_dir: Path,
     titles: dict[str, dict[str, str]],
     font_file: Path,
 ):
     console.print(file)
     device_name = get_device_name(file.stem)
     lang = get_language(file)
-    lang_code, _ = lang.split("-")
+    if "-" in lang:
+        lang_code, _ = lang.split("-")
+    else:
+        lang_code = lang
     console.print(" -", device_name, " ", lang)
 
     try:
@@ -278,9 +340,6 @@ def frame(
     screenshot.paste(screenshot_raw, box=[*frame_config.offset])
 
     buffer = Image.new("RGBA", frame_config.frame.size)
-    ImageDraw.Draw(buffer).rectangle(
-        [0, 0, *buffer.size], fill=screen_style.background_color
-    )
 
     mask = Image.new("RGBA", frame_config.frame.size)
     x, y = frame_config.offset
@@ -292,35 +351,35 @@ def frame(
     r = frame_config.mask_corner_radius
     round_rect(x, y, w, h, r, ImageDraw.Draw(mask), fill="red")
 
-    shadow = Image.new("RGBA", frame_config.frame.size)
-    round_rect(x, y, w, h, r, ImageDraw.Draw(shadow), fill="black")
-    shadow = shadow.filter(ImageFilter.GaussianBlur(50))
-
-    buffer.alpha_composite(shadow)
+    buffer.paste(screenshot, mask=mask)
+    buffer.alpha_composite(frame_config.frame)
 
     buffer.paste(screenshot, mask=mask)
     buffer.alpha_composite(frame_config.frame)
 
     # resize to original device screenshot size to comply with AppStore requirements
     output = Image.new("RGBA", screenshot_raw.size)
-
     output_draw = ImageDraw.Draw(output)
+
     output_draw.rectangle([0, 0, *buffer.size], fill=screen_style.background_color)
 
     font = ImageFont.truetype(str(font_file), screen_style.text_size)
 
     if title_key := screen_config.title_key:
+        text_buffer = Image.new("RGBA", screenshot_raw.size)
+        text_buffer_draw = ImageDraw.Draw(text_buffer)
         title = titles[title_key].get(lang_code, title_key.upper())
         console.print("Wrap:", screen_style.text_wrap)
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
-        output_draw.multiline_text(
+        text_buffer_draw.multiline_text(
             [*screen_style.text_offset],
             title,
             fill=screen_style.text_color,
             font=font,
             spacing=screen_style.font_spacing,
         )
+        output.alpha_composite(text_buffer)
 
     aspect_ratio = buffer.size[0] / buffer.size[1]
 
@@ -331,15 +390,33 @@ def frame(
 
     console.print(output.size)
 
-    output.paste(
+    if frame_config.post_size:
+        buffer = buffer.resize(frame_config.post_size.root)
+
+    delta_x = (output.size[0] - buffer.size[0]) // 2
+    delta_y = (output.size[1] - buffer.size[1]) // 2
+
+    offset_buffer = Image.new("RGBA", output.size)
+    offset_buffer.paste(
         buffer,
         box=[
-            0 + frame_config.post_offset[0],
-            output.size[1] - buffer.size[1] + frame_config.post_offset[1],
+            delta_x + frame_config.post_offset[0],
+            delta_y + frame_config.post_offset[1],
         ],
     )
 
-    output_file = file.parent / f"{file.stem}-framed.png"
+    offset_buffer = drop_shadow(
+        offset_buffer,
+        frame_config.shadow_blur,
+        color=screen_style.shadow_color,
+        debug=False,
+    )
+    output.alpha_composite(offset_buffer)
+
+    locale_dir = output_dir / lang
+    if not locale_dir.exists():
+        locale_dir.mkdir(parents=True)
+    output_file = locale_dir / f"{file.stem}-framed.png"
     console.print("Saving to", output_file)
     output.save(output_file)
 

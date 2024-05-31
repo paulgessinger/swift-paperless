@@ -20,3 +20,5 @@ swift-paperless.xcodeproj/xcuserdata
 fastlane/screenshots/**/*.png
 .env
 fastlane/metadata/*/*.txt
+scripts/frames
+fastlane/Preview.html
