@@ -44,3 +44,20 @@ To get the latest development version of the app, grab it on
 
 ## Contact
 If you have any questions or need support create an issue on [GitHub](https://github.com/paulgessinger/swift-paperless/issues/new) or send me a [message](mailto:swift-paperless@paulgessinger.com).
+
+## Maintenance
+
+- Run the screenshot automation:
+
+```console
+fastlane snapshot
+scripts/frame.py fastlane/screenshots
+fastlane deliver
+```
+
+- Concatenate screenshots for panorama:
+
+```console
+montage fastlane/screenshots/framed/en-US/iPhone\ 15\ Pro\ Max-0* \
+    -tile 4x1 -geometry +20+0 panorama.png
+```
