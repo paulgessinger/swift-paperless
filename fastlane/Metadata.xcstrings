@@ -209,6 +209,12 @@
     "promotional_text" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -219,6 +225,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "promotional_text"
           }
         }
       }
@@ -226,6 +244,12 @@
     "release_notes" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -236,6 +260,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "release_notes"
           }
         }
       }

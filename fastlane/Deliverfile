@@ -3,6 +3,8 @@
 # https://docs.fastlane.tools/actions/deliver/
 
 
-screenshots_path "fastlane/screenshots/framed"
+screenshots_path "fastlane/screenshots/framed/en-US"
 
 skip_binary_upload true
+
+# overwrite_screenshots true
