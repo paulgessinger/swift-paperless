@@ -1,8 +1,17 @@
 devices:
+  - name: "iPhone 8"
+    frame: "iPhone 8/Apple iPhone 8 Space Gray.png"
+    offset: [62, 219]
+    post_offset: [0, 380]
+    target_size: [750, 1334]
+    post_margin: 20
+    mask_corner_radius: 0
+    mask_margin: 0
+
   - name: "iPhone 15 Pro"
     frame: "iPhone 15 Pro/iPhone 15 Pro - Natural Titanium - Portrait.png"
     offset: [120, 120]
-    post_offset: [0, 250]
+    post_offset: [0, 300]
     target_size: [1179, 2556]
     mask_corner_radius: 150
     mask_margin: 0
@@ -10,18 +19,16 @@ devices:
   - name: "iPhone 15 Pro Max"
     frame: "iPhone 15 Pro Max/iPhone 15 Pro Max - Natural Titanium - Portrait.png"
     offset: [120, 120]
-    post_offset: [0, 300]
+    post_offset: [0, 320]
     target_size: [1290, 2796]
     mask_corner_radius: 150
     mask_margin: 10
-    shadow:
-      blur: 30
 
   - name: "iPad Pro (12.9-inch) (6th generation)"
     frame: "iPad Pro 12.9/iPad Pro 12.9 - Space Gray - Portrait.png"
     target_size: [2048, 2732]
     offset: [121, 114]
-    post_offset: [0, 250]
+    post_offset: [0, 460]
     mask_corner_radius: 50
     mask_margin: 10
 
@@ -29,8 +36,8 @@ devices:
     frame: "iPad Pro 12.9 2G/Apple iPad Pro Space Gray.png"
     target_size: [2048, 2732]
     offset: [120, 217]
-    post_offset: [0, 300]
-    post_size: [2008, 2678]
+    post_offset: [0, 560]
+    post_margin: 20
     mask_corner_radius: 0
     mask_margin: 0
 
@@ -45,17 +52,27 @@ screens:
       text_color: "#17541F"
       text_offset: [60, 60]
       text_size: 100
-      font_spacing: 20
+      font_spacing: 10
 
-  - device_pattern: "iPhone"
+  - device_pattern: "iPhone 15 Pro$"
     screen_pattern: ".*"
     style:
-      text_wrap: 22
+      text_size: 80
+
+  - device_pattern: "iPhone 15 Pro Max$"
+    screen_pattern: ".*"
+    style:
+      text_size: 90
+
+  - device_pattern: "iPhone 8"
+    screen_pattern: ".*"
+    style:
+      text_offset: [30, 30]
+      text_size: 53
 
   - device_pattern: "iPad Pro \\(12.9-inch\\) \\(.* generation\\)"
     screen_pattern: ".*"
     style:
-      text_wrap: 35
 
   - device_pattern: ".*"
     screen_pattern: "01DocumentView"

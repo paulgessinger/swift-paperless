@@ -7,3 +7,4 @@ requests
 python-dotenv
 dirtyjson
 jinja2
+numpy

@@ -6,38 +6,38 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arbejd med dine dokumenter på farten, se eksempler og del med enhver app"
+            "state" : "needs_review",
+            "value" : "Arbejd med dine \ndokumenter på farten, \nse eksempler og del \nmed enhver app"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arbeite unterwegs mit deinen Dokumenten, zeige sie in der Vorschau an und teile sie mit jeder App"
+            "state" : "needs_review",
+            "value" : "Arbeite unterwegs mit\ndeinen Dokumenten, \nzeige sie an und teile \nsie mit jeder App"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Work with your documents on the go, preview and share with any app"
+            "value" : "Work with your \ndocuments on the go, \npreview and share with any app"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Travaillez avec vos documents en déplacement, prévisualisez-les et partagez-les avec n'importe quelle application."
+            "state" : "needs_review",
+            "value" : "Travaillez avec vos\ndocuments, prévisua-\nlisez-les et partagez-les\navec toutes les appli."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Werk onderweg met je documenten, bekijk voorbeelden en deel ze met elke app"
+            "state" : "needs_review",
+            "value" : "Werk onderweg met je\ndocumenten, bekijk\nvoorbeelden en deel ze\nmet elke app"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Work with your documents on the go, preview and share with any app"
+            "state" : "needs_review",
+            "value" : "Praca z dokumentami \nw podróży, podgląd i \nudostępnianie w \ndowolnej aplikacji"
           }
         }
       }
@@ -48,37 +48,37 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Omfattende redigering og organisering"
+            "value" : "Omfattende redigering\nog organisering"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umfassende Bearbeitung und Organisation"
+            "value" : "Umfassende \nBearbeitung und\nOrganisation"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comprehensive editing and organization"
+            "value" : "Comprehensive editing\nand organization"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une rédaction et une organisation complètes"
+            "value" : "Une rédaction et une\norganisation complètes"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uitgebreide bewerking en organisatie"
+            "value" : "Uitgebreide bewerking\nen organisatie"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Comprehensive editing and organization"
+            "state" : "translated",
+            "value" : "Kompleksowa edycja\ni organizacja"
           }
         }
       }
@@ -88,38 +88,38 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumenthåndtering med Paperless"
+            "state" : "needs_review",
+            "value" : "Dokumenthåndtering\nmed Paperless"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumenten-management mit Paperless"
+            "state" : "needs_review",
+            "value" : "Dokumenten-\nmanagement mit \nPaperless"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Document management with Paperless"
+            "value" : "Document \nmanagement\nwith Paperless"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gestion des documents avec Paperless"
+            "state" : "needs_review",
+            "value" : "Gestion des documents\navec Paperless"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documentbeheer met Paperless"
+            "state" : "needs_review",
+            "value" : "Documentbeheer\nmet Paperless"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document management with Paperless"
+            "state" : "needs_review",
+            "value" : "Zarządzanie\ndokumentami\nz Paperless"
           }
         }
       }
@@ -129,38 +129,38 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kraftig søgning og filtrering"
+            "state" : "needs_review",
+            "value" : "Kraftig søgning \nog filtrering"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leistungsstarke Suche und Filter"
+            "state" : "needs_review",
+            "value" : "Leistungsstarke Suche \nund Filter"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Powerful search and filter"
+            "value" : "Powerful search\nand filter"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtres de recherche puissants"
+            "state" : "needs_review",
+            "value" : "Filtres de recherche\npuissants"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Krachtig zoeken en filteren"
+            "state" : "needs_review",
+            "value" : "Krachtig zoeken \nen filteren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Powerful search and filter"
+            "state" : "needs_review",
+            "value" : "Zaawansowane \nwyszukiwanie \ni filtrowanie"
           }
         }
       }

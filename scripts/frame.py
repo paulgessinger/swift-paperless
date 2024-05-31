@@ -58,7 +58,7 @@ class DeviceConfig(pydantic.BaseModel):
     frame: Annotated[Image.Image, SkipValidation]
     offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
     post_offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
-    post_size: Point | None = None
+    post_margin: int = 0
     target_size: Point
     mask_corner_radius: int
     mask_margin: int
@@ -178,8 +178,7 @@ root_dir = Path(__file__).parent.parent
 
 
 def main(
-    inputs: Annotated[Path, typer.Argument(exists=True)] = root_dir
-    / "fastlane/screenshots",
+    inputs: Annotated[list[Path], typer.Argument(exists=True)],
     output_folder: Annotated[
         Path, typer.Option("--output", file_okay=False, writable=True)
     ] = root_dir
@@ -203,16 +202,18 @@ def main(
 
     files = []
 
-    if inputs.is_file():
-        files.append(inputs)
-    else:
-        for root, dirs, file in os.walk(inputs):
-            root = Path(root)
-            for f in file:
-                if f.endswith(".png"):
-                    files.append(root / f)
+    for i in inputs:
+        if i.is_file():
+            files.append(i)
+        else:
+            for root, dirs, file in os.walk(i):
+                root = Path(root)
+                for f in file:
+                    if f.endswith(".png"):
+                        files.append(root / f)
 
-    font_file = config_file.parent / "helvetica-bold.ttf"
+    font_file = config_file.parent / "DejaVuSans-Bold.ttf"
+    #  font_file = config_file.parent / "helvetica-bold.ttf"
     if not font_file.exists():
         font_url = "https://github.com/CartoDB/cartodb/raw/master/app/assets/fonts/helvetica-bold.ttf"
         with requests.get(font_url, stream=True) as r:
@@ -321,6 +322,14 @@ def frame(
         lang_code, _ = lang.split("-")
     else:
         lang_code = lang
+
+    lang_dict = {
+        "da-DA": "da",
+        "pl-PL": "pl",
+    }
+
+    lang = lang_dict.get(lang, lang)
+
     console.print(" -", device_name, " ", lang)
 
     try:
@@ -364,12 +373,14 @@ def frame(
     output_draw.rectangle([0, 0, *buffer.size], fill=screen_style.background_color)
 
     font = ImageFont.truetype(str(font_file), screen_style.text_size)
+    #  font = ImageFont.load_default(screen_style.text_size)
 
     if title_key := screen_config.title_key:
         text_buffer = Image.new("RGBA", screenshot_raw.size)
         text_buffer_draw = ImageDraw.Draw(text_buffer)
         title = titles[title_key].get(lang_code, title_key.upper())
         console.print("Wrap:", screen_style.text_wrap)
+        print(title)
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
         text_buffer_draw.multiline_text(
@@ -390,8 +401,12 @@ def frame(
 
     console.print(output.size)
 
-    if frame_config.post_size:
-        buffer = buffer.resize(frame_config.post_size.root)
+    if frame_config.post_margin:
+        aspect_ratio = buffer.size[0] / buffer.size[1]
+        new_w = buffer.size[0] - frame_config.post_margin * 2
+        new_h = int(new_w / aspect_ratio)
+        print("Resizing from", buffer.size, " to ", (new_w, new_h))
+        buffer = buffer.resize((new_w, new_h))
 
     delta_x = (output.size[0] - buffer.size[0]) // 2
     delta_y = (output.size[1] - buffer.size[1]) // 2
