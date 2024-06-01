@@ -78,7 +78,7 @@ struct DocumentEditView: View {
         }, set: { document.asn = UInt($0) })
     }
 
-    func asnPlusOne() async {
+    private func asnPlusOne() async {
         do {
             let nextAsn = try await store.repository.nextAsn()
             withAnimation {

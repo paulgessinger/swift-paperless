@@ -16,3 +16,12 @@ extension Label where Icon == Image, Title == Text {
         self.init(String(localized: localized), image: image)
     }
 }
+
+struct TightLabel: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 2) {
+            configuration.icon
+            configuration.title
+        }
+    }
+}

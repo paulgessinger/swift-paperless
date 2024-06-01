@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 12.03.23.
 //
 
+import os
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -48,6 +49,9 @@ struct CreateDocumentView: View {
     }
 
     let sourceUrl: URL
+    let callback: () -> Void
+    let share: Bool
+    let title: String
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
@@ -55,10 +59,18 @@ struct CreateDocumentView: View {
 
     @State private var document = ProtoDocument()
     @State private var status = Status.none
+    @State private var asn: String = ""
+    @State var isDocumentValid = true
 
-    let callback: () -> Void
-    let share: Bool
-    let title: String
+    private func asnPlusOne() async {
+        do {
+            let nextAsn = try await store.repository.nextAsn()
+            asn = String(nextAsn)
+        } catch {
+            Logger.shared.error("Error getting next ASN: \(error)")
+            errorController.push(error: error)
+        }
+    }
 
     private var thumbnailView: ThumbnailView
 
@@ -100,10 +112,30 @@ struct CreateDocumentView: View {
 
     private func resetDocument() {
         document.asn = nil
+        asn = ""
         document.documentType = nil
         document.correspondent = nil
         document.tags = []
         document.storagePath = nil
+
+        isDocumentValid = true
+    }
+
+    private func checkDocument() async {
+        var valid = true
+        if let asn = document.asn {
+            do {
+                if try await store.repository.document(asn: asn) != nil {
+                    // asn already exists, invalid
+                    valid = false
+                }
+            } catch {
+                Logger.shared.error("Got error getting document by ASN for duplication check: \(error)")
+                errorController.push(error: error)
+            }
+        }
+
+        isDocumentValid = valid
     }
 
     var body: some View {
@@ -152,8 +184,43 @@ struct CreateDocumentView: View {
 
                     Section {
                         TextField(String(localized: .localizable.documentEditTitleLabel), text: $document.title) {}
+
+                        HStack {
+                            TextField(String(localized: .localizable.asn), text: $asn)
+                                .keyboardType(.numberPad)
+
+                            if asn.isEmpty {
+                                Button(String("+1")) { Task { await asnPlusOne() }}
+                                    .padding(.vertical, 2)
+                                    .padding(.horizontal, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                            .fill(Color.accentColor))
+                                    .foregroundColor(.white)
+                                    .transition(.opacity)
+                            }
+
+                            // This only works because it's currently the only possible invalid state
+                            if !isDocumentValid {
+                                Label(String(localized: .localizable.documentDuplicateAsn), systemImage:
+                                    "xmark.circle.fill")
+                                    .foregroundColor(.white)
+//                                    .font(.caption)
+                                    .labelStyle(TightLabel())
+                                    .padding(.leading, 6)
+                                    .padding(.trailing, 10)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                            .fill(Color.red)
+                                    )
+                            }
+                        }
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+
                         DatePicker(String(localized: .localizable.documentEditCreatedDateLabel), selection: $document.created, displayedComponents: .date)
                     }
+
                     Section {
                         NavigationLink(destination: {
                             CommonPickerEdit(
@@ -254,6 +321,7 @@ struct CreateDocumentView: View {
                             }
                         }
                         .transition(.opacity)
+                        .disabled(!isDocumentValid)
 
                     case .uploading:
                         ProgressView()
@@ -282,6 +350,29 @@ struct CreateDocumentView: View {
                 case .repositoryWillChange:
                     resetDocument()
                 default: break
+                }
+            }
+
+            .onChange(of: asn) { [previous = asn] _ in
+                if asn.isEmpty {
+                    document.asn = nil
+                    // This only works because it's the only invalid state right now
+                    isDocumentValid = true
+                } else if !asn.isNumber {
+                    asn = previous
+                } else {
+                    if let newAsn = UInt(asn) {
+                        document.asn = newAsn
+                    } else {
+                        // Overflow
+                        asn = previous
+                    }
+                }
+            }
+
+            .onChange(of: document) { _ in
+                Task {
+                    await checkDocument()
                 }
             }
         }

@@ -39,7 +39,7 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
     static var localizedName: String { String(localized: .localizable.document) }
 }
 
-struct ProtoDocument: DocumentProtocol {
+struct ProtoDocument: DocumentProtocol, Equatable {
     var title: String = ""
     var asn: UInt?
     var documentType: UInt? = nil

@@ -172,6 +172,8 @@
 		7A7080E82BDFE0A50095BD56 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080E72BDFE0A50095BD56 /* ShareView.swift */; };
 		7A7080FC2BE0F4EB0095BD56 /* NSData+mimeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080FB2BE0F4EB0095BD56 /* NSData+mimeType.swift */; };
 		7A7080FD2BE0F4EE0095BD56 /* NSData+mimeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080FB2BE0F4EB0095BD56 /* NSData+mimeType.swift */; };
+		7A763EBD2C0B484C0042796A /* String+isNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A763EBC2C0B484C0042796A /* String+isNumber.swift */; };
+		7A763EBE2C0B484C0042796A /* String+isNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A763EBC2C0B484C0042796A /* String+isNumber.swift */; };
 		7A81C5AC2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
 		7A81C5AE2A1A90C50092061F /* StoragePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */; };
@@ -381,6 +383,7 @@
 		7A7080DC2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AttachmentManager+receiveAttachment.swift"; sourceTree = "<group>"; };
 		7A7080E72BDFE0A50095BD56 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
 		7A7080FB2BE0F4EB0095BD56 /* NSData+mimeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSData+mimeType.swift"; sourceTree = "<group>"; };
+		7A763EBC2C0B484C0042796A /* String+isNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+isNumber.swift"; sourceTree = "<group>"; };
 		7A81C5AB2A1A90C50092061F /* StoragePathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathModel.swift; sourceTree = "<group>"; };
 		7A81C5AF2A1A95450092061F /* StoragePathEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePathEditView.swift; sourceTree = "<group>"; };
 		7A83F6E22A6BE3D7002B5CF6 /* DataScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataScannerView.swift; sourceTree = "<group>"; };
@@ -655,6 +658,7 @@
 				7A0772912BE934D200DCC8CD /* Label+init.swift */,
 				7A3E45CF2BF255530007AB67 /* Bundle.swift */,
 				7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */,
+				7A763EBC2C0B484C0042796A /* String+isNumber.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1040,6 +1044,7 @@
 				7A2E12242B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A4AA8E729BB969400D845A2 /* ShareViewController.swift in Sources */,
 				7AEF691629CF967900414BA7 /* ConnectionManager.swift in Sources */,
+				7A763EBE2C0B484C0042796A /* String+isNumber.swift in Sources */,
 				7A07722C2BE6495600DCC8CD /* NullRepository.swift in Sources */,
 				7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */,
 				7A4AA90E29BE1FDE00D845A2 /* TagSelectionView.swift in Sources */,
@@ -1136,6 +1141,7 @@
 				7A8E1F822A1A8F90002A7CB3 /* TagModel.swift in Sources */,
 				7AEF691C29D049D900414BA7 /* PositionObservingView.swift in Sources */,
 				7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */,
+				7A763EBD2C0B484C0042796A /* String+isNumber.swift in Sources */,
 				7A2577402A87D32400B15626 /* NullCodable.swift in Sources */,
 				7A4AA90929BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7AF2E07E29F46C950092948B /* ErrorController.swift in Sources */,

@@ -1650,6 +1650,17 @@
         }
       }
     },
+    "documentDuplicateAsn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exists"
+          }
+        }
+      }
+    },
     "documentEditCreatedDateLabel" : {
       "extractionState" : "manual",
       "localizations" : {
