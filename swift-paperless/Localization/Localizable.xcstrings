@@ -4165,6 +4165,17 @@
         }
       }
     },
+    "releaseNotesLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+          }
+        }
+      }
+    },
     "remove" : {
       "extractionState" : "manual",
       "localizations" : {

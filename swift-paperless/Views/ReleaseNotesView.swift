@@ -10,6 +10,15 @@ import MarkdownUI
 import os
 import SwiftUI
 
+private struct ReleaseNotesError: LocalizedError {
+    @MainActor
+    init() {
+        errorDescription = String(localized: .localizable.releaseNotesLoadError(AppSettings.shared.currentAppVersion?.description ?? "(?)"))
+    }
+
+    var errorDescription: String?
+}
+
 @MainActor
 class ReleaseNotesViewModel: ObservableObject {
     @Published var showReleaseNotes = false
@@ -46,11 +55,14 @@ class ReleaseNotesViewModel: ObservableObject {
         Logger.shared.debug("Loading release notes from \(request.url!, privacy: .public)")
 
         do {
-            let (data, _) = try await URLSession.shared.getData(for: request)
-            print("set")
-            content = String(decoding: data, as: UTF8.self)
+            let (data, response) = try await URLSession.shared.getData(for: request)
+            if let response = response as? HTTPURLResponse, response.statusCode != 200 {
+                error = ReleaseNotesError()
+            } else {
+                content = String(decoding: data, as: UTF8.self)
+            }
         } catch {
-            Logger.shared.error("Error loading release noted: \(error)")
+            Logger.shared.error("Error loading release notes: \(error)")
             self.error = error
         }
     }
@@ -70,9 +82,10 @@ struct ReleaseNotesView: View {
                     Text("😵")
                         .font(.title)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    Text("\(error.localizedDescription)")
-                    if Bundle.main.appConfiguration == .TestFlight {
-                        Text("This is expected on TestFlight, if the release notes have not been created yet!")
+                    if let errorDescription = (error as? LocalizedError)?.errorDescription {
+                        Text("\(errorDescription)")
+                    } else {
+                        Text("\(error.localizedDescription)")
                     }
                 }
                 .multilineTextAlignment(.center)
