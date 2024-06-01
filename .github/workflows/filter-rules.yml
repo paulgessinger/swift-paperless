@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r filter_rules/requirements.txt
+          pip install -r scripts/requirements.txt
           pip install pre-commit
 
       - uses: actions/cache@v4
