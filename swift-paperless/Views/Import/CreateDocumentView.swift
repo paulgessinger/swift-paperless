@@ -137,20 +137,23 @@ struct CreateDocumentView: View {
 
                 Form {
                     if share, let stored = connectionManager.storedConnection {
-                        HStack {
-                            Text(.settings.activeServer)
+                        Section(String(localized: .settings.activeServer)) {
                             Menu {
                                 ConnectionSelectionMenu(connectionManager: connectionManager)
                             } label: {
-                                Text(stored.url.absoluteString)
-                                    .font(.body)
-                                    .foregroundStyle(.gray)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                                Label(String(localized: .settings.chooseServerAccessibilityLabel),
-                                      systemImage: "chevron.up.chevron.down")
-                                    .labelStyle(.iconOnly)
-                                    .foregroundStyle(.gray)
+                                HStack {
+                                    let label = connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
+                                    Text(label)
+                                        .font(.body)
+                                        .foregroundStyle(.gray)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .multilineTextAlignment(.leading)
+                                    Label(String(localized: .settings.chooseServerAccessibilityLabel),
+                                          systemImage: "chevron.up.chevron.down")
+                                        .labelStyle(.iconOnly)
+                                        .foregroundStyle(.gray)
+                                }
+                                .frame(maxWidth: .infinity)
                             }
                         }
                     }
@@ -299,4 +302,31 @@ struct CreateDocumentView: View {
 
         .errorOverlay(errorController: errorController, offset: 20)
     }
+}
+
+// - MARK: Previews
+
+private struct PreviewHelperView: View {
+    @StateObject private var store = DocumentStore(repository: PreviewRepository())
+    @StateObject private var errorController = ErrorController()
+    @StateObject private var connectionManager = ConnectionManager(previewMode: true)
+
+    private let url = Bundle.main.url(forResource: "demo2", withExtension: "pdf")!
+
+    let share: Bool
+
+    var body: some View {
+        CreateDocumentView(sourceUrl: url, share: share)
+            .environmentObject(store)
+            .environmentObject(errorController)
+            .environmentObject(connectionManager)
+    }
+}
+
+#Preview("Import") {
+    PreviewHelperView(share: false)
+}
+
+#Preview("Share") {
+    PreviewHelperView(share: true)
 }

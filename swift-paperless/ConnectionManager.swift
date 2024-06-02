@@ -85,7 +85,10 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         }
 
         if components.path != "" {
-            urlString += "/\(components.path)"
+            if urlString.last != "/", components.path.first != "/" {
+                urlString += "/"
+            }
+            urlString += "\(components.path)"
         }
         return "\(user.username)@\(urlString)"
     }
@@ -99,7 +102,10 @@ struct StoredConnection: Equatable, Codable, Identifiable {
             return "\(user.username)@\(url)"
         }
         if components.path != "" {
-            urlString += "/\(components.path)"
+            if urlString.last != "/", components.path.first != "/" {
+                urlString += "/"
+            }
+            urlString += "\(components.path)"
         }
         return urlString
     }
@@ -157,8 +163,12 @@ class ConnectionManager: ObservableObject {
 
     let previewMode: Bool
 
-    init() {
-        previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+    init(previewMode: Bool? = nil) {
+        if let previewMode {
+            self.previewMode = previewMode
+        } else {
+            self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+        }
     }
 
     // @TODO: (multi-server) Remove in a few versions
@@ -191,6 +201,12 @@ class ConnectionManager: ObservableObject {
         willSet {
             objectWillChange.send()
         }
+    }
+
+    func isServerUnique(_ url: URL) -> Bool {
+        let allUrls = connections.values.map(\.url.absoluteString)
+        let url = url.absoluteString
+        return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
     }
 
     func migrateToMultiServer() async {
@@ -232,8 +248,8 @@ class ConnectionManager: ObservableObject {
         if previewMode {
             Logger.api.info("Running in preview mode")
             let udef = UserDefaults.standard
-            let url = URL(string: udef.string(forKey: "PreviewURL")!)!
-            let token = udef.string(forKey: "PreviewToken")!
+            let url = URL(string: udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/")!
+            let token = udef.string(forKey: "PreviewToken") ?? "pseudo-token-that-will-not-work"
             return Connection(url: url,
                               token: token,
                               extraHeaders: extraHeaders)
@@ -274,6 +290,14 @@ class ConnectionManager: ObservableObject {
     }
 
     var storedConnection: StoredConnection? {
+        if previewMode {
+            Logger.api.info("Running in preview mode")
+            let url = URL(string: UserDefaults.standard.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/")!
+            return StoredConnection(url: url,
+                                    extraHeaders: extraHeaders,
+                                    user: User(id: 1, isSuperUser: true, username: "paperless"))
+        }
+
         guard let activeConnectionId, let stored = connections[activeConnectionId] else {
             return nil
         }
