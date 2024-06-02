@@ -172,6 +172,7 @@ struct DocumentDetailView: View {
         .large,
     ]
     @State private var editDetent = Self.editDetents.first!
+    @State private var editDetentOnFocus: PresentationDetent? = nil
 
     private static let bottomPadding: CGFloat = 100
 
@@ -283,6 +284,7 @@ struct DocumentDetailView: View {
                             }
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            .keyboardType(.alphabet)
                             .focused($searchFocus)
                         }
                         .padding(.horizontal)
@@ -344,6 +346,26 @@ struct DocumentDetailView: View {
             }
         }
         .animation(.spring(duration: openDuration, bounce: 0.1), value: editing)
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                Button {
+                    searchFocus = false
+                } label: {
+                    Label(localized: .localizable.documentDetailPreviewTitle, systemImage: "keyboard.chevron.compact.down")
+                        .labelStyle(.titleAndIcon)
+                }
+            }
+        }
+        .onChange(of: searchFocus) {
+            if searchFocus == true {
+                editDetentOnFocus = editDetent
+                editDetent = Self.editDetents.first!
+            } else {
+                if let editDetentOnFocus {
+                    editDetent = editDetentOnFocus
+                }
+            }
+        }
     }
 
     var body: some View {
