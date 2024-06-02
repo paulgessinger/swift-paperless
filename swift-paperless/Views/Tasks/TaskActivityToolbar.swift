@@ -42,7 +42,7 @@ struct TaskActivityToolbar: View {
             } label: {}
         }
 
-        .onChange(of: store.tasks) { _ in
+        .onChange(of: store.tasks) {
             withAnimation {
                 number = store.activeTasks.count
             }
