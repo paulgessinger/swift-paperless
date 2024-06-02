@@ -1650,6 +1650,17 @@
         }
       }
     },
+    "documentDetailPreviewTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview"
+          }
+        }
+      }
+    },
     "documentDuplicateAsn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1687,17 +1698,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Exists"
-          }
-        }
-      }
-    },
-    "documentDetailPreviewTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preview"
           }
         }
       }
