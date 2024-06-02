@@ -94,7 +94,7 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
             }
         }
 
-        .onChange(of: asn) { [previous = asn, wasValid = isValid] _ in
+        .onChange(of: asn) { [previous = asn, wasValid = isValid] in
             if asn.isEmpty {
                 document.asn = nil
                 isValid = true
