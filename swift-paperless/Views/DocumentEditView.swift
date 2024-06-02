@@ -68,26 +68,10 @@ struct DocumentEditView: View {
 
     @State private var suggestions: Suggestions?
 
-    private var asn: Binding<String> {
-        .init(get: {
-            if let asn = document.asn {
-                return "\(asn)"
-            } else {
-                return ""
-            }
-        }, set: { document.asn = UInt($0) })
-    }
+    @State var isAsnValid = true
 
-    private func asnPlusOne() async {
-        do {
-            let nextAsn = try await store.repository.nextAsn()
-            withAnimation {
-                document.asn = nextAsn
-            }
-        } catch {
-            Logger.shared.error("Error getting next ASN: \(error)")
-            errorController.push(error: error)
-        }
+    private var isSaveDisabled: Bool {
+        !modified || document.title.isEmpty || !isAsnValid
     }
 
     init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
@@ -125,19 +109,8 @@ struct DocumentEditView: View {
                     TextField(String(localized: .localizable.title), text: $document.title) {}
                         .clearable($document.title)
 
-                    TextField(String(localized: .localizable.asn), text: asn)
-                        .keyboardType(.numberPad)
-                        .overlay(alignment: .trailing) {
-                            if document.asn == nil {
-                                Button(String("+1")) { Task { await asnPlusOne() }}
-                                    .padding(.vertical, 2)
-                                    .padding(.horizontal, 10)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                            .fill(Color.accentColor))
-                                    .foregroundColor(.white)
-                            }
-                        }
+                    DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
                     DatePicker(String(localized: .localizable.documentEditCreatedDateLabel),
                                selection: $document.created.animation(.default),
@@ -331,7 +304,7 @@ struct DocumentEditView: View {
                         dismiss()
                     }
                     .bold()
-                    .disabled(!modified || document.title.isEmpty)
+                    .disabled(isSaveDisabled)
                 }
             }
 

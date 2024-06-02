@@ -73,6 +73,8 @@
 		7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */; };
 		7A2F65592B5ADB25000A75D9 /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F65582B5ADB25000A75D9 /* MailView.swift */; };
 		7A2F655A2B5ADB25000A75D9 /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F65582B5ADB25000A75D9 /* MailView.swift */; };
+		7A3C1CF52C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */; };
+		7A3C1CF62C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036129EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
 		7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E036729EC9013008F4976 /* SavedViewEditView.swift */; };
@@ -338,6 +340,7 @@
 		7A2E12212B14F3A000E7704A /* DeriveUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrl.swift; sourceTree = "<group>"; };
 		7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrlTest.swift; sourceTree = "<group>"; };
 		7A2F65582B5ADB25000A75D9 /* MailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailView.swift; sourceTree = "<group>"; };
+		7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAsnEditingView.swift; sourceTree = "<group>"; };
 		7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
 		7A3E036729EC9013008F4976 /* SavedViewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewEditView.swift; sourceTree = "<group>"; };
 		7A3E45CF2BF255530007AB67 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
@@ -708,6 +711,7 @@
 				7A7080C52BDF8ECA0095BD56 /* Import */,
 				7A0772112BE537EE00DCC8CD /* Tasks */,
 				7A5482B0299AD56C00D5061E /* DocumentView.swift */,
+				7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */,
 				7AF04B7A29A689BA008E8F79 /* DocumentCell.swift */,
 				7AF04B7C29A689E1008E8F79 /* DocumentDetailView.swift */,
 				7AF04B7E29A68A0A008E8F79 /* DocumentEditView.swift */,
@@ -1007,6 +1011,7 @@
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7A0772422BE64C9200DCC8CD /* ApiError.swift in Sources */,
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
+				7A3C1CF62C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
 				7A3E46242BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */,
 				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
@@ -1108,6 +1113,7 @@
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
 				7A15D7702BC8010E001E3A86 /* ConnectionsView.swift in Sources */,
+				7A3C1CF52C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */,
 				7A0773382BEA607000DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A7080FC2BE0F4EB0095BD56 /* NSData+mimeType.swift in Sources */,
 				7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
