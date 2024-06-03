@@ -114,6 +114,8 @@ struct LoginView: View {
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
+    @State private var loginOngoing = false
+
     private nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
         Logger.shared.debug("Checking API NSError: \(error)")
@@ -194,6 +196,8 @@ struct LoginView: View {
         Logger.shared.notice("Attempting login with url \(url.text)")
 
         do {
+            loginOngoing = true
+            defer { loginOngoing = false }
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
             guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
@@ -258,18 +262,6 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if initial {
-                    HStack {
-                        Spacer()
-                        LogoView()
-                            .font(.title)
-                        Spacer()
-                    }
-                    .listRowInsets(EdgeInsets())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                    .background(Color.systemGroupedBackground)
-                }
-
                 Section {
                     HStack {
                         TextField(String(localized: .login.urlPlaceholder), text: $url.text)
@@ -335,20 +327,43 @@ struct LoginView: View {
                         Text(.login.passwordStorageNotice)
                     }
                 }
-
-                Section {
-                    Button(action: {
-                        Task {
-                            await login()
-                        }
-                    }) {
-                        HStack {
-                            Spacer()
-                            Text(.login.buttonLabel)
-                            Spacer()
-                        }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button(action: {
+                    Task {
+                        await login()
                     }
-                    .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
+                }) {
+                    HStack(spacing: 5) {
+                        if loginOngoing {
+                            ProgressView()
+                        }
+                        Text(.login.buttonLabel)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.bordered)
+                .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
+                .padding()
+                .background(.thickMaterial)
+                .ignoresSafeArea()
+                .animation(.default, value: loginOngoing)
+            }
+
+            .onSubmit {
+                Task {
+                    await login()
+                }
+            }
+
+            .safeAreaInset(edge: .top) {
+                if initial {
+                    HStack {
+                        LogoView()
+                            .font(.title)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, -45)
                 }
             }
 

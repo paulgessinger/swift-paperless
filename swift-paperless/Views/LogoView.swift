@@ -28,7 +28,7 @@ struct LogoView: View {
     private let logoRadius: CGFloat = 5
 
     var body: some View {
-        VStack {
+        VStack(spacing: -15) {
             Image("AppLogoOnWhite")
             Text(.localizable.appName)
                 .font(.title)
