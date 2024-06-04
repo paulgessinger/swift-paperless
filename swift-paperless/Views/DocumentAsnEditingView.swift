@@ -19,6 +19,20 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
     @EnvironmentObject private var errorController: ErrorController
 
     @State private var asn: String = ""
+    @State private var changed: Bool = false
+
+    @State private var originalAsn: UInt?
+
+    init(document: Binding<DocumentType>, isValid: Binding<Bool>) {
+        _document = document
+        _isValid = isValid
+        let asn = if let asn = self.document.asn {
+            String(asn)
+        } else {
+            ""
+        }
+        _asn = State(initialValue: asn)
+    }
 
     private func asnPlusOne() async {
         do {
@@ -90,11 +104,11 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
             } else {
                 if let newAsn = UInt(asn) {
                     Task {
+                        document.asn = newAsn
                         isValid = false // mark as fals to prevent flickering
                         checking = true
-                        isValid = await checkAsn()
+                        isValid = await checkAsn() || document.asn == originalAsn
                         checking = false
-                        document.asn = newAsn
                     }
                 } else {
                     // Overflow
@@ -102,6 +116,10 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
                     isValid = wasValid
                 }
             }
+        }
+
+        .task {
+            originalAsn = document.asn
         }
     }
 }
