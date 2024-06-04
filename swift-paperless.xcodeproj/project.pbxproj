@@ -777,7 +777,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7A2E12142B14BBE200E7704A /* PBXTargetDependency */,
+				7A646EF32C0EF1AE00925F58 /* PBXTargetDependency */,
 			);
 			name = ShareExtension;
 			packageProductDependencies = (
@@ -802,7 +802,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */,
+				7A646EEC2C0EF1A200925F58 /* PBXTargetDependency */,
 				7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */,
 			);
 			name = "swift-paperless";
@@ -1084,6 +1084,7 @@
 				7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */,
 				7A3E46232BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */,
 				7A0772062BE5370700DCC8CD /* TaskActivityToolbar.swift in Sources */,
+				7A4D513D2C0F88AF0066E75A /* BiometricLockManager.swift in Sources */,
 				7A3E45E02BF256BB0007AB67 /* AppVersionView.swift in Sources */,
 				7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */,
@@ -1102,7 +1103,6 @@
 				7A8E1F7E2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
 				7AEF691229CF80F600414BA7 /* LogoView.swift in Sources */,
-				7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */,
 				7A0772442BE64CB200DCC8CD /* ApiSequence.swift in Sources */,
 				7A0772412BE64C9200DCC8CD /* ApiError.swift in Sources */,
 				7A3E036829EC9013008F4976 /* SavedViewEditView.swift in Sources */,
@@ -1230,10 +1230,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7A2E12142B14BBE200E7704A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */;
-		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
@@ -1257,9 +1253,13 @@
 			isa = PBXTargetDependency;
 			productRef = 7A56F2412B826F6300BE9361 /* XCStringsToolPlugin */;
 		};
-		7ABA52AB2B791D4B00AE218B /* PBXTargetDependency */ = {
+		7A646EEC2C0EF1A200925F58 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */;
+			productRef = 7A646EEB2C0EF1A200925F58 /* XCStringsToolPlugin */;
+		};
+		7A646EF32C0EF1AE00925F58 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A646EF22C0EF1AE00925F58 /* XCStringsToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1740,7 +1740,7 @@
 			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 0.4.2;
 			};
 		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
@@ -1806,11 +1806,6 @@
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
 		};
-		7A2E12132B14BBE200E7704A /* XCStringsToolPlugin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
-			productName = "plugin:XCStringsToolPlugin";
-		};
 		7A4AA90229BE048800D845A2 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
@@ -1836,6 +1831,16 @@
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
 		};
+		7A646EEB2C0EF1A200925F58 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A646EF22C0EF1AE00925F58 /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
 		7A68F0B229B4B94B00878223 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
@@ -1855,11 +1860,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
-		};
-		7ABA52AA2B791D4B00AE218B /* XCStringsToolPlugin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
-			productName = "plugin:XCStringsToolPlugin";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
