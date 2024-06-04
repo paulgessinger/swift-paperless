@@ -418,7 +418,7 @@ struct FilterState: Equatable, Codable, Sendable {
     init(savedView: SavedView) {
         self.init(rules: savedView.filterRules)
         self.savedView = savedView.id
-        self.sortField = savedView.sortField
+        self.sortField = savedView.sortField ?? AppSettings.value(for: .defaultSortField, or: .added)
         self.sortOrder = savedView.sortOrder
     }
 

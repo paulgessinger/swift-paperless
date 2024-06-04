@@ -11,7 +11,7 @@ protocol SavedViewProtocol: Codable {
     var name: String { get set }
     var showOnDashboard: Bool { get set }
     var showInSidebar: Bool { get set }
-    var sortField: SortField { get set }
+    var sortField: SortField? { get set }
     var sortOrder: SortOrder { get set }
     var filterRules: [FilterRule] { get set }
 }
@@ -21,7 +21,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
     var name: String
     var showOnDashboard: Bool
     var showInSidebar: Bool
-    var sortField: SortField
+    var sortField: SortField?
     var sortOrder: SortOrder
     var filterRules: [FilterRule]
 
@@ -46,7 +46,7 @@ struct ProtoSavedView: Codable, SavedViewProtocol {
     var name: String = ""
     var showOnDashboard: Bool = false
     var showInSidebar: Bool = false
-    var sortField: SortField = .created
+    var sortField: SortField? = .created
     var sortOrder: SortOrder = .descending
     var filterRules: [FilterRule] = []
 

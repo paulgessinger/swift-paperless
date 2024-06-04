@@ -64,4 +64,36 @@ final class SavedViewTest: XCTestCase {
             XCTAssertEqual(result.sortOrder, .ascending)
         }
     }
+
+    func testDecodingNilSortField() throws {
+        let input = """
+        {
+          "id": 1,
+          "name": "Inbox",
+          "show_on_dashboard": true,
+          "show_in_sidebar": true,
+          "sort_field": null,
+          "sort_reverse": false,
+          "filter_rules": [
+            {
+              "rule_type": 6,
+              "value": "1"
+            }
+          ],
+          "page_size": null,
+          "display_mode": null,
+          "display_fields": null,
+          "owner": 3,
+          "user_can_change": true
+        }
+        """.data(using: .utf8)!
+
+        let result = try JSONDecoder().decode(SavedView.self, from: input)
+        XCTAssertEqual(result.id, 1)
+        XCTAssertEqual(result.name, "Inbox")
+        XCTAssertEqual(result.showOnDashboard, true)
+        XCTAssertEqual(result.showInSidebar, true)
+        XCTAssertEqual(result.sortField, nil)
+        XCTAssertEqual(result.sortOrder, .ascending)
+    }
 }
