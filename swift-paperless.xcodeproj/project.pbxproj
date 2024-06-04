@@ -137,6 +137,7 @@
 		7A4AA91729BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */; };
 		7A4AA91829BE40B300D845A2 /* MultiPartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */; };
 		7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA91929BE730B00D845A2 /* Semaphore */; };
+		7A4D513D2C0F88AF0066E75A /* BiometricLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4D513C2C0F88AF0066E75A /* BiometricLockManager.swift */; };
 		7A4D9F3829D4B78500B25A63 /* demo.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 7A4D9F3729D4B78500B25A63 /* demo.pdf */; };
 		7A5482AF299AD56C00D5061E /* swift_paperlessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */; };
 		7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482B0299AD56C00D5061E /* DocumentView.swift */; };
@@ -213,7 +214,6 @@
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AB060DE29C6623F004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
 		7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB060DD29C6623F004E6C63 /* Repository.swift */; };
-		7ABA52B62B791E6400AE218B /* Biometric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52B52B791E6400AE218B /* Biometric.swift */; };
 		7ABA52CA2B79314700AE218B /* InactiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABA52C92B79314700AE218B /* InactiveView.swift */; };
 		7ABC73052BFB58EC0061E094 /* Screenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABC73042BFB58EC0061E094 /* Screenshots.swift */; };
 		7ABC73072BFB59490061E094 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABC73062BFB59490061E094 /* SnapshotHelper.swift */; };
@@ -365,6 +365,7 @@
 		7A4AA91029BE202800D845A2 /* PreviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewModel.swift; sourceTree = "<group>"; };
 		7A4AA91329BE22C300D845A2 /* CreateDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateDocumentView.swift; sourceTree = "<group>"; };
 		7A4AA91629BE40B300D845A2 /* MultiPartFormDataRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiPartFormDataRequest.swift; sourceTree = "<group>"; };
+		7A4D513C2C0F88AF0066E75A /* BiometricLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricLockManager.swift; sourceTree = "<group>"; };
 		7A4D9F3729D4B78500B25A63 /* demo.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = demo.pdf; sourceTree = "<group>"; };
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482AE299AD56C00D5061E /* swift_paperlessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessApp.swift; sourceTree = "<group>"; };
@@ -401,7 +402,6 @@
 		7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagers.swift; sourceTree = "<group>"; };
 		7AB057792AA48BA700ABA6B1 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		7AB060DD29C6623F004E6C63 /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
-		7ABA52B52B791E6400AE218B /* Biometric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Biometric.swift; sourceTree = "<group>"; };
 		7ABA52C92B79314700AE218B /* InactiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveView.swift; sourceTree = "<group>"; };
 		7ABC73042BFB58EC0061E094 /* Screenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screenshots.swift; sourceTree = "<group>"; };
 		7ABC73062BFB59490061E094 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
@@ -650,7 +650,6 @@
 				7A898ECD2A03000D0003DFBD /* UserDefaults.swift */,
 				7A898ED02A0303140003DFBD /* Logging.swift */,
 				7A25773F2A87D32400B15626 /* NullCodable.swift */,
-				7ABA52B52B791E6400AE218B /* Biometric.swift */,
 				7A495C8C2BD7FFF200A2E5CF /* Compatibility.swift */,
 				7A495CDA2BD940A200A2E5CF /* Binding.swift */,
 				7A495CF82BD94D6C00A2E5CF /* View+confirmationDialog.swift */,
@@ -662,6 +661,7 @@
 				7A3E45CF2BF255530007AB67 /* Bundle.swift */,
 				7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */,
 				7A763EBC2C0B484C0042796A /* String+isNumber.swift */,
+				7A4D513C2C0F88AF0066E75A /* BiometricLockManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";

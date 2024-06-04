@@ -17,16 +17,8 @@ struct TestView: View {
 struct PreferencesView: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
-    @State private var enableBiometricToggle = false
-
-    @State private var biometricName: String? = nil
-
     @EnvironmentObject private var errorController: ErrorController
-
-    init() {
-        _enableBiometricToggle = State(initialValue: AppSettings.shared.enableBiometricAppLock)
-        _biometricName = State(initialValue: getBiometricName())
-    }
+    @EnvironmentObject private var biometricLockManager: BiometricLockManager
 
     var body: some View {
         Form {
@@ -37,9 +29,9 @@ struct PreferencesView: View {
                 Text(.settings.documentDeleteConfirmationLabelDescription)
             }
 
-            if let biometricName {
+            if let biometricName = BiometricLockManager.biometricName {
                 Section {
-                    Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $enableBiometricToggle)
+                    Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $biometricLockManager.isEnabled)
                 }
             }
 
@@ -72,37 +64,6 @@ struct PreferencesView: View {
                 Text(.localizable.filtering)
             } footer: {
                 Text(.settings.defaultSearchModeDescription)
-            }
-        }
-
-        .onChange(of: enableBiometricToggle) { value in
-            if !value {
-                Logger.shared.notice("Biometric lock disabled")
-                return
-            }
-
-            guard let biometricName else {
-                Logger.shared.error("Biometric info returned false, but activation was requested")
-                return
-            }
-
-            Logger.shared.notice("Attempt to enable biometric lock")
-
-            Task {
-                do {
-                    if try await biometricAuthenticate() {
-                        Logger.shared.notice("Biometric lock enabled successfully")
-                        try? await Task.sleep(for: .seconds(2))
-                        AppSettings.shared.enableBiometricAppLock = true
-                    } else {
-                        Logger.shared.notice("Biometric lock could not be enabled")
-                        enableBiometricToggle = false
-                    }
-                } catch {
-                    Logger.shared.error("Error enabling biometric lock: \(error)")
-                    errorController.push(error: error, message: String(localized: .settings.biometricLockEnableFailure(biometricName)))
-                    enableBiometricToggle = false
-                }
             }
         }
     }

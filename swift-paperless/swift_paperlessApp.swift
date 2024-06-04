@@ -17,23 +17,21 @@ struct MainView: View {
 
     @StateObject private var manager = ConnectionManager()
 
-    @StateObject private var errorController = ErrorController()
+    @StateObject private var errorController: ErrorController
 
     @Environment(\.scenePhase) var scenePhase
 
     @ObservedObject private var appSettings = AppSettings.shared
 
-    private enum LockState {
-        case initial, locked, unlocked
-    }
-
-    @State private var lockState = LockState.initial
-    @State private var unlocking = false
-
     @StateObject private var releaseNotesModel = ReleaseNotesViewModel()
+
+    @StateObject private var biometricLockManager: BiometricLockManager
 
     init() {
         _ = AppSettings.shared
+        let errorController = ErrorController()
+        _errorController = StateObject(wrappedValue: errorController)
+        _biometricLockManager = StateObject(wrappedValue: BiometricLockManager(errorController: errorController))
     }
 
     private func refreshConnection() {
@@ -74,7 +72,7 @@ struct MainView: View {
                     .environmentObject(manager)
 
                     .overlay {
-                        if appSettings.enableBiometricAppLock, lockState == .locked || scenePhase == .inactive {
+                        if AppSettings.shared.enableBiometricAppLock, biometricLockManager.lockState == .locked || scenePhase == .inactive {
                             InactiveView()
                                 .transition(.opacity)
                         }
@@ -82,6 +80,7 @@ struct MainView: View {
             }
         }
         .environmentObject(errorController)
+        .environmentObject(biometricLockManager)
 
         .fullScreenCover(isPresented: $showLoginScreen) {
             LoginView(connectionManager: manager)
@@ -94,9 +93,7 @@ struct MainView: View {
         }
 
         .task {
-            if lockState == .initial, appSettings.enableBiometricAppLock {
-                lockState = .locked
-            }
+            biometricLockManager.lockIfEnabled()
 
             Logger.shared.notice("Checking login status")
             refreshConnection()
@@ -118,41 +115,14 @@ struct MainView: View {
 
             case .background:
                 Logger.shared.notice("App goes to background")
-                if appSettings.enableBiometricAppLock, lockState == .unlocked {
-                    Logger.shared.notice("Biometric lock is enabled: locking")
-                    lockState = .locked
-                }
+                biometricLockManager.lockIfEnabled()
+
             case .active:
                 store?.startTaskPolling()
 
                 Logger.shared.notice("App becomes active")
-                if appSettings.enableBiometricAppLock, lockState == .locked {
-                    Task {
-                        if unlocking {
-                            return
-                        }
-                        unlocking = true
-                        defer { unlocking = false }
-                        do {
-                            Logger.shared.notice("App is locked, attempt biometric unlock")
 
-                            if try await biometricAuthenticate() {
-                                Logger.shared.notice("App is unlocked by biometric")
-                                try? await Task.sleep(for: .seconds(1.0))
-                                withAnimation {
-                                    lockState = .unlocked
-                                }
-                            }
-                        } catch {
-                            Logger.shared.error("Error during biometric unlock: \(error)")
-                            var message: String? = nil
-                            if let biometricName = getBiometricName() {
-                                message = String(localized: .settings.biometricLockEnableFailure(biometricName))
-                            }
-                            errorController.push(error: error, message: message)
-                        }
-                    }
-                }
+                Task { await biometricLockManager.unlockIfEnabled() }
 
             default:
                 break

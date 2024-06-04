@@ -19,4 +19,6 @@ extension Logger {
     static let api = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "API")
     nonisolated(unsafe)
     static let migration = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Migration")
+    nonisolated(unsafe)
+    static let biometric = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Biometric")
 }
