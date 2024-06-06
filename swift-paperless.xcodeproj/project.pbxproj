@@ -73,6 +73,14 @@
 		7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */; };
 		7A2F65592B5ADB25000A75D9 /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F65582B5ADB25000A75D9 /* MailView.swift */; };
 		7A2F655A2B5ADB25000A75D9 /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2F65582B5ADB25000A75D9 /* MailView.swift */; };
+		7A35C0AD2C117E53006A542D /* SortField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0AC2C117E53006A542D /* SortField.swift */; };
+		7A35C0AE2C117E53006A542D /* SortField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0AC2C117E53006A542D /* SortField.swift */; };
+		7A35C0BB2C117E91006A542D /* SortOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0BA2C117E91006A542D /* SortOrder.swift */; };
+		7A35C0BC2C117E91006A542D /* SortOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0BA2C117E91006A542D /* SortOrder.swift */; };
+		7A35C0BD2C117EF6006A542D /* SortOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0BA2C117E91006A542D /* SortOrder.swift */; };
+		7A35C0BE2C117EF7006A542D /* SortOrder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0BA2C117E91006A542D /* SortOrder.swift */; };
+		7A35C0BF2C117EF9006A542D /* SortField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0AC2C117E53006A542D /* SortField.swift */; };
+		7A35C0C02C117EFA006A542D /* SortField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A35C0AC2C117E53006A542D /* SortField.swift */; };
 		7A3C1CF52C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */; };
 		7A3C1CF62C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */; };
 		7A3E035F29EC8B7D008F4976 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */; };
@@ -340,6 +348,8 @@
 		7A2E12212B14F3A000E7704A /* DeriveUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrl.swift; sourceTree = "<group>"; };
 		7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeriveUrlTest.swift; sourceTree = "<group>"; };
 		7A2F65582B5ADB25000A75D9 /* MailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailView.swift; sourceTree = "<group>"; };
+		7A35C0AC2C117E53006A542D /* SortField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortField.swift; sourceTree = "<group>"; };
+		7A35C0BA2C117E91006A542D /* SortOrder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortOrder.swift; sourceTree = "<group>"; };
 		7A3C1CF42C0C9A4A00963C8F /* DocumentAsnEditingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAsnEditingView.swift; sourceTree = "<group>"; };
 		7A3E035E29EC8B7D008F4976 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
 		7A3E036729EC9013008F4976 /* SavedViewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewEditView.swift; sourceTree = "<group>"; };
@@ -679,6 +689,8 @@
 				7A2831B12A62748D009E86CE /* UserModel.swift */,
 				7A2831B62A63D6E2009E86CE /* TaskModel.swift */,
 				7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */,
+				7A35C0AC2C117E53006A542D /* SortField.swift */,
+				7A35C0BA2C117E91006A542D /* SortOrder.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -989,6 +1001,7 @@
 				7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
 				7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */,
+				7A35C0AE2C117E53006A542D /* SortField.swift in Sources */,
 				7A81C5AE2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
 				7A3E45D32BF255530007AB67 /* Bundle.swift in Sources */,
@@ -1012,6 +1025,7 @@
 				7A0772422BE64C9200DCC8CD /* ApiError.swift in Sources */,
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A3C1CF62C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */,
+				7A35C0BC2C117E91006A542D /* SortOrder.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
 				7A3E46242BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */,
 				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
@@ -1089,6 +1103,7 @@
 				7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */,
 				7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */,
+				7A35C0BB2C117E91006A542D /* SortOrder.swift in Sources */,
 				7A297FB029FE78750021A1ED /* CorrespondentEditView.swift in Sources */,
 				7AF04B7B29A689BA008E8F79 /* DocumentCell.swift in Sources */,
 				7A2A113D29FE649300E9FFE3 /* Keychain.swift in Sources */,
@@ -1127,6 +1142,7 @@
 				7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A2831B22A62748D009E86CE /* UserModel.swift in Sources */,
 				7A4648072A1D5AED00078968 /* DateDecodingError.swift in Sources */,
+				7A35C0AD2C117E53006A542D /* SortField.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* ApiRepository.swift in Sources */,
 				7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */,
 				7AB0577A2AA48BA700ABA6B1 /* PrivacyView.swift in Sources */,
@@ -1176,6 +1192,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A4648042A1D5ABC00078968 /* ListResponse.swift in Sources */,
+				7A35C0C02C117EFA006A542D /* SortField.swift in Sources */,
 				7A8E1F7A2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
 				7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
@@ -1197,6 +1214,7 @@
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A3E45D12BF255530007AB67 /* Bundle.swift in Sources */,
 				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
+				7A35C0BD2C117EF6006A542D /* SortOrder.swift in Sources */,
 				7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */,
 				7A495D3F2BD969F600A2E5CF /* Binding.swift in Sources */,
 				7AF2E07729F3F02E0092948B /* Repository.swift in Sources */,
@@ -1223,6 +1241,8 @@
 				7A3E45D22BF255530007AB67 /* Bundle.swift in Sources */,
 				7A495D222BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */,
+				7A35C0BF2C117EF9006A542D /* SortField.swift in Sources */,
+				7A35C0BE2C117EF7006A542D /* SortOrder.swift in Sources */,
 				7A495D402BD969F700A2E5CF /* Binding.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

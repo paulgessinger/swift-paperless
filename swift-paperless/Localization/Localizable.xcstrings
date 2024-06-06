@@ -5419,6 +5419,17 @@
         }
       }
     },
+    "sortOrderOwner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owner"
+          }
+        }
+      }
+    },
     "sortOrderStoragePath" : {
       "extractionState" : "manual",
       "localizations" : {
