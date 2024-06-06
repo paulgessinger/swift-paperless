@@ -830,6 +830,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A35C0A92C117D79006A542D /* PBXTargetDependency */,
 				7A5482BE299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessTests";
@@ -848,6 +849,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7A35C0AB2C117D7D006A542D /* PBXTargetDependency */,
 				7A5482C8299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessUITests";
@@ -1228,6 +1230,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7A35C0A92C117D79006A542D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A35C0A82C117D79006A542D /* XCStringsToolPlugin */;
+		};
+		7A35C0AB2C117D7D006A542D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7A35C0AA2C117D7D006A542D /* XCStringsToolPlugin */;
+		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
@@ -1795,6 +1805,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		7A35C0A82C117D79006A542D /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A35C0AA2C117D7D006A542D /* XCStringsToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
+			productName = "plugin:XCStringsToolPlugin";
 		};
 		7A4AA90229BE048800D845A2 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
