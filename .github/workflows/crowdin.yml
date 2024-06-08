@@ -1,4 +1,4 @@
-name: Crowdin Action
+name: Crowdin synchronization
 
 on:
   workflow_dispatch:
@@ -61,10 +61,10 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          title: 'chore: Update Filter Rule types'
-          commit-message: 'chore: Update Filter Rule types'
+          title: 'chore: Update localization'
+          commit-message: 'chore: Update localization'
           branch: l18n_update
           delete-branch: true
-          body: "Automated update of localizations"
+          body: "Automated update of localizations from Crowdin"
           base: main
           add-paths: swift-paperless/Localization
