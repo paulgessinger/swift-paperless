@@ -5,30 +5,65 @@ on:
   schedule:
     - cron: '2 */12 * * *'
   push:
-    paths: [
-      'swift-paperless/Localization/*.xcstrings',
-    ]
+    # paths: [
+    #   'swift-paperless/Localization/*.xcstrings',
+    # ]
     branches: [ main ]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   synchronize-with-crowdin:
     name: Crowdin Sync
     runs-on: ubuntu-latest
 
+    env:
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: crowdin action
-      uses: crowdin/github-action@v2
-      with:
-        upload_translations: false
-        download_translations: true
-        localization_branch_name: l10n
-        pull_request_labels: 'translation'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
-        CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Crowdin push/pull
+        uses: crowdin/github-action@v2
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        with:
+          upload_translations: false
+          upload_sources: true
+          download_translations: true
+          create_pull_request: false
+
+      - name: Fix generated files
+        run: |
+          pre-commit run end-of-file-fixer --files swift-paperless/Localization/*.xcstrings || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: 'chore: Update Filter Rule types'
+          commit-message: 'chore: Update Filter Rule types'
+          branch: l18n update
+          delete-branch: true
+          body: "Automated update of localizations"
+          base: main
+          add-paths: swift-paperless/Localization
