@@ -21,6 +21,8 @@ jobs:
 
     env:
       PRE_COMMIT_HOME: '/tmp/pre-commit'
+      CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+      CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
     steps:
       - uses: actions/setup-python@v5
@@ -42,16 +44,15 @@ jobs:
         with:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Crowdin push/pull
+      - name: Crowdin push
         uses: crowdin/github-action@v2
-        env:
-          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
         with:
-          upload_translations: false
-          upload_sources: true
-          download_translations: true
-          create_pull_request: false
+          command: push
+
+      - name: Crowdin pull
+        uses: crowdin/github-action@v2
+        with:
+          command: pull
 
       - name: Fix generated files
         run: |
