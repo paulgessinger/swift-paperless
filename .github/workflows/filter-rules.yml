@@ -15,7 +15,6 @@ jobs:
 
     env:
       PRE_COMMIT_HOME: '/tmp/pre-commit'
-      GH_TOKEN: ${{ github.token  }}
 
     steps:
       - uses: actions/checkout@v4
@@ -42,15 +41,14 @@ jobs:
 
       - run: git diff
 
-
       - name: Create Pull Request
-        id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
-          commit-message: Update report
+          token: ${{ secrets.GH_TOKEN }}
+          title: 'chore: Update Filter Rule types'
+          commit-message: 'chore: Update Filter Rule types'
           branch: filter-rule-type-update
           delete-branch: true
-          title: 'chore: Update Filter Rule types'
           body: "Automated update of Filter Rule types."
           base: main
           add-paths: swift-paperless/FilterRuleType.swift
