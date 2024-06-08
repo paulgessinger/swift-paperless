@@ -54,6 +54,7 @@ jobs:
 
       - name: Fix generated files
         run: |
+          ls -al swift-paperless/Localization/*.xcstrings
           pre-commit run end-of-file-fixer --files swift-paperless/Localization/*.xcstrings || true
 
       - name: Create Pull Request
