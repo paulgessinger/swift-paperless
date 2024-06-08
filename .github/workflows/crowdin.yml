@@ -5,9 +5,9 @@ on:
   schedule:
     - cron: '2 */12 * * *'
   push:
-    # paths: [
-    #   'swift-paperless/Localization/*.xcstrings',
-    # ]
+    paths: [
+      'swift-paperless/Localization/*.xcstrings',
+    ]
     branches: [ main ]
 
 permissions:
@@ -54,9 +54,7 @@ jobs:
 
       - name: Fix generated files
         run: |
-          ls -al swift-paperless/Localization/*.xcstrings
           sudo chown $(whoami):$(whoami) swift-paperless/Localization/*.xcstrings
-          ls -al swift-paperless/Localization/*.xcstrings
           pre-commit run end-of-file-fixer --files swift-paperless/Localization/*.xcstrings || true
 
       - name: Create Pull Request
