@@ -41,8 +41,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Crowdin push
         uses: crowdin/github-action@v2
@@ -61,6 +59,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
+          token: ${{ secrets.GH_TOKEN }}
           title: 'chore: Update localization'
           commit-message: 'chore: Update localization'
           branch: l18n_update
