@@ -151,7 +151,6 @@
 		7A5482B1299AD56C00D5061E /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482B0299AD56C00D5061E /* DocumentView.swift */; };
 		7A5482B3299AD56E00D5061E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B2299AD56E00D5061E /* Assets.xcassets */; };
 		7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */; };
-		7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */; };
 		7A5482CB299AD56E00D5061E /* swift_paperlessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */; };
 		7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
 		7A56F2682B8270BB00BE9361 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A2E120C2B14B9C900E7704A /* Localizable.xcstrings */; };
@@ -384,7 +383,6 @@
 		7A5482B4299AD56E00D5061E /* swift_paperless.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_paperless.entitlements; sourceTree = "<group>"; };
 		7A5482B6299AD56E00D5061E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		7A5482BC299AD56E00D5061E /* swift-paperlessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessTests.swift; sourceTree = "<group>"; };
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITests.swift; sourceTree = "<group>"; };
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
@@ -623,7 +621,6 @@
 			isa = PBXGroup;
 			children = (
 				7A5C138B29ABC35E00D71F51 /* ColorHex.swift */,
-				7A5482C0299AD56E00D5061E /* swift_paperlessTests.swift */,
 				7ACB386629D9EA91006CE102 /* FilterRuleTest.swift */,
 				7AF2E07129F3ECE40092948B /* SavedViewTest.swift */,
 				7A2E12252B14F42200E7704A /* DeriveUrlTest.swift */,
@@ -1202,7 +1199,6 @@
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
 				7A0772DF2BEA2DF800DCC8CD /* ErrorParsingTest.swift in Sources */,
 				7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */,
-				7A5482C1299AD56E00D5061E /* swift_paperlessTests.swift in Sources */,
 				7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */,
 				7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */,
 				7A07733A2BEA734C00DCC8CD /* ErrorDisplay.swift in Sources */,

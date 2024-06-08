@@ -94,7 +94,7 @@ final class SavedViewTest: XCTestCase {
         XCTAssertEqual(result.name, "Inbox")
         XCTAssertEqual(result.showOnDashboard, true)
         XCTAssertEqual(result.showInSidebar, true)
-        XCTAssertEqual(result.sortField, nil)
+        XCTAssertEqual(result.sortField, .added)
         XCTAssertEqual(result.sortOrder, .ascending)
     }
 
