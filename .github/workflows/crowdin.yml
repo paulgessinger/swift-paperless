@@ -63,7 +63,7 @@ jobs:
         with:
           title: 'chore: Update Filter Rule types'
           commit-message: 'chore: Update Filter Rule types'
-          branch: l18n update
+          branch: l18n_update
           delete-branch: true
           body: "Automated update of localizations"
           base: main
