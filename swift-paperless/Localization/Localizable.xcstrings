@@ -5419,6 +5419,17 @@
         }
       }
     },
+    "sortOrderNotes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
+          }
+        }
+      }
+    },
     "sortOrderOwner" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5426,6 +5437,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Owner"
+          }
+        }
+      }
+    },
+    "sortOrderScore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search score"
           }
         }
       }

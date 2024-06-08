@@ -40,6 +40,8 @@ struct SearchBarView: View {
                     .foregroundColor(text.isEmpty ? .gray : .primary)
                     .focused($focused)
                     .onSubmit(onSubmit)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
 
                 if !text.isEmpty {
                     Spacer()

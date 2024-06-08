@@ -34,7 +34,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 
             Section(String(localized: .localizable.sorting)) {
                 Picker(String(localized: .localizable.sortBy), selection: $savedView.sortField) {
-                    ForEach(SortField.allCases, id: \.self) { v in
+                    ForEach(SortField.allCases, id: \.rawValue) { v in
                         Text(v.localizedName).tag(v)
                     }
                 }

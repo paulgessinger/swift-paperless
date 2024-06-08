@@ -613,8 +613,10 @@ struct FilterBar: View {
                 Divider()
 
                 Menu {
+                    let isAdvancedSearch = !filterState.searchText.isEmpty && filterState.searchMode == .advanced
+                    let eligibleSortFields = (isAdvancedSearch || filterState.sortField == .score) ? SortField.allCases : SortField.allCases.filter { $0 != .score }
                     Picker(String(localized: .localizable.sortBy), selection: $filterState.sortField) {
-                        ForEach(SortField.allCases, id: \.rawValue) { f in
+                        ForEach(eligibleSortFields, id: \.rawValue) { f in
                             Text(f.localizedName).tag(f)
                         }
                     }
