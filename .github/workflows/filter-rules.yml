@@ -15,6 +15,8 @@ jobs:
 
     env:
       PRE_COMMIT_HOME: '/tmp/pre-commit'
+      # For gh cli in generate_filterrules.py
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
