@@ -33,6 +33,17 @@ class DocumentDetailModel {
         case closing
         case correspondent
         case documentType
+        case storagePath
+        case created
+
+        var color: Color {
+            switch self {
+            case .correspondent: .paletteYellow
+            case .documentType: .paletteRed
+            case .storagePath: .paletteCoolGray
+            default: .gray
+            }
+        }
     }
 
     enum Detent: RawRepresentable, CaseIterable {
@@ -71,14 +82,20 @@ class DocumentDetailModel {
     var download: DocumentDownloadState = .initial
     var showPreviewSheet = false
 
+//    @ObservationIgnored
+//    let animation: Namespace.ID
+
     @ObservationIgnored
     var store: DocumentStore
 
     var document: Document
 
-    init(store: DocumentStore, document: Document) {
+    init( // animation: Namespace.ID,
+        store: DocumentStore, document: Document
+    ) {
         self.store = store
         self.document = document
+//        self.animation = animation
     }
 
     func push(detent: Detent) {

@@ -9,9 +9,106 @@ import NukeUI
 import os
 import SwiftUI
 
-struct DocumentDetailViewV2: View {
-    @ObservedObject var store: DocumentStore
+private struct Box<Content: View, ID: Hashable>: View {
+    @Environment(DocumentDetailModel.self) private var viewModel
+//    @Bindable var viewModel: DocumentDetailModel
 
+    let animation: Namespace.ID
+    let id: ID
+    let color: Color
+    @ViewBuilder let label: () -> Content
+
+    var body: some View {
+        HStack {
+            label()
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        .background {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(color)
+                .matchedGeometryEffect(id: id, in: animation, isSource: true)
+        }
+    }
+}
+
+private struct IconBox<ID: Hashable>: View {
+    @Environment(DocumentDetailModel.self) private var viewModel
+    @EnvironmentObject private var store: DocumentStore
+
+    let animation: Namespace.ID
+    let id: ID
+    let iconId: ID
+    let icon: String
+    let color: Color
+    let label: String
+
+    var body: some View {
+        Box(animation: animation, id: id, color: color) {
+            HStack {
+                Label(label, systemImage: icon)
+                    .labelStyle(.iconOnly)
+                    .font(.title3)
+                    .matchedGeometryEffect(id: iconId, in: animation, isSource: true)
+                Text(label)
+            }
+        }
+    }
+}
+
+private struct CommonBox<Element>: View where Element: Pickable {
+    @Environment(DocumentDetailModel.self) private var viewModel
+    @EnvironmentObject private var store: DocumentStore
+
+    let animation: Namespace.ID
+
+    private let editMode: DocumentDetailModel.EditMode
+
+    init(_: Element.Type, animation: Namespace.ID) {
+        self.animation = animation
+
+        editMode = switch Element.self {
+        case is Correspondent.Type: .correspondent
+        case is DocumentType.Type: .documentType
+        case is StoragePath.Type: .storagePath
+        default:
+            fatalError("Unknown element \(Element.self)")
+        }
+    }
+
+    var body: some View {
+        Box(
+            animation: animation,
+            id: "Edit\(Element.self)",
+            color: editMode.color
+        ) {
+            HStack {
+                Label(Element.singularLabel, systemImage: Element.icon)
+                    .labelStyle(.iconOnly)
+                    .font(.title3)
+                    .matchedGeometryEffect(id: "EditIcon\(Element.self)", in: animation, isSource: true)
+                let path = Element.documentPath(Document.self)
+                if let id = viewModel.document[keyPath: path], let name = store[keyPath: Element.storePath][id]?.name {
+                    Text(name)
+                } else {
+                    Text(Element.notAssignedPicker)
+                }
+            }
+        }
+        .onTapGesture {
+            viewModel.startEditing(editMode)
+        }
+        .zIndex(viewModel.zIndexActive == editMode ? 1 : 0)
+    }
+}
+
+struct DocumentDetailViewV2: View {
+//
+
+    @ObservedObject var store: DocumentStore
     var navPath: Binding<NavigationPath>?
 
     @State private var previewUrl: URL?
@@ -28,9 +125,13 @@ struct DocumentDetailViewV2: View {
     private let openDuration = 0.3
     private let closeDuration = 0.3
 
-    init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>? = nil) {
+    init(store: DocumentStore,
+         document: Document,
+         navPath: Binding<NavigationPath>? = nil)
+    {
         self.store = store
-        _viewModel = State(initialValue: DocumentDetailModel(store: store, document: document))
+        _viewModel = State(initialValue: DocumentDetailModel(store: store,
+                                                             document: document))
         self.navPath = navPath
     }
 
@@ -48,11 +149,81 @@ struct DocumentDetailViewV2: View {
                 makeCommonPicker(Correspondent.self)
             case .documentType:
                 makeCommonPicker(DocumentType.self)
+            case .storagePath:
+                makeCommonPicker(StoragePath.self)
+            case .created:
+                CreatedPicker(viewModel: viewModel,
+                              date: $viewModel.document.created,
+                              animation: animation)
             default:
                 EmptyView()
             }
         }
         .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
+    }
+
+    private struct CreatedPicker: View {
+        @Bindable var viewModel: DocumentDetailModel
+        @Binding var date: Date
+        let animation: Namespace.ID
+
+        @State private var showInterface = false
+
+        @MainActor
+        private func close() async {
+            showInterface = false
+            try? await Task.sleep(for: .seconds(0.3))
+            await viewModel.stopEditing()
+        }
+
+        var body: some View {
+            ScrollView(.vertical) {
+                VStack {
+                    DatePicker(String(localized: .localizable.documentEditCreatedDateLabel),
+                               selection: $date,
+                               displayedComponents: .date)
+                        .labelsHidden()
+                        .datePickerStyle(.graphical)
+                        .padding()
+                        .opacity(showInterface ? 1 : 0)
+                }
+                .animation(.default, value: showInterface)
+
+                .task {
+                    try? await Task.sleep(for: .seconds(0.15))
+                    showInterface = true
+                }
+
+                .onChange(of: date) {
+                    Task {
+                        await close()
+                    }
+                }
+            }
+            .safeAreaInset(edge: .top) {
+//                VStack {
+                PickerHeader(color: .paletteBlue,
+                             showInterface: $showInterface,
+                             animation: animation,
+                             id: "EditCreated")
+                {
+                    HStack {
+                        Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
+                            .labelStyle(.iconOnly)
+                            .font(.title3)
+                            .matchedGeometryEffect(id: "EditIconCreated", in: animation, isSource: true)
+                        Text(.localizable.documentEditCreatedDateLabel)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                } onClose: {
+                    Task { await close() }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .animation(.default, value: showInterface)
+//                }
+            }
+        }
     }
 
     var body: some View {
@@ -67,99 +238,38 @@ struct DocumentDetailViewV2: View {
                                 .font(.title)
                                 .bold()
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .gridCellColumns(2)
                             LazyVGrid(columns: [GridItem(), GridItem()]) {
-                                HStack {
-                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title3)
-                                        .matchedGeometryEffect(id: "EditIcon\(DocumentType.self)", in: animation, isSource: true)
-                                    if let id = viewModel.document.documentType, let name = store.documentTypes[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.documentTypeNotAssignedPicker)
+                                CommonBox(DocumentType.self, animation: animation)
+                                CommonBox(Correspondent.self, animation: animation)
+                                CommonBox(StoragePath.self, animation: animation)
+
+                                IconBox(animation: animation,
+                                        id: "EditCreated",
+                                        iconId: "EditCreatedIcon",
+                                        icon: "calendar",
+                                        color: .paletteBlue,
+                                        label: DocumentCell.dateFormatter.string(from: viewModel.document.created))
+                                    .onTapGesture {
+                                        viewModel.startEditing(.created)
                                     }
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .zIndex(viewModel.zIndexActive == .created ? 1 : 0)
 
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color.paletteRed)
-                                        .matchedGeometryEffect(id: "Edit\(DocumentType.self)", in: animation, isSource: !viewModel.isEditing)
-                                }
-                                .onTapGesture {
-                                    viewModel.startEditing(.documentType)
-                                }
-                                .zIndex(viewModel.zIndexActive == .documentType ? 1 : 0)
+//                                DatePicker(selection: $viewModel.document.created.animation(.default),
+//                                           displayedComponents: .date) {
+                                ////                                    Text("HI")
+//                                }
+//                                           .labelsHidden()
+//                                           .datePickerStyle(.graphical)
 
-                                HStack {
-                                    Label(localized: .localizable.correspondent, systemImage: "person.fill")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title3)
-                                        .matchedGeometryEffect(id: "EditIcon\(Correspondent.self)", in: animation, isSource: true)
-
-                                    if let id = viewModel.document.correspondent, let name = store.correspondents[id]?.name {
-                                        Text(name)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    } else {
-                                        Text(.localizable.documentTypeNotAssignedPicker)
-                                    }
-//                                        Text("I am pretty long text here. And now I am even longer")
-//                                            .lineSpacing(0)
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color.paletteYellow)
-                                        .matchedGeometryEffect(id: "Edit\(Correspondent.self)", in: animation, isSource: !viewModel.isEditing)
-                                }
-                                .onTapGesture {
-                                    viewModel.startEditing(.correspondent)
-                                }
-                                .zIndex(viewModel.zIndexActive == .correspondent ? 1 : 0)
-
-                                HStack {
-                                    Label(localized: .localizable.storagePath, systemImage: "archivebox")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    if let id = viewModel.document.storagePath, let name = store.storagePaths[id]?.name {
-                                        Text(name)
-                                    } else {
-                                        Text(.localizable.storagePathNotAssignedPicker)
-                                    }
-                                }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color.paletteCoolGray)
-                                }
-
-                                HStack {
-                                    Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title)
-
-                                    Text(DocumentCell.dateFormatter.string(from: viewModel.document.created))
-                                }
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                .background {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color.paletteBlue)
-                                }
+//                                Box(animation: animation, id: "EditCreated", color: .paletteBlue) {
+//                                    HStack {
+//                                        Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
+//                                            .labelStyle(.iconOnly)
+//                                            .font(.title3)
+//
+//                                        Text(DocumentCell.dateFormatter.string(from: viewModel.document.created))
+//                                    }
+//                                }
 
                                 Text("Other")
                                 Text("Stuff")
@@ -192,6 +302,9 @@ struct DocumentDetailViewV2: View {
             }
             .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
         }
+
+        .environment(viewModel)
+
         .navigationBarTitleDisplayMode(.inline)
 
         .sheet(isPresented: $viewModel.showPreviewSheet) {
