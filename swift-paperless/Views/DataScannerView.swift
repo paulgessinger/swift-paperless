@@ -357,11 +357,12 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
 private struct DetailView: View {
     var document: Document
 
+    @EnvironmentObject private var store: DocumentStore
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            DocumentDetailViewV2(document: document)
+            DocumentDetailViewV2(store: store, document: document)
                 .navigationBarTitleDisplayMode(.inline)
 
                 .toolbar {

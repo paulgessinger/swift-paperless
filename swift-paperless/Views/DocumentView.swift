@@ -83,7 +83,7 @@ struct DocumentView: View {
     func navigationDestinations(nav: NavigationState) -> some View {
         switch nav {
         case let .detail(doc):
-            DocumentDetailViewV2(document: doc, navPath: $navPath)
+            DocumentDetailViewV2(store: store, document: doc, navPath: $navPath)
         case .settings:
             SettingsView()
         default:
