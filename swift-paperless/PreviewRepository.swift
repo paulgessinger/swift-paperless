@@ -49,7 +49,11 @@ actor PreviewRepository: Repository {
     private let storagePaths: [UInt: StoragePath]
     private let tasks: [PaperlessTask]
 
-    init() {
+    private let downloadDelay: Double
+
+    init(downloadDelay: Double = 0.0) {
+        self.downloadDelay = downloadDelay
+
         let tags = [Tag]([
             .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
             .init(id: 2, isInboxTag: false, name: "Bank", slug: "bank", color: Color.blue.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
@@ -200,7 +204,7 @@ actor PreviewRepository: Repository {
     func create(document _: ProtoDocument, file _: URL) async throws {}
 
     func download(documentID _: UInt) async -> URL? {
-        try? await Task.sleep(for: .seconds(10))
+        try? await Task.sleep(for: .seconds(downloadDelay))
         return Bundle.main.url(forResource: "demo2", withExtension: "pdf")
     }
 
