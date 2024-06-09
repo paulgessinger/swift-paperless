@@ -34,15 +34,22 @@ struct DocumentDetailViewV2: View {
         self.navPath = navPath
     }
 
+    private func makeCommonPicker<Element: Pickable>(_: Element.Type) -> some View {
+        DocumentDetailCommonPicker<Element>(
+            animation: animation,
+            viewModel: viewModel
+        )
+    }
+
     private var editingView: some View {
         VStack {
             switch viewModel.editMode {
-            case .none: EmptyView()
             case .correspondent:
-                DocumentDetailCommonPicker<Correspondent>(
-                    animation: animation,
-                    viewModel: viewModel
-                )
+                makeCommonPicker(Correspondent.self)
+            case .documentType:
+                makeCommonPicker(DocumentType.self)
+            default:
+                EmptyView()
             }
         }
         .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
@@ -53,110 +60,112 @@ struct DocumentDetailViewV2: View {
             editingView
 
             VStack {
-                if viewModel.editMode == .none {
+                if viewModel.editMode == .none || viewModel.editMode == .closing {
                     ScrollView(.vertical) {
                         VStack {
-                            Grid {
-                                Text(viewModel.document.title)
-                                    .font(.title)
-                                    .bold()
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .gridCellColumns(2)
-
-                                GridRow {
-                                    HStack {
-                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                            .labelStyle(.iconOnly)
-                                            .font(.title)
-
-                                        if let id = viewModel.document.correspondent, let name = store.correspondents[id]?.name {
-                                            Text(name)
-                                        } else {
-                                            Text(.localizable.correspondentNotAssignedPicker)
-                                        }
-                                    }
-                                    .foregroundStyle(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                            .fill(Color("AccentColor"))
-                                    }
-
-                                    HStack {
-                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                            .labelStyle(.iconOnly)
-                                            .font(.title)
-
-                                        if let id = viewModel.document.correspondent, let name = store.correspondents[id]?.name {
-                                            Text(name)
-                                        } else {
-                                            Text(.localizable.correspondentNotAssignedPicker)
-                                        }
-                                    }
-                                    .foregroundStyle(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                            .fill(Color("AccentColor"))
+                            Text(viewModel.document.title)
+                                .font(.title)
+                                .bold()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .gridCellColumns(2)
+                            LazyVGrid(columns: [GridItem(), GridItem()]) {
+                                HStack {
+                                    Label(localized: .localizable.documentType, systemImage: "doc.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title3)
+                                        .matchedGeometryEffect(id: "EditIcon\(DocumentType.self)", in: animation, isSource: true)
+                                    if let id = viewModel.document.documentType, let name = store.documentTypes[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.documentTypeNotAssignedPicker)
                                     }
                                 }
-                                //                                .zIndex(0)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                                GridRow {
-//                                    if !editing {
-                                    HStack {
-                                        Label(localized: .localizable.correspondent, systemImage: "person.fill")
-                                            .labelStyle(.iconOnly)
-                                            .font(.title)
-                                            .matchedGeometryEffect(id: "EditIcon", in: animation, isSource: true)
-                                        Text("I am pretty long text here")
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color.paletteRed)
+                                        .matchedGeometryEffect(id: "Edit\(DocumentType.self)", in: animation, isSource: !viewModel.isEditing)
+                                }
+                                .onTapGesture {
+                                    viewModel.startEditing(.documentType)
+                                }
+                                .zIndex(viewModel.zIndexActive == .documentType ? 1 : 0)
+
+                                HStack {
+                                    Label(localized: .localizable.correspondent, systemImage: "person.fill")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title3)
+                                        .matchedGeometryEffect(id: "EditIcon\(Correspondent.self)", in: animation, isSource: true)
+
+                                    if let id = viewModel.document.correspondent, let name = store.correspondents[id]?.name {
+                                        Text(name)
                                             .fixedSize(horizontal: false, vertical: true)
+                                    } else {
+                                        Text(.localizable.documentTypeNotAssignedPicker)
                                     }
-                                    .foregroundStyle(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+//                                        Text("I am pretty long text here. And now I am even longer")
+//                                            .lineSpacing(0)
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                            .fill(.orange)
-                                            .matchedGeometryEffect(id: "Edit", in: animation, isSource: !viewModel.isEditing)
-                                    }
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color.paletteYellow)
+                                        .matchedGeometryEffect(id: "Edit\(Correspondent.self)", in: animation, isSource: !viewModel.isEditing)
+                                }
+                                .onTapGesture {
+                                    viewModel.startEditing(.correspondent)
+                                }
+                                .zIndex(viewModel.zIndexActive == .correspondent ? 1 : 0)
 
-                                    .onTapGesture { viewModel.editMode = .correspondent }
-//                                    }
+                                HStack {
+                                    Label(localized: .localizable.storagePath, systemImage: "archivebox")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
 
-                                    HStack {
-                                        Label(localized: .localizable.documentType, systemImage: "doc.fill")
-                                            .labelStyle(.iconOnly)
-                                            .font(.title)
-
-                                        if let id = viewModel.document.correspondent, let name = store.correspondents[id]?.name {
-                                            Text(name)
-                                        } else {
-                                            Text(.localizable.correspondentNotAssignedPicker)
-                                        }
-                                    }
-                                    .foregroundStyle(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                            .fill(Color("AccentColor"))
+                                    if let id = viewModel.document.storagePath, let name = store.storagePaths[id]?.name {
+                                        Text(name)
+                                    } else {
+                                        Text(.localizable.storagePathNotAssignedPicker)
                                     }
                                 }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                                GridRow {
-                                    Text("Other")
-                                    Text("Stuff")
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color.paletteCoolGray)
                                 }
+
+                                HStack {
+                                    Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
+                                        .labelStyle(.iconOnly)
+                                        .font(.title)
+
+                                    Text(DocumentCell.dateFormatter.string(from: viewModel.document.created))
+                                }
+                                .foregroundStyle(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                .background {
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .fill(Color.paletteBlue)
+                                }
+
+                                Text("Other")
+                                Text("Stuff")
                             }
-                            .padding()
                         }
+                        .padding()
                     }
 
                     .safeAreaInset(edge: .bottom) {

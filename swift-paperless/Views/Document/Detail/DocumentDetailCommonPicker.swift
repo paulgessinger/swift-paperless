@@ -16,6 +16,16 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
     @State private var text: String = ""
     @FocusState private var searchFocus: Bool
 
+    @State private var showInterface = false
+
+    private var color: Color {
+        switch Element.self {
+        case is Correspondent.Type: .paletteYellow
+        case is DocumentType.Type: .paletteRed
+        default: .gray
+        }
+    }
+
     var body: some View {
         ScrollView(.vertical) {
             VStack {
@@ -28,11 +38,12 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
                     Label(localized: .localizable.correspondent, systemImage: "person.fill")
                         .labelStyle(.iconOnly)
                         .font(.title3)
-                        .matchedGeometryEffect(id: "EditIcon", in: animation, isSource: true)
+                        .matchedGeometryEffect(id: "EditIcon\(Element.self)", in: animation, isSource: true)
                     Text(.localizable.correspondent)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 //                        SearchBarView(text: $text)
+
                 HStack {
                     Label(String(localized: .localizable.search), systemImage: "magnifyingglass")
                         .labelStyle(.iconOnly)
@@ -55,32 +66,39 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
                         .fill(.thinMaterial)
                 )
                 .padding(.top)
+                .opacity(showInterface ? 1 : 0)
             }
             .padding()
             .foregroundStyle(.white)
             .overlay(alignment: .topTrailing) {
-                Label(localized: .localizable.done, systemImage: "xmark")
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .background(Circle().fill(.thinMaterial))
-                    .padding(10)
-                    .onTapGesture {
-                        Task {
-                            if searchFocus {
-                                searchFocus = false
-                                try? await Task.sleep(for: .seconds(0.3))
+                if showInterface {
+                    Label(localized: .localizable.done, systemImage: "xmark")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.white)
+                        .padding(10)
+                        .background(Circle().fill(.thinMaterial))
+                        .padding(.vertical, 10)
+                        .padding(.trailing)
+                        .onTapGesture {
+                            Task {
+                                Haptics.shared.impact(style: .light)
+                                showInterface = false
+                                if searchFocus {
+                                    searchFocus = false
+                                    try? await Task.sleep(for: .seconds(0.3))
+                                }
+                                await viewModel.stopEditing()
                             }
-                            viewModel.editMode = .none
                         }
-                    }
+                }
             }
             .background {
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(.orange)
+                    .fill(color)
+                    .matchedGeometryEffect(id: "Edit\(Element.self)", in: animation, isSource: true)
             }
-            .matchedGeometryEffect(id: "Edit", in: animation, isSource: true)
             .padding(.horizontal)
+            .animation(.default, value: showInterface)
         }
 
         .toolbar {
@@ -104,7 +122,9 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
 
         .task {
             text = ""
-            try? await Task.sleep(for: .seconds(0.3))
+            try? await Task.sleep(for: .seconds(0.15))
+            showInterface = true
+            try? await Task.sleep(for: .seconds(0.35))
             searchFocus = true
         }
     }

@@ -30,7 +30,9 @@ enum DocumentDownloadState: Equatable {
 class DocumentDetailModel {
     enum EditMode {
         case none
+        case closing
         case correspondent
+        case documentType
     }
 
     enum Detent: RawRepresentable, CaseIterable {
@@ -60,6 +62,7 @@ class DocumentDetailModel {
 //    var previewDetentOnFocus: PresentationDetent? = nil
 
     var editMode = EditMode.none
+    var zIndexActive = EditMode.none
 
     var isEditing: Bool {
         editMode != .none
@@ -86,6 +89,23 @@ class DocumentDetailModel {
     func popDetent() {
         guard !detentStack.isEmpty else { return }
         detent = detentStack.removeLast()
+    }
+
+    func startEditing(_ mode: EditMode) {
+        guard editMode == .none else { return }
+        Haptics.shared.impact(style: .light)
+        zIndexActive = mode
+        Task {
+            try? await Task.sleep(for: .seconds(0.05))
+            editMode = mode
+        }
+    }
+
+    func stopEditing() async {
+        editMode = .closing
+        try? await Task.sleep(for: .seconds(0.5))
+        editMode = .none
+        zIndexActive = .none
     }
 
     func loadDocument() async {
