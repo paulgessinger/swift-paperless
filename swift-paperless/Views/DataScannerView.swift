@@ -361,7 +361,7 @@ private struct DetailView: View {
 
     var body: some View {
         NavigationStack {
-            DocumentDetailView(document: document)
+            DocumentDetailViewV2(document: document)
                 .navigationBarTitleDisplayMode(.inline)
 
                 .toolbar {
