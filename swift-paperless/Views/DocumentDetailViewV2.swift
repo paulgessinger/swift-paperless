@@ -65,7 +65,11 @@ struct DocumentDetailViewV2: View {
     private func loadDocument() async {
         switch download {
         case .initial:
-            download = .loading
+            let setLoading = Task {
+                try? await Task.sleep(for: .seconds(0.5))
+                guard !Task.isCancelled else { return }
+                download = .loading
+            }
             do {
                 guard let url = try await store.repository.download(documentID: document.id) else {
                     download = .error
@@ -77,6 +81,10 @@ struct DocumentDetailViewV2: View {
                     return
                 }
                 download = .loaded(view)
+                setLoading.cancel()
+                Haptics.shared.prepare()
+                try? await Task.sleep(for: .seconds(0.3))
+                Haptics.shared.impact(style: .light)
                 showPreviewSheet = true
 
             } catch {
@@ -356,6 +364,27 @@ struct DocumentDetailViewV2: View {
                             .padding()
                         }
                     }
+
+                    .safeAreaInset(edge: .bottom) {
+                        VStack {
+                            if download == .loading {
+                                HStack(spacing: 5) {
+                                    ProgressView()
+                                    Text(.localizable.loading)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 25.0, style: .continuous)
+                                        .fill(.thickMaterial)
+                                )
+                                .padding(.horizontal)
+                                .transition(
+                                    .move(edge: .bottom).combined(with: .opacity))
+                            }
+                        }
+                        .animation(.default, value: download)
+                    }
                 }
             }
             .animation(.spring(duration: openDuration, bounce: 0.1), value: editing)
@@ -421,7 +450,7 @@ private struct PreviewHelper: View {
 }
 
 #Preview("DocumentDetailsView") {
-    let store = DocumentStore(repository: PreviewRepository())
+    let store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
     @StateObject var errorController = ErrorController()
 
     return PreviewHelper()
