@@ -74,6 +74,7 @@ class DocumentDetailModel {
 
     var editMode = EditMode.none
     var zIndexActive = EditMode.none
+    var editingViewId = UUID()
 
     var isEditing: Bool {
         editMode != .none
@@ -110,6 +111,7 @@ class DocumentDetailModel {
 
     func startEditing(_ mode: EditMode) {
         guard editMode == .none else { return }
+        editingViewId = UUID()
         Haptics.shared.impact(style: .light)
         zIndexActive = mode
         Task {
@@ -159,5 +161,9 @@ class DocumentDetailModel {
         default:
             break
         }
+    }
+
+    func saveDocument() async throws {
+        try await store.updateDocument(document)
     }
 }

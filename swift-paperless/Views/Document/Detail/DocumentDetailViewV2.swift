@@ -54,6 +54,10 @@ private struct IconBox<ID: Hashable>: View {
                     .font(.title3)
                     .matchedGeometryEffect(id: iconId, in: animation, isSource: true)
                 Text(label)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .multilineTextAlignment(.trailing)
+//                Label("Edit", systemImage: "pencil.circle.fill")
+//                    .labelStyle(.iconOnly)
             }
         }
     }
@@ -80,24 +84,20 @@ private struct CommonBox<Element>: View where Element: Pickable {
     }
 
     var body: some View {
-        Box(
+        let path = Element.documentPath(Document.self)
+        let label = if let id = viewModel.document[keyPath: path], let name = store[keyPath: Element.storePath][id]?.name {
+            name
+        } else {
+            Element.notAssignedPicker
+        }
+        IconBox(
             animation: animation,
             id: "Edit\(Element.self)",
-            color: editMode.color
-        ) {
-            HStack {
-                Label(Element.singularLabel, systemImage: Element.icon)
-                    .labelStyle(.iconOnly)
-                    .font(.title3)
-                    .matchedGeometryEffect(id: "EditIcon\(Element.self)", in: animation, isSource: true)
-                let path = Element.documentPath(Document.self)
-                if let id = viewModel.document[keyPath: path], let name = store[keyPath: Element.storePath][id]?.name {
-                    Text(name)
-                } else {
-                    Text(Element.notAssignedPicker)
-                }
-            }
-        }
+            iconId: "EditIcon\(Element.self)",
+            icon: Element.icon,
+            color: editMode.color,
+            label: label
+        )
         .onTapGesture {
             viewModel.startEditing(editMode)
         }
@@ -159,6 +159,7 @@ struct DocumentDetailViewV2: View {
                 EmptyView()
             }
         }
+        .id(viewModel.editingViewId)
         .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
     }
 
@@ -184,10 +185,11 @@ struct DocumentDetailViewV2: View {
                                displayedComponents: .date)
                         .labelsHidden()
                         .datePickerStyle(.graphical)
-                        .padding()
+                        .padding(.horizontal)
                         .opacity(showInterface ? 1 : 0)
+                        .id(date)
                 }
-                .animation(.default, value: showInterface)
+                .animation(.default.delay(showInterface ? 0.15 : 0), value: showInterface)
 
                 .task {
                     try? await Task.sleep(for: .seconds(0.15))
@@ -196,6 +198,8 @@ struct DocumentDetailViewV2: View {
 
                 .onChange(of: date) {
                     Task {
+                        Haptics.shared.impact(style: .light)
+                        try? await Task.sleep(for: .seconds(0.3))
                         await close()
                     }
                 }
@@ -205,22 +209,26 @@ struct DocumentDetailViewV2: View {
                 PickerHeader(color: .paletteBlue,
                              showInterface: $showInterface,
                              animation: animation,
-                             id: "EditCreated")
+                             id: "EditCreated",
+                             closeInline: true)
                 {
                     HStack {
                         Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
                             .labelStyle(.iconOnly)
                             .font(.title3)
-                            .matchedGeometryEffect(id: "EditIconCreated", in: animation, isSource: true)
+                            .matchedGeometryEffect(id: "EditCreatedIcon", in: animation, isSource: true)
                         Text(.localizable.documentEditCreatedDateLabel)
+                            .opacity(showInterface ? 1 : 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 } onClose: {
-                    Task { await close() }
+                    Task {
+                        Haptics.shared.impact(style: .light)
+                        await close()
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .animation(.default, value: showInterface)
 //                }
             }
         }
@@ -326,13 +334,20 @@ struct DocumentDetailViewV2: View {
         .task {
             await viewModel.loadDocument()
         }
+
+        .onChange(of: viewModel.document) {
+            // @TODO: Handle error
+            Task { try? await viewModel.saveDocument() }
+        }
     }
 }
 
 // MARK: - Previews
 
 private struct PreviewHelper: View {
-    @EnvironmentObject var store: DocumentStore
+    @StateObject var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
+    @StateObject var errorController = ErrorController()
+
     @State var document: Document?
     @State var navPath = NavigationPath()
 
@@ -352,14 +367,17 @@ private struct PreviewHelper: View {
                 }
             }
         }
+        .environmentObject(store)
+        .environmentObject(errorController)
+
+        .task {
+            try? await store.fetchAll()
+        }
     }
 }
 
-#Preview("DocumentDetailsView") {
-    let store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
-    @StateObject var errorController = ErrorController()
+// MARK: - Previews
 
-    return PreviewHelper()
-        .environmentObject(store)
-        .environmentObject(errorController)
+#Preview("DocumentDetailsView") {
+    PreviewHelper()
 }
