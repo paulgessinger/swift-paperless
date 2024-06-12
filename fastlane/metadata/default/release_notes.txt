@@ -1,3 +1,8 @@
+- Fixed a bug when decoding dates from the API in certain locale configurations
+
+
+Previous updates:
+
 Features
 
 - Improved used feedback for ASNs in document creation and editing.
