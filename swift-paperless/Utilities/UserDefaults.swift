@@ -16,6 +16,7 @@ private nonisolated(unsafe)
 let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
 
 extension UserDefaults {
+    @MainActor
     static let group = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!
 
     func load<Value>(_: Value.Type, key: String, storage: UserDefaults = .standard) throws -> Value? where Value: Decodable {

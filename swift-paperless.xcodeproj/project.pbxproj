@@ -1789,10 +1789,10 @@
 		};
 		7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			repositoryURL = "https://github.com/paulgessinger/swift-markdown-ui";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
+				branch = "circular-reference-path";
+				kind = branch;
 			};
 		};
 		7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
