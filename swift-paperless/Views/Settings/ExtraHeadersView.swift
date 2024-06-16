@@ -29,7 +29,7 @@ struct ExtraHeadersView: View {
                         .clearable($header.key)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
-                        .onChange(of: header.key) { value in
+                        .onChange(of: header.key) { _, value in
                             header.key = value.replacingOccurrences(of: " ", with: "")
                         }
                 }

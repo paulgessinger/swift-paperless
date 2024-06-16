@@ -357,11 +357,12 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
 private struct DetailView: View {
     var document: Document
 
+    @EnvironmentObject private var store: DocumentStore
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            DocumentDetailView(document: document)
+            DocumentDetailView(store: store, document: document)
                 .navigationBarTitleDisplayMode(.inline)
 
                 .toolbar {
@@ -472,8 +473,7 @@ struct TypeAsnView: View {
         .padding()
         .onAppear { focused = true }
 
-        .onChange(of: debounce.debouncedText) { _ in
-
+        .onChange(of: debounce.debouncedText) {
             guard !debounce.text.isEmpty else {
                 withAnimation { status = .none }
                 return

@@ -69,7 +69,7 @@ struct ConnectionsView: View {
                     Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
                 }
 
-                .onChange(of: extraHeaders) { _ in
+                .onChange(of: extraHeaders) {
                     Logger.shared.trace("Extra header manipulated in ConnectionsView")
                     connectionManager.setExtraHeaders(extraHeaders)
                 }

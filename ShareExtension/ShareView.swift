@@ -139,11 +139,11 @@ struct ShareView: View {
             }
         }
 
-        .onChange(of: attachmentManager.importUrls) { _ in
+        .onChange(of: attachmentManager.importUrls) {
             totalInputs = max(attachmentManager.importUrls.count, totalInputs)
         }
 
-        .onChange(of: connectionManager.activeConnectionId) { _ in refreshConnection() }
-        .onChange(of: connectionManager.connections) { _ in refreshConnection() }
+        .onChange(of: connectionManager.activeConnectionId) { refreshConnection() }
+        .onChange(of: connectionManager.connections) { refreshConnection() }
     }
 }

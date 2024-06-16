@@ -1,5 +1,5 @@
 //
-//  DocumentDetailView.swift
+//  DocumentDetailViewV1.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 22.02.23.
@@ -147,9 +147,8 @@ private extension Aspect where Content == Text {
     }
 }
 
-struct DocumentDetailView: View {
-    @EnvironmentObject private var store: DocumentStore
-
+struct DocumentDetailViewV1: View {
+    @ObservedObject private var store: DocumentStore
     @State var document: Document
     var navPath: Binding<NavigationPath>?
 
@@ -163,6 +162,15 @@ struct DocumentDetailView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var errorController: ErrorController
+
+    init(store: DocumentStore,
+         document: Document,
+         navPath: Binding<NavigationPath>? = nil)
+    {
+        self.store = store
+        self.document = document
+        self.navPath = navPath
+    }
 
     var gray: Color {
         if colorScheme == .dark {
@@ -271,7 +279,7 @@ struct DocumentDetailView: View {
 
         .navigationBarTitleDisplayMode(.inline)
 
-        .onChange(of: store.documents) { _ in
+        .onChange(of: store.documents) {
             if let document = store.documents[document.id] {
                 self.document = document
             }
@@ -299,7 +307,7 @@ private struct PreviewHelper: View {
         NavigationStack {
             VStack {
                 if let document {
-                    DocumentDetailView(document: document, navPath: $navPath)
+                    DocumentDetailViewV1(store: store, document: document, navPath: $navPath)
                 }
             }
             .task {

@@ -160,6 +160,7 @@ struct SettingsView: View {
                 } label: {
                     Text(.settings.debugResetAppVersion)
                 }
+                DocumentDetailViewVersionSelection()
             }
         }
         .navigationTitle(String(localized: .settings.debugMenu))
@@ -210,7 +211,7 @@ struct SettingsView: View {
                 .errorOverlay(errorController: errorController, offset: 15)
         }
 
-        .onChange(of: feedbackLogs) { _ in
+        .onChange(of: feedbackLogs) {
             showMailSheet = true
         }
 

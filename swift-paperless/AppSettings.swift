@@ -15,6 +15,8 @@ enum SettingsKeys: String {
     case defaultSearchMode
     case defaultSortField
     case defaultSortOrder
+
+    case editingUserInterfaceExperiment
 }
 
 @MainActor
@@ -73,6 +75,13 @@ class AppSettings: ObservableObject {
 
     @PublishedUserDefaultsBacked(.defaultSortOrder)
     var defaultSortOrder = SortOrder.descending
+
+    enum EditingUserInterface: Codable, CaseIterable {
+        case automatic, v1, v2
+    }
+
+    @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
+    var editingUserInterface: EditingUserInterface = .automatic
 
     struct Version: CustomStringConvertible, Codable, Equatable {
         private let releaseStored: [UInt]

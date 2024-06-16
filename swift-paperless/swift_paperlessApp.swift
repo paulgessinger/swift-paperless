@@ -105,10 +105,10 @@ struct MainView: View {
             }
         }
 
-        .onChange(of: manager.activeConnectionId) { _ in refreshConnection() }
-        .onChange(of: manager.connections) { _ in refreshConnection() }
+        .onChange(of: manager.activeConnectionId) { refreshConnection() }
+        .onChange(of: manager.connections) { refreshConnection() }
 
-        .onChange(of: scenePhase) { value in
+        .onChange(of: scenePhase) { _, value in
             switch value {
             case .inactive:
                 Logger.shared.notice("App becomes inactive")

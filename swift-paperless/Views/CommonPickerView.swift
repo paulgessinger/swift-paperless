@@ -153,7 +153,7 @@ struct CommonPicker: View {
 
         .navigationBarTitleDisplayMode(.inline)
 
-        .onChange(of: mode) { newValue in
+        .onChange(of: mode) { _, newValue in
             switch newValue {
             case .anyOf:
                 switch selection {
@@ -192,6 +192,8 @@ protocol Pickable {
     static var pluralLabel: String { get }
     static var excludeLabel: String { get }
 
+    static var icon: String { get }
+
     var id: UInt { get }
     var name: String { get }
 }
@@ -209,6 +211,8 @@ extension Correspondent: Pickable {
     static let singularLabel = String(localized: .localizable.correspondent)
     static let pluralLabel = String(localized: .localizable.correspondents)
     static let excludeLabel = String(localized: .localizable.correspondentExclude)
+
+    static let icon: String = "person.fill"
 }
 
 extension DocumentType: Pickable {
@@ -224,6 +228,8 @@ extension DocumentType: Pickable {
     static let singularLabel = String(localized: .localizable.documentType)
     static let pluralLabel = String(localized: .localizable.documentTypes)
     static let excludeLabel = String(localized: .localizable.documentTypeExclude)
+
+    static let icon: String = "doc.fill"
 }
 
 extension StoragePath: Pickable {
@@ -239,6 +245,8 @@ extension StoragePath: Pickable {
     static let singularLabel = String(localized: .localizable.storagePath)
     static let pluralLabel = String(localized: .localizable.storagePaths)
     static let excludeLabel = String(localized: .localizable.storagePathExclude)
+
+    static let icon: String = "archivebox.fill"
 }
 
 struct CommonPickerEdit<Manager, D>: View
@@ -345,7 +353,7 @@ struct CommonPickerEdit<Manager, D>: View
             )
         }
 
-        .onChange(of: searchDebounce.debouncedText) { value in
+        .onChange(of: searchDebounce.debouncedText) { _, value in
             withAnimation {
                 showNone = value.isEmpty
             }

@@ -428,7 +428,7 @@ struct FilterBar: View {
                     }
                 }
 
-                .onChange(of: offset) { _ in
+                .onChange(of: offset) {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         withAnimation {
                             menuWidth = offset.width
@@ -651,11 +651,11 @@ struct FilterBar: View {
             }
         }
 
-        .onChange(of: filterState.sortOrder) { value in
+        .onChange(of: filterState.sortOrder) { _, value in
             filterModel.filterState.sortOrder = value
         }
 
-        .onChange(of: filterState.sortField) { value in
+        .onChange(of: filterState.sortField) { _, value in
             filterModel.filterState.sortField = value
         }
 

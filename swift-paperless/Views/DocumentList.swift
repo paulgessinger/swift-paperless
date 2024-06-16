@@ -228,7 +228,7 @@ struct DocumentList: View {
             }
         }
 
-        .onChange(of: filterModel.filterState) { filter in
+        .onChange(of: filterModel.filterState) { _, filter in
             Task {
                 if let documents = try? await viewModel.refresh(filter: filter) {
                     viewModel.replace(documents: documents)
