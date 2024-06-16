@@ -35,7 +35,7 @@ private struct Box<Content: View, ID: Hashable>: View {
     }
 }
 
-private struct IconBox<ID: Hashable>: View {
+private struct IconBox<Content: View, ID: Hashable>: View {
     @Environment(DocumentDetailModel.self) private var viewModel
     @EnvironmentObject private var store: DocumentStore
 
@@ -44,20 +44,20 @@ private struct IconBox<ID: Hashable>: View {
     let iconId: ID
     let icon: String
     let color: Color
-    let label: String
+    @ViewBuilder let content: () -> Content
 
     var body: some View {
         Box(animation: animation, id: id, color: color) {
             HStack {
-                Label(label, systemImage: icon)
-                    .labelStyle(.iconOnly)
-                    .font(.title3)
-                    .matchedGeometryEffect(id: iconId, in: animation, isSource: true)
-                Text(label)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .multilineTextAlignment(.trailing)
-//                Label("Edit", systemImage: "pencil.circle.fill")
-//                    .labelStyle(.iconOnly)
+                Label {
+                    content()
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .multilineTextAlignment(.trailing)
+                } icon: {
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .matchedGeometryEffect(id: iconId, in: animation, isSource: true)
+                }
             }
         }
     }
@@ -96,7 +96,7 @@ private struct CommonBox<Element>: View where Element: Pickable {
             iconId: "EditIcon\(Element.self)",
             icon: Element.icon,
             color: editMode.color,
-            label: label
+            content: { Text(label) }
         )
         .onTapGesture {
             viewModel.startEditing(editMode)
@@ -106,8 +106,6 @@ private struct CommonBox<Element>: View where Element: Pickable {
 }
 
 struct DocumentDetailViewV2: View {
-//
-
     @ObservedObject var store: DocumentStore
     var navPath: Binding<NavigationPath>?
 
@@ -187,12 +185,12 @@ struct DocumentDetailViewV2: View {
                         .datePickerStyle(.graphical)
                         .padding(.horizontal)
                         .opacity(showInterface ? 1 : 0)
-                        .id(date)
+                        .frame(width: min(320, UIScreen.main.bounds.size.width))
                 }
                 .animation(.default.delay(showInterface ? 0.15 : 0), value: showInterface)
 
                 .task {
-                    try? await Task.sleep(for: .seconds(0.15))
+                    try? await Task.sleep(for: .seconds(0.10))
                     showInterface = true
                 }
 
@@ -205,7 +203,6 @@ struct DocumentDetailViewV2: View {
                 }
             }
             .safeAreaInset(edge: .top) {
-//                VStack {
                 PickerHeader(color: .paletteBlue,
                              showInterface: $showInterface,
                              animation: animation,
@@ -229,10 +226,12 @@ struct DocumentDetailViewV2: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-//                }
             }
         }
     }
+
+    @State private var asnText: String = ""
+    @FocusState private var asnFocused: Bool
 
     var body: some View {
         Group {
@@ -252,35 +251,43 @@ struct DocumentDetailViewV2: View {
                                 CommonBox(StoragePath.self, animation: animation)
 
                                 IconBox(animation: animation,
+                                        id: "EditAsn",
+                                        iconId: "EditAsnIcon",
+                                        icon: "qrcode",
+                                        color: .gray,
+                                        content: {
+                                            HStack {
+                                                TextField(String(localized: .localizable(.asn)),
+                                                          text: $asnText, prompt: Text(String("")))
+                                                    .focused($asnFocused)
+                                                    .keyboardType(.numberPad)
+                                                    .overlay(alignment: .trailing) {
+                                                        VStack {
+                                                            if asnText.isEmpty, !asnFocused {
+                                                                Text("      ")
+                                                                    .redacted(reason: .placeholder)
+                                                                    .allowsHitTesting(false)
+                                                            }
+                                                        }
+                                                        .animation(.default, value: asnText)
+                                                        .animation(.default, value: asnFocused)
+                                                    }
+
+                                                Label("Save", systemImage: "checkmark.circle.fill")
+                                                    .labelStyle(.iconOnly)
+                                            }
+                                        })
+
+                                IconBox(animation: animation,
                                         id: "EditCreated",
                                         iconId: "EditCreatedIcon",
                                         icon: "calendar",
                                         color: .paletteBlue,
-                                        label: DocumentCell.dateFormatter.string(from: viewModel.document.created))
+                                        content: { Text(DocumentCell.dateFormatter.string(from: viewModel.document.created)) })
                                     .onTapGesture {
                                         viewModel.startEditing(.created)
                                     }
                                     .zIndex(viewModel.zIndexActive == .created ? 1 : 0)
-
-//                                DatePicker(selection: $viewModel.document.created.animation(.default),
-//                                           displayedComponents: .date) {
-                                ////                                    Text("HI")
-//                                }
-//                                           .labelsHidden()
-//                                           .datePickerStyle(.graphical)
-
-//                                Box(animation: animation, id: "EditCreated", color: .paletteBlue) {
-//                                    HStack {
-//                                        Label(localized: .localizable(.documentEditCreatedDateLabel), systemImage: "calendar")
-//                                            .labelStyle(.iconOnly)
-//                                            .font(.title3)
-//
-//                                        Text(DocumentCell.dateFormatter.string(from: viewModel.document.created))
-//                                    }
-//                                }
-
-                                Text("Other")
-                                Text("Stuff")
                             }
                         }
                         .padding()
@@ -375,8 +382,6 @@ private struct PreviewHelper: View {
         }
     }
 }
-
-// MARK: - Previews
 
 #Preview("DocumentDetailsView") {
     PreviewHelper()
