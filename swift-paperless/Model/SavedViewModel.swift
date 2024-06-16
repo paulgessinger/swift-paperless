@@ -49,7 +49,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
         hasher.combine(id)
     }
 
-    static var localizedName: String { String(localized: .localizable.savedView) }
+    static var localizedName: String { String(localized: .localizable(.savedView)) }
 }
 
 struct ProtoSavedView: Codable, SavedViewProtocol {

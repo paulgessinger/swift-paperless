@@ -55,9 +55,9 @@ struct ShareView: View {
     private var createTitle: String {
         let remaining = totalInputs - attachmentManager.importUrls.count + 1
         if totalInputs == 1 {
-            return String(localized: .localizable.documentAdd)
+            return String(localized: .localizable(.documentAdd))
         } else {
-            return "\(String(localized: .localizable.documentAdd)) (\(remaining) / \(totalInputs))"
+            return "\(String(localized: .localizable(.documentAdd))) (\(remaining) / \(totalInputs))"
         }
     }
 
@@ -65,13 +65,13 @@ struct ShareView: View {
 
     func errorView(_: AttachmentError) -> some View {
         VStack {
-            Text(.localizable.shareSheetInvalidAttachmentTitle)
+            Text(.localizable(.shareSheetInvalidAttachmentTitle))
                 .font(.title)
                 .padding()
             Text("🫣")
                 .font(.system(size: emojiScale))
 
-            Text(.localizable.shareSheetInvalidAttachmentDetail)
+            Text(.localizable(.shareSheetInvalidAttachmentDetail))
                 .multilineTextAlignment(.center)
                 .padding(.top)
 

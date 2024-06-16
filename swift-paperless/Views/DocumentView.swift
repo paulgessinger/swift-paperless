@@ -94,14 +94,14 @@ struct DocumentView: View {
     private var savedViewNavigationTitle: String {
         guard let id = filterModel.filterState.savedView else {
             // No saved view active
-            return String(localized: .localizable.documents)
+            return String(localized: .localizable(.documents))
         }
         guard let savedView = store.savedViews[id] else {
             // Not necessarily an error, might be still loading
-            return String(localized: .localizable.documents)
+            return String(localized: .localizable(.documents))
         }
         if filterModel.filterState.modified {
-            return String(localized: .localizable.savedViewModified(savedView.name))
+            return String(localized: .localizable(.savedViewModified(savedView.name)))
         } else {
             return savedView.name
         }
@@ -109,9 +109,9 @@ struct DocumentView: View {
 
     private var createDocumentTitle: String {
         if importModel.totalUrls > 1 {
-            return "\(String(localized: .localizable.documentAdd)) (\(importModel.remaining) / \(importModel.totalUrls))"
+            return "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
         } else {
-            return String(localized: .localizable.documentAdd)
+            return String(localized: .localizable(.documentAdd))
         }
     }
 
@@ -120,27 +120,27 @@ struct DocumentView: View {
         ToolbarItemGroup(placement: .navigationBarTrailing) {
             TaskActivityToolbar(navState: $taskViewNavState)
 
-            Label(String(localized: .localizable.add), systemImage: "plus")
+            Label(String(localized: .localizable(.add)), systemImage: "plus")
                 .overlay {
                     Menu {
                         if isDocumentScannerAvailable {
                             Button {
                                 showDocumentScanner = true
                             } label: {
-                                Label(String(localized: .localizable.scanDocument), systemImage: "doc.viewfinder")
+                                Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
                             }
                         }
 
                         Button {
                             showFileImporter = true
                         } label: {
-                            Label(String(localized: .localizable.importDocument), systemImage: "folder.badge.plus")
+                            Label(String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
                         }
 
                         Button {
                             showPhotosPicker = true
                         } label: {
-                            Label(String(localized: .localizable.importPhotos), systemImage: "photo")
+                            Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
                         }
                     } label: {}
                 }
@@ -176,11 +176,11 @@ struct DocumentView: View {
                 Button(role: .destructive) {
                     logoutRequested = true
                 } label: {
-                    Label(String(localized: .localizable.logout), systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
                 }
 
             } label: {
-                Label(String(localized: .localizable.detailsMenuLabel), systemImage: "ellipsis.circle")
+                Label(String(localized: .localizable(.detailsMenuLabel)), systemImage: "ellipsis.circle")
                     .labelStyle(.iconOnly)
             }
 
@@ -191,7 +191,7 @@ struct DocumentView: View {
                         showDataScanner = true
                     }
                 } label: {
-                    Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
+                    Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
                 }
             } else {
                 Button {
@@ -199,7 +199,7 @@ struct DocumentView: View {
                         showTypeAsn.toggle()
                     }
                 } label: {
-                    Label(String(localized: .localizable.toolbarAsnButton), systemImage: "number.circle")
+                    Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
                 }
             }
         }
@@ -257,7 +257,7 @@ struct DocumentView: View {
                                 filterModel.filterState.clear()
                             }
                         } label: {
-                            Text(.localizable.allDocuments)
+                            Text(.localizable(.allDocuments))
                         }
                         Divider()
                         ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
@@ -351,11 +351,11 @@ struct DocumentView: View {
 
                 .sheet(item: $taskViewNavState, content: tasksSheet)
 
-                .confirmationDialog(String(localized: .localizable.confirmationPromptTitle), isPresented: $logoutRequested, titleVisibility: .visible) {
-                    Button(String(localized: .localizable.logout), role: .destructive) {
+                .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
+                    Button(String(localized: .localizable(.logout)), role: .destructive) {
                         connectionManager.logout()
                     }
-                    Button(String(localized: .localizable.cancel), role: .cancel) {}
+                    Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                 }
 
                 .task {

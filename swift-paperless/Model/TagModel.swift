@@ -114,5 +114,5 @@ struct Tag:
         hasher.combine(id)
     }
 
-    static var localizedName: String { String(localized: .localizable.tag) }
+    static var localizedName: String { String(localized: .localizable(.tag)) }
 }

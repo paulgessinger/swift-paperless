@@ -22,7 +22,7 @@ struct PrivacyView: View {
         }
         .overlay {
             if text == nil {
-                ProgressView(String(localized: .localizable.loading))
+                ProgressView(String(localized: .localizable(.loading)))
             }
         }
         .navigationTitle(title)

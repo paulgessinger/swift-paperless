@@ -22,11 +22,11 @@ struct ResourceForbidden<Resource: Model>: DisplayableError {
     let response: String
 
     var message: String {
-        String(localized: .localizable.apiForbiddenErrorMessage(Resource.localizedName))
+        String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
     }
 
     var details: String? {
-        String(localized: .localizable.apiForbiddenDetails(Resource.localizedName, response))
+        String(localized: .localizable(.apiForbiddenDetails(Resource.localizedName, response)))
     }
 
     var documentationLink: URL? { DocumentationLinks.forbidden }

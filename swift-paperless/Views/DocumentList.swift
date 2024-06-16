@@ -81,7 +81,7 @@ struct DocumentList: View {
                     Button {
                         Task { await viewModel.removeInboxTags(document: document) }
                     } label: {
-                        Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
+                        Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
                     }
                     .tint(.accentColor)
                 }
@@ -90,7 +90,7 @@ struct DocumentList: View {
                     Button(role: documentDeleteConfirmation ? .none : .destructive) {
                         onDeleteButtonPressed()
                     } label: {
-                        Label(String(localized: .localizable.delete), systemImage: "trash")
+                        Label(String(localized: .localizable(.delete)), systemImage: "trash")
                     }
                     .tint(.red)
                 }
@@ -99,19 +99,19 @@ struct DocumentList: View {
                     Button {
                         navPath.append(NavigationState.detail(document: document))
                     } label: {
-                        Label(String(localized: .localizable.edit), systemImage: "pencil")
+                        Label(String(localized: .localizable(.edit)), systemImage: "pencil")
                     }
 
                     Button {
                         Task { await viewModel.removeInboxTags(document: document) }
                     } label: {
-                        Label(String(localized: .localizable.tagsRemoveInbox), systemImage: "tray")
+                        Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
                     }
 
                     Button(role: .destructive) {
                         onDeleteButtonPressed()
                     } label: {
-                        Label(String(localized: .localizable.delete), systemImage: "trash")
+                        Label(String(localized: .localizable(.delete)), systemImage: "trash")
                     }
 
                 } preview: {
@@ -132,10 +132,10 @@ struct DocumentList: View {
         var body: some View {
             if #available(iOS 17.0, macOS 14.0, *) {
                 ContentUnavailableView {
-                    Label(String(localized: .localizable.noDocuments), systemImage: "tray.fill")
+                    Label(String(localized: .localizable(.noDocuments)), systemImage: "tray.fill")
                 } description: {
                     if filtering {
-                        Text(.localizable.noDocumentsDescriptionFilter)
+                        Text(.localizable(.noDocumentsDescriptionFilter))
                     }
                 }
             } else {
@@ -145,11 +145,11 @@ struct DocumentList: View {
                         .scaledToFit()
                         .foregroundStyle(.gray)
                         .frame(width: 75)
-                    Text(.localizable.noDocuments)
+                    Text(.localizable(.noDocuments))
                         .font(.title2)
                         .bold()
                     if filtering {
-                        Text(.localizable.noDocumentsDescriptionFilter)
+                        Text(.localizable(.noDocumentsDescriptionFilter))
                             .font(.callout)
                     }
                 }
@@ -255,21 +255,21 @@ struct DocumentList: View {
 
         // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
         .confirmationDialog(unwrapping: $documentToDelete,
-                            title: { _ in String(localized: .localizable.documentDelete) },
+                            title: { _ in String(localized: .localizable(.documentDelete)) },
                             actions: { $item in
                                 let document = item
                                 Button(role: .destructive) {
                                     Task {
                                         try? await store.deleteDocument(document)
                                     }
-                                } label: { Text(.localizable.documentDelete) }
+                                } label: { Text(.localizable(.documentDelete)) }
                                 Button(role: .cancel) {
                                     documentToDelete = nil
-                                } label: { Text(.localizable.cancel) }
+                                } label: { Text(.localizable(.cancel)) }
                             },
                             message: { $item in
                                 let document = item
-                                Text(.localizable.deleteDocumentName(document.title))
+                                Text(.localizable(.deleteDocumentName(document.title)))
                             })
     }
 }

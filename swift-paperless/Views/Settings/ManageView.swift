@@ -125,7 +125,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         VStack {
             if elements.isEmpty {
                 Divider()
-                Text(.localizable.noElementsFound)
+                Text(.localizable(.noElementsFound))
                     .multilineTextAlignment(.center)
                 Spacer()
             } else {
@@ -159,7 +159,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     NavigationLink {
                         Create(model: model)
                     } label: {
-                        Label(String(localized: .localizable.add), systemImage: "plus")
+                        Label(String(localized: .localizable(.add)), systemImage: "plus")
                     }
 
                     EditButton()
@@ -168,9 +168,9 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
         .confirmationDialog(unwrapping: $elementToDelete,
-                            title: { _ in String(localized: .localizable.delete) },
+                            title: { _ in String(localized: .localizable(.delete)) },
                             actions: { $item in
-                                Button(String(localized: .localizable.delete), role: .destructive) {
+                                Button(String(localized: .localizable(.delete)), role: .destructive) {
                                     withAnimation {
                                         elements.removeAll(where: { $0 == item })
                                     }
@@ -186,7 +186,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                                         }
                                     }
                                 }
-                                Button(String(localized: .localizable.cancel), role: .cancel) {
+                                Button(String(localized: .localizable(.cancel)), role: .cancel) {
                                     withAnimation {
                                         elements = model.load()
                                     }

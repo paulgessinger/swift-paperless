@@ -14,14 +14,14 @@ enum DocumentCreateError: DisplayableError {
     var message: String {
         switch self {
         case .tooLarge:
-            return String(localized: .localizable.documentCreateFailedTooLarge)
+            return String(localized: .localizable(.documentCreateFailedTooLarge))
         }
     }
 
     var details: String? {
         switch self {
         case .tooLarge:
-            return String(localized: .localizable.documentCreateFailedTooLargeDetails)
+            return String(localized: .localizable(.documentCreateFailedTooLargeDetails))
         }
     }
 }

@@ -18,37 +18,37 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     {
         _savedView = State(initialValue: savedView)
         self.onSave = onSave
-        saveLabel = String(localized: .localizable.save)
+        saveLabel = String(localized: .localizable(.save))
     }
 
     var body: some View {
         Form {
-            Section(String(localized: .localizable.properties)) {
-                TextField(String(localized: .localizable.title), text: $savedView.name)
+            Section(String(localized: .localizable(.properties))) {
+                TextField(String(localized: .localizable(.title)), text: $savedView.name)
                     .clearable($savedView.name)
 
-                Toggle(String(localized: .localizable.savedViewShowOnDashboard), isOn: $savedView.showOnDashboard)
+                Toggle(String(localized: .localizable(.savedViewShowOnDashboard)), isOn: $savedView.showOnDashboard)
 
-                Toggle(String(localized: .localizable.savedViewShowInSidebar), isOn: $savedView.showInSidebar)
+                Toggle(String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar)
             }
 
-            Section(String(localized: .localizable.sorting)) {
-                Picker(String(localized: .localizable.sortBy), selection: $savedView.sortField) {
+            Section(String(localized: .localizable(.sorting))) {
+                Picker(String(localized: .localizable(.sortBy)), selection: $savedView.sortField) {
                     ForEach(SortField.allCases, id: \.rawValue) { v in
                         Text(v.localizedName).tag(v)
                     }
                 }
 
-                Picker(String(localized: .localizable.sortOrder), selection: $savedView.sortOrder) {
-                    Text(.localizable.ascending).tag(SortOrder.ascending)
-                    Text(.localizable.descending).tag(SortOrder.descending)
+                Picker(String(localized: .localizable(.sortOrder)), selection: $savedView.sortOrder) {
+                    Text(.localizable(.ascending)).tag(SortOrder.ascending)
+                    Text(.localizable(.descending)).tag(SortOrder.descending)
                 }
             }
         }
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(String(localized: .localizable.save)) {
+                Button(String(localized: .localizable(.save))) {
                     do {
                         try onSave(savedView)
                     } catch {
@@ -60,7 +60,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
             }
         }
 
-        .navigationTitle(Element.self is SavedView.Type ? Text(.localizable.savedViewEditTitle) : Text(.localizable.savedViewCreateTitle))
+        .navigationTitle(Element.self is SavedView.Type ? Text(.localizable(.savedViewEditTitle)) : Text(.localizable(.savedViewCreateTitle)))
 
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -69,7 +69,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 extension SavedViewEditView where Element == ProtoSavedView {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoSavedView(), onSave: onSave)
-        saveLabel = String(localized: .localizable.add)
+        saveLabel = String(localized: .localizable(.add))
     }
 }
 

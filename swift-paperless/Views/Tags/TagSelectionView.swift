@@ -41,7 +41,7 @@ struct TagFilterView: View {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label(String(localized: .localizable.tagIsSelected), systemImage: "checkmark")
+                Label(String(localized: .localizable(.tagIsSelected)), systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -130,13 +130,13 @@ struct TagFilterView: View {
                     row(action: {
                         Task { withAnimation { selectedTags = .any }}
                     }, active: selectedTags == .any, content: {
-                        Text(.localizable.tagsFilterAny)
+                        Text(.localizable(.tagsFilterAny))
                     })
 
                     row(action: {
                         Task { withAnimation { selectedTags = .notAssigned }}
                     }, active: selectedTags == .notAssigned, content: {
-                        Text(.localizable.tagsNotAssignedPicker)
+                        Text(.localizable(.tagsNotAssignedPicker))
                     })
                 }
 
@@ -154,7 +154,7 @@ struct TagFilterView: View {
                             Spacer()
 
                             VStack {
-                                let empty = Label(String(localized: .localizable.tagIsNotSelected), systemImage: "circle")
+                                let empty = Label(String(localized: .localizable(.tagIsNotSelected)), systemImage: "circle")
                                     .labelStyle(.iconOnly)
                                 switch selectedTags {
                                 case .any:
@@ -163,17 +163,17 @@ struct TagFilterView: View {
                                     empty
                                 case let .allOf(include, exclude):
                                     if include.contains(tag.id) {
-                                        Label(String(localized: .localizable.tagIncluded), systemImage: "checkmark.circle")
+                                        Label(String(localized: .localizable(.tagIncluded)), systemImage: "checkmark.circle")
                                             .labelStyle(.iconOnly)
                                     } else if exclude.contains(tag.id) {
-                                        Label(String(localized: .localizable.tagExcluded), systemImage: "xmark.circle")
+                                        Label(String(localized: .localizable(.tagExcluded)), systemImage: "xmark.circle")
                                             .labelStyle(.iconOnly)
                                     } else {
                                         empty
                                     }
                                 case let .anyOf(ids):
                                     if ids.contains(tag.id) {
-                                        Label(String(localized: .localizable.tagIsSelected), systemImage: "checkmark.circle")
+                                        Label(String(localized: .localizable(.tagIsSelected)), systemImage: "checkmark.circle")
                                             .labelStyle(.iconOnly)
                                     } else {
                                         empty
@@ -186,8 +186,8 @@ struct TagFilterView: View {
                     }
                 } header: {
                     Picker("Tag filter mode", selection: $mode) {
-                        Text(.localizable.tagsAll).tag(Mode.all)
-                        Text(.localizable.tagsAny).tag(Mode.any)
+                        Text(.localizable(.tagsAll)).tag(Mode.all)
+                        Text(.localizable(.tagsAny)).tag(Mode.any)
                     }
                     .textCase(.none)
                     .padding(.bottom, 10)
@@ -285,7 +285,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                 .foregroundColor(.primary)
             Spacer()
             if active {
-                Label(String(localized: .localizable.tagIsSelected), systemImage: "checkmark")
+                Label(String(localized: .localizable(.tagIsSelected)), systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
         }
@@ -327,14 +327,14 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                                         view.redacted(reason: .placeholder)
                                     }
                                     Spacer()
-                                    Label(String(localized: .localizable.remove), systemImage: "xmark.circle.fill")
+                                    Label(String(localized: .localizable(.remove)), systemImage: "xmark.circle.fill")
                                         .labelStyle(.iconOnly)
                                         .foregroundColor(.gray)
                                 }
                             }
                         }
                     } header: {
-                        Text(.localizable.selected)
+                        Text(.localizable(.selected))
                     }
                 }
 
@@ -352,7 +352,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                             HStack {
                                 TagView(tag: tag)
                                 Spacer()
-                                Label(String(localized: .localizable.tagAdd), systemImage: "plus.circle")
+                                Label(String(localized: .localizable(.tagAdd)), systemImage: "plus.circle")
                                     .labelStyle(.iconOnly)
                                     .foregroundColor(.accentColor)
                             }
@@ -368,14 +368,14 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             )
         }
 
-        .navigationTitle(Text(.localizable.tags))
+        .navigationTitle(Text(.localizable(.tags)))
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink {
                     CreateTag(document: $document)
                 } label: {
-                    Label(String(localized: .localizable.tagAdd), systemImage: "plus")
+                    Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
                 }
             }
         }

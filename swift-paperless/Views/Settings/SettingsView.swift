@@ -33,42 +33,42 @@ struct SettingsView: View {
         Section(String(localized: .settings.organization)) {
             NavigationLink {
                 ManageView<TagManager>(store: store)
-                    .navigationTitle(Text(.localizable.tags))
+                    .navigationTitle(Text(.localizable(.tags)))
                     .task { await checked(store.fetchAllTags) }
             } label: {
-                Label(String(localized: .localizable.tags), systemImage: "tag.fill")
+                Label(String(localized: .localizable(.tags)), systemImage: "tag.fill")
             }
 
             NavigationLink {
                 ManageView<CorrespondentManager>(store: store)
-                    .navigationTitle(Text(.localizable.correspondents))
+                    .navigationTitle(Text(.localizable(.correspondents)))
                     .task { await checked(store.fetchAllCorrespondents) }
             } label: {
-                Label(String(localized: .localizable.correspondents), systemImage: "person.fill")
+                Label(String(localized: .localizable(.correspondents)), systemImage: "person.fill")
             }
 
             NavigationLink {
                 ManageView<DocumentTypeManager>(store: store)
-                    .navigationTitle(Text(.localizable.documentTypes))
+                    .navigationTitle(Text(.localizable(.documentTypes)))
                     .task { await checked(store.fetchAllDocumentTypes) }
             } label: {
-                Label(String(localized: .localizable.documentTypes), systemImage: "doc.fill")
+                Label(String(localized: .localizable(.documentTypes)), systemImage: "doc.fill")
             }
 
             NavigationLink {
                 ManageView<SavedViewManager>(store: store)
-                    .navigationTitle(Text(.localizable.savedViews))
+                    .navigationTitle(Text(.localizable(.savedViews)))
                     .task { await checked(store.fetchAllDocumentTypes) }
             } label: {
-                Label(String(localized: .localizable.savedViews), systemImage: "line.3.horizontal.decrease.circle.fill")
+                Label(String(localized: .localizable(.savedViews)), systemImage: "line.3.horizontal.decrease.circle.fill")
             }
 
             NavigationLink {
                 ManageView<StoragePathManager>(store: store)
-                    .navigationTitle(Text(.localizable.storagePaths))
+                    .navigationTitle(Text(.localizable(.storagePaths)))
                     .task { await checked(store.fetchAllStoragePaths) }
             } label: {
-                Label(String(localized: .localizable.storagePaths), systemImage: "archivebox.fill")
+                Label(String(localized: .localizable(.storagePaths)), systemImage: "archivebox.fill")
             }
         }
     }

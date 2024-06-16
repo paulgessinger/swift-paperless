@@ -18,7 +18,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     {
         _storagePath = State(initialValue: storagePath)
         self.onSave = onSave
-        saveLabel = String(localized: .localizable.save)
+        saveLabel = String(localized: .localizable(.save))
     }
 
     var isValid: Bool {
@@ -28,18 +28,18 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     var body: some View {
         Form {
             Section {
-                TextField(String(localized: .localizable.title), text: $storagePath.name)
+                TextField(String(localized: .localizable(.title)), text: $storagePath.name)
                     .clearable($storagePath.name)
 
-                TextField(String(localized: .localizable.path), text: $storagePath.path)
+                TextField(String(localized: .localizable(.path)), text: $storagePath.path)
                     .clearable($storagePath.path)
                     .autocorrectionDisabled(true)
                     .textInputAutocapitalization(.never)
 
             } header: {
-                Text(.localizable.properties)
+                Text(.localizable(.properties))
             } footer: {
-                Text(.localizable.storagePathFormatExplanation)
+                Text(.localizable(.storagePathFormatExplanation))
             }
 
             MatchEditView(element: $storagePath)
@@ -59,7 +59,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
             }
         }
 
-        .navigationTitle(Element.self is SavedView.Type ? String(localized: .localizable.storagePathEditTitle) : String(localized: .localizable.storagePathCreateTitle))
+        .navigationTitle(Element.self is SavedView.Type ? String(localized: .localizable(.storagePathEditTitle)) : String(localized: .localizable(.storagePathCreateTitle)))
 
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -68,7 +68,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 extension StoragePathEditView where Element == ProtoStoragePath {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(element: ProtoStoragePath(), onSave: onSave)
-        saveLabel = String(localized: .localizable.add)
+        saveLabel = String(localized: .localizable(.add))
     }
 }
 

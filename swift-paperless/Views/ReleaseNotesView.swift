@@ -13,7 +13,7 @@ import SwiftUI
 private struct ReleaseNotesError: LocalizedError {
     @MainActor
     init() {
-        errorDescription = String(localized: .localizable.releaseNotesLoadError(AppSettings.shared.currentAppVersion?.description ?? "(?)"))
+        errorDescription = String(localized: .localizable(.releaseNotesLoadError(AppSettings.shared.currentAppVersion?.description ?? "(?)")))
     }
 
     var errorDescription: String?
@@ -97,7 +97,7 @@ struct ReleaseNotesView: View {
             Button {
                 releaseNotesModel.showReleaseNotes = false
             } label: {
-                Text(.localizable.ok)
+                Text(.localizable(.ok))
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal)
                     .padding(.vertical, 10)

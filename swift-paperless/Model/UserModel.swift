@@ -17,5 +17,5 @@ struct User: Codable, Model, Identifiable, Equatable {
         case isSuperUser = "is_superuser"
     }
 
-    static var localizedName: String { String(localized: .localizable.user) }
+    static var localizedName: String { String(localized: .localizable(.user)) }
 }

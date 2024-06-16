@@ -61,7 +61,7 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
 
     var body: some View {
         HStack {
-            TextField(String(localized: .localizable.asn), text: $asn)
+            TextField(String(localized: .localizable(.asn)), text: $asn)
                 .keyboardType(.numberPad)
 
             if asn.isEmpty {
@@ -79,7 +79,7 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
                 if checking {
                     ProgressView()
                 } else {
-                    Label(String(localized: .localizable.documentDuplicateAsn), systemImage:
+                    Label(String(localized: .localizable(.documentDuplicateAsn)), systemImage:
                         "xmark.circle.fill")
                         .foregroundColor(.white)
                         .labelStyle(TightLabel())

@@ -90,7 +90,7 @@ struct HighlightView: View {
                 HStack(spacing: 10) {
                     ProgressView()
                     if let asn {
-                        Text(.localizable.asnSpecific(asn))
+                        Text(.localizable(.asnSpecific(asn)))
                             .fixedSize()
                     }
                 }
@@ -144,11 +144,11 @@ struct HighlightView: View {
                 .transition(.identity.combined(with: .opacity).animation(.default.delay(0.2)))
 
             case .noAsn:
-                Text(.localizable.dataScannerNoAsn(text))
+                Text(.localizable(.dataScannerNoAsn(text)))
                     .fixedSize()
                     .padding()
             case let .invalidAsn(asn):
-                Text(.localizable.dataScannerInvalidAsn(asn))
+                Text(.localizable(.dataScannerInvalidAsn(asn)))
                     .fixedSize()
                     .padding()
             case let .error(error):
@@ -430,7 +430,7 @@ struct TypeAsnView: View {
                     .padding(.bottom, 0)
             }
             HStack {
-                Text(.localizable.asnPlaceholder)
+                Text(.localizable(.asnPlaceholder))
                     .padding(.leading)
                     .padding(.vertical, 19)
                 TextField(String("1234"), text: $debounce.text)
@@ -445,7 +445,7 @@ struct TypeAsnView: View {
                     ProgressView()
                         .padding(20)
                 case let .valid(document):
-                    Button(String(localized: .localizable.open)) {
+                    Button(String(localized: .localizable(.open))) {
                         action(document)
                     }
                     .padding(10)
@@ -456,9 +456,9 @@ struct TypeAsnView: View {
                     )
                     .padding(10)
                 case let .notAnAsn(asn):
-                    errorLabel(String(localized: .localizable.dataScannerNoAsn(asn)))
+                    errorLabel(String(localized: .localizable(.dataScannerNoAsn(asn))))
                 case let .invalid(asn):
-                    errorLabel(String(localized: .localizable.dataScannerInvalidAsn(asn)))
+                    errorLabel(String(localized: .localizable(.dataScannerInvalidAsn(asn))))
                 case let .error(error):
                     errorLabel(error.localizedDescription)
                 }
@@ -534,7 +534,7 @@ struct DataScannerView: View {
                 Button(role: .cancel) {
                     dismiss()
                 } label: {
-                    Label(String(localized: .localizable.cancel), systemImage: "xmark")
+                    Label(String(localized: .localizable(.cancel)), systemImage: "xmark")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .padding(15)
@@ -560,7 +560,7 @@ struct DataScannerView: View {
                         }
                     }
                 } label: {
-                    Label(String(localized: .localizable.dataScannerTypeInAsn), systemImage: "keyboard")
+                    Label(String(localized: .localizable(.dataScannerTypeInAsn)), systemImage: "keyboard")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .padding(15)

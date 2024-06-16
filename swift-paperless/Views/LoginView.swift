@@ -374,7 +374,7 @@ struct LoginView: View {
 
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button(String(localized: .localizable.cancel)) {
+                            Button(String(localized: .localizable(.cancel))) {
                                 dismiss()
                             }
                         }

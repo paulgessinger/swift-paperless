@@ -167,7 +167,7 @@ struct TaskDetailView: View {
 
                             HStack {
                                 DocumentCell(document: document, store: store)
-                                Label(localized: .localizable.more, systemImage: "chevron.right")
+                                Label(localized: .localizable(.more), systemImage: "chevron.right")
                                     .labelStyle(.iconOnly)
                                     .foregroundColor(.gray)
                                     .font(.callout)
@@ -342,7 +342,7 @@ private struct TaskList: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 if editMode == .inactive {
-                    Button(String(localized: .localizable.back)) {
+                    Button(String(localized: .localizable(.back))) {
                         dismiss()
                     }
                 } else {
@@ -375,11 +375,11 @@ private struct TaskList: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 if editMode == .inactive {
-                    Button(String(localized: .localizable.select)) {
+                    Button(String(localized: .localizable(.select))) {
                         editMode = .active
                     }
                 } else {
-                    Button(String(localized: .localizable.done)) {
+                    Button(String(localized: .localizable(.done))) {
                         editMode = .inactive
                     }
                 }

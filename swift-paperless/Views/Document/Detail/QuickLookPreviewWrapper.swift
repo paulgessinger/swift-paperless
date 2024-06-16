@@ -18,13 +18,13 @@ struct DocumentDetailPreviewWrapper: View {
                     //                    FullDocumentPreview(url: thumb.file)
                     .toolbarBackground(.visible, for: .navigationBar)
                     .toolbarBackground(Color(white: 0.4, opacity: 0.0), for: .navigationBar)
-                    .navigationTitle(String(localized: .localizable.documentDetailPreviewTitle))
+                    .navigationTitle(String(localized: .localizable(.documentDetailPreviewTitle)))
                     .ignoresSafeArea(.container, edges: [.bottom])
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             ShareLink(item: thumb.file) {
-                                Label(localized: .localizable.share, systemImage: "square.and.arrow.up")
+                                Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
                             }
                         }
                     }

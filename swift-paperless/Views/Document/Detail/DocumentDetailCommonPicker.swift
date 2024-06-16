@@ -32,7 +32,7 @@ struct PickerHeader<Content: View, ID: Hashable>: View {
     }
 
     private var closeButton: some View {
-        Label(localized: .localizable.done, systemImage: "xmark")
+        Label(localized: .localizable(.done), systemImage: "xmark")
             .labelStyle(.iconOnly)
             .foregroundStyle(.white)
             .padding(10)
@@ -183,7 +183,7 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     HStack {
-                        Label(String(localized: .localizable.search), systemImage: "magnifyingglass")
+                        Label(String(localized: .localizable(.search)), systemImage: "magnifyingglass")
                             .labelStyle(.iconOnly)
                             .foregroundStyle(.white)
                             .padding(.trailing, -2)
@@ -219,7 +219,7 @@ struct DocumentDetailCommonPicker<Element: Pickable>: View {
                 Button {
                     searchFocus = false
                 } label: {
-                    Label(localized: .localizable.documentDetailPreviewTitle, systemImage: "keyboard.chevron.compact.down")
+                    Label(localized: .localizable(.documentDetailPreviewTitle), systemImage: "keyboard.chevron.compact.down")
                         .labelStyle(.titleAndIcon)
                 }
             }

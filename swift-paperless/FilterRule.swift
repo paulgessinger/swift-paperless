@@ -272,13 +272,13 @@ struct FilterState: Equatable, Codable, Sendable {
         var localizedName: String {
             switch self {
             case .title:
-                String(localized: .localizable.searchTitle)
+                String(localized: .localizable(.searchTitle))
             case .content:
-                String(localized: .localizable.searchContent)
+                String(localized: .localizable(.searchContent))
             case .titleContent:
-                String(localized: .localizable.searchTitleContent)
+                String(localized: .localizable(.searchTitleContent))
             case .advanced:
-                String(localized: .localizable.searchAdvanced)
+                String(localized: .localizable(.searchAdvanced))
             }
         }
     }

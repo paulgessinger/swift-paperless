@@ -34,7 +34,7 @@ struct DocumentType:
         case isInsensitive = "is_insensitive"
     }
 
-    static var localizedName: String { String(localized: .localizable.documentType) }
+    static var localizedName: String { String(localized: .localizable(.documentType)) }
 }
 
 struct ProtoDocumentType: Codable, Hashable, DocumentTypeProtocol {

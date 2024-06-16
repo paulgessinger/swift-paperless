@@ -61,7 +61,7 @@ struct PreferencesView: View {
                     Text(.settings.defaultSearchModeLabel)
                 }
             } header: {
-                Text(.localizable.filtering)
+                Text(.localizable(.filtering))
             } footer: {
                 Text(.settings.defaultSearchModeDescription)
             }

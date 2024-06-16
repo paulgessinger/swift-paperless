@@ -88,7 +88,7 @@ struct ConnectionsView: View {
                 } label: {
                     Image(systemName: "plus.circle").resizable()
                         .frame(width: plusIconSize, height: plusIconSize)
-                        .accessibilityLabel(Text(.localizable.add))
+                        .accessibilityLabel(Text(.localizable(.add)))
                 }
                 .buttonStyle(BorderlessButtonStyle())
             }

@@ -76,7 +76,7 @@ struct CreateDocumentView: View {
         _document = State(initialValue: ProtoDocument(title: url.deletingPathExtension().lastPathComponent))
         self.callback = callback
         self.share = share
-        self.title = title ?? String(localized: .localizable.documentAdd)
+        self.title = title ?? String(localized: .localizable(.documentAdd))
         thumbnailView = ThumbnailView(sourceUrl: sourceUrl)
     }
 
@@ -131,7 +131,7 @@ struct CreateDocumentView: View {
                     VStack(alignment: .leading) {
                         Text(document.title)
                             .font(.headline)
-                        Text(.localizable.pages(thumbnailView.pageCount))
+                        Text(.localizable(.pages(thumbnailView.pageCount)))
                             .font(.subheadline)
                     }
                     Spacer()
@@ -163,12 +163,12 @@ struct CreateDocumentView: View {
                     }
 
                     Section {
-                        TextField(String(localized: .localizable.documentEditTitleLabel), text: $document.title) {}
+                        TextField(String(localized: .localizable(.documentEditTitleLabel)), text: $document.title) {}
 
                         DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
                             .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
-                        DatePicker(String(localized: .localizable.documentEditCreatedDateLabel), selection: $document.created, displayedComponents: .date)
+                        DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)), selection: $document.created, displayedComponents: .date)
                     }
 
                     Section {
@@ -178,16 +178,16 @@ struct CreateDocumentView: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle(String(localized: .localizable.correspondent))
+                            .navigationTitle(String(localized: .localizable(.correspondent)))
                         }) {
                             HStack {
-                                Text(.localizable.correspondent)
+                                Text(.localizable(.correspondent))
                                 Spacer()
                                 Group {
                                     if let id = document.correspondent {
                                         Text(store.correspondents[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(.localizable.correspondentNotAssignedPicker)
+                                        Text(.localizable(.correspondentNotAssignedPicker))
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -200,16 +200,16 @@ struct CreateDocumentView: View {
                                 document: $document,
                                 store: store
                             )
-                            .navigationTitle(Text(.localizable.documentType))
+                            .navigationTitle(Text(.localizable(.documentType)))
                         }) {
                             HStack {
-                                Text(.localizable.documentType)
+                                Text(.localizable(.documentType))
                                 Spacer()
                                 Group {
                                     if let id = document.documentType {
                                         Text(store.documentTypes[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(.localizable.documentTypeNotAssignedPicker)
+                                        Text(.localizable(.documentTypeNotAssignedPicker))
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -224,13 +224,13 @@ struct CreateDocumentView: View {
                             )
                         }) {
                             HStack {
-                                Text(.localizable.storagePath)
+                                Text(.localizable(.storagePath))
                                 Spacer()
                                 Group {
                                     if let id = document.storagePath {
                                         Text(store.storagePaths[id]?.name ?? "ERROR")
                                     } else {
-                                        Text(.localizable.storagePathNotAssignedPicker)
+                                        Text(.localizable(.storagePathNotAssignedPicker))
                                     }
                                 }
                                 .foregroundColor(.gray)
@@ -239,10 +239,10 @@ struct CreateDocumentView: View {
 
                         NavigationLink(destination: {
                             DocumentTagEditView(document: $document)
-                                .navigationTitle(Text(.localizable.tags))
+                                .navigationTitle(Text(.localizable(.tags)))
                         }) {
                             if document.tags.isEmpty {
-                                Text(.localizable.createDocumentNoTags)
+                                Text(.localizable(.createDocumentNoTags))
                             } else {
                                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
                                     .contentShape(Rectangle())
@@ -261,7 +261,7 @@ struct CreateDocumentView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     switch status {
                     case .none:
-                        Button(String(localized: .localizable.save)) {
+                        Button(String(localized: .localizable(.save))) {
                             Task {
                                 withAnimation {
                                     status = .uploading
@@ -278,11 +278,11 @@ struct CreateDocumentView: View {
                             .transition(.opacity)
 
                     case .complete:
-                        Label(String(localized: .localizable.documentUploadComplete), systemImage: "checkmark.circle.fill")
+                        Label(String(localized: .localizable(.documentUploadComplete)), systemImage: "checkmark.circle.fill")
                             .foregroundColor(.accentColor)
                             .labelStyle(.iconOnly)
                     case .error:
-                        Label(String(localized: .localizable.documentUploadError), systemImage: "exclamationmark.triangle")
+                        Label(String(localized: .localizable(.documentUploadError)), systemImage: "exclamationmark.triangle")
                             .labelStyle(.iconOnly)
                     }
                 }

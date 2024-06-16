@@ -36,7 +36,7 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
         case storagePath = "storage_path"
     }
 
-    static var localizedName: String { String(localized: .localizable.document) }
+    static var localizedName: String { String(localized: .localizable(.document)) }
 }
 
 struct ProtoDocument: DocumentProtocol, Equatable {

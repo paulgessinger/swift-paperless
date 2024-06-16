@@ -22,7 +22,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     {
         _tag = StateObject(wrappedValue: ThrottleObject(value: tag, delay: 0.5))
         self.onSave = onSave
-        saveLabel = String(localized: .localizable.save)
+        saveLabel = String(localized: .localizable(.save))
     }
 
     private let scale = 2.0
@@ -40,12 +40,12 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     var body: some View {
         Form {
             Section {
-                TextField(String(localized: .localizable.tagName), text: $tag.value.name)
+                TextField(String(localized: .localizable(.tagName)), text: $tag.value.name)
                     .clearable($tag.value.name)
 
-                Toggle(String(localized: .localizable.tagIsInbox), isOn: $tag.value.isInboxTag)
+                Toggle(String(localized: .localizable(.tagIsInbox)), isOn: $tag.value.isInboxTag)
             } header: {
-                Text(!tag.throttledValue.name.isEmpty ? tag.throttledValue.name : String(localized: .localizable.tagName))
+                Text(!tag.throttledValue.name.isEmpty ? tag.throttledValue.name : String(localized: .localizable(.tagName)))
 
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -61,8 +61,8 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
                     .frame(maxWidth: .infinity, alignment: .center)
             }
 
-            Section(String(localized: .localizable.color)) {
-                ColorPicker(String(localized: .localizable.color),
+            Section(String(localized: .localizable(.color))) {
+                ColorPicker(String(localized: .localizable(.color)),
                             selection: $tag.value.color.color,
                             supportsOpacity: false)
                 Button {
@@ -72,7 +72,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
                 } label: {
                     HStack {
                         Spacer()
-                        Text(.localizable.tagColorRandom)
+                        Text(.localizable(.tagColorRandom))
                         Spacer()
                     }
                 }
@@ -96,7 +96,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
             }
         }
 
-        .navigationTitle(Element.self is Tag.Type ? Text(.localizable.tagEditTitle) : Text(.localizable.tagCreateTitle))
+        .navigationTitle(Element.self is Tag.Type ? Text(.localizable(.tagEditTitle)) : Text(.localizable(.tagCreateTitle)))
     }
 }
 
@@ -105,7 +105,7 @@ extension TagEditView where Element == ProtoTag {
     init(onSave: @escaping (Element) throws -> Void = { _ in }) {
         self.init(tag: ProtoTag(color: HexColor(Self.randomColor())),
                   onSave: onSave)
-        saveLabel = String(localized: .localizable.add)
+        saveLabel = String(localized: .localizable(.add))
     }
 }
 
@@ -115,7 +115,7 @@ struct TagEditView_Previews: PreviewProvider {
             NavigationStack {
                 TagEditView<ProtoTag>()
                     .navigationBarTitleDisplayMode(.inline)
-                    .navigationTitle(Text(.localizable.tagCreateTitle))
+                    .navigationTitle(Text(.localizable(.tagCreateTitle)))
             }
         }
     }

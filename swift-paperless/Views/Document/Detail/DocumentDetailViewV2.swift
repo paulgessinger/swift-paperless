@@ -180,7 +180,7 @@ struct DocumentDetailViewV2: View {
         var body: some View {
             ScrollView(.vertical) {
                 VStack {
-                    DatePicker(String(localized: .localizable.documentEditCreatedDateLabel),
+                    DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)),
                                selection: $date,
                                displayedComponents: .date)
                         .labelsHidden()
@@ -213,11 +213,11 @@ struct DocumentDetailViewV2: View {
                              closeInline: true)
                 {
                     HStack {
-                        Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
+                        Label(localized: .localizable(.documentEditCreatedDateLabel), systemImage: "calendar")
                             .labelStyle(.iconOnly)
                             .font(.title3)
                             .matchedGeometryEffect(id: "EditCreatedIcon", in: animation, isSource: true)
-                        Text(.localizable.documentEditCreatedDateLabel)
+                        Text(.localizable(.documentEditCreatedDateLabel))
                             .opacity(showInterface ? 1 : 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -271,7 +271,7 @@ struct DocumentDetailViewV2: View {
 
 //                                Box(animation: animation, id: "EditCreated", color: .paletteBlue) {
 //                                    HStack {
-//                                        Label(localized: .localizable.documentEditCreatedDateLabel, systemImage: "calendar")
+//                                        Label(localized: .localizable(.documentEditCreatedDateLabel), systemImage: "calendar")
 //                                            .labelStyle(.iconOnly)
 //                                            .font(.title3)
 //
@@ -291,7 +291,7 @@ struct DocumentDetailViewV2: View {
                             if viewModel.download == .loading {
                                 HStack(spacing: 5) {
                                     ProgressView()
-                                    Text(.localizable.loading)
+                                    Text(.localizable(.loading))
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical)
