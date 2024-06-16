@@ -156,6 +156,7 @@ struct DocumentList: View {
             }
         }
 
+        nonisolated
         static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool {
             true
         }
