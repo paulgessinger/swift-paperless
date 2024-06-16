@@ -1757,10 +1757,10 @@
 		};
 		7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/paulgessinger/xcstrings-tool-plugin";
+			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
 			requirement = {
-				branch = "fix-ios18";
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.0;
 			};
 		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
