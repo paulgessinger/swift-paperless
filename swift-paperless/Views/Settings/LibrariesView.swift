@@ -18,7 +18,7 @@ struct LibrariesView: View {
             let begin = raw.range(of: "---")!.upperBound
             text = String(raw.suffix(from: begin))
         } catch {
-            fatalError(String(localized: .settings.detailsLibrariesLoadError))
+            fatalError(String(localized: .settings(.detailsLibrariesLoadError)))
         }
     }
 
@@ -26,7 +26,7 @@ struct LibrariesView: View {
         ScrollView(.vertical) {
             Markdown(text)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .navigationTitle(Text(.settings.detailsLibraries))
+                .navigationTitle(Text(.settings(.detailsLibraries)))
                 .padding()
         }
     }

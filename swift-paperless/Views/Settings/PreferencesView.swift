@@ -23,15 +23,16 @@ struct PreferencesView: View {
     var body: some View {
         Form {
             Section {
-                Toggle(String(localized: .settings.documentDeleteConfirmationLabel),
+                Toggle(String(localized: .settings(.documentDeleteConfirmationLabel)),
                        isOn: $appSettings.documentDeleteConfirmation)
             } footer: {
-                Text(.settings.documentDeleteConfirmationLabelDescription)
+                Text(.settings(.documentDeleteConfirmationLabelDescription))
             }
 
             if let biometricName = BiometricLockManager.biometricName {
                 Section {
-                    Toggle(String(localized: .settings.useBiometricLock(biometricName)), isOn: $biometricLockManager.isEnabled)
+                    Toggle(String(localized: .settings(.useBiometricLock(biometricName))),
+                           isOn: $biometricLockManager.isEnabled)
                 }
             }
 
@@ -41,7 +42,7 @@ struct PreferencesView: View {
                         Text(field.localizedName).tag(field)
                     }
                 } label: {
-                    Text(.settings.defaultSortField)
+                    Text(.settings(.defaultSortField))
                 }
 
                 Picker(selection: $appSettings.defaultSortOrder) {
@@ -50,7 +51,7 @@ struct PreferencesView: View {
                     Text(SortOrder.descending.localizedName)
                         .tag(SortOrder.descending)
                 } label: {
-                    Text(.settings.defaultSortOrder)
+                    Text(.settings(.defaultSortOrder))
                 }
 
                 Picker(selection: $appSettings.defaultSearchMode) {
@@ -58,15 +59,15 @@ struct PreferencesView: View {
                         Text(mode.localizedName).tag(mode)
                     }
                 } label: {
-                    Text(.settings.defaultSearchModeLabel)
+                    Text(.settings(.defaultSearchModeLabel))
                 }
             } header: {
                 Text(.localizable(.filtering))
             } footer: {
-                Text(.settings.defaultSearchModeDescription)
+                Text(.settings(.defaultSearchModeDescription))
             }
         }
-        .navigationTitle(Text(.settings.preferences))
+        .navigationTitle(Text(.settings(.preferences)))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -21,10 +21,10 @@ enum AppIcon: String, CaseIterable {
 
     var name: String {
         switch self {
-        case .primary: String(localized: .settings.logoPrimary)
-        case .var0: String(localized: .settings.logoVariation(1))
-        case .var1: String(localized: .settings.logoVariation(2))
-        case .var2: String(localized: .settings.logoVariation(3))
+        case .primary: String(localized: .settings(.logoPrimary))
+        case .var0: String(localized: .settings(.logoVariation(1)))
+        case .var1: String(localized: .settings(.logoVariation(2)))
+        case .var2: String(localized: .settings(.logoVariation(3)))
         }
     }
 
@@ -75,7 +75,7 @@ struct LogoChangeView: View {
                             Text(icon.name)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             if icon == selectedIcon {
-                                Label(localized: .settings.logoIsSelected, systemImage: "checkmark.circle.fill")
+                                Label(localized: .settings(.logoIsSelected), systemImage: "checkmark.circle.fill")
                                     .labelStyle(.iconOnly)
                                     .font(.title)
                                     .foregroundStyle(.accent)
@@ -96,7 +96,7 @@ struct LogoChangeView: View {
         .task {
             selectedIcon = .active
         }
-        .navigationTitle(String(localized: .settings.logoChangeTitle))
+        .navigationTitle(String(localized: .settings(.logoChangeTitle)))
     }
 }
 

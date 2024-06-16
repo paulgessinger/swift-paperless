@@ -12,7 +12,7 @@ struct PrivacyView: View {
     private static let url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/docs/privacy.md")!
 
     @State private var text: String? = nil
-    @State private var title: String = .init(localized: .settings.detailsPrivacy)
+    @State private var title: String = .init(localized: .settings(.detailsPrivacy))
 
     var body: some View {
         ScrollView(.vertical) {
@@ -36,7 +36,7 @@ struct PrivacyView: View {
                 }
             } catch {
                 withAnimation {
-                    text = String(localized: .settings.detailsPrivacyLoadError(PrivacyView.url.absoluteString))
+                    text = String(localized: .settings(.detailsPrivacyLoadError(PrivacyView.url.absoluteString)))
                 }
             }
         }

@@ -21,23 +21,23 @@ struct AppVersionView: View {
                 LabeledContent {
                     Text(info.version)
                 } label: {
-                    Text(.settings.appVersionLabel)
+                    Text(.settings(.appVersionLabel))
                 }
 
                 LabeledContent {
                     Text(info.build)
                 } label: {
-                    Text(.settings.appBuildNumberLabel)
+                    Text(.settings(.appBuildNumberLabel))
                 }
 
                 LabeledContent {
                     Text(info.config.rawValue)
                 } label: {
-                    Text(.settings.appConfigurationLabel)
+                    Text(.settings(.appConfigurationLabel))
                 }
             }
         }
-        .navigationTitle(String(localized: .settings.versionInfoLabel))
+        .navigationTitle(String(localized: .settings(.versionInfoLabel)))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             let channel = AsyncChannel<Info>()

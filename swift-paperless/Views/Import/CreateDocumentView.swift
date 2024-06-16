@@ -141,7 +141,7 @@ struct CreateDocumentView: View {
 
                 Form {
                     if share, let stored = connectionManager.storedConnection {
-                        Section(String(localized: .settings.activeServer)) {
+                        Section(String(localized: .settings(.activeServer))) {
                             Menu {
                                 ConnectionSelectionMenu(connectionManager: connectionManager)
                             } label: {
@@ -152,7 +152,7 @@ struct CreateDocumentView: View {
                                         .foregroundStyle(.gray)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .multilineTextAlignment(.leading)
-                                    Label(String(localized: .settings.chooseServerAccessibilityLabel),
+                                    Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
                                           systemImage: "chevron.up.chevron.down")
                                         .labelStyle(.iconOnly)
                                         .foregroundStyle(.gray)

@@ -13,7 +13,7 @@ import os
 private func biometricAuthenticate() async throws -> Bool {
     let context = LAContext()
     var error: NSError?
-    let reason = String(localized: .settings.biometricReason)
+    let reason = String(localized: .settings(.biometricReason))
 
     guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
         if let error {
@@ -82,7 +82,7 @@ class BiometricLockManager: ObservableObject {
                 Logger.biometric.error("Error during biometric unlock: \(error)")
                 var message: String? = nil
                 if let biometricName = Self.biometricName {
-                    message = String(localized: .settings.biometricLockEnableFailure(biometricName))
+                    message = String(localized: .settings(.biometricLockEnableFailure(biometricName)))
                 }
                 errorController.push(error: error, message: message)
             }
@@ -106,7 +106,7 @@ class BiometricLockManager: ObservableObject {
             } catch {
                 Logger.biometric.error("Error enabling biometric lock: \(error)")
                 let biometricName = Self.biometricName ?? "UnknownID"
-                errorController.push(error: error, message: String(localized: .settings.biometricLockEnableFailure(biometricName)))
+                errorController.push(error: error, message: String(localized: .settings(.biometricLockEnableFailure(biometricName))))
                 isEnabled = false
             }
         }

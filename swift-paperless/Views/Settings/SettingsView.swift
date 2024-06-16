@@ -30,7 +30,7 @@ struct SettingsView: View {
     }
 
     private var organizationSection: some View {
-        Section(String(localized: .settings.organization)) {
+        Section(String(localized: .settings(.organization))) {
             NavigationLink {
                 ManageView<TagManager>(store: store)
                     .navigationTitle(Text(.localizable(.tags)))
@@ -74,24 +74,24 @@ struct SettingsView: View {
     }
 
     private var detailSection: some View {
-        Section(String(localized: .settings.detailsTitle)) {
+        Section(String(localized: .settings(.detailsTitle))) {
             NavigationLink {
                 LibrariesView()
             } label: {
-                Label(String(localized: .settings.detailsLibraries), systemImage: "books.vertical.fill")
+                Label(String(localized: .settings(.detailsLibraries)), systemImage: "books.vertical.fill")
             }
 
             Button {
                 UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
             } label: {
-                Label(String(localized: .settings.detailsSourceCode), systemImage: "terminal.fill")
+                Label(String(localized: .settings(.detailsSourceCode)), systemImage: "terminal.fill")
                     .accentColor(.primary)
             }
 
             NavigationLink {
                 PrivacyView()
             } label: {
-                Label(String(localized: .settings.detailsPrivacy), systemImage: "hand.raised.fill")
+                Label(String(localized: .settings(.detailsPrivacy)), systemImage: "hand.raised.fill")
             }
 
             if MFMailComposeViewController.canSendMail() {
@@ -101,7 +101,7 @@ struct SettingsView: View {
                         Button {
                             export()
                         } label: {
-                            Label(String(localized: .settings.detailsFeedback), systemImage: "paperplane.fill")
+                            Label(String(localized: .settings(.detailsFeedback)), systemImage: "paperplane.fill")
                                 .accentColor(.primary)
                         }
 
@@ -109,7 +109,7 @@ struct SettingsView: View {
                         LogRecordExportButton.loadingView()
 
                     case .loaded:
-                        Label(String(localized: .settings.feedbackDone), systemImage: "checkmark.circle.fill")
+                        Label(String(localized: .settings(.feedbackDone)), systemImage: "checkmark.circle.fill")
                             .accentColor(.primary)
 
                     case let .error(error):
@@ -129,25 +129,25 @@ struct SettingsView: View {
             NavigationLink {
                 AppVersionView()
             } label: {
-                Label(localized: .settings.versionInfoLabel, systemImage: "info.bubble.fill")
+                Label(localized: .settings(.versionInfoLabel), systemImage: "info.bubble.fill")
             }
         }
     }
 
     var advancedSection: some View {
-        Section(String(localized: .settings.advanced)) {
+        Section(String(localized: .settings(.advanced))) {
             LogRecordExportButton()
 
             NavigationLink {
                 LogoChangeView()
             } label: {
-                Label(localized: .settings.logoChangeTitle, systemImage: "leaf.fill")
+                Label(localized: .settings(.logoChangeTitle), systemImage: "leaf.fill")
             }
 
             NavigationLink {
                 debugMenu
             } label: {
-                Label(localized: .settings.debugMenu, systemImage: "ladybug.fill")
+                Label(localized: .settings(.debugMenu), systemImage: "ladybug.fill")
             }
         }
     }
@@ -158,12 +158,12 @@ struct SettingsView: View {
                 Button {
                     AppSettings.shared.resetAppVersion()
                 } label: {
-                    Text(.settings.debugResetAppVersion)
+                    Text(.settings(.debugResetAppVersion))
                 }
                 DocumentDetailViewVersionSelection()
             }
         }
-        .navigationTitle(String(localized: .settings.debugMenu))
+        .navigationTitle(String(localized: .settings(.debugMenu)))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -172,11 +172,11 @@ struct SettingsView: View {
             ConnectionsView(connectionManager: connectionManager,
                             showLoginSheet: $showLoginSheet)
 
-            Section(String(localized: .settings.preferences)) {
+            Section(String(localized: .settings(.preferences))) {
                 NavigationLink {
                     PreferencesView()
                 } label: {
-                    Label(String(localized: .settings.preferences), systemImage: "dial.low.fill")
+                    Label(String(localized: .settings(.preferences)), systemImage: "dial.low.fill")
                 }
             }
 
@@ -215,7 +215,7 @@ struct SettingsView: View {
             showMailSheet = true
         }
 
-        .navigationTitle(Text(.settings.title))
+        .navigationTitle(Text(.settings(.title)))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

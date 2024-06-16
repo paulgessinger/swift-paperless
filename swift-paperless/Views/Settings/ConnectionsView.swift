@@ -45,7 +45,7 @@ struct ConnectionsView: View {
         Section {
             if let stored = connectionManager.storedConnection {
                 HStack {
-                    Text(.settings.activeServerUrl)
+                    Text(.settings(.activeServerUrl))
                     Menu {
                         ConnectionSelectionMenu(connectionManager: connectionManager)
                     } label: {
@@ -54,14 +54,14 @@ struct ConnectionsView: View {
                             .foregroundStyle(.gray)
                             .frame(maxWidth: .infinity, alignment: .trailing)
 
-                        Label(String(localized: .settings.chooseServerAccessibilityLabel),
+                        Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
                               systemImage: "chevron.up.chevron.down")
                             .labelStyle(.iconOnly)
                             .foregroundStyle(.gray)
                     }
                 }
 
-                LabeledContent(String(localized: .settings.activeServerUsername), value: stored.user.username)
+                LabeledContent(String(localized: .settings(.activeServerUsername)), value: stored.user.username)
 
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
@@ -81,7 +81,7 @@ struct ConnectionsView: View {
         }
         header: {
             HStack {
-                Text(.settings.activeServer)
+                Text(.settings(.activeServer))
                 Spacer()
                 Button {
                     showLoginSheet = true
@@ -106,7 +106,7 @@ struct ConnectionQuickChangeMenu: View {
             Menu {
                 ConnectionSelectionMenu(connectionManager: connectionManager)
             } label: {
-                Text(.settings.activeServer)
+                Text(.settings(.activeServer))
             }
         }
     }
