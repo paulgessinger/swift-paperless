@@ -417,7 +417,7 @@ private struct PreviewHelperView<Content: View>: View {
         relatedDocument: "22"
     )
 
-    PreviewHelperView {
+    return PreviewHelperView {
         NavigationStack {
             TaskDetailView(task: task)
         }
