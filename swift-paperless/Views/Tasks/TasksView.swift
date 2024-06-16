@@ -239,7 +239,7 @@ struct TasksView: View {
                 .navigationDestination(for: NavigationState.self) { nav in
                     switch nav {
                     case let .detail(document):
-                        DocumentDetailViewV2(store: store, document: document, navPath: $navPath)
+                        DocumentDetailView(store: store, document: document, navPath: $navPath)
                     case let .task(task):
                         TaskDetailView(task: task)
                     default:

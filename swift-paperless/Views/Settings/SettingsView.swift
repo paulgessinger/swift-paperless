@@ -160,6 +160,7 @@ struct SettingsView: View {
                 } label: {
                     Text(.settings.debugResetAppVersion)
                 }
+                DocumentDetailViewVersionSelection()
             }
         }
         .navigationTitle(String(localized: .settings.debugMenu))

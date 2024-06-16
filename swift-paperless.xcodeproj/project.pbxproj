@@ -98,6 +98,7 @@
 		7A3E46212BF268490007AB67 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7A3E46232BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */; };
 		7A3E46242BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */; };
+		7A3FB24E2C1EF4E2002EFFF3 /* DocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3FB2422C1EF4DF002EFFF3 /* DocumentDetailView.swift */; };
 		7A4570192BF8BC6200CFB030 /* ReleaseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */; };
 		7A4570322BF8DF7500CFB030 /* DateDecoderTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4570312BF8DF7500CFB030 /* DateDecoderTest.swift */; };
 		7A4648002A1D593C00078968 /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A898ECD2A03000D0003DFBD /* UserDefaults.swift */; };
@@ -366,6 +367,7 @@
 		7A3E45DF2BF256BB0007AB67 /* AppVersionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionView.swift; sourceTree = "<group>"; };
 		7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AsyncChannel+next.swift"; sourceTree = "<group>"; };
 		7A3E46222BF3B4760007AB67 /* DocumentListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentListViewModel.swift; sourceTree = "<group>"; };
+		7A3FB2422C1EF4DF002EFFF3 /* DocumentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailView.swift; sourceTree = "<group>"; };
 		7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotesView.swift; sourceTree = "<group>"; };
 		7A4570312BF8DF7500CFB030 /* DateDecoderTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateDecoderTest.swift; sourceTree = "<group>"; };
 		7A4648022A1D5ABC00078968 /* ListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListResponse.swift; sourceTree = "<group>"; };
@@ -681,6 +683,7 @@
 		7A71D1C72C15EE5400C55D82 /* Detail */ = {
 			isa = PBXGroup;
 			children = (
+				7A3FB2422C1EF4DF002EFFF3 /* DocumentDetailView.swift */,
 				7AF04B7C29A689E1008E8F79 /* DocumentDetailViewV2.swift */,
 				7A868E612C15ABFD00F2EE21 /* DocumentDetailViewV1.swift */,
 				7A71D1DE2C15EE8800C55D82 /* DocumentDetailCommonPicker.swift */,
@@ -1140,6 +1143,7 @@
 				7A3E45D02BF255530007AB67 /* Bundle.swift in Sources */,
 				7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */,
 				7A3E46232BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */,
+				7A3FB24E2C1EF4E2002EFFF3 /* DocumentDetailView.swift in Sources */,
 				7A0772062BE5370700DCC8CD /* TaskActivityToolbar.swift in Sources */,
 				7A4D513D2C0F88AF0066E75A /* BiometricLockManager.swift in Sources */,
 				7A3E45E02BF256BB0007AB67 /* AppVersionView.swift in Sources */,

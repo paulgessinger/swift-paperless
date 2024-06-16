@@ -148,8 +148,7 @@ private extension Aspect where Content == Text {
 }
 
 struct DocumentDetailViewV1: View {
-    @EnvironmentObject private var store: DocumentStore
-
+    @ObservedObject private var store: DocumentStore
     @State var document: Document
     var navPath: Binding<NavigationPath>?
 
@@ -163,6 +162,15 @@ struct DocumentDetailViewV1: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var errorController: ErrorController
+
+    init(store: DocumentStore,
+         document: Document,
+         navPath: Binding<NavigationPath>? = nil)
+    {
+        self.store = store
+        self.document = document
+        self.navPath = navPath
+    }
 
     var gray: Color {
         if colorScheme == .dark {
@@ -299,7 +307,7 @@ private struct PreviewHelper: View {
         NavigationStack {
             VStack {
                 if let document {
-                    DocumentDetailViewV1(document: document, navPath: $navPath)
+                    DocumentDetailViewV1(store: store, document: document, navPath: $navPath)
                 }
             }
             .task {
