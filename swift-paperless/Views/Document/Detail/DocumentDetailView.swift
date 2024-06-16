@@ -10,14 +10,23 @@ import SwiftUI
 struct DocumentDetailViewVersionSelection: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
+    @State private var show = false
+
     var body: some View {
-        Picker("Document editing UI variant",
-               selection: $appSettings.editingUserInterface)
-        {
-            ForEach(AppSettings.EditingUserInterface.allCases, id: \.self) { element in
-                Text("\(element)")
-                    .tag(element)
+        VStack {
+            if show {
+                Picker("Document editing UI variant",
+                       selection: $appSettings.editingUserInterface)
+                {
+                    ForEach(AppSettings.EditingUserInterface.allCases, id: \.self) { element in
+                        Text("\(element)")
+                            .tag(element)
+                    }
+                }
             }
+        }
+        .task {
+            show = Bundle.main.appConfiguration != .AppStore
         }
     }
 }
