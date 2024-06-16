@@ -39,12 +39,12 @@ private struct DetailsView: View {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
+                    Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
 
                 LogRecordExportButton()
             }
-            .navigationTitle(Text(.login.detailsTitle))
+            .navigationTitle(Text(.login(.detailsTitle)))
             .navigationBarTitleDisplayMode(.inline)
 
             .toolbar {
@@ -93,9 +93,9 @@ struct LoginView: View {
         var message: String {
             switch self {
             case .urlInvalid:
-                return String(localized: .login.errorUrlInvalid)
+                return String(localized: .login(.errorUrlInvalid))
             case .invalidLogin:
-                return String(localized: .login.errorLoginInvalid)
+                return String(localized: .login(.errorLoginInvalid))
             }
         }
 
@@ -157,7 +157,7 @@ struct LoginView: View {
 
         guard let (_, apiUrl) = deriveUrl(string: value) else {
             Logger.shared.notice("Cannot convert to URL: \(value)")
-            urlState = .error(info: AttributedString(localized: .login.errorCouldNotConvertURL(value)))
+            urlState = .error(info: AttributedString(localized: .login(.errorCouldNotConvertURL(value))))
             return
         }
 
@@ -174,7 +174,7 @@ struct LoginView: View {
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                urlState = .error(info: AttributedString(localized: .login.errorInvalidResponse(value, statusCode)))
+                urlState = .error(info: AttributedString(localized: .login(.errorInvalidResponse(value, statusCode))))
                 return
             }
 
@@ -184,10 +184,10 @@ struct LoginView: View {
         } catch let error as NSError where LoginView.isLocalNetworkDenied(error) {
             Logger.shared.error("Unable to connect to API: local network access denied")
             urlState = .error(info: AttributedString(localized:
-                .login.errorLocalNetworkDenied(DocumentationLinks.localNetworkDenied.absoluteString)))
+                .login(.errorLocalNetworkDenied(DocumentationLinks.localNetworkDenied.absoluteString))))
         } catch {
             Logger.shared.error("Checking API error: \(error)")
-            urlState = .error(info: AttributedString(localized: .login.errorUrlInvalidOther(error.localizedDescription)))
+            urlState = .error(info: AttributedString(localized: .login(.errorUrlInvalidOther(error.localizedDescription))))
             return
         }
     }
@@ -264,7 +264,7 @@ struct LoginView: View {
             Form {
                 Section {
                     HStack {
-                        TextField(String(localized: .login.urlPlaceholder), text: $url.text)
+                        TextField(String(localized: .login(.urlPlaceholder)), text: $url.text)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                         Spacer()
@@ -272,12 +272,12 @@ struct LoginView: View {
                         case .checking:
                             ProgressView()
                         case .valid:
-                            Label(String(localized: .login.urlValid), systemImage:
+                            Label(String(localized: .login(.urlValid)), systemImage:
                                 "checkmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.accentColor)
                         case .error:
-                            Label(String(localized: .login.urlError), systemImage:
+                            Label(String(localized: .login(.urlError)), systemImage:
                                 "xmark.circle.fill")
                                 .labelStyle(.iconOnly)
                                 .foregroundColor(.red)
@@ -291,14 +291,14 @@ struct LoginView: View {
                         if apiInUrl {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
-                                Text(.login.apiInUrlNotice)
+                                Text(.login(.apiInUrlNotice))
                             }
                         }
 
                         if url.debouncedText.starts(with: "http://"), !LoginView.isLocalAddress(url.debouncedText) {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
-                                Text(.login.httpWarning)
+                                Text(.login(.httpWarning))
                             }
                         }
 
@@ -315,16 +315,16 @@ struct LoginView: View {
                 }
 
                 Section {
-                    TextField(String(localized: .login.username), text: $username)
+                    TextField(String(localized: .login(.username)), text: $username)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
-                    SecureField(String(localized: .login.password), text: $password)
+                    SecureField(String(localized: .login(.password)), text: $password)
                 } header: {
-                    Text(.login.credentials)
+                    Text(.login(.credentials))
                 } footer: {
                     HStack(alignment: .top) {
                         Image(systemName: "info.circle")
-                        Text(.login.passwordStorageNotice)
+                        Text(.login(.passwordStorageNotice))
                     }
                 }
             }
@@ -338,7 +338,7 @@ struct LoginView: View {
                         if loginOngoing {
                             ProgressView()
                         }
-                        Text(.login.buttonLabel)
+                        Text(.login(.buttonLabel))
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
@@ -369,7 +369,7 @@ struct LoginView: View {
 
             .if(!initial) { view in
                 view
-                    .navigationTitle(String(localized: .login.additionalTitle))
+                    .navigationTitle(String(localized: .login(.additionalTitle)))
                     .navigationBarTitleDisplayMode(.inline)
 
                     .toolbar {
@@ -395,7 +395,7 @@ struct LoginView: View {
                     Button {
                         showDetails = true
                     } label: {
-                        Label(String(localized: .login.moreToolbarButtonLabel), systemImage: "info.circle")
+                        Label(String(localized: .login(.moreToolbarButtonLabel)), systemImage: "info.circle")
                     }
                 }
             }
@@ -405,7 +405,7 @@ struct LoginView: View {
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
-                Text(.login.success)
+                Text(.login(.success))
             }
         }
     }

@@ -24,8 +24,8 @@ struct ExtraHeadersView: View {
 
         var body: some View {
             Form {
-                Section(String(localized: .login.extraHeadersKey)) {
-                    TextField(String(localized: .login.extraHeadersKey), text: $header.key)
+                Section(String(localized: .login(.extraHeadersKey))) {
+                    TextField(String(localized: .login(.extraHeadersKey)), text: $header.key)
                         .clearable($header.key)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
@@ -33,8 +33,8 @@ struct ExtraHeadersView: View {
                             header.key = value.replacingOccurrences(of: " ", with: "")
                         }
                 }
-                Section(String(localized: .login.extraHeadersValue)) {
-                    TextField(String(localized: .login.extraHeadersValue), text: $header.value)
+                Section(String(localized: .login(.extraHeadersValue))) {
+                    TextField(String(localized: .login(.extraHeadersValue)), text: $header.value)
                         .clearable($header.value)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
@@ -59,7 +59,7 @@ struct ExtraHeadersView: View {
                     }
                 }
             } footer: {
-                Text(.login.extraHeadersDescription)
+                Text(.login(.extraHeadersDescription))
             }
         }
 
@@ -78,6 +78,6 @@ struct ExtraHeadersView: View {
             }
         }
 
-        .navigationTitle(Text(.login.extraHeaders))
+        .navigationTitle(Text(.login(.extraHeaders)))
     }
 }

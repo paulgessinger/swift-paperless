@@ -66,7 +66,7 @@ struct ConnectionsView: View {
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
-                    Label(String(localized: .login.extraHeaders), systemImage: "list.bullet.rectangle.fill")
+                    Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
 
                 .onChange(of: extraHeaders) {
