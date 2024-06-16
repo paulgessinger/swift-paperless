@@ -11,7 +11,8 @@ import SwiftUI
 struct PrivacyView: View {
     private static let url = URL(string: "https://raw.githubusercontent.com/paulgessinger/swift-paperless/main/docs/privacy.md")!
 
-    @State var text: String? = nil
+    @State private var text: String? = nil
+    @State private var title: String = .init(localized: .settings.detailsPrivacy)
 
     var body: some View {
         ScrollView(.vertical) {
@@ -24,13 +25,14 @@ struct PrivacyView: View {
                 ProgressView(String(localized: .localizable.loading))
             }
         }
-        .navigationTitle(Text(.settings.detailsPrivacy))
+        .navigationTitle(title)
         .task {
             do {
                 let request = URLRequest(url: PrivacyView.url)
                 let (data, _) = try await URLSession.shared.getData(for: request)
                 withAnimation {
                     text = String(decoding: data, as: UTF8.self)
+                    title = ""
                 }
             } catch {
                 withAnimation {

@@ -151,6 +151,8 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             }
         }
 
+        .navigationBarTitleDisplayMode(.inline)
+
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {

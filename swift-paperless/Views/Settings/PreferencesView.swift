@@ -66,6 +66,8 @@ struct PreferencesView: View {
                 Text(.settings.defaultSearchModeDescription)
             }
         }
+        .navigationTitle(Text(.settings.preferences))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

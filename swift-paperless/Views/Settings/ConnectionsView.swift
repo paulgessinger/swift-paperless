@@ -93,6 +93,8 @@ struct ConnectionsView: View {
                 .buttonStyle(BorderlessButtonStyle())
             }
         }
+
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

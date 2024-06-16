@@ -151,6 +151,8 @@ struct CommonPicker: View {
             )
         }
 
+        .navigationBarTitleDisplayMode(.inline)
+
         .onChange(of: mode) { newValue in
             switch newValue {
             case .anyOf:
@@ -342,6 +344,7 @@ struct CommonPickerEdit<Manager, D>: View
                 alignment: .top
             )
         }
+
         .onChange(of: searchDebounce.debouncedText) { value in
             withAnimation {
                 showNone = value.isEmpty
@@ -362,7 +365,7 @@ struct CommonPickerEdit<Manager, D>: View
 }
 
 private struct FilterViewPreviewHelper<T: Pickable>: View {
-    @EnvironmentObject var store: DocumentStore
+    @StateObject var store = DocumentStore(repository: PreviewRepository())
     @State var filterState = FilterState.Filter.any
     @State var elements: [(UInt, String)] = []
 
@@ -382,32 +385,18 @@ private struct FilterViewPreviewHelper<T: Pickable>: View {
                 .map { ($0.key, $0.value.name) }
                 .sorted(by: { $0.1 < $1.1 })
         }
+        .environmentObject(store)
     }
 }
 
-struct CommonFilterPickerCorrespondent_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-
-    static var previews: some View {
-        FilterViewPreviewHelper(elements: \.correspondents)
-            .environmentObject(store)
-    }
+#Preview("CommonFilterPickerCorrespondent") {
+    FilterViewPreviewHelper(elements: \.correspondents)
 }
 
-struct CommonFilterPickerDocumentType_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-
-    static var previews: some View {
-        FilterViewPreviewHelper(elements: \.documentTypes)
-            .environmentObject(store)
-    }
+#Preview("CommonFilterPickerDocumentType") {
+    FilterViewPreviewHelper(elements: \.documentTypes)
 }
 
-struct CommonFilterPickerStoragePaths_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-
-    static var previews: some View {
-        FilterViewPreviewHelper(elements: \.storagePaths)
-            .environmentObject(store)
-    }
+#Preview("CommonFilterPickerStoragePaths") {
+    FilterViewPreviewHelper(elements: \.storagePaths)
 }

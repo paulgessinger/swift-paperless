@@ -163,6 +163,7 @@ struct SettingsView: View {
             }
         }
         .navigationTitle(String(localized: .settings.debugMenu))
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     var body: some View {
@@ -173,7 +174,6 @@ struct SettingsView: View {
             Section(String(localized: .settings.preferences)) {
                 NavigationLink {
                     PreferencesView()
-                        .navigationTitle(Text(.settings.preferences))
                 } label: {
                     Label(String(localized: .settings.preferences), systemImage: "dial.low.fill")
                 }
@@ -215,6 +215,7 @@ struct SettingsView: View {
         }
 
         .navigationTitle(Text(.settings.title))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
