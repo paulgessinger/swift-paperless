@@ -24,8 +24,8 @@ jobs:
           - "iPhone 15 Pro"
           - "iPad Pro (12.9-inch) (6th generation)"
         ios:
-          - "16.4"
-          - "17.4"
+          - "17.5"
+          - "18.0"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
