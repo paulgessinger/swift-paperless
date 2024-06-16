@@ -13,6 +13,6 @@ final class ErrorParsingTest: XCTestCase {
                                  result: "2015-02-01 Car Garage Health Employee Data Collection Form.pdf: Not consuming 2015-02-01 Car Garage Health Employee Data Collection Form.pdf: It is a duplicate of 2015-02-01 Car Garage Health Employee Data Collection Form.pdf (#28)",
                                  acknowledged: false)
 
-        XCTAssertEqual(task.localizedResult, String(localized: .tasks.errorDuplicate(task.taskFileName!)))
+        XCTAssertEqual(task.localizedResult, String(localized: .tasks(.errorDuplicate)(task.taskFileName!)))
     }
 }

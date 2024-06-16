@@ -16,15 +16,22 @@ struct TaskActivityToolbar: View {
     @State private var number: Int = 0
 
     static let numTasks = 5
+    var more: String {
+        if store.tasks.count > Self.numTasks {
+            return String(localized: .tasks(.tasksMenuMoreLabel(UInt(store.tasks.count - Self.numTasks))))
+        } else {
+            return String(localized: .tasks(.tasksMenuAllLabel))
+        }
+    }
 
     var body: some View {
         Group {
-            Label(localized: .tasks.title, systemImage: "chart.bar.doc.horizontal")
+            Label(localized: .tasks(.title), systemImage: "chart.bar.doc.horizontal")
         }
         .overlay {
             Menu {
                 ForEach(store.tasks.prefix(Self.numTasks)) { task in
-                    let filename = task.taskFileName ?? String(localized: .tasks.unknownFileName)
+                    let filename = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
                     Button {
                         navState = .task(task)
                     } label: {
@@ -34,7 +41,6 @@ struct TaskActivityToolbar: View {
 
                 Divider()
 
-                let more = String(localized: store.tasks.count > Self.numTasks ? .tasks.tasksMenuMoreLabel(UInt(store.tasks.count - Self.numTasks)) : .tasks.tasksMenuAllLabel)
                 Button(more) {
                     navState = .tasks
                 }

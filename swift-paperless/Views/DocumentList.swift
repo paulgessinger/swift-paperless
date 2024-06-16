@@ -194,7 +194,7 @@ struct DocumentList: View {
             }
 
         case let .taskError(task: task):
-            errorController.push(message: String(localized: .tasks.errorNotificationTitle),
+            errorController.push(message: String(localized: .tasks(.errorNotificationTitle)),
                                  details: task.localizedResult)
         }
     }

@@ -60,17 +60,17 @@ extension TaskStatus {
     var name: String {
         let res: LocalizedStringResource = switch self {
         case .PENDING:
-            .tasks.statusPending
+            .tasks(.statusPending)
         case .STARTED:
-            .tasks.statusStarted
+            .tasks(.statusStarted)
         case .SUCCESS:
-            .tasks.statusSuccess
+            .tasks(.statusSuccess)
         case .FAILURE:
-            .tasks.statusFailure
+            .tasks(.statusFailure)
         case .RETRY:
-            .tasks.statusRetry
+            .tasks(.statusRetry)
         case .REVOKED:
-            .tasks.statusRevoked
+            .tasks(.statusRevoked)
         }
 
         return String(localized: res)
@@ -90,7 +90,7 @@ struct TaskDetailView: View {
     @State private var document: DocumentResult?
 
     private var title: String {
-        String(localized: .tasks.task(String(task.id)))
+        String(localized: .tasks(.task(String(task.id))))
     }
 
     private var fmt: DateFormatter {
@@ -104,13 +104,13 @@ struct TaskDetailView: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading) {
                 VStack(alignment: .leading) {
-                    Text(task.taskFileName ?? String(localized: .tasks.unknownFileName))
+                    Text(task.taskFileName ?? String(localized: .tasks(.unknownFileName)))
                         .font(.headline)
 
                     Divider()
 
                     HStack {
-                        Text(.tasks.idLabel)
+                        Text(.tasks(.idLabel))
                             .foregroundStyle(.gray)
                         Text(String(task.id))
                             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -120,7 +120,7 @@ struct TaskDetailView: View {
 
                     if let created = task.dateCreated {
                         HStack {
-                            Text(.tasks.createdLabel)
+                            Text(.tasks(.createdLabel))
                                 .foregroundStyle(.gray)
                             Spacer()
                             Text("\(fmt.string(from: created))")
@@ -130,7 +130,7 @@ struct TaskDetailView: View {
                     }
 
                     HStack {
-                        Text(.tasks.status)
+                        Text(.tasks(.status))
                             .foregroundStyle(.gray)
                         Spacer()
                         task.status.label
@@ -141,7 +141,7 @@ struct TaskDetailView: View {
                     if let result = task.result {
                         Divider()
                         VStack(alignment: .leading) {
-                            Text(.tasks.result)
+                            Text(.tasks(.result))
                                 .foregroundStyle(.gray)
                             Text(result)
                                 .italic()
@@ -160,7 +160,7 @@ struct TaskDetailView: View {
                     switch document {
                     case let .document(document):
                         VStack {
-                            Text(.tasks.relatedDocument)
+                            Text(.tasks(.relatedDocument))
                                 .font(.headline)
                                 .padding(.top, 30)
                                 .frame(maxWidth: .infinity, alignment: .center)
@@ -187,7 +187,7 @@ struct TaskDetailView: View {
                         .padding()
 
                     case let .missing(id):
-                        Text(.tasks.missingDocument(String(id)))
+                        Text(.tasks(.missingDocument(String(id))))
                             .padding()
                             .italic()
                             .multilineTextAlignment(.center)
@@ -233,7 +233,7 @@ struct TasksView: View {
         NavigationStack(path: $navPath) {
             TaskList(tasks: store.tasks, navPath: $navPath)
 
-                .navigationTitle(String(localized: .tasks.title))
+                .navigationTitle(String(localized: .tasks(.title)))
                 .navigationBarTitleDisplayMode(.inline)
                 .environmentObject(store)
                 .navigationDestination(for: NavigationState.self) { nav in
@@ -283,7 +283,7 @@ private struct TaskList: View {
                     NavigationLink(value: NavigationState.task(task)) {
                         VStack(alignment: .leading) {
                             HStack {
-                                Text(String(localized: .tasks.task(String(task.id))))
+                                Text(String(localized: .tasks(.task(String(task.id)))))
                                 if let created = task.dateCreated {
                                     Text("\(fmt.string(from: created))")
                                         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -291,7 +291,7 @@ private struct TaskList: View {
                             }
                             .foregroundColor(.gray)
 
-                            let name = task.taskFileName ?? String(localized: .tasks.unknownFileName)
+                            let name = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
                             HStack(alignment: .top) {
                                 task.status.label
                                     .labelStyle(.iconOnly)
@@ -312,17 +312,13 @@ private struct TaskList: View {
                                     }
                                 }
                             } label: {
-                                Label(localized: .tasks.acknowledge, systemImage: "checkmark")
+                                Label(localized: .tasks(.acknowledge), systemImage: "checkmark")
                             }
                         }
                     }
                 }
             } else {
-                if #available(iOS 17, *) {
-                    ContentUnavailableView(String(localized: .tasks.noTasks), systemImage: "list.bullet.circle")
-                } else {
-                    Text(.tasks.noTasks)
-                }
+                ContentUnavailableView(String(localized: .tasks(.noTasks)), systemImage: "list.bullet.circle")
             }
         }
 
@@ -336,7 +332,7 @@ private struct TaskList: View {
         .environment(\.editMode, $editMode)
 
         .alert(unwrapping: $errorTask,
-               title: { task in Text(.tasks.missingDocument(String(task.id))) },
+               title: { task in Text(.tasks(.missingDocument(String(task.id)))) },
                actions: { _ in })
 
         .toolbar {
@@ -347,7 +343,7 @@ private struct TaskList: View {
                     }
                 } else {
                     if selection.isEmpty {
-                        Button(String(localized: .tasks.acknowledgeAll), role: .destructive) {
+                        Button(String(localized: .tasks(.acknowledgeAll)), role: .destructive) {
                             Task {
                                 do {
                                     try await store.acknowledge(tasks: store.tasks.map(\.id))
@@ -359,7 +355,7 @@ private struct TaskList: View {
                             }
                         }
                     } else {
-                        Button(String(localized: .tasks.acknowledgeN(UInt(selection.count))), role: .destructive) {
+                        Button(String(localized: .tasks(.acknowledgeN(UInt(selection.count)))), role: .destructive) {
                             Task {
                                 do {
                                     try await store.acknowledge(tasks: Array(selection))
