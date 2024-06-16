@@ -32,38 +32,38 @@ enum MatchingAlgorithm: Int, Codable, CaseIterable {
     var title: String {
         switch self {
         case .none:
-            String(localized: .matching.algorithmNone)
+            String(localized: .matching(.algorithmNone))
         case .any:
-            String(localized: .matching.algorithmAny)
+            String(localized: .matching(.algorithmAny))
         case .all:
-            String(localized: .matching.algorithmAll)
+            String(localized: .matching(.algorithmAll))
         case .literal:
-            String(localized: .matching.algorithmExact)
+            String(localized: .matching(.algorithmExact))
         case .regex:
-            String(localized: .matching.algorithmRegEx)
+            String(localized: .matching(.algorithmRegEx))
         case .fuzzy:
-            String(localized: .matching.algorithmFuzzy)
+            String(localized: .matching(.algorithmFuzzy))
         case .auto:
-            String(localized: .matching.algorithmAuto)
+            String(localized: .matching(.algorithmAuto))
         }
     }
 
     var label: String {
         switch self {
         case .none:
-            String(localized: .matching.explanationNone)
+            String(localized: .matching(.explanationNone))
         case .any:
-            String(localized: .matching.explanationAny)
+            String(localized: .matching(.explanationAny))
         case .all:
-            String(localized: .matching.explanationAny)
+            String(localized: .matching(.explanationAny))
         case .literal:
-            String(localized: .matching.explanationExact)
+            String(localized: .matching(.explanationExact))
         case .regex:
-            String(localized: .matching.explanationRegEx)
+            String(localized: .matching(.explanationRegEx))
         case .fuzzy:
-            String(localized: .matching.explanationFuzzy)
+            String(localized: .matching(.explanationFuzzy))
         case .auto:
-            String(localized: .matching.explanationAuto)
+            String(localized: .matching(.explanationAuto))
         }
     }
 }
