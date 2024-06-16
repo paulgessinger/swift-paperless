@@ -170,6 +170,7 @@
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
+		7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6AA3442C1EDEBE007A1866 /* MarkdownUI */; };
 		7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E029DEA51A00186A87 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
@@ -213,7 +214,6 @@
 		7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6F31DE29DEA46500186A87 /* FilterRule.swift */; };
 		7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057702AA481A700ABA6B1 /* LibrariesView.swift */; };
-		7AB057752AA482D200ABA6B1 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB057742AA482D200ABA6B1 /* MarkdownUI */; };
 		7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */; };
 		7AB057782AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */; };
 		7AB0577A2AA48BA700ABA6B1 /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057792AA48BA700ABA6B1 /* PrivacyView.swift */; };
@@ -468,12 +468,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A68F0B329B4B94B00878223 /* Flow in Frameworks */,
+				7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */,
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
-				7AB057752AA482D200ABA6B1 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -825,7 +825,7 @@
 				7A1C32BE2A5EAF1A00C18B44 /* Nuke */,
 				7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */,
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
-				7AB057742AA482D200ABA6B1 /* MarkdownUI */,
+				7A6AA3442C1EDEBE007A1866 /* MarkdownUI */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -915,8 +915,8 @@
 				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
-				7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
+				7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1779,20 +1779,20 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
+			requirement = {
+				kind = revision;
+				revision = 9f6c50ff6355cdde56086364aa6eb65b68ca2158;
+			};
+		};
 		7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
-			};
-		};
-		7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/paulgessinger/swift-markdown-ui";
-			requirement = {
-				branch = "circular-reference-path";
-				kind = branch;
 			};
 		};
 		7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
@@ -1866,9 +1866,9 @@
 			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
 			productName = Flow;
 		};
-		7AB057742AA482D200ABA6B1 /* MarkdownUI */ = {
+		7A6AA3442C1EDEBE007A1866 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7AB057732AA482D200ABA6B1 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			package = 7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
 		};
 		7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */ = {
