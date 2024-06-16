@@ -18,6 +18,8 @@ Swift Paperless
 iOS app for <a href="https://github.com/paperless-ngx/paperless-ngx">Paperless-ngx</a>
 </h2>
 
+[![Crowdin](https://badges.crowdin.net/swift-paperless/localized.svg)](https://crowdin.com/project/swift-paperless)
+
 <hr/>
 
 <a href="https://apps.apple.com/app/swift-paperless/id6448698521">
