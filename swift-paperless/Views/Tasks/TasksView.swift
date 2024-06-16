@@ -384,17 +384,26 @@ private struct TaskList: View {
     }
 }
 
-#Preview("TaskList") {
-    @StateObject var store = DocumentStore(repository: PreviewRepository())
-    @State var navPath = NavigationPath()
+// MARK: - Previews
 
-    return TasksView()
-        .environmentObject(store)
+private struct PreviewHelperView<Content: View>: View {
+    @StateObject private var store = DocumentStore(repository: PreviewRepository())
+
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        content()
+            .environmentObject(store)
+    }
+}
+
+#Preview("TaskList") {
+    PreviewHelperView {
+        TasksView()
+    }
 }
 
 #Preview("Task") {
-    @StateObject var store = DocumentStore(repository: PreviewRepository())
-
     let task = PaperlessTask(
         id: 2748,
         taskId: UUID(uuidString: "ef16d8fb-c495-4850-92b8-73a64109674e")!,
@@ -408,8 +417,9 @@ private struct TaskList: View {
         relatedDocument: "22"
     )
 
-    return NavigationStack {
-        TaskDetailView(task: task)
+    PreviewHelperView {
+        NavigationStack {
+            TaskDetailView(task: task)
+        }
     }
-    .environmentObject(store)
 }
