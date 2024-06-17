@@ -1661,8 +1661,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preview"
+            "state" : "translated",
+            "value" : "Vorschau"
           }
         },
         "en" : {
@@ -5162,8 +5162,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Teilen"
           }
         },
         "en" : {
