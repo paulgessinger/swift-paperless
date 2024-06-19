@@ -17,9 +17,17 @@ struct PickerHeader<Content: View, ID: Hashable>: View {
 
     @ViewBuilder var content: () -> Content
 
+    let icon: String
+
     var onClose: (() -> Void)?
 
-    init(color: Color, showInterface: Binding<Bool>, animation: Namespace.ID, id: ID, closeInline: Bool = false, content: @escaping () -> Content,
+    init(color: Color,
+         showInterface: Binding<Bool>,
+         animation: Namespace.ID,
+         id: ID,
+         closeInline: Bool = false,
+         icon: String = "xmark",
+         content: @escaping () -> Content,
          onClose: (() -> Void)? = nil)
     {
         self.color = color
@@ -29,13 +37,15 @@ struct PickerHeader<Content: View, ID: Hashable>: View {
         self.closeInline = closeInline
         self.content = content
         self.onClose = onClose
+        self.icon = icon
     }
 
     private var closeButton: some View {
-        Label(localized: .localizable(.done), systemImage: "xmark")
+        Label(localized: .localizable(.done), systemImage: icon)
             .labelStyle(.iconOnly)
+            .contentTransition(.symbolEffect(.replace))
             .foregroundStyle(.white)
-            .padding(10)
+            .frame(minWidth: 35, minHeight: 35)
             .background(Circle().fill(.thinMaterial))
             .onTapGesture {
                 onClose?()

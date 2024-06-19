@@ -91,6 +91,8 @@ class DocumentDetailModel {
 
     var document: Document
 
+    var suggestions: Suggestions?
+
     init( // animation: Namespace.ID,
         store: DocumentStore, document: Document
     ) {
@@ -165,5 +167,9 @@ class DocumentDetailModel {
 
     func saveDocument() async throws {
         try await store.updateDocument(document)
+    }
+
+    func loadSuggestions() async throws {
+        suggestions = try await store.repository.suggestions(documentId: document.id)
     }
 }

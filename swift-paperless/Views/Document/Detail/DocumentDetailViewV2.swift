@@ -83,6 +83,30 @@ private struct CommonBox<Element>: View where Element: Pickable {
         }
     }
 
+    private var suggestionsKey: KeyPath<Suggestions, [UInt]> {
+        switch Element.self {
+        case is Correspondent.Type: \.correspondents
+        case is DocumentType.Type: \.documentTypes
+        case is StoragePath.Type: \.storagePaths
+        default:
+            fatalError("Unknown element \(Element.self)")
+        }
+    }
+
+    @ViewBuilder
+    private var suggestions: some View {
+        let _ = print("Render SUGGESTIONS")
+        if let suggestions = viewModel.suggestions {
+            let names = suggestions[keyPath: suggestionsKey]
+                .filter { viewModel.document[keyPath: Element.documentPath(Document.self)] != $0 }
+                .compactMap { viewModel.store[keyPath: Element.storePath][$0]?.name }
+            let _ = print(names)
+            ForEach(names, id: \.self) { name in
+                Text(name)
+            }
+        }
+    }
+
     var body: some View {
         let path = Element.documentPath(Document.self)
         let label = if let id = viewModel.document[keyPath: path], let name = store[keyPath: Element.storePath][id]?.name {
@@ -96,7 +120,13 @@ private struct CommonBox<Element>: View where Element: Pickable {
             iconId: "EditIcon\(Element.self)",
             icon: Element.icon,
             color: editMode.color,
-            content: { Text(label) }
+            content: {
+//                VStack(alignment: .trailing) {
+                Text(label)
+//                    HStack{ suggestions }
+//                        .font(.caption)
+//                }
+            }
         )
         .onTapGesture {
             viewModel.startEditing(editMode)
@@ -106,6 +136,8 @@ private struct CommonBox<Element>: View where Element: Pickable {
 }
 
 struct DocumentDetailViewV2: View {
+    typealias CreatedPicker = DocumentDetailViewV2CreatedPicker
+
     @ObservedObject var store: DocumentStore
     var navPath: Binding<NavigationPath>?
 
@@ -161,73 +193,65 @@ struct DocumentDetailViewV2: View {
         .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
     }
 
-    private struct CreatedPicker: View {
-        @Bindable var viewModel: DocumentDetailModel
-        @Binding var date: Date
-        let animation: Namespace.ID
-
-        @State private var showInterface = false
-
-        @MainActor
-        private func close() async {
-            showInterface = false
-            try? await Task.sleep(for: .seconds(0.3))
-            await viewModel.stopEditing()
-        }
-
-        var body: some View {
-            ScrollView(.vertical) {
-                VStack {
-                    DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)),
-                               selection: $date,
-                               displayedComponents: .date)
-                        .labelsHidden()
-                        .datePickerStyle(.graphical)
-                        .padding(.horizontal)
-                        .opacity(showInterface ? 1 : 0)
-                        .frame(width: min(320, UIScreen.main.bounds.size.width))
-                }
-                .animation(.default.delay(showInterface ? 0.15 : 0), value: showInterface)
-
-                .task {
-                    try? await Task.sleep(for: .seconds(0.10))
-                    showInterface = true
-                }
-
-                .onChange(of: date) {
-                    Task {
-                        Haptics.shared.impact(style: .light)
-                        try? await Task.sleep(for: .seconds(0.3))
-                        await close()
-                    }
-                }
-            }
-            .safeAreaInset(edge: .top) {
-                PickerHeader(color: .paletteBlue,
-                             showInterface: $showInterface,
-                             animation: animation,
-                             id: "EditCreated",
-                             closeInline: true)
-                {
-                    HStack {
-                        Label(localized: .localizable(.documentEditCreatedDateLabel), systemImage: "calendar")
-                            .labelStyle(.iconOnly)
-                            .font(.title3)
-                            .matchedGeometryEffect(id: "EditCreatedIcon", in: animation, isSource: true)
-                        Text(.localizable(.documentEditCreatedDateLabel))
-                            .opacity(showInterface ? 1 : 0)
-                    }
+    private var defaultView: some View {
+        ScrollView(.vertical) {
+            VStack {
+                Text(viewModel.document.title)
+                    .font(.title)
+                    .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
+                CommonBox(DocumentType.self, animation: animation)
+                CommonBox(Correspondent.self, animation: animation)
+                CommonBox(StoragePath.self, animation: animation)
+                //                LazyVGrid(columns: [GridItem(), GridItem()]) {}
+                HStack {
+                    VStack {
+                        IconBox(animation: animation,
+                                id: "EditAsn",
+                                iconId: "EditAsnIcon",
+                                icon: "qrcode",
+                                color: .gray,
+                                content: {
+                                    HStack {
+                                        TextField(String(localized: .localizable(.asn)),
+                                                  text: $asnText, prompt: Text(String("")))
+                                            .focused($asnFocused)
+                                            .keyboardType(.numberPad)
+                                            .overlay(alignment: .trailing) {
+                                                VStack {
+                                                    if asnText.isEmpty, !asnFocused {
+                                                        Text("      ")
+                                                            .redacted(reason: .placeholder)
+                                                            .allowsHitTesting(false)
+                                                    }
+                                                }
+                                                .animation(.default, value: asnText)
+                                                .animation(.default, value: asnFocused)
+                                            }
 
-                } onClose: {
-                    Task {
-                        Haptics.shared.impact(style: .light)
-                        await close()
+                                        Label("Save", systemImage: "checkmark.circle.fill")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                })
+                    }
+                    VStack {
+                        IconBox(animation: animation,
+                                id: "EditCreated",
+                                iconId: "EditCreatedIcon",
+                                icon: "calendar",
+                                color: .paletteBlue,
+                                content: {
+                                    Text(DocumentCell.dateFormatter.string(from: viewModel.document.created))
+                                })
+                                .onTapGesture {
+                                    viewModel.startEditing(.created)
+                                }
+                                .zIndex(viewModel.zIndexActive == .created ? 1 : 0)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .padding()
     }
 
     @State private var asnText: String = ""
@@ -239,80 +263,27 @@ struct DocumentDetailViewV2: View {
 
             VStack {
                 if viewModel.editMode == .none || viewModel.editMode == .closing {
-                    ScrollView(.vertical) {
-                        VStack {
-                            Text(viewModel.document.title)
-                                .font(.title)
-                                .bold()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            LazyVGrid(columns: [GridItem(), GridItem()]) {
-                                CommonBox(DocumentType.self, animation: animation)
-                                CommonBox(Correspondent.self, animation: animation)
-                                CommonBox(StoragePath.self, animation: animation)
-
-                                IconBox(animation: animation,
-                                        id: "EditAsn",
-                                        iconId: "EditAsnIcon",
-                                        icon: "qrcode",
-                                        color: .gray,
-                                        content: {
-                                            HStack {
-                                                TextField(String(localized: .localizable(.asn)),
-                                                          text: $asnText, prompt: Text(String("")))
-                                                    .focused($asnFocused)
-                                                    .keyboardType(.numberPad)
-                                                    .overlay(alignment: .trailing) {
-                                                        VStack {
-                                                            if asnText.isEmpty, !asnFocused {
-                                                                Text("      ")
-                                                                    .redacted(reason: .placeholder)
-                                                                    .allowsHitTesting(false)
-                                                            }
-                                                        }
-                                                        .animation(.default, value: asnText)
-                                                        .animation(.default, value: asnFocused)
-                                                    }
-
-                                                Label("Save", systemImage: "checkmark.circle.fill")
-                                                    .labelStyle(.iconOnly)
-                                            }
-                                        })
-
-                                IconBox(animation: animation,
-                                        id: "EditCreated",
-                                        iconId: "EditCreatedIcon",
-                                        icon: "calendar",
-                                        color: .paletteBlue,
-                                        content: { Text(DocumentCell.dateFormatter.string(from: viewModel.document.created)) })
-                                    .onTapGesture {
-                                        viewModel.startEditing(.created)
+                    defaultView
+                        .safeAreaInset(edge: .bottom) {
+                            VStack {
+                                if viewModel.download == .loading {
+                                    HStack(spacing: 5) {
+                                        ProgressView()
+                                        Text(.localizable(.loading))
                                     }
-                                    .zIndex(viewModel.zIndexActive == .created ? 1 : 0)
-                            }
-                        }
-                        .padding()
-                    }
-
-                    .safeAreaInset(edge: .bottom) {
-                        VStack {
-                            if viewModel.download == .loading {
-                                HStack(spacing: 5) {
-                                    ProgressView()
-                                    Text(.localizable(.loading))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 25.0, style: .continuous)
+                                            .fill(.thickMaterial)
+                                    )
+                                    .padding(.horizontal)
+                                    .transition(
+                                        .move(edge: .bottom).combined(with: .opacity))
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 25.0, style: .continuous)
-                                        .fill(.thickMaterial)
-                                )
-                                .padding(.horizontal)
-                                .transition(
-                                    .move(edge: .bottom).combined(with: .opacity))
                             }
+                            .animation(.default, value: viewModel.download)
                         }
-                        .animation(.default, value: viewModel.download)
-                    }
                 }
             }
             .animation(.spring(duration: openDuration, bounce: 0.1), value: viewModel.editMode)
@@ -339,7 +310,15 @@ struct DocumentDetailViewV2: View {
         }
 
         .task {
-            await viewModel.loadDocument()
+            async let doc: () = viewModel.loadDocument()
+            do {
+                try await viewModel.loadSuggestions()
+            } catch {
+                // Should we surface this error at all?
+                Logger.shared.error("Unable to get suggestions: \(error)")
+            }
+
+            await doc
         }
 
         .onChange(of: viewModel.document) {
