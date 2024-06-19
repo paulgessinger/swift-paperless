@@ -60,7 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gonzalezreal/swift-markdown-ui.git",
       "state" : {
-        "revision" : "9f6c50ff6355cdde56086364aa6eb65b68ca2158"
+        "revision" : "9a8119b37e09a770367eeb26e05267c75d854053",
+        "version" : "2.3.1"
       }
     },
     {
@@ -77,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/liamnichols/xcstrings-tool-plugin",
       "state" : {
-        "revision" : "cfc1b9301210700658b52b9e27230e01646a0e50",
-        "version" : "0.5.0"
+        "revision" : "a281cf2c72e0e4d91c74bf467ef4e871d4f37751",
+        "version" : "0.5.1"
       }
     }
   ],
