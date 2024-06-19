@@ -34,7 +34,11 @@ struct DocumentDetailViewVersionSelection: View {
 @MainActor
 private var editingInterface: AppSettings.EditingUserInterface {
     switch AppSettings.shared.editingUserInterface {
-    case .automatic: .v1
+    case .automatic:
+        switch Bundle.main.appConfiguration {
+        case .Debug, .Simulator: .v2
+        case .AppStore, .TestFlight: .v1
+        }
     case .v1: .v1
     case .v2: .v2
     }
