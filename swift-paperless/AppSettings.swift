@@ -141,7 +141,6 @@ extension AppSettings {
     static func value<Value: Codable>(for key: SettingsKeys, or defaultValue: Value) -> Value {
         let key = key.rawValue
         guard let obj = UserDefaults.standard.object(forKey: key) as? Data else {
-            Logger.shared.trace("AppSettings.value(\(key)) not found returning default")
             return defaultValue
         }
         do {
