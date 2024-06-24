@@ -8,17 +8,24 @@
 import Foundation
 class PaperlessURLSessionDelegate: NSObject, URLSessionDelegate {
     
+    var identityName: String? = nil
+    
     public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard challenge.protectionSpace.authenticationMethod
                 == NSURLAuthenticationMethodClientCertificate
+              
         else {
             completionHandler(.performDefaultHandling, nil)
             return
         }
-        print("Delegate active \(challenge.protectionSpace)")
         
-        if let identity = Keychain.readIdentity(name: "User_Certificate"){
-            print("loaded")
+        guard let identName = identityName else {
+            print("Cert Req but not loaded")
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+        print("Using \(identName)")
+        if let identity = Keychain.readIdentity(name: identName){
             let credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
             
             challenge.sender?.use(credential, for: challenge)

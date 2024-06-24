@@ -121,24 +121,31 @@ enum Keychain {
         }
     }
     
-    static func readAllIdenties() {
+    static func readAllIdenties() -> [(SecIdentity, String)] {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecMatchLimit as String: kSecMatchLimitAll,
             kSecReturnAttributes as String: true,
-            kSecReturnData as String: true,
+            kSecReturnRef as String: kCFBooleanTrue
         ]
         var item_ref: CFTypeRef?
         
+        var ret: [(SecIdentity, String)] = []
         
         if SecItemCopyMatching(query as CFDictionary, &item_ref) == noErr {
             let items = item_ref as! Array<Dictionary<String, Any>>
             for item in items {
-                print(item[kSecAttrLabel as String] as? String)
+                let name = item[kSecAttrLabel as String] as? String
+                let identity = item[kSecValueRef as String] as! SecIdentity?
+                
+                ret.append((identity!, name!))
+                
             }
         } else {
             print("Something went wrong trying to find the idenities in the keychain")
         }
+        
+        return ret
     }
     
     static func readIdentity(name: String) -> SecIdentity? {
@@ -168,5 +175,18 @@ enum Keychain {
             print("Something went wrong trying to find the user in the keychain")
         }
         return nil
+    }
+    
+    static func deleteIdentity(name: String){
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassIdentity,
+            kSecAttrLabel as String: name,
+        ]
+        
+        if SecItemDelete(query as CFDictionary) == noErr {
+            print("Successfully deleted")
+        }else {
+            print("Error deleting")
+        }
     }
 }

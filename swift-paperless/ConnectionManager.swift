@@ -14,11 +14,13 @@ struct Connection: Equatable {
     let url: URL
     let token: String
     let extraHeaders: [ConnectionManager.HeaderValue]
+    let identity: String?
 
-    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = []) {
+    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], identityName: String?) {
         self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
+        self.identity = identityName
     }
 
     var scheme: String {
@@ -40,6 +42,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
     var url: URL
     var extraHeaders: [ConnectionManager.HeaderValue]
     var user: User
+    var identity: String?
 
     var token: String {
         get throws {
@@ -57,7 +60,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
 
     var connection: Connection {
         get throws {
-            try Connection(url: url, token: token, extraHeaders: extraHeaders)
+            try Connection(url: url, token: token, extraHeaders: extraHeaders, identityName: identity)
         }
     }
 
@@ -252,7 +255,7 @@ class ConnectionManager: ObservableObject {
             let token = udef.string(forKey: "PreviewToken") ?? "pseudo-token-that-will-not-work"
             return Connection(url: url,
                               token: token,
-                              extraHeaders: extraHeaders)
+                              extraHeaders: extraHeaders, identityName: nil)
         }
 
         if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
@@ -286,7 +289,7 @@ class ConnectionManager: ObservableObject {
 
         return Connection(url: url,
                           token: String(data: data, encoding: .utf8)!,
-                          extraHeaders: extraHeaders)
+                          extraHeaders: extraHeaders, identityName: nil)
     }
 
     var storedConnection: StoredConnection? {

@@ -138,8 +138,9 @@ actor ApiRepository {
 
         let sanitizedUrl = sanitizeUrlForLog(url)
         Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
-
-        let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
+        let delegate = PaperlessURLSessionDelegate()
+        delegate.identityName = connection.identity
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
         let result: (Data, URLResponse)
         do {
             result = try await session.getData(for: request)

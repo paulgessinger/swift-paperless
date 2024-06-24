@@ -27,10 +27,8 @@ class PKCS12 {
         let secError: OSStatus = SecPKCS12Import(pkcs12Data as NSData, importPasswordOption, &items)
         guard secError == errSecSuccess else {
             if secError == errSecAuthFailed {
-                NSLog("Incorrect password?")
                 throw PKCS12Error.wrongPassword
             }
-            print("Error trying to import PKCS12 data")
             throw PKCS12Error.other
         }
         guard let theItemsCFArray = items else { fatalError() }

@@ -42,9 +42,9 @@ private struct DetailsView: View {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
                 NavigationLink {
-                    MTLSSettingsView()
+                    TLSListView()
                 } label: {
-                    Label("MTLS", systemImage: "list.bullet.rectangle.fill")
+                    Label("Certificates", systemImage: "lock.fill")
                 }
 
                 LogRecordExportButton()
@@ -120,6 +120,8 @@ struct LoginView: View {
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     @State private var loginOngoing = false
+    
+    @State private var selectedIdentity: String? = nil
 
     private nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
@@ -176,8 +178,9 @@ struct LoginView: View {
             urlState = .checking
 
             
-            
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
+            let delegate = PaperlessURLSessionDelegate()
+            delegate.identityName = selectedIdentity
+            let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             
             let (data, response) = try await session.getData(for: request)
 
@@ -222,8 +225,11 @@ struct LoginView: View {
             extraHeaders.apply(toRequest: &request)
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
-
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
+            
+            let delegate = PaperlessURLSessionDelegate()
+            delegate.identityName = selectedIdentity
+            
+            let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
@@ -243,7 +249,7 @@ struct LoginView: View {
             showSuccessOverlay = true
             try await Task.sleep(for: .seconds(2.3))
 
-            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders)
+            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders, identityName: selectedIdentity)
 
             let repository = ApiRepository(connection: connection)
 
@@ -253,7 +259,7 @@ struct LoginView: View {
                 Logger.api.warning("Username from login and logged in username not the same")
             }
 
-            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser)
+            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser, identity: selectedIdentity)
             try stored.setToken(connection.token)
 
             try connectionManager.login(stored)
@@ -268,6 +274,8 @@ struct LoginView: View {
             errorController.push(error: error)
         }
     }
+    
+    @State private var idenityNames: [String] = []
 
     var body: some View {
         NavigationStack {
@@ -322,6 +330,24 @@ struct LoginView: View {
                         }
                     }
                     .transition(.opacity)
+                }
+                
+                
+                Section{
+                    Picker("Use Certificate", selection: $selectedIdentity) {
+                        Text("None").tag(Optional<String>(nil))
+                        ForEach(idenityNames, id: \.self) {
+                            Text($0).tag(Optional($0))
+                        }
+                    }
+                    .onAppear{
+                        let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()
+                        
+                        idenityNames.removeAll()
+                        idents.forEach{ identity, name in
+                            idenityNames.append(name)
+                        }
+                    }
                 }
 
                 Section {
@@ -397,6 +423,11 @@ struct LoginView: View {
                     withAnimation {
                         apiInUrl = value.contains("/api")
                     }
+                }
+            }
+            .onChange(of: selectedIdentity) {
+                Task {
+                    await checkUrl(string: url.debouncedText)
                 }
             }
 
