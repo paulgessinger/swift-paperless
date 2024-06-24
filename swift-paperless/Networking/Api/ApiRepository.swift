@@ -139,9 +139,10 @@ actor ApiRepository {
         let sanitizedUrl = sanitizeUrlForLog(url)
         Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
 
+        let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
         let result: (Data, URLResponse)
         do {
-            result = try await URLSession.shared.getData(for: request)
+            result = try await session.getData(for: request)
         } catch let error as CancellationError {
             Logger.api.trace("Fetch request task was cancelled")
             throw error

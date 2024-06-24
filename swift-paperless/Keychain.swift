@@ -105,4 +105,68 @@ enum Keychain {
             throw KeychainError.unexpectedStatus(status)
         }
     }
+    
+    static func saveIdentity(identity: SecIdentity?, name: String) {
+        let attributes: [String: Any] = [
+            kSecClass as String: kSecClassIdentity,
+            kSecValueRef as String: identity,
+            kSecAttrLabel as String: name
+        ]
+        let res = SecItemAdd(attributes as CFDictionary, nil)
+        if res == noErr {
+            print("Identity saved successfully in the keychain")
+        } else {
+            print(res)
+            print("Something went wrong trying to save the Identity in the keychain")
+        }
+    }
+    
+    static func readAllIdenties() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassIdentity,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+            kSecReturnAttributes as String: true,
+            kSecReturnData as String: true,
+        ]
+        var item_ref: CFTypeRef?
+        
+        
+        if SecItemCopyMatching(query as CFDictionary, &item_ref) == noErr {
+            let items = item_ref as! Array<Dictionary<String, Any>>
+            for item in items {
+                print(item[kSecAttrLabel as String] as? String)
+            }
+        } else {
+            print("Something went wrong trying to find the idenities in the keychain")
+        }
+    }
+    
+    static func readIdentity(name: String) -> SecIdentity? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassIdentity,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecReturnAttributes as String: true,
+            kSecAttrLabel as String: name,
+            kSecReturnRef as String: kCFBooleanTrue
+        ]
+        var item_ref: CFTypeRef?
+        
+        
+        if SecItemCopyMatching(query as CFDictionary, &item_ref) == noErr {
+            
+            if let existingItem = item_ref as? [String: Any],
+               let name = existingItem[kSecAttrLabel as String] as? String
+            
+            {
+                print(name)
+                
+                let identity = existingItem[kSecValueRef as String] as! SecIdentity?
+                return identity
+            }
+             print("Key err")
+        } else {
+            print("Something went wrong trying to find the user in the keychain")
+        }
+        return nil
+    }
 }

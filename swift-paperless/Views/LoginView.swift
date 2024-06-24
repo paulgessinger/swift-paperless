@@ -41,6 +41,11 @@ private struct DetailsView: View {
                 } label: {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
+                NavigationLink {
+                    MTLSSettingsView()
+                } label: {
+                    Label("MTLS", systemImage: "list.bullet.rectangle.fill")
+                }
 
                 LogRecordExportButton()
             }
@@ -170,7 +175,11 @@ struct LoginView: View {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
 
-            let (data, response) = try await URLSession.shared.getData(for: request)
+            
+            
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
+            
+            let (data, response) = try await session.getData(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
@@ -214,7 +223,8 @@ struct LoginView: View {
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
 
-            let (data, response) = try await URLSession.shared.getData(for: request)
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(), delegateQueue: nil)
+            let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
             if statusCode != 200 {
