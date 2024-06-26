@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 enum Keychain {
     enum KeychainError: Error {
