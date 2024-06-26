@@ -149,6 +149,11 @@ struct SettingsView: View {
             } label: {
                 Label(localized: .settings(.debugMenu), systemImage: "ladybug.fill")
             }
+            NavigationLink {
+                TLSListView()
+            } label: {
+                Label(localized: .settings(.certificates), systemImage: "lock.fill")
+            }
         }
     }
 

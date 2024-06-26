@@ -114,10 +114,9 @@ enum Keychain {
         ]
         let res = SecItemAdd(attributes as CFDictionary, nil)
         if res == noErr {
-            print("Identity saved successfully in the keychain")
+            Logger.shared.info("Identity saved successfully in the keychain")
         } else {
-            print(res)
-            print("Something went wrong trying to save the Identity in the keychain")
+            Logger.shared.warning("Something went wrong trying to save the Identity in the keychain")
         }
     }
     
@@ -142,7 +141,7 @@ enum Keychain {
                 
             }
         } else {
-            print("Something went wrong trying to find the idenities in the keychain")
+            Logger.shared.warning("Something went wrong trying to find the idenities in the keychain")
         }
         
         return ret
@@ -163,16 +162,13 @@ enum Keychain {
             
             if let existingItem = item_ref as? [String: Any],
                let name = existingItem[kSecAttrLabel as String] as? String
-            
             {
-                print(name)
                 
                 let identity = existingItem[kSecValueRef as String] as! SecIdentity?
                 return identity
             }
-             print("Key err")
         } else {
-            print("Something went wrong trying to find the user in the keychain")
+            Logger.shared.warning("Something went wrong trying to find the user in the keychain")
         }
         return nil
     }
@@ -184,9 +180,9 @@ enum Keychain {
         ]
         
         if SecItemDelete(query as CFDictionary) == noErr {
-            print("Successfully deleted")
+            Logger.shared.info("Successfully deleted the identity")
         }else {
-            print("Error deleting")
+            Logger.shared.warning("Error deleting the identity")
         }
     }
 }

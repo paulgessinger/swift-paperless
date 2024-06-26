@@ -1,6 +1,17 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "activeCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active Certificate"
+          }
+        }
+      }
+    },
     "activeServer" : {
       "comment" : "Active server display section title",
       "extractionState" : "manual",
@@ -371,6 +382,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaloguj się z TouchID, by użyć aplikacji"
+          }
+        }
+      }
+    },
+    "certificateLoadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't load certificate. Invalid password?"
+          }
+        }
+      }
+    },
+    "certificateNotLoaded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate not loaded"
+          }
+        }
+      }
+    },
+    "certificates" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificates"
           }
         }
       }
@@ -1355,6 +1399,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preferencje"
+          }
+        }
+      }
+    },
+    "selectCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Certificate"
           }
         }
       }

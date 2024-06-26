@@ -179,7 +179,7 @@ struct LoginView: View {
 
             
             let delegate = PaperlessURLSessionDelegate()
-            delegate.identityName = selectedIdentity
+            delegate.loadIdentityByName(name: selectedIdentity)
             let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             
             let (data, response) = try await session.getData(for: request)
@@ -227,7 +227,7 @@ struct LoginView: View {
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
             
             let delegate = PaperlessURLSessionDelegate()
-            delegate.identityName = selectedIdentity
+            delegate.loadIdentityByName(name: selectedIdentity)
             
             let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
@@ -334,7 +334,7 @@ struct LoginView: View {
                 
                 
                 Section{
-                    Picker("Use Certificate", selection: $selectedIdentity) {
+                    Picker(String(localized: .settings(.activeCertificate)), selection: $selectedIdentity) {
                         Text("None").tag(Optional<String>(nil))
                         ForEach(idenityNames, id: \.self) {
                             Text($0).tag(Optional($0))

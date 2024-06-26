@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TLSIdentity: Identifiable, Equatable {
     var name: String
-    //var identity: SecIdentity
+    var identity: SecIdentity
     
     var id: String { name }
 }
@@ -27,7 +27,6 @@ struct TLSListView: View {
     
     
     func refreshAll() {
-        print("Refresh")
         let idenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
         
         withAnimation{
@@ -37,7 +36,7 @@ struct TLSListView: View {
         idenitites.forEach{ ident, name in
             print(name)
             withAnimation{
-                self.idenities.append(TLSIdentity(name: name))
+                self.idenities.append(TLSIdentity(name: name, identity: ident))
             }
         }
     }
@@ -45,13 +44,16 @@ struct TLSListView: View {
     var body: some View {
         List {
             ForEach($idenities){ $identity in
-                Text(identity.name)
+                NavigationLink {
+                    TLSSingleView(identity: identity)
+                } label: {
+                    Text(identity.name)
+                }
             }
             .onDelete { ids in
                 withAnimation {
                     ids.forEach{ id in
                         let item = idenities[id]
-                        print("Delete \(item.name)")
                         Keychain.deleteIdentity(name: item.name)
                         refreshAll()
                     }
@@ -148,27 +150,26 @@ struct TLSListView: View {
         var body: some View {
             Form {
                 Section {
-                    TextField("Certificate Name", text: $certificateName)
-                    SecureField("Certificate Password",text: $certificatePassword).autocorrectionDisabled()
-                    Button("Select Certificate"){
+                    TextField(String(localized: .localizable(.name)), text: $certificateName)
+                    SecureField(String(localized: .login(.password)),text: $certificatePassword).autocorrectionDisabled()
+                    Button(String(localized: .settings(.selectCertificate))){
                         self.isImporting = true
                     }
                 } footer: {
                     switch certificateState {
                     case .notloaded:
-                        Text("No Certificate loaded")
+                        Text(String(localized: .settings(.certificateNotLoaded)))
                     case .wrongPassword:
-                        Text("Cant´t load. Wrong password?")
+                        Text(String(localized: .settings(.certificateLoadError)))
                     case .valid:
                         HStack{
                             Image("checkmark.circle.fill")
-                            Text("Valid")
                         }
                     }
                 }
                 
                 Section {
-                    Button("Save"){
+                    Button(String(localized: .localizable(.save))){
                         guard let data = certificateData else {
                             isCertificateValid = false
                             certificateState = .notloaded
@@ -197,12 +198,39 @@ struct TLSListView: View {
                         defer { selectedFile.stopAccessingSecurityScopedResource() }
                         self.certificateName = selectedFile.lastPathComponent
                     } else {
-                        print("File access denied")
+                        //TODO: error handling
                     }
                 } catch {
-                    
-                    print("Unable to read file contents")
+                    //TODO: error handling
                     print(error.localizedDescription)
+                }
+            }
+        }
+    }
+}
+
+struct TLSSingleView: View {
+    
+    @State var identity: TLSIdentity
+    @State var cn: String?
+    
+    var body: some View {
+        Form {
+            Section{
+                LabeledContent("Name", value: identity.name)
+                LabeledContent("Cn", value: cn ?? "N/A")
+            }
+        }
+        .onChange(of: identity, initial: true){
+            var optCertificate: SecCertificate?
+            SecIdentityCopyCertificate(identity.identity, &optCertificate)
+            
+            if let certificate = optCertificate{
+                var cn: CFString?
+                SecCertificateCopyCommonName(certificate, &cn)
+                
+                if cn != nil {
+                    self.cn = cn as String?
                 }
             }
         }
