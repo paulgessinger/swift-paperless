@@ -22,7 +22,7 @@ enum CertificateState {
 
 struct TLSListView: View {
     @State var idenities: [TLSIdentity] = []
-    
+    @Binding var identityNames: [String]
     @State var showCreate: Bool = false
     
     
@@ -33,9 +33,10 @@ struct TLSListView: View {
             self.idenities.removeAll()
         }
         
+        identityNames.removeAll()
         idenitites.forEach{ ident, name in
-            print(name)
             withAnimation{
+                self.identityNames.append(name)
                 self.idenities.append(TLSIdentity(name: name, identity: ident))
             }
         }
@@ -71,7 +72,6 @@ struct TLSListView: View {
                     }, label: {
                         Label(String(localized: .localizable(.add)), systemImage: "plus")
                     })
-
                     EditButton()
                 }
             }

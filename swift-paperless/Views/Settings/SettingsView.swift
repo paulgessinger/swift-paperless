@@ -150,7 +150,7 @@ struct SettingsView: View {
                 Label(localized: .settings(.debugMenu), systemImage: "ladybug.fill")
             }
             NavigationLink {
-                TLSListView()
+                TLSListView(identityNames: Binding(get: {[] as [String]}, set: {val in }))
             } label: {
                 Label(localized: .settings(.certificates), systemImage: "lock.fill")
             }

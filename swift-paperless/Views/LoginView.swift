@@ -31,6 +31,7 @@ private struct TokenResponse: Decodable {
 
 private struct DetailsView: View {
     @Binding var extraHeaders: [ConnectionManager.HeaderValue]
+    @Binding var identityNames: [String]
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -42,7 +43,7 @@ private struct DetailsView: View {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
                 NavigationLink {
-                    TLSListView()
+                    TLSListView(identityNames: $identityNames)
                 } label: {
                     Label("Certificates", systemImage: "lock.fill")
                 }
@@ -442,7 +443,7 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(extraHeaders: $extraHeaders)
+                DetailsView(extraHeaders: $extraHeaders, identityNames: $idenityNames)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
