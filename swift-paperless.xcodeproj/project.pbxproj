@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04AA126B2C29AA7B000A389C /* PKCS12.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA126A2C29AA7B000A389C /* PKCS12.swift */; };
+		04AA126D2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA126C2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift */; };
+		04AA12702C29AB31000A389C /* PKCS12.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA126A2C29AA7B000A389C /* PKCS12.swift */; };
+		04AA127C2C29AB34000A389C /* PaperlessURLSessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA126C2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift */; };
+		04AA128B2C29F36B000A389C /* TLSListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA128A2C29F36B000A389C /* TLSListView.swift */; };
+		04AA128C2C29F36B000A389C /* TLSListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA128A2C29F36B000A389C /* TLSListView.swift */; };
 		7A04034229FD68E8009604E4 /* ManageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A04034129FD68E8009604E4 /* ManageView.swift */; };
 		7A04EE422A672A2800C9CAE3 /* FilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD8FC5729E4B37B00157217 /* FilterBar.swift */; };
 		7A04EE472A672BEA00C9CAE3 /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -328,6 +334,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		04AA126A2C29AA7B000A389C /* PKCS12.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKCS12.swift; sourceTree = "<group>"; };
+		04AA126C2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperlessURLSessionDelegate.swift; sourceTree = "<group>"; };
+		04AA128A2C29F36B000A389C /* TLSListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLSListView.swift; sourceTree = "<group>"; };
 		7A04034129FD68E8009604E4 /* ManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageView.swift; sourceTree = "<group>"; };
 		7A04EE492A673AE600C9CAE3 /* DocumentLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
 		7A0772052BE5370700DCC8CD /* TaskActivityToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskActivityToolbar.swift; sourceTree = "<group>"; };
@@ -715,6 +724,7 @@
 				7A3E46032BF25C330007AB67 /* AsyncChannel+next.swift */,
 				7A763EBC2C0B484C0042796A /* String+isNumber.swift */,
 				7A4D513C2C0F88AF0066E75A /* BiometricLockManager.swift */,
+				04AA126A2C29AA7B000A389C /* PKCS12.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -749,6 +759,7 @@
 				7A2E12212B14F3A000E7704A /* DeriveUrl.swift */,
 				7ADA9ABA2B263797002C303C /* Decoder.swift */,
 				7A07722A2BE6495600DCC8CD /* NullRepository.swift */,
+				04AA126C2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -789,6 +800,7 @@
 				7A4570182BF8BC6200CFB030 /* ReleaseNotesView.swift */,
 				7ABC73282BFB86E80061E094 /* QuickLookPreview.swift */,
 				7AE5601B2BFF5C7A00352293 /* PDFKitView.swift */,
+				04AA128A2C29F36B000A389C /* TLSListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -921,7 +933,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1420;
+				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					7A4AA8E329BB969400D845A2 = {
@@ -1064,6 +1076,7 @@
 				7A4AA90A29BE1F7F00D845A2 /* CommonPickerView.swift in Sources */,
 				7A3E45E12BF256BB0007AB67 /* AppVersionView.swift in Sources */,
 				7A8E1F772A1A6FE4002A7CB3 /* DocumentModel.swift in Sources */,
+				04AA127C2C29AB34000A389C /* PaperlessURLSessionDelegate.swift in Sources */,
 				7A495C792BD4136C00A2E5CF /* ConnectionsView.swift in Sources */,
 				7A3E46052BF25C330007AB67 /* AsyncChannel+next.swift in Sources */,
 				7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */,
@@ -1074,6 +1087,7 @@
 				7A81C5B12A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A3C1CF62C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */,
 				7A35C0BC2C117E91006A542D /* SortOrder.swift in Sources */,
+				04AA128C2C29F36B000A389C /* TLSListView.swift in Sources */,
 				7A4AA8F629BE037800D845A2 /* Utilities.swift in Sources */,
 				7A3E46242BF3B4760007AB67 /* DocumentListViewModel.swift in Sources */,
 				7AB060DF29C6628E004E6C63 /* Repository.swift in Sources */,
@@ -1085,6 +1099,7 @@
 				7A297FB529FE9AC80021A1ED /* ManageView.swift in Sources */,
 				7A2A13272A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7A2577432A87D32400B15626 /* NullCodable.swift in Sources */,
+				04AA12702C29AB31000A389C /* PKCS12.swift in Sources */,
 				7A495CDC2BD940A200A2E5CF /* Binding.swift in Sources */,
 				7A8E1F802A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7A7080D22BDF8EFC0095BD56 /* Import.swift in Sources */,
@@ -1139,6 +1154,7 @@
 				7A2831BA2A63DDDF009E86CE /* DocumentList.swift in Sources */,
 				7A07721C2BE5380100DCC8CD /* TasksView.swift in Sources */,
 				7A4AA91129BE202800D845A2 /* PreviewModel.swift in Sources */,
+				04AA126D2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift in Sources */,
 				7A297FB329FE8A320021A1ED /* DocumentTypeEditView.swift in Sources */,
 				7ACFB2D72B4756FC009DED79 /* LogRecord.swift in Sources */,
 				7A81C5AC2A1A90C50092061F /* StoragePathModel.swift in Sources */,
@@ -1186,7 +1202,9 @@
 				7A495CF92BD94D6C00A2E5CF /* View+confirmationDialog.swift in Sources */,
 				7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */,
 				7AFB7BA72A89773B0013196B /* AppSettings.swift in Sources */,
+				04AA128B2C29F36B000A389C /* TLSListView.swift in Sources */,
 				7A898ECE2A03000D0003DFBD /* UserDefaults.swift in Sources */,
+				04AA126B2C29AA7B000A389C /* PKCS12.swift in Sources */,
 				7A10C1A02C237A06000A7B06 /* DocumentDetailCreatedPicker.swift in Sources */,
 				7A3E46042BF25C330007AB67 /* AsyncChannel+next.swift in Sources */,
 				7A2831B72A63D6E2009E86CE /* TaskModel.swift in Sources */,

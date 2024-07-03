@@ -26,13 +26,24 @@ class DocumentListViewModel: ObservableObject {
     private var batchSize: UInt = 250
     private var fetchMargin = 10
 
-    private var imagePrefetcher = ImagePrefetcher()
+    private var imagePrefetcher: ImagePrefetcher
 
     init(store: DocumentStore, filterState: FilterState, errorController: ErrorController) {
         self.store = store
         self.filterState = filterState
         self.errorController = errorController
+        
+        let dataloader = DataLoader()
+        
+        let delegate = PaperlessURLSessionDelegate()
+        if let identName = store.repository.getIdentName(){
+            delegate.loadIdentityByName(name: identName)
+        }
 
+        dataloader.delegate = delegate
+        
+        imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline(configuration: .init(dataLoader: dataloader)))
+        
         imagePrefetcher.didComplete = {
             Logger.shared.debug("Thumbnail prefetching completed")
         }

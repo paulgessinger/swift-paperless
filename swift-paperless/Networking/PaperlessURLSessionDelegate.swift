@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-class PaperlessURLSessionDelegate: NSObject, URLSessionDelegate {
+class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate {
     
     private var credential: URLCredential? = nil
     
@@ -23,23 +23,36 @@ class PaperlessURLSessionDelegate: NSObject, URLSessionDelegate {
             Logger.shared.info("Error loading identity from keychain")
         }
     }
-    
-    public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard 
+    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        guard
             challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
-                
         else {
-            completionHandler(.performDefaultHandling, nil)
-            return
+            return (.performDefaultHandling, nil)
         }
         
         guard let cred = self.credential else {
-            completionHandler(.performDefaultHandling, nil)
-            return
+            Logger.shared.info("Delegate without cert called")
+            return (.performDefaultHandling, nil)
         }
 
         challenge.sender?.use(cred, for: challenge)
-        completionHandler(.useCredential, cred)
+        return (.useCredential, cred)
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        guard
+            challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
+        else {
+            return (.performDefaultHandling, nil)
+        }
+        
+        guard let cred = self.credential else {
+            Logger.shared.info("DelegateTask without cert called")
+            return (.performDefaultHandling, nil)
+        }
+
+        challenge.sender?.use(cred, for: challenge)
+        return (.useCredential, cred)
     }
     
 }

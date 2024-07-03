@@ -194,6 +194,11 @@ actor PreviewRepository: Repository {
             ),
         ]
     }
+    
+    nonisolated
+    func getIdentName() -> String? {
+        return nil
+    }
 
     func nextAsn() async -> UInt {
         (documents.compactMap(\.value.asn).max() ?? 0) + 1
