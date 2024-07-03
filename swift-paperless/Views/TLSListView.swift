@@ -109,7 +109,7 @@ struct TLSListView: View {
         @State private var isCertificateValid = false
         @State private var certificateState: CertificateState = .notloaded
         
-        
+        @Environment(\.dismiss) var dismiss
         
         private func validateCertificate(certificateData: Data, certificatePassword: String) -> Bool {
             do {
@@ -176,6 +176,7 @@ struct TLSListView: View {
                             return
                         }
                         saveToKeychain(certificateData: data, certificatePassword: certificatePassword, certificateName: certificateName)
+                        dismiss()
                     }.disabled(!isCertificateValid)
                     
                 }
