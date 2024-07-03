@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import Nuke
 import NukeUI
 import os
 import SwiftUI
@@ -25,6 +26,16 @@ struct DocumentPreviewImage: View {
         .task {
             image.transaction = Transaction(animation: .linear(duration: 0.1))
             do {
+                let dataloader = DataLoader()
+                
+                let delegate = PaperlessURLSessionDelegate()
+                if let identName = store.repository.getIdentName(){
+                    delegate.loadIdentityByName(name: identName)
+                }
+                dataloader.delegate = delegate
+                
+                image.pipeline = ImagePipeline(configuration: .init(dataLoader: dataloader))
+                
                 try image.load(ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document), processors: [.resize(width: 130)]))
             } catch {
                 Logger.shared.error("Error loading document thumbnail for cell: \(error)")
