@@ -65,10 +65,9 @@ extension AsyncSequence where Self: Sendable, Element: Sendable, AsyncIterator: 
 }
 
 protocol Repository: Sendable, Actor {
-    
     nonisolated
     func getIdentName() -> String?
-    
+
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws
     func create(document: ProtoDocument, file: URL) async throws

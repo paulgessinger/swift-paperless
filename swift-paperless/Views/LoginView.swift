@@ -121,13 +121,13 @@ struct LoginView: View {
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     @State private var loginOngoing = false
-    
+
     @State private var selectedIdentity: String? = nil
-    
+
     @State private var availableIdenityNames: [String] = []
 
     @State private var identityBasedAuth: Bool = false
-    
+
     @State private var showIdentitySelection: Bool = false
 
     private nonisolated
@@ -184,11 +184,10 @@ struct LoginView: View {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
 
-            
             let delegate = PaperlessURLSessionDelegate()
             delegate.loadIdentityByName(name: selectedIdentity)
             let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-            
+
             let (data, response) = try await session.getData(for: request)
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
@@ -213,7 +212,7 @@ struct LoginView: View {
 
     private func login() async {
         Logger.shared.notice("Attempting login with url \(url.text)")
-        
+
         if identityBasedAuth {
             return await loginIdentityBased()
         }
@@ -236,14 +235,14 @@ struct LoginView: View {
             extraHeaders.apply(toRequest: &request)
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
-            
+
             let delegate = PaperlessURLSessionDelegate()
             delegate.loadIdentityByName(name: selectedIdentity)
-            
+
             let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
-            
+
             if statusCode != 200 {
                 Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1, privacy: .public), \(String(decoding: data, as: UTF8.self))")
                 if statusCode == 400 {
@@ -285,12 +284,12 @@ struct LoginView: View {
             errorController.push(error: error)
         }
     }
-    
+
     private func loginIdentityBased() async {
         do {
             loginOngoing = true
             defer { loginOngoing = false }
-            
+
             guard let (baseUrl, _) = deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
                 errorController.push(error: LoginError.urlInvalid)
@@ -301,16 +300,16 @@ struct LoginView: View {
             let connection = Connection(url: baseUrl, token: "", extraHeaders: extraHeaders, identityName: selectedIdentity)
 
             let repository = ApiRepository(connection: connection)
-            
+
             let currentUser = try await repository.currentUser()
-            
+
             Logger.shared.info("Username: \(currentUser.username)")
-            
+
             let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser, identity: selectedIdentity)
             try stored.setToken("")
             try connectionManager.login(stored)
             Logger.api.info("Login successful")
-            
+
             // Success point
             Haptics.shared.notification(.success)
             showSuccessOverlay = true
@@ -375,17 +374,17 @@ struct LoginView: View {
                     }
                     .transition(.opacity)
                 }
-                
+
                 if showIdentitySelection {
-                    Section{
+                    Section {
                         Picker(String(localized: .settings(.activeIdentity)), selection: $selectedIdentity) {
-                            Text("None").tag(Optional<String>(nil))
+                            Text("None").tag(String?(nil))
                             ForEach(availableIdenityNames, id: \.self) {
                                 Text($0).tag(Optional($0))
                             }
                         }
                         .onChange(of: selectedIdentity) {
-                            if selectedIdentity == nil{
+                            if selectedIdentity == nil {
                                 identityBasedAuth = false
                             }
                         }
@@ -498,13 +497,13 @@ struct LoginView: View {
                 Text(.login(.success))
             }
             .onAppear {
-                let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()                
+                let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()
                 availableIdenityNames.removeAll()
-                idents.forEach{ identity, name in
+                idents.forEach { _, name in
                     availableIdenityNames.append(name)
                 }
             }
-            .onChange(of: availableIdenityNames){
+            .onChange(of: availableIdenityNames) {
                 showIdentitySelection = availableIdenityNames.count > 0
             }
         }

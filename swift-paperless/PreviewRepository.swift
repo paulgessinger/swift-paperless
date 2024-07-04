@@ -194,10 +194,10 @@ actor PreviewRepository: Repository {
             ),
         ]
     }
-    
+
     nonisolated
     func getIdentName() -> String? {
-        return nil
+        nil
     }
 
     func nextAsn() async -> UInt {

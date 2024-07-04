@@ -20,7 +20,7 @@ struct Connection: Equatable {
         self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
-        self.identity = identityName
+        identity = identityName
     }
 
     var scheme: String {

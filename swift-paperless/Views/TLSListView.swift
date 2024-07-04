@@ -5,13 +5,13 @@
 //  Created by Nils Witt on 24.06.24.
 //
 
-import SwiftUI
 import os
+import SwiftUI
 
 struct TLSIdentity: Identifiable, Equatable {
     var name: String
     var identity: SecIdentity
-    
+
     var id: String { name }
 }
 
@@ -25,27 +25,26 @@ struct TLSListView: View {
     @State var idenities: [TLSIdentity] = []
     @Binding var identityNames: [String]
     @State var showCreate: Bool = false
-    
-    
+
     func refreshAll() {
         let idenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
-        
-        withAnimation{
-            self.idenities.removeAll()
+
+        withAnimation {
+            idenities.removeAll()
         }
-        
+
         identityNames.removeAll()
-        idenitites.forEach{ ident, name in
-            withAnimation{
-                self.identityNames.append(name)
-                self.idenities.append(TLSIdentity(name: name, identity: ident))
+        idenitites.forEach { ident, name in
+            withAnimation {
+                identityNames.append(name)
+                idenities.append(TLSIdentity(name: name, identity: ident))
             }
         }
     }
-    
+
     var body: some View {
         List {
-            ForEach($idenities){ $identity in
+            ForEach($idenities) { $identity in
                 NavigationLink {
                     TLSSingleView(identity: identity)
                 } label: {
@@ -54,7 +53,7 @@ struct TLSListView: View {
             }
             .onDelete { ids in
                 withAnimation {
-                    ids.forEach{ id in
+                    ids.forEach { id in
                         let item = idenities[id]
                         Keychain.deleteIdentity(name: item.name)
                         refreshAll()
@@ -62,7 +61,7 @@ struct TLSListView: View {
                 }
             }
         }
-        .onAppear{
+        .onAppear {
             refreshAll()
         }
         .toolbar {
@@ -78,16 +77,15 @@ struct TLSListView: View {
             }
         }
         .sheet(isPresented: $showCreate, content: {
-            
             CreateView()
                 .navigationTitle("T")
-                .toolbar(){
+                .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack {
                             Button {
                                 showCreate = true
                                 withAnimation {
-                                    //headers.append(.init(key: "Header", value: "Value"))
+                                    // headers.append(.init(key: "Header", value: "Value"))
                                 }
                             } label: {
                                 Label(String(localized: .localizable(.add)), systemImage: "plus")
@@ -98,42 +96,38 @@ struct TLSListView: View {
                 }
         })
     }
-    
-    
-    
+
     private struct CreateView: View {
         @State private var certificatePassword: String = ""
         @State private var certificateName: String = ""
         @State private var certificateData: Data? = nil
-        
+
         @State private var isImporting: Bool = false
         @State private var isCertificateValid = false
         @State private var certificateState: CertificateState = .notloaded
-        
+
         @Environment(\.dismiss) var dismiss
-        
+
         private func validateCertificate(certificateData: Data, certificatePassword: String) -> Bool {
             do {
                 let _ = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
                 return true
-            } catch {
-                
-            }
+            } catch {}
             return false
         }
-        
-        private func saveToKeychain(certificateData: Data, certificatePassword: String, certificateName: String){
+
+        private func saveToKeychain(certificateData: Data, certificatePassword: String, certificateName: String) {
             do {
                 let pkc = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
                 if let identity = pkc.identity {
                     Keychain.saveIdentity(identity: identity, name: certificateName)
                 }
-            }catch {
+            } catch {
                 print(error)
             }
         }
-        
-        private func validateInput(){
+
+        private func validateInput() {
             guard let data = certificateData else {
                 isCertificateValid = false
                 certificateState = .notloaded
@@ -142,19 +136,19 @@ struct TLSListView: View {
             if validateCertificate(certificateData: data, certificatePassword: certificatePassword) {
                 certificateState = .valid
                 isCertificateValid = true
-            }else {
+            } else {
                 certificateState = .wrongPassword
                 isCertificateValid = false
             }
         }
-        
+
         var body: some View {
             Form {
                 Section {
                     TextField(String(localized: .localizable(.name)), text: $certificateName)
-                    SecureField(String(localized: .login(.password)),text: $certificatePassword).autocorrectionDisabled()
-                    Button(String(localized: .settings(.selectCertificate))){
-                        self.isImporting = true
+                    SecureField(String(localized: .login(.password)), text: $certificatePassword).autocorrectionDisabled()
+                    Button(String(localized: .settings(.selectCertificate))) {
+                        isImporting = true
                     }
                 } footer: {
                     switch certificateState {
@@ -163,14 +157,14 @@ struct TLSListView: View {
                     case .wrongPassword:
                         Text(String(localized: .settings(.certificateLoadError)))
                     case .valid:
-                        HStack{
+                        HStack {
                             Image("checkmark.circle.fill")
                         }
                     }
                 }
-                
+
                 Section {
-                    Button(String(localized: .localizable(.save))){
+                    Button(String(localized: .localizable(.save))) {
                         guard let data = certificateData else {
                             isCertificateValid = false
                             certificateState = .notloaded
@@ -179,13 +173,12 @@ struct TLSListView: View {
                         saveToKeychain(certificateData: data, certificatePassword: certificatePassword, certificateName: certificateName)
                         dismiss()
                     }.disabled(!isCertificateValid)
-                    
                 }
             }
-            .onChange(of: certificateData){
+            .onChange(of: certificateData) {
                 validateInput()
             }
-            .onChange(of: certificatePassword){
+            .onChange(of: certificatePassword) {
                 validateInput()
             }
             .fileImporter(
@@ -196,9 +189,9 @@ struct TLSListView: View {
                 do {
                     guard let selectedFile: URL = try result.get().first else { return }
                     if selectedFile.startAccessingSecurityScopedResource() {
-                        self.certificateData = try Data(contentsOf: selectedFile)
+                        certificateData = try Data(contentsOf: selectedFile)
                         defer { selectedFile.stopAccessingSecurityScopedResource() }
-                        self.certificateName = selectedFile.lastPathComponent
+                        certificateName = selectedFile.lastPathComponent
                     } else {
                         Logger.shared.error("Error opening File from secure context")
                     }
@@ -211,25 +204,24 @@ struct TLSListView: View {
 }
 
 struct TLSSingleView: View {
-    
     @State var identity: TLSIdentity
     @State var cn: String?
-    
+
     var body: some View {
         Form {
-            Section{
+            Section {
                 LabeledContent(LocalizedStringKey(localizable: .name), value: identity.name)
                 LabeledContent("CN", value: cn ?? "N/A")
             }
         }
-        .onChange(of: identity, initial: true){
+        .onChange(of: identity, initial: true) {
             var optCertificate: SecCertificate?
             SecIdentityCopyCertificate(identity.identity, &optCertificate)
-            
-            if let certificate = optCertificate{
+
+            if let certificate = optCertificate {
                 var cn: CFString?
                 SecCertificateCopyCommonName(certificate, &cn)
-                
+
                 if cn != nil {
                     self.cn = cn as String?
                 }

@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 enum PKCS12Error: Error {
     case wrongPassword
     case other
@@ -16,7 +15,6 @@ enum PKCS12Error: Error {
 class PKCS12 {
     let identity: SecIdentity?
 
-    
     public init(pkcs12Data: Data, password: String) throws {
         let importPasswordOption: NSDictionary = [kSecImportExportPassphrase as NSString: password]
         var items: CFArray?
@@ -39,7 +37,7 @@ class PKCS12 {
     }
 }
 
-extension Array where Element == [String: AnyObject] {
+extension [[String: AnyObject]] {
     func element<T>(for key: CFString) -> T? {
         for dictElement in self {
             if let value = dictElement[key as String] as? T {

@@ -9,10 +9,10 @@ import SwiftUI
 
 actor NullRepository: Repository {
     struct NotImplemented: Error {}
-    
+
     nonisolated
     func getIdentName() -> String? {
-        return nil
+        nil
     }
 
     func update(document: Document) async throws -> Document { document }

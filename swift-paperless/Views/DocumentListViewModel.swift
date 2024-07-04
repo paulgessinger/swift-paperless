@@ -32,18 +32,18 @@ class DocumentListViewModel: ObservableObject {
         self.store = store
         self.filterState = filterState
         self.errorController = errorController
-        
+
         let dataloader = DataLoader()
-        
+
         let delegate = PaperlessURLSessionDelegate()
-        if let identName = store.repository.getIdentName(){
+        if let identName = store.repository.getIdentName() {
             delegate.loadIdentityByName(name: identName)
         }
 
         dataloader.delegate = delegate
-        
+
         imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline(configuration: .init(dataLoader: dataloader)))
-        
+
         imagePrefetcher.didComplete = {
             Logger.shared.debug("Thumbnail prefetching completed")
         }

@@ -51,10 +51,10 @@ actor ApiRepository {
             }
         }
     }
-    
+
     nonisolated
     func getIdentName() -> String? {
-        return connection.identity
+        connection.identity
     }
 
     private nonisolated
@@ -143,12 +143,12 @@ actor ApiRepository {
 
         let sanitizedUrl = sanitizeUrlForLog(url)
         Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
-        
+
         let delegate = PaperlessURLSessionDelegate()
         delegate.loadIdentityByName(name: connection.identity)
 
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-        
+
         let result: (Data, URLResponse)
         do {
             result = try await session.getData(for: request)
