@@ -14,10 +14,6 @@ enum PKCS12Error: Error {
 }
 
 class PKCS12 {
-    let label: String?
-    let keyID: NSData?
-    let trust: SecTrust?
-    let certChain: [SecTrust]?
     let identity: SecIdentity?
 
     
@@ -39,10 +35,6 @@ class PKCS12 {
             fatalError()
         }
 
-        label = dictArray.element(for: kSecImportItemLabel)
-        keyID = dictArray.element(for: kSecImportItemKeyID)
-        trust = dictArray.element(for: kSecImportItemTrust)
-        certChain = dictArray.element(for: kSecImportItemCertChain)
         identity = dictArray.element(for: kSecImportItemIdentity)
     }
 }
