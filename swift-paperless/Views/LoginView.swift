@@ -123,6 +123,10 @@ struct LoginView: View {
     @State private var loginOngoing = false
     
     @State private var selectedIdentity: String? = nil
+    
+    @State private var availableIdenityNames: [String] = []
+
+    @State private var certBasedAuth: Bool = false
 
     private nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
@@ -275,8 +279,6 @@ struct LoginView: View {
             errorController.push(error: error)
         }
     }
-    
-    @State private var idenityNames: [String] = []
 
     var body: some View {
         NavigationStack {
@@ -337,31 +339,41 @@ struct LoginView: View {
                 Section{
                     Picker(String(localized: .settings(.activeCertificate)), selection: $selectedIdentity) {
                         Text("None").tag(Optional<String>(nil))
-                        ForEach(idenityNames, id: \.self) {
+                        ForEach(availableIdenityNames, id: \.self) {
                             Text($0).tag(Optional($0))
                         }
+                    }
+                    .onChange(of: selectedIdentity) {
+                        certBasedAuth = false
                     }
                     .onAppear{
                         let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()
                         
-                        idenityNames.removeAll()
+                        availableIdenityNames.removeAll()
                         idents.forEach{ identity, name in
-                            idenityNames.append(name)
+                            availableIdenityNames.append(name)
+                        }
+                    }
+                    if selectedIdentity != nil {
+                        Toggle(isOn: $certBasedAuth) {
+                                Text("Certificate Only")
                         }
                     }
                 }
 
-                Section {
-                    TextField(String(localized: .login(.username)), text: $username)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                    SecureField(String(localized: .login(.password)), text: $password)
-                } header: {
-                    Text(.login(.credentials))
-                } footer: {
-                    HStack(alignment: .top) {
-                        Image(systemName: "info.circle")
-                        Text(.login(.passwordStorageNotice))
+                if !certBasedAuth {
+                    Section {
+                        TextField(String(localized: .login(.username)), text: $username)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                        SecureField(String(localized: .login(.password)), text: $password)
+                    } header: {
+                        Text(.login(.credentials))
+                    } footer: {
+                        HStack(alignment: .top) {
+                            Image(systemName: "info.circle")
+                            Text(.login(.passwordStorageNotice))
+                        }
                     }
                 }
             }
@@ -443,7 +455,7 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(extraHeaders: $extraHeaders, identityNames: $idenityNames)
+                DetailsView(extraHeaders: $extraHeaders, identityNames: $availableIdenityNames)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
