@@ -152,7 +152,7 @@ struct SettingsView: View {
             NavigationLink {
                 TLSListView(identityNames: Binding(get: {[] as [String]}, set: {val in }))
             } label: {
-                Label(localized: .settings(.certificates), systemImage: "lock.fill")
+                Label(localized: .settings(.idenitities), systemImage: "lock.fill")
             }
         }
     }

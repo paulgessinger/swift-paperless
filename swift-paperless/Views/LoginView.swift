@@ -45,7 +45,7 @@ private struct DetailsView: View {
                 NavigationLink {
                     TLSListView(identityNames: $identityNames)
                 } label: {
-                    Label(localized: .settings(.certificates), systemImage: "lock.fill")
+                    Label(localized: .settings(.idenitities), systemImage: "lock.fill")
                 }
 
                 LogRecordExportButton()
@@ -126,7 +126,9 @@ struct LoginView: View {
     
     @State private var availableIdenityNames: [String] = []
 
-    @State private var certBasedAuth: Bool = false
+    @State private var identityBasedAuth: Bool = false
+    
+    @State private var showIdentitySelection: Bool = false
 
     private nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
@@ -212,8 +214,8 @@ struct LoginView: View {
     private func login() async {
         Logger.shared.notice("Attempting login with url \(url.text)")
         
-        if certBasedAuth {
-            return await loginCertBased()
+        if identityBasedAuth {
+            return await loginIdentityBased()
         }
 
         do {
@@ -284,7 +286,7 @@ struct LoginView: View {
         }
     }
     
-    private func loginCertBased() async {
+    private func loginIdentityBased() async {
         do {
             loginOngoing = true
             defer { loginOngoing = false }
@@ -374,33 +376,28 @@ struct LoginView: View {
                     .transition(.opacity)
                 }
                 
-                
-                Section{
-                    Picker(String(localized: .settings(.activeCertificate)), selection: $selectedIdentity) {
-                        Text("None").tag(Optional<String>(nil))
-                        ForEach(availableIdenityNames, id: \.self) {
-                            Text($0).tag(Optional($0))
+                if showIdentitySelection {
+                    Section{
+                        Picker(String(localized: .settings(.activeIdentity)), selection: $selectedIdentity) {
+                            Text("None").tag(Optional<String>(nil))
+                            ForEach(availableIdenityNames, id: \.self) {
+                                Text($0).tag(Optional($0))
+                            }
                         }
-                    }
-                    .onChange(of: selectedIdentity) {
-                        certBasedAuth = false
-                    }
-                    .onAppear{
-                        let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()
-                        
-                        availableIdenityNames.removeAll()
-                        idents.forEach{ identity, name in
-                            availableIdenityNames.append(name)
+                        .onChange(of: selectedIdentity) {
+                            if selectedIdentity == nil{
+                                identityBasedAuth = false
+                            }
                         }
-                    }
-                    if selectedIdentity != nil {
-                        Toggle(isOn: $certBasedAuth) {
-                                Text("Certificate Only")
+                        if selectedIdentity != nil {
+                            Toggle(isOn: $identityBasedAuth) {
+                                Text("Identity Only")
+                            }
                         }
                     }
                 }
 
-                if !certBasedAuth {
+                if !identityBasedAuth {
                     Section {
                         TextField(String(localized: .login(.username)), text: $username)
                             .autocorrectionDisabled()
@@ -431,7 +428,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .buttonStyle(.bordered)
-                .disabled((!urlStateValid || username.isEmpty || password.isEmpty) && (!certBasedAuth || !urlStateValid))
+                .disabled((!urlStateValid || username.isEmpty || password.isEmpty) && (!identityBasedAuth || !urlStateValid))
                 .padding()
                 .background(.thickMaterial)
                 .ignoresSafeArea()
@@ -499,6 +496,16 @@ struct LoginView: View {
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
                 Text(.login(.success))
+            }
+            .onAppear {
+                let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()                
+                availableIdenityNames.removeAll()
+                idents.forEach{ identity, name in
+                    availableIdenityNames.append(name)
+                }
+            }
+            .onChange(of: availableIdenityNames){
+                showIdentitySelection = availableIdenityNames.count > 0
             }
         }
     }
