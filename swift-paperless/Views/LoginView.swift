@@ -211,6 +211,10 @@ struct LoginView: View {
 
     private func login() async {
         Logger.shared.notice("Attempting login with url \(url.text)")
+        
+        if certBasedAuth {
+            return await loginCertBased()
+        }
 
         do {
             loginOngoing = true
@@ -273,6 +277,41 @@ struct LoginView: View {
             if !initial {
                 dismiss()
             }
+
+        } catch {
+            Logger.shared.error("Error during login with url \(error)")
+            errorController.push(error: error)
+        }
+    }
+    
+    private func loginCertBased() async {
+        do {
+            loginOngoing = true
+            defer { loginOngoing = false }
+            
+            guard let (baseUrl, _) = deriveUrl(string: url.text, suffix: "token") else {
+                Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
+                errorController.push(error: LoginError.urlInvalid)
+                return
+            }
+
+            Logger.shared.info("Trying to load data from api ")
+            let connection = Connection(url: baseUrl, token: "", extraHeaders: extraHeaders, identityName: selectedIdentity)
+
+            let repository = ApiRepository(connection: connection)
+            
+            let currentUser = try await repository.currentUser()
+            
+            Logger.shared.info("Username: \(currentUser.username)")
+            
+            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser, identity: selectedIdentity)
+            try stored.setToken("")
+            try connectionManager.login(stored)
+            Logger.api.info("Login successful")
+            
+            // Success point
+            Haptics.shared.notification(.success)
+            showSuccessOverlay = true
 
         } catch {
             Logger.shared.error("Error during login with url \(error)")
@@ -392,7 +431,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .buttonStyle(.bordered)
-                .disabled(!urlStateValid || username.isEmpty || password.isEmpty)
+                .disabled((!urlStateValid || username.isEmpty || password.isEmpty) && (!certBasedAuth || !urlStateValid))
                 .padding()
                 .background(.thickMaterial)
                 .ignoresSafeArea()
