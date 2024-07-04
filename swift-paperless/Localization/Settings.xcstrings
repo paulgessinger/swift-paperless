@@ -1,13 +1,13 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "activeCertificate" : {
+    "activeIdentity" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Active Certificate"
+            "value" : "Active Identity"
           }
         }
       }
@@ -1153,6 +1153,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyślij e-mail"
+          }
+        }
+      }
+    },
+    "idenitities" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identities"
           }
         }
       }

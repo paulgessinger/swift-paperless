@@ -110,7 +110,7 @@ enum Keychain {
     static func saveIdentity(identity: SecIdentity?, name: String) {
         let attributes: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
-            kSecValueRef as String: identity,
+            kSecValueRef as String: identity as Any,
             kSecAttrLabel as String: name
         ]
         let res = SecItemAdd(attributes as CFDictionary, nil)
@@ -126,7 +126,7 @@ enum Keychain {
             kSecClass as String: kSecClassIdentity,
             kSecMatchLimit as String: kSecMatchLimitAll,
             kSecReturnAttributes as String: true,
-            kSecReturnRef as String: kCFBooleanTrue
+            kSecReturnRef as String: kCFBooleanTrue as Any
         ]
         var item_ref: CFTypeRef?
         
@@ -154,7 +154,7 @@ enum Keychain {
             kSecMatchLimit as String: kSecMatchLimitOne,
             kSecReturnAttributes as String: true,
             kSecAttrLabel as String: name,
-            kSecReturnRef as String: kCFBooleanTrue
+            kSecReturnRef as String: kCFBooleanTrue as Any
         ]
         var item_ref: CFTypeRef?
         
@@ -162,14 +162,14 @@ enum Keychain {
         if SecItemCopyMatching(query as CFDictionary, &item_ref) == noErr {
             
             if let existingItem = item_ref as? [String: Any],
-               let name = existingItem[kSecAttrLabel as String] as? String
+               let _ = existingItem[kSecAttrLabel as String] as? String
             {
                 
                 let identity = existingItem[kSecValueRef as String] as! SecIdentity?
                 return identity
             }
         } else {
-            Logger.shared.warning("Something went wrong trying to find the user in the keychain")
+            Logger.shared.warning("Something went wrong trying to find the identity in the keychain")
         }
         return nil
     }
