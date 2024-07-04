@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 struct TLSIdentity: Identifiable, Equatable {
     var name: String
@@ -199,11 +200,10 @@ struct TLSListView: View {
                         defer { selectedFile.stopAccessingSecurityScopedResource() }
                         self.certificateName = selectedFile.lastPathComponent
                     } else {
-                        //TODO: error handling
+                        Logger.shared.error("Error opening File from secure context")
                     }
                 } catch {
-                    //TODO: error handling
-                    print(error.localizedDescription)
+                    Logger.shared.error("erro while loding PfX \(error)")
                 }
             }
         }
@@ -218,8 +218,8 @@ struct TLSSingleView: View {
     var body: some View {
         Form {
             Section{
-                LabeledContent("Name", value: identity.name)
-                LabeledContent("Cn", value: cn ?? "N/A")
+                LabeledContent(LocalizedStringKey(localizable: .name), value: identity.name)
+                LabeledContent("CN", value: cn ?? "N/A")
             }
         }
         .onChange(of: identity, initial: true){

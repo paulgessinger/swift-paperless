@@ -45,7 +45,7 @@ private struct DetailsView: View {
                 NavigationLink {
                     TLSListView(identityNames: $identityNames)
                 } label: {
-                    Label("Certificates", systemImage: "lock.fill")
+                    Label(localized: .settings(.certificates), systemImage: "lock.fill")
                 }
 
                 LogRecordExportButton()
@@ -55,7 +55,7 @@ private struct DetailsView: View {
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized: "Done")) {
+                    Button(String(localized: .localizable(.done))) {
                         dismiss()
                     }
                 }
@@ -233,7 +233,7 @@ struct LoginView: View {
             let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
-
+            
             if statusCode != 200 {
                 Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1, privacy: .public), \(String(decoding: data, as: UTF8.self))")
                 if statusCode == 400 {
