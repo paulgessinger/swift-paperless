@@ -8,45 +8,49 @@
 import os
 import SwiftUI
 
-struct TLSIdentity: Identifiable, Equatable {
+private struct TLSIdentity: Identifiable, Equatable {
     var name: String
     var identity: SecIdentity
 
     var id: String { name }
 }
 
-enum CertificateState {
+private enum CertificateState {
     case notloaded
     case wrongPassword
     case valid
+    case loadingError(String)
 }
 
 struct TLSListView: View {
-    @State var idenities: [TLSIdentity] = []
-    @Binding var identityNames: [String]
-    @State var showCreate: Bool = false
+    @State private var identities: [TLSIdentity] = []
+    @State private var identityNames: [String] = []
+    @State private var showCreate: Bool = false
+
+    @EnvironmentObject private var errorController: ErrorController
 
     func refreshAll() {
-        let idenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
+        let keyChainIdenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
 
-        withAnimation {
-            idenities.removeAll()
+        let pIdentityNames: [String] = keyChainIdenitites.map { _, name in name }
+
+        let tlsIdentities: [TLSIdentity] = keyChainIdenitites.map { identity, name in
+            TLSIdentity(name: name, identity: identity)
         }
 
-        identityNames.removeAll()
-        idenitites.forEach { ident, name in
-            withAnimation {
-                identityNames.append(name)
-                idenities.append(TLSIdentity(name: name, identity: ident))
-            }
+        withAnimation {
+            identityNames.removeAll()
+            identityNames.append(contentsOf: pIdentityNames)
+            identities.removeAll()
+            identities.append(contentsOf: tlsIdentities)
         }
     }
 
     var body: some View {
         List {
-            ForEach($idenities) { $identity in
+            ForEach($identities) { $identity in
                 NavigationLink {
-                    TLSSingleView(identity: identity)
+                    TLSSingleView(identity: $identity)
                 } label: {
                     Text(identity.name)
                 }
@@ -54,8 +58,13 @@ struct TLSListView: View {
             .onDelete { ids in
                 withAnimation {
                     ids.forEach { id in
-                        let item = idenities[id]
-                        Keychain.deleteIdentity(name: item.name)
+                        let item = identities[id]
+
+                        do {
+                            try Keychain.deleteIdentity(name: item.name)
+                        } catch {
+                            errorController.push(error: error)
+                        }
                         refreshAll()
                     }
                 }
@@ -78,15 +87,11 @@ struct TLSListView: View {
         }
         .sheet(isPresented: $showCreate, content: {
             CreateView()
-                .navigationTitle("T")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack {
                             Button {
                                 showCreate = true
-                                withAnimation {
-                                    // headers.append(.init(key: "Header", value: "Value"))
-                                }
                             } label: {
                                 Label(String(localized: .localizable(.add)), systemImage: "plus")
                             }
@@ -107,6 +112,7 @@ struct TLSListView: View {
         @State private var certificateState: CertificateState = .notloaded
 
         @Environment(\.dismiss) var dismiss
+        @EnvironmentObject private var errorController: ErrorController
 
         private func validateCertificate(certificateData: Data, certificatePassword: String) -> Bool {
             do {
@@ -120,10 +126,11 @@ struct TLSListView: View {
             do {
                 let pkc = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
                 if let identity = pkc.identity {
-                    Keychain.saveIdentity(identity: identity, name: certificateName)
+                    try Keychain.saveIdentity(identity: identity, name: certificateName)
                 }
             } catch {
-                print(error)
+                errorController.push(error: error)
+                Logger.shared.error("Error loading/saving Identity to the Keychain")
             }
         }
 
@@ -155,6 +162,8 @@ struct TLSListView: View {
                     case .notloaded:
                         Text(String(localized: .settings(.certificateNotLoaded)))
                     case .wrongPassword:
+                        Text(String(localized: .settings(.certificateLoadError)))
+                    case .loadingError:
                         Text(String(localized: .settings(.certificateLoadError)))
                     case .valid:
                         HStack {
@@ -194,18 +203,20 @@ struct TLSListView: View {
                         certificateName = selectedFile.lastPathComponent
                     } else {
                         Logger.shared.error("Error opening File from secure context")
+                        certificateState = CertificateState.loadingError("Error opening File from secure context")
                     }
                 } catch {
-                    Logger.shared.error("erro while loding PfX \(error)")
+                    Logger.shared.error("Error while loding PfX \(error)")
+                    certificateState = CertificateState.loadingError(error.localizedDescription)
                 }
             }
         }
     }
 }
 
-struct TLSSingleView: View {
-    @State var identity: TLSIdentity
-    @State var cn: String?
+private struct TLSSingleView: View {
+    @Binding var identity: TLSIdentity
+    @State private var cn: String?
 
     var body: some View {
         Form {

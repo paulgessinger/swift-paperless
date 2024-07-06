@@ -195,11 +195,6 @@ actor PreviewRepository: Repository {
         ]
     }
 
-    nonisolated
-    func getIdentName() -> String? {
-        nil
-    }
-
     func nextAsn() async -> UInt {
         (documents.compactMap(\.value.asn).max() ?? 0) + 1
     }
@@ -297,4 +292,7 @@ actor PreviewRepository: Repository {
     func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
 
     func acknowledge(tasks _: [UInt]) async throws {}
+
+    nonisolated
+    var delegate: PaperlessURLSessionDelegate? { nil }
 }

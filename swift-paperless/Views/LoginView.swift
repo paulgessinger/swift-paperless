@@ -31,7 +31,6 @@ private struct TokenResponse: Decodable {
 
 private struct DetailsView: View {
     @Binding var extraHeaders: [ConnectionManager.HeaderValue]
-    @Binding var identityNames: [String]
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -43,7 +42,7 @@ private struct DetailsView: View {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
                 NavigationLink {
-                    TLSListView(identityNames: $identityNames)
+                    TLSListView()
                 } label: {
                     Label(localized: .settings(.idenitities), systemImage: "lock.fill")
                 }
@@ -124,7 +123,7 @@ struct LoginView: View {
 
     @State private var selectedIdentity: String? = nil
 
-    @State private var availableIdenityNames: [String] = []
+    @State private var availableIdentityNames: [String] = []
 
     @State private var identityBasedAuth: Bool = false
 
@@ -184,9 +183,7 @@ struct LoginView: View {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             urlState = .checking
 
-            let delegate = PaperlessURLSessionDelegate()
-            delegate.loadIdentityByName(name: selectedIdentity)
-            let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: selectedIdentity), delegateQueue: nil)
 
             let (data, response) = try await session.getData(for: request)
 
@@ -236,10 +233,7 @@ struct LoginView: View {
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
 
-            let delegate = PaperlessURLSessionDelegate()
-            delegate.loadIdentityByName(name: selectedIdentity)
-
-            let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: selectedIdentity), delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
@@ -378,8 +372,8 @@ struct LoginView: View {
                 if showIdentitySelection {
                     Section {
                         Picker(String(localized: .settings(.activeIdentity)), selection: $selectedIdentity) {
-                            Text("None").tag(String?(nil))
-                            ForEach(availableIdenityNames, id: \.self) {
+                            Text(String(localized: .localizable(.none))).tag(String?(nil))
+                            ForEach(availableIdentityNames, id: \.self) {
                                 Text($0).tag(Optional($0))
                             }
                         }
@@ -490,21 +484,28 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(extraHeaders: $extraHeaders, identityNames: $availableIdenityNames)
+                DetailsView(extraHeaders: $extraHeaders)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
                 Text(.login(.success))
             }
             .onAppear {
-                let idents: [(SecIdentity, String)] = Keychain.readAllIdenties()
-                availableIdenityNames.removeAll()
-                idents.forEach { _, name in
-                    availableIdenityNames.append(name)
+                let identities: [(SecIdentity, String)] = Keychain.readAllIdenties()
+                availableIdentityNames.removeAll()
+                identities.forEach { _, name in
+                    availableIdentityNames.append(name)
                 }
             }
-            .onChange(of: availableIdenityNames) {
-                showIdentitySelection = availableIdenityNames.count > 0
+            .onChange(of: showDetails) {
+                let identities: [(SecIdentity, String)] = Keychain.readAllIdenties()
+                availableIdentityNames.removeAll()
+                identities.forEach { _, name in
+                    availableIdentityNames.append(name)
+                }
+            }
+            .onChange(of: availableIdentityNames) {
+                showIdentitySelection = availableIdentityNames.count > 0
             }
         }
     }

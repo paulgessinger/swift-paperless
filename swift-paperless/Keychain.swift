@@ -14,6 +14,8 @@ enum Keychain {
         case itemNotFound
         case invalidItemFormat
         case unexpectedStatus(OSStatus)
+        case identitySaveFailed
+        case identityDeleteFailed
     }
 
     static func save(service: String, account: String, value: Data) throws {
@@ -107,7 +109,7 @@ enum Keychain {
         }
     }
 
-    static func saveIdentity(identity: SecIdentity?, name: String) {
+    static func saveIdentity(identity: SecIdentity?, name: String) throws {
         let attributes: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecValueRef as String: identity as Any,
@@ -118,6 +120,7 @@ enum Keychain {
             Logger.shared.info("Identity saved successfully in the keychain")
         } else {
             Logger.shared.warning("Something went wrong trying to save the Identity in the keychain")
+            throw KeychainError.identitySaveFailed
         }
     }
 
@@ -136,9 +139,10 @@ enum Keychain {
             let items = item_ref as! [[String: Any]]
             for item in items {
                 let name = item[kSecAttrLabel as String] as? String
-                let identity = item[kSecValueRef as String] as! SecIdentity?
-
-                ret.append((identity!, name!))
+                let optionalIdentity = item[kSecValueRef as String] as! SecIdentity?
+                if let identity = optionalIdentity {
+                    ret.append((identity, name!))
+                }
             }
         } else {
             Logger.shared.warning("Something went wrong trying to find the idenities in the keychain")
@@ -170,7 +174,7 @@ enum Keychain {
         return nil
     }
 
-    static func deleteIdentity(name: String) {
+    static func deleteIdentity(name: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecAttrLabel as String: name,
@@ -180,6 +184,7 @@ enum Keychain {
             Logger.shared.info("Successfully deleted the identity")
         } else {
             Logger.shared.warning("Error deleting the identity")
+            throw KeychainError.identityDeleteFailed
         }
     }
 }

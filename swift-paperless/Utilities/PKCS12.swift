@@ -25,19 +25,19 @@ class PKCS12 {
             }
             throw PKCS12Error.other
         }
-        guard let theItemsCFArray = items else { fatalError() }
+        guard let theItemsCFArray = items else { throw PKCS12Error.other }
         let theItemsNSArray: NSArray = theItemsCFArray as NSArray
         guard let dictArray
             = theItemsNSArray as? [[String: AnyObject]]
         else {
-            fatalError()
+            throw PKCS12Error.other
         }
 
         identity = dictArray.element(for: kSecImportItemIdentity)
     }
 }
 
-extension [[String: AnyObject]] {
+private extension [[String: AnyObject]] {
     func element<T>(for key: CFString) -> T? {
         for dictElement in self {
             if let value = dictElement[key as String] as? T {

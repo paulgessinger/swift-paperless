@@ -3422,6 +3422,17 @@
         }
       }
     },
+    "none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        }
+      }
+    },
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -34,12 +34,20 @@ actor ApiRepository {
     nonisolated
     let connection: Connection
 
+    private let urlSession: URLSession
+    private let urlSessionDelegate: PaperlessURLSessionDelegate
+
     private var apiVersion: UInt?
     private var backendVersion: (UInt, UInt, UInt)?
 
     init(connection: Connection) {
         self.connection = connection
         Logger.api.notice("Initializing ApiRepository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+
+        let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
+
+        urlSessionDelegate = delegate
+        urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
 
         Task {
             await ensureBackendVersions()
@@ -53,8 +61,8 @@ actor ApiRepository {
     }
 
     nonisolated
-    func getIdentName() -> String? {
-        connection.identity
+    var delegate: PaperlessURLSessionDelegate? {
+        urlSessionDelegate
     }
 
     private nonisolated
@@ -144,14 +152,9 @@ actor ApiRepository {
         let sanitizedUrl = sanitizeUrlForLog(url)
         Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
 
-        let delegate = PaperlessURLSessionDelegate()
-        delegate.loadIdentityByName(name: connection.identity)
-
-        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-
         let result: (Data, URLResponse)
         do {
-            result = try await session.getData(for: request)
+            result = try await urlSession.getData(for: request)
         } catch let error as CancellationError {
             Logger.api.trace("Fetch request task was cancelled")
             throw error

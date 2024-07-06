@@ -35,12 +35,9 @@ class DocumentListViewModel: ObservableObject {
 
         let dataloader = DataLoader()
 
-        let delegate = PaperlessURLSessionDelegate()
-        if let identName = store.repository.getIdentName() {
-            delegate.loadIdentityByName(name: identName)
+        if let delegate = store.repository.delegate {
+            dataloader.delegate = delegate
         }
-
-        dataloader.delegate = delegate
 
         imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline(configuration: .init(dataLoader: dataloader)))
 

@@ -10,11 +10,6 @@ import SwiftUI
 actor NullRepository: Repository {
     struct NotImplemented: Error {}
 
-    nonisolated
-    func getIdentName() -> String? {
-        nil
-    }
-
     func update(document: Document) async throws -> Document { document }
     func delete(document _: Document) async throws {}
     func create(document _: ProtoDocument, file _: URL) async throws {}
@@ -75,6 +70,9 @@ actor NullRepository: Repository {
     func acknowledge(tasks _: [UInt]) async throws {}
 
     func suggestions(documentId _: UInt) async -> Suggestions { .init() }
+
+    nonisolated
+    var delegate: PaperlessURLSessionDelegate? { nil }
 }
 
 actor NullDocumentSource: DocumentSource {

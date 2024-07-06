@@ -8,19 +8,18 @@
 import Foundation
 import os
 
-class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate {
-    private var credential: URLCredential? = nil
+final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate {
+    private let credential: URLCredential?
 
-    public func loadIdentityByName(name: String?) {
-        credential = nil
+    init(identityName: String?) {
         if
-            let pName = name,
+            let pName = identityName,
             let identity = Keychain.readIdentity(name: pName)
         {
             credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
-            return
         } else {
             Logger.shared.info("Error loading identity from keychain")
+            credential = nil
         }
     }
 

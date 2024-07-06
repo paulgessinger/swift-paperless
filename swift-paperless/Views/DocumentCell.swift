@@ -28,11 +28,9 @@ struct DocumentPreviewImage: View {
             do {
                 let dataloader = DataLoader()
 
-                let delegate = PaperlessURLSessionDelegate()
-                if let identName = store.repository.getIdentName() {
-                    delegate.loadIdentityByName(name: identName)
+                if let delegate = store.repository.delegate {
+                    dataloader.delegate = delegate
                 }
-                dataloader.delegate = delegate
 
                 image.pipeline = ImagePipeline(configuration: .init(dataLoader: dataloader))
 
