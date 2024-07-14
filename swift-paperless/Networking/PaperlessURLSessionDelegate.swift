@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate {
+final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
     private let credential: URLCredential?
 
     init(identityName: String?) {
