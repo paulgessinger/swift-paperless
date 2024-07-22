@@ -36,12 +36,20 @@ private var editingInterface: AppSettings.EditingUserInterface {
     switch AppSettings.shared.editingUserInterface {
     case .automatic:
         switch Bundle.main.appConfiguration {
-        case .Debug, .Simulator: .v2
+        case .Debug, .Simulator: .v3
         case .AppStore, .TestFlight: .v1
         }
     case .v1: .v1
     case .v2: .v2
+    case .v3: .v3
     }
+}
+
+@MainActor
+protocol DocumentDetailViewProtocol: View {
+    init(store: DocumentStore,
+         document: Document,
+         navPath: Binding<NavigationPath>?)
 }
 
 struct DocumentDetailView: View {
@@ -66,6 +74,10 @@ struct DocumentDetailView: View {
                                  navPath: navPath)
         case .v2:
             DocumentDetailViewV2(store: store,
+                                 document: document,
+                                 navPath: navPath)
+        case .v3:
+            DocumentDetailViewV3(store: store,
                                  document: document,
                                  navPath: navPath)
         default:

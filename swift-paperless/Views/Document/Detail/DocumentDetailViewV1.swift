@@ -147,7 +147,7 @@ private extension Aspect where Content == Text {
     }
 }
 
-struct DocumentDetailViewV1: View {
+struct DocumentDetailViewV1: DocumentDetailViewProtocol {
     @ObservedObject private var store: DocumentStore
     @State var document: Document
     var navPath: Binding<NavigationPath>?

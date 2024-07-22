@@ -57,7 +57,7 @@ class DocumentDetailModel {
 
         var rawValue: PresentationDetent {
             switch self {
-            case .small: .fraction(0.2)
+            case .small: .fraction(0.3)
             case .medium: .medium
             case .large: .large
             }
@@ -69,7 +69,7 @@ class DocumentDetailModel {
 
     private var detentStack: [PresentationDetent] = []
 
-    var detent = Detent.small.rawValue
+    var detent = Detent.medium.rawValue
 //    var previewDetentOnFocus: PresentationDetent? = nil
 
     var editMode = EditMode.none
@@ -83,9 +83,6 @@ class DocumentDetailModel {
     var download: DocumentDownloadState = .initial
     var showPreviewSheet = false
 
-//    @ObservationIgnored
-//    let animation: Namespace.ID
-
     @ObservationIgnored
     var store: DocumentStore
 
@@ -93,12 +90,11 @@ class DocumentDetailModel {
 
     var suggestions: Suggestions?
 
-    init( // animation: Namespace.ID,
+    init(
         store: DocumentStore, document: Document
     ) {
         self.store = store
         self.document = document
-//        self.animation = animation
     }
 
     func push(detent: Detent) {
@@ -149,11 +145,6 @@ class DocumentDetailModel {
                 }
                 download = .loaded(view)
                 setLoading.cancel()
-                Haptics.shared.prepare()
-                try? await Task.sleep(for: .seconds(0.3))
-                Haptics.shared.impact(style: .light)
-                showPreviewSheet = true
-
             } catch {
                 download = .error
                 Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")

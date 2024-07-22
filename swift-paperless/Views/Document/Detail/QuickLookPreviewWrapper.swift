@@ -9,13 +9,13 @@ import Foundation
 import SwiftUI
 
 struct DocumentDetailPreviewWrapper: View {
-    @Binding var state: DocumentDownloadState
+//    @Binding var state: DocumentDownloadState
+    @State var viewModel: DocumentDetailModel
 
     var body: some View {
         NavigationStack {
-            if case let .loaded(thumb) = state {
+            if case let .loaded(thumb) = viewModel.download {
                 QuickLookPreview(url: thumb.file)
-                    //                    FullDocumentPreview(url: thumb.file)
                     .toolbarBackground(.visible, for: .navigationBar)
                     .toolbarBackground(Color(white: 0.4, opacity: 0.0), for: .navigationBar)
                     .navigationTitle(String(localized: .localizable(.documentDetailPreviewTitle)))

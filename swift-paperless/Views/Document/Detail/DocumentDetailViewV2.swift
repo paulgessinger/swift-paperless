@@ -135,7 +135,8 @@ private struct CommonBox<Element>: View where Element: Pickable {
     }
 }
 
-struct DocumentDetailViewV2: View {
+@MainActor
+struct DocumentDetailViewV2: DocumentDetailViewProtocol {
     typealias CreatedPicker = DocumentDetailViewV2CreatedPicker
 
     @ObservedObject var store: DocumentStore
@@ -294,7 +295,7 @@ struct DocumentDetailViewV2: View {
         .navigationBarTitleDisplayMode(.inline)
 
         .sheet(isPresented: $viewModel.showPreviewSheet) {
-            DocumentDetailPreviewWrapper(state: $viewModel.download)
+            DocumentDetailPreviewWrapper(viewModel: viewModel)
                 .presentationDetents(Set(DocumentDetailModel.previewDetents), selection: $viewModel.detent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
