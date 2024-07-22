@@ -144,7 +144,9 @@ actor ApiRepository {
         }
     }
 
-    private func fetchData(for request: URLRequest, code: Int = 200, delegate: (any URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
+    private func fetchData(for request: URLRequest, code: Int = 200,
+                           progress: (@Sendable (Double) -> Void)? = nil) async throws -> (Data, URLResponse)
+    {
         guard let url = request.url else {
             Logger.api.error("Request URL is nil")
             throw RequestError.invalidRequest
@@ -155,7 +157,7 @@ actor ApiRepository {
 
         let result: (Data, URLResponse)
         do {
-            result = try await urlSession.getData(for: request, delegate: delegate)
+            result = try await urlSession.getData(for: request, progress: progress)
         } catch let error as CancellationError {
             Logger.api.trace("Fetch request task was cancelled")
             throw error
@@ -325,26 +327,8 @@ extension ApiRepository: Repository {
         do {
             let request = try request(.download(documentId: documentID))
 
-            final class Delegate: NSObject, URLSessionTaskDelegate {
-                let callback: (@Sendable (Double) -> Void)?
-
-                private var progressObservation: NSKeyValueObservation? = nil
-
-                init(_ callback: (@Sendable (Double) -> Void)? = nil) {
-                    self.callback = callback
-                }
-
-                public func urlSession(_: URLSession, didCreateTask task: URLSessionTask) {
-                    let callback = callback
-                    progressObservation = task.progress.observe(\.fractionCompleted) { progress, _ in
-                        callback?(progress.fractionCompleted)
-                    }
-                }
-            }
-
-            let delegate = Delegate(progress)
-
-            let (data, response) = try await fetchData(for: request, code: 200, delegate: delegate)
+            let (data, response) = try await fetchData(for: request, code: 200,
+                                                       progress: progress)
 
             guard let suggestedFilename = response.suggestedFilename else {
                 Logger.api.error("Cannot get suggested filename from response")
