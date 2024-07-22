@@ -111,7 +111,7 @@ struct TaskDetailView: View {
 
                     HStack {
                         Text(.tasks(.idLabel))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(.secondary)
                         Text(String(task.id))
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
@@ -121,7 +121,7 @@ struct TaskDetailView: View {
                     if let created = task.dateCreated {
                         HStack {
                             Text(.tasks(.createdLabel))
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(.secondary)
                             Spacer()
                             Text("\(fmt.string(from: created))")
                                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -131,7 +131,7 @@ struct TaskDetailView: View {
 
                     HStack {
                         Text(.tasks(.status))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(.secondary)
                         Spacer()
                         task.status.label
                             .labelStyle(.iconOnly)
@@ -142,18 +142,18 @@ struct TaskDetailView: View {
                         Divider()
                         VStack(alignment: .leading) {
                             Text(.tasks(.result))
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(.secondary)
                             Text(result)
                                 .italic()
                         }
                     }
                 }
                 .padding()
-                .background(Color.systemBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: .imageShadow, radius: 10)
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(.gray, lineWidth: 0.33))
+//                .background(Color.systemBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous)
+                    .stroke(.tertiary)
+                )
                 .padding()
 
                 if let document {
@@ -181,8 +181,8 @@ struct TaskDetailView: View {
                                 }
                             }
 
-                            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(.gray, lineWidth: 0.33))
+                            .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                .stroke(.tertiary))
                         }
                         .padding()
 

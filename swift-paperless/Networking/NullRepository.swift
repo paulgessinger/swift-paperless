@@ -39,6 +39,8 @@ actor NullRepository: Repository {
     func document(id _: UInt) async -> Document? { nil }
     func document(asn _: UInt) async -> Document? { nil }
 
+    func metadata(documentId _: UInt) async throws -> Metadata { throw NotImplemented() }
+
     nonisolated func documents(filter _: FilterState) -> any DocumentSource {
         NullDocumentSource()
     }

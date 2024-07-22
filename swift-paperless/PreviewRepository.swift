@@ -144,6 +144,8 @@ actor PreviewRepository: Repository {
                                        correspondent: corr(),
                                        created: .now,
                                        tags: t(),
+                                       added: .now,
+                                       modified: .now,
                                        storagePath: p())
         }
 
@@ -236,6 +238,23 @@ actor PreviewRepository: Repository {
 
     func document(asn: UInt) async -> Document? {
         documents.first(where: { $0.value.asn == asn })?.value
+    }
+
+    func metadata(documentId _: UInt) async throws -> Metadata {
+        Metadata(
+            originalChecksum: "4e3db09db50373773325e278e4a9919",
+            originalSize: 61337,
+            originalMimeType: "application/pdf",
+            mediaFilename: "username/2024/07/2024-07-18--Invoice.pdf",
+            hasArchiveVersion: true,
+            originalMetadata: [Metadata.Item](),
+            archiveChecksum: "4e3db09db50373773325e278e4a9919",
+            archiveMediaFilename: "username/2024/07/2024-07-18--Invoice.pdf",
+            originalFilename: "invoice.pdf",
+            archiveSize: nil,
+            archiveMetadata: [Metadata.Item](),
+            lang: "de"
+        )
     }
 
     nonisolated func documents(filter _: FilterState) -> any DocumentSource {

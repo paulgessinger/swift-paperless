@@ -428,6 +428,17 @@ extension ApiRepository: Repository {
         }
     }
 
+    func metadata(documentId: UInt) async throws -> Metadata {
+        let request = try request(.metadata(documentId: documentId))
+        do {
+            let decoded = try await fetchData(for: request, as: Metadata.self)
+            return decoded
+        } catch {
+            Logger.api.error("Error fetching document metadata for id \(documentId): \(error)")
+            throw error
+        }
+    }
+
     private func nextAsnCompatibility() async throws -> UInt {
         Logger.api.notice("Getting next ASN with legacy compatibility method")
         var fs = FilterState()

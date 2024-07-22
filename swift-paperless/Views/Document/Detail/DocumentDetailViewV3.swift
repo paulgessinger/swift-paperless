@@ -53,6 +53,8 @@ private struct DocumentPropertyView: View {
 
     @Binding var dragOffset: CGSize
 
+    @State private var showDetails = false
+
     private var detailOffset: CGFloat {
         max(min(dragOffset.height + 50, 0) * 0.4, -20)
     }
@@ -68,7 +70,7 @@ private struct DocumentPropertyView: View {
     var body: some View {
         let document = viewModel.document
         VStack(alignment: .leading) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .top) {
                 Group {
                     if document.title.count < 20 {
                         Text("\(document.title)")
@@ -81,24 +83,17 @@ private struct DocumentPropertyView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .offset(y: secondaryOffset)
 
-                Button {
-                    Haptics.shared.impact(style: .medium)
-                    showEditSheet = true
-                } label: {
-                    Label(localized: .localizable(.edit), systemImage: "square.and.pencil")
-                        .labelStyle(.iconOnly)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .offset(CGSize(width: 0.33, height: -1.33))
-                        .padding(8)
-                        .background(
-                            Circle()
-                                .fill(Color.secondary)
-                        )
-                        .offset(y: -2)
-                        .offset(y: secondaryOffset)
-                }
+                Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.primary, .tertiary)
+                    .offset(y: secondaryOffset)
+                    .onTapGesture {
+                        Haptics.shared.impact(style: .medium)
+                        showEditSheet = true
+                    }
             }
 
             VStack(alignment: .leading) {
@@ -123,7 +118,6 @@ private struct DocumentPropertyView: View {
                 }
 
                 TagsView(tags: document.tags.compactMap { store.tags[$0] })
-//                Text("\(chevronSize) \(dragOffset.height)")
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,10 +126,32 @@ private struct DocumentPropertyView: View {
                     .stroke(.tertiary)
             )
             .offset(y: detailOffset)
+            .contentShape(RoundedRectangle(cornerRadius: 15))
+            .onTapGesture {
+                Haptics.shared.impact(style: .medium)
+                showDetails.toggle()
+            }
+            .overlay(alignment: .topTrailing) {
+                Label(localized: .localizable(.details), systemImage: "info.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .fontWeight(.bold)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.primary, .tertiary)
+                    .padding([.top, .trailing], 10)
+            }
         }
 
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding([.horizontal, .top])
+
+        .sheet(isPresented: $showDetails) {
+            DocumentMetadataView(document: document, metadata: $viewModel.metadata)
+                .presentationDetents([.medium, .large])
+        }
+
+        .task {
+            await viewModel.loadMetadata()
+        }
     }
 }
 
@@ -145,6 +161,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @State private var webviewOpacity = 0.0
     @State private var topPadding: CGFloat = 0.0
     @State private var bottomPadding: CGFloat = 200
+
+    @State private var bottomInsetFrame = CGRect.zero
 
     @State private var showEditSheet = false
     @State private var dragOffset = CGSize.zero
@@ -173,6 +191,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     private var bottomSpacing: CGFloat {
         let bottom = safeAreaInsets.bottom + 20
         return max(min(bottom - dragOffset.height, maxDragOffset), bottom)
+    }
+
+    func updateWebkitInset() {
+        bottomPadding = UIScreen.main.bounds.size.height - bottomInsetFrame.maxY + bottomInsetFrame.height + safeAreaInsets.bottom
     }
 
     init(store: DocumentStore, document: Document, navPath _: Binding<NavigationPath>?) {
@@ -221,7 +243,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                      dragOffset: $dragOffset)
                     .padding(.bottom, bottomSpacing)
                     .overlay(alignment: .bottom) {
-                        Image(systemName: "chevron.up")
+                        Image(systemName: "chevron.compact.up")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 12, height: 12)
@@ -241,13 +263,12 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                                    style: .continuous)
                                 .fill(.thinMaterial)
                                 .task {
-                                    let frame = geo.frame(in: .global)
-                                    bottomPadding = UIScreen.main.bounds.size.height - frame.maxY + frame.height
+                                    bottomInsetFrame = geo.frame(in: .global)
                                 }
                         }
                     )
 
-                    .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                    .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
                         .onChanged { value in
                             Haptics.shared.prepare()
                             if dragOffset.height >= -dragThreshold, value.translation.height < -dragThreshold {
@@ -280,6 +301,9 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         }
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(.thinMaterial, for: .navigationBar)
+
+        .onChange(of: bottomInsetFrame) { updateWebkitInset() }
+        .onChange(of: safeAreaInsets) { updateWebkitInset() }
 
         .sheet(isPresented: $showEditSheet) {
             viewModel.detent = .medium

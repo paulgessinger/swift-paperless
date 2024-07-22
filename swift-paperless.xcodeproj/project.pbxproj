@@ -52,6 +52,9 @@
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
 		7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C42A5EB08D00C18B44 /* NukeUI */; };
+		7A20372A2C4EA5000060D086 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2037292C4EA5000060D086 /* Metadata.swift */; };
+		7A2037362C4EA6F00060D086 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2037292C4EA5000060D086 /* Metadata.swift */; };
+		7A2037432C4EA8D80060D086 /* DocumentMetadataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2037422C4EA8D80060D086 /* DocumentMetadataView.swift */; };
 		7A229F212C4C136F00506107 /* DocumentDetailViewV3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A229F202C4C136E00506107 /* DocumentDetailViewV3.swift */; };
 		7A2577402A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577412A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
@@ -357,6 +360,8 @@
 		7A15D76F2BC8010E001E3A86 /* ConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsView.swift; sourceTree = "<group>"; };
 		7A17104E2BF7C1BF00C2BDBF /* DocumentImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentImportModel.swift; sourceTree = "<group>"; };
 		7A17105C2BF7D19C00C2BDBF /* LogoChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoChangeView.swift; sourceTree = "<group>"; };
+		7A2037292C4EA5000060D086 /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
+		7A2037422C4EA8D80060D086 /* DocumentMetadataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentMetadataView.swift; sourceTree = "<group>"; };
 		7A229F202C4C136E00506107 /* DocumentDetailViewV3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailViewV3.swift; sourceTree = "<group>"; };
 		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A25773F2A87D32400B15626 /* NullCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NullCodable.swift; sourceTree = "<group>"; };
@@ -706,6 +711,7 @@
 				7A71D1DE2C15EE8800C55D82 /* DocumentDetailCommonPicker.swift */,
 				7A71D1E12C15EEBE00C55D82 /* QuickLookPreviewWrapper.swift */,
 				7A7FA51D2C15F51900E8EB1D /* DocumentDetailModel.swift */,
+				7A2037422C4EA8D80060D086 /* DocumentMetadataView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -749,6 +755,7 @@
 				7AEF78C42A799A9C002AB0E1 /* SuggestionsModel.swift */,
 				7A35C0AC2C117E53006A542D /* SortField.swift */,
 				7A35C0BA2C117E91006A542D /* SortOrder.swift */,
+				7A2037292C4EA5000060D086 /* Metadata.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1066,6 +1073,7 @@
 				7AF2E07F29F46C950092948B /* ErrorController.swift in Sources */,
 				7A4AA90029BE042700D845A2 /* Model.swift in Sources */,
 				7A9CC11429E31AD7009CAD61 /* FilterRule.swift in Sources */,
+				7A2037362C4EA6F00060D086 /* Metadata.swift in Sources */,
 				7A35C0AE2C117E53006A542D /* SortField.swift in Sources */,
 				7A81C5AE2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A3E036A29EC9013008F4976 /* SavedViewEditView.swift in Sources */,
@@ -1185,6 +1193,7 @@
 				7A04EE4A2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
 				7A4AA91429BE22C300D845A2 /* CreateDocumentView.swift in Sources */,
 				7AEF78C52A799A9C002AB0E1 /* SuggestionsModel.swift in Sources */,
+				7A2037432C4EA8D80060D086 /* DocumentMetadataView.swift in Sources */,
 				7A6FD1A72BDD6668002AA467 /* DocumentationLinks.swift in Sources */,
 				7A8E1F7E2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7AF04B7F29A68A0A008E8F79 /* DocumentEditView.swift in Sources */,
@@ -1218,6 +1227,7 @@
 				7A17105D2BF7D19C00C2BDBF /* LogoChangeView.swift in Sources */,
 				7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A2831B22A62748D009E86CE /* UserModel.swift in Sources */,
+				7A20372A2C4EA5000060D086 /* Metadata.swift in Sources */,
 				7A4648072A1D5AED00078968 /* DateDecodingError.swift in Sources */,
 				7A35C0AD2C117E53006A542D /* SortField.swift in Sources */,
 				7AF6688729A137EA0016BC31 /* ApiRepository.swift in Sources */,

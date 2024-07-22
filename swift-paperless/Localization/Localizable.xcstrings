@@ -1279,6 +1279,17 @@
         }
       }
     },
+    "details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
     "detailsMenuLabel" : {
       "comment" : "'More' menu",
       "extractionState" : "manual",
@@ -1440,6 +1451,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dodaj dokument"
+          }
+        }
+      }
+    },
+    "documentAddedDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date added"
+          }
+        }
+      }
+    },
+    "documentArchiveChecksum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive MD5 checksum"
+          }
+        }
+      }
+    },
+    "documentArchiveFilesize" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive file size"
           }
         }
       }
@@ -1737,37 +1781,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Oprettelsesdato"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Erstellt am"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Created date"
+            "value" : "Date created"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Date de création"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Aanmaakdatum"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Data utworzenia"
           }
         }
@@ -1810,6 +1854,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tytuł"
+          }
+        }
+      }
+    },
+    "documentMediaFilename" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media filename"
+          }
+        }
+      }
+    },
+    "documentMetadata" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadata"
+          }
+        }
+      }
+    },
+    "documentModifiedDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date modified"
+          }
+        }
+      }
+    },
+    "documentOriginalChecksum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original MD5 checksum"
+          }
+        }
+      }
+    },
+    "documentOriginalFilename" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original filename"
+          }
+        }
+      }
+    },
+    "documentOriginalFilesize" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original file size"
+          }
+        }
+      }
+    },
+    "documentOriginalMimeType" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original mime type"
           }
         }
       }
@@ -3017,13 +3138,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Indlæser"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Laden"
           }
         },
@@ -3035,19 +3156,19 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Chargement en cours"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Aan het laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Wczytywanie"
           }
         }

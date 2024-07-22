@@ -92,6 +92,8 @@ class DocumentDetailModel {
 
     var suggestions: Suggestions?
 
+    var metadata: Metadata?
+
     init(
         store: DocumentStore, document: Document
     ) {
@@ -125,6 +127,16 @@ class DocumentDetailModel {
         try? await Task.sleep(for: .seconds(0.5))
         editMode = .none
         zIndexActive = .none
+    }
+
+    func loadMetadata() async {
+        do {
+            metadata = try await store.repository.metadata(documentId: document.id)
+        } catch is CancellationError {
+        } catch {
+            Logger.shared.error("Error loading document metadata: \(error)")
+            //                                        errorController.push(error: error)
+        }
     }
 
     func onProgress(_: Double) {}

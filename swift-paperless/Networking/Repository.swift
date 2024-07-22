@@ -107,6 +107,8 @@ protocol Repository: Sendable, Actor {
 
     func nextAsn() async throws -> UInt
 
+    func metadata(documentId: UInt) async throws -> Metadata
+
     // @TODO: Remove UIImage
     func thumbnail(document: Document) async throws -> Image?
     func thumbnailData(document: Document) async throws -> Data

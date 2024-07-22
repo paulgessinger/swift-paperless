@@ -25,7 +25,9 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
     var created: Date
     var tags: [UInt]
 
-    private(set) var added: String? = nil
+    var added: Date? = nil
+    var modified: Date? = nil
+
     @NullCodable var storagePath: UInt? = nil
 
     private enum CodingKeys: String, CodingKey {
