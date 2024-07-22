@@ -1854,7 +1854,7 @@
 			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				minimumVersion = 2.2.0;
 			};
 		};
 		7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
