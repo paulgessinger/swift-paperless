@@ -64,6 +64,11 @@ extension AsyncSequence where Self: Sendable, Element: Sendable, AsyncIterator: 
     }
 }
 
+enum DocumentDownloadEvent {
+    case progress
+    case complete
+}
+
 protocol Repository: Sendable, Actor {
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws
@@ -111,6 +116,8 @@ protocol Repository: Sendable, Actor {
 
     func download(documentID: UInt) async throws -> URL?
 
+    func download(documentID: UInt, progress: (@Sendable (Double) -> Void)?) async throws -> URL?
+
     func suggestions(documentId: UInt) async throws -> Suggestions
 
     // MARK: Saved views
@@ -137,6 +144,12 @@ protocol Repository: Sendable, Actor {
 
     nonisolated
     var delegate: PaperlessURLSessionDelegate? { get }
+}
+
+extension Repository {
+    func download(documentID: UInt) async throws -> URL? {
+        try await download(documentID: documentID, progress: nil)
+    }
 }
 
 // - MARK: DocumentSource

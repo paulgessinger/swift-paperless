@@ -14,6 +14,10 @@ public extension URLSession {
         try await data(for: request)
     }
 
+    nonisolated func getData(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (Data, URLResponse) {
+        try await data(for: request, delegate: delegate)
+    }
+
     nonisolated func getData(for url: URL) async throws -> (Data, URLResponse) {
         try await data(from: url)
     }

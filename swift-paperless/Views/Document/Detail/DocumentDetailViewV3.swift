@@ -172,7 +172,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .center) {
             if case let .loaded(pdf) = viewModel.download {
                 WebView(url: pdf.file, topPadding: $topPadding, bottomPadding: $bottomPadding, load: {
                     webviewOpacity = 1.0
@@ -181,9 +181,14 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 .ignoresSafeArea(edges: [.top, .bottom])
                 .opacity(webviewOpacity)
             } else {
-                ScrollView(.vertical) {
-                    ProgressView(label: { Text(.localizable(.loading)) })
+                VStack {
+                    Text(.localizable(.loading))
+                        .foregroundStyle(.gray)
+                    ProgressView(value: viewModel.downloadProgress, total: 1.0)
+                        .frame(width: 100)
                 }
+                .animation(.spring, value: viewModel.downloadProgress)
+                .frame(maxHeight: .infinity, alignment: .center)
             }
         }
         .animation(.default, value: viewModel.download)
@@ -243,7 +248,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 )
         }
 
-        .ignoresSafeArea(edges: [.top, .bottom])
+        .ignoresSafeArea(edges: [.bottom])
+
         .task {
             async let doc: () = viewModel.loadDocument()
 
@@ -331,7 +337,7 @@ private struct WebViewInternal: UIViewRepresentable {
 // MARK: - Previews
 
 private struct PreviewHelper: View {
-    @StateObject var store = DocumentStore(repository: PreviewRepository(downloadDelay: 0.0))
+    @StateObject var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
     @StateObject var errorController = ErrorController()
 
     @State var document: Document?

@@ -81,6 +81,8 @@ class DocumentDetailModel {
     }
 
     var download: DocumentDownloadState = .initial
+    var downloadProgress: Double = 0.0
+
     var showPreviewSheet = false
 
     @ObservationIgnored
@@ -125,6 +127,8 @@ class DocumentDetailModel {
         zIndexActive = .none
     }
 
+    func onProgress(_: Double) {}
+
     func loadDocument() async {
         switch download {
         case .initial:
@@ -134,7 +138,11 @@ class DocumentDetailModel {
                 download = .loading
             }
             do {
-                guard let url = try await store.repository.download(documentID: document.id) else {
+                guard let url = try await store.repository.download(documentID: document.id, progress: { @Sendable value in
+                    Task { @MainActor in
+                        self.downloadProgress = value
+                    }
+                }) else {
                     download = .error
                     return
                 }

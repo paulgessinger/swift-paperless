@@ -203,8 +203,13 @@ actor PreviewRepository: Repository {
     func delete(document _: Document) async throws {}
     func create(document _: ProtoDocument, file _: URL) async throws {}
 
-    func download(documentID _: UInt) async -> URL? {
-        try? await Task.sleep(for: .seconds(downloadDelay))
+    func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
+        var elapsed = 0.0
+        for i in 1 ... 10 {
+            try? await Task.sleep(for: .seconds(downloadDelay / 10.0))
+            elapsed = Double(i) / 10.0 * downloadDelay
+            progress?(elapsed)
+        }
         return Bundle.main.url(forResource: "demo2", withExtension: "pdf")
     }
 

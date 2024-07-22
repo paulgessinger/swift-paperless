@@ -14,7 +14,7 @@ actor NullRepository: Repository {
     func delete(document _: Document) async throws {}
     func create(document _: ProtoDocument, file _: URL) async throws {}
 
-    func download(documentID _: UInt) async -> URL? { nil }
+    func download(documentID _: UInt, progress _: (@Sendable (Double) -> Void)? = nil) async throws -> URL? { nil }
 
     func tag(id _: UInt) async -> Tag? { nil }
     func create(tag _: ProtoTag) async throws -> Tag { throw NotImplemented() }
