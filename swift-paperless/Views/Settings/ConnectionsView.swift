@@ -62,7 +62,7 @@ struct ConnectionsView: View {
                 }
 
                 LabeledContent(String(localized: .settings(.activeServerUsername)), value: stored.user.username)
-                LabeledContent(String(localized: .settings(.activeIdentity)), value: stored.identity ?? String(localized: .localizable(.none)))
+                LabeledContent(String(localized: .settings(.activeIdentity)), value: stored.identity ?? String(localized: .login(.noIdentity)))
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
