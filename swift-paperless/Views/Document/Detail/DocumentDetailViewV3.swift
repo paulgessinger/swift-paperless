@@ -253,16 +253,15 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .toolbarBackground(.thinMaterial, for: .navigationBar)
 
         .sheet(isPresented: $showEditSheet) {
-            VStack {
-                Text("I am editing")
-                Button("Close") {
-                    showEditSheet = false
-                }
-            }
-            .presentationDetents(Set(DocumentDetailModel.previewDetents), selection: $viewModel.detent)
-            .presentationBackgroundInteraction(
-                .enabled(upThrough: .medium)
-            )
+            viewModel.detent = .medium
+        } content: {
+            DocumentEditView(document: $viewModel.document)
+
+                .presentationDetents(Set(DocumentDetailModel.previewDetents), selection: $viewModel.detent)
+                .presentationBackgroundInteraction(
+                    .enabled(upThrough: .medium)
+                )
+                .presentationContentInteraction(.scrolls)
         }
     }
 }
