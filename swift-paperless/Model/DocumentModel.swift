@@ -51,12 +51,12 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
     @DecodeOnly
     var notes: [Note]
 
-    // Presense of this depends on the API version!
+    // Presense of this depends on the endpoint
     @DecodeOnly
     var _userCanChange: Bool?
 
     var userCanChange: Bool {
-        // Assume default of 'true' in case we're on an older version
+        // If we didn't get a value, we likely just modified
         _userCanChange ?? true
     }
 

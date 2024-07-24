@@ -39,9 +39,15 @@ actor ApiRepository {
     private let urlSessionDelegate: PaperlessURLSessionDelegate
 
     private var apiVersion: UInt?
+    private var minimumApiVersion: UInt = 3
+    private var maximumApiVersion: UInt = 5
     private var backendVersion: (UInt, UInt, UInt)?
 
-    init(connection: Connection) {
+    private var effectiveApiVersion: UInt {
+        min(maximumApiVersion, max(minimumApiVersion, apiVersion ?? minimumApiVersion))
+    }
+
+    init(connection: Connection) async {
         self.connection = connection
         Logger.api.notice("Initializing ApiRepository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
 
@@ -50,14 +56,19 @@ actor ApiRepository {
         urlSessionDelegate = delegate
         urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
 
-        Task {
-            await ensureBackendVersions()
+        await loadBackendVersions()
 
-            if let apiVersion = await apiVersion, let backendVersion = await backendVersion {
-                Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
-            } else {
-                Logger.api.warning("Did not get backend version info")
+        if let apiVersion, let backendVersion {
+            Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
+
+            if apiVersion < minimumApiVersion || maximumApiVersion < apiVersion {
+                let minimumApiVersion = minimumApiVersion
+                let maximumApiVersion = maximumApiVersion
+                Logger.api.info("Backend API version \(apiVersion) is outside of tested range of API versions [\(minimumApiVersion), \(maximumApiVersion)]")
             }
+
+        } else {
+            Logger.api.warning("Did not get backend version info")
         }
     }
 
@@ -93,7 +104,7 @@ actor ApiRepository {
         let sanitizedUrl = sanitizeUrlForLog(url)
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json; version=3", forHTTPHeaderField: "Accept")
+        request.setValue("application/json; version=\(effectiveApiVersion)", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         Logger.api.trace("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(request.allHTTPHeaderFields ?? [:])")
         return request
@@ -476,10 +487,6 @@ extension ApiRepository: Repository {
     }
 
     func nextAsn() async throws -> UInt {
-        if apiVersion == nil || backendVersion == nil {
-            await ensureBackendVersions()
-        }
-
         if let backendVersion, backendVersion >= (2, 0, 0) {
             return try await nextAsnDirectEndpoint()
         } else {
@@ -619,7 +626,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    private func ensureBackendVersions() async {
+    private func loadBackendVersions() async {
         Logger.api.notice("Getting backend versions")
         do {
             let request = try request(.root())
@@ -656,7 +663,6 @@ extension ApiRepository: Repository {
 
             self.apiVersion = apiVersion
             self.backendVersion = backendVersion
-
         } catch {
             Logger.api.error("Unable to get API and backend version, error: \(error)")
             return

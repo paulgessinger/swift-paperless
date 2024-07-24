@@ -255,7 +255,7 @@ struct LoginView: View {
 
             let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders, identityName: selectedIdentity)
 
-            let repository = ApiRepository(connection: connection)
+            let repository = await ApiRepository(connection: connection)
 
             let currentUser = try await repository.currentUser()
 
@@ -293,7 +293,7 @@ struct LoginView: View {
             Logger.shared.info("Trying to load data from api ")
             let connection = Connection(url: baseUrl, token: "", extraHeaders: extraHeaders, identityName: selectedIdentity)
 
-            let repository = ApiRepository(connection: connection)
+            let repository = await ApiRepository(connection: connection)
 
             let currentUser = try await repository.currentUser()
 

@@ -44,18 +44,19 @@ struct MainView: View {
                 Task {
                     store.eventPublisher.send(.repositoryWillChange)
                     try? await Task.sleep(for: .seconds(0.3))
-                    store.set(repository: ApiRepository(connection: conn))
+                    await store.set(repository: ApiRepository(connection: conn))
                     try? await store.fetchAll()
                     store.startTaskPolling()
+                    storeReady = true
                 }
             } else {
-                store = DocumentStore(repository: ApiRepository(connection: conn))
                 Task {
+                    store = await DocumentStore(repository: ApiRepository(connection: conn))
                     try? await store!.fetchAll()
                     store!.startTaskPolling()
+                    storeReady = true
                 }
             }
-            storeReady = true
             showLoginScreen = false
         } else {
             Logger.shared.trace("App does not have any active connection, show login screen")

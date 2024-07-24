@@ -44,7 +44,7 @@ struct ShareView: View {
             Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
             Task {
                 store.eventPublisher.send(.repositoryWillChange)
-                store.set(repository: ApiRepository(connection: conn))
+                await store.set(repository: ApiRepository(connection: conn))
                 try? await store.fetchAll()
             }
         } else {
@@ -135,7 +135,7 @@ struct ShareView: View {
 
         .task {
             if let conn = connectionManager.connection {
-                store.set(repository: ApiRepository(connection: conn))
+                await store.set(repository: ApiRepository(connection: conn))
             }
         }
 
