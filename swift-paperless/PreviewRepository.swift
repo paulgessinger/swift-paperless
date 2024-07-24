@@ -136,6 +136,11 @@ actor PreviewRepository: Repository {
             return maxAsn
         }
 
+        let notes: [Document.Note] = [
+            .init(id: 1, note: "Hallo", created: .now, document: 1234, user: 4),
+            .init(id: 2, note: "Another note", created: .now, document: 1234, user: 4),
+        ]
+
         for i in 0 ..< 30 {
             documents[UInt(i)] = .init(id: UInt(i),
                                        title: "Document \(i + 1)",
@@ -146,7 +151,8 @@ actor PreviewRepository: Repository {
                                        tags: t(),
                                        added: .now,
                                        modified: .now,
-                                       storagePath: p())
+                                       storagePath: p(),
+                                       notes: notes)
         }
 
         documents[2]?.title = "I am a very long document title that will not fit into a single line."

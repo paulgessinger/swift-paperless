@@ -64,6 +64,7 @@
 		7A2792052C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
 		7A2792062C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
 		7A2792072C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
+		7A2792182C50EBF800DC0352 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2037292C4EA5000060D086 /* Metadata.swift */; };
 		7A2831B22A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B32A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B52A63CEE6009E86CE /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -1327,6 +1328,7 @@
 				7A4648082A1D5AED00078968 /* DateDecodingError.swift in Sources */,
 				7A2792062C50EAB900DC0352 /* DecodeOnly.swift in Sources */,
 				7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */,
+				7A2792182C50EBF800DC0352 /* Metadata.swift in Sources */,
 				7A8E1F7F2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
 				7A2791F82C50EAA100DC0352 /* DecodeOnlyTest.swift in Sources */,
 				7A58A24829E19BF400986FE9 /* Model.swift in Sources */,

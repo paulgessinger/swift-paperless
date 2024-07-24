@@ -19,16 +19,46 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
     var id: UInt
     var title: String
 
-    @NullCodable var asn: UInt?
-    @NullCodable var documentType: UInt?
-    @NullCodable var correspondent: UInt?
+    @NullCodable
+    var asn: UInt?
+
+    @NullCodable
+    var documentType: UInt?
+
+    @NullCodable
+    var correspondent: UInt?
+
     var created: Date
     var tags: [UInt]
 
-    var added: Date? = nil
-    var modified: Date? = nil
+    @DecodeOnly
+    var added: Date?
 
-    @NullCodable var storagePath: UInt? = nil
+    @DecodeOnly
+    var modified: Date?
+
+    @NullCodable
+    var storagePath: UInt?
+
+    struct Note: Identifiable, Equatable, Sendable, Codable, Hashable {
+        var id: UInt
+        var note: String
+        var created: Date
+        var document: UInt
+        var user: UInt
+    }
+
+    @DecodeOnly
+    var notes: [Note]
+
+    // Presense of this depends on the API version!
+    @DecodeOnly
+    var _userCanChange: Bool?
+
+    var userCanChange: Bool {
+        // Assume default of 'true' in case we're on an older version
+        _userCanChange ?? true
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, title
@@ -36,6 +66,8 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
         case documentType = "document_type"
         case correspondent, created, tags, added
         case storagePath = "storage_path"
+        case notes
+        case _userCanChange = "user_can_change"
     }
 
     static var localizedName: String { String(localized: .localizable(.document)) }
