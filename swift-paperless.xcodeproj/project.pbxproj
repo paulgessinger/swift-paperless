@@ -60,6 +60,10 @@
 		7A2577412A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577422A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
 		7A2577432A87D32400B15626 /* NullCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A25773F2A87D32400B15626 /* NullCodable.swift */; };
+		7A2791F82C50EAA100DC0352 /* DecodeOnlyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2791F72C50EAA100DC0352 /* DecodeOnlyTest.swift */; };
+		7A2792052C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
+		7A2792062C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
+		7A2792072C50EAB900DC0352 /* DecodeOnly.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2792042C50EAB900DC0352 /* DecodeOnly.swift */; };
 		7A2831B22A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B32A62748D009E86CE /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A2831B52A63CEE6009E86CE /* TaskActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */; };
@@ -365,6 +369,8 @@
 		7A229F202C4C136E00506107 /* DocumentDetailViewV3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentDetailViewV3.swift; sourceTree = "<group>"; };
 		7A256CEE29B6828D00BADEB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7A25773F2A87D32400B15626 /* NullCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NullCodable.swift; sourceTree = "<group>"; };
+		7A2791F72C50EAA100DC0352 /* DecodeOnlyTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeOnlyTest.swift; sourceTree = "<group>"; };
+		7A2792042C50EAB900DC0352 /* DecodeOnly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeOnly.swift; sourceTree = "<group>"; };
 		7A2831B12A62748D009E86CE /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		7A2831B42A63CEE6009E86CE /* TaskActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskActivityView.swift; sourceTree = "<group>"; };
 		7A2831B62A63D6E2009E86CE /* TaskModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskModel.swift; sourceTree = "<group>"; };
@@ -668,6 +674,7 @@
 				7ADB3D212C18C362000D0576 /* issue_91.json */,
 				7A0772DE2BEA2DF800DCC8CD /* ErrorParsingTest.swift */,
 				7A4570312BF8DF7500CFB030 /* DateDecoderTest.swift */,
+				7A2791F72C50EAA100DC0352 /* DecodeOnlyTest.swift */,
 			);
 			path = "swift-paperlessTests";
 			sourceTree = "<group>";
@@ -736,6 +743,7 @@
 				7A763EBC2C0B484C0042796A /* String+isNumber.swift */,
 				7A4D513C2C0F88AF0066E75A /* BiometricLockManager.swift */,
 				04AA126A2C29AA7B000A389C /* PKCS12.swift */,
+				7A2792042C50EAB900DC0352 /* DecodeOnly.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1147,6 +1155,7 @@
 				7A7080DD2BDFE0530095BD56 /* AttachmentManager+receiveAttachment.swift in Sources */,
 				7A2831B82A63DC97009E86CE /* TaskModel.swift in Sources */,
 				7AEF691329CF80F600414BA7 /* LogoView.swift in Sources */,
+				7A2792072C50EAB900DC0352 /* DecodeOnly.swift in Sources */,
 				7A4AA8FF29BE042700D845A2 /* ApiRepository.swift in Sources */,
 				7A898ED22A0303140003DFBD /* Logging.swift in Sources */,
 				7A4AA90F29BE1FEB00D845A2 /* TagView.swift in Sources */,
@@ -1181,6 +1190,7 @@
 				7A3E45E02BF256BB0007AB67 /* AppVersionView.swift in Sources */,
 				7A2A13262A087AD00088808E /* ExtraHeadersView.swift in Sources */,
 				7AD8FC5829E4B37B00157217 /* FilterBar.swift in Sources */,
+				7A2792052C50EAB900DC0352 /* DecodeOnly.swift in Sources */,
 				7A6F31DF29DEA46500186A87 /* FilterRule.swift in Sources */,
 				7A35C0BB2C117E91006A542D /* SortOrder.swift in Sources */,
 				7A297FB029FE78750021A1ED /* CorrespondentEditView.swift in Sources */,
@@ -1315,8 +1325,10 @@
 				7A4648002A1D593C00078968 /* UserDefaults.swift in Sources */,
 				7A4570322BF8DF7500CFB030 /* DateDecoderTest.swift in Sources */,
 				7A4648082A1D5AED00078968 /* DateDecodingError.swift in Sources */,
+				7A2792062C50EAB900DC0352 /* DecodeOnly.swift in Sources */,
 				7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */,
 				7A8E1F7F2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
+				7A2791F82C50EAA100DC0352 /* DecodeOnlyTest.swift in Sources */,
 				7A58A24829E19BF400986FE9 /* Model.swift in Sources */,
 				7A9086F32BC31055006FC837 /* ErrorController.swift in Sources */,
 				7A8E1F872A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
