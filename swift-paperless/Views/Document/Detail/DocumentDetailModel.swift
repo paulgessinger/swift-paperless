@@ -12,7 +12,7 @@ import SwiftUI
 enum DocumentDownloadState: Equatable {
     case initial
     case loading
-    case loaded(PDFThumbnail)
+    case loaded(URL)
     case error
 
     static func == (lhs: DocumentDownloadState, rhs: DocumentDownloadState) -> Bool {
@@ -28,62 +28,8 @@ enum DocumentDownloadState: Equatable {
 @MainActor
 @Observable
 class DocumentDetailModel {
-    enum EditMode {
-        case none
-        case closing
-        case correspondent
-        case documentType
-        case storagePath
-        case created
-
-        var color: Color {
-            switch self {
-            case .correspondent: .paletteYellow
-            case .documentType: .paletteRed
-            case .storagePath: .paletteCoolGray
-            default: .gray
-            }
-        }
-    }
-
-    enum Detent: RawRepresentable, CaseIterable {
-        case small
-        case medium
-        case large
-
-        init?(rawValue _: PresentationDetent) {
-            nil
-        }
-
-        var rawValue: PresentationDetent {
-            switch self {
-            case .small: .fraction(0.3)
-            case .medium: .medium
-            case .large: .large
-            }
-        }
-    }
-
-    @ObservationIgnored
-    static let previewDetents: [PresentationDetent] = Detent.allCases.map(\.rawValue)
-
-    private var detentStack: [PresentationDetent] = []
-
-    var detent = Detent.medium.rawValue
-//    var previewDetentOnFocus: PresentationDetent? = nil
-
-    var editMode = EditMode.none
-    var zIndexActive = EditMode.none
-    var editingViewId = UUID()
-
-    var isEditing: Bool {
-        editMode != .none
-    }
-
     var download: DocumentDownloadState = .initial
     var downloadProgress: Double = 0.0
-
-    var showPreviewSheet = false
 
     @ObservationIgnored
     var store: DocumentStore
@@ -101,45 +47,14 @@ class DocumentDetailModel {
         self.document = document
     }
 
-    func push(detent: Detent) {
-        detentStack.append(self.detent)
-        self.detent = detent.rawValue
-    }
-
-    func popDetent() {
-        guard !detentStack.isEmpty else { return }
-        detent = detentStack.removeLast()
-    }
-
-    func startEditing(_ mode: EditMode) {
-        guard editMode == .none else { return }
-        editingViewId = UUID()
-        Haptics.shared.impact(style: .light)
-        zIndexActive = mode
-        Task {
-            try? await Task.sleep(for: .seconds(0.05))
-            editMode = mode
-        }
-    }
-
-    func stopEditing() async {
-        editMode = .closing
-        try? await Task.sleep(for: .seconds(0.5))
-        editMode = .none
-        zIndexActive = .none
-    }
-
     func loadMetadata() async {
         do {
             metadata = try await store.repository.metadata(documentId: document.id)
         } catch is CancellationError {
         } catch {
             Logger.shared.error("Error loading document metadata: \(error)")
-            //                                        errorController.push(error: error)
         }
     }
-
-    func onProgress(_: Double) {}
 
     func loadDocument() async {
         switch download {
@@ -159,12 +74,9 @@ class DocumentDetailModel {
                     return
                 }
 
-                guard let view = PDFThumbnail(file: url) else {
-                    download = .error
-                    return
-                }
-                download = .loaded(view)
+                download = .loaded(url)
                 setLoading.cancel()
+            } catch is CancellationError {
             } catch {
                 download = .error
                 Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")

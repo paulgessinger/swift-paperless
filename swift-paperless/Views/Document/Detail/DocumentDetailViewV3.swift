@@ -170,6 +170,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @Environment(\.dismiss) private var dismiss
 
+    @State private var editDetent: PresentationDetent = .medium
+
     private var chevronSize: CGFloat {
         let y = max(-dragOffset.height, 0)
         return min(1 + y / dragThreshold, 2)
@@ -204,8 +206,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     var body: some View {
         GeometryReader { geoOuter in
             ZStack(alignment: .center) {
-                if case let .loaded(pdf) = viewModel.download {
-                    WebView(url: pdf.file, topPadding: $topPadding, bottomPadding: $bottomPadding, load: {
+                if case let .loaded(url) = viewModel.download {
+                    WebView(url: url, topPadding: $topPadding, bottomPadding: $bottomPadding, load: {
                         webviewOpacity = 1.0
                     })
                     .equatable()
@@ -321,8 +323,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 //                                Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
 //                            }
 
-                            if case let .loaded(thumb) = viewModel.download {
-                                ShareLink(item: thumb.file) {
+                            if case let .loaded(url) = viewModel.download {
+                                ShareLink(item: url) {
                                     Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.up")
                                 }
                             }
@@ -336,21 +338,12 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .onChange(of: bottomInsetFrame) { updateWebkitInset() }
         .onChange(of: safeAreaInsets) { updateWebkitInset() }
 
-//        .onChange(of: viewModel.download) {
-//            print("GO share link")
-//            if case let .loaded(thumb) = viewModel.download {
-//                withAnimation {
-//                    shareLinkUrl = thumb.file
-//                }
-//            }
-//        }
-
         .sheet(isPresented: $showEditSheet) {
-            viewModel.detent = .medium
+            editDetent = .medium
         } content: {
             DocumentEditView(document: $viewModel.document)
 
-                .presentationDetents(Set(DocumentDetailModel.previewDetents), selection: $viewModel.detent)
+                .presentationDetents([.fraction(0.3), .medium, .large], selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
                 )
