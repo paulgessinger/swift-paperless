@@ -47,7 +47,7 @@ private var editingInterface: AppSettings.EditingUserInterface {
         case .TestFlight: .v3
         }
     case .v1: .v1
-    case .v2: .v2
+    case .v2: .automatic
     case .v3: .v3
     }
 }
@@ -77,10 +77,6 @@ struct DocumentDetailView: View {
         switch editingInterface {
         case .v1:
             DocumentDetailViewV1(store: store,
-                                 document: document,
-                                 navPath: navPath)
-        case .v2:
-            DocumentDetailViewV2(store: store,
                                  document: document,
                                  navPath: navPath)
         case .v3:
