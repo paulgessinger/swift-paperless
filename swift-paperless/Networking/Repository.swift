@@ -109,6 +109,9 @@ protocol Repository: Sendable, Actor {
 
     func metadata(documentId: UInt) async throws -> Metadata
 
+    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
+    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note]
+
     // @TODO: Remove UIImage
     func thumbnail(document: Document) async throws -> Image?
     func thumbnailData(document: Document) async throws -> Data

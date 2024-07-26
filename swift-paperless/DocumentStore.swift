@@ -132,6 +132,29 @@ final class DocumentStore: ObservableObject, Sendable {
         eventPublisher.send(.deleted(document: document))
     }
 
+    func deleteNote(from document: Document, id: UInt) async throws {
+        eventPublisher.send(.changed(document: document))
+        let notes = try await repository.deleteNote(id: id, documentId: document.id)
+
+        var document = document
+        document.notes = notes
+
+        documents[document.id] = document
+        eventPublisher.send(.changeReceived(document: document))
+    }
+
+    func addNote(to document: Document, note: ProtoDocument.Note) async throws {
+        eventPublisher.send(.changed(document: document))
+
+        let notes = try await repository.createNote(documentId: document.id, note: note)
+
+        var document = document
+        document.notes = notes
+
+        documents[document.id] = document
+        eventPublisher.send(.changeReceived(document: document))
+    }
+
     func fetchTasks() async {
         guard let tasks = try? await repository.tasks() else {
             return

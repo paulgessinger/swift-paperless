@@ -283,6 +283,9 @@ struct DocumentEditView: View {
                     }
                 }
             }
+
+            .scrollBounceBehavior(.basedOnSize)
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(String(localized: .localizable(.cancel)), role: .cancel) {

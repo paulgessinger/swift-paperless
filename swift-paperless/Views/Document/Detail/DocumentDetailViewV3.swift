@@ -96,33 +96,43 @@ private struct DocumentPropertyView: View {
                     }
             }
 
-            VStack(alignment: .leading) {
-                HFlow(itemSpacing: spacing) {
-                    if let asn = document.asn {
-                        Aspect(String(localized: .localizable(.documentAsn(asn))), systemImage: "qrcode")
+            HStack(alignment: .top) {
+                VStack(alignment: .leading) {
+                    HFlow(itemSpacing: spacing) {
+                        if let asn = document.asn {
+                            Aspect(String(localized: .localizable(.documentAsn(asn))), systemImage: "qrcode")
+                        }
+
+                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
+                            Aspect(name, systemImage: "person")
+                        }
+
+                        if let id = document.documentType, let name = store.documentTypes[id]?.name {
+                            Aspect(name, systemImage: "doc")
+                        }
+
+                        Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
+
+                        if let id = document.storagePath, let name = store.storagePaths[id]?.name {
+                            Aspect(name, systemImage: "archivebox")
+                        }
                     }
 
-                    if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                        Aspect(name, systemImage: "person")
-                    }
-
-                    if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                        Aspect(name, systemImage: "doc")
-                    }
-
-                    Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
-
-                    if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                        Aspect(name, systemImage: "archivebox")
-                    }
+                    TagsView(tags: document.tags.compactMap { store.tags[$0] })
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                Label(localized: .localizable(.details), systemImage: "info.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .fontWeight(.bold)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.primary, .tertiary)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 15)
+                    .fill(.ultraThinMaterial)
                     .stroke(.tertiary)
             )
             .offset(y: detailOffset)
@@ -131,21 +141,13 @@ private struct DocumentPropertyView: View {
                 Haptics.shared.impact(style: .medium)
                 showDetails.toggle()
             }
-            .overlay(alignment: .topTrailing) {
-                Label(localized: .localizable(.details), systemImage: "info.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .fontWeight(.bold)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.primary, .tertiary)
-                    .padding([.top, .trailing], 10)
-            }
         }
 
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding([.horizontal, .top])
 
         .sheet(isPresented: $showDetails) {
-            DocumentMetadataView(document: document, metadata: $viewModel.metadata)
+            DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
                 .presentationDetents([.medium, .large])
         }
 
@@ -262,6 +264,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                                    topTrailingRadius: 20,
                                                    style: .continuous)
                                 .fill(.thinMaterial)
+                                .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
                                 .task {
                                     bottomInsetFrame = geo.frame(in: .global)
                                 }
@@ -364,7 +367,7 @@ private struct WebViewInternal: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = context.coordinator.webView
-        webView.scrollView.contentInset = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
+        updateInsets(webView)
         let request = URLRequest(url: url)
         webView.load(request)
         return webView
@@ -374,10 +377,17 @@ private struct WebViewInternal: UIViewRepresentable {
         Coordinator(self)
     }
 
+    @MainActor
+    private func updateInsets(_ webView: WKWebView) {
+        print("Update bottom: \(bottomPadding)")
+        let insets = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
+        webView.scrollView.contentInset = insets
+        webView.scrollView.verticalScrollIndicatorInsets = insets
+    }
+
     func updateUIView(_: WKWebView, context: Context) {
         let webView = context.coordinator.webView
-//        print("Update bottom: \(bottomPadding)")
-        webView.scrollView.contentInset = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
+        updateInsets(webView)
     }
 }
 

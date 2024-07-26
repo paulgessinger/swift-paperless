@@ -182,6 +182,9 @@
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
 		7A5C138C29ABC35E00D71F51 /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C138B29ABC35E00D71F51 /* ColorHex.swift */; };
 		7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5C139029ABFC3F00D71F51 /* TagView.swift */; };
+		7A614E232C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A614E222C53C21C00C48F68 /* DocumentMetadata.xcstrings */; };
+		7A614E242C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A614E222C53C21C00C48F68 /* DocumentMetadata.xcstrings */; };
+		7A614E252C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A614E222C53C21C00C48F68 /* DocumentMetadata.xcstrings */; };
 		7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B62A63D6E2009E86CE /* TaskModel.swift */; };
 		7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
@@ -426,6 +429,7 @@
 		7A5482CA299AD56E00D5061E /* swift_paperlessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessUITests.swift; sourceTree = "<group>"; };
 		7A5C138B29ABC35E00D71F51 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
 		7A5C139029ABFC3F00D71F51 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
+		7A614E222C53C21C00C48F68 /* DocumentMetadata.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = DocumentMetadata.xcstrings; sourceTree = "<group>"; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7A68F0AA29B356A300878223 /* TagSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectionView.swift; sourceTree = "<group>"; };
 		7A6F31DE29DEA46500186A87 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
@@ -575,6 +579,7 @@
 				7A1460F22B19F8380074BAAB /* Login.xcstrings */,
 				7AEBB5382B26589700845B73 /* Matching.xcstrings */,
 				7A0772612BE66E0500DCC8CD /* Tasks.xcstrings */,
+				7A614E222C53C21C00C48F68 /* DocumentMetadata.xcstrings */,
 			);
 			path = Localization;
 			sourceTree = "<group>";
@@ -1014,6 +1019,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A0772632BE66E0500DCC8CD /* Tasks.xcstrings in Resources */,
+				7A614E252C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */,
 				7A4AA90629BE186A00D845A2 /* Assets.xcassets in Resources */,
 				7A2E120E2B14B9C900E7704A /* Localizable.xcstrings in Resources */,
 				7AEBB5492B26597500845B73 /* Matching.xcstrings in Resources */,
@@ -1031,6 +1037,7 @@
 				7A5482B7299AD56E00D5061E /* Preview Assets.xcassets in Resources */,
 				7AF0C7DE2BAF6ED300FCD5AA /* PrivacyInfo.xcprivacy in Resources */,
 				7AD353B12A8036E200AFFAFE /* demo3.pdf in Resources */,
+				7A614E232C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */,
 				7AEBB5392B26589700845B73 /* Matching.xcstrings in Resources */,
 				7ABC733C2BFB8A5C0061E094 /* demo2.pdf in Resources */,
 				7A0772622BE66E0500DCC8CD /* Tasks.xcstrings in Resources */,
@@ -1048,6 +1055,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A0772FF2BEA2E1A00DCC8CD /* Tasks.xcstrings in Resources */,
+				7A614E242C53C21C00C48F68 /* DocumentMetadata.xcstrings in Resources */,
 				7ADB3D222C18C363000D0576 /* issue_91.json in Resources */,
 				7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */,
 				7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */,

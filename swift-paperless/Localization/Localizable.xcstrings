@@ -1455,39 +1455,6 @@
         }
       }
     },
-    "documentAddedDate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Date added"
-          }
-        }
-      }
-    },
-    "documentArchiveChecksum" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archive MD5 checksum"
-          }
-        }
-      }
-    },
-    "documentArchiveFilesize" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archive file size"
-          }
-        }
-      }
-    },
     "documentAsn" : {
       "comment" : "ASN display in document context",
       "extractionState" : "manual",
@@ -1854,83 +1821,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tytuł"
-          }
-        }
-      }
-    },
-    "documentMediaFilename" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Media filename"
-          }
-        }
-      }
-    },
-    "documentMetadata" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metadata"
-          }
-        }
-      }
-    },
-    "documentModifiedDate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Date modified"
-          }
-        }
-      }
-    },
-    "documentOriginalChecksum" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original MD5 checksum"
-          }
-        }
-      }
-    },
-    "documentOriginalFilename" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original filename"
-          }
-        }
-      }
-    },
-    "documentOriginalFilesize" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original file size"
-          }
-        }
-      }
-    },
-    "documentOriginalMimeType" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original mime type"
           }
         }
       }

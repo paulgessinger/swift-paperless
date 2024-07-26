@@ -61,6 +61,15 @@ extension Endpoint {
         Endpoint(path: "/api/documents/\(documentId)/metadata", queryItems: [])
     }
 
+    static func notes(documentId: UInt) -> Endpoint {
+        Endpoint(path: "/api/documents/\(documentId)/notes", queryItems: [])
+    }
+
+    static func note(documentId: UInt, noteId: UInt) -> Endpoint {
+        Endpoint(path: "/api/documents/\(documentId)/notes",
+                 queryItems: [URLQueryItem(name: "id", value: String(noteId))])
+    }
+
     static func thumbnail(documentId: UInt) -> Endpoint {
         Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
     }

@@ -44,8 +44,8 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
         var id: UInt
         var note: String
         var created: Date
-        var document: UInt
-        var user: UInt
+//        var document: UInt
+//        var user: UInt
     }
 
     @DecodeOnly
@@ -81,4 +81,8 @@ struct ProtoDocument: DocumentProtocol, Equatable {
     var tags: [UInt] = []
     var created: Date = .now
     var storagePath: UInt? = nil
+
+    struct Note: Codable {
+        var note: String
+    }
 }

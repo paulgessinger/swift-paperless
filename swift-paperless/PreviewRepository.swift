@@ -42,7 +42,7 @@ struct SeededGenerator: RandomNumberGenerator {
 }
 
 actor PreviewRepository: Repository {
-    private let documents: [UInt: Document]
+    private var documents: [UInt: Document]
     private let tags: [UInt: Tag]
     private let documentTypes: [UInt: DocumentType]
     private let correspondents: [UInt: Correspondent]
@@ -137,8 +137,8 @@ actor PreviewRepository: Repository {
         }
 
         let notes: [Document.Note] = [
-            .init(id: 1, note: "Hallo", created: .now, document: 1234, user: 4),
-            .init(id: 2, note: "Another note", created: .now, document: 1234, user: 4),
+            .init(id: 1, note: "Hallo", created: .now),
+            .init(id: 2, note: "Another note", created: .now),
         ]
 
         for i in 0 ..< 30 {
@@ -263,7 +263,31 @@ actor PreviewRepository: Repository {
         )
     }
 
-    nonisolated func documents(filter _: FilterState) -> any DocumentSource {
+    struct NoteError: Error {}
+
+    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+        guard var document = documents[documentId] else {
+            throw NoteError()
+        }
+
+        let nextId = (document.notes.map(\.id).max() ?? 0) + 1
+        document.notes.append(Document.Note(id: nextId, note: note.note, created: .now))
+
+        documents[documentId] = document
+        return document.notes
+    }
+
+    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+        guard var document = documents[documentId] else {
+            throw NoteError()
+        }
+
+        document.notes = document.notes.filter { $0.id != id }
+        documents[documentId] = document
+        return document.notes
+    }
+
+    func documents(filter _: FilterState) -> any DocumentSource {
         PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
     }
 

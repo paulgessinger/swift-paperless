@@ -45,7 +45,6 @@ class UserDefaultsBacked<Value> where Value: Codable {
     var wrappedValue: Value {
         get {
             let key = key
-            logger.trace("Getting UserDefaultsBacked(\(key))")
             if let cachedValue {
                 return cachedValue
             }

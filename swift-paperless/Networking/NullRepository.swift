@@ -41,6 +41,9 @@ actor NullRepository: Repository {
 
     func metadata(documentId _: UInt) async throws -> Metadata { throw NotImplemented() }
 
+    func createNote(documentId _: UInt, note _: ProtoDocument.Note) async throws -> [Document.Note] { [] }
+    func deleteNote(id _: UInt, documentId _: UInt) async throws -> [Document.Note] { [] }
+
     nonisolated func documents(filter _: FilterState) -> any DocumentSource {
         NullDocumentSource()
     }

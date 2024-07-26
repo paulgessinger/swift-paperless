@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.07.2024.
 //
 
+import os
 import SwiftUI
 
 private struct Row<Label: View, Value: View>: View {
@@ -18,7 +19,6 @@ private struct Row<Label: View, Value: View>: View {
             Spacer()
             value()
         }
-        Divider()
     }
 }
 
@@ -51,7 +51,6 @@ private struct WideRow<Label: View, Value: View>: View {
             value()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        Divider()
     }
 }
 
@@ -92,7 +91,9 @@ private struct Section<Title: View, Content: View>: View {
     var body: some View {
         VStack(spacing: spacing) {
             title()
-                .font(.title3)
+                .font(.headline)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
             VStack {
@@ -131,88 +132,261 @@ extension Section where Title == Text {
     }
 }
 
+private struct NoteView: View {
+    @Binding var document: Document
+    let note: Document.Note
+
+    @State private var showDeleteConfirmation = false
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("\(note.note)")
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Label(localized: .localizable(.delete), systemImage: "trash.circle.fill")
+                .labelStyle(.iconOnly)
+                .symbolRenderingMode(.palette)
+                .font(.title)
+                .foregroundStyle(.white, .red)
+                .onTapGesture {
+                    showDeleteConfirmation = true
+                }
+        }
+        .confirmationDialog(String(localized: .documentMetadata(.noteDeleteConfirmation)), isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button(String(localized: .localizable(.delete)), role: .destructive) {
+                Task {
+                    do {
+                        try await store.deleteNote(from: document, id: note.id)
+                        document.notes = document.notes.filter { $0.id != note.id }
+                    } catch {
+                        Logger.shared.error("Error deleting note from document: \(error)")
+                        errorController.push(error: error)
+                    }
+                }
+            }
+            Button(String(localized: .localizable(.cancel)), role: .cancel) {
+                showDeleteConfirmation = false
+            }
+        }
+    }
+}
+
 struct DocumentMetadataView: View {
-    let document: Document
-    @Binding var metadata: Metadata?
+    @Binding private var document: Document
+    @Binding private var metadata: Metadata?
+
+    @State private var adding = false
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
     @Environment(\.dismiss) private var dismiss
 
+    init(document: Binding<Document>, metadata: Binding<Metadata?>) {
+        _document = document
+        _metadata = metadata
+    }
+
     private var loaded: Bool {
         metadata != nil
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            Section(.localizable(.documentMetadata)) {
-                if let modified = document.modified {
-                    Row(.localizable(.documentModifiedDate)) {
-                        Text(modified, style: .date)
-                    }
-                }
-                if let added = document.added {
-                    Row(.localizable(.documentAddedDate)) {
-                        Text(added, style: .date)
-                    }
-                }
-
-                VStack {
-                    if let metadata {
-                        WideRow(.localizable(.documentMediaFilename),
-                                value: metadata.mediaFilename)
-
-                        WideRow(.localizable(.documentOriginalFilename),
-                                value: metadata.originalFilename)
-
-                        WideRow(.localizable(.documentOriginalChecksum)) {
-                            Text(metadata.originalChecksum)
-                                .italic()
+        NavigationStack {
+            ScrollView(.vertical) {
+                Section(.documentMetadata(.title)) {
+                    if let modified = document.modified {
+                        Row(.documentMetadata(.modifiedDate)) {
+                            Text(modified, style: .date)
                         }
-
-                        Row(.localizable(.documentOriginalFilesize)) {
-                            Text(metadata.originalSize.formatted(.byteCount(style: .file)))
+                    }
+                    if let added = document.added {
+                        Divider()
+                        Row(.documentMetadata(.addedDate)) {
+                            Text(added, style: .date)
                         }
+                    }
 
-                        Row(.localizable(.documentOriginalMimeType),
-                            value: metadata.originalMimeType)
+                    VStack {
+                        if let metadata {
+                            Divider()
+                            WideRow(.documentMetadata(.mediaFilename),
+                                    value: metadata.mediaFilename)
 
-                        if let archiveChecksum = metadata.archiveChecksum {
-                            WideRow(.localizable(.documentArchiveChecksum)) {
-                                Text(archiveChecksum)
+                            Divider()
+                            WideRow(.documentMetadata(.originalFilename),
+                                    value: metadata.originalFilename)
+
+                            Divider()
+                            WideRow(.documentMetadata(.originalChecksum)) {
+                                Text(metadata.originalChecksum)
                                     .italic()
                             }
-                        }
 
-                        if let archiveSize = metadata.archiveSize {
-                            Row(.localizable(.documentArchiveFilesize)) {
-                                Text(archiveSize.formatted(.byteCount(style: .file)))
+                            Divider()
+                            Row(.documentMetadata(.originalFilesize)) {
+                                Text(metadata.originalSize.formatted(.byteCount(style: .file)))
+                            }
+
+                            Divider()
+                            Row(.documentMetadata(.originalMimeType),
+                                value: metadata.originalMimeType)
+
+                            if let archiveChecksum = metadata.archiveChecksum {
+                                Divider()
+                                WideRow(.documentMetadata(.archiveChecksum)) {
+                                    Text(archiveChecksum)
+                                        .italic()
+                                }
+                            }
+
+                            if let archiveSize = metadata.archiveSize {
+                                Divider()
+                                Row(.documentMetadata(.archiveFilesize)) {
+                                    Text(archiveSize.formatted(.byteCount(style: .file)))
+                                }
+                            }
+                        } else {
+                            ProgressView()
+                                .padding()
+                        }
+                    }
+                    .animation(.spring.delay(0.2), value: loaded)
+                }
+
+                Section {
+                    HStack(alignment: .bottom) {
+                        Text(.documentMetadata(.notes))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Label(localized: .localizable(.add), systemImage: "plus.circle.fill")
+                            .labelStyle(.iconOnly)
+                            .symbolRenderingMode(.palette)
+                            .font(.title)
+                            .foregroundStyle(.primary, .tertiary)
+                            .onTapGesture {
+                                adding = true
+                            }
+                    }
+                } content: {
+                    if !document.notes.isEmpty {
+                        ForEach(document.notes) { note in
+                            NoteView(document: $document,
+                                     note: note)
+                            if note != document.notes.last {
+                                Divider()
+                                    .padding(.bottom)
                             }
                         }
+                    } else {
+                        VStack {
+                            Text(.documentMetadata(.notesNone))
+                            Button(String(localized: .documentMetadata(.addNote))) {
+                                adding = true
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
-                .animation(.spring.delay(0.2), value: loaded)
+                .animation(.spring, value: document)
+                .animation(.spring, value: adding)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+
+            .animation(.spring, value: loaded)
+
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Label(localized: .localizable(.back), systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.primary, .thickMaterial)
+                        .font(.title)
+                        .onTapGesture {
+                            dismiss()
+                        }
+                        .padding(.top)
+                }
             }
 
-            .padding(.top, 30)
+            .sheet(isPresented: $adding) {
+                CreateNoteView(document: $document)
+            }
+
+            .errorOverlay(errorController: errorController)
         }
+    }
+}
 
-        .animation(.spring, value: loaded)
+private struct CreateNoteView: View {
+    @Binding var document: Document
 
-        .overlay(alignment: .topLeading) {
-            HStack {
-                Spacer()
-                Label(localized: .localizable(.back), systemImage: "xmark.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .font(.largeTitle)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.primary, .thickMaterial)
-                    .padding([.top, .horizontal])
-                    .onTapGesture {
+    @State private var noteText: String = ""
+    @State private var saving = false
+
+    @FocusState private var focused: Bool
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
+
+    private func saveNote() async {
+        guard !noteText.isEmpty else { return }
+
+        let note = ProtoDocument.Note(note: noteText)
+        saving = true
+        defer { saving = false }
+
+        do {
+            try await store.addNote(to: document, note: note)
+            if let document = try await store.document(id: document.id) {
+                self.document = document
+            }
+            noteText = ""
+            dismiss()
+        } catch {
+            Logger.shared.error("Error adding note to document: \(error)")
+            errorController.push(error: error)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField(.documentMetadata(.notePlaceholder),
+                          text: $noteText,
+                          axis: .vertical)
+                    .focused($focused)
+            }
+
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(.localizable(.cancel), role: .cancel) {
                         dismiss()
                     }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !saving {
+                        Button(.localizable(.add)) {
+                            Task { await saveNote() }
+                        }
+                        .bold()
+                        .disabled(noteText.isEmpty)
+                    } else {
+                        ProgressView()
+                    }
+                }
             }
+
+            .navigationTitle(.documentMetadata(.noteCreate))
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .errorOverlay(errorController: errorController, offset: 20)
+        .task {
+            focused = true
         }
     }
 }
@@ -229,8 +403,8 @@ private struct PreviewHelper: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if let document {
-                    DocumentMetadataView(document: document, metadata: $metadata)
+                if document != nil {
+                    DocumentMetadataView(document: Binding($document)!, metadata: $metadata)
                 }
             }
             .task {

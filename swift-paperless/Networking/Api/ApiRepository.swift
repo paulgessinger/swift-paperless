@@ -450,6 +450,33 @@ extension ApiRepository: Repository {
         }
     }
 
+    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+        var request = try request(.notes(documentId: documentId))
+        let body = try JSONEncoder().encode(note)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        do {
+            return try await fetchData(for: request, as: [Document.Note].self, code: 200)
+        } catch {
+            Logger.shared.error("Error creating note on document \(documentId): \(error)")
+            throw error
+        }
+    }
+
+    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+        var request = try request(.note(documentId: documentId, noteId: id))
+        request.httpMethod = "DELETE"
+
+        do {
+            return try await fetchData(for: request, as: [Document.Note].self, code: 200)
+        } catch {
+            Logger.shared.error("Error deleting note on document \(documentId): \(error)")
+            throw error
+        }
+    }
+
     private func nextAsnCompatibility() async throws -> UInt {
         Logger.api.notice("Getting next ASN with legacy compatibility method")
         var fs = FilterState()
