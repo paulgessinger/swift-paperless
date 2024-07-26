@@ -150,10 +150,6 @@ private struct DocumentPropertyView: View {
             DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
                 .presentationDetents([.medium, .large])
         }
-
-        .task {
-            await viewModel.loadMetadata()
-        }
     }
 }
 
@@ -170,6 +166,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @State private var dragOffset = CGSize.zero
 
     @State private var safeAreaInsets = EdgeInsets()
+    @State private var shareLinkUrl: URL?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -300,13 +297,50 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .task {
             async let doc: () = viewModel.loadDocument()
 
+            await viewModel.loadMetadata()
+
             await doc
         }
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(.thinMaterial, for: .navigationBar)
 
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        // @TODO: Implement share links
+                    } label: {
+                        Label(localized: .localizable(.shareLink), systemImage: "link")
+                    }
+
+                    Button {
+                        // @TODO: Implement app deep links
+                    } label: {
+                        Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
+                    }
+
+                    if case let .loaded(thumb) = viewModel.download {
+                        ShareLink(item: thumb.file) {
+                            Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.up")
+                        }
+                    }
+                } label: {
+                    Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+
         .onChange(of: bottomInsetFrame) { updateWebkitInset() }
         .onChange(of: safeAreaInsets) { updateWebkitInset() }
+
+//        .onChange(of: viewModel.download) {
+//            print("GO share link")
+//            if case let .loaded(thumb) = viewModel.download {
+//                withAnimation {
+//                    shareLinkUrl = thumb.file
+//                }
+//            }
+//        }
 
         .sheet(isPresented: $showEditSheet) {
             viewModel.detent = .medium
@@ -379,7 +413,7 @@ private struct WebViewInternal: UIViewRepresentable {
 
     @MainActor
     private func updateInsets(_ webView: WKWebView) {
-        print("Update bottom: \(bottomPadding)")
+//        print("Update bottom: \(bottomPadding)")
         let insets = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
         webView.scrollView.contentInset = insets
         webView.scrollView.verticalScrollIndicatorInsets = insets

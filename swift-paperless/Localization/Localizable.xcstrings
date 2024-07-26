@@ -5214,6 +5214,39 @@
         }
       }
     },
+    "shareAppLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link to this app"
+          }
+        }
+      }
+    },
+    "shareLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share link"
+          }
+        }
+      }
+    },
+    "shareSheet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other apps"
+          }
+        }
+      }
+    },
     "shareSheetInvalidAttachmentDetail" : {
       "extractionState" : "manual",
       "localizations" : {

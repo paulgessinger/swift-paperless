@@ -12,13 +12,19 @@ struct DocumentDetailViewVersionSelection: View {
 
     @State private var show = false
 
+    let available: [AppSettings.EditingUserInterface] = [
+        .automatic,
+        .v1,
+        .v3,
+    ]
+
     var body: some View {
         VStack {
             if show {
                 Picker("Document editing UI variant",
                        selection: $appSettings.editingUserInterface)
                 {
-                    ForEach(AppSettings.EditingUserInterface.allCases, id: \.self) { element in
+                    ForEach(available, id: \.self) { element in
                         Text("\(element)")
                             .tag(element)
                     }
@@ -37,7 +43,8 @@ private var editingInterface: AppSettings.EditingUserInterface {
     case .automatic:
         switch Bundle.main.appConfiguration {
         case .Debug, .Simulator: .v3
-        case .AppStore, .TestFlight: .v1
+        case .AppStore: .v1
+        case .TestFlight: .v3
         }
     case .v1: .v1
     case .v2: .v2

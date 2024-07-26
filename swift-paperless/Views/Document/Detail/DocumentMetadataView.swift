@@ -94,7 +94,7 @@ private struct Section<Title: View, Content: View>: View {
                 .font(.headline)
                 .textCase(.uppercase)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: 40, alignment: .bottomLeading)
                 .padding(.horizontal)
             VStack {
                 content()
@@ -179,6 +179,13 @@ struct DocumentMetadataView: View {
 
     @State private var adding = false
 
+    private enum Tabs {
+        case metadata
+        case notes
+    }
+
+    @State private var visibleTab = Tabs.metadata
+
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
@@ -193,112 +200,134 @@ struct DocumentMetadataView: View {
         metadata != nil
     }
 
-    var body: some View {
-        NavigationStack {
-            ScrollView(.vertical) {
-                Section(.documentMetadata(.title)) {
-                    if let modified = document.modified {
-                        Row(.documentMetadata(.modifiedDate)) {
-                            Text(modified, style: .date)
-                        }
+    private var metadataSection: some View {
+        ScrollView(.vertical) {
+            Section(.documentMetadata(.title)) {
+                if let modified = document.modified {
+                    Row(.documentMetadata(.modifiedDate)) {
+                        Text(modified, style: .date)
                     }
-                    if let added = document.added {
-                        Divider()
-                        Row(.documentMetadata(.addedDate)) {
-                            Text(added, style: .date)
-                        }
+                }
+                if let added = document.added {
+                    Divider()
+                    Row(.documentMetadata(.addedDate)) {
+                        Text(added, style: .date)
                     }
-
-                    VStack {
-                        if let metadata {
-                            Divider()
-                            WideRow(.documentMetadata(.mediaFilename),
-                                    value: metadata.mediaFilename)
-
-                            Divider()
-                            WideRow(.documentMetadata(.originalFilename),
-                                    value: metadata.originalFilename)
-
-                            Divider()
-                            WideRow(.documentMetadata(.originalChecksum)) {
-                                Text(metadata.originalChecksum)
-                                    .italic()
-                            }
-
-                            Divider()
-                            Row(.documentMetadata(.originalFilesize)) {
-                                Text(metadata.originalSize.formatted(.byteCount(style: .file)))
-                            }
-
-                            Divider()
-                            Row(.documentMetadata(.originalMimeType),
-                                value: metadata.originalMimeType)
-
-                            if let archiveChecksum = metadata.archiveChecksum {
-                                Divider()
-                                WideRow(.documentMetadata(.archiveChecksum)) {
-                                    Text(archiveChecksum)
-                                        .italic()
-                                }
-                            }
-
-                            if let archiveSize = metadata.archiveSize {
-                                Divider()
-                                Row(.documentMetadata(.archiveFilesize)) {
-                                    Text(archiveSize.formatted(.byteCount(style: .file)))
-                                }
-                            }
-                        } else {
-                            ProgressView()
-                                .padding()
-                        }
-                    }
-                    .animation(.spring.delay(0.2), value: loaded)
                 }
 
-                Section {
-                    HStack(alignment: .bottom) {
-                        Text(.documentMetadata(.notes))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                VStack {
+                    if let metadata {
+                        Divider()
+                        WideRow(.documentMetadata(.mediaFilename),
+                                value: metadata.mediaFilename)
 
-                        Label(localized: .localizable(.add), systemImage: "plus.circle.fill")
-                            .labelStyle(.iconOnly)
-                            .symbolRenderingMode(.palette)
-                            .font(.title)
-                            .foregroundStyle(.primary, .tertiary)
-                            .onTapGesture {
-                                adding = true
+                        Divider()
+                        WideRow(.documentMetadata(.originalFilename),
+                                value: metadata.originalFilename)
+
+                        Divider()
+                        WideRow(.documentMetadata(.originalChecksum)) {
+                            Text(metadata.originalChecksum)
+                                .italic()
+                        }
+
+                        Divider()
+                        Row(.documentMetadata(.originalFilesize)) {
+                            Text(metadata.originalSize.formatted(.byteCount(style: .file)))
+                        }
+
+                        Divider()
+                        Row(.documentMetadata(.originalMimeType),
+                            value: metadata.originalMimeType)
+
+                        if let archiveChecksum = metadata.archiveChecksum {
+                            Divider()
+                            WideRow(.documentMetadata(.archiveChecksum)) {
+                                Text(archiveChecksum)
+                                    .italic()
                             }
-                    }
-                } content: {
-                    if !document.notes.isEmpty {
-                        ForEach(document.notes) { note in
-                            NoteView(document: $document,
-                                     note: note)
-                            if note != document.notes.last {
-                                Divider()
-                                    .padding(.bottom)
+                        }
+
+                        if let archiveSize = metadata.archiveSize {
+                            Divider()
+                            Row(.documentMetadata(.archiveFilesize)) {
+                                Text(archiveSize.formatted(.byteCount(style: .file)))
                             }
                         }
                     } else {
-                        VStack {
-                            Text(.documentMetadata(.notesNone))
-                            Button(String(localized: .documentMetadata(.addNote))) {
-                                adding = true
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        ProgressView()
+                            .padding()
                     }
                 }
-                .animation(.spring, value: document)
-                .animation(.spring, value: adding)
+                .animation(.spring.delay(0.2), value: loaded)
             }
-            .scrollBounceBehavior(.basedOnSize)
-
             .animation(.spring, value: loaded)
 
+            .padding(.top)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    private var notesSection: some View {
+        ScrollView(.vertical) {
+            Section {
+                HStack(alignment: .bottom) {
+                    Text(.documentMetadata(.notes))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Label(localized: .localizable(.add), systemImage: "plus.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .symbolRenderingMode(.palette)
+                        .font(.title)
+                        .foregroundStyle(.primary, .tertiary)
+                        .onTapGesture {
+                            adding = true
+                        }
+                }
+            } content: {
+                if !document.notes.isEmpty {
+                    ForEach(document.notes) { note in
+                        NoteView(document: $document,
+                                 note: note)
+                        if note != document.notes.last {
+                            Divider()
+                                .padding(.bottom)
+                        }
+                    }
+                } else {
+                    VStack {
+                        Text(.documentMetadata(.notesNone))
+                            .italic()
+                        Button(String(localized: .documentMetadata(.addNote))) {
+                            adding = true
+                        }
+                        .bold()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+
+            .padding(.top)
+
+            .animation(.spring, value: document)
+            .animation(.spring, value: adding)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    var body: some View {
+        NavigationStack {
+            TabView(selection: $visibleTab) {
+                metadataSection
+                    .tag(Tabs.metadata)
+                notesSection
+                    .tag(Tabs.notes)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea(edges: .bottom)
+
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Label(localized: .localizable(.back), systemImage: "xmark.circle.fill")
                         .labelStyle(.iconOnly)
                         .symbolRenderingMode(.palette)
@@ -309,6 +338,20 @@ struct DocumentMetadataView: View {
                         }
                         .padding(.top)
                 }
+
+                ToolbarItem(placement: .principal) {
+                    Picker(selection: $visibleTab) {
+                        Text(.documentMetadata(.title))
+                            .tag(Tabs.metadata)
+                        Text(.documentMetadata(.notes))
+                            .tag(Tabs.notes)
+                    } label: {
+                        Text("tab")
+                    }
+                    .pickerStyle(.segmented)
+                    .fixedSize()
+                    .padding(.top)
+                }
             }
 
             .sheet(isPresented: $adding) {
@@ -316,6 +359,8 @@ struct DocumentMetadataView: View {
             }
 
             .errorOverlay(errorController: errorController)
+
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
@@ -362,13 +407,13 @@ private struct CreateNoteView: View {
             }
 
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button(.localizable(.cancel), role: .cancel) {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     if !saving {
                         Button(.localizable(.add)) {
                             Task { await saveNote() }

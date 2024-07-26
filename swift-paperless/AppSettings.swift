@@ -77,7 +77,10 @@ class AppSettings: ObservableObject {
     var defaultSortOrder = SortOrder.descending
 
     enum EditingUserInterface: Codable, CaseIterable {
-        case automatic, v1, v2, v3
+        case automatic
+        case v1
+        case v2
+        case v3
     }
 
     @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
