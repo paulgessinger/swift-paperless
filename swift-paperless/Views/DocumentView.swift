@@ -121,6 +121,7 @@ struct DocumentView: View {
             TaskActivityToolbar(navState: $taskViewNavState)
 
             Label(String(localized: .localizable(.add)), systemImage: "plus")
+                .tint(.accent)
                 .overlay {
                     Menu {
                         if isDocumentScannerAvailable {
@@ -183,6 +184,7 @@ struct DocumentView: View {
                 Label(String(localized: .localizable(.detailsMenuLabel)), systemImage: "ellipsis.circle")
                     .labelStyle(.iconOnly)
             }
+            .tint(.accent)
 
             if isDataScannerAvailable {
                 Button {
@@ -193,6 +195,7 @@ struct DocumentView: View {
                 } label: {
                     Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
                 }
+                .tint(.accent)
             } else {
                 Button {
                     withAnimation(.spring(response: 0.5)) {
@@ -201,6 +204,7 @@ struct DocumentView: View {
                 } label: {
                     Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
                 }
+                .tint(.accent)
             }
         }
     }

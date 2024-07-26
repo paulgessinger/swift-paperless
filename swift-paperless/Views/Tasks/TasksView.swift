@@ -18,7 +18,7 @@ extension TaskStatus {
         case .SUCCESS:
             "checkmark.circle"
         case .FAILURE:
-            "x.circle"
+            "xmark.circle"
         case .RETRY:
             "clock.arrow.circlepath"
         case .REVOKED:
@@ -197,6 +197,7 @@ struct TaskDetailView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .scrollBounceBehavior(.basedOnSize)
 
         .task {
             guard let id = task.relatedDocument, let id = UInt(id) else {

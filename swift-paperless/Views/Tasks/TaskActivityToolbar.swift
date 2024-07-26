@@ -26,7 +26,9 @@ struct TaskActivityToolbar: View {
 
     var body: some View {
         Group {
-            Label(localized: .tasks(.title), systemImage: "chart.bar.doc.horizontal")
+            Label(localized: .tasks(.title),
+                  systemImage: "checklist")
+                .tint(.accent)
         }
         .overlay {
             Menu {
