@@ -306,27 +306,30 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        // @TODO: Implement share links
-                    } label: {
-                        Label(localized: .localizable(.shareLink), systemImage: "link")
-                    }
+                Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+                    .overlay {
+                        Menu {
+                            // @TODO: Implement share links
+//                            Button {
+//                            } label: {
+//                                Label(localized: .localizable(.shareLink), systemImage: "link")
+//                            }
 
-                    Button {
-                        // @TODO: Implement app deep links
-                    } label: {
-                        Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
-                    }
+                            // @TODO: Implement app deep links
+//                            Button {
+//                            } label: {
+//                                Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
+//                            }
 
-                    if case let .loaded(thumb) = viewModel.download {
-                        ShareLink(item: thumb.file) {
-                            Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.up")
+                            if case let .loaded(thumb) = viewModel.download {
+                                ShareLink(item: thumb.file) {
+                                    Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.up")
+                                }
+                            }
+                        } label: {
+                            EmptyView()
                         }
                     }
-                } label: {
-                    Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
-                }
             }
         }
 
