@@ -288,9 +288,7 @@ struct DocumentEditView: View {
 
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(String(localized: .localizable(.cancel)), role: .cancel) {
-                        dismiss()
-                    }
+                    CancelIconButton()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(String(localized: .localizable(.save))) {

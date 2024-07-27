@@ -53,7 +53,10 @@ private struct DocumentPropertyView: View {
 
     @Binding var dragOffset: CGSize
 
-    @State private var showDetails = false
+    @State private var showMetadata = false
+    @State private var showNotes = false
+
+    @ScaledMetric(relativeTo: .body) private var infoButtonSize = 20.0
 
     private var detailOffset: CGFloat {
         max(min(dragOffset.height + 50, 0) * 0.4, -20)
@@ -64,6 +67,7 @@ private struct DocumentPropertyView: View {
     }
 
     @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
 
     @ScaledMetric(relativeTo: .body) private var spacing = 15.0
 
@@ -122,13 +126,32 @@ private struct DocumentPropertyView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Label(localized: .localizable(.details), systemImage: "info.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .fontWeight(.bold)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.primary, .tertiary)
+                Menu {
+                    Button {
+                        showMetadata = true
+                    } label: {
+                        Label(localized: .documentMetadata(.metadata),
+                              systemImage: "info.circle")
+                    }
+
+                    Button {
+                        showNotes = true
+                    } label: {
+                        Label(localized: .documentMetadata(.notes),
+                              systemImage: "note.text")
+                    }
+
+                } label: {
+                    Label(localized: .localizable(.details), systemImage: "info.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .fontWeight(.bold)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.primary, .tertiary)
+                        .font(.system(size: infoButtonSize))
+                        .tint(.primary)
+                }
             }
-            .padding()
+            .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 15)
@@ -137,18 +160,21 @@ private struct DocumentPropertyView: View {
             )
             .offset(y: detailOffset)
             .contentShape(RoundedRectangle(cornerRadius: 15))
-            .onTapGesture {
-                Haptics.shared.impact(style: .medium)
-                showDetails.toggle()
-            }
         }
 
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding([.horizontal, .top])
 
-        .sheet(isPresented: $showDetails) {
+        .sheet(isPresented: $showMetadata) {
             DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
-                .presentationDetents([.medium, .large])
+                .environmentObject(store)
+                .environmentObject(errorController)
+        }
+
+        .sheet(isPresented: $showNotes) {
+            DocumentNoteView(document: $viewModel.document)
+                .environmentObject(store)
+                .environmentObject(errorController)
         }
     }
 }
@@ -309,6 +335,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+                    .tint(.accent)
                     .overlay {
                         Menu {
                             // @TODO: Implement share links

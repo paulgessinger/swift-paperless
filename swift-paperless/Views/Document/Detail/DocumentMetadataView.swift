@@ -103,7 +103,7 @@ private struct Section<Title: View, Content: View>: View {
             .padding()
 
             .background(
-                RoundedRectangle(cornerRadius: 25, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(.tertiary)
             )
         }
@@ -132,69 +132,14 @@ extension Section where Title == Text {
     }
 }
 
-private struct NoteView: View {
-    @Binding var document: Document
-    let note: Document.Note
-
-    @State private var showDeleteConfirmation = false
-    @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var errorController: ErrorController
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("\(note.note)")
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Label(localized: .localizable(.delete), systemImage: "trash.circle.fill")
-                .labelStyle(.iconOnly)
-                .symbolRenderingMode(.palette)
-                .font(.title)
-                .foregroundStyle(.white, .red)
-                .onTapGesture {
-                    showDeleteConfirmation = true
-                }
-        }
-        .confirmationDialog(String(localized: .documentMetadata(.noteDeleteConfirmation)), isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
-            Button(String(localized: .localizable(.delete)), role: .destructive) {
-                Task {
-                    do {
-                        try await store.deleteNote(from: document, id: note.id)
-                        document.notes = document.notes.filter { $0.id != note.id }
-                    } catch {
-                        Logger.shared.error("Error deleting note from document: \(error)")
-                        errorController.push(error: error)
-                    }
-                }
-            }
-            Button(String(localized: .localizable(.cancel)), role: .cancel) {
-                showDeleteConfirmation = false
-            }
-        }
-    }
-}
-
 struct DocumentMetadataView: View {
-    @Binding private var document: Document
-    @Binding private var metadata: Metadata?
-
-    @State private var adding = false
-
-    private enum Tabs {
-        case metadata
-        case notes
-    }
-
-    @State private var visibleTab = Tabs.metadata
+    @Binding var document: Document
+    @Binding var metadata: Metadata?
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
     @Environment(\.dismiss) private var dismiss
-
-    init(document: Binding<Document>, metadata: Binding<Metadata?>) {
-        _document = document
-        _metadata = metadata
-    }
 
     private var loaded: Bool {
         metadata != nil
@@ -202,33 +147,42 @@ struct DocumentMetadataView: View {
 
     private var metadataSection: some View {
         ScrollView(.vertical) {
-            Section(.documentMetadata(.title)) {
-                if let modified = document.modified {
-                    Row(.documentMetadata(.modifiedDate)) {
+            Section {
+                Row(.documentMetadata(.modifiedDate)) {
+                    if let modified = document.modified {
                         Text(modified, style: .date)
+                    } else {
+                        Text(.localizable(.none))
                     }
                 }
-                if let added = document.added {
-                    Divider()
-                    Row(.documentMetadata(.addedDate)) {
+                Divider()
+                Row(.documentMetadata(.addedDate)) {
+                    if let added = document.added {
                         Text(added, style: .date)
+                    } else {
+                        Text(.localizable(.none))
                     }
                 }
 
                 VStack {
                     if let metadata {
                         Divider()
-                        WideRow(.documentMetadata(.mediaFilename),
-                                value: metadata.mediaFilename)
+                        WideRow(.documentMetadata(.mediaFilename)) {
+                            Text(metadata.mediaFilename)
+                                .textSelection(.enabled)
+                        }
 
                         Divider()
-                        WideRow(.documentMetadata(.originalFilename),
-                                value: metadata.originalFilename)
+                        WideRow(.documentMetadata(.originalFilename)) {
+                            Text(metadata.originalFilename)
+                                .textSelection(.enabled)
+                        }
 
                         Divider()
                         WideRow(.documentMetadata(.originalChecksum)) {
                             Text(metadata.originalChecksum)
                                 .italic()
+                                .textSelection(.enabled)
                         }
 
                         Divider()
@@ -237,14 +191,17 @@ struct DocumentMetadataView: View {
                         }
 
                         Divider()
-                        Row(.documentMetadata(.originalMimeType),
-                            value: metadata.originalMimeType)
+                        Row(.documentMetadata(.originalMimeType)) {
+                            Text(metadata.originalMimeType)
+                                .textSelection(.enabled)
+                        }
 
                         if let archiveChecksum = metadata.archiveChecksum {
                             Divider()
                             WideRow(.documentMetadata(.archiveChecksum)) {
                                 Text(archiveChecksum)
                                     .italic()
+                                    .textSelection(.enabled)
                             }
                         }
 
@@ -262,177 +219,25 @@ struct DocumentMetadataView: View {
                 .animation(.spring.delay(0.2), value: loaded)
             }
             .animation(.spring, value: loaded)
-
-            .padding(.top)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-    }
-
-    private var notesSection: some View {
-        ScrollView(.vertical) {
-            Section {
-                HStack(alignment: .bottom) {
-                    Text(.documentMetadata(.notes))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Label(localized: .localizable(.add), systemImage: "plus.circle.fill")
-                        .labelStyle(.iconOnly)
-                        .symbolRenderingMode(.palette)
-                        .font(.title)
-                        .foregroundStyle(.primary, .tertiary)
-                        .onTapGesture {
-                            adding = true
-                        }
-                }
-            } content: {
-                if !document.notes.isEmpty {
-                    ForEach(document.notes) { note in
-                        NoteView(document: $document,
-                                 note: note)
-                        if note != document.notes.last {
-                            Divider()
-                                .padding(.bottom)
-                        }
-                    }
-                } else {
-                    VStack {
-                        Text(.documentMetadata(.notesNone))
-                            .italic()
-                        Button(String(localized: .documentMetadata(.addNote))) {
-                            adding = true
-                        }
-                        .bold()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-
-            .padding(.top)
-
-            .animation(.spring, value: document)
-            .animation(.spring, value: adding)
         }
         .scrollBounceBehavior(.basedOnSize)
     }
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $visibleTab) {
-                metadataSection
-                    .tag(Tabs.metadata)
-                notesSection
-                    .tag(Tabs.notes)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .ignoresSafeArea(edges: .bottom)
+            metadataSection
 
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Label(localized: .localizable(.back), systemImage: "xmark.circle.fill")
-                        .labelStyle(.iconOnly)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.primary, .thickMaterial)
-                        .font(.title)
-                        .onTapGesture {
-                            dismiss()
-                        }
-                        .padding(.top)
-                }
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle(.documentMetadata(.metadata))
 
-                ToolbarItem(placement: .principal) {
-                    Picker(selection: $visibleTab) {
-                        Text(.documentMetadata(.title))
-                            .tag(Tabs.metadata)
-                        Text(.documentMetadata(.notes))
-                            .tag(Tabs.notes)
-                    } label: {
-                        Text("tab")
-                    }
-                    .pickerStyle(.segmented)
-                    .fixedSize()
-                    .padding(.top)
-                }
-            }
-
-            .sheet(isPresented: $adding) {
-                CreateNoteView(document: $document)
-            }
-
-            .errorOverlay(errorController: errorController)
-
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
-
-private struct CreateNoteView: View {
-    @Binding var document: Document
-
-    @State private var noteText: String = ""
-    @State private var saving = false
-
-    @FocusState private var focused: Bool
-
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var errorController: ErrorController
-
-    private func saveNote() async {
-        guard !noteText.isEmpty else { return }
-
-        let note = ProtoDocument.Note(note: noteText)
-        saving = true
-        defer { saving = false }
-
-        do {
-            try await store.addNote(to: document, note: note)
-            if let document = try await store.document(id: document.id) {
-                self.document = document
-            }
-            noteText = ""
-            dismiss()
-        } catch {
-            Logger.shared.error("Error adding note to document: \(error)")
-            errorController.push(error: error)
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField(.documentMetadata(.notePlaceholder),
-                          text: $noteText,
-                          axis: .vertical)
-                    .focused($focused)
-            }
-
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(.localizable(.cancel), role: .cancel) {
-                        dismiss()
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        CancelIconButton()
                     }
                 }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    if !saving {
-                        Button(.localizable(.add)) {
-                            Task { await saveNote() }
-                        }
-                        .bold()
-                        .disabled(noteText.isEmpty)
-                    } else {
-                        ProgressView()
-                    }
-                }
-            }
-
-            .navigationTitle(.documentMetadata(.noteCreate))
-            .navigationBarTitleDisplayMode(.inline)
         }
+
         .errorOverlay(errorController: errorController, offset: 20)
-        .task {
-            focused = true
-        }
     }
 }
 

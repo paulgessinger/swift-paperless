@@ -302,6 +302,12 @@
 		7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
+		7AFE3E7F2C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
+		7AFE3E802C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
+		7AFE3E812C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
+		7AFE3E902C551EA200A567CD /* CancelIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */; };
+		7AFE3E912C551EA200A567CD /* CancelIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */; };
+		7AFE3E922C551EA200A567CD /* CancelIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */; };
 		939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
 /* End PBXBuildFile section */
 
@@ -489,6 +495,8 @@
 		7AFB7BA62A89773B0013196B /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		7AFB7BA92A89783F0013196B /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		7AFD3F5F2A87F482002789C2 /* FilterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterModel.swift; sourceTree = "<group>"; };
+		7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentNoteView.swift; sourceTree = "<group>"; };
+		7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancelIconButton.swift; sourceTree = "<group>"; };
 		939739772B72966E0041F08A /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -713,6 +721,7 @@
 				7A868E612C15ABFD00F2EE21 /* DocumentDetailViewV1.swift */,
 				7A7FA51D2C15F51900E8EB1D /* DocumentDetailModel.swift */,
 				7A2037422C4EA8D80060D086 /* DocumentMetadataView.swift */,
+				7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -815,6 +824,7 @@
 				7ABC73282BFB86E80061E094 /* QuickLookPreview.swift */,
 				7AE5601B2BFF5C7A00352293 /* PDFKitView.swift */,
 				04AA128A2C29F36B000A389C /* TLSListView.swift */,
+				7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1099,6 +1109,7 @@
 				7A3E46052BF25C330007AB67 /* AsyncChannel+next.swift in Sources */,
 				7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */,
 				7A04EE4B2A673AE600C9CAE3 /* DocumentLoader.swift in Sources */,
+				7AFE3E922C551EA200A567CD /* CancelIconButton.swift in Sources */,
 				7A0773392BEA607000DCC8CD /* ErrorDisplay.swift in Sources */,
 				7A2A113E29FE649300E9FFE3 /* Keychain.swift in Sources */,
 				7A0772422BE64C9200DCC8CD /* ApiError.swift in Sources */,
@@ -1124,6 +1135,7 @@
 				7A7080FD2BE0F4EE0095BD56 /* NSData+mimeType.swift in Sources */,
 				7A0772452BE64CB200DCC8CD /* ApiSequence.swift in Sources */,
 				7AFB7BA82A8977720013196B /* AppSettings.swift in Sources */,
+				7AFE3E812C551C3500A567CD /* DocumentNoteView.swift in Sources */,
 				7A1710502BF7C1BF00C2BDBF /* DocumentImportModel.swift in Sources */,
 				7A9CC11629E31AFA009CAD61 /* FilterRuleType.swift in Sources */,
 				7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */,
@@ -1233,6 +1245,7 @@
 				7A17105D2BF7D19C00C2BDBF /* LogoChangeView.swift in Sources */,
 				7A81C5B02A1A95450092061F /* StoragePathEditView.swift in Sources */,
 				7A2831B22A62748D009E86CE /* UserModel.swift in Sources */,
+				7AFE3E7F2C551C3500A567CD /* DocumentNoteView.swift in Sources */,
 				7A20372A2C4EA5000060D086 /* Metadata.swift in Sources */,
 				7A4648072A1D5AED00078968 /* DateDecodingError.swift in Sources */,
 				7A35C0AD2C117E53006A542D /* SortField.swift in Sources */,
@@ -1241,6 +1254,7 @@
 				7AB0577A2AA48BA700ABA6B1 /* PrivacyView.swift in Sources */,
 				7ADA9ABB2B263797002C303C /* Decoder.swift in Sources */,
 				7AEF691529CF967900414BA7 /* ConnectionManager.swift in Sources */,
+				7AFE3E902C551EA200A567CD /* CancelIconButton.swift in Sources */,
 				7A0772922BE934D200DCC8CD /* Label+init.swift in Sources */,
 				7AF04B8129A68A20008E8F79 /* Utilities.swift in Sources */,
 				7AD353AD2A8018FE00AFFAFE /* PDFView.swift in Sources */,
@@ -1290,8 +1304,10 @@
 				7A7056FF2C43C26F00287AEF /* PaperlessURLSessionDelegate.swift in Sources */,
 				7A8E1F7A2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
 				7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */,
+				7AFE3E802C551C3500A567CD /* DocumentNoteView.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
 				7A2577412A87D32400B15626 /* NullCodable.swift in Sources */,
+				7AFE3E912C551EA200A567CD /* CancelIconButton.swift in Sources */,
 				7A495D232BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */,
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,

@@ -12,17 +12,6 @@
         }
       }
     },
-    "addNote" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add one!"
-          }
-        }
-      }
-    },
     "archiveChecksum" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -56,6 +45,17 @@
         }
       }
     },
+    "metadata" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadata"
+          }
+        }
+      }
+    },
     "modifiedDate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -78,17 +78,6 @@
         }
       }
     },
-    "noteDeleteConfirmation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete note?"
-          }
-        }
-      }
-    },
     "notePlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -107,17 +96,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notes"
-          }
-        }
-      }
-    },
-    "notesNone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No notes for this document"
           }
         }
       }
@@ -162,17 +140,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Original mime type"
-          }
-        }
-      }
-    },
-    "title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metadata"
           }
         }
       }
