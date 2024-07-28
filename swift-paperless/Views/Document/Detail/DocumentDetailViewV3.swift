@@ -6,6 +6,8 @@
 //
 
 import Flow
+import NukeUI
+import os
 import SwiftUI
 import UIKit
 import WebKit
@@ -229,6 +231,54 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                                              document: document))
     }
 
+    private struct LoadingView: View {
+        @Bindable var viewModel: DocumentDetailModel
+
+        @StateObject private var image = FetchImage()
+
+        var body: some View {
+            ScrollView(.vertical) {
+                VStack {
+                    if let image = image.image {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .blur(radius: 10, opaque: true)
+                            .shadow(color: Color(white: 0.2, opacity: 0.3), radius: 5)
+                            .padding(.horizontal, 8)
+                            .padding(.top, 7)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .animation(.spring(duration: 0.3), value: image.image)
+            .scrollDisabled(true)
+
+            .overlay {
+                VStack {
+                    Text(.localizable(.loading))
+                        .foregroundStyle(.gray)
+                    ProgressView(value: viewModel.downloadProgress, total: 1.0)
+                        .frame(width: 100)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(.thinMaterial)
+                )
+                .animation(.spring, value: viewModel.downloadProgress)
+            }
+
+            .task {
+                do {
+                    try image.load(ImageRequest(urlRequest: viewModel.store.repository.thumbnailRequest(document: viewModel.document)))
+                } catch {
+                    Logger.shared.error("Error loading document thumbnail: \(error)")
+                }
+            }
+        }
+    }
+
     var body: some View {
         GeometryReader { geoOuter in
             ZStack(alignment: .center) {
@@ -241,20 +291,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                     .opacity(webviewOpacity)
                 } else {
                     // Somewhat hacky way to center progress view + not push it by swiping up
-                    ScrollView(.vertical) {
-                        ZStack {
-                            Spacer().containerRelativeFrame([.horizontal, .vertical])
-
-                            VStack {
-                                Text(.localizable(.loading))
-                                    .foregroundStyle(.gray)
-                                ProgressView(value: viewModel.downloadProgress, total: 1.0)
-                                    .frame(width: 100)
-                            }
-                            .animation(.spring, value: viewModel.downloadProgress)
-                        }
-                    }
-                    .scrollDisabled(true)
+                    LoadingView(viewModel: viewModel)
                 }
             }
             .task {
