@@ -15,12 +15,18 @@ struct LoadingDocumentList: View {
     @StateObject private var store = DocumentStore(repository: PreviewRepository())
 
     var body: some View {
-        List(documents, id: \.self) { document in
-            DocumentCell(document: document, store: store)
-                .redacted(reason: .placeholder)
-                .padding(.horizontal)
-                .padding(.vertical)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        List {
+            Section {
+                ForEach(documents, id: \.self) { document in
+                    DocumentCell(document: document, store: store)
+                        .redacted(reason: .placeholder)
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
+                }
+            }
+            .listSectionSeparator(.hidden)
         }
         .listStyle(.plain)
         .task {
@@ -178,18 +184,24 @@ struct DocumentList: View {
             } else {
                 let documents = viewModel.documents
                 if !documents.isEmpty {
-                    List(
-                        Array(zip(documents.indices, documents)), id: \.1.id
-                    ) { idx, document in
-                        Cell(store: store,
-                             document: document,
-                             navPath: $navPath,
-                             documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                             documentToDelete: $documentToDelete,
-                             viewModel: viewModel)
-                            .task {
-                                await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                    List {
+                        Section {
+                            ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
+                                Cell(store: store,
+                                     document: document,
+                                     navPath: $navPath,
+                                     documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                                     documentToDelete: $documentToDelete,
+                                     viewModel: viewModel)
+
+                                    .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
+
+                                    .task {
+                                        await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                                    }
                             }
+                        }
+                        .listSectionSeparator(.hidden)
                     }
                     .listStyle(.plain)
                 } else {
