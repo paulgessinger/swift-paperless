@@ -68,6 +68,7 @@ actor NullRepository: Repository {
 
     func currentUser() async throws -> User { throw NotImplemented() }
     func users() async -> [User] { [] }
+    func groups() async throws -> [UserGroup] { [] }
 
     func task(id _: UInt) async throws -> PaperlessTask? { nil }
     func tasks() async -> [PaperlessTask] { [] }

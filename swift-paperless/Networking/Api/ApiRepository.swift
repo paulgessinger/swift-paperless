@@ -164,7 +164,7 @@ actor ApiRepository {
         }
 
         let sanitizedUrl = sanitizeUrlForLog(url)
-        Logger.api.trace("Fetching request data for \(sanitizedUrl, privacy: .public)")
+        Logger.api.trace("Fetching request data for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public)")
 
         let result: (Data, URLResponse)
         do {
@@ -286,7 +286,8 @@ actor ApiRepository {
 
 extension ApiRepository: Repository {
     func update(document: Document) async throws -> Document {
-        try await update(element: document, endpoint: .document(id: document.id))
+        try await update(element: document,
+                         endpoint: .document(id: document.id, fullPerms: false))
     }
 
     func create(document: ProtoDocument, file: URL) async throws {
@@ -522,6 +523,8 @@ extension ApiRepository: Repository {
     }
 
     func users() async throws -> [User] { try await all(User.self) }
+
+    func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
 
     func thumbnail(document: Document) async throws -> Image? {
         let data = try await thumbnailData(document: document)

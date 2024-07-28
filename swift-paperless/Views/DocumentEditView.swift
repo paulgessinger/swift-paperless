@@ -248,6 +248,12 @@ struct DocumentEditView: View {
                 }
 
                 Section {
+                    NavigationLink(.permissions(.title)) {
+                        PermissionsEditView(element: $document)
+                    }
+                }
+
+                Section {
                     Button(action: {
                         if appSettings.documentDeleteConfirmation {
                             showDeleteConfirmation = true
@@ -255,33 +261,26 @@ struct DocumentEditView: View {
                             doDocumentDelete()
                         }
                     }) {
-                        HStack {
-                            Spacer()
-                            if !deleted {
-                                Text(String(localized: .localizable(.delete)))
-                            } else {
-                                HStack {
-                                    Text(String(localized: .localizable(.documentDeleted)))
-                                    Image(systemName: "checkmark.circle.fill")
-                                }
-                            }
-                            Spacer()
-                        }
+                        Label(localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+                              systemImage: deleted ? "checkmark.circle.fill" : "trash")
+                            .contentTransition(.symbolEffect)
                     }
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .foregroundColor(Color.red)
                     .bold()
-
-                    .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
-                                        isPresented: $showDeleteConfirmation,
-                                        titleVisibility: .visible)
-                    {
-                        Button(String(localized: .localizable(.delete)), role: .destructive) {
-                            // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                            doDocumentDelete()
-                        }
-                        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-                    }
                 }
+                .animation(.default, value: deleted)
+            }
+
+            .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
+                                isPresented: $showDeleteConfirmation,
+                                titleVisibility: .visible)
+            {
+                Button(String(localized: .localizable(.delete)), role: .destructive) {
+                    // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
+                    doDocumentDelete()
+                }
+                Button(String(localized: .localizable(.cancel)), role: .cancel) {}
             }
 
             .scrollBounceBehavior(.basedOnSize)
@@ -296,7 +295,7 @@ struct DocumentEditView: View {
                             let copy = document
                             documentOut = document
                             do {
-                                try await store.updateDocument(document)
+                                documentOut = try await store.updateDocument(document)
                             } catch {
                                 errorController.push(error: error)
                                 documentOut = copy

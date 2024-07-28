@@ -23,6 +23,7 @@ final class DocumentStore: ObservableObject, Sendable {
     @Published private(set) var storagePaths: [UInt: StoragePath] = [:]
 
     @Published private(set) var users: [UInt: User] = [:]
+    @Published private(set) var groups: [UInt: UserGroup] = [:]
     @Published private(set) var currentUser: User?
 
     @Published private(set) var tasks: [PaperlessTask] = []
@@ -110,6 +111,7 @@ final class DocumentStore: ObservableObject, Sendable {
         savedViews = [:]
         storagePaths = [:]
         users = [:]
+        groups = [:]
         currentUser = nil
         tasks = []
     }
@@ -120,10 +122,12 @@ final class DocumentStore: ObservableObject, Sendable {
         clear()
     }
 
-    func updateDocument(_ document: Document) async throws {
+    func updateDocument(_ document: Document) async throws -> Document {
         eventPublisher.send(.changed(document: document))
-        documents[document.id] = try await repository.update(document: document)
+        let document = try await repository.update(document: document)
+        documents[document.id] = document
         eventPublisher.send(.changeReceived(document: document))
+        return document
     }
 
     func deleteDocument(_ document: Document) async throws {
@@ -214,6 +218,11 @@ final class DocumentStore: ObservableObject, Sendable {
                            collection: \.users)
     }
 
+    func fetchAllGroups() async throws {
+        try await fetchAll(elements: repository.groups(),
+                           collection: \.groups)
+    }
+
     func fetchAll() async throws {
         // @TODO: This gets called concurrently during startup, maybe debounce
         Logger.shared.notice("Fetch all store request")
@@ -228,8 +237,9 @@ final class DocumentStore: ObservableObject, Sendable {
         async let storagePaths: Void = fetchAllStoragePaths()
         async let currentUser: Void = fetchCurrentUser()
         async let users: Void = fetchAllUsers()
+        async let groups: Void = fetchAllGroups()
 
-        _ = try await (correspondents, documentTypes, tags, savedViews, storagePaths, currentUser, users)
+        _ = try await (correspondents, documentTypes, tags, savedViews, storagePaths, currentUser, users, groups)
 
         Logger.shared.notice("Fetch all store complete")
     }

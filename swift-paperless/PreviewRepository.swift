@@ -48,11 +48,23 @@ actor PreviewRepository: Repository {
     private let correspondents: [UInt: Correspondent]
     private let storagePaths: [UInt: StoragePath]
     private let tasks: [PaperlessTask]
+    private let users: [User]
+    private let groups: [UserGroup]
 
     private let downloadDelay: Double
 
     init(downloadDelay: Double = 0.0) {
         self.downloadDelay = downloadDelay
+
+        users = [
+            User(id: 1, isSuperUser: true, username: "superperson"),
+            User(id: 2, isSuperUser: false, username: "joeschmoe"),
+        ]
+
+        groups = [
+            UserGroup(id: 1, name: "Crew"),
+            UserGroup(id: 2, name: "Staff"),
+        ]
 
         let tags = [Tag]([
             .init(id: 1, isInboxTag: true, name: "Inbox", slug: "inbox", color: Color.purple.hex, match: "", matchingAlgorithm: .auto, isInsensitive: true),
@@ -338,7 +350,8 @@ actor PreviewRepository: Repository {
         .init(id: 1, isSuperUser: true, username: "user")
     }
 
-    func users() async -> [User] { [] }
+    func users() async -> [User] { users }
+    func groups() async throws -> [UserGroup] { groups }
 
     func tasks() async -> [PaperlessTask] { tasks }
     func task(id _: UInt) async throws -> PaperlessTask? { nil }

@@ -15,7 +15,7 @@ protocol DocumentProtocol: Codable {
     var storagePath: UInt? { get set }
 }
 
-struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sendable {
+struct Document: Identifiable, Equatable, Hashable, Sendable {
     var id: UInt
     var title: String
 
@@ -40,12 +40,13 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
     @NullCodable
     var storagePath: UInt?
 
+    @NullCodable
+    var owner: UInt?
+
     struct Note: Identifiable, Equatable, Sendable, Codable, Hashable {
         var id: UInt
         var note: String
         var created: Date
-//        var document: UInt
-//        var user: UInt
     }
 
     @DecodeOnly
@@ -60,6 +61,17 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
         _userCanChange ?? true
     }
 
+    // Presense of this depends on the endpoint
+    @DecodeOnly
+    var permissions: Permissions? {
+        didSet {
+            setPermissions = permissions
+        }
+    }
+
+    // The API wants this extra key for writing perms
+    var setPermissions: Permissions?
+
     private enum CodingKeys: String, CodingKey {
         case id, title
         case asn = "archive_serial_number"
@@ -68,10 +80,16 @@ struct Document: Identifiable, Equatable, Hashable, Model, DocumentProtocol, Sen
         case storagePath = "storage_path"
         case notes
         case _userCanChange = "user_can_change"
+        case permissions
+        case setPermissions = "set_permissions"
     }
 
     static var localizedName: String { String(localized: .localizable(.document)) }
 }
+
+extension Document: Model {}
+extension Document: DocumentProtocol {}
+extension Document: PermissionsModel {}
 
 struct ProtoDocument: DocumentProtocol, Equatable {
     var title: String = ""

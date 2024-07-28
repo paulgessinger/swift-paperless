@@ -2897,6 +2897,17 @@
         }
       }
     },
+    "group" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group"
+          }
+        }
+      }
+    },
     "importDocument" : {
       "comment" : "Document add menu item for adding files",
       "extractionState" : "manual",

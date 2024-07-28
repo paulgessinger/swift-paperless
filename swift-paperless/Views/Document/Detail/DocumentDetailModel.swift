@@ -57,6 +57,8 @@ class DocumentDetailModel {
     }
 
     func loadDocument() async {
+        async let updated = try await store.document(id: document.id)
+
         switch download {
         case .initial:
             let setLoading = Task {
@@ -71,7 +73,7 @@ class DocumentDetailModel {
                     }
                 }) else {
                     download = .error
-                    return
+                    break
                 }
 
                 download = .loaded(url)
@@ -80,16 +82,20 @@ class DocumentDetailModel {
             } catch {
                 download = .error
                 Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
-                return
+                break
             }
 
         default:
             break
         }
-    }
 
-    func saveDocument() async throws {
-        try await store.updateDocument(document)
+        do {
+            if let updated = try await updated {
+                document = updated
+            }
+        } catch {
+            Logger.shared.error("Error updating document with full perms for editing: \(error)")
+        }
     }
 
     func loadSuggestions() async throws {

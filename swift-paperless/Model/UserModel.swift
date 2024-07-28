@@ -19,3 +19,10 @@ struct User: Codable, Model, Identifiable, Equatable {
 
     static var localizedName: String { String(localized: .localizable(.user)) }
 }
+
+struct UserGroup: Codable, Identifiable, Equatable, Model {
+    var id: UInt
+    var name: String
+
+    static var localizedName: String { String(localized: .localizable(.group)) }
+}

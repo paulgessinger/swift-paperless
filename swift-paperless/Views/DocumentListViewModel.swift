@@ -170,6 +170,6 @@ class DocumentListViewModel: ObservableObject {
         for tag in inboxTags {
             document.tags.removeAll(where: { $0 == tag.id })
         }
-        try? await store.updateDocument(document)
+        _ = try? await store.updateDocument(document)
     }
 }

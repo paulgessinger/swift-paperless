@@ -53,8 +53,15 @@ extension Endpoint {
         )
     }
 
-    static func document(id: UInt) -> Endpoint {
-        Endpoint(path: "/api/documents/\(id)", queryItems: [])
+    static func document(id: UInt, fullPerms: Bool = true) -> Endpoint {
+        var queryItems: [URLQueryItem] = []
+
+        if fullPerms {
+            queryItems.append(URLQueryItem(name: "full_perms", value: "true"))
+        }
+
+        return Endpoint(path: "/api/documents/\(id)",
+                        queryItems: queryItems)
     }
 
     static func metadata(documentId: UInt) -> Endpoint {
@@ -153,6 +160,8 @@ extension Endpoint {
             return storagePaths()
         case is User.Type:
             return users()
+        case is UserGroup.Type:
+            return groups()
         default:
             fatalError("Invalid type")
         }
@@ -188,6 +197,11 @@ extension Endpoint {
 
     static func users() -> Endpoint {
         .init(path: "/api/users",
+              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+    }
+
+    static func groups() -> Endpoint {
+        .init(path: "/api/groups",
               queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 

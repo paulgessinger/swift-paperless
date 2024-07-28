@@ -15,37 +15,25 @@ import WebKit
 private let dragThreshold = 40.0
 private let maxDragOffset = 100.0
 
-private struct Aspect<Content: View>: View {
-    var label: Content
+private struct Aspect: View {
+    var label: String
     var systemImage: String
 
     @ScaledMetric(relativeTo: .body) private var imageWidth = 20.0
     @ScaledMetric(relativeTo: .body) private var spacing = 5.0
 
-    init(systemImage: String, content: @escaping () -> Content) {
+    init(_ label: LocalizedStringResource, systemImage: String) {
+        self.label = String(localized: label)
         self.systemImage = systemImage
-        label = content()
+    }
+
+    init(_ label: String, systemImage: String) {
+        self.label = label
+        self.systemImage = systemImage
     }
 
     var body: some View {
-        HStack(spacing: spacing) {
-            Image(systemName: systemImage)
-                .frame(width: imageWidth, alignment: .leading)
-                .fontWeight(.medium)
-            label
-        }
-    }
-}
-
-private extension Aspect where Content == Text {
-    init(_ label: String, systemImage: String) {
-        self.label = Text(label)
-        self.systemImage = systemImage
-    }
-
-    init(_ label: LocalizedStringKey, systemImage: String) {
-        self.label = Text(label)
-        self.systemImage = systemImage
+        Label(label, systemImage: systemImage)
     }
 }
 
@@ -106,7 +94,7 @@ private struct DocumentPropertyView: View {
                 VStack(alignment: .leading) {
                     HFlow(itemSpacing: spacing) {
                         if let asn = document.asn {
-                            Aspect(String(localized: .localizable(.documentAsn(asn))), systemImage: "qrcode")
+                            Aspect(.localizable(.documentAsn(asn)), systemImage: "qrcode")
                         }
 
                         if let id = document.correspondent, let name = store.correspondents[id]?.name {
