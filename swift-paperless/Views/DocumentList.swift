@@ -123,45 +123,6 @@ struct DocumentList: View {
         }
     }
 
-    private struct NoDocumentsView: View, Equatable {
-        var filtering: Bool
-
-        // Workaround to make SwiftUI call the == func to skip rerendering this view
-        @State private var dummy = 5
-
-        var body: some View {
-            if #available(iOS 17.0, macOS 14.0, *) {
-                ContentUnavailableView {
-                    Label(String(localized: .localizable(.noDocuments)), systemImage: "tray.fill")
-                } description: {
-                    if filtering {
-                        Text(.localizable(.noDocumentsDescriptionFilter))
-                    }
-                }
-            } else {
-                VStack(alignment: .center) {
-                    Image(systemName: "tray.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(.gray)
-                        .frame(width: 75)
-                    Text(.localizable(.noDocuments))
-                        .font(.title2)
-                        .bold()
-                    if filtering {
-                        Text(.localizable(.noDocumentsDescriptionFilter))
-                            .font(.callout)
-                    }
-                }
-            }
-        }
-
-        nonisolated
-        static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool {
-            true
-        }
-    }
-
     private func onReceiveEvent(event: DocumentStore.Event) {
         switch event {
         case let .deleted(document):
@@ -200,6 +161,16 @@ struct DocumentList: View {
         }
     }
 
+    func refresh() {
+        Task {
+            if let documents = try? await viewModel.refresh() {
+                withAnimation {
+                    viewModel.replace(documents: documents)
+                }
+            }
+        }
+    }
+
     var body: some View {
         VStack {
             if !viewModel.ready {
@@ -222,7 +193,8 @@ struct DocumentList: View {
                     }
                     .listStyle(.plain)
                 } else {
-                    NoDocumentsView(filtering: filterModel.filterState.filtering)
+                    NoDocumentsView(filtering: filterModel.filterState.filtering,
+                                    onRefresh: { refresh() })
                         .equatable()
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
@@ -239,15 +211,9 @@ struct DocumentList: View {
 
         // @TODO: Re-evaluate if we want an animation here
         .animation(.default, value: viewModel.documents)
-        .refreshable {
-            Task {
-                if let documents = try? await viewModel.refresh() {
-                    withAnimation {
-                        viewModel.replace(documents: documents)
-                    }
-                }
-            }
-        }
+
+        .refreshable { refresh() }
+
         .task {
             await viewModel.load()
         }
@@ -273,4 +239,42 @@ struct DocumentList: View {
                                 Text(.localizable(.deleteDocumentName(document.title)))
                             })
     }
+}
+
+private struct NoDocumentsView: View, Equatable {
+    var filtering: Bool
+
+    var onRefresh: () -> Void
+
+    // Workaround to make SwiftUI call the == func to skip rerendering this view
+    @State private var dummy = 5
+
+    var body: some View {
+        ScrollView(.vertical) {
+            ContentUnavailableView {
+                Label(String(localized: .localizable(.noDocuments)), systemImage: "tray.fill")
+            } description: {
+                if filtering {
+                    Text(.localizable(.noDocumentsDescriptionFilter))
+                }
+            }
+
+            .padding(.top, 40)
+
+            .refreshable {
+                onRefresh()
+            }
+        }
+    }
+
+    nonisolated
+    static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool {
+        true
+    }
+}
+
+// - MARK: Previews
+
+#Preview("NoDocumentsView") {
+    NoDocumentsView(filtering: true, onRefresh: {})
 }

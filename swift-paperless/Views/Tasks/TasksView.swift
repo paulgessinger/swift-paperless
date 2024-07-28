@@ -319,7 +319,10 @@ private struct TaskList: View {
                     }
                 }
             } else {
-                ContentUnavailableView(String(localized: .tasks(.noTasks)), systemImage: "list.bullet.circle")
+                ScrollView(.vertical) {
+                    ContentUnavailableView(String(localized: .tasks(.noTasks)), systemImage: "list.bullet.circle")
+                        .padding(.top, 50)
+                }
             }
         }
 
