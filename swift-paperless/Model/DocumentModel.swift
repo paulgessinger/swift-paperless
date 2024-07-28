@@ -80,6 +80,7 @@ struct Document: Identifiable, Equatable, Hashable, Sendable {
         case storagePath = "storage_path"
         case notes
         case _userCanChange = "user_can_change"
+        case owner
         case permissions
         case setPermissions = "set_permissions"
     }
