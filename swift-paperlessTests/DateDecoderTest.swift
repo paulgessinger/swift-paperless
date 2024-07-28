@@ -10,7 +10,7 @@ import XCTest
 final class DateDecoderTest: XCTestCase {
     func testISO8691() throws {
         let input = "\"2024-05-13T23:38:10.546679Z\"".data(using: .utf8)!
-        try makeDecoder(tz: .current).decode(Date.self, from: input)
+        _ = try makeDecoder(tz: .current).decode(Date.self, from: input)
     }
 
     func testDates() throws {
@@ -28,6 +28,6 @@ final class DateDecoderTest: XCTestCase {
         let url = bundle.url(forResource: "issue_91", withExtension: "json")!
         let data = try Data(contentsOf: url)
 
-        try decoder.decode(ListResponse<Document>.self, from: data)
+        _ = try decoder.decode(ListResponse<Document>.self, from: data)
     }
 }

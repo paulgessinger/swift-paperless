@@ -303,7 +303,6 @@
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFE3E7F2C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
-		7AFE3E802C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
 		7AFE3E812C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
 		7AFE3E902C551EA200A567CD /* CancelIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */; };
 		7AFE3E912C551EA200A567CD /* CancelIconButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E8F2C551EA200A567CD /* CancelIconButton.swift */; };
@@ -1304,7 +1303,6 @@
 				7A7056FF2C43C26F00287AEF /* PaperlessURLSessionDelegate.swift in Sources */,
 				7A8E1F7A2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
 				7A2E12232B14F3A000E7704A /* DeriveUrl.swift in Sources */,
-				7AFE3E802C551C3500A567CD /* DocumentNoteView.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
 				7A2577412A87D32400B15626 /* NullCodable.swift in Sources */,
 				7AFE3E912C551EA200A567CD /* CancelIconButton.swift in Sources */,

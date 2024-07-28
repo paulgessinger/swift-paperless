@@ -13,7 +13,7 @@ struct CancelIconButton: View {
     var action: (() -> Void)? = nil
 
     var body: some View {
-        Label(localized: .localizable(.back), systemImage: "xmark.circle.fill")
+        Label(.localizable(.back), systemImage: "xmark.circle.fill")
             .labelStyle(.iconOnly)
             .symbolRenderingMode(.palette)
             .foregroundStyle(.primary, .tertiary)
