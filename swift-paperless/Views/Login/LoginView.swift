@@ -8,27 +8,6 @@
 import os
 import SwiftUI
 
-private struct Response: Decodable {
-    var correspondents: URL
-    var document_types: URL
-    var logs: URL
-    var mail_accounts: URL
-    var mail_rules: URL
-    var saved_views: URL
-    var storage_paths: URL
-    var tags: URL
-    var tasks: URL
-}
-
-private struct TokenRequest: Encodable {
-    var username: String
-    var password: String
-}
-
-private struct TokenResponse: Decodable {
-    var token: String
-}
-
 private struct DetailsView: View {
     @Binding var extraHeaders: [ConnectionManager.HeaderValue]
     @Environment(\.dismiss) private var dismiss
@@ -73,41 +52,7 @@ struct LoginView: View {
 
     @StateObject private var url = DebounceObject(delay: 1)
 
-    private enum UrlState {
-        case empty
-        case checking
-        case valid
-        case error(info: AttributedString)
-    }
-
-    @State private var urlState = UrlState.empty
-
-    private var urlStateValid: Bool {
-        switch urlState {
-        case .valid:
-            return true
-        default:
-            return false
-        }
-    }
-
-    private enum LoginError: DisplayableError, Equatable {
-        case urlInvalid
-        case invalidLogin
-
-        var message: String {
-            switch self {
-            case .urlInvalid:
-                return String(localized: .login(.errorUrlInvalid))
-            case .invalidLogin:
-                return String(localized: .login(.errorLoginInvalid))
-            }
-        }
-
-        var details: String? {
-            nil
-        }
-    }
+    @State private var viewModel = LoginViewModel()
 
     @State private var apiInUrl = false
 
@@ -117,11 +62,7 @@ struct LoginView: View {
     @State private var showDetails: Bool = false
     @State private var showSuccessOverlay = false
 
-    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
-
     @State private var loginOngoing = false
-
-    @State private var selectedIdentity: String? = nil
 
     @State private var availableIdentityNames: [String] = []
 
@@ -129,131 +70,62 @@ struct LoginView: View {
 
     @State private var showIdentitySelection: Bool = false
 
-    private nonisolated
-    static func isLocalNetworkDenied(_ error: NSError) -> Bool {
-        Logger.shared.debug("Checking API NSError: \(error)")
-        guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else {
-            return false
-        }
-        Logger.shared.debug("Checking API underlying NSError: \(underlying)")
-
-        guard let reason = (underlying.userInfo["_NSURLErrorNWPathKey"] as? NSObject)?.value(forKey: "reason") as? Int else {
-            return false
-        }
-
-        Logger.shared.debug("Unsatisfied reason code is: \(reason)")
-        return reason == 29
-    }
-
-    private nonisolated
-    static func isLocalAddress(_ url: String) -> Bool {
-        guard let components = URLComponents(string: url), let host = components.host else {
-            return false
-        }
-
-        guard let match = try? /(\d+)\.(\d+)\.(\d+)\.(\d+)/.wholeMatch(in: host) else {
-            return false
-        }
-
-        let ip = (UInt(match.1)!, UInt(match.2)!, UInt(match.3)!, UInt(match.4)!)
-
-        return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
-    }
-
-    private func checkUrl(string value: String) async {
-        Logger.shared.notice("Checking backend URL \(value)")
-        guard !value.isEmpty else {
-            Logger.shared.notice("Value is empty")
-            urlState = .empty
-            return
-        }
-
-        guard let (_, apiUrl) = deriveUrl(string: value) else {
-            Logger.shared.notice("Cannot convert to URL: \(value)")
-            urlState = .error(info: AttributedString(localized: .login(.errorCouldNotConvertURL(value))))
-            return
-        }
-
-        var request = URLRequest(url: apiUrl)
-        extraHeaders.apply(toRequest: &request)
-
-        Logger.api.info("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
-
-        do {
-            Logger.shared.info("Checking valid-looking URL \(apiUrl)")
-            urlState = .checking
-
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: selectedIdentity), delegateQueue: nil)
-
-            let (data, response) = try await session.getData(for: request)
-
-            if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
-                Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                urlState = .error(info: AttributedString(localized: .login(.errorInvalidResponse(value, statusCode))))
-                return
-            }
-
-            let _ = try JSONDecoder().decode(Response.self, from: data)
-            urlState = .valid
-
-        } catch let error as NSError where LoginView.isLocalNetworkDenied(error) {
-            Logger.shared.error("Unable to connect to API: local network access denied")
-            urlState = .error(info: AttributedString(localized:
-                .login(.errorLocalNetworkDenied(DocumentationLinks.localNetworkDenied.absoluteString))))
-        } catch {
-            Logger.shared.error("Checking API error: \(error)")
-            urlState = .error(info: AttributedString(localized: .login(.errorUrlInvalidOther(error.localizedDescription))))
-            return
-        }
-    }
-
-    private func login() async {
+    private func login() async throws {
         Logger.shared.notice("Attempting login with url \(url.text)")
 
         if identityBasedAuth {
-            return await loginIdentityBased()
+            return try await loginIdentityBased()
         }
 
         do {
             loginOngoing = true
             defer { loginOngoing = false }
+
+            struct TokenRequest: Encodable {
+                var username: String
+                var password: String
+            }
+
             let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
 
-            guard let (baseUrl, tokenUrl) = deriveUrl(string: url.text, suffix: "token") else {
+            guard let (baseUrl, tokenUrl) = LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
-                errorController.push(error: LoginError.urlInvalid)
-                return
+                viewModel.loginState = .error(.urlInvalid)
+                throw LoginError.urlInvalid
             }
 
             var request = URLRequest(url: tokenUrl)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = json
-            extraHeaders.apply(toRequest: &request)
+            viewModel.extraHeaders.apply(toRequest: &request)
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
 
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: selectedIdentity), delegateQueue: nil)
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: viewModel.selectedIdentity), delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
             if statusCode != 200 {
                 Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1, privacy: .public), \(String(decoding: data, as: UTF8.self))")
                 if statusCode == 400 {
-                    errorController.push(error: LoginError.invalidLogin)
+                    viewModel.loginState = .error(.invalidLogin)
                 }
-                return
+                throw LoginError.invalidLogin
+            }
+
+            struct TokenResponse: Decodable {
+                var token: String
             }
 
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
 
             Logger.shared.info("Login credentials are valid")
 
-            Haptics.shared.notification(.success)
-            showSuccessOverlay = true
-            try await Task.sleep(for: .seconds(2.3))
-
-            let connection = Connection(url: baseUrl, token: tokenResponse.token, extraHeaders: extraHeaders, identityName: selectedIdentity)
+            let connection = Connection(url: baseUrl,
+                                        token: tokenResponse.token,
+                                        extraHeaders: viewModel.extraHeaders,
+                                        identityName: viewModel.selectedIdentity)
 
             let repository = await ApiRepository(connection: connection)
 
@@ -263,35 +135,49 @@ struct LoginView: View {
                 Logger.api.warning("Username from login and logged in username not the same")
             }
 
-            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser, identity: selectedIdentity)
+            let stored = StoredConnection(url: baseUrl,
+                                          extraHeaders: viewModel.extraHeaders,
+                                          user: currentUser,
+                                          identity: viewModel.selectedIdentity)
             try stored.setToken(connection.token)
 
             try connectionManager.login(stored)
             Logger.api.info("Login successful")
 
+            Haptics.shared.notification(.success)
+            showSuccessOverlay = true
+            try await Task.sleep(for: .seconds(2.3))
+
             if !initial {
                 dismiss()
             }
 
+        } catch RequestError.forbidden {
+            Logger.shared.error("User logging in does not have permissions to get permissions")
+            viewModel.loginState = .error(.insufficientPermissions)
+            throw LoginError.insufficientPermissions
         } catch {
             Logger.shared.error("Error during login with url \(error)")
-            errorController.push(error: error)
+            viewModel.loginState = .error(.other(error))
+            throw LoginError.other(error)
         }
     }
 
-    private func loginIdentityBased() async {
+    private func loginIdentityBased() async throws {
         do {
             loginOngoing = true
             defer { loginOngoing = false }
 
-            guard let (baseUrl, _) = deriveUrl(string: url.text, suffix: "token") else {
+            guard let (baseUrl, _) = LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
-                errorController.push(error: LoginError.urlInvalid)
-                return
+                viewModel.loginState = .error(.urlInvalid)
+                throw LoginError.urlInvalid
             }
 
             Logger.shared.info("Trying to load data from api ")
-            let connection = Connection(url: baseUrl, token: "", extraHeaders: extraHeaders, identityName: selectedIdentity)
+            let connection = Connection(url: baseUrl, token: "",
+                                        extraHeaders: viewModel.extraHeaders,
+                                        identityName: viewModel.selectedIdentity)
 
             let repository = await ApiRepository(connection: connection)
 
@@ -299,7 +185,10 @@ struct LoginView: View {
 
             Logger.shared.info("Username: \(currentUser.username)")
 
-            let stored = StoredConnection(url: baseUrl, extraHeaders: extraHeaders, user: currentUser, identity: selectedIdentity)
+            let stored = StoredConnection(url: baseUrl,
+                                          extraHeaders: viewModel.extraHeaders,
+                                          user: currentUser,
+                                          identity: viewModel.selectedIdentity)
             try stored.setToken("")
             try connectionManager.login(stored)
             Logger.api.info("Login successful")
@@ -308,10 +197,37 @@ struct LoginView: View {
             Haptics.shared.notification(.success)
             showSuccessOverlay = true
 
+        } catch RequestError.forbidden {
+            Logger.shared.error("User logging in does not have permissions to get permissions")
+            viewModel.loginState = .error(.insufficientPermissions)
+            throw LoginError.insufficientPermissions
         } catch {
             Logger.shared.error("Error during login with url \(error)")
-            errorController.push(error: error)
+            viewModel.loginState = .error(.other(error))
+            throw LoginError.other(error)
         }
+    }
+
+    private func errorView(_ error: LoginError) -> some View {
+        HStack(alignment: .top) {
+            Image(systemName: "xmark")
+                .offset(y: 2)
+            VStack(alignment: .leading) {
+                if let details = error.details {
+                    Text(details)
+                } else {
+                    Text(.login(.errorMessage))
+                }
+                if let link = error.documentationLink {
+                    Link(destination: link) {
+                        Text(.localizable(.errorMoreInfo))
+                            .underline()
+                    }
+                }
+            }
+            .font(.footnote)
+        }
+        .foregroundColor(.red)
     }
 
     var body: some View {
@@ -323,7 +239,7 @@ struct LoginView: View {
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                         Spacer()
-                        switch urlState {
+                        switch viewModel.loginState {
                         case .checking:
                             ProgressView()
                         case .valid:
@@ -350,20 +266,15 @@ struct LoginView: View {
                             }
                         }
 
-                        if url.debouncedText.starts(with: "http://"), !LoginView.isLocalAddress(url.debouncedText) {
+                        if url.debouncedText.starts(with: "http://"), !LoginViewModel.isLocalAddress(url.debouncedText) {
                             HStack(alignment: .top) {
                                 Image(systemName: "info.circle")
                                 Text(.login(.httpWarning))
                             }
                         }
 
-                        if case let .error(info) = urlState {
-                            HStack(alignment: .top) {
-                                Image(systemName: "xmark")
-                                    .offset(y: 2)
-                                Text(info)
-                            }
-                            .foregroundColor(.red)
+                        if case let .error(error) = viewModel.loginState {
+                            errorView(error)
                         }
                     }
                     .transition(.opacity)
@@ -371,19 +282,22 @@ struct LoginView: View {
 
                 if showIdentitySelection {
                     Section {
-                        Picker(String(localized: .settings(.activeIdentity)), selection: $selectedIdentity) {
+                        Picker(String(localized: .settings(.activeIdentity)),
+                               selection: $viewModel.selectedIdentity)
+                        {
                             Text(String(localized: .localizable(.none))).tag(String?(nil))
                             ForEach(availableIdentityNames, id: \.self) {
                                 Text($0).tag(Optional($0))
                             }
                         }
-                        .onChange(of: selectedIdentity) {
-                            if selectedIdentity == nil {
+                        .onChange(of: viewModel.selectedIdentity) {
+                            if viewModel.selectedIdentity == nil {
                                 identityBasedAuth = false
                             }
                         }
-                        if selectedIdentity != nil {
+                        if viewModel.selectedIdentity != nil {
                             Toggle(isOn: $identityBasedAuth) {
+                                // @TODO: Translation
                                 Text("Identity Only")
                             }
                         }
@@ -409,7 +323,11 @@ struct LoginView: View {
             .safeAreaInset(edge: .bottom) {
                 Button(action: {
                     Task {
-                        await login()
+                        do {
+                            try await login()
+                        } catch {
+                            errorController.push(error: error)
+                        }
                     }
                 }) {
                     HStack(spacing: 5) {
@@ -421,7 +339,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .buttonStyle(.bordered)
-                .disabled((!urlStateValid || username.isEmpty || password.isEmpty) && (!identityBasedAuth || !urlStateValid))
+                .disabled((!viewModel.loginStateValid || username.isEmpty || password.isEmpty) && (!identityBasedAuth || !viewModel.loginStateValid))
                 .padding()
                 .background(.thickMaterial)
                 .ignoresSafeArea()
@@ -430,7 +348,11 @@ struct LoginView: View {
 
             .onSubmit {
                 Task {
-                    await login()
+                    do {
+                        try await login()
+                    } catch {
+                        errorController.push(error: error)
+                    }
                 }
             }
 
@@ -461,15 +383,15 @@ struct LoginView: View {
 
             .onChange(of: url.debouncedText) { _, value in
                 Task {
-                    await checkUrl(string: value)
+                    await viewModel.checkUrl(string: value)
                     withAnimation {
                         apiInUrl = value.contains("/api")
                     }
                 }
             }
-            .onChange(of: selectedIdentity) {
+            .onChange(of: viewModel.selectedIdentity) {
                 Task {
-                    await checkUrl(string: url.debouncedText)
+                    await viewModel.checkUrl(string: url.debouncedText)
                 }
             }
 
@@ -484,7 +406,7 @@ struct LoginView: View {
             }
 
             .sheet(isPresented: $showDetails) {
-                DetailsView(extraHeaders: $extraHeaders)
+                DetailsView(extraHeaders: $viewModel.extraHeaders)
             }
 
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {

@@ -3,13 +3,13 @@ import XCTest
 final class DeriveUrlTest: XCTestCase {
     func testBasicFunctionality() throws {
         do {
-            let res = deriveUrl(string: "file://paperless.example.com")
+            let res = LoginViewModel.deriveUrl(string: "file://paperless.example.com")
             XCTAssertNil(res)
         }
 
         do {
             // implicit https scheme
-            let res = deriveUrl(string: "paperless.example.com")
+            let res = LoginViewModel.deriveUrl(string: "paperless.example.com")
             XCTAssertNotNil(res)
             let (base, url) = res!
 
@@ -19,13 +19,13 @@ final class DeriveUrlTest: XCTestCase {
     }
 
     func testMissingHostname() throws {
-        let res = deriveUrl(string: "http://")
+        let res = LoginViewModel.deriveUrl(string: "http://")
         XCTAssertNil(res)
     }
 
     func testExplicitScheme() throws {
         do {
-            let res = deriveUrl(string: "http://paperless.example.com")
+            let res = LoginViewModel.deriveUrl(string: "http://paperless.example.com")
             XCTAssertNotNil(res)
             let (base, url) = res!
             XCTAssertEqual(base, URL(string: "http://paperless.example.com"))
@@ -33,7 +33,7 @@ final class DeriveUrlTest: XCTestCase {
         }
 
         do {
-            let res = deriveUrl(string: "https://paperless.example.com")
+            let res = LoginViewModel.deriveUrl(string: "https://paperless.example.com")
             XCTAssertNotNil(res)
             let (base, url) = res!
             XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
@@ -42,7 +42,7 @@ final class DeriveUrlTest: XCTestCase {
     }
 
     func testSuffix() throws {
-        let res = deriveUrl(string: "https://paperless.example.com", suffix: "token")
+        let res = LoginViewModel.deriveUrl(string: "https://paperless.example.com", suffix: "token")
         XCTAssertNotNil(res)
         let (base, url) = res!
         XCTAssertEqual(base, URL(string: "https://paperless.example.com"))

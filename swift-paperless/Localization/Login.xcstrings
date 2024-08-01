@@ -289,83 +289,53 @@
         }
       }
     },
-    "errorCouldNotConvertURL" : {
+    "errorInvalidResponse" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunne ikke konvertere \"%@\" til URL"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\"%@\" ist keine gültige URL"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not convert \"%@\" to URL"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de convertir «%@» en URL"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kan \"%@\" niet omzetten naar URL"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie można zinterpretować \"%@\" jako adres URL"
+            "value" : "Request returned invalid response code %d."
           }
         }
       }
     },
-    "errorInvalidResponse" : {
+    "errorInvalidResponseDetails" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Anmodning til \"%@\" returnerede ugyldig svarkode %d"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Anfrage an \"%@\" hat einen ungültigen Antwort-Code zurückgegeben %d"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request to \"%@\" returned invalid response code %d"
+            "value" : "Request returned invalid response code %d.\nDetails: %@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La requête à «%@» a renvoyé un code de réponse invalide %d"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Verzoek naar \"%@\" heeft een ongeldige responscode %d teruggestuurd"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Żądanie do \"%@\" zwróciło nieprawidłowy kod odpowiedzi %d"
           }
         }
@@ -377,37 +347,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Appen er ikke blevet tildelt adgang til det lokale netværk. Se [her](%@) for detaljer."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Der App wurde kein Zugriff auf das lokale Netzwerk gewährt. Siehe [hier](%@) für Details."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The app has not been granted access to the local network. See [here](%@) for details."
+            "value" : "The app has not been granted access to the local network."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "L'application n'a pas été autorisée à accéder au réseau local. Voir [ici](%@) pour plus de détails."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De app heeft geen toegang gekregen tot het lokale netwerk. Druk [hier](%@) voor meer informatie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej. Szczegółowe informacje można znaleźć [tutaj](%@)."
           }
         }
@@ -454,42 +424,53 @@
         }
       }
     },
+    "errorMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error while logging in"
+          }
+        }
+      }
+    },
     "errorOther" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Anden fejl"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Unerwarteter Fehler"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Other error"
+            "value" : "%@"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Autre erreur"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Andere fout"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Nieoczekiwany błąd"
           }
         }
@@ -532,47 +513,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Podany adres URL jest nieprawidłowy."
-          }
-        }
-      }
-    },
-    "errorUrlInvalidOther" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Den angivne URL er ugyldig: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die eingegebene URL ist ungültig: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The entered URL is invalid: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'URL saisie n'est pas valide : %@"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De opgegeven URL is ongeldig: %@"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Podany adres URL jest nieprawidłowy: %@"
           }
         }
       }
@@ -778,6 +718,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeśli to możliwe, użyj HTTPS do połączenia z API."
+          }
+        }
+      }
+    },
+    "insufficientPermissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The user associated with these credentials has insufficient permissions."
           }
         }
       }
