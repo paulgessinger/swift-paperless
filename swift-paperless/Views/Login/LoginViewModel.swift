@@ -8,73 +8,16 @@
 import Foundation
 import os
 
-enum LoginError: DisplayableError {
-    case urlInvalid
-    case invalidLogin
-
-    case invalidResponse(statusCode: Int, details: String?)
-    case localNetworkDenied
-
-    case insufficientPermissions
-
-    case other(_: Error)
-
-    var message: String {
-        String(localized: .login(.errorMessage))
-    }
-
-    var details: String? {
-        String(localized: _details)
-    }
-
-    private var _details: LocalizedStringResource {
-        switch self {
-        case .urlInvalid:
-            return .login(.errorUrlInvalid)
-
-        case .invalidLogin:
-            return .login(.errorLoginInvalid)
-
-        case let .invalidResponse(statusCode, details):
-            if let details {
-                return .login(.errorInvalidResponseDetails(statusCode, details))
-            } else {
-                return .login(.errorInvalidResponse(statusCode))
-            }
-
-        case .localNetworkDenied:
-            return .login(.errorLocalNetworkDenied)
-
-        case .insufficientPermissions:
-            return .login(.insufficientPermissions)
-
-        case let .other(error):
-            return .login(.errorOther(error.localizedDescription))
-        }
-    }
-
-    var documentationLink: URL? {
-        switch self {
-        case .localNetworkDenied:
-            DocumentationLinks.localNetworkDenied
-        case .insufficientPermissions:
-            DocumentationLinks.insufficientPermissions
-        default:
-            nil
-        }
-    }
+enum LoginState {
+    case empty
+    case checking
+    case valid
+    case error(_: LoginError)
 }
 
 @MainActor
 @Observable
 class LoginViewModel {
-    enum LoginState {
-        case empty
-        case checking
-        case valid
-        case error(_: LoginError)
-    }
-
     var loginState = LoginState.empty
 
     var loginStateValid: Bool {
@@ -89,6 +32,9 @@ class LoginViewModel {
     var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     var selectedIdentity: String?
+
+    var username: String = ""
+    var password: String = ""
 
     func decodeDetails(_ body: Data) -> String? {
         struct Response: Decodable {
@@ -105,9 +51,13 @@ class LoginViewModel {
             return
         }
 
-        guard let (_, apiUrl) = LoginViewModel.deriveUrl(string: value) else {
-            Logger.shared.notice("Cannot to URL: \(value)")
-            loginState = .error(.urlInvalid)
+        let apiUrl: URL
+
+        do {
+            (_, apiUrl) = try LoginViewModel.deriveUrl(string: value)
+        } catch {
+            Logger.shared.error("Cannot derive URL: \(value) -> \(error)")
+            loginState = .error(.invalidUrl(error as? LocalizedError))
             return
         }
 
@@ -149,6 +99,9 @@ class LoginViewModel {
         } catch let error as NSError where LoginViewModel.isLocalNetworkDenied(error) {
             Logger.shared.error("Unable to connect to API: local network access denied")
             loginState = .error(.localNetworkDenied)
+        } catch let error as NSError where error.code == -1202 {
+            Logger.shared.error("Certificate error when connecting to the API: \(error)")
+            loginState = .error(.certificate(error))
         } catch {
             Logger.shared.error("Checking API error: \(error)")
             loginState = .error(.other(error))
@@ -157,7 +110,7 @@ class LoginViewModel {
     }
 
     nonisolated
-    static func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolved: URL)? {
+    static func deriveUrl(string value: String, suffix: String = "") throws -> (base: URL, resolved: URL) {
         let url: URL?
 
         let pattern = /(\w+):\/\/(.*)/
@@ -167,7 +120,7 @@ class LoginViewModel {
             let rest = matches.2
             if scheme != "http", scheme != "https" {
                 Logger.shared.error("Encountered invalid scheme \(scheme)")
-                return nil
+                throw UrlError.invalidScheme(String(scheme))
             }
             url = URL(string: "\(scheme)://\(rest)")
         } else {
@@ -176,19 +129,19 @@ class LoginViewModel {
 
         guard let url, var url = URL(string: url.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))) else {
             Logger.shared.notice("Derived URL \(value) was invalid")
-            return nil
+            throw UrlError.other
         }
 
         let base = url
 
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             Logger.shared.notice("Could not parse URL \(url) into components")
-            return nil
+            throw UrlError.cannotSplit
         }
 
         guard let host = components.host, !host.isEmpty else {
             Logger.shared.error("URL \(url) had empty host")
-            return nil
+            throw UrlError.emptyHost
         }
 
         assert(components.scheme != nil)

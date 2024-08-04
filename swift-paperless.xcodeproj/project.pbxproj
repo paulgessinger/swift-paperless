@@ -313,6 +313,7 @@
 		7AFE3EDD2C569C2400A567CD /* PermissionsEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3EDC2C569C2400A567CD /* PermissionsEditView.swift */; };
 		7AFE3EEC2C569D0000A567CD /* Permissions.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AFE3EEB2C569D0000A567CD /* Permissions.xcstrings */; };
 		7AFE3F242C56CA3600A567CD /* Permissions.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7AFE3EEB2C569D0000A567CD /* Permissions.xcstrings */; };
+		7AFE70082C5E454800AD74B6 /* LoginError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE70072C5E454800AD74B6 /* LoginError.swift */; };
 		939739782B72966E0041F08A /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
 /* End PBXBuildFile section */
 
@@ -505,6 +506,7 @@
 		7AFE3EC62C5699DC00A567CD /* PermissionsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsModel.swift; sourceTree = "<group>"; };
 		7AFE3EDC2C569C2400A567CD /* PermissionsEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsEditView.swift; sourceTree = "<group>"; };
 		7AFE3EEB2C569D0000A567CD /* Permissions.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Permissions.xcstrings; sourceTree = "<group>"; };
+		7AFE70072C5E454800AD74B6 /* LoginError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginError.swift; sourceTree = "<group>"; };
 		939739772B72966E0041F08A /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -709,6 +711,7 @@
 			children = (
 				7AEF690F29CF7FA800414BA7 /* LoginView.swift */,
 				7A65F18D2C5AC061001A5A4C /* LoginViewModel.swift */,
+				7AFE70072C5E454800AD74B6 /* LoginError.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -1250,6 +1253,7 @@
 				7A5C139129ABFC3F00D71F51 /* TagView.swift in Sources */,
 				7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */,
 				7A11DEF929FFDAB800FFD705 /* PreviewRepository.swift in Sources */,
+				7AFE70082C5E454800AD74B6 /* LoginError.swift in Sources */,
 				7A15D7702BC8010E001E3A86 /* ConnectionsView.swift in Sources */,
 				7A3C1CF52C0C9A4A00963C8F /* DocumentAsnEditingView.swift in Sources */,
 				7A65F18E2C5AC061001A5A4C /* LoginViewModel.swift in Sources */,

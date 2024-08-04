@@ -56,9 +56,6 @@ struct LoginView: View {
 
     @State private var apiInUrl = false
 
-    @State private var username: String = ""
-    @State private var password: String = ""
-
     @State private var showDetails: Bool = false
     @State private var showSuccessOverlay = false
 
@@ -86,12 +83,13 @@ struct LoginView: View {
                 var password: String
             }
 
-            let json = try JSONEncoder().encode(TokenRequest(username: username, password: password))
+            let json = try JSONEncoder().encode(TokenRequest(username: viewModel.username,
+                                                             password: viewModel.password))
 
-            guard let (baseUrl, tokenUrl) = LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
+            guard let (baseUrl, tokenUrl) = try? LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
-                viewModel.loginState = .error(.urlInvalid)
-                throw LoginError.urlInvalid
+                viewModel.loginState = .error(.invalidUrl(nil))
+                throw LoginError.invalidUrl(nil)
             }
 
             var request = URLRequest(url: tokenUrl)
@@ -131,7 +129,7 @@ struct LoginView: View {
 
             let currentUser = try await repository.currentUser()
 
-            if currentUser.username != username {
+            if currentUser.username != viewModel.username {
                 Logger.api.warning("Username from login and logged in username not the same")
             }
 
@@ -141,7 +139,7 @@ struct LoginView: View {
                                           identity: viewModel.selectedIdentity)
             try stored.setToken(connection.token)
 
-            try connectionManager.login(stored)
+            connectionManager.login(stored)
             Logger.api.info("Login successful")
 
             Haptics.shared.notification(.success)
@@ -168,10 +166,10 @@ struct LoginView: View {
             loginOngoing = true
             defer { loginOngoing = false }
 
-            guard let (baseUrl, _) = LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
+            guard let (baseUrl, _) = try? LoginViewModel.deriveUrl(string: url.text, suffix: "token") else {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
-                viewModel.loginState = .error(.urlInvalid)
-                throw LoginError.urlInvalid
+                viewModel.loginState = .error(.invalidUrl(nil))
+                throw LoginError.invalidUrl(nil)
             }
 
             Logger.shared.info("Trying to load data from api ")
@@ -190,7 +188,7 @@ struct LoginView: View {
                                           user: currentUser,
                                           identity: viewModel.selectedIdentity)
             try stored.setToken("")
-            try connectionManager.login(stored)
+            connectionManager.login(stored)
             Logger.api.info("Login successful")
 
             // Success point
@@ -206,28 +204,6 @@ struct LoginView: View {
             viewModel.loginState = .error(.other(error))
             throw LoginError.other(error)
         }
-    }
-
-    private func errorView(_ error: LoginError) -> some View {
-        HStack(alignment: .top) {
-            Image(systemName: "xmark")
-                .offset(y: 2)
-            VStack(alignment: .leading) {
-                if let details = error.details {
-                    Text(details)
-                } else {
-                    Text(.login(.errorMessage))
-                }
-                if let link = error.documentationLink {
-                    Link(destination: link) {
-                        Text(.localizable(.errorMoreInfo))
-                            .underline()
-                    }
-                }
-            }
-            .font(.footnote)
-        }
-        .foregroundColor(.red)
     }
 
     var body: some View {
@@ -274,7 +250,7 @@ struct LoginView: View {
                         }
 
                         if case let .error(error) = viewModel.loginState {
-                            errorView(error)
+                            error.view
                         }
                     }
                     .transition(.opacity)
@@ -306,10 +282,10 @@ struct LoginView: View {
 
                 if !identityBasedAuth {
                     Section {
-                        TextField(String(localized: .login(.username)), text: $username)
+                        TextField(String(localized: .login(.username)), text: $viewModel.username)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
-                        SecureField(String(localized: .login(.password)), text: $password)
+                        SecureField(String(localized: .login(.password)), text: $viewModel.password)
                     } header: {
                         Text(.login(.credentials))
                     } footer: {
@@ -339,7 +315,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .buttonStyle(.bordered)
-                .disabled((!viewModel.loginStateValid || username.isEmpty || password.isEmpty) && (!identityBasedAuth || !viewModel.loginStateValid))
+                .disabled((!viewModel.loginStateValid || viewModel.username.isEmpty || viewModel.password.isEmpty) && (!identityBasedAuth || !viewModel.loginStateValid))
                 .padding()
                 .background(.thickMaterial)
                 .ignoresSafeArea()

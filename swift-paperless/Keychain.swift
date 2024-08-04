@@ -145,7 +145,7 @@ enum Keychain {
                 }
             }
         } else {
-            Logger.shared.warning("Something went wrong trying to find the idenities in the keychain")
+            Logger.shared.warning("Something went wrong trying to find the identities in the keychain")
         }
 
         return ret
