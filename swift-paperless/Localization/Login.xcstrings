@@ -207,6 +207,17 @@
         }
       }
     },
+    "certificateInfo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Self-signed certificates are supported using the operating system trust store!"
+          }
+        }
+      }
+    },
     "credentials" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -289,54 +300,57 @@
         }
       }
     },
+    "documentationLinkLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More info here"
+          }
+        }
+      }
+    },
+    "errorCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate error while connecting"
+          }
+        }
+      }
+    },
+    "errorInsufficientPermissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The user associated with these credentials has insufficient permissions"
+          }
+        }
+      }
+    },
+    "errorInsufficientPermissionsDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A minimum set of permissions is required to be able to use the app!"
+          }
+        }
+      }
+    },
     "errorInvalidResponse" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request returned invalid response code %d."
-          }
-        }
-      }
-    },
-    "errorInvalidResponseDetails" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Anmodning til \"%@\" returnerede ugyldig svarkode %d"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Anfrage an \"%@\" hat einen ungültigen Antwort-Code zurückgegeben %d"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request returned invalid response code %d.\nDetails: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La requête à «%@» a renvoyé un code de réponse invalide %d"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Verzoek naar \"%@\" heeft een ongeldige responscode %d teruggestuurd"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Żądanie do \"%@\" zwróciło nieprawidłowy kod odpowiedzi %d"
+            "value" : "Request returned invalid response code *%d*."
           }
         }
       }
@@ -424,6 +438,17 @@
         }
       }
     },
+    "errorLoginInvalidDetails" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The username and password combination was rejected. Please check you typed them in correctly."
+          }
+        }
+      }
+    },
     "errorMessage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -435,83 +460,42 @@
         }
       }
     },
-    "errorOther" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Anden fejl"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Unerwarteter Fehler"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Autre erreur"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Andere fout"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nieoczekiwany błąd"
-          }
-        }
-      }
-    },
     "errorUrlInvalid" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Den angivne URL er ugyldig."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Die eingegebene URL ist ungültig."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The entered URL is invalid."
+            "value" : "The entered URL is invalid"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "L'URL saisie n'est pas valide."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De opgegeven URL is ongeldig."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Podany adres URL jest nieprawidłowy."
           }
         }
@@ -718,17 +702,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeśli to możliwe, użyj HTTPS do połączenia z API."
-          }
-        }
-      }
-    },
-    "insufficientPermissions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The user associated with these credentials has insufficient permissions."
           }
         }
       }

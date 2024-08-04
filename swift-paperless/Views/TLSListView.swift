@@ -29,7 +29,7 @@ struct TLSListView: View {
 
     @EnvironmentObject private var errorController: ErrorController
 
-    func refreshAll() {
+    private func refreshAll() {
         let keyChainIdenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
 
         let pIdentityNames: [String] = keyChainIdenitites.map { _, name in name }
@@ -39,10 +39,8 @@ struct TLSListView: View {
         }
 
         withAnimation {
-            identityNames.removeAll()
-            identityNames.append(contentsOf: pIdentityNames)
-            identities.removeAll()
-            identities.append(contentsOf: tlsIdentities)
+            identityNames = pIdentityNames
+            identities = tlsIdentities
         }
     }
 
@@ -118,7 +116,9 @@ struct TLSListView: View {
             do {
                 let _ = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
                 return true
-            } catch {}
+            } catch {
+                Logger.shared.error("PKCS12 invalid: \(error)")
+            }
             return false
         }
 
@@ -130,7 +130,7 @@ struct TLSListView: View {
                 }
             } catch {
                 errorController.push(error: error)
-                Logger.shared.error("Error loading/saving Identity to the Keychain")
+                Logger.shared.error("Error loading/saving identity to the keychain: \(error)")
             }
         }
 

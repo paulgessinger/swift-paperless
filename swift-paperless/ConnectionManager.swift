@@ -308,7 +308,7 @@ class ConnectionManager: ObservableObject {
         return stored
     }
 
-    func login(_ connection: StoredConnection) throws {
+    func login(_ connection: StoredConnection) {
         Logger.api.info("Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
         connections[connection.id] = connection
         activeConnectionId = connection.id
