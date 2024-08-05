@@ -93,7 +93,7 @@ class ErrorController: ObservableObject {
     }
 
     func push(error: DisplayableError) {
-        Task {
+        Task { @MainActor in
             await channel.send(error)
         }
     }
