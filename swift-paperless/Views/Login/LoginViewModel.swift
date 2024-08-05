@@ -55,7 +55,9 @@ class LoginViewModel {
         checkUrlTask?.cancel()
         checkUrlTask = Task {
             if !immediate {
-                try? await Task.sleep(for: .seconds(0.8))
+                do {
+                    try await Task.sleep(for: .seconds(0.8))
+                } catch {}
                 guard !Task.isCancelled else {
                     return
                 }
@@ -153,6 +155,8 @@ class LoginViewModel {
         } catch is CancellationError {
             // do nothing
             return
+        } catch let error as NSError where error.code == -999 {
+            // also a cancellation error
         } catch {
             Logger.shared.error("Checking API error: \(error)")
             loginState = .error(.init(other: error))
