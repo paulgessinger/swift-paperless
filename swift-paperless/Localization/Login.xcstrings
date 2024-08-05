@@ -223,13 +223,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Loginoplysninger"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Zugangsdaten"
           }
         },
@@ -241,19 +241,19 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Identifiants"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Inloggegevens"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dane uwierzytelniające"
           }
         }
@@ -670,37 +670,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Hvis det overhovedet er muligt, brug HTTPS til at oprette forbindelse til API'et."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Bitte nur zu lokalen Installationen per HTTP verbinden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If at all possible, use HTTPS to connect to the API."
+            "value" : "If at all possible, use HTTPS to connect to the API for non-local addresses."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Si possible, utilisez HTTPS pour vous connecter à l'API."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Indien mogelijk, gebruik HTTPS om verbinding te maken met de API."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Jeśli to możliwe, użyj HTTPS do połączenia z API."
           }
         }
@@ -870,6 +870,17 @@
         }
       }
     },
+    "schemeSelectionLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select scheme"
+          }
+        }
+      }
+    },
     "success" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -957,37 +968,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless URL"
+            "value" : "paperless.example.com"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "URL de Paperless"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Adres URL serwera Paperless"
           }
         }

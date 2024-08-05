@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-enum LoginState {
+enum LoginState: Equatable {
     case empty
     case checking
     case valid
@@ -36,6 +36,51 @@ class LoginViewModel {
     var username: String = ""
     var password: String = ""
 
+    var url: String = ""
+
+    var checkUrlTask: Task<Void, Never>?
+
+    enum Scheme: String {
+        case http
+        case https
+
+        var label: String {
+            "\(self)://"
+        }
+    }
+
+    var scheme = Scheme.https
+
+    func onChangeUrl(immediate: Bool = false) {
+        checkUrlTask?.cancel()
+        checkUrlTask = Task {
+            if !immediate {
+                try? await Task.sleep(for: .seconds(0.8))
+                guard !Task.isCancelled else {
+                    return
+                }
+            }
+
+            if !url.isEmpty {
+                await checkUrl(string: fullUrl)
+            }
+        }
+
+        if url.isEmpty {
+            loginState = .empty
+        }
+
+        if url.starts(with: "https://") {
+            scheme = .https
+            url.replace(/^https:\/\//, with: "")
+        }
+
+        if url.starts(with: "http://") {
+            scheme = .http
+            url.replace(/^http:\/\//, with: "")
+        }
+    }
+
     func decodeDetails(_ body: Data) -> String? {
         struct Response: Decodable {
             var details: String
@@ -54,10 +99,13 @@ class LoginViewModel {
         let apiUrl: URL
 
         do {
-            (_, apiUrl) = try LoginViewModel.deriveUrl(string: value)
+            (_, apiUrl) = try deriveUrl(string: value)
+        } catch is CancellationError {
+            // do nothing
+            return
         } catch {
             Logger.shared.error("Cannot derive URL: \(value) -> \(error)")
-            loginState = .error(.invalidUrl(error as? LocalizedError))
+            loginState = .error(.init(invalidUrl: error))
             return
         }
 
@@ -101,59 +149,15 @@ class LoginViewModel {
             loginState = .error(.localNetworkDenied)
         } catch let error as NSError where error.code == -1202 {
             Logger.shared.error("Certificate error when connecting to the API: \(error)")
-            loginState = .error(.certificate(error))
+            loginState = .error(.init(certificate: error))
+        } catch is CancellationError {
+            // do nothing
+            return
         } catch {
             Logger.shared.error("Checking API error: \(error)")
-            loginState = .error(.other(error))
+            loginState = .error(.init(other: error))
             return
         }
-    }
-
-    nonisolated
-    static func deriveUrl(string value: String, suffix: String = "") throws -> (base: URL, resolved: URL) {
-        let url: URL?
-
-        let pattern = /(\w+):\/\/(.*)/
-
-        if let matches = try? pattern.wholeMatch(in: value) {
-            let scheme = matches.1
-            let rest = matches.2
-            if scheme != "http", scheme != "https" {
-                Logger.shared.error("Encountered invalid scheme \(scheme)")
-                throw UrlError.invalidScheme(String(scheme))
-            }
-            url = URL(string: "\(scheme)://\(rest)")
-        } else {
-            url = URL(string: "https://\(value)")
-        }
-
-        guard let url, var url = URL(string: url.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))) else {
-            Logger.shared.notice("Derived URL \(value) was invalid")
-            throw UrlError.other
-        }
-
-        let base = url
-
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.shared.notice("Could not parse URL \(url) into components")
-            throw UrlError.cannotSplit
-        }
-
-        guard let host = components.host, !host.isEmpty else {
-            Logger.shared.error("URL \(url) had empty host")
-            throw UrlError.emptyHost
-        }
-
-        assert(components.scheme != nil)
-
-        url = url.appending(component: "api", directoryHint: .isDirectory)
-        if !suffix.isEmpty {
-            url = url.appending(component: suffix, directoryHint: .isDirectory)
-        }
-
-        Logger.shared.notice("Derive URL: \(value) + \(suffix) -> \(url)")
-
-        return (base, url)
     }
 
     nonisolated
@@ -172,10 +176,22 @@ class LoginViewModel {
         return reason == 29
     }
 
+    var fullUrl: String {
+        "\(scheme)://\(url)"
+    }
+
+    var isLocalAddress: Bool {
+        Self.isLocalAddress(fullUrl)
+    }
+
     nonisolated
     static func isLocalAddress(_ url: String) -> Bool {
         guard let components = URLComponents(string: url), let host = components.host else {
             return false
+        }
+
+        if host == "localhost" {
+            return true
         }
 
         guard let match = try? /(\d+)\.(\d+)\.(\d+)\.(\d+)/.wholeMatch(in: host) else {
@@ -183,6 +199,10 @@ class LoginViewModel {
         }
 
         let ip = (UInt(match.1)!, UInt(match.2)!, UInt(match.3)!, UInt(match.4)!)
+
+        if ip == (127, 0, 0, 1) {
+            return true
+        }
 
         return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
     }

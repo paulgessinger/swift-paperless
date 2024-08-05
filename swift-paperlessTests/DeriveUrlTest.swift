@@ -3,15 +3,12 @@ import XCTest
 final class DeriveUrlTest: XCTestCase {
     func testBasicFunctionality() throws {
         do {
-            let res = LoginViewModel.deriveUrl(string: "file://paperless.example.com")
-            XCTAssertNil(res)
+            _ = try deriveUrl(string: "file://paperless.example.com")
         }
 
         do {
             // implicit https scheme
-            let res = LoginViewModel.deriveUrl(string: "paperless.example.com")
-            XCTAssertNotNil(res)
-            let (base, url) = res!
+            let (base, url) = try deriveUrl(string: "paperless.example.com")
 
             XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
             XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/"))
@@ -19,32 +16,26 @@ final class DeriveUrlTest: XCTestCase {
     }
 
     func testMissingHostname() throws {
-        let res = LoginViewModel.deriveUrl(string: "http://")
+        let res = try deriveUrl(string: "http://")
         XCTAssertNil(res)
     }
 
     func testExplicitScheme() throws {
         do {
-            let res = LoginViewModel.deriveUrl(string: "http://paperless.example.com")
-            XCTAssertNotNil(res)
-            let (base, url) = res!
+            let (base, url) = try deriveUrl(string: "http://paperless.example.com")
             XCTAssertEqual(base, URL(string: "http://paperless.example.com"))
             XCTAssertEqual(url, URL(string: "http://paperless.example.com/api/"))
         }
 
         do {
-            let res = LoginViewModel.deriveUrl(string: "https://paperless.example.com")
-            XCTAssertNotNil(res)
-            let (base, url) = res!
+            let (base, url) = try deriveUrl(string: "https://paperless.example.com")
             XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
             XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/"))
         }
     }
 
     func testSuffix() throws {
-        let res = LoginViewModel.deriveUrl(string: "https://paperless.example.com", suffix: "token")
-        XCTAssertNotNil(res)
-        let (base, url) = res!
+        let (base, url) = try deriveUrl(string: "https://paperless.example.com", suffix: "token")
         XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
         XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/token/"))
     }
