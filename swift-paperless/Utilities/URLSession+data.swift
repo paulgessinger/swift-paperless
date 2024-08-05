@@ -18,6 +18,7 @@ public extension URLSession {
         final class Delegate: NSObject, URLSessionTaskDelegate {
             let callback: (@Sendable (Double) -> Void)?
 
+            @MainActor
             private var progressObservation: NSKeyValueObservation? = nil
 
             init(_ callback: (@Sendable (Double) -> Void)? = nil) {
@@ -25,9 +26,12 @@ public extension URLSession {
             }
 
             func urlSession(_: URLSession, didCreateTask task: URLSessionTask) {
-                let callback = callback
-                progressObservation = task.progress.observe(\.fractionCompleted) { progress, _ in
-                    callback?(progress.fractionCompleted)
+                // task is Sendable, so we send that to the main actor and then store the observation in the main isolated variable
+                Task { @MainActor in
+                    let callback = callback
+                    progressObservation = task.progress.observe(\.fractionCompleted) { progress, _ in
+                        callback?(progress.fractionCompleted)
+                    }
                 }
             }
         }
