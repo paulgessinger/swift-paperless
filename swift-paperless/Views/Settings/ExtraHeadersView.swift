@@ -14,14 +14,6 @@ struct ExtraHeadersView: View {
     private struct SingleView: View {
         @Binding var header: ConnectionManager.HeaderValue
 
-//        var headerKey: Binding<String> {
-//            return Binding<String>(get: {header.key}, set: {
-//                print("Sanitizing: '\($0)'")
-//                header.key = $0.replacingOccurrences(of: " ", with: "")
-//                print("now: '\(header.key)'")
-//            })
-//        }
-
         var body: some View {
             Form {
                 Section(String(localized: .login(.extraHeadersKey))) {

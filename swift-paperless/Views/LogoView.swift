@@ -29,7 +29,7 @@ struct LogoView: View {
 
     var body: some View {
         VStack(spacing: -15) {
-            Image("AppLogoOnWhite")
+            Image(.appLogoOnWhite)
             Text(.localizable(.appName))
                 .font(.title)
         }

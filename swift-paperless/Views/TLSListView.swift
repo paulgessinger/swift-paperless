@@ -46,31 +46,40 @@ struct TLSListView: View {
 
     var body: some View {
         List {
-            ForEach($identities) { $identity in
-                NavigationLink {
-                    TLSSingleView(identity: $identity)
-                } label: {
-                    Text(identity.name)
-                }
-            }
-            .onDelete { ids in
-                withAnimation {
-                    ids.forEach { id in
-                        let item = identities[id]
-
-                        do {
-                            try Keychain.deleteIdentity(name: item.name)
-                        } catch {
-                            errorController.push(error: error)
-                        }
-                        refreshAll()
+            Section {
+                ForEach($identities) { $identity in
+                    NavigationLink {
+                        TLSSingleView(identity: $identity)
+                    } label: {
+                        Text(identity.name)
                     }
                 }
+                .onDelete { ids in
+                    withAnimation {
+                        ids.forEach { id in
+                            let item = identities[id]
+
+                            do {
+                                try Keychain.deleteIdentity(name: item.name)
+                            } catch {
+                                errorController.push(error: error)
+                            }
+                            refreshAll()
+                        }
+                    }
+                }
+            } footer: {
+                Text(.settings(.identitiesDescription))
             }
         }
-        .onAppear {
+
+        .navigationTitle(.settings(.identities))
+        .navigationBarTitleDisplayMode(.inline)
+
+        .task {
             refreshAll()
         }
+
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
@@ -153,18 +162,21 @@ struct TLSListView: View {
             Form {
                 Section {
                     TextField(String(localized: .localizable(.name)), text: $certificateName)
-                    SecureField(String(localized: .login(.password)), text: $certificatePassword).autocorrectionDisabled()
+                    SecureField(String(localized: .login(.password)), text: $certificatePassword)
+                        .autocorrectionDisabled()
+
                     Button(String(localized: .settings(.selectCertificate))) {
                         isImporting = true
                     }
+
                 } footer: {
                     switch certificateState {
                     case .notloaded:
-                        Text(String(localized: .settings(.certificateNotLoaded)))
+                        Text(.settings(.certificateNotLoaded))
                     case .wrongPassword:
-                        Text(String(localized: .settings(.certificateLoadError)))
+                        Text(.settings(.certificateLoadError))
                     case .loadingError:
-                        Text(String(localized: .settings(.certificateLoadError)))
+                        Text(.settings(.certificateLoadError))
                     case .valid:
                         HStack {
                             Image("checkmark.circle.fill")
@@ -238,5 +250,13 @@ private struct TLSSingleView: View {
                 }
             }
         }
+    }
+}
+
+// - MARK: Previews
+
+#Preview {
+    NavigationView {
+        TLSListView()
     }
 }

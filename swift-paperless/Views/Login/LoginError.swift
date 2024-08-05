@@ -13,10 +13,20 @@ enum UrlError: LocalizedError {
     case other
     case cannotSplit
     case emptyHost
+
+    var errorDescription: String? {
+        switch self {
+        case let .invalidScheme(scheme):
+            "Invalid scheme: \(scheme)"
+        case .other: "other"
+        case .cannotSplit: "cannot split"
+        case .emptyHost: "empty host"
+        }
+    }
 }
 
-enum LoginError: DisplayableError {
-    case invalidUrl(_: LocalizedError?)
+enum LoginError: DisplayableError, Equatable {
+    case invalidUrl(_: String?)
     case invalidLogin
 
     case invalidResponse(statusCode: Int, details: String?)
@@ -24,10 +34,24 @@ enum LoginError: DisplayableError {
 
     case insufficientPermissions
 
-    // Includes the upstream error because we want to show that extra info
-    case certificate(_: Error)
+    case certificate(_: String)
 
-    case other(_: Error)
+    case other(_: String)
+
+    private static func string(for error: Error) -> String {
+        (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+    }
+
+    init(other error: Error) { self = .other(Self.string(for: error)) }
+    init(invalidUrl error: Error) {
+        if let error = error as? LocalizedError {
+            self = .invalidUrl(Self.string(for: error))
+        } else {
+            self = .invalidUrl(nil)
+        }
+    }
+
+    init(certificate error: Error) { self = .certificate(Self.string(for: error)) }
 }
 
 extension LoginError {
@@ -48,7 +72,7 @@ extension LoginError {
         switch self {
         case let .invalidUrl(error):
             var msg = String(localized: .login(.errorUrlInvalid))
-            if let desc = error?.errorDescription {
+            if let desc = error {
                 msg = "\(msg) Details: \(desc)"
             }
             return try? AttributedString(markdown: msg)
@@ -70,19 +94,11 @@ extension LoginError {
             return loc(.login(.errorInsufficientPermissions))
 
         case let .other(error):
-            return AttributedString((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+            return AttributedString(error)
 
         case let .certificate(error):
             let msg = loc(.login(.errorCertificate))
-            let err: String
-            switch error {
-            case let error as LocalizedError:
-                err = error.errorDescription ?? error.localizedDescription
-            default:
-                err = error.localizedDescription
-            }
-
-            return try? AttributedString(markdown: "\(msg):\n\(err)")
+            return try? AttributedString(markdown: "\(msg):\n\(error)")
         }
     }
 
@@ -102,14 +118,6 @@ extension LoginError {
 
 extension LoginError {
     @ViewBuilder
-    private func errorBlock(_ error: Error) -> some View {
-        let desc = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-
-        Text(desc)
-            .italic()
-    }
-
-    @ViewBuilder
     private var inner: some View {
         switch self {
         case let .invalidResponse(code, details):
@@ -124,8 +132,8 @@ extension LoginError {
         case let .invalidUrl(error):
             (Text(.login(.errorUrlInvalid)) + Text(":"))
                 .bold()
-            if let desc = error?.errorDescription {
-                Text(desc)
+            if let error {
+                Text(error)
             }
 
         case .invalidLogin:
@@ -142,7 +150,8 @@ extension LoginError {
             (Text(.login(.errorCertificate)) + Text(":"))
                 .bold()
 
-            errorBlock(error)
+            Text(error)
+                .italic()
 
             Text(.login(.certificateInfo))
                 .bold()
@@ -167,14 +176,10 @@ extension LoginError {
         }
     }
 
+    @MainActor
     var view: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Image(systemName: "xmark")
-                .font(.footnote)
-            VStack(alignment: .leading) {
-                inner
-            }
-            .font(.footnote)
+        LoginFooterView(systemImage: "xmark") {
+            inner
         }
         .foregroundColor(.red)
     }
@@ -182,6 +187,7 @@ extension LoginError {
 
 // - MARK: Preview
 
+@MainActor
 private func h(_ error: LoginError) -> some View {
     error.view
 }
@@ -194,15 +200,15 @@ private struct TestLocalizedError: LocalizedError {
 
 #Preview {
     VStack(alignment: .leading, spacing: 10) {
-        h(.invalidUrl(TestLocalizedError()))
+        h(.init(invalidUrl: TestLocalizedError()))
         h(.invalidLogin)
         h(.invalidResponse(statusCode: 123, details: "Detail string"))
         h(.invalidResponse(statusCode: 123, details: nil))
         h(.insufficientPermissions)
-        h(.certificate(TestError()))
-        h(.certificate(TestLocalizedError()))
-        h(.other(TestError()))
-        h(.other(TestLocalizedError()))
+        h(.init(certificate: TestError()))
+        h(.init(certificate: TestLocalizedError()))
+        h(.init(other: TestError()))
+        h(.init(other: TestLocalizedError()))
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
