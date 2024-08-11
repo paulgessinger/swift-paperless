@@ -49,7 +49,8 @@ actor ApiRepository {
 
     init(connection: Connection) async {
         self.connection = connection
-        Logger.api.notice("Initializing ApiRepository with connection \(connection.url, privacy: .private) \(connection.token, privacy: .private)")
+        let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
+        Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) \(connection.token, privacy: .private)")
 
         let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
 
@@ -87,7 +88,7 @@ actor ApiRepository {
         let connection = connection
         Logger.api.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
         guard let url = endpoint.url(url: connection.url) else {
-            let sanitizedUrl = sanitizeUrlForLog(connection.url)
+            let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
             Logger.api.error("Unable to make URL: \(sanitizedUrl, privacy: .public)")
             throw RequestError.invalidRequest
         }
@@ -101,7 +102,7 @@ actor ApiRepository {
     }()
 
     func request(url: URL) -> URLRequest {
-        let sanitizedUrl = sanitizeUrlForLog(url)
+        let sanitizedUrl = Self.sanitizeUrlForLog(url)
         var request = URLRequest(url: url)
         request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json; version=\(effectiveApiVersion)", forHTTPHeaderField: "Accept")
@@ -115,7 +116,7 @@ actor ApiRepository {
     }
 
     private nonisolated
-    func sanitizeUrlForLog(_ url: URL) -> String {
+    static func sanitizeUrlForLog(_ url: URL) -> String {
         #if DEBUG
             return url.absoluteString
         #else
@@ -163,7 +164,7 @@ actor ApiRepository {
             throw RequestError.invalidRequest
         }
 
-        let sanitizedUrl = sanitizeUrlForLog(url)
+        let sanitizedUrl = Self.sanitizeUrlForLog(url)
         Logger.api.trace("Fetching request data for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public)")
 
         let result: (Data, URLResponse)
@@ -211,9 +212,9 @@ actor ApiRepository {
             let url = request.url!
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             if Bundle.main.appConfiguration == .AppStore {
-                Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
+                Logger.api.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
             } else {
-                Logger.api.error("Unable to decode response to \(self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
+                Logger.api.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
             }
             throw error
         }

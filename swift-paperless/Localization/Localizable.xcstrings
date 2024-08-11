@@ -702,6 +702,58 @@
         }
       }
     },
+    "copiedToClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied to clipboard"
+          }
+        }
+      }
+    },
+    "copyToClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopier til udklipsholder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Zwischenablage kopieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy to clipboard"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier dans le presse-papier"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiëren naar klembord"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiuj do schowka"
+          }
+        }
+      }
+    },
     "correspondent" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2519,47 +2571,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd"
-          }
-        }
-      }
-    },
-    "errorAlertCopyToClipboard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopier til udklipsholder"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In die Zwischenablage kopieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy to clipboard"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copier dans le presse-papier"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiëren naar klembord"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiuj do schowka"
           }
         }
       }

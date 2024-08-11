@@ -66,7 +66,10 @@ actor NullRepository: Repository {
     func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
     func delete(storagePath _: StoragePath) async throws { throw NotImplemented() }
 
-    func currentUser() async throws -> User { throw NotImplemented() }
+    func currentUser() async throws -> User {
+        throw NotImplemented()
+    }
+
     func users() async -> [User] { [] }
     func groups() async throws -> [UserGroup] { [] }
 

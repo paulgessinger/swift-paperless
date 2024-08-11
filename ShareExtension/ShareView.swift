@@ -17,7 +17,6 @@ struct ShareView: View {
     @StateObject private var errorController = ErrorController()
 
     @State private var error: String = ""
-    @State private var showingError = false
     @State private var totalInputs = 0
 
     var callback: () -> Void
@@ -128,9 +127,6 @@ struct ShareView: View {
                     Spacer()
                 }
             }
-        }
-        .alert(error, isPresented: $showingError) {
-            Button("Ok", role: .cancel) {}
         }
 
         .task {

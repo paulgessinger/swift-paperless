@@ -10,29 +10,6 @@ import Social
 import SwiftUI
 import UIKit
 
-@MainActor
-private func makePreviewImage() async -> Image? {
-    let renderer = ImageRenderer(content:
-        ZStack {
-            Image(systemName: "doc.text.image")
-                .resizable()
-                .scaledToFill()
-                .padding(10)
-            Rectangle()
-                .stroke(.white, lineWidth: 3)
-                .background(Rectangle().fill(Color.primary))
-                .rotationEffect(.degrees(45))
-                .frame(width: 7, height: 110)
-        }
-        .padding(100)
-    )
-    renderer.scale = 3
-    if let uiImage = renderer.uiImage {
-        return .init(uiImage: uiImage)
-    }
-    return nil
-}
-
 class ShareViewController: UIViewController {
     @IBOutlet var container: UIView!
 
@@ -60,6 +37,7 @@ class ShareViewController: UIViewController {
         Logger.shared.notice("Receiving shared items")
         if let item = extensionContext?.inputItems.first as? NSExtensionItem {
             if let attachments = item.attachments {
+                Logger.shared.debug("Recived item(s): \(attachments)")
                 attachmentManager.receive(attachments: attachments)
             } else {
                 Logger.shared.warning("Attachment was nil")

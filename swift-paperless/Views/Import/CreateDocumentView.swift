@@ -40,6 +40,65 @@ private struct ThumbnailView: View {
     }
 }
 
+private struct DetailView: View {
+    private struct CopyButton: View {
+        var logs: URL
+
+        @EnvironmentObject private var errorController: ErrorController
+
+        @State private var copied = false
+
+        var body: some View {
+            Button {
+                do {
+                    let data = try Data(contentsOf: logs)
+                    let string = String(data: data, encoding: .utf8)
+                    UIPasteboard.general.string = string
+                    Haptics.shared.notification(.success)
+                    copied = true
+                } catch {
+                    Logger.shared.error("Unable to load logs from file: \(error)")
+                    errorController.push(error: error)
+                }
+            } label: {
+                if !copied {
+                    Label(localized: .localizable(.copyToClipboard),
+                          systemImage: "doc.on.doc")
+                } else {
+                    Label(localized: .localizable(.copiedToClipboard),
+                          systemImage: "doc.on.doc.fill")
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        Form {
+            LogRecordExportButton { state, export in
+                switch state {
+                case .none:
+                    Button {
+                        export()
+                    } label: {
+                        Label(String(localized: .localizable(.logsExport)), systemImage: "text.word.spacing")
+                            .accentColor(.primary)
+                    }
+
+                case .loading:
+                    LogRecordExportButton.loadingView()
+
+                case let .loaded(logs):
+                    CopyButton(logs: logs)
+
+                case let .error(error):
+                    Label(error.localizedDescription, systemImage: "xmark.circle.fill")
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+    }
+}
+
 struct CreateDocumentView: View {
     private enum Status {
         case none
@@ -258,7 +317,7 @@ struct CreateDocumentView: View {
             .navigationTitle(title)
 
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     switch status {
                     case .none:
                         Button(String(localized: .localizable(.save))) {
@@ -284,6 +343,17 @@ struct CreateDocumentView: View {
                     case .error:
                         Label(String(localized: .localizable(.documentUploadError)), systemImage: "exclamationmark.triangle")
                             .labelStyle(.iconOnly)
+                    }
+                }
+
+                if share {
+                    ToolbarItem(placement: .topBarLeading) {
+                        NavigationLink {
+                            DetailView()
+                        } label: {
+                            Label(localized: .localizable(.details),
+                                  systemImage: "info.circle")
+                        }
                     }
                 }
             }

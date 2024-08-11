@@ -134,7 +134,7 @@ struct ErrorDisplay: ViewModifier {
                        Text(detail.message)
                    },
                    actions: { $detail in
-                       Button(String(localized: .localizable(.errorAlertCopyToClipboard))) {
+                       Button(String(localized: .localizable(.copyToClipboard))) {
                            UIPasteboard.general.string = detail.details
                        }
 

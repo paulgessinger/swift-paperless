@@ -209,7 +209,6 @@ final class DocumentStore: ObservableObject, Sendable {
             }
         } catch {
             Logger.shared.error("Unable to get current user: \(error)")
-//            currentUser = User(id: UInt.max, isSuperUser: false, username: "dummy")
         }
     }
 
