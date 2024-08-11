@@ -18,7 +18,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         {
             credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
         } else {
-            Logger.shared.info("Error loading identity from keychain")
+            Logger.shared.info("Did not get identities from keychain")
             credential = nil
         }
     }
