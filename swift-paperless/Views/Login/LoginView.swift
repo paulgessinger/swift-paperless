@@ -18,6 +18,11 @@ struct LoginView: LoginViewProtocol {
     var initial = true
 
     var body: some View {
-        LoginViewV2(connectionManager: connectionManager, initial: initial)
+        switch Bundle.main.appConfiguration {
+        case .AppStore, .TestFlight:
+            LoginViewV1(connectionManager: connectionManager, initial: initial)
+        case .Debug, .Simulator:
+            LoginViewV2(connectionManager: connectionManager, initial: initial)
+        }
     }
 }
