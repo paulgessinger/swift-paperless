@@ -3,25 +3,6 @@ import Foundation
 import OSLog
 import SwiftUI
 
-class LogRecords: Transferable, ObservableObject {
-    var logs: String
-
-    init(logs: String) {
-        self.logs = logs
-    }
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .text, exporting: { record in
-            let temp = FileManager.default.temporaryDirectory.appendingPathComponent("logs.txt")
-
-            let data = record.logs.data(using: .utf8)!
-            try data.write(to: temp, options: .atomic)
-
-            return SentTransferredFile(temp)
-        })
-    }
-}
-
 @MainActor
 private class LogRecordViewModel: ObservableObject {
     @Published private(set) var state = LogRecordExportButton.LogState.none
@@ -38,12 +19,19 @@ private class LogRecordViewModel: ObservableObject {
             do {
                 let store = try OSLogStore(scope: .currentProcessIdentifier)
                 let position = store.position(timeIntervalSinceLatestBoot: 1)
-                let state: LogRecordExportButton.LogState = try .loaded(logs: store
+                let logs = try store
                     .getEntries(at: position)
                     .compactMap { $0 as? OSLogEntryLog }
                     .filter { $0.subsystem == Bundle.main.bundleIdentifier! }
                     .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
-                    .joined(separator: "\n"))
+                    .joined(separator: "\n")
+
+                let temp = FileManager.default.temporaryDirectory.appendingPathComponent("logs.txt")
+                let data = logs.data(using: .utf8)!
+                try data.write(to: temp, options: .atomic)
+
+                let state: LogRecordExportButton.LogState = .loaded(logs: temp)
+
                 await MainActor.run {
                     self.change?(state)
                     self.state = state
@@ -65,7 +53,7 @@ struct LogRecordExportButton: View {
     enum LogState {
         case none
         case loading
-        case loaded(logs: String)
+        case loaded(logs: URL)
         case error(error: Error)
     }
 
@@ -87,16 +75,14 @@ struct LogRecordExportButton: View {
         viewModel = LogRecordViewModel(change: change)
     }
 
-    @ViewBuilder static func loadingView() -> some View {
-        if #available(iOS 17.0, *) {
-            Label(String(localized: .localizable(.logsExportLoading)), systemImage: "ellipsis")
-                .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing)
-        } else {
-            Label(String(localized: .localizable(.logsExportLoading)), systemImage: "ellipsis")
-        }
+    @ViewBuilder
+    static func loadingView() -> some View {
+        Label(String(localized: .localizable(.logsExportLoading)), systemImage: "ellipsis")
+            .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing)
     }
 
-    @ViewBuilder private static func defaultContent(state: LogState, export: @escaping () -> Void) -> some View {
+    @ViewBuilder
+    private static func defaultContent(state: LogState, export: @escaping () -> Void) -> some View {
         switch state {
         case .none:
             Button {
@@ -110,7 +96,7 @@ struct LogRecordExportButton: View {
             loadingView()
 
         case let .loaded(logs):
-            ShareLink(item: LogRecords(logs: logs), preview: SharePreview("Logs")) {
+            ShareLink(item: logs, preview: SharePreview("Logs")) {
                 Label(String(localized: .localizable(.logsExportReady)), systemImage: "checkmark.circle.fill")
                     .accentColor(.primary)
             }

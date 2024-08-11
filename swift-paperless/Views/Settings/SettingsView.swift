@@ -16,7 +16,7 @@ struct SettingsView: View {
     @EnvironmentObject private var connectionManager: ConnectionManager
     @EnvironmentObject private var errorController: ErrorController
 
-    @State private var feedbackLogs: String? = nil
+    @State private var feedbackLogs: URL? = nil
     @State private var showMailSheet: Bool = false
     @State private var showLoginSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, Error>? = nil
@@ -196,7 +196,7 @@ struct SettingsView: View {
             // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
             MailView(result: $result, isPresented: $showMailSheet) { vc in
                 vc.setToRecipients(["swift-paperless@paulgessinger.com"])
-                if let data = feedbackLogs?.data(using: .utf8) {
+                if let feedbackLogs, let data = try? Data(contentsOf: feedbackLogs) {
                     vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
                 }
 
