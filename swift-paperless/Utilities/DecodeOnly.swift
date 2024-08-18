@@ -18,13 +18,13 @@ struct DecodeOnly<T: Decodable> {
 
 // Always conform to encodable, because we never actually encode anything
 extension DecodeOnly: Encodable {
-    func encode(to _: Encoder) throws {
+    func encode(to _: any Encoder) throws {
         // Intentionally empty
     }
 }
 
 extension DecodeOnly: Decodable {
-    init(from decoder: Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         wrappedValue = try container.decode(T.self)
     }

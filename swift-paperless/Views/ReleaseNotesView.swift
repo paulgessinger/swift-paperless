@@ -22,7 +22,7 @@ private struct ReleaseNotesError: LocalizedError {
 @MainActor
 class ReleaseNotesViewModel: ObservableObject {
     @Published var showReleaseNotes = false
-    @Published var error: Error? = nil
+    @Published var error: (any Error)? = nil
     @Published var content: String? = nil
 
     init() {
@@ -82,7 +82,7 @@ struct ReleaseNotesView: View {
                     Text("😵")
                         .font(.title)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    if let errorDescription = (error as? LocalizedError)?.errorDescription {
+                    if let errorDescription = (error as? any LocalizedError)?.errorDescription {
                         Text("\(errorDescription)")
                     } else {
                         Text("\(error.localizedDescription)")

@@ -13,7 +13,7 @@ private func isCameraViewControllerSupported() async -> Bool {
 
 struct DocumentScannerView: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
-    let onCompletion: @Sendable (_ result: Result<[URL], Error>) -> Void
+    let onCompletion: @Sendable (_ result: Result<[URL], any Error>) -> Void
 
     @MainActor
     static var isAvailable: Bool {
@@ -24,9 +24,9 @@ struct DocumentScannerView: UIViewControllerRepresentable {
 
     class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
         @Binding var isPresented: Bool
-        let completionHandler: @Sendable (_ result: Result<[URL], Error>) -> Void
+        let completionHandler: @Sendable (_ result: Result<[URL], any Error>) -> Void
 
-        init(isPresented: Binding<Bool>, onCompletion: @Sendable @escaping (_ result: Result<[URL], Error>) -> Void) {
+        init(isPresented: Binding<Bool>, onCompletion: @Sendable @escaping (_ result: Result<[URL], any Error>) -> Void) {
             _isPresented = isPresented
             completionHandler = onCompletion
         }
@@ -57,7 +57,7 @@ struct DocumentScannerView: UIViewControllerRepresentable {
             isPresented = false
         }
 
-        func documentCameraViewController(_: VNDocumentCameraViewController, didFailWithError error: Error) {
+        func documentCameraViewController(_: VNDocumentCameraViewController, didFailWithError error: any Error) {
             Logger.shared.notice("Document scanner receives error")
             isPresented = false
             Task { [completionHandler = self.completionHandler] in
