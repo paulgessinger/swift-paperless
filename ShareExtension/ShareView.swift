@@ -53,7 +53,9 @@ struct ShareView: View {
 
     private var createTitle: String {
         let remaining = totalInputs - attachmentManager.importUrls.count + 1
-        if totalInputs == 1 {
+        Logger.shared.info("Creating share sheet title: totalInputs: \(totalInputs) importURLs: \(attachmentManager.importUrls.count) -> remaining \(remaining)")
+        // Apparently sometimes this is 0 (odd), hide the x/y title in that case
+        if totalInputs <= 1 {
             return String(localized: .localizable(.documentAdd))
         } else {
             return "\(String(localized: .localizable(.documentAdd))) (\(remaining) / \(totalInputs))"
