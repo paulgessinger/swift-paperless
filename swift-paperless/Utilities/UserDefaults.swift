@@ -9,10 +9,6 @@ import Combine
 import Foundation
 import os
 
-#if swift(>=6.0)
-    #warning("Reevaluate whether this decoration is necessary.")
-#endif
-private nonisolated(unsafe)
 let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
 
 extension UserDefaults {

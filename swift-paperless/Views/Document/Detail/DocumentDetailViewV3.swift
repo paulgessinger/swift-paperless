@@ -410,6 +410,7 @@ private struct WebView: View, Equatable {
     @Binding var bottomPadding: CGFloat
     let load: (() -> Void)?
 
+    nonisolated
     static func == (lhs: WebView, rhs: WebView) -> Bool {
         lhs.url == rhs.url
     }
