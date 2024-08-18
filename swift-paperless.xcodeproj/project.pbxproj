@@ -294,6 +294,7 @@
 		7AF2E08829F56F3D0092948B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08729F56F3D0092948B /* Endpoint.swift */; };
 		7AF2E08929F56F3D0092948B /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08729F56F3D0092948B /* Endpoint.swift */; };
 		7AF2E08F29F57DA10092948B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF2E08A29F57C230092948B /* SettingsView.swift */; };
+		7AF343672C721FC300EF83A7 /* PermissionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3EC62C5699DC00A567CD /* PermissionsModel.swift */; };
 		7AF6688729A137EA0016BC31 /* ApiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688629A137EA0016BC31 /* ApiRepository.swift */; };
 		7AF6688929A138330016BC31 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688829A138330016BC31 /* Model.swift */; };
 		7AF6688B29A138A70016BC31 /* AuthAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF6688A29A138A70016BC31 /* AuthAsyncImage.swift */; };
@@ -1339,6 +1340,7 @@
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A3E45D12BF255530007AB67 /* Bundle.swift in Sources */,
 				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
+				7AF343672C721FC300EF83A7 /* PermissionsModel.swift in Sources */,
 				7A35C0BD2C117EF6006A542D /* SortOrder.swift in Sources */,
 				7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */,
 				7A495D3F2BD969F600A2E5CF /* Binding.swift in Sources */,
