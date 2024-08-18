@@ -93,7 +93,7 @@ extension AttachmentManager {
 
         Task {
             for (idx, attachment) in attachments.enumerated() {
-                Logger.shared.info("- #\(idx) ~> \(attachment)")
+                Logger.shared.info("- #\(idx) ~> \(String(describing: attachment), privacy: .public)")
                 if attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") {
                     Logger.shared.info("Attachment has type PDF")
                     do {
