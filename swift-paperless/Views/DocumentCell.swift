@@ -93,7 +93,7 @@ struct DocumentCell: View {
                         .stroke(.gray, lineWidth: 0.33))
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .frame(width: 130, height: 170, alignment: .topLeading)
-                    .shadow(color: Color("ImageShadow"), radius: 5)
+                    .shadow(color: Color(.imageShadow), radius: 5)
             } else {
                 DocumentPreviewImage(store: store,
                                      document: document)
@@ -101,7 +101,7 @@ struct DocumentCell: View {
                         .stroke(.gray, lineWidth: 0.33))
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .frame(width: 130, height: 170, alignment: .topLeading)
-                    .shadow(color: Color("ImageShadow"), radius: 5)
+                    .shadow(color: Color(.imageShadow), radius: 5)
                     .transaction { tx in
                         tx.animation = nil
                     }

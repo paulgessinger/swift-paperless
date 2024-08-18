@@ -208,7 +208,7 @@ struct TagFilterView: View {
             }
             .overlay(
                 Rectangle()
-                    .fill(Color("Divider"))
+                    .fill(Color(.divider))
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )
@@ -362,7 +362,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             }
             .overlay(
                 Rectangle()
-                    .fill(Color("Divider"))
+                    .fill(Color(.divider))
                     .frame(maxWidth: .infinity, maxHeight: 1),
                 alignment: .top
             )

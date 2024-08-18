@@ -112,7 +112,7 @@ private struct IntegratedDocumentPreview: View {
         .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
             .stroke(.gray, lineWidth: 0.33))
-        .shadow(color: Color("ImageShadow"), radius: 15)
+        .shadow(color: Color(.imageShadow), radius: 15)
 
         .task {
             await loadDocument()

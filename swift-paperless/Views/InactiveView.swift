@@ -12,7 +12,7 @@ struct InactiveView: View {
         VStack {}
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(
-                LinearGradient(gradient: Gradient(colors: [.accentColor, Color("AccentColorDarkened")]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(gradient: Gradient(colors: [.accentColor, Color(.accentColorDarkened)]), startPoint: .topLeading, endPoint: .bottomTrailing)
             )
     }
 }

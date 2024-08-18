@@ -281,13 +281,13 @@ private struct Pill<Label: View>: View {
         .padding(.vertical, 4)
         .background {
             Capsule()
-                .fill(Color("ElementBackground"))
+                .fill(Color(.elementBackground))
         }
         .overlay(
             Capsule()
-                .strokeBorder(active ? Color("AccentColorLightened") : Color("ElementBorder"),
+                .strokeBorder(active ? Color(.accent) : Color(.elementBorder),
                               lineWidth: 0.66))
-        .foregroundColor(active ? Color("AccentColorLightened") : Color.primary)
+        .foregroundColor(active ? Color(.accent) : Color.primary)
         .if(active) { view in view.bold() }
     }
 }

@@ -88,7 +88,7 @@ struct ShareView: View {
 //                            .buttonStyle(.borderedProminent)
         }
         .padding()
-        .accentColor(Color("AccentColor"))
+        .accentColor(Color(.accent))
     }
 
     var body: some View {
@@ -112,7 +112,7 @@ struct ShareView: View {
                             .environmentObject(store)
                             .environmentObject(errorController)
                             .environmentObject(connectionManager)
-                            .accentColor(Color("AccentColor"))
+                            .accentColor(Color(.accent))
                         }
                     }
                 }

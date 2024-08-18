@@ -62,7 +62,7 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
             isInboxTag: false,
             name: name,
             slug: "",
-            color: Color("ElementBackground").hex
+            color: Color(.elementBackground).hex
         )
     }
 }
@@ -103,7 +103,7 @@ struct Tag:
             isInboxTag: false,
             name: name,
             slug: "",
-            color: Color("ElementBackground").hex,
+            color: Color(.elementBackground).hex,
             match: "",
             matchingAlgorithm: .auto,
             isInsensitive: true
