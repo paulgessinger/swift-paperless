@@ -38,20 +38,20 @@ enum LoginError: DisplayableError, Equatable {
 
     case other(_: String)
 
-    private static func string(for error: Error) -> String {
-        (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+    private static func string(for error: any Error) -> String {
+        (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
     }
 
-    init(other error: Error) { self = .other(Self.string(for: error)) }
-    init(invalidUrl error: Error) {
-        if let error = error as? LocalizedError {
+    init(other error: any Error) { self = .other(Self.string(for: error)) }
+    init(invalidUrl error: any Error) {
+        if let error = error as? any LocalizedError {
             self = .invalidUrl(Self.string(for: error))
         } else {
             self = .invalidUrl(nil)
         }
     }
 
-    init(certificate error: Error) { self = .certificate(Self.string(for: error)) }
+    init(certificate error: any Error) { self = .certificate(Self.string(for: error)) }
 }
 
 extension LoginError {
