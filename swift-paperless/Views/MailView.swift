@@ -2,21 +2,23 @@ import MessageUI
 import SwiftUI
 
 struct MailView: UIViewControllerRepresentable {
-    @Binding var result: Result<MFMailComposeResult, Error>?
+    typealias ResultType = Result<MFMailComposeResult, any Error>
+
+    @Binding var result: ResultType?
     @Binding var isPresented: Bool
 
     var prepare: ((MFMailComposeViewController) -> Void)? = nil
 
     class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
-        @Binding var result: Result<MFMailComposeResult, Error>?
+        @Binding var result: ResultType?
         @Binding var isPresented: Bool
 
-        init(result: Binding<Result<MFMailComposeResult, Error>?>, isPresented: Binding<Bool>) {
+        init(result: Binding<ResultType?>, isPresented: Binding<Bool>) {
             _result = result
             _isPresented = isPresented
         }
 
-        func mailComposeController(_: MFMailComposeViewController, didFinishWith _: MFMailComposeResult, error _: Error?) {
+        func mailComposeController(_: MFMailComposeViewController, didFinishWith _: MFMailComposeResult, error _: (any Error)?) {
             isPresented = false
         }
     }

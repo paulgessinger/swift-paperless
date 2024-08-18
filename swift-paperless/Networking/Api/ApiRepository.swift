@@ -135,7 +135,7 @@ actor ApiRepository {
         #endif
     }
 
-    func sanitizedError(_ error: Error) -> String {
+    func sanitizedError(_ error: some Error) -> String {
         #if DEBUG
             return String(describing: error)
         #else

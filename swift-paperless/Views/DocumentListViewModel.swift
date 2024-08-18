@@ -19,7 +19,7 @@ class DocumentListViewModel: ObservableObject {
     @Published var loading = false
     @Published var ready = false
 
-    private var source: DocumentSource?
+    private var source: (any DocumentSource)?
     private var exhausted: Bool = false
 
     private var initialBatchSize: UInt = 250
