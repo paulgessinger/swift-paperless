@@ -245,7 +245,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             .overlay {
                 VStack {
                     Text(.localizable(.loading))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(.primary)
                     ProgressView(value: viewModel.downloadProgress, total: 1.0)
                         .frame(width: 100)
                 }
