@@ -236,9 +236,9 @@ private struct PreviewHelper: View {
 }
 
 #Preview {
-    @Previewable
+//    @Previewable
     @StateObject var store = DocumentStore(repository: PreviewRepository())
-    @Previewable
+//    @Previewable
     @StateObject var errorController = ErrorController()
 
     return PreviewHelper()
