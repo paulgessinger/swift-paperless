@@ -99,6 +99,8 @@ extension AttachmentManager {
                     do {
                         let url = try await Self.loadItem(attachment: attachment, type: "com.adobe.pdf")
                         importUrls.append(url)
+                        totalInputs = totalInputs + 1
+                        Logger.shared.info("Total inputs now: \(self.totalInputs)")
                     } catch {
                         Logger.shared.error("Error getting PDF attachment: \(error)")
                         self.error = .invalidAttachment
@@ -110,6 +112,8 @@ extension AttachmentManager {
                     do {
                         let url = try await Self.loadItem(attachment: attachment, type: "public.image")
                         importUrls.append(url)
+                        totalInputs = totalInputs + 1
+                        Logger.shared.info("Total inputs now: \(self.totalInputs)")
                     } catch {
                         Logger.shared.error("Error getting Image attachment: \(error)")
                         self.error = .invalidAttachment

@@ -17,7 +17,6 @@ struct ShareView: View {
     @StateObject private var errorController = ErrorController()
 
     @State private var error: String = ""
-    @State private var totalInputs = 0
 
     var callback: () -> Void
 
@@ -52,13 +51,13 @@ struct ShareView: View {
     }
 
     private var createTitle: String {
-        let remaining = totalInputs - attachmentManager.importUrls.count + 1
-        Logger.shared.info("Creating share sheet title: totalInputs: \(totalInputs) importURLs: \(attachmentManager.importUrls.count) -> remaining \(remaining)")
+        let remaining = attachmentManager.totalInputs - attachmentManager.importUrls.count + 1
+        Logger.shared.info("Creating share sheet title: totalInputs: \(attachmentManager.totalInputs) importURLs: \(attachmentManager.importUrls.count) -> remaining \(remaining)")
         // Apparently sometimes this is 0 (odd), hide the x/y title in that case
-        if totalInputs <= 1 {
+        if attachmentManager.totalInputs <= 1 {
             return String(localized: .localizable(.documentAdd))
         } else {
-            return "\(String(localized: .localizable(.documentAdd))) (\(remaining) / \(totalInputs))"
+            return "\(String(localized: .localizable(.documentAdd))) (\(remaining) / \(attachmentManager.totalInputs))"
         }
     }
 
@@ -135,10 +134,6 @@ struct ShareView: View {
             if let conn = connectionManager.connection {
                 await store.set(repository: ApiRepository(connection: conn))
             }
-        }
-
-        .onChange(of: attachmentManager.importUrls) {
-            totalInputs = max(attachmentManager.importUrls.count, totalInputs)
         }
 
         .onChange(of: connectionManager.activeConnectionId) { refreshConnection() }

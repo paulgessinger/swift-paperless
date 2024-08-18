@@ -21,4 +21,5 @@ class AttachmentManager: ObservableObject {
     @Published var documentUrl: URL?
 
     @Published var importUrls: [URL] = []
+    @Published var totalInputs: Int = 0
 }
