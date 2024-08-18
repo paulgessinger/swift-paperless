@@ -223,6 +223,7 @@ struct CreateDocumentView: View {
 
                     Section {
                         TextField(String(localized: .localizable(.documentEditTitleLabel)), text: $document.title) {}
+                            .clearable($document.title)
 
                         DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
                             .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
