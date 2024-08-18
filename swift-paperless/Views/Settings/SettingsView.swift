@@ -19,7 +19,7 @@ struct SettingsView: View {
     @State private var feedbackLogs: URL? = nil
     @State private var showMailSheet: Bool = false
     @State private var showLoginSheet: Bool = false
-    @State private var result: Result<MFMailComposeResult, any Error>? = nil
+    @State private var result: Result<MFMailComposeResult, Error>? = nil
 
     private func checked(_ fn: @escaping () async throws -> Void) async {
         do {

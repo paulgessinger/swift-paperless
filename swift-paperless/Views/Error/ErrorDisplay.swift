@@ -13,7 +13,7 @@ struct ErrorDisplay: ViewModifier {
     // Additional offset applied to pill view
     let offset: CGFloat
 
-    @State private var detail: (any DisplayableError)? = nil
+    @State private var detail: DisplayableError? = nil
     @State private var alertOffsetRaw: CGFloat
 
     private var alertOffset: CGFloat {

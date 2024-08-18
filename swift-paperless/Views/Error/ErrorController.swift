@@ -27,14 +27,14 @@ private struct GenericError: DisplayableError {
 class ErrorController: ObservableObject {
     enum State {
         case none
-        case active(error: any DisplayableError, duration: Double)
+        case active(error: DisplayableError, duration: Double)
     }
 
     @Published var state: State = .none
 
     private static let defaultTitle = String(localized: .localizable(.errorDefaultMessage))
 
-    private var channel = AsyncChannel<any DisplayableError>()
+    private var channel = AsyncChannel<DisplayableError>()
     private var task: Task<Void, Never>? = nil
 
     init() {
@@ -63,13 +63,13 @@ class ErrorController: ObservableObject {
         Logger.shared.debug("ErrorController worker terminated")
     }
 
-    func push(error: any Error, message: String? = nil) {
-        if let de = error as? any DisplayableError {
+    func push(error: Error, message: String? = nil) {
+        if let de = error as? DisplayableError {
             push(error: de)
             return
         }
 
-        if let le = error as? any LocalizedError {
+        if let le = error as? LocalizedError {
             if let message {
                 Logger.shared.error("Presenting error: \(String(describing: error))")
                 Task {
@@ -84,15 +84,15 @@ class ErrorController: ObservableObject {
         push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
     }
 
-    func push(error: any Error, message: LocalizedStringResource) {
+    func push(error: Error, message: LocalizedStringResource) {
         push(error: error, message: String(localized: message))
     }
 
-    func push(error: any LocalizedError) {
+    func push(error: LocalizedError) {
         push(error: GenericError(message: error.errorDescription ?? Self.defaultTitle, details: error.failureReason))
     }
 
-    func push(error: any DisplayableError) {
+    func push(error: DisplayableError) {
         Task {
             await channel.send(error)
         }

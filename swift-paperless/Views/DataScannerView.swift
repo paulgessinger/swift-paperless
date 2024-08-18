@@ -55,7 +55,7 @@ struct HighlightView: View {
         case loaded(document: Document)
         case noAsn
         case invalidAsn(asn: UInt)
-        case error(error: any Error)
+        case error(error: Error)
     }
 
     @State private var status = Status.loading
@@ -383,7 +383,7 @@ struct TypeAsnView: View {
         case valid(document: Document)
         case notAnAsn(asn: String)
         case invalid(asn: UInt)
-        case error(error: any Error)
+        case error(error: Error)
     }
 
     @StateObject private var debounce = DebounceObject(delay: 0.1)

@@ -54,7 +54,7 @@ struct LogRecordExportButton: View {
         case none
         case loading
         case loaded(logs: URL)
-        case error(error: any Error)
+        case error(error: Error)
     }
 
     @ObservedObject private var viewModel: LogRecordViewModel

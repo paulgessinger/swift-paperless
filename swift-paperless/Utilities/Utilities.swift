@@ -130,13 +130,13 @@ struct HexColor: Equatable {
 }
 
 extension HexColor: Codable {
-    public init(from decoder: any Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let str = try container.decode(String.self)
         color = try Color(hex: str)
     }
 
-    public func encode(to encoder: any Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(color.hexString)
     }
@@ -322,12 +322,12 @@ struct EquatableNoop<Value>: Equatable {
 extension EquatableNoop: Sendable where Value: Sendable {}
 
 extension EquatableNoop: Codable where Value: Codable {
-    init(from decoder: any Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         wrappedValue = try container.decode(Value.self)
     }
 
-    func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(wrappedValue)
     }

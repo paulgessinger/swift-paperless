@@ -11,13 +11,13 @@ enum SortOrder: Codable {
     case ascending
     case descending
 
-    public init(from decoder: any Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let reverse = try container.decode(Bool.self)
         self.init(reverse)
     }
 
-    public func encode(to encoder: any Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(reverse)
     }
