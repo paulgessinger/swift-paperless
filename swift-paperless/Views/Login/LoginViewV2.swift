@@ -13,6 +13,8 @@ private struct DetailsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LoginViewModel.self) private var viewModel
 
+    @Environment(IdentityManager.self) private var identityManager
+
     var body: some View {
         // Hack
         @Bindable var viewModel = viewModel
@@ -25,7 +27,7 @@ private struct DetailsView: View {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
                 NavigationLink {
-                    TLSListView()
+                    TLSListView(identityManager: identityManager)
                 } label: {
                     Label(localized: .settings(.identities), systemImage: "lock.fill")
                 }
@@ -186,6 +188,7 @@ struct LoginViewV2: LoginViewProtocol {
     }
 
     @State private var viewModel = LoginViewModel()
+    @State private var identityManager = IdentityManager()
 
     @Environment(\.dismiss) private var dismiss
 
@@ -238,8 +241,10 @@ struct LoginViewV2: LoginViewProtocol {
                         }
                     }
 
-                    Section {
-                        Text("Another")
+                    if !identityManager.identities.isEmpty {
+                        Section {
+                            Text("GO IDENTITY!")
+                        }
                     }
                 }
             }
@@ -303,6 +308,7 @@ struct LoginViewV2: LoginViewProtocol {
         }
 
         .environment(viewModel)
+        .environment(identityManager)
     }
 }
 

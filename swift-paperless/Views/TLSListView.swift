@@ -8,7 +8,7 @@
 import os
 import SwiftUI
 
-private struct TLSIdentity: Identifiable, Equatable {
+struct TLSIdentity: Identifiable, Equatable, Hashable {
     var name: String
     var identity: SecIdentity
 
@@ -23,31 +23,26 @@ private enum CertificateState {
 }
 
 struct TLSListView: View {
-    @State private var identities: [TLSIdentity] = []
-    @State private var identityNames: [String] = []
     @State private var showCreate: Bool = false
 
     @EnvironmentObject private var errorController: ErrorController
 
-    private func refreshAll() {
-        let keyChainIdenitites: [(SecIdentity, String)] = Keychain.readAllIdenties()
+    private var identityManager: IdentityManager
 
-        let pIdentityNames: [String] = keyChainIdenitites.map { _, name in name }
-
-        let tlsIdentities: [TLSIdentity] = keyChainIdenitites.map { identity, name in
-            TLSIdentity(name: name, identity: identity)
-        }
-
-        withAnimation {
-            identityNames = pIdentityNames
-            identities = tlsIdentities
+    init(identityManager: IdentityManager? = nil) {
+        if let identityManager {
+            self.identityManager = identityManager
+        } else {
+            self.identityManager = IdentityManager()
         }
     }
 
     var body: some View {
+        @Bindable var identityManager = identityManager
+
         List {
             Section {
-                ForEach($identities) { $identity in
+                ForEach($identityManager.identities) { $identity in
                     NavigationLink {
                         TLSSingleView(identity: $identity)
                     } label: {
@@ -56,15 +51,14 @@ struct TLSListView: View {
                 }
                 .onDelete { ids in
                     withAnimation {
-                        ids.forEach { id in
-                            let item = identities[id]
-
+                        for id in ids {
+                            let item = identityManager.identities[id]
                             do {
-                                try Keychain.deleteIdentity(name: item.name)
+                                try identityManager.delete(name: item.name)
                             } catch {
+                                Logger.shared.error("Error deleting identity: \(error)")
                                 errorController.push(error: error)
                             }
-                            refreshAll()
                         }
                     }
                 }
@@ -76,15 +70,11 @@ struct TLSListView: View {
         .navigationTitle(.settings(.identities))
         .navigationBarTitleDisplayMode(.inline)
 
-        .task {
-            refreshAll()
-        }
-
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     NavigationLink(destination: {
-                        CreateView()
+                        CreateView(identityManager: identityManager)
                     }, label: {
                         Label(String(localized: .localizable(.add)), systemImage: "plus")
                     })
@@ -93,7 +83,7 @@ struct TLSListView: View {
             }
         }
         .sheet(isPresented: $showCreate, content: {
-            CreateView()
+            CreateView(identityManager: identityManager)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack {
@@ -121,27 +111,7 @@ struct TLSListView: View {
         @Environment(\.dismiss) var dismiss
         @EnvironmentObject private var errorController: ErrorController
 
-        private func validateCertificate(certificateData: Data, certificatePassword: String) -> Bool {
-            do {
-                let _ = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
-                return true
-            } catch {
-                Logger.shared.error("PKCS12 invalid: \(error)")
-            }
-            return false
-        }
-
-        private func saveToKeychain(certificateData: Data, certificatePassword: String, certificateName: String) {
-            do {
-                let pkc = try PKCS12(pkcs12Data: certificateData, password: certificatePassword)
-                if let identity = pkc.identity {
-                    try Keychain.saveIdentity(identity: identity, name: certificateName)
-                }
-            } catch {
-                errorController.push(error: error)
-                Logger.shared.error("Error loading/saving identity to the keychain: \(error)")
-            }
-        }
+        @Bindable var identityManager: IdentityManager
 
         private func validateInput() {
             guard let data = certificateData else {
@@ -149,7 +119,7 @@ struct TLSListView: View {
                 certificateState = .notloaded
                 return
             }
-            if validateCertificate(certificateData: data, certificatePassword: certificatePassword) {
+            if IdentityManager.validate(certificate: data, password: certificatePassword) {
                 certificateState = .valid
                 isCertificateValid = true
             } else {
@@ -191,7 +161,12 @@ struct TLSListView: View {
                             certificateState = .notloaded
                             return
                         }
-                        saveToKeychain(certificateData: data, certificatePassword: certificatePassword, certificateName: certificateName)
+                        do {
+                            try identityManager.save(certificate: data, password: certificatePassword, name: certificateName)
+                        } catch {
+                            Logger.shared.error("Error saving certificate for identity: \(error)")
+                            errorController.push(error: error)
+                        }
                         dismiss()
                     }.disabled(!isCertificateValid)
                 }

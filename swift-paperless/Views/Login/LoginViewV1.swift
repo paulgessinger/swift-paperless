@@ -11,6 +11,7 @@ import SwiftUI
 private struct DetailsView: View {
     @Binding var extraHeaders: [ConnectionManager.HeaderValue]
     @Environment(\.dismiss) private var dismiss
+    @Environment(IdentityManager.self) private var identityManager
 
     var body: some View {
         NavigationStack {
@@ -21,7 +22,7 @@ private struct DetailsView: View {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
                 }
                 NavigationLink {
-                    TLSListView()
+                    TLSListView(identityManager: identityManager)
                 } label: {
                     Label(localized: .settings(.identities), systemImage: "lock.fill")
                 }
@@ -62,11 +63,9 @@ struct LoginViewV1: LoginViewProtocol {
 
     @State private var loginOngoing = false
 
-    @State private var availableIdentityNames: [String] = []
+    @State private var identityManager = IdentityManager()
 
     @State private var identityBasedAuth: Bool = false
-
-    @State private var showIdentitySelection: Bool = false
 
     private func login() async throws {
         Logger.shared.notice("Attempting login with url \(url.text)")
@@ -105,7 +104,7 @@ struct LoginViewV1: LoginViewProtocol {
 
             Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
 
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: viewModel.selectedIdentity), delegateQueue: nil)
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identity: viewModel.selectedIdentity), delegateQueue: nil)
             let (data, response) = try await session.getData(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode
 
@@ -128,7 +127,7 @@ struct LoginViewV1: LoginViewProtocol {
             let connection = Connection(url: baseUrl,
                                         token: tokenResponse.token,
                                         extraHeaders: viewModel.extraHeaders,
-                                        identityName: viewModel.selectedIdentity)
+                                        identityName: viewModel.selectedIdentity?.name)
 
             let repository = await ApiRepository(connection: connection)
 
@@ -141,7 +140,7 @@ struct LoginViewV1: LoginViewProtocol {
             let stored = StoredConnection(url: baseUrl,
                                           extraHeaders: viewModel.extraHeaders,
                                           user: currentUser,
-                                          identity: viewModel.selectedIdentity)
+                                          identity: viewModel.selectedIdentity?.name)
             try stored.setToken(connection.token)
 
             connectionManager.login(stored)
@@ -180,7 +179,7 @@ struct LoginViewV1: LoginViewProtocol {
             Logger.shared.info("Trying to load data from api ")
             let connection = Connection(url: baseUrl, token: "",
                                         extraHeaders: viewModel.extraHeaders,
-                                        identityName: viewModel.selectedIdentity)
+                                        identityName: viewModel.selectedIdentity?.name)
 
             let repository = await ApiRepository(connection: connection)
 
@@ -191,7 +190,7 @@ struct LoginViewV1: LoginViewProtocol {
             let stored = StoredConnection(url: baseUrl,
                                           extraHeaders: viewModel.extraHeaders,
                                           user: currentUser,
-                                          identity: viewModel.selectedIdentity)
+                                          identity: viewModel.selectedIdentity?.name)
             try stored.setToken("")
             connectionManager.login(stored)
             Logger.api.info("Login successful")
@@ -212,6 +211,8 @@ struct LoginViewV1: LoginViewProtocol {
     }
 
     var body: some View {
+        @Bindable var identityManager = identityManager
+
         NavigationStack {
             Form {
                 Section {
@@ -261,14 +262,15 @@ struct LoginViewV1: LoginViewProtocol {
                     .transition(.opacity)
                 }
 
-                if showIdentitySelection {
+                if !identityManager.identities.isEmpty {
                     Section {
                         Picker(String(localized: .settings(.activeIdentity)),
                                selection: $viewModel.selectedIdentity)
                         {
-                            Text(String(localized: .localizable(.none))).tag(String?(nil))
-                            ForEach(availableIdentityNames, id: \.self) {
-                                Text($0).tag(Optional($0))
+                            Text(String(localized: .localizable(.none))).tag(nil as TLSIdentity?)
+                            ForEach(identityManager.identities, id: \.self) {
+                                Text($0.name)
+                                    .tag(Optional($0))
                             }
                         }
                         .onChange(of: viewModel.selectedIdentity) {
@@ -393,24 +395,9 @@ struct LoginViewV1: LoginViewProtocol {
             .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
                 Text(.login(.success))
             }
-            .onAppear {
-                let identities: [(SecIdentity, String)] = Keychain.readAllIdenties()
-                availableIdentityNames.removeAll()
-                identities.forEach { _, name in
-                    availableIdentityNames.append(name)
-                }
-            }
-            .onChange(of: showDetails) {
-                let identities: [(SecIdentity, String)] = Keychain.readAllIdenties()
-                availableIdentityNames.removeAll()
-                identities.forEach { _, name in
-                    availableIdentityNames.append(name)
-                }
-            }
-            .onChange(of: availableIdentityNames) {
-                showIdentitySelection = availableIdentityNames.count > 0
-            }
         }
+
+        .environment(identityManager)
     }
 }
 

@@ -6,14 +6,17 @@
 //
 
 import Foundation
+import os
 
 enum PKCS12Error: Error {
     case wrongPassword
-    case other
+    case noItems
+    case other(_: OSStatus)
+    case noIdentity
 }
 
 class PKCS12 {
-    let identity: SecIdentity?
+    let identity: SecIdentity
 
     public init(pkcs12Data: Data, password: String) throws {
         let importPasswordOption: NSDictionary = [kSecImportExportPassphrase as NSString: password]
@@ -23,17 +26,24 @@ class PKCS12 {
             if secError == errSecAuthFailed {
                 throw PKCS12Error.wrongPassword
             }
-            throw PKCS12Error.other
+            throw PKCS12Error.other(secError)
         }
-        guard let theItemsCFArray = items else { throw PKCS12Error.other }
+        guard let theItemsCFArray = items else {
+            throw PKCS12Error.noItems
+        }
         let theItemsNSArray: NSArray = theItemsCFArray as NSArray
         guard let dictArray
             = theItemsNSArray as? [[String: AnyObject]]
         else {
-            throw PKCS12Error.other
+            throw PKCS12Error.noItems
         }
 
-        identity = dictArray.element(for: kSecImportItemIdentity)
+        guard let identity: SecIdentity = dictArray.element(for: kSecImportItemIdentity) else {
+            Logger.shared.error("PKCS12 did not contain an identity")
+            throw PKCS12Error.noIdentity
+        }
+
+        self.identity = identity
     }
 }
 

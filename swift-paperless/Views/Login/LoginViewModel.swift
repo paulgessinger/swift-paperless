@@ -31,7 +31,7 @@ class LoginViewModel {
 
     var extraHeaders: [ConnectionManager.HeaderValue] = []
 
-    var selectedIdentity: String?
+    var selectedIdentity: TLSIdentity?
 
     var username: String = ""
     var password: String = ""
@@ -120,7 +120,9 @@ class LoginViewModel {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             loginState = .checking
 
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identityName: selectedIdentity), delegateQueue: nil)
+            let session = URLSession(configuration: .default,
+                                     delegate: PaperlessURLSessionDelegate(identity: selectedIdentity),
+                                     delegateQueue: nil)
 
             let (data, response) = try await session.getData(for: request)
 

@@ -14,8 +14,9 @@ enum Keychain {
         case itemNotFound
         case invalidItemFormat
         case unexpectedStatus(OSStatus)
-        case identitySaveFailed
-        case identityDeleteFailed
+        case identitySaveFailed(OSStatus)
+        case identityDeleteFailed(OSStatus)
+        case identityReadFailed(OSStatus)
     }
 
     static func save(service: String, account: String, value: Data) throws {
@@ -120,11 +121,11 @@ enum Keychain {
             Logger.shared.info("Identity saved successfully in the keychain")
         } else {
             Logger.shared.warning("Something went wrong trying to save the Identity in the keychain")
-            throw KeychainError.identitySaveFailed
+            throw KeychainError.identitySaveFailed(res)
         }
     }
 
-    static func readAllIdenties() -> [(SecIdentity, String)] {
+    static func readAllIdentities() throws -> [(SecIdentity, String)] {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecMatchLimit as String: kSecMatchLimitAll,
@@ -134,8 +135,8 @@ enum Keychain {
         var item_ref: CFTypeRef?
 
         var ret: [(SecIdentity, String)] = []
-
-        if SecItemCopyMatching(query as CFDictionary, &item_ref) == noErr {
+        let res = SecItemCopyMatching(query as CFDictionary, &item_ref)
+        if res == noErr {
             let items = item_ref as! [[String: Any]]
             for item in items {
                 let name = item[kSecAttrLabel as String] as? String
@@ -144,8 +145,11 @@ enum Keychain {
                     ret.append((identity, name!))
                 }
             }
+        } else if res == errSecItemNotFound {
+            Logger.shared.info("No identities found in keychain")
         } else {
-            Logger.shared.warning("Something went wrong trying to find the identities in the keychain")
+            Logger.shared.warning("Error reading keychain identities: \(res)")
+            throw KeychainError.identityReadFailed(res)
         }
 
         return ret
@@ -180,11 +184,12 @@ enum Keychain {
             kSecAttrLabel as String: name,
         ]
 
-        if SecItemDelete(query as CFDictionary) == noErr {
+        let res = SecItemDelete(query as CFDictionary)
+        if res == noErr {
             Logger.shared.info("Successfully deleted the identity")
         } else {
             Logger.shared.warning("Error deleting the identity")
-            throw KeychainError.identityDeleteFailed
+            throw KeychainError.identityDeleteFailed(res)
         }
     }
 }
