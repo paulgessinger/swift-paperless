@@ -8,6 +8,20 @@
 import Foundation
 import SwiftUI
 
+private enum Stage: CaseIterable, Comparable {
+    case connection
+    case credentials
+
+    var label: Text {
+        switch self {
+        case .connection:
+            Text("1. ") + Text(.login(.stageConnection))
+        case .credentials:
+            Text("2. ") + Text(.login(.stageCredentials))
+        }
+    }
+}
+
 @MainActor
 private struct DetailsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -48,12 +62,20 @@ private struct DetailsView: View {
     }
 }
 
-private struct Section<Content: View, Footer: View>: View {
+private struct Section<Content: View, Footer: View, Header: View>: View {
     var content: () -> Content
+    var header: (() -> Header)? = nil
     var footer: (() -> Footer)? = nil
 
     var body: some View {
         VStack(spacing: 4) {
+            header?()
+                .foregroundStyle(.secondary)
+                .font(.footnote)
+                .textCase(.uppercase)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+
             content()
                 .padding(.horizontal)
                 .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
@@ -75,11 +97,31 @@ private struct Section<Content: View, Footer: View>: View {
 
 extension Section where Footer == EmptyView {
     init(@ViewBuilder content: @escaping () -> Content) {
-        self.init(content: content, footer: nil)
+        self.init(content: content, header: nil, footer: nil)
     }
 
     init(@ViewBuilder content: @escaping () -> Content, footer _: () -> Void) {
-        self.init(content: content, footer: nil)
+        self.init(content: content, header: nil, footer: nil)
+    }
+}
+
+extension Section where Footer == EmptyView, Header == EmptyView {
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.init(content: content, header: nil, footer: nil)
+    }
+
+    init(@ViewBuilder content: @escaping () -> Content, footer _: () -> Void, header _: () -> Void) {
+        self.init(content: content, header: nil, footer: nil)
+    }
+}
+
+extension Section where Header == EmptyView {
+    init(@ViewBuilder content: @escaping () -> Content, @ViewBuilder footer: @escaping () -> Footer) {
+        self.init(content: content, header: nil, footer: footer)
+    }
+
+    init(@ViewBuilder content: @escaping () -> Content, @ViewBuilder footer: @escaping () -> Footer, header _: () -> Void) {
+        self.init(content: content, header: nil, footer: footer)
     }
 }
 
@@ -178,6 +220,75 @@ private struct UrlEntryView: View {
 }
 
 @MainActor
+struct ContinueButton: View {
+    var disabled: Bool
+    var action: () -> Void
+
+    private var color: Color {
+        if disabled {
+            return .secondary
+        } else {
+            return Color.accentColor
+        }
+    }
+
+    var body: some View {
+        Button(.login(.continueButtonLabel)) {
+            action()
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, minHeight: 40, alignment: .center)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .circular)
+                .fill(color)
+        )
+        .padding()
+    }
+}
+
+private struct StageSelection: View {
+    @Binding var stage: Stage
+
+    @Namespace private var animation
+
+    var body: some View {
+        HStack {
+            ForEach(Stage.allCases, id: \.self) { el in
+                if el == stage {
+                    el.label
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.bottom, 3)
+                        .background(alignment: .bottom) {
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(Color.accentColor)
+                                .frame(height: 3)
+                                .matchedGeometryEffect(id: "active", in: animation)
+                        }
+                } else {
+                    el.label
+                        .onTapGesture {
+                            if el < stage {
+                                stage = el
+                            }
+                        }
+                }
+            }
+        }
+
+        .animation(.spring(duration: 0.25, bounce: 0.25), value: stage)
+
+        .padding(.vertical, 10)
+        .padding(.horizontal)
+        .background(
+            RoundedRectangle(cornerRadius: 15, style: .circular)
+                .fill(.thickMaterial)
+                .stroke(.tertiary)
+                .shadow(color: Color(white: 0.2, opacity: 0.1), radius: 10)
+        )
+    }
+}
+
+@MainActor
 struct LoginViewV2: LoginViewProtocol {
     @ObservedObject var connectionManager: ConnectionManager
     let initial: Bool
@@ -198,54 +309,80 @@ struct LoginViewV2: LoginViewProtocol {
     @State private var showApiWarning = false
     @State private var showError: LoginError?
 
+    @State private var stage = Stage.connection
+
     private let animation = Animation.spring(duration: 0.2)
 
     private func checkWarnings() {
         $showHttpWarning.animation(animation).wrappedValue = viewModel.scheme == .http && !viewModel.isLocalAddress
     }
 
+    var urlStageView: some View {
+        VStack {
+            Section {
+                UrlEntryView()
+            } footer: {
+                VStack(alignment: .leading) {
+                    if showHttpWarning {
+                        LoginFooterView(systemImage: "info.circle") {
+                            Text(.login(.httpWarning))
+                        }
+                        .transition(.opacity)
+                    }
+
+                    if showApiWarning {
+                        LoginFooterView(systemImage: "info.circle") {
+                            Text(.login(.apiInUrlNotice))
+                        }
+                        .transition(.opacity)
+                    }
+
+                    if let error = showError {
+                        error.view
+                            .transition(.opacity)
+                    }
+                }
+            }
+
+            if !identityManager.identities.isEmpty {
+                Section {
+                    HStack {
+                        Text(.login(.identityTitle))
+                        Picker("",
+                               selection: $viewModel.selectedIdentity)
+                        {
+                            Text(String(localized: .localizable(.none))).tag(nil as TLSIdentity?)
+                            ForEach(identityManager.identities, id: \.self) {
+                                Text($0.name)
+                                    .tag(Optional($0))
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                } footer: {
+                    Text(.login(.identityDescription))
+                }
+            }
+
+            ContinueButton(disabled: viewModel.loginState != .valid) {
+                stage = .credentials
+            }
+        }
+    }
+
+    var credentialStageView: some View {
+        Text("Credentials")
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                VStack {
-                    if initial {
-                        HStack {
-                            LogoView()
-                                .font(.title)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    }
-
-                    Section {
-                        UrlEntryView()
-                    } footer: {
-                        VStack(alignment: .leading) {
-                            if showHttpWarning {
-                                LoginFooterView(systemImage: "info.circle") {
-                                    Text(.login(.httpWarning))
-                                }
-                                .transition(.opacity)
-                            }
-
-                            if showApiWarning {
-                                LoginFooterView(systemImage: "info.circle") {
-                                    Text(.login(.apiInUrlNotice))
-                                }
-                                .transition(.opacity)
-                            }
-
-                            if let error = showError {
-                                error.view
-                                    .transition(.opacity)
-                            }
-                        }
-                    }
-
-                    if !identityManager.identities.isEmpty {
-                        Section {
-                            Text("GO IDENTITY!")
-                        }
-                    }
+                switch stage {
+                case .connection:
+                    urlStageView
+                case .credentials:
+                    credentialStageView
                 }
             }
 
@@ -253,15 +390,31 @@ struct LoginViewV2: LoginViewProtocol {
 
             .scrollBounceBehavior(.basedOnSize)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
 
             .toolbar {
+                if initial {
+                    ToolbarItem(placement: .principal) {
+                        LogoTitle()
+                            .fixedSize()
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showDetails = true
                     } label: {
-                        Label(String(localized: .login(.moreToolbarButtonLabel)), systemImage: "info.circle")
+                        Label(String(localized: .login(.moreToolbarButtonLabel)), systemImage: "ellipsis.circle")
                     }
                 }
+            }
+
+            .safeAreaInset(edge: .top) {
+                StageSelection(stage: $stage)
+                    .padding(.top, 5)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom)
+                    .background(.thinMaterial)
             }
 
             .if(!initial) { view in
@@ -283,6 +436,7 @@ struct LoginViewV2: LoginViewProtocol {
         }
 
         .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
+        .onChange(of: viewModel.selectedIdentity) { viewModel.onChangeUrl(immediate: true) }
 
         .onChange(of: viewModel.scheme) {
             Haptics.shared.impact(style: .soft)
@@ -320,4 +474,29 @@ struct LoginViewV2: LoginViewProtocol {
 
 #Preview("Additional") {
     LoginViewV2(connectionManager: ConnectionManager(), initial: false)
+}
+
+#Preview("Section") {
+    Section {
+        Text("GO IDENTITY!")
+    } header: {
+        Text("head")
+    } footer: {
+        Text("yo")
+    }
+}
+
+#Preview("Stage") {
+    @Previewable @State var stage = Stage.connection
+
+    return VStack {
+        StageSelection(stage: $stage)
+        Button("Connection") {
+            stage = .connection
+        }
+
+        Button("Credentials") {
+            stage = .credentials
+        }
+    }
 }

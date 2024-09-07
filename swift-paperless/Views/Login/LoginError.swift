@@ -30,6 +30,9 @@ enum LoginError: DisplayableError, Equatable {
     case invalidLogin
 
     case invalidResponse(statusCode: Int, details: String?)
+
+    case badRequest
+
     case localNetworkDenied
 
     case insufficientPermissions
@@ -87,6 +90,11 @@ extension LoginError {
             }
             return try? AttributedString(markdown: msg)
 
+        case .badRequest:
+            let msg = String(localized: .login(.errorInvalidResponse(400))) + String(localized: .login(.errorBadRequest))
+
+            return try? AttributedString(markdown: msg)
+
         case .localNetworkDenied:
             return loc(.login(.errorLocalNetworkDenied))
 
@@ -127,6 +135,13 @@ extension LoginError {
             if let details {
                 Text(details)
                     .italic()
+            }
+
+        case .badRequest:
+            VStack(alignment: .leading) {
+                Text(.login(.errorInvalidResponse(400)))
+                    .bold()
+                Text(.login(.errorBadRequest))
             }
 
         case let .invalidUrl(error):

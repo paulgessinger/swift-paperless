@@ -218,6 +218,17 @@
         }
       }
     },
+    "continueButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
     "credentials" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -307,6 +318,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More info here"
+          }
+        }
+      }
+    },
+    "errorBadRequest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
           }
         }
       }
@@ -706,6 +728,28 @@
         }
       }
     },
+    "identityDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a client certificate to use when connecting to the target server."
+          }
+        }
+      }
+    },
+    "identityTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identity"
+          }
+        }
+      }
+    },
     "moreToolbarButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -877,6 +921,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select scheme"
+          }
+        }
+      }
+    },
+    "stageConnection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        }
+      }
+    },
+    "stageCredentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credentials"
           }
         }
       }

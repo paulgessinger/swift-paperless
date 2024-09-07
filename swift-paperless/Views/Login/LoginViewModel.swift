@@ -39,6 +39,7 @@ class LoginViewModel {
     var url: String = ""
 
     var checkUrlTask: Task<Void, Never>?
+    var loadingSpinnerTimeout: Task<Void, Never>?
 
     enum Scheme: String {
         case http
@@ -56,16 +57,28 @@ class LoginViewModel {
         checkUrlTask = Task {
             if !immediate {
                 do {
-                    try await Task.sleep(for: .seconds(0.8))
+                    try await Task.sleep(for: .seconds(0.25))
                 } catch {}
                 guard !Task.isCancelled else {
                     return
                 }
             }
 
+            // Arm loading spinner: if loading takes more than half a second, show spinner
+            loadingSpinnerTimeout = Task {
+                try? await Task.sleep(for: .seconds(0.5))
+                guard !Task.isCancelled else {
+                    return
+                }
+                loginState = .checking
+            }
+
             if !url.isEmpty {
                 await checkUrl(string: fullUrl)
             }
+
+            // Avoid showing the spinner
+            loadingSpinnerTimeout?.cancel()
         }
 
         if url.isEmpty {
@@ -119,6 +132,7 @@ class LoginViewModel {
         do {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             loginState = .checking
+            Logger.shared.info("Using identity: \(selectedIdentity?.name ?? "none")")
 
             let session = URLSession(configuration: .default,
                                      delegate: PaperlessURLSessionDelegate(identity: selectedIdentity),
@@ -128,8 +142,12 @@ class LoginViewModel {
 
             if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                loginState = .error(.invalidResponse(statusCode: statusCode,
-                                                     details: decodeDetails(data)))
+                if statusCode == 400 {
+                    loginState = .error(.badRequest)
+                } else {
+                    loginState = .error(.invalidResponse(statusCode: statusCode,
+                                                         details: decodeDetails(data)))
+                }
                 return
             }
 
@@ -148,17 +166,17 @@ class LoginViewModel {
             _ = try JSONDecoder().decode(Response.self, from: data)
             loginState = .valid
 
+        } catch is CancellationError {
+            // do nothing
+            return
+        } catch let error as NSError where error.code == -999 {
+            // also a cancellation error
         } catch let error as NSError where LoginViewModel.isLocalNetworkDenied(error) {
             Logger.shared.error("Unable to connect to API: local network access denied")
             loginState = .error(.localNetworkDenied)
         } catch let error as NSError where error.code == -1202 {
             Logger.shared.error("Certificate error when connecting to the API: \(error)")
             loginState = .error(.init(certificate: error))
-        } catch is CancellationError {
-            // do nothing
-            return
-        } catch let error as NSError where error.code == -999 {
-            // also a cancellation error
         } catch {
             Logger.shared.error("Checking API error: \(error)")
             loginState = .error(.init(other: error))
