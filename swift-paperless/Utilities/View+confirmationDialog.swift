@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-private struct ConfirmationDialogModifier<Item, M: View, A: View>: ViewModifier {
+private struct ConfirmationDialogModifier<Item: Sendable, M: View, A: View>: ViewModifier {
     @Binding var item: Item?
 
     var title: (Binding<Item>) -> String
@@ -40,7 +40,7 @@ private struct ConfirmationDialogModifier<Item, M: View, A: View>: ViewModifier 
 }
 
 extension View {
-    func confirmationDialog<Item>(
+    func confirmationDialog<Item: Sendable>(
         unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> String,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View,
@@ -49,7 +49,7 @@ extension View {
         modifier(ConfirmationDialogModifier(item: item, title: title, actions: actions, message: message))
     }
 
-    func confirmationDialog<Item>(
+    func confirmationDialog<Item: Sendable>(
         unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> String,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View

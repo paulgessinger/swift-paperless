@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-private struct AlertModifier<Item, M: View, A: View>: ViewModifier {
+private struct AlertModifier<Item: Sendable, M: View, A: View>: ViewModifier {
     @Binding var item: Item?
 
     var title: (Binding<Item>) -> Text
@@ -40,7 +40,7 @@ private struct AlertModifier<Item, M: View, A: View>: ViewModifier {
 }
 
 extension View {
-    func alert<Item>(
+    func alert<Item: Sendable>(
         unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> Text,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View,
@@ -49,7 +49,7 @@ extension View {
         modifier(AlertModifier(item: item, title: title, actions: actions, message: message))
     }
 
-    func alert<Item>(
+    func alert<Item: Sendable>(
         unwrapping item: Binding<Item?>,
         title: @escaping (Binding<Item>) -> Text,
         @ViewBuilder actions: @escaping (Binding<Item>) -> some View

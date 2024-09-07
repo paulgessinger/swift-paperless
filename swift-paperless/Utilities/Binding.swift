@@ -8,11 +8,11 @@
 import SwiftUI
 
 extension Binding {
-    static func present(_ base: Binding<(some Any)?>) -> Binding<Bool> where Value == Bool {
+    static func present(_ base: Binding<(some Sendable)?>) -> Binding<Bool> where Value == Bool {
         .init(get: { base.wrappedValue != nil }, set: { if !$0 { base.wrappedValue = nil } })
     }
 
-    init(present base: Binding<(some Any)?>) where Value == Bool {
+    init(present base: Binding<(some Sendable)?>) where Value == Bool {
         self.init(get: { base.wrappedValue != nil }, set: { if !$0 { base.wrappedValue = nil } })
     }
 }
