@@ -143,6 +143,8 @@ struct LoginFooterView<Content: View>: View {
 private typealias Scheme = LoginViewModel.Scheme
 
 private struct UrlEntryView: View {
+    @FocusState.Binding var focus: Bool
+
     @Environment(LoginViewModel.self) private var viewModel
 
     var body: some View {
@@ -196,6 +198,7 @@ private struct UrlEntryView: View {
                 .padding(.vertical, 10)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+                .focused($focus)
             Spacer()
             switch viewModel.loginState {
             case .checking:
@@ -303,6 +306,8 @@ private struct CredentialsStageView: View {
 private struct ConnectionStageView: View {
     @Binding var stage: Stage
 
+    @FocusState private var focus: Bool
+
     @Environment(LoginViewModel.self) private var viewModel
     @Environment(IdentityManager.self) private var identityManager
 
@@ -320,7 +325,7 @@ private struct ConnectionStageView: View {
         @Bindable var viewModel = viewModel
         VStack {
             Section {
-                UrlEntryView()
+                UrlEntryView(focus: $focus)
             } footer: {
                 VStack(alignment: .leading) {
                     if showHttpWarning {
@@ -366,6 +371,7 @@ private struct ConnectionStageView: View {
             }
 
             ContinueButton(disabled: viewModel.loginState != .valid) {
+                focus = false
                 stage = .credentials
             }
         }
