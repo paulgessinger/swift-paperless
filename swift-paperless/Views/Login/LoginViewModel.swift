@@ -132,6 +132,7 @@ class LoginViewModel {
         do {
             Logger.shared.info("Checking valid-looking URL \(apiUrl)")
             loginState = .checking
+            let selectedIdentity = selectedIdentity
             Logger.shared.info("Using identity: \(selectedIdentity?.name ?? "none")")
 
             let session = URLSession(configuration: .default,
