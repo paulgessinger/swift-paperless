@@ -233,15 +233,18 @@ struct ContinueButton: View {
     }
 
     var body: some View {
-        Button(.login(.continueButtonLabel)) {
+        Button {
             action()
+        } label: {
+            Text(.login(.continueButtonLabel))
+                .disabled(disabled)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 40, alignment: .center)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .circular)
+                        .fill(color)
+                )
         }
-        .foregroundStyle(.white)
-        .frame(maxWidth: .infinity, minHeight: 40, alignment: .center)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .circular)
-                .fill(color)
-        )
         .padding()
     }
 }
@@ -288,28 +291,24 @@ private struct StageSelection: View {
     }
 }
 
-@MainActor
-struct LoginViewV2: LoginViewProtocol {
-    @ObservedObject var connectionManager: ConnectionManager
-    let initial: Bool
-
-    init(connectionManager: ConnectionManager, initial: Bool = true) {
-        self.connectionManager = connectionManager
-        self.initial = initial
+private struct CredentialsStageView: View {
+    var body: some View {
+        VStack {
+            Text("Credentials")
+        }
+        .frame(maxWidth: .infinity)
     }
+}
 
-    @State private var viewModel = LoginViewModel()
-    @State private var identityManager = IdentityManager()
+private struct ConnectionStageView: View {
+    @Binding var stage: Stage
 
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var showDetails = false
+    @Environment(LoginViewModel.self) private var viewModel
+    @Environment(IdentityManager.self) private var identityManager
 
     @State private var showHttpWarning = false
     @State private var showApiWarning = false
     @State private var showError: LoginError?
-
-    @State private var stage = Stage.connection
 
     private let animation = Animation.spring(duration: 0.2)
 
@@ -317,7 +316,8 @@ struct LoginViewV2: LoginViewProtocol {
         $showHttpWarning.animation(animation).wrappedValue = viewModel.scheme == .http && !viewModel.isLocalAddress
     }
 
-    var urlStageView: some View {
+    var body: some View {
+        @Bindable var viewModel = viewModel
         VStack {
             Section {
                 UrlEntryView()
@@ -369,22 +369,70 @@ struct LoginViewV2: LoginViewProtocol {
                 stage = .credentials
             }
         }
+
+        .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
+        .onChange(of: viewModel.selectedIdentity) { viewModel.onChangeUrl(immediate: true) }
+
+        .onChange(of: viewModel.scheme) {
+            Haptics.shared.impact(style: .soft)
+            checkWarnings()
+            viewModel.onChangeUrl(immediate: true)
+        }
+
+        .onChange(of: viewModel.url) { checkWarnings() }
+        .onChange(of: viewModel.loginState) {
+            let binding = $showError.animation(animation)
+            switch viewModel.loginState {
+            case let .error(error):
+                Haptics.shared.notification(.warning)
+                binding.wrappedValue = error
+            case .checking:
+                break
+            case .valid:
+                Haptics.shared.notification(.success)
+                fallthrough
+            default:
+                binding.wrappedValue = nil
+            }
+        }
+    }
+}
+
+@MainActor
+struct LoginViewV2: LoginViewProtocol {
+    @ObservedObject var connectionManager: ConnectionManager
+    let initial: Bool
+
+    init(connectionManager: ConnectionManager, initial: Bool = true) {
+        self.connectionManager = connectionManager
+        self.initial = initial
     }
 
-    var credentialStageView: some View {
-        Text("Credentials")
-    }
+    @State private var viewModel = LoginViewModel()
+    @State private var identityManager = IdentityManager()
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var showDetails = false
+    @State private var stage = Stage.connection
 
     var body: some View {
         NavigationStack {
-            ScrollView(.vertical) {
+            VStack {
                 switch stage {
                 case .connection:
-                    urlStageView
+                    ScrollView(.vertical) {
+                        ConnectionStageView(stage: $stage)
+                    }
+                    .transition(.move(edge: .leading))
                 case .credentials:
-                    credentialStageView
+                    ScrollView(.vertical) {
+                        CredentialsStageView()
+                    }
+                    .transition(.move(edge: .trailing))
                 }
             }
+            .animation(.spring(duration: 0.3), value: stage)
 
             .background(Color.systemGroupedBackground)
 
@@ -433,32 +481,6 @@ struct LoginViewV2: LoginViewProtocol {
 
         .sheet(isPresented: $showDetails) {
             DetailsView()
-        }
-
-        .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
-        .onChange(of: viewModel.selectedIdentity) { viewModel.onChangeUrl(immediate: true) }
-
-        .onChange(of: viewModel.scheme) {
-            Haptics.shared.impact(style: .soft)
-            checkWarnings()
-            viewModel.onChangeUrl(immediate: true)
-        }
-
-        .onChange(of: viewModel.url) { checkWarnings() }
-        .onChange(of: viewModel.loginState) {
-            let binding = $showError.animation(animation)
-            switch viewModel.loginState {
-            case let .error(error):
-                Haptics.shared.notification(.warning)
-                binding.wrappedValue = error
-            case .checking:
-                break
-            case .valid:
-                Haptics.shared.notification(.success)
-                fallthrough
-            default:
-                binding.wrappedValue = nil
-            }
         }
 
         .environment(viewModel)
