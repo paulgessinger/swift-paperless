@@ -14,9 +14,7 @@ struct ConnectionSelectionMenu: View {
     var body: some View {
         ForEach(connectionManager.connections.values.sorted(by: { $0.url.absoluteString < $1.url.absoluteString })) { conn in
             Button {
-                withAnimation {
-                    connectionManager.activeConnectionId = conn.id
-                }
+                connectionManager.activeConnectionId = conn.id
             } label: {
                 // Bit of a hack to have by-character line breaks
                 let label = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label

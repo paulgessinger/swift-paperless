@@ -8,6 +8,7 @@
 import Foundation
 import Nuke
 import os
+import SwiftUI
 
 @MainActor
 class DocumentListViewModel: ObservableObject {
@@ -47,14 +48,9 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func reload() async {
-        do {
-            source = try await store.repository.documents(filter: filterState)
-            documents = []
-            await load()
-        } catch {
-            Logger.shared.error("Error getting reloaded document source: \(error)")
-            errorController.push(error: error)
-        }
+        documents = []
+        source = nil
+        await load()
     }
 
     func load() async {

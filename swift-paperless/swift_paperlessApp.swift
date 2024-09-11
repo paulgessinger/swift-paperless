@@ -44,16 +44,19 @@ struct MainView: View {
                     store.eventPublisher.send(.repositoryWillChange)
                     try? await Task.sleep(for: .seconds(0.3))
                     await store.set(repository: ApiRepository(connection: conn))
+                    Task {
+                        try? await Task.sleep(for: .seconds(0.25))
+                        storeReady = true
+                    }
                     try? await store.fetchAll()
                     store.startTaskPolling()
-                    storeReady = true
                 }
             } else {
                 Task {
                     store = await DocumentStore(repository: ApiRepository(connection: conn))
+                    storeReady = true
                     try? await store!.fetchAll()
                     store!.startTaskPolling()
-                    storeReady = true
                 }
             }
             showLoginScreen = false
@@ -64,7 +67,7 @@ struct MainView: View {
     }
 
     var body: some View {
-        Group {
+        VStack {
             if manager.connection != nil, storeReady {
                 DocumentView()
                     .errorOverlay(errorController: errorController)
@@ -77,8 +80,15 @@ struct MainView: View {
                                 .transition(.opacity)
                         }
                     }
+            } else {
+                VStack {
+                    ProgressView()
+                        .controlSize(.large)
+                }
             }
         }
+        .animation(.default, value: storeReady)
+
         .environmentObject(errorController)
         .environmentObject(biometricLockManager)
 

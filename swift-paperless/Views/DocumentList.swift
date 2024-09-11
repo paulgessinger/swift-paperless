@@ -146,13 +146,9 @@ struct DocumentList: View {
                 }
             }
         case .repositoryWillChange:
-            withAnimation {
-                viewModel.ready = false
-                filterModel.ready = false
-            }
+            break
         case .repositoryChanged:
             Task {
-                try? await Task.sleep(for: .seconds(0.5))
                 await viewModel.reload()
             }
             Task {
