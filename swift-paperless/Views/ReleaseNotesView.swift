@@ -61,6 +61,8 @@ class ReleaseNotesViewModel: ObservableObject {
             } else {
                 content = String(decoding: data, as: UTF8.self)
             }
+        } catch is CancellationError {
+            // noop
         } catch {
             Logger.shared.error("Error loading release notes: \(error)")
             self.error = error
