@@ -10,7 +10,7 @@ Swift Paperless
 
 <p align="center">
 <a href="https://apps.apple.com/app/swift-paperless/id6448698521">
-<img src="app_store.svg" />
+<img src="app_store.svg" alt="Get it on the App Store!" />
 </a>
 </p>
 
@@ -18,15 +18,15 @@ Swift Paperless
 iOS app for <a href="https://github.com/paperless-ngx/paperless-ngx">Paperless-ngx</a>
 </h2>
 
-[![Crowdin](https://badges.crowdin.net/swift-paperless/localized.svg)](https://crowdin.com/project/swift-paperless)
+<a href="https://crowdin.com/project/swift-paperless">
+<img src="https://badges.crowdin.net/swift-paperless/localized.svg" alt="Localization status on Crowdin" />
+</a>
 
 <hr/>
 
 <a href="https://apps.apple.com/app/swift-paperless/id6448698521">
-<img src="panorama.png" />
+<img src="panorama.png" alt="App preview" />
 </a>
-
-
 
 ---
 
@@ -45,6 +45,7 @@ To get the latest development version of the app, grab it on
 [TestFlight](https://testflight.apple.com/join/bOpOdzwL)!
 
 ## Contact
+
 If you have any questions or need support create an issue on [GitHub](https://github.com/paulgessinger/swift-paperless/issues/new) or send me a [message](mailto:swift-paperless@paulgessinger.com).
 
 ## Maintenance
