@@ -185,8 +185,27 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @State private var shareLinkUrl: URL?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     @State private var editDetent: PresentationDetent = .medium
+
+    private var defaultEditDetent: PresentationDetent {
+        switch horizontalSizeClass {
+        case .compact:
+            .medium
+        default:
+            .large
+        }
+    }
+
+    private var editDetentOptions: Set<PresentationDetent> {
+        switch horizontalSizeClass {
+        case .compact:
+            [.fraction(0.3), .medium, .large]
+        default:
+            [.large]
+        }
+    }
 
     private var chevronSize: CGFloat {
         let y = max(-dragOffset.height, 0)
@@ -348,6 +367,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         }
 
         .task {
+            editDetent = defaultEditDetent
+
             async let doc: () = viewModel.loadDocument()
 
             await viewModel.loadMetadata()
@@ -391,11 +412,11 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .onChange(of: safeAreaInsets) { updateWebkitInset() }
 
         .sheet(isPresented: $showEditSheet) {
-            editDetent = .medium
+            editDetent = defaultEditDetent
         } content: {
             DocumentEditView(document: $viewModel.document)
 
-                .presentationDetents([.fraction(0.3), .medium, .large], selection: $editDetent)
+                .presentationDetents(editDetentOptions, selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
                 )
