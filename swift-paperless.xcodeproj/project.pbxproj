@@ -301,6 +301,7 @@
 		7AFB7BA72A89773B0013196B /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7AFB7BA82A8977720013196B /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA62A89773B0013196B /* AppSettings.swift */; };
 		7AFB7BAA2A89783F0013196B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFB7BA92A89783F0013196B /* PreferencesView.swift */; };
+		7AFBD39D2C914078001B32D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A5482B2299AD56E00D5061E /* Assets.xcassets */; };
 		7AFD3F602A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFD3F612A87F482002789C2 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFD3F5F2A87F482002789C2 /* FilterModel.swift */; };
 		7AFE3E7F2C551C3500A567CD /* DocumentNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3E7E2C551C3500A567CD /* DocumentNoteView.swift */; };
@@ -1071,6 +1072,7 @@
 				7A56F26D2B8270C300BE9361 /* Matching.xcstrings in Resources */,
 				7A56F2692B8270BE00BE9361 /* Settings.xcstrings in Resources */,
 				7A56F25E2B8270BA00BE9361 /* Localizable.xcstrings in Resources */,
+				7AFBD39D2C914078001B32D9 /* Assets.xcassets in Resources */,
 				7A56F26B2B8270C000BE9361 /* Login.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
