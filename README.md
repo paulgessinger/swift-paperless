@@ -1,6 +1,6 @@
 <p align="center" style="margin-bottom:0.25em">
 
-<img src="docs/assets/logo_standalone.png" width="128" />
+<img src="logo.png" width="128" />
 
 </p>
 
