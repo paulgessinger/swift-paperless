@@ -57,12 +57,14 @@ struct LogoChangeView: View {
                     Button {
                         guard !icon.isActive else { return }
                         Task { @MainActor in
+                            let previous = selectedIcon
                             do {
                                 let value = icon == .primary ? nil : icon.rawValue
-                                try await UIApplication.shared.setAlternateIconName(value)
                                 selectedIcon = icon
+                                try await UIApplication.shared.setAlternateIconName(value)
                             } catch {
                                 Logger.shared.error("Error changing icon: \(error)")
+                                selectedIcon = previous
                             }
                         }
                     } label: {
