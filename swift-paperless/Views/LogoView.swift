@@ -25,7 +25,7 @@ struct LogoTitle: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            Image(.appLogoOnWhite)
+            Image(.appLogoTransparent)
                 .resizable()
                 .frame(width: logoSize, height: logoSize)
             Text(.localizable(.appName))
