@@ -5351,6 +5351,17 @@
         }
       }
     },
+    "shareSheetNotLoggedIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please log in using the app first!"
+          }
+        }
+      }
+    },
     "sortBy" : {
       "extractionState" : "manual",
       "localizations" : {

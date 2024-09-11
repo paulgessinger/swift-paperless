@@ -128,7 +128,7 @@ struct ShareView: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        Text("Please log in using the app first!")
+                        Text(.localizable(.shareSheetNotLoggedIn))
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                         Spacer()
