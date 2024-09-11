@@ -16,7 +16,7 @@ enum AppIcon: String, CaseIterable {
     case var2 = "AppIconVar2"
 
     var image: Image {
-        Image(uiImage: UIImage(named: rawValue)!)
+        Image(uiImage: UIImage(named: "\(rawValue)-Preview")!)
     }
 
     var name: String {
