@@ -14,6 +14,8 @@ struct ShareView: View {
     @StateObject private var connectionManager = ConnectionManager()
 
     @StateObject private var store = DocumentStore(repository: NullRepository())
+    @State private var storeReady = false
+
     @StateObject private var errorController = ErrorController()
 
     @State private var error: String = ""
@@ -43,6 +45,7 @@ struct ShareView: View {
             Task {
                 store.eventPublisher.send(.repositoryWillChange)
                 await store.set(repository: ApiRepository(connection: conn))
+                storeReady = true
                 try? await store.fetchAll()
             }
         } else {
@@ -98,21 +101,26 @@ struct ShareView: View {
                 } else {
                     if let url = attachmentManager.importUrls.first {
                         VStack {
-                            CreateDocumentView(
-                                sourceUrl: url,
-                                callback: internalCallback,
-                                share: true,
-                                title: createTitle
-                            )
-                            .id(url)
-                            // @FIXME: Gives a white band at the bottom, not ideal
-                            .padding(.bottom, 40)
+                            if storeReady {
+                                CreateDocumentView(
+                                    sourceUrl: url,
+                                    callback: internalCallback,
+                                    share: true,
+                                    title: createTitle
+                                )
+                                .id(url)
+                                // @FIXME: Gives a white band at the bottom, not ideal
+                                .padding(.bottom, 40)
 
-                            .environmentObject(store)
-                            .environmentObject(errorController)
-                            .environmentObject(connectionManager)
-                            .accentColor(Color(.accent))
+                                .environmentObject(store)
+                                .environmentObject(errorController)
+                                .environmentObject(connectionManager)
+                                .accentColor(Color(.accent))
+                            } else {
+                                ProgressView()
+                            }
                         }
+                        .animation(.default, value: storeReady)
                     }
                 }
             } else {
@@ -131,9 +139,7 @@ struct ShareView: View {
         }
 
         .task {
-            if let conn = connectionManager.connection {
-                await store.set(repository: ApiRepository(connection: conn))
-            }
+            refreshConnection()
         }
 
         .onChange(of: connectionManager.activeConnectionId) { refreshConnection() }

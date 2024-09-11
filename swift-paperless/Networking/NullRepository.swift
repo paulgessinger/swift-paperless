@@ -10,9 +10,9 @@ import SwiftUI
 actor NullRepository: Repository {
     struct NotImplemented: Error {}
 
-    func update(document: Document) async throws -> Document { document }
-    func delete(document _: Document) async throws {}
-    func create(document _: ProtoDocument, file _: URL) async throws {}
+    func update(document _: Document) async throws -> Document { throw NotImplemented() }
+    func delete(document _: Document) async throws { throw NotImplemented() }
+    func create(document _: ProtoDocument, file _: URL) async throws { throw NotImplemented() }
 
     func download(documentID _: UInt, progress _: (@Sendable (Double) -> Void)? = nil) async throws -> URL? { nil }
 
