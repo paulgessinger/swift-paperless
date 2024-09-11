@@ -82,6 +82,7 @@ struct MainView: View {
                     }
             } else {
                 VStack {
+                    LogoView()
                     ProgressView()
                         .controlSize(.large)
                 }

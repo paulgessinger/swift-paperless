@@ -6,24 +6,8 @@
 //
 
 import SwiftUI
-private extension Bundle {
-    var iconFileName: String? {
-        guard let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
-              let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
-              let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
-              let iconFileName = iconFiles.last
-        else { return nil }
-        return iconFileName
-    }
-}
 
 struct LogoView: View {
-    private var iconImage: Image {
-        Bundle.main.iconFileName
-            .flatMap { UIImage(named: $0) }
-            .map { Image(uiImage: $0) }!
-    }
-
     private let logoSize: CGFloat = 64
     private let logoRadius: CGFloat = 5
 
