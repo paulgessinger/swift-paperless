@@ -33,6 +33,8 @@ struct ConnectionsView: View {
 
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
+    @State private var logoutRequested = false
+
     init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
         self.connectionManager = connectionManager
         _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
@@ -65,6 +67,21 @@ struct ConnectionsView: View {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {
                     Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+                }
+
+                Button(role: .destructive) {
+                    logoutRequested = true
+                } label: {
+                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
+                }
+                .foregroundColor(Color.red)
+                .bold()
+
+                .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
+                    Button(String(localized: .localizable(.logout)), role: .destructive) {
+                        connectionManager.logout()
+                    }
+                    Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                 }
 
                 .onChange(of: extraHeaders) {
