@@ -44,10 +44,7 @@ platform :ios do
 
     last_tag = last_git_tag()
 
-    changelog = sh("git", "cliff",
-                   "--config", "fastlane/cliff.toml",
-                   "-w", "..",
-                   "--unreleased")
+    changelog = sh("git cliff --config fastlane/cliff.toml -w .. --unreleased 2> /dev/null")
 
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
