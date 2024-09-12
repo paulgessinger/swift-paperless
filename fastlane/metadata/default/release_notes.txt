@@ -1,18 +1,19 @@
-- Fixed a bug when decoding dates from the API in certain locale configurations
-
-
-Previous updates:
-
 Features
+- All new document detail view
+  - You can now inspect the open document while editing thanks to a new sheet based edit overlay.
+  - Editing of document notes
+  - View document metadata
 
-- Improved used feedback for ASNs in document creation and editing.
-  The app will now report if an ASN is already used or not.
+- Ready for iOS 18 with updated icons!
+- Editing of permissions on documents
+- Clear button in create document screen
+- Ability to export logs from the share extension for debugging
+- Initial support for mTLS (client certificate authentication)
 
 Bug Fixes
-
-- Wrong app icon in the initial login view
-- Saved views can have missing sort field, added support for notes, owner and search score sort field
+- Share sheet allowed saving before API was ready
+- Incorrect number of import items displayed
 
 Refactor-
-
-- Server selection UI improvement in share-sheet
+- Ability to log out of a server in the settings screen
+- Improved accent color in dark mode for improved readability

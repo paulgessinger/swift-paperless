@@ -20,13 +20,29 @@ devices:
   - name: "iPhone 15 Pro"
     frame: "iPhone 15 Pro/iPhone 15 Pro - Natural Titanium - Portrait.png"
     offset: [120, 120]
-    post_offset: [0, 300]
+    post_offset: [0, 350]
     target_size: [1179, 2556]
     mask_corner_radius: 150
     mask_margin: 0
 
   - name: "iPhone 15 Pro Max"
     frame: "iPhone 15 Pro Max/iPhone 15 Pro Max - Natural Titanium - Portrait.png"
+    offset: [120, 120]
+    post_offset: [0, 350]
+    target_size: [1290, 2796]
+    mask_corner_radius: 150
+    mask_margin: 10
+
+  - name: "iPhone 16 Pro"
+    frame: "iPhone 16 Pro/iPhone 16 Pro - Natural Titanium - Portrait.png"
+    offset: [70, 70]
+    post_offset: [0, 400]
+    target_size: [1206, 2622]
+    mask_corner_radius: 150
+    mask_margin: 0
+
+  - name: "iPhone 16 Pro Max"
+    frame: "iPhone 16 Pro Max/iPhone 16 Pro Max - Natural Titanium - Portrait.png"
     offset: [120, 120]
     post_offset: [0, 320]
     target_size: [1290, 2796]
@@ -37,7 +53,7 @@ devices:
     frame: "iPad Pro 12.9/iPad Pro 12.9 - Space Gray - Portrait.png"
     target_size: [2048, 2732]
     offset: [121, 114]
-    post_offset: [0, 460]
+    post_offset: [0, 550]
     mask_corner_radius: 50
     mask_margin: 10
 
@@ -50,6 +66,13 @@ devices:
     mask_corner_radius: 0
     mask_margin: 0
 
+  - name: "iPad Pro 13-inch (M4)"
+    frame: "iPad Pro 13/iPad Pro 13 - M4 - Space Gray - Portrait.png"
+    target_size: [2064, 2752]
+    offset: [120, 125]
+    post_offset: [0, 500]
+    mask_corner_radius: 50
+    mask_margin: 10
 
 screens:
   - device_pattern: ".*"
@@ -63,12 +86,12 @@ screens:
       text_size: 100
       font_spacing: 10
 
-  - device_pattern: "iPhone 15 Pro$"
+  - device_pattern: "iPhone .* Pro$"
     screen_pattern: ".*"
     style:
       text_size: 80
 
-  - device_pattern: "iPhone 15 Pro Max$"
+  - device_pattern: "iPhone .* Pro Max$"
     screen_pattern: ".*"
     style:
       text_size: 90

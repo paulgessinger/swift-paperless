@@ -212,15 +212,9 @@ def main(
                     if f.endswith(".png"):
                         files.append(root / f)
 
-    font_file = config_file.parent / "DejaVuSans-Bold.ttf"
+    # font_file = config_file.parent / "DejaVuSans-Bold.ttf"
+    font_file = config_file.parent / "OpenSans-VariableFont_wdth,wght.ttf"
     #  font_file = config_file.parent / "helvetica-bold.ttf"
-    if not font_file.exists():
-        font_url = "https://github.com/CartoDB/cartodb/raw/master/app/assets/fonts/helvetica-bold.ttf"
-        with requests.get(font_url, stream=True) as r:
-            r.raise_for_status()
-            with font_file.open("wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
 
     if jobs == 1 or len(files) == 1:
         for f in files:
@@ -373,7 +367,8 @@ def frame(
     output_draw.rectangle([0, 0, *buffer.size], fill=screen_style.background_color)
 
     font = ImageFont.truetype(str(font_file), screen_style.text_size)
-    #  font = ImageFont.load_default(screen_style.text_size)
+    font.set_variation_by_name("Bold")
+    # print(font.get_variation_names())
 
     if title_key := screen_config.title_key:
         text_buffer = Image.new("RGBA", screenshot_raw.size)

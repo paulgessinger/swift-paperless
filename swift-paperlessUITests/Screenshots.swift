@@ -14,7 +14,7 @@ final class Screenshots: XCTestCase {
         setupSnapshot(app)
         app.launch()
 
-        sleep(1)
+        sleep(3)
         snapshot("01DocumentView")
 
         app.staticTexts["filterBarTagsFilterButton"].tap()
@@ -26,13 +26,15 @@ final class Screenshots: XCTestCase {
 
         app.collectionViews.children(matching: .cell).element(boundBy: 1).tap()
 
-        sleep(1)
+        sleep(3)
 
         snapshot("03DocumentDetailView")
 
-        let navBar = XCUIApplication().navigationBars.element(boundBy: 0)
-        navBar.buttons["documentEditButton"].tap()
+        app.images["documentEditButton"].tap()
 
         snapshot("04DocumentEditing")
+
+        // Run this in debugger for help
+        // po print(XCUIApplication().debugDescription)
     }
 }

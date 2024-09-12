@@ -88,6 +88,7 @@ private struct DocumentPropertyView: View {
                         Haptics.shared.impact(style: .medium)
                         showEditSheet = true
                     }
+                    .accessibilityIdentifier("documentEditButton")
             }
 
             HStack(alignment: .top) {

@@ -87,4 +87,10 @@ platform :ios do
       xcargs: "-skipPackagePluginValidation"
     )
   end
+
+  lane :screenshots do
+    xcode_select("/Applications/Xcode_16.app")
+
+    snapshot()
+  end
 end
