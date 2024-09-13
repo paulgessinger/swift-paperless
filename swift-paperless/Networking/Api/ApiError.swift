@@ -12,6 +12,7 @@ enum RequestError: Error {
     case invalidResponse
     case unexpectedStatusCode(code: Int)
     case forbidden(detail: String)
+    case unauthorized(detail: String)
 }
 
 struct ResourceForbidden<Resource: Model>: DisplayableError {

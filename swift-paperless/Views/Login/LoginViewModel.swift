@@ -7,12 +7,48 @@
 
 import Foundation
 import os
+import SwiftUI
 
 enum LoginState: Equatable {
     case empty
     case checking
     case valid
     case error(_: LoginError)
+}
+
+enum CredentialMode: Equatable, Hashable, CaseIterable {
+    case usernameAndPassword
+    case token
+    case none
+
+    var label: String {
+        switch self {
+        case .usernameAndPassword:
+            String(localized: .login(.credentialModeUsernamePassword))
+        case .token:
+            String(localized: .login(.credentialModeToken))
+        case .none:
+            String(localized: .login(.credentialModeNone))
+        }
+    }
+
+    var description: Text {
+        switch self {
+        case .usernameAndPassword:
+            Text(.login(.credentialModeUsernamePasswordDescription))
+        case .token:
+            Text(.login(.credentialModeTokenDescription(DocumentationLinks.obtainApiToken.absoluteString)))
+        case .none:
+            Text(.login(.credentialModeNoneDescription))
+        }
+    }
+}
+
+enum CredentialState: Equatable {
+    case none
+    case validating
+    case valid
+    case error(LoginError)
 }
 
 @MainActor
@@ -33,9 +69,6 @@ class LoginViewModel {
 
     var selectedIdentity: TLSIdentity?
 
-    var username: String = ""
-    var password: String = ""
-
     var url: String = ""
 
     var checkUrlTask: Task<Void, Never>?
@@ -51,6 +84,23 @@ class LoginViewModel {
     }
 
     var scheme = Scheme.https
+
+    var credentialMode = CredentialMode.usernameAndPassword
+    var credentialState = CredentialState.none
+
+    // For user password login
+    var username: String = ""
+    var password: String = ""
+
+    // for token login
+    var token: String = ""
+
+//    @ObservationIgnored
+//    var connectionManager: ConnectionManager
+
+//    init(connectionManager: ConnectionManager) {
+//        self.connectionManager = connectionManager
+//    }
 
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
@@ -230,5 +280,128 @@ class LoginViewModel {
         }
 
         return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
+    }
+
+    private func fetchToken(url tokenUrl: URL) async throws -> String {
+        Logger.shared.info("Fetching token from username \(username) and password \(password)")
+
+        do {
+            struct TokenRequest: Encodable {
+                var username: String
+                var password: String
+            }
+
+            let json = try JSONEncoder().encode(TokenRequest(username: username,
+                                                             password: password))
+
+            var request = URLRequest(url: tokenUrl)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = json
+            extraHeaders.apply(toRequest: &request)
+
+            Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
+
+            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identity: selectedIdentity), delegateQueue: nil)
+            let (data, response) = try await session.getData(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+
+            if statusCode != 200 {
+                Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), \(String(decoding: data, as: UTF8.self))")
+                if statusCode == 400 {
+                    throw LoginError.invalidLogin
+                }
+                let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
+                throw LoginError.invalidResponse(statusCode: statusCode, details: body)
+            }
+
+            struct TokenResponse: Decodable {
+                var token: String
+            }
+
+            let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
+
+            return tokenResponse.token
+        }
+    }
+
+    func validateCredentials() async throws {
+        Logger.shared.info("Validating credentials against url: \(url)")
+        credentialState = .validating
+
+        let baseUrl: URL
+        let tokenUrl: URL
+        do {
+            (baseUrl, tokenUrl) = try deriveUrl(string: fullUrl, suffix: "token")
+        } catch {
+            // In principle this is checked before, so should not fail here
+            Logger.shared.warning("Error making URL for logging in (url: \(url)) \(error)")
+            throw LoginError(invalidUrl: error)
+        }
+
+        do {
+            let connection: Connection
+
+            let makeConnection = { [self] (token: String?) -> Connection in
+                Connection(url: baseUrl,
+                           token: token,
+                           extraHeaders: extraHeaders,
+                           identityName: selectedIdentity?.name)
+            }
+
+            switch credentialMode {
+            case .usernameAndPassword:
+                Logger.shared.info("Credential mode is username and password")
+
+                let token = try await fetchToken(url: tokenUrl)
+                Logger.shared.info("Username and password are valid, have token")
+                connection = makeConnection(token)
+
+            case .token:
+                connection = makeConnection(token)
+            case .none:
+                connection = makeConnection(nil)
+            }
+
+            Logger.shared.debug("Building repository instance with connection for testing")
+            let repository = await ApiRepository(connection: connection)
+
+            Logger.shared.info("Requesting current user")
+            let currentUser = try await repository.currentUser()
+
+            Logger.shared.info("Have user: \(currentUser.username)")
+
+            if currentUser.username != username {
+                Logger.api.warning("Username from login and logged in username not the same")
+            }
+
+            let stored = StoredConnection(url: baseUrl,
+                                          extraHeaders: extraHeaders,
+                                          user: currentUser,
+                                          identity: selectedIdentity?.name)
+            if let token = connection.token {
+                try stored.setToken(token)
+            }
+
+            Logger.api.info("Login successful")
+
+//            connectionManager.login(stored)
+
+            Haptics.shared.notification(.success)
+
+            credentialState = .valid
+
+        } catch RequestError.forbidden {
+            Logger.shared.error("User logging in does not have permissions to get permissions")
+            credentialState = .error(.insufficientPermissions)
+        } catch RequestError.unauthorized {
+            credentialState = .error(.invalidToken)
+        } catch let error as LoginError {
+            Logger.shared.error("Error during login with url \(error)")
+            credentialState = .error(error)
+        } catch {
+            Logger.shared.error("Error during login with url \(error)")
+            credentialState = .error(.init(other: error))
+        }
     }
 }

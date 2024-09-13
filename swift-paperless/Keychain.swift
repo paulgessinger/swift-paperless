@@ -67,7 +67,7 @@ enum Keychain {
         }
     }
 
-    static func read(service: String, account: String) throws -> Data {
+    static func read(service: String, account: String) throws -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
@@ -82,7 +82,7 @@ enum Keychain {
                                          &result)
 
         guard status != errSecItemNotFound else {
-            throw KeychainError.itemNotFound
+            return nil
         }
 
         guard status == errSecSuccess else {

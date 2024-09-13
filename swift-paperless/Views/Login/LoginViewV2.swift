@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 import SwiftUI
 
 private enum Stage: CaseIterable, Comparable {
@@ -96,12 +97,12 @@ private struct Section<Content: View, Footer: View, Header: View>: View {
 }
 
 extension Section where Footer == EmptyView {
-    init(@ViewBuilder content: @escaping () -> Content) {
-        self.init(content: content, header: nil, footer: nil)
+    init(@ViewBuilder content: @escaping () -> Content, header: @escaping () -> Header) {
+        self.init(content: content, header: header, footer: nil)
     }
 
-    init(@ViewBuilder content: @escaping () -> Content, footer _: () -> Void) {
-        self.init(content: content, header: nil, footer: nil)
+    init(@ViewBuilder content: @escaping () -> Content, footer _: () -> Void, header: @escaping () -> Header) {
+        self.init(content: content, header: header, footer: nil)
     }
 }
 
@@ -199,6 +200,7 @@ private struct UrlEntryView: View {
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
                 .focused($focus)
+                .submitLabel(.next)
             Spacer()
             switch viewModel.loginState {
             case .checking:
@@ -219,36 +221,6 @@ private struct UrlEntryView: View {
         }
         .animation(.spring(duration: 0.2), value: viewModel.loginState)
         .animation(.spring(duration: 0.2), value: viewModel.scheme)
-    }
-}
-
-@MainActor
-struct ContinueButton: View {
-    var disabled: Bool
-    var action: () -> Void
-
-    private var color: Color {
-        if disabled {
-            return .secondary
-        } else {
-            return Color.accentColor
-        }
-    }
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            Text(.login(.continueButtonLabel))
-                .disabled(disabled)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: 40, alignment: .center)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .circular)
-                        .fill(color)
-                )
-        }
-        .padding()
     }
 }
 
@@ -295,11 +267,180 @@ private struct StageSelection: View {
 }
 
 private struct CredentialsStageView: View {
-    var body: some View {
-        VStack {
-            Text("Credentials")
+    @Environment(LoginViewModel.self) private var viewModel
+
+    @EnvironmentObject private var errorController: ErrorController
+
+    var loginEnabled: Bool {
+        if viewModel.credentialState == .validating {
+            return false
         }
-        .frame(maxWidth: .infinity)
+
+        return switch viewModel.credentialMode {
+        case .usernameAndPassword:
+            !viewModel.username.isEmpty && !viewModel.password.isEmpty
+        case .token:
+            !viewModel.token.isEmpty
+        case .none:
+            true
+        }
+    }
+
+    private func validate() {
+        guard loginEnabled else { return }
+        Logger.shared.info("Attempting to validate the credentials")
+        Task {
+            do {
+                try await viewModel.validateCredentials()
+            } catch {
+                Logger.shared.error("Got error validating credentials: \(error)")
+                errorController.push(error: error)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var button: some View {
+        Button {
+            validate()
+        } label: {
+            switch viewModel.credentialState {
+            case .validating:
+                HStack {
+                    ProgressView()
+                    Text(.login(.buttonValidating))
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            default:
+                Text(.login(.buttonLabel))
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
+        .id(viewModel.credentialMode)
+        .buttonStyle(.borderedProminent)
+        .disabled(!loginEnabled)
+    }
+
+    @ViewBuilder
+    private func errorView(_ error: LoginError) -> some View {
+        switch error {
+        case .invalidToken:
+            LoginFooterView(systemImage: "xmark") {
+                switch viewModel.credentialMode {
+                case .token:
+                    Text(.login(.errorTokenInvalid))
+                case .usernameAndPassword:
+                    Text(.login(.errorTokenInvalidUsernamePassword))
+                case .none:
+                    Text(.login(.errorNoCredentialsUnauthorized))
+                }
+            }
+            .foregroundColor(.red)
+        default:
+            error.view
+        }
+    }
+
+    var body: some View {
+        @Bindable var viewModel = viewModel
+        ScrollView(.vertical) {
+            VStack {
+                Section {
+                    Menu {
+                        ForEach(CredentialMode.allCases, id: \.self) { item in
+                            Button {
+                                viewModel.credentialMode = item
+                            } label: {
+                                if viewModel.credentialMode == item {
+                                    Label(item.label, systemImage: "checkmark")
+                                } else {
+                                    Text(item.label)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Label(localized: .login(.schemeSelectionLabel),
+                                  systemImage: "chevron.up.chevron.down")
+                                .labelStyle(.iconOnly)
+                                .font(.footnote)
+                            Text(viewModel.credentialMode.label)
+                                .fixedSize()
+                        }
+                    }
+                } header: {
+                    Text(.login(.credentialMode))
+                } footer: {
+                    VStack {
+                        viewModel.credentialMode.description
+                    }
+                    .animation(.default, value: viewModel.credentialMode)
+                }
+
+                VStack {
+                    switch viewModel.credentialMode {
+                    case .usernameAndPassword:
+                        Section {
+                            VStack {
+                                TextField(.login(.username), text: $viewModel.username)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
+                                    .submitLabel(.go)
+                                Divider()
+                                SecureField(.login(.password), text: $viewModel.password)
+                                    .submitLabel(.go)
+                            }
+                            .padding(.vertical, 10)
+
+                            .onSubmit(of: .text) {
+                                validate()
+                            }
+
+                        } header: {
+                            Text(.login(.credentials))
+                        }
+
+                    case .token:
+                        Section {
+                            TextField(.login(.token), text: $viewModel.token)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .submitLabel(.go)
+
+                                .onSubmit(of: .text) {
+                                    validate()
+                                }
+                        }
+
+                    case .none:
+                        EmptyView()
+                    }
+
+                    VStack {
+                        switch viewModel.credentialState {
+                        case .valid:
+                            EmptyView()
+                        case let .error(error):
+                            button
+                            errorView(error)
+                        default:
+                            button
+                        }
+                    }
+                    .padding()
+                    .animation(.default, value: loginEnabled)
+                }
+                .animation(.default, value: viewModel.credentialMode)
+            }
+            .frame(maxWidth: .infinity)
+        }
+
+        .background(Color.systemGroupedBackground)
+        .scrollBounceBehavior(.basedOnSize)
+
+        .onChange(of: viewModel.credentialMode) {
+            viewModel.credentialState = .none
+        }
     }
 }
 
@@ -323,58 +464,70 @@ private struct ConnectionStageView: View {
 
     var body: some View {
         @Bindable var viewModel = viewModel
-        VStack {
-            Section {
-                UrlEntryView(focus: $focus)
-            } footer: {
-                VStack(alignment: .leading) {
-                    if showHttpWarning {
-                        LoginFooterView(systemImage: "info.circle") {
-                            Text(.login(.httpWarning))
-                        }
-                        .transition(.opacity)
-                    }
-
-                    if showApiWarning {
-                        LoginFooterView(systemImage: "info.circle") {
-                            Text(.login(.apiInUrlNotice))
-                        }
-                        .transition(.opacity)
-                    }
-
-                    if let error = showError {
-                        error.view
-                            .transition(.opacity)
-                    }
-                }
-            }
-
-            if !identityManager.identities.isEmpty {
+        ScrollView(.vertical) {
+            VStack {
                 Section {
-                    HStack {
-                        Text(.login(.identityTitle))
-                        Picker("",
-                               selection: $viewModel.selectedIdentity)
-                        {
-                            Text(String(localized: .localizable(.none))).tag(nil as TLSIdentity?)
-                            ForEach(identityManager.identities, id: \.self) {
-                                Text($0.name)
-                                    .tag(Optional($0))
-                            }
-                        }
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
+                    UrlEntryView(focus: $focus)
                 } footer: {
-                    Text(.login(.identityDescription))
-                }
-            }
+                    VStack(alignment: .leading) {
+                        if showHttpWarning {
+                            LoginFooterView(systemImage: "info.circle") {
+                                Text(.login(.httpWarning))
+                            }
+                            .transition(.opacity)
+                        }
 
-            ContinueButton(disabled: viewModel.loginState != .valid) {
-                focus = false
-                stage = .credentials
+                        if showApiWarning {
+                            LoginFooterView(systemImage: "info.circle") {
+                                Text(.login(.apiInUrlNotice))
+                            }
+                            .transition(.opacity)
+                        }
+
+                        if let error = showError {
+                            error.view
+                                .transition(.opacity)
+                        }
+                    }
+                }
+
+                if !identityManager.identities.isEmpty {
+                    Section {
+                        HStack {
+                            Text(.login(.identityTitle))
+                            Picker("",
+                                   selection: $viewModel.selectedIdentity)
+                            {
+                                Text(String(localized: .localizable(.none))).tag(nil as TLSIdentity?)
+                                ForEach(identityManager.identities, id: \.self) {
+                                    Text($0.name)
+                                        .tag(Optional($0))
+                                }
+                            }
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                    } footer: {
+                        Text(.login(.identityDescription))
+                    }
+                }
+
+                Button {
+                    focus = false
+                    stage = .credentials
+                } label: {
+                    Text(.login(.continueButtonLabel))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.borderedProminent)
+
+                .padding()
+                .disabled(viewModel.loginState != .valid)
             }
         }
+
+        .background(Color.systemGroupedBackground)
+        .scrollBounceBehavior(.basedOnSize)
 
         .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
         .onChange(of: viewModel.selectedIdentity) { viewModel.onChangeUrl(immediate: true) }
@@ -401,6 +554,13 @@ private struct ConnectionStageView: View {
                 binding.wrappedValue = nil
             }
         }
+
+        .onSubmit(of: .text) {
+            if viewModel.loginState == .valid {
+                focus = false
+                stage = .credentials
+            }
+        }
     }
 }
 
@@ -421,28 +581,22 @@ struct LoginViewV2: LoginViewProtocol {
 
     @State private var showDetails = false
     @State private var stage = Stage.connection
+    @State private var showSuccessOverlay = false
 
     var body: some View {
         NavigationStack {
             VStack {
                 switch stage {
                 case .connection:
-                    ScrollView(.vertical) {
-                        ConnectionStageView(stage: $stage)
-                    }
-                    .transition(.move(edge: .leading))
+                    ConnectionStageView(stage: $stage)
+                        .transition(.move(edge: .leading))
                 case .credentials:
-                    ScrollView(.vertical) {
-                        CredentialsStageView()
-                    }
-                    .transition(.move(edge: .trailing))
+                    CredentialsStageView()
+                        .transition(.move(edge: .trailing))
                 }
             }
             .animation(.spring(duration: 0.3), value: stage)
 
-            .background(Color.systemGroupedBackground)
-
-            .scrollBounceBehavior(.basedOnSize)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
 
@@ -489,6 +643,16 @@ struct LoginViewV2: LoginViewProtocol {
             DetailsView()
         }
 
+        .onChange(of: viewModel.credentialState) {
+            if viewModel.credentialState == .valid {
+                showSuccessOverlay = true
+            }
+        }
+
+        .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
+            Text(.login(.success))
+        }
+
         .environment(viewModel)
         .environment(identityManager)
     }
@@ -505,16 +669,23 @@ struct LoginViewV2: LoginViewProtocol {
 }
 
 #Preview("Section") {
-    Section {
-        Text("GO IDENTITY!")
-    } header: {
-        Text("head")
-    } footer: {
-        Text("yo")
+    ScrollView(.vertical) {
+        Section {
+            HStack {
+                Text("GO IDENTITY!")
+                Text("Right")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        } header: {
+            Text("head")
+        } footer: {
+            Text("yo")
+        }
     }
+    .background(Color.systemGroupedBackground)
 }
 
-#Preview("Stage") {
+#Preview("StageSwitch") {
     @Previewable @State var stage = Stage.connection
 
     return VStack {
@@ -527,4 +698,12 @@ struct LoginViewV2: LoginViewProtocol {
             stage = .credentials
         }
     }
+}
+
+#Preview("Credentials") {
+    @Previewable @State var viewModel = LoginViewModel()
+
+    return CredentialsStageView()
+        .background(Color.systemGroupedBackground)
+        .environment(viewModel)
 }

@@ -29,6 +29,8 @@ enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: String?)
     case invalidLogin
 
+    case invalidToken
+
     case invalidResponse(statusCode: Int, details: String?)
 
     case badRequest
@@ -82,6 +84,9 @@ extension LoginError {
 
         case .invalidLogin:
             return loc(.login(.errorLoginInvalid))
+
+        case .invalidToken:
+            return loc(.login(.errorTokenInvalid))
 
         case let .invalidResponse(statusCode, details):
             var msg = String(localized: .login(.errorInvalidResponse(statusCode)))

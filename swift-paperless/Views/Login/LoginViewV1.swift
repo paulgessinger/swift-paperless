@@ -67,6 +67,8 @@ struct LoginViewV1: LoginViewProtocol {
 
     @State private var identityBasedAuth: Bool = false
 
+//    init(connectionManager: ConnectionManager)
+
     private func login() async throws {
         Logger.shared.notice("Attempting login with url \(url.text)")
 
@@ -141,7 +143,7 @@ struct LoginViewV1: LoginViewProtocol {
                                           extraHeaders: viewModel.extraHeaders,
                                           user: currentUser,
                                           identity: viewModel.selectedIdentity?.name)
-            try stored.setToken(connection.token)
+            try stored.setToken(connection.token!)
 
             connectionManager.login(stored)
             Logger.api.info("Login successful")
@@ -191,7 +193,6 @@ struct LoginViewV1: LoginViewProtocol {
                                           extraHeaders: viewModel.extraHeaders,
                                           user: currentUser,
                                           identity: viewModel.selectedIdentity?.name)
-            try stored.setToken("")
             connectionManager.login(stored)
             Logger.api.info("Login successful")
 
