@@ -112,6 +112,15 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         guard var urlString = components.host else {
             return "\(user.username)@\(url)"
         }
+
+        if let scheme = components.scheme {
+            urlString = "\(scheme)://\(urlString)"
+        }
+
+        if let port = components.port, port != 80, port != 443 {
+            urlString = "\(urlString):\(port)"
+        }
+
         if components.path != "" {
             if urlString.last != "/", components.path.first != "/" {
                 urlString += "/"
