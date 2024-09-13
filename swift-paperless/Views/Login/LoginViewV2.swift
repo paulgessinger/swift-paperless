@@ -318,27 +318,34 @@ private struct CredentialsStageView: View {
         }
         .id(viewModel.credentialMode)
         .buttonStyle(.borderedProminent)
+        .padding(.horizontal)
         .disabled(!loginEnabled)
     }
 
     @ViewBuilder
     private func errorView(_ error: LoginError) -> some View {
-        switch error {
-        case .invalidToken:
-            LoginFooterView(systemImage: "xmark") {
-                switch viewModel.credentialMode {
-                case .token:
-                    Text(.login(.errorTokenInvalid))
-                case .usernameAndPassword:
-                    Text(.login(.errorTokenInvalidUsernamePassword))
-                case .none:
-                    Text(.login(.errorNoCredentialsUnauthorized))
+        VStack {
+            switch error {
+            case .invalidToken:
+                LoginFooterView(systemImage: "xmark") {
+                    switch viewModel.credentialMode {
+                    case .token:
+                        Text(.login(.errorTokenInvalid))
+                    case .usernameAndPassword:
+                        Text(.login(.errorTokenInvalidUsernamePassword))
+                    case .none:
+                        Text(.login(.errorNoCredentialsUnauthorized))
+                    }
                 }
+                .foregroundColor(.red)
+                .padding(.horizontal)
+            default:
+                error.view
+                    .padding(.horizontal)
             }
-            .foregroundColor(.red)
-        default:
-            error.view
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
     }
 
     var body: some View {
@@ -427,7 +434,7 @@ private struct CredentialsStageView: View {
                             button
                         }
                     }
-                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .animation(.default, value: loginEnabled)
                 }
                 .animation(.default, value: viewModel.credentialMode)
@@ -572,9 +579,10 @@ struct LoginViewV2: LoginViewProtocol {
     init(connectionManager: ConnectionManager, initial: Bool = true) {
         self.connectionManager = connectionManager
         self.initial = initial
+        _viewModel = State(initialValue: LoginViewModel(connectionManager: connectionManager))
     }
 
-    @State private var viewModel = LoginViewModel()
+    @State private var viewModel: LoginViewModel
     @State private var identityManager = IdentityManager()
 
     @Environment(\.dismiss) private var dismiss
@@ -646,6 +654,12 @@ struct LoginViewV2: LoginViewProtocol {
         .onChange(of: viewModel.credentialState) {
             if viewModel.credentialState == .valid {
                 showSuccessOverlay = true
+                if !initial {
+                    Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        dismiss()
+                    }
+                }
             }
         }
 
@@ -701,7 +715,7 @@ struct LoginViewV2: LoginViewProtocol {
 }
 
 #Preview("Credentials") {
-    @Previewable @State var viewModel = LoginViewModel()
+    @Previewable @State var viewModel = LoginViewModel(connectionManager: ConnectionManager())
 
     return CredentialsStageView()
         .background(Color.systemGroupedBackground)

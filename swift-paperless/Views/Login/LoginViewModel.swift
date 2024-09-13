@@ -95,12 +95,12 @@ class LoginViewModel {
     // for token login
     var token: String = ""
 
-//    @ObservationIgnored
-//    var connectionManager: ConnectionManager
+    @ObservationIgnored
+    var connectionManager: ConnectionManager
 
-//    init(connectionManager: ConnectionManager) {
-//        self.connectionManager = connectionManager
-//    }
+    init(connectionManager: ConnectionManager) {
+        self.connectionManager = connectionManager
+    }
 
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
@@ -388,7 +388,7 @@ class LoginViewModel {
 
             Logger.api.info("Login successful")
 
-//            connectionManager.login(stored)
+            connectionManager.login(stored)
 
             Haptics.shared.notification(.success)
 

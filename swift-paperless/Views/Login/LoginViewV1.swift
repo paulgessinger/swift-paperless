@@ -54,7 +54,7 @@ struct LoginViewV1: LoginViewProtocol {
 
     @StateObject private var url = DebounceObject(delay: 1)
 
-    @State private var viewModel = LoginViewModel()
+    @State private var viewModel: LoginViewModel
 
     @State private var apiInUrl = false
 
@@ -67,7 +67,11 @@ struct LoginViewV1: LoginViewProtocol {
 
     @State private var identityBasedAuth: Bool = false
 
-//    init(connectionManager: ConnectionManager)
+    init(connectionManager: ConnectionManager, initial: Bool = true) {
+        _viewModel = State(initialValue: LoginViewModel(connectionManager: connectionManager))
+        self.connectionManager = connectionManager
+        self.initial = initial
+    }
 
     private func login() async throws {
         Logger.shared.notice("Attempting login with url \(url.text)")
