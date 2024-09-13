@@ -283,6 +283,8 @@ class LoginViewModel {
     }
 
     private func fetchToken(url tokenUrl: URL) async throws -> String {
+        let username = username
+        let password = password
         Logger.shared.info("Fetching token from username \(username) and password \(password)")
 
         do {
@@ -326,7 +328,8 @@ class LoginViewModel {
     }
 
     func validateCredentials() async throws {
-        Logger.shared.info("Validating credentials against url: \(url)")
+        let fullUrl = fullUrl
+        Logger.shared.info("Validating credentials against url: \(fullUrl)")
         credentialState = .validating
 
         let baseUrl: URL
@@ -335,7 +338,7 @@ class LoginViewModel {
             (baseUrl, tokenUrl) = try deriveUrl(string: fullUrl, suffix: "token")
         } catch {
             // In principle this is checked before, so should not fail here
-            Logger.shared.warning("Error making URL for logging in (url: \(url)) \(error)")
+            Logger.shared.warning("Error making URL for logging in (url: \(fullUrl)) \(error)")
             throw LoginError(invalidUrl: error)
         }
 
