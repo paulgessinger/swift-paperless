@@ -23,6 +23,14 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         }
     }
 
+    init(identity: TLSIdentity?) {
+        if let identity {
+            credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
+        } else {
+            credential = nil
+        }
+    }
+
     public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         guard
             challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate

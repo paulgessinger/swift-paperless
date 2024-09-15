@@ -50,7 +50,7 @@ actor ApiRepository {
     init(connection: Connection) async {
         self.connection = connection
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
-        Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) \(connection.token, privacy: .private)")
+        Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) \(connection.token ?? "None", privacy: .private)")
 
         let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
 
@@ -79,7 +79,7 @@ actor ApiRepository {
     }
 
     private nonisolated
-    var apiToken: String {
+    var apiToken: String? {
         connection.token
     }
 
@@ -104,7 +104,9 @@ actor ApiRepository {
     func request(url: URL) -> URLRequest {
         let sanitizedUrl = Self.sanitizeUrlForLog(url)
         var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        if let apiToken {
+            request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        }
         request.setValue("application/json; version=\(effectiveApiVersion)", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         Logger.api.trace("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(request.allHTTPHeaderFields ?? [:])")
@@ -143,7 +145,7 @@ actor ApiRepository {
         #endif
     }
 
-    private func decodeForbidden(_ data: Data) -> String {
+    private func decodeDetails(_ data: Data) -> String {
         struct Details: Decodable {
             var detail: String
         }
@@ -193,7 +195,9 @@ actor ApiRepository {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             Logger.api.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
             if response.statusCode == 403 {
-                throw RequestError.forbidden(detail: decodeForbidden(data))
+                throw RequestError.forbidden(detail: decodeDetails(data))
+            } else if response.statusCode == 401 {
+                throw RequestError.unauthorized(detail: decodeDetails(data))
             } else {
                 throw RequestError.unexpectedStatusCode(code: response.statusCode)
             }
@@ -557,7 +561,9 @@ extension ApiRepository: Repository {
         let url = try url(Endpoint.thumbnail(documentId: document.id))
 
         var request = URLRequest(url: url)
-        request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        if let apiToken {
+            request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        }
         connection.extraHeaders.apply(toRequest: &request)
 
         return request

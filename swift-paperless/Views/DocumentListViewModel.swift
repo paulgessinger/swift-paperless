@@ -51,6 +51,8 @@ class DocumentListViewModel: ObservableObject {
         documents = []
         source = nil
         await load()
+        try? await Task.sleep(for: .seconds(0.1))
+        ready = true
     }
 
     func load() async {
@@ -70,7 +72,6 @@ class DocumentListViewModel: ObservableObject {
             imagePrefetcher.startPrefetching(with: requests)
 
             documents = batch
-            ready = true
             loading = false
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")

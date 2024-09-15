@@ -14,4 +14,10 @@ struct DocumentationLinks {
 
     static let localNetworkDenied = Self.baseUrl.appending(path: "common-issues/local-network-denied")
     static let forbidden = Self.baseUrl.appending(path: "common-issues/forbidden")
+
+    static let insufficientPermissions = Self.baseUrl.appending(path: "common-issues/minimum-permissions")
+
+    static let certificate = Self.baseUrl.appending(path: "common-issues/certificates")
+
+    static let obtainApiToken = Self.baseUrl.appending(path: "faq/api-token")
 }

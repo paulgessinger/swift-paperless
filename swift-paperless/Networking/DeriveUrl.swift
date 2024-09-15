@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolved: URL)? {
+func deriveUrl(string value: String, suffix: String = "") throws -> (base: URL, resolved: URL) {
     let url: URL?
 
     let pattern = /(\w+):\/\/(.*)/
@@ -11,7 +11,7 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
         let rest = matches.2
         if scheme != "http", scheme != "https" {
             Logger.shared.error("Encountered invalid scheme \(scheme)")
-            return nil
+            throw UrlError.invalidScheme(String(scheme))
         }
         url = URL(string: "\(scheme)://\(rest)")
     } else {
@@ -20,19 +20,19 @@ func deriveUrl(string value: String, suffix: String = "") -> (base: URL, resolve
 
     guard let url, var url = URL(string: url.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))) else {
         Logger.shared.notice("Derived URL \(value) was invalid")
-        return nil
+        throw UrlError.other
     }
 
     let base = url
 
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
         Logger.shared.notice("Could not parse URL \(url) into components")
-        return nil
+        throw UrlError.cannotSplit
     }
 
     guard let host = components.host, !host.isEmpty else {
         Logger.shared.error("URL \(url) had empty host")
-        return nil
+        throw UrlError.emptyHost
     }
 
     assert(components.scheme != nil)

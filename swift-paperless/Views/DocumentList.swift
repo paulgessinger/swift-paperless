@@ -146,7 +146,9 @@ struct DocumentList: View {
                 }
             }
         case .repositoryWillChange:
-            break
+            filterModel.ready = false
+            viewModel.ready = false
+
         case .repositoryChanged:
             Task {
                 await viewModel.reload()
@@ -208,6 +210,7 @@ struct DocumentList: View {
                 }
             }
         }
+        .animation(.default, value: viewModel.ready)
 
         .onChange(of: filterModel.filterState) { _, filter in
             Task {
@@ -224,6 +227,7 @@ struct DocumentList: View {
 
         .task {
             await viewModel.load()
+            viewModel.ready = true
         }
 
         .onReceive(store.eventPublisher, perform: onReceiveEvent)

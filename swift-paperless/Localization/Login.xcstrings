@@ -84,47 +84,6 @@
         }
       }
     },
-    "buttonError" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loginfejl"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehler beim Login"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Login error"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erreur de connexion"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fout bij het inloggen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Błąd logowania"
-          }
-        }
-      }
-    },
     "buttonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -166,43 +125,112 @@
         }
       }
     },
-    "buttonValid" : {
+    "buttonValidating" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gyldigt login"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Login gültig"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login valid"
+            "value" : "Validating"
           }
-        },
-        "fr" : {
+        }
+      }
+    },
+    "certificateInfo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connexion valide"
+            "value" : "Self-signed certificates are supported using the operating system trust store!"
           }
-        },
-        "nl" : {
+        }
+      }
+    },
+    "continueButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login correct"
+            "value" : "Continue"
           }
-        },
-        "pl" : {
+        }
+      }
+    },
+    "credentialMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logowanie prawidłowe"
+            "value" : "Mode"
+          }
+        }
+      }
+    },
+    "credentialModeNone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No credentials"
+          }
+        }
+      }
+    },
+    "credentialModeNoneDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+          }
+        }
+      }
+    },
+    "credentialModeToken" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token"
+          }
+        }
+      }
+    },
+    "credentialModeTokenDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login with an API token that you obtained in the admin interface. Click [here](%@) for information how to do this."
+          }
+        }
+      }
+    },
+    "credentialModeUsernamePassword" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Username & Password"
+          }
+        }
+      }
+    },
+    "credentialModeUsernamePasswordDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
           }
         }
       }
@@ -212,13 +240,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Loginoplysninger"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Zugangsdaten"
           }
         },
@@ -230,19 +258,19 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Identifiants"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Inloggegevens"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dane uwierzytelniające"
           }
         }
@@ -289,43 +317,57 @@
         }
       }
     },
-    "errorCouldNotConvertURL" : {
+    "documentationLinkLabel" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunne ikke konvertere \"%@\" til URL"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\"%@\" ist keine gültige URL"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Could not convert \"%@\" to URL"
+            "value" : "More info here"
           }
-        },
-        "fr" : {
+        }
+      }
+    },
+    "errorBadRequest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impossible de convertir «%@» en URL"
+            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
           }
-        },
-        "nl" : {
+        }
+      }
+    },
+    "errorCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kan \"%@\" niet omzetten naar URL"
+            "value" : "Certificate error while connecting"
           }
-        },
-        "pl" : {
+        }
+      }
+    },
+    "errorInsufficientPermissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie można zinterpretować \"%@\" jako adres URL"
+            "value" : "The user associated with these credentials has insufficient permissions"
+          }
+        }
+      }
+    },
+    "errorInsufficientPermissionsDetail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A minimum set of permissions is required to be able to use the app!"
           }
         }
       }
@@ -333,40 +375,10 @@
     "errorInvalidResponse" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmodning til \"%@\" returnerede ugyldig svarkode %d"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anfrage an \"%@\" hat einen ungültigen Antwort-Code zurückgegeben %d"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Request to \"%@\" returned invalid response code %d"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La requête à «%@» a renvoyé un code de réponse invalide %d"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verzoek naar \"%@\" heeft een ongeldige responscode %d teruggestuurd"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Żądanie do \"%@\" zwróciło nieprawidłowy kod odpowiedzi %d"
+            "value" : "Request returned invalid response code *%d*."
           }
         }
       }
@@ -377,37 +389,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Appen er ikke blevet tildelt adgang til det lokale netværk. Se [her](%@) for detaljer."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Der App wurde kein Zugriff auf das lokale Netzwerk gewährt. Siehe [hier](%@) für Details."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The app has not been granted access to the local network. See [here](%@) for details."
+            "value" : "The app has not been granted access to the local network."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "L'application n'a pas été autorisée à accéder au réseau local. Voir [ici](%@) pour plus de détails."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De app heeft geen toegang gekregen tot het lokale netwerk. Druk [hier](%@) voor meer informatie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej. Szczegółowe informacje można znaleźć [tutaj](%@)."
           }
         }
@@ -454,43 +466,57 @@
         }
       }
     },
-    "errorOther" : {
+    "errorLoginInvalidDetails" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anden fejl"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unerwarteter Fehler"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Other error"
+            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
           }
-        },
-        "fr" : {
+        }
+      }
+    },
+    "errorMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autre erreur"
+            "value" : "Error while logging in"
           }
-        },
-        "nl" : {
+        }
+      }
+    },
+    "errorNoCredentialsUnauthorized" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Andere fout"
+            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
           }
-        },
-        "pl" : {
+        }
+      }
+    },
+    "errorTokenInvalid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieoczekiwany błąd"
+            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
+          }
+        }
+      }
+    },
+    "errorTokenInvalidUsernamePassword" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
           }
         }
       }
@@ -500,79 +526,38 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Den angivne URL er ugyldig."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Die eingegebene URL ist ungültig."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The entered URL is invalid."
+            "value" : "The entered URL is invalid"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "L'URL saisie n'est pas valide."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De opgegeven URL is ongeldig."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Podany adres URL jest nieprawidłowy."
-          }
-        }
-      }
-    },
-    "errorUrlInvalidOther" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Den angivne URL er ugyldig: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die eingegebene URL ist ungültig: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The entered URL is invalid: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'URL saisie n'est pas valide : %@"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De opgegeven URL is ongeldig: %@"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Podany adres URL jest nieprawidłowy: %@"
           }
         }
       }
@@ -746,38 +731,60 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Hvis det overhovedet er muligt, brug HTTPS til at oprette forbindelse til API'et."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Bitte nur zu lokalen Installationen per HTTP verbinden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If at all possible, use HTTPS to connect to the API."
+            "value" : "If at all possible, use HTTPS to connect to the API for non-local addresses."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Si possible, utilisez HTTPS pour vous connecter à l'API."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Indien mogelijk, gebruik HTTPS om verbinding te maken met de API."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Jeśli to możliwe, użyj HTTPS do połączenia z API."
+          }
+        }
+      }
+    },
+    "identityDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a client certificate to use when connecting to the target server."
+          }
+        }
+      }
+    },
+    "identityTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identity"
           }
         }
       }
@@ -946,6 +953,39 @@
         }
       }
     },
+    "schemeSelectionLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select scheme"
+          }
+        }
+      }
+    },
+    "stageConnection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        }
+      }
+    },
+    "stageCredentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credentials"
+          }
+        }
+      }
+    },
     "success" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -983,6 +1023,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Logowanie udane"
+          }
+        }
+      }
+    },
+    "token" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token"
           }
         }
       }
@@ -1033,37 +1084,37 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless URL"
+            "value" : "paperless.example.com"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "URL de Paperless"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Paperless URL"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Adres URL serwera Paperless"
           }
         }

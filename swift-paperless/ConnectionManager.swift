@@ -12,11 +12,11 @@ import os
 
 struct Connection: Equatable {
     let url: URL
-    let token: String
+    let token: String?
     let extraHeaders: [ConnectionManager.HeaderValue]
     let identity: String?
 
-    init(url: URL, token: String, extraHeaders: [ConnectionManager.HeaderValue] = [], identityName: String?) {
+    init(url: URL, token: String? = nil, extraHeaders: [ConnectionManager.HeaderValue] = [], identityName: String?) {
         self.url = url
         self.token = token
         self.extraHeaders = extraHeaders
@@ -44,11 +44,19 @@ struct StoredConnection: Equatable, Codable, Identifiable {
     var user: User
     var identity: String?
 
-    var token: String {
+    var token: String? {
         get throws {
-            let data = try Keychain.read(service: url.absoluteString,
-                                         account: user.username)
-            return String(data: data, encoding: .utf8)!
+            guard let data = try Keychain.read(service: url.absoluteString,
+                                               account: user.username)
+            else {
+                return nil
+            }
+            let token = String(data: data, encoding: .utf8)!
+            // we might have saved empty strings as tokens before, convert to nil when reading
+            if token.isEmpty {
+                return nil
+            }
+            return token
         }
     }
 
@@ -104,6 +112,15 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         guard var urlString = components.host else {
             return "\(user.username)@\(url)"
         }
+
+        if let scheme = components.scheme {
+            urlString = "\(scheme)://\(urlString)"
+        }
+
+        if let port = components.port, port != 80, port != 443 {
+            urlString = "\(urlString):\(port)"
+        }
+
         if components.path != "" {
             if urlString.last != "/", components.path.first != "/" {
                 urlString += "/"
@@ -279,17 +296,22 @@ class ConnectionManager: ObservableObject {
             url = url.appending(path: path)
         }
 
-        let data: Data
+        let token: String?
         do {
             let keychainAccount = "PaperlessAccount"
-            data = try Keychain.read(service: apiHost,
-                                     account: keychainAccount)
+            let data = try Keychain.read(service: apiHost,
+                                         account: keychainAccount)
+            if let data {
+                token = String(data: data, encoding: .utf8)!
+            } else {
+                token = nil
+            }
         } catch {
             return nil
         }
 
         return Connection(url: url,
-                          token: String(data: data, encoding: .utf8)!,
+                          token: token,
                           extraHeaders: extraHeaders, identityName: nil)
     }
 
@@ -308,7 +330,7 @@ class ConnectionManager: ObservableObject {
         return stored
     }
 
-    func login(_ connection: StoredConnection) throws {
+    func login(_ connection: StoredConnection) {
         Logger.api.info("Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
         connections[connection.id] = connection
         activeConnectionId = connection.id

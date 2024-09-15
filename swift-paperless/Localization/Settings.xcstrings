@@ -1277,7 +1277,7 @@
         }
       }
     },
-    "idenitities" : {
+    "identities" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -1314,6 +1314,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Identities"
+          }
+        }
+      }
+    },
+    "identitiesDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
           }
         }
       }
