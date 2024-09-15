@@ -271,6 +271,8 @@ private struct CredentialsStageView: View {
 
     @EnvironmentObject private var errorController: ErrorController
 
+    var onSuccess: (StoredConnection) -> Void
+
     var loginEnabled: Bool {
         if viewModel.credentialState == .validating {
             return false
@@ -291,7 +293,8 @@ private struct CredentialsStageView: View {
         Logger.shared.info("Attempting to validate the credentials")
         Task {
             do {
-                try await viewModel.validateCredentials()
+                let stored = try await viewModel.validateCredentials()
+                onSuccess(stored)
             } catch {
                 Logger.shared.error("Got error validating credentials: \(error)")
                 errorController.push(error: error)
@@ -574,15 +577,9 @@ private struct ConnectionStageView: View {
 @MainActor
 struct LoginViewV2: LoginViewProtocol {
     @ObservedObject var connectionManager: ConnectionManager
-    let initial: Bool
+    var initial: Bool = false
 
-    init(connectionManager: ConnectionManager, initial: Bool = true) {
-        self.connectionManager = connectionManager
-        self.initial = initial
-        _viewModel = State(initialValue: LoginViewModel(connectionManager: connectionManager))
-    }
-
-    @State private var viewModel: LoginViewModel
+    @State private var viewModel = LoginViewModel()
     @State private var identityManager = IdentityManager()
 
     @Environment(\.dismiss) private var dismiss
@@ -590,6 +587,20 @@ struct LoginViewV2: LoginViewProtocol {
     @State private var showDetails = false
     @State private var stage = Stage.connection
     @State private var showSuccessOverlay = false
+
+    private func loginSucceeded(stored: StoredConnection) {
+        Haptics.shared.notification(.success)
+
+        showSuccessOverlay = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if !initial {
+                dismiss()
+                try? await Task.sleep(for: .seconds(0.2))
+            }
+            connectionManager.login(stored)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -599,7 +610,7 @@ struct LoginViewV2: LoginViewProtocol {
                     ConnectionStageView(stage: $stage)
                         .transition(.move(edge: .leading))
                 case .credentials:
-                    CredentialsStageView()
+                    CredentialsStageView(onSuccess: loginSucceeded)
                         .transition(.move(edge: .trailing))
                 }
             }
@@ -649,18 +660,6 @@ struct LoginViewV2: LoginViewProtocol {
 
         .sheet(isPresented: $showDetails) {
             DetailsView()
-        }
-
-        .onChange(of: viewModel.credentialState) {
-            if viewModel.credentialState == .valid {
-                showSuccessOverlay = true
-                if !initial {
-                    Task {
-                        try? await Task.sleep(for: .seconds(2))
-                        dismiss()
-                    }
-                }
-            }
         }
 
         .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
@@ -715,9 +714,9 @@ struct LoginViewV2: LoginViewProtocol {
 }
 
 #Preview("Credentials") {
-    @Previewable @State var viewModel = LoginViewModel(connectionManager: ConnectionManager())
+    @Previewable @State var viewModel = LoginViewModel()
 
-    return CredentialsStageView()
+    return CredentialsStageView(onSuccess: { _ in })
         .background(Color.systemGroupedBackground)
         .environment(viewModel)
 }

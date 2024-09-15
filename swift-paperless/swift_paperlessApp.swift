@@ -66,25 +66,31 @@ struct MainView: View {
         }
     }
 
+    private var loadingView: some View {
+        VStack {
+            LogoView()
+            ProgressView()
+                .controlSize(.large)
+        }
+    }
+
     var body: some View {
         VStack {
-            if manager.connection != nil, storeReady {
-                DocumentView()
-                    .errorOverlay(errorController: errorController)
-                    .environmentObject(store!)
-                    .environmentObject(manager)
+            ZStack {
+                if manager.connection == nil || !storeReady {
+                    loadingView
+                } else {
+                    DocumentView()
+                        .errorOverlay(errorController: errorController)
+                        .environmentObject(store!)
+                        .environmentObject(manager)
 
-                    .overlay {
-                        if AppSettings.shared.enableBiometricAppLock, biometricLockManager.lockState == .locked || scenePhase == .inactive {
-                            InactiveView()
-                                .transition(.opacity)
+                        .overlay {
+                            if AppSettings.shared.enableBiometricAppLock, biometricLockManager.lockState == .locked || scenePhase == .inactive {
+                                InactiveView()
+                                    .transition(.opacity)
+                            }
                         }
-                    }
-            } else {
-                VStack {
-                    LogoView()
-                    ProgressView()
-                        .controlSize(.large)
                 }
             }
         }

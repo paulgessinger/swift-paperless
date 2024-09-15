@@ -95,13 +95,6 @@ class LoginViewModel {
     // for token login
     var token: String = ""
 
-    @ObservationIgnored
-    var connectionManager: ConnectionManager
-
-    init(connectionManager: ConnectionManager) {
-        self.connectionManager = connectionManager
-    }
-
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
         checkUrlTask = Task {
@@ -327,7 +320,7 @@ class LoginViewModel {
         }
     }
 
-    func validateCredentials() async throws {
+    func validateCredentials() async throws (LoginError) -> StoredConnection {
         let fullUrl = fullUrl
         Logger.shared.info("Validating credentials against url: \(fullUrl)")
         credentialState = .validating
@@ -386,25 +379,27 @@ class LoginViewModel {
                 try stored.setToken(token)
             }
 
-            Logger.api.info("Login successful")
-
-            connectionManager.login(stored)
-
-            Haptics.shared.notification(.success)
+            Logger.api.info("Credentials are valid")
 
             credentialState = .valid
+
+            return stored
 
         } catch RequestError.forbidden {
             Logger.shared.error("User logging in does not have permissions to get permissions")
             credentialState = .error(.insufficientPermissions)
+            throw .insufficientPermissions
         } catch RequestError.unauthorized {
             credentialState = .error(.invalidToken)
+            throw .invalidLogin
         } catch let error as LoginError {
             Logger.shared.error("Error during login with url \(error)")
             credentialState = .error(error)
+            throw error
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             credentialState = .error(.init(other: error))
+            throw LoginError(other: error)
         }
     }
 }
