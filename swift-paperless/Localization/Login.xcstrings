@@ -472,7 +472,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The username and password combination was rejected. Please check you typed them in correctly."
+            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
           }
         }
       }
@@ -494,7 +494,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The connection request without credentials was rejected. Please check your configuration."
+            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
           }
         }
       }
@@ -505,7 +505,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The access token is invalid. Please check you typed it in correctly."
+            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
           }
         }
       }
@@ -516,7 +516,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Username and password were accepted, but the returned access token was rejected. This is likely an internal error. Please send a bug report with logs."
+            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
           }
         }
       }

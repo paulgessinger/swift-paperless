@@ -157,8 +157,6 @@ extension LoginError {
             }
 
         case .invalidLogin:
-            (Text(.login(.errorLoginInvalid)) + Text(":"))
-                .bold()
             Text(.login(.errorLoginInvalidDetails))
 
         case .insufficientPermissions:
