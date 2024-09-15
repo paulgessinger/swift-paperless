@@ -81,7 +81,7 @@ actor NullRepository: Repository {
     func suggestions(documentId _: UInt) async -> Suggestions { .init() }
 
     nonisolated
-    var delegate: PaperlessURLSessionDelegate? { nil }
+    var delegate: (any URLSessionDelegate)? { nil }
 }
 
 actor NullDocumentSource: DocumentSource {

@@ -361,5 +361,5 @@ actor PreviewRepository: Repository {
     func acknowledge(tasks _: [UInt]) async throws {}
 
     nonisolated
-    var delegate: PaperlessURLSessionDelegate? { nil }
+    var delegate: (any URLSessionDelegate)? { nil }
 }

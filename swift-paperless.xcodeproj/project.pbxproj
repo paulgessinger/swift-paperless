@@ -193,7 +193,6 @@
 		7A6F31E129DEA51C00186A87 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACB386429D99FCE006CE102 /* FilterRuleType.swift */; };
 		7A6FD1A72BDD6668002AA467 /* DocumentationLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6FD1A62BDD6668002AA467 /* DocumentationLinks.swift */; };
 		7A6FD1A82BDD6668002AA467 /* DocumentationLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6FD1A62BDD6668002AA467 /* DocumentationLinks.swift */; };
-		7A7056FF2C43C26F00287AEF /* PaperlessURLSessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AA126C2C29AAA9000A389C /* PaperlessURLSessionDelegate.swift */; };
 		7A7057102C43C29200287AEF /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A113C29FE649300E9FFE3 /* Keychain.swift */; };
 		7A7080CF2BDF8EE30095BD56 /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939739772B72966E0041F08A /* DocumentScannerView.swift */; };
 		7A7080D12BDF8EF90095BD56 /* Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7080D02BDF8EF90095BD56 /* Import.swift */; };
@@ -1349,7 +1348,6 @@
 			files = (
 				7A4648042A1D5ABC00078968 /* ListResponse.swift in Sources */,
 				7A35C0C02C117EFA006A542D /* SortField.swift in Sources */,
-				7A7056FF2C43C26F00287AEF /* PaperlessURLSessionDelegate.swift in Sources */,
 				7A8E1F7A2A1A8F5A002A7CB3 /* CorrespondentModel.swift in Sources */,
 				7A4648012A1D5A7D00078968 /* Logging.swift in Sources */,
 				7A2577412A87D32400B15626 /* NullCodable.swift in Sources */,

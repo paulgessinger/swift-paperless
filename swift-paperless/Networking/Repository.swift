@@ -149,7 +149,7 @@ protocol Repository: Sendable, Actor {
     func acknowledge(tasks: [UInt]) async throws
 
     nonisolated
-    var delegate: PaperlessURLSessionDelegate? { get }
+    var delegate: (any URLSessionDelegate)? { get }
 }
 
 extension Repository {

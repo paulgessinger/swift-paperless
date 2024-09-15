@@ -74,7 +74,7 @@ actor ApiRepository {
     }
 
     nonisolated
-    var delegate: PaperlessURLSessionDelegate? {
+    var delegate: (any URLSessionDelegate)? {
         urlSessionDelegate
     }
 
