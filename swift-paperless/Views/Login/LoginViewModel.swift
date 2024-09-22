@@ -37,7 +37,7 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
         case .usernameAndPassword:
             Text(.login(.credentialModeUsernamePasswordDescription))
         case .token:
-            Text(.login(.credentialModeTokenDescription(DocumentationLinks.obtainApiToken.absoluteString)))
+            Text(.login(.credentialModeTokenDescription))
         case .none:
             Text(.login(.credentialModeNoneDescription))
         }

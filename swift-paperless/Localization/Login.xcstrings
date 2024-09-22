@@ -208,7 +208,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login with an API token that you obtained in the admin interface. Click [here](%@) for information how to do this."
+            "value" : "Login with an API token that you obtained in the admin interface."
           }
         }
       }
