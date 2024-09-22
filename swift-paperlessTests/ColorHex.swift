@@ -20,11 +20,11 @@ import Testing
             try Color(hex: "nope")
         }
 
-        #expecttry (Color(hex: "#ffffff") == Color.white)
-        #expecttry (Color(hex: "#000000") == Color.black)
-        #expecttry (Color(hex: "#ff0000") == Color(.sRGB, red: 1, green: 0, blue: 0))
-        #expecttry (Color(hex: "#00ff00") == Color(.sRGB, red: 0, green: 1, blue: 0))
-        #expecttry (Color(hex: "#0000ff") == Color(.sRGB, red: 0, green: 0, blue: 1))
+        try #expect(Color(hex: "#ffffff") == Color.white)
+        try #expect(Color(hex: "#000000") == Color.black)
+        try #expect(Color(hex: "#ff0000") == Color(.sRGB, red: 1, green: 0, blue: 0))
+        try #expect(Color(hex: "#00ff00") == Color(.sRGB, red: 0, green: 1, blue: 0))
+        try #expect(Color(hex: "#0000ff") == Color(.sRGB, red: 0, green: 0, blue: 1))
     }
 
     @Test
@@ -48,7 +48,7 @@ import Testing
     func testFromJson() throws {
         for (s, c) in inputs {
             let input = "{\"color\":\"\(s)\"}".data(using: .utf8)!
-            let test = try #requiretry (decoder.decode(TestStruct.self, from: input))
+            let test = try #require(try decoder.decode(TestStruct.self, from: input))
             #expect(test.color.color == c)
         }
     }
