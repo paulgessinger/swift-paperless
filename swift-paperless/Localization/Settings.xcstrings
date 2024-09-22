@@ -335,9 +335,39 @@
     "appVersionTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemt app-version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte App-Version"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Stored app version"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version de l'application stockée"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stored app version"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Stored app version"
           }
         }
@@ -1209,9 +1239,39 @@
     "experimentsDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Einstellungen sind kommende Funktionsvarianten/Experimente, die abschaltet werden können. \n\nNormalerweise wird ein Experiment entweder implementiert und die alte Variante verschwindet, oder das Experiment wird aufgegeben und die neue Variante verschwindet."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les paramètres sont des variantes ou des expériences de fonctionnalités à venir que vous pouvez désactiver. \n\nEn général, l'expérience sera mise en œuvre, et l'ancienne variante disparaîtra, ou l'expérience sera abandonnée, et la nouvelle variante disparaîtra."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
           }
         }
@@ -1220,9 +1280,39 @@
     "experimentsTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "UI Experiments"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UI-Experimente"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "UI Experiments"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expériences en matière d'interface utilisateur"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "UI Experiments"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "UI Experiments"
           }
         }
@@ -1354,9 +1444,39 @@
     "identitiesDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identitäten sind Zertifikate zusammen mit privaten Schlüsseln, mit denen du kryptografisch authentifiziert werden kanst. Identitäten werden in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/)-Konfigurationen für den Zugriff auf gesicherte Ressourcen verwendet.\n\nDies ist eine **fortgeschrittene Funktion**!"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les identités sont des certificats accompagnés de clés privées qui peuvent être utilisés pour vous authentifier de manière cryptographique. Les identités sont utilisées dans les configurations [*mTLS*] (https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) pour accéder aux ressources sécurisées.\n\nIl s'agit d'une **fonctionnalité avancée** !"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
           }
         }
@@ -1611,9 +1731,39 @@
     "resetAppVersionDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App führt bestimmte Buchhaltungsaufgaben auf der Grundlage der App-Version aus. Hier kann die App-Version zurückgesetzt werden, so dass die App so funktioniert, als wäre sie neu installiert worden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'application effectue certaines opérations comptables en fonction de la version de l'application. Cette opération réinitialise la version de l'application, de sorte que l'application fonctionne comme s'il s'agissait d'une installation propre."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
           }
         }

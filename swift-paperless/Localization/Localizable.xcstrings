@@ -707,8 +707,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copied to clipboard"
+            "state" : "translated",
+            "value" : "Kopieret til udklipsholder"
           }
         },
         "de" : {
@@ -1366,8 +1366,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Detaljer"
           }
         },
         "de" : {
