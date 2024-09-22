@@ -158,9 +158,6 @@ class LoginViewModel {
 
         do {
             (_, apiUrl) = try deriveUrl(string: value)
-        } catch is CancellationError {
-            // do nothing
-            return
         } catch {
             Logger.shared.error("Cannot derive URL: \(value) -> \(error)")
             loginState = .error(.init(invalidUrl: error))
