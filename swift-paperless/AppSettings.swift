@@ -17,6 +17,7 @@ enum SettingsKeys: String {
     case defaultSortOrder
 
     case editingUserInterfaceExperiment
+    case loginScreenV2
 }
 
 @MainActor
@@ -85,6 +86,9 @@ class AppSettings: ObservableObject {
 
     @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
     var editingUserInterface: EditingUserInterface = .automatic
+
+    @PublishedUserDefaultsBacked(.loginScreenV2)
+    var loginScreenV2: Bool = true
 
     struct Version: CustomStringConvertible, Codable, Equatable {
         private let releaseStored: [UInt]

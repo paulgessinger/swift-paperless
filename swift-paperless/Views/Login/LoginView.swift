@@ -17,12 +17,21 @@ struct LoginView: LoginViewProtocol {
     @ObservedObject var connectionManager: ConnectionManager
     var initial = true
 
+    @ObservedObject private var appSettings = AppSettings.shared
+
     var body: some View {
-        switch Bundle.main.appConfiguration {
-        case .AppStore, .TestFlight:
-            LoginViewV1(connectionManager: connectionManager, initial: initial)
-        case .Debug, .Simulator:
+        if appSettings.loginScreenV2 {
             LoginViewV2(connectionManager: connectionManager, initial: initial)
+        } else {
+            LoginViewV1(connectionManager: connectionManager, initial: initial)
         }
+    }
+}
+
+struct LoginViewSwitchView: View {
+    @ObservedObject private var appSettings = AppSettings.shared
+
+    var body: some View {
+        Toggle("Login screen v2", isOn: $appSettings.loginScreenV2)
     }
 }

@@ -145,7 +145,7 @@ struct SettingsView: View {
             }
 
             NavigationLink {
-                debugMenu
+                DebugMenuView()
             } label: {
                 Label(localized: .settings(.debugMenu), systemImage: "ladybug.fill")
             }
@@ -155,21 +155,6 @@ struct SettingsView: View {
                 Label(localized: .settings(.identities), systemImage: "lock.fill")
             }
         }
-    }
-
-    var debugMenu: some View {
-        Form {
-            Section {
-                Button {
-                    AppSettings.shared.resetAppVersion()
-                } label: {
-                    Text(.settings(.debugResetAppVersion))
-                }
-                DocumentDetailViewVersionSelection()
-            }
-        }
-        .navigationTitle(String(localized: .settings(.debugMenu)))
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     var body: some View {

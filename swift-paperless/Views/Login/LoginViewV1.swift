@@ -16,18 +16,24 @@ private struct DetailsView: View {
     var body: some View {
         NavigationStack {
             List {
-                NavigationLink {
-                    ExtraHeadersView(headers: $extraHeaders)
-                } label: {
-                    Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
-                }
-                NavigationLink {
-                    TLSListView(identityManager: identityManager)
-                } label: {
-                    Label(localized: .settings(.identities), systemImage: "lock.fill")
+                Section {
+                    NavigationLink {
+                        ExtraHeadersView(headers: $extraHeaders)
+                    } label: {
+                        Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+                    }
+                    NavigationLink {
+                        TLSListView(identityManager: identityManager)
+                    } label: {
+                        Label(localized: .settings(.identities), systemImage: "lock.fill")
+                    }
+
+                    LogRecordExportButton()
                 }
 
-                LogRecordExportButton()
+                Section {
+                    LoginViewSwitchView()
+                }
             }
             .navigationTitle(Text(.login(.detailsTitle)))
             .navigationBarTitleDisplayMode(.inline)

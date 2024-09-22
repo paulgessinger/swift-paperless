@@ -35,19 +35,23 @@ private struct DetailsView: View {
         @Bindable var viewModel = viewModel
 
         NavigationStack {
-            List {
-                NavigationLink {
-                    ExtraHeadersView(headers: $viewModel.extraHeaders)
-                } label: {
-                    Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
-                }
-                NavigationLink {
-                    TLSListView(identityManager: identityManager)
-                } label: {
-                    Label(localized: .settings(.identities), systemImage: "lock.fill")
+            Form {
+                SwiftUI.Section {
+                    NavigationLink {
+                        ExtraHeadersView(headers: $viewModel.extraHeaders)
+                    } label: {
+                        Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+                    }
+                    NavigationLink {
+                        TLSListView(identityManager: identityManager)
+                    } label: {
+                        Label(localized: .settings(.identities), systemImage: "lock.fill")
+                    }
+
+                    LogRecordExportButton()
                 }
 
-                LogRecordExportButton()
+                LoginViewSwitchView()
             }
             .navigationTitle(Text(.login(.detailsTitle)))
             .navigationBarTitleDisplayMode(.inline)
