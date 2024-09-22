@@ -26,6 +26,10 @@ jobs:
         ios:
           - "17.5"
           - "18.0"
+        exclude:
+          # combination does not exist
+          - device: "iPhone 16 Pro"
+            ios: "17.5"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
