@@ -255,7 +255,10 @@ struct LoginViewV1: LoginViewProtocol {
                         }
 
                         if case let .error(error) = viewModel.loginState {
-                            error.view
+                            LoginFooterView(systemImage: "xmark") {
+                                error.presentation
+                            }
+                            .foregroundStyle(.red)
                         }
                     }
                     .transition(.opacity)

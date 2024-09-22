@@ -131,7 +131,7 @@ extension LoginError {
 
 extension LoginError {
     @ViewBuilder
-    private var inner: some View {
+    var presentation: some View {
         switch self {
         case let .invalidResponse(code, details):
             Text(.login(.errorInvalidResponse(code)))
@@ -193,21 +193,13 @@ extension LoginError {
             }
         }
     }
-
-    @MainActor
-    var view: some View {
-        LoginFooterView(systemImage: "xmark") {
-            inner
-        }
-        .foregroundColor(.red)
-    }
 }
 
 // - MARK: Preview
 
 @MainActor
 private func h(_ error: LoginError) -> some View {
-    error.view
+    error.presentation
 }
 
 private struct TestError: Error {}

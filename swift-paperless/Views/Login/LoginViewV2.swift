@@ -343,8 +343,11 @@ private struct CredentialsStageView: View {
                 .foregroundColor(.red)
                 .padding(.horizontal)
             default:
-                error.view
-                    .padding(.horizontal)
+                LoginFooterView(systemImage: "xmark") {
+                    error.presentation
+                }
+                .foregroundStyle(.red)
+                .padding(.horizontal)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -495,8 +498,11 @@ private struct ConnectionStageView: View {
                         }
 
                         if let error = showError {
-                            error.view
-                                .transition(.opacity)
+                            LoginFooterView(systemImage: "xmark") {
+                                error.presentation
+                            }
+                            .foregroundStyle(.red)
+                            .transition(.opacity)
                         }
                     }
                 }
