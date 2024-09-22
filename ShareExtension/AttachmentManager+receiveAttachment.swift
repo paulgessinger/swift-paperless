@@ -75,6 +75,7 @@ extension AttachmentManager {
                         Logger.shared.error("Unable to convert image to PNG")
                         continuation.resume(throwing: InvalidAttachmentContent())
                     }
+
                 default:
                     Logger.shared.error("Got attachment data \(String(describing: data), privacy: .public) but cannot handle")
                     continuation.resume(throwing: InvalidAttachmentContent())

@@ -13,13 +13,13 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
     @Binding var document: DocumentType
     @Binding var isValid: Bool
 
-    @State private var checking: Bool = false
+    @State private var checking = false
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
-    @State private var asn: String = ""
-    @State private var changed: Bool = false
+    @State private var asn = ""
+    @State private var changed = false
 
     @State private var originalAsn: UInt?
 

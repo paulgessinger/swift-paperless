@@ -25,18 +25,18 @@ enum SortOrder: Codable {
     var localizedName: String {
         switch self {
         case .ascending:
-            return String(localized: .localizable(.ascending))
+            String(localized: .localizable(.ascending))
         case .descending:
-            return String(localized: .localizable(.descending))
+            String(localized: .localizable(.descending))
         }
     }
 
     var reverse: Bool {
         switch self {
         case .descending:
-            return true
+            true
         case .ascending:
-            return false
+            false
         }
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-func deriveUrl(string value: String, suffix: String = "") throws (UrlError) -> (base: URL, resolved: URL) {
+func deriveUrl(string value: String, suffix: String = "") throws(UrlError) -> (base: URL, resolved: URL) {
     let url: URL?
 
     let pattern = /(\w+):\/\/(.*)/

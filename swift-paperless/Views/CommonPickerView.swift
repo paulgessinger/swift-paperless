@@ -71,11 +71,11 @@ struct CommonPicker: View {
     private func selected(id: UInt) -> Bool {
         switch selection {
         case let .anyOf(ids):
-            return ids.contains(id)
+            ids.contains(id)
         case let .noneOf(ids):
-            return ids.contains(id)
+            ids.contains(id)
         default:
-            return false
+            false
         }
     }
 
@@ -132,13 +132,13 @@ struct CommonPicker: View {
                     .disabled({
                         switch selection {
                         case .any:
-                            return true
+                            true
                         case .notAssigned:
-                            return true
+                            true
                         case .anyOf:
-                            return false
+                            false
                         case .noneOf:
-                            return false
+                            false
                         }
                     }())
                 }

@@ -59,9 +59,9 @@ class LoginViewModel {
     var loginStateValid: Bool {
         switch loginState {
         case .valid, .error: // Error is technically not valid, but we want to allow retrying
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 
@@ -317,7 +317,7 @@ class LoginViewModel {
         }
     }
 
-    func validateCredentials() async throws (LoginError) -> StoredConnection {
+    func validateCredentials() async throws(LoginError) -> StoredConnection {
         let fullUrl = fullUrl
         Logger.shared.info("Validating credentials against url: \(fullUrl)")
         credentialState = .validating
@@ -352,6 +352,7 @@ class LoginViewModel {
 
             case .token:
                 connection = makeConnection(token)
+
             case .none:
                 connection = makeConnection(nil)
             }

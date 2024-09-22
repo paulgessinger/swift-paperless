@@ -18,9 +18,9 @@ struct TaskActivityToolbar: View {
     static let numTasks = 5
     var more: String {
         if store.tasks.count > Self.numTasks {
-            return String(localized: .tasks(.tasksMenuMoreLabel(UInt(store.tasks.count - Self.numTasks))))
+            String(localized: .tasks(.tasksMenuMoreLabel(UInt(store.tasks.count - Self.numTasks))))
         } else {
-            return String(localized: .tasks(.tasksMenuAllLabel))
+            String(localized: .tasks(.tasksMenuAllLabel))
         }
     }
 

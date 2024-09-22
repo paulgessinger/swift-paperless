@@ -23,9 +23,9 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
     var showTextField: Bool {
         switch element.matchingAlgorithm {
         case .auto, .none:
-            return false
+            false
         default:
-            return true
+            true
         }
     }
 

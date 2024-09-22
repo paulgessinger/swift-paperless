@@ -20,9 +20,9 @@ struct SearchBarView: View {
 
     var barColor: AnyShapeStyle {
         if colorScheme == .dark {
-            return .init(.background.secondary)
+            .init(.background.secondary)
         } else {
-            return .init(.background.tertiary)
+            .init(.background.tertiary)
         }
     }
 
@@ -95,7 +95,7 @@ struct SearchBarView: View {
 }
 
 private struct PreviewHelper<Content>: View where Content: View {
-    @State private var text: String = ""
+    @State private var text = ""
     @State private var hidden = false
 
     var content: (Binding<String>) -> Content

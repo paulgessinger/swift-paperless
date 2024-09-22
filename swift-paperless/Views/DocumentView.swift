@@ -109,9 +109,9 @@ struct DocumentView: View {
 
     private var createDocumentTitle: String {
         if importModel.totalUrls > 1 {
-            return "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
+            "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
         } else {
-            return String(localized: .localizable(.documentAdd))
+            String(localized: .localizable(.documentAdd))
         }
     }
 

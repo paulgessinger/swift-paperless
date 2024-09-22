@@ -49,9 +49,9 @@ struct PaperlessTask: Model, Codable, Equatable, Hashable, Identifiable {
     var isActive: Bool {
         switch status {
         case .PENDING, .STARTED, .RETRY:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 

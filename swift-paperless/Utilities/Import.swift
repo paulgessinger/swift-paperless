@@ -22,11 +22,11 @@ enum DocumentImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .photosReceivalFailed:
-            return String(localized: .localizable(.photosReceivalFailed))
+            String(localized: .localizable(.photosReceivalFailed))
         case .pdfCreatePageFailed:
-            return String(localized: .localizable(.documentScanErrorCreatePageFailed))
+            String(localized: .localizable(.documentScanErrorCreatePageFailed))
         case .pdfWriteFailed:
-            return String(localized: .localizable(.documentScanErrorWriteFailed))
+            String(localized: .localizable(.documentScanErrorWriteFailed))
         }
     }
 }

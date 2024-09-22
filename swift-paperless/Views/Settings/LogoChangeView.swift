@@ -31,18 +31,18 @@ enum AppIcon: String, CaseIterable {
     @MainActor
     var isActive: Bool {
         if let iconName = UIApplication.shared.alternateIconName {
-            return iconName == rawValue
+            iconName == rawValue
         } else {
-            return self == .primary
+            self == .primary
         }
     }
 
     @MainActor
     static var active: AppIcon {
         if let iconName = UIApplication.shared.alternateIconName {
-            return .init(rawValue: iconName) ?? .primary
+            .init(rawValue: iconName) ?? .primary
         } else {
-            return .primary
+            .primary
         }
     }
 }

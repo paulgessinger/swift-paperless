@@ -53,11 +53,10 @@ class ShareViewController: UIViewController {
 
     override public func viewDidLayoutSubviews() {
         // offset is empirical and probably wrong
-        let offset: CGFloat
-        if traitCollection.horizontalSizeClass == .regular {
-            offset = 40
+        let offset: CGFloat = if traitCollection.horizontalSizeClass == .regular {
+            40
         } else {
-            offset = 80
+            80
         }
         childView?.view.frame = CGRect(x: container.bounds.origin.x, y: container.bounds.origin.y, width: container.bounds.width, height: container.bounds.height + offset)
     }

@@ -52,7 +52,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case 39: .hasCustomFieldsAny
         case 40: .doesNotHaveCustomFields
         case 41: .hasAnyCustomFields
-
         default: .other(rawValue)
         }
     }
@@ -101,7 +100,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .hasCustomFieldsAny: 39
         case .doesNotHaveCustomFields: 40
         case .hasAnyCustomFields: 41
-
         case let .other(value): value
         }
     }
@@ -250,7 +248,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .hasCustomFieldsAny: "custom_fields__id__in"
         case .doesNotHaveCustomFields: "custom_fields__id__none"
         case .hasAnyCustomFields: "has_custom_fields"
-
         default: nil
         }
     }
@@ -299,7 +296,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .hasCustomFieldsAny: .number
         case .doesNotHaveCustomFields: .number
         case .hasAnyCustomFields: .boolean
-
         default: .string
         }
     }
@@ -309,7 +305,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .isInInbox: true
         case .hasAnyTag: true
         case .hasAnyCustomFields: true
-
         default: false
         }
     }
@@ -331,7 +326,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .hasCustomFieldsAll: true
         case .hasCustomFieldsAny: true
         case .doesNotHaveCustomFields: true
-
         default: false
         }
     }
@@ -361,7 +355,6 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         case .correspondent: "correspondent__isnull"
         case .storagePath: "storage_path__isnull"
         case .documentType: "document_type__isnull"
-
         default: nil
         }
     }

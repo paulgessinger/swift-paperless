@@ -51,27 +51,27 @@ enum FilterRuleValue: Codable, Equatable {
     var correspondentId: UInt? {
         switch self {
         case let .correspondent(id):
-            return id
+            id
         default:
-            return nil
+            nil
         }
     }
 
     var documentTypeId: UInt? {
         switch self {
         case let .documentType(id):
-            return id
+            id
         default:
-            return nil
+            nil
         }
     }
 
     var storagePathId: UInt? {
         switch self {
         case let .storagePath(id):
-            return id
+            id
         default:
-            return nil
+            nil
         }
     }
 }
@@ -190,7 +190,6 @@ extension FilterRule: Codable {
                 throw DateDecodingError.invalidDate(string: dateStr)
             }
             value = .date(value: date)
-
 //            self.value = try .date(value: container.decode(Date.self, forKey: .value))
         case .number:
             value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
@@ -244,13 +243,13 @@ struct FilterState: Equatable, Codable, Sendable {
         var ruleType: FilterRuleType {
             switch self {
             case .title:
-                return .title
+                .title
             case .content:
-                return .content
+                .content
             case .titleContent:
-                return .titleContent
+                .titleContent
             case .advanced:
-                return .fulltextQuery
+                .fulltextQuery
             }
         }
 
@@ -484,7 +483,6 @@ struct FilterState: Equatable, Codable, Sendable {
                 case .allOf:
                     print("Have filter state .allOf or .anyOf, but found is-not-tagged rule")
                     remaining.append(rule)
-
                 case .any:
                     tags = .notAssigned
                 case .notAssigned:
@@ -703,7 +701,6 @@ struct FilterState: Equatable, Codable, Sendable {
                 result.append(
                     .init(ruleType: .doesNotHaveTag, value: .tag(id: id)))
             }
-
         case let .anyOf(ids):
             for id in ids {
                 result.append(

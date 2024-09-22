@@ -62,7 +62,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     @State private var elements: [Element] = []
 
-    @State private var searchText: String = ""
+    @State private var searchText = ""
 
     init(store: DocumentStore) {
         model = .init(store: store)

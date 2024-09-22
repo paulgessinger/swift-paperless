@@ -23,9 +23,9 @@ enum MultiPartFormDataError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notAFile:
-            return "Given input does not represent a file"
+            "Given input does not represent a file"
         case .noMimeType:
-            return "File type could not be determined"
+            "File type could not be determined"
         }
     }
 }

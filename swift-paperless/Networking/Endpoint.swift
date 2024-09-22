@@ -147,21 +147,21 @@ extension Endpoint {
     static func listAll(_ type: (some Model).Type) -> Endpoint {
         switch type {
         case is Correspondent.Type:
-            return correspondents()
+            correspondents()
         case is DocumentType.Type:
-            return documentTypes()
+            documentTypes()
         case is Tag.Type:
-            return tags()
+            tags()
         case is Document.Type:
-            return documents(page: 1, filter: FilterState())
+            documents(page: 1, filter: FilterState())
         case is SavedView.Type:
-            return savedViews()
+            savedViews()
         case is StoragePath.Type:
-            return storagePaths()
+            storagePaths()
         case is User.Type:
-            return users()
+            users()
         case is UserGroup.Type:
-            return groups()
+            groups()
         default:
             fatalError("Invalid type")
         }

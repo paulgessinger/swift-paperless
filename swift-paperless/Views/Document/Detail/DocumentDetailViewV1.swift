@@ -108,12 +108,10 @@ private struct IntegratedDocumentPreview: View {
 
         .transition(.opacity)
         .animation(.easeOut(duration: 0.8), value: download)
-
         .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
             .stroke(.gray, lineWidth: 0.33))
         .shadow(color: Color(.imageShadow), radius: 15)
-
         .task {
             await loadDocument()
         }
@@ -174,9 +172,9 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
 
     var gray: AnyShapeStyle {
         if colorScheme == .dark {
-            return .init(.background.tertiary)
+            .init(.background.tertiary)
         } else {
-            return .init(.background.secondary)
+            .init(.background.secondary)
         }
     }
 
@@ -240,7 +238,6 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
 
                 IntegratedDocumentPreview(download: $download, document: document)
                     .padding()
-
                     .onTapGesture {
                         if case let .loaded(view) = download {
                             previewUrl = view.file
@@ -261,7 +258,6 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
         }
 
         .quickLookPreview($previewUrl)
-
 //                if let related = relatedDocuments {
 //                    Group {
 //                        Divider()
@@ -276,9 +272,7 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
 //                    .transition(
 //                        .opacity.combined(with: .move(edge: .bottom)))
 //                }
-
         .navigationBarTitleDisplayMode(.inline)
-
         .onChange(of: store.documents) {
             if let document = store.documents[document.id] {
                 self.document = document

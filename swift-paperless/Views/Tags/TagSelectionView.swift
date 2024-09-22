@@ -195,13 +195,13 @@ struct TagFilterView: View {
                     .disabled({
                         switch selectedTags {
                         case .any:
-                            return true
+                            true
                         case .notAssigned:
-                            return true
+                            true
                         case let .allOf(_, exclude):
-                            return !exclude.isEmpty
+                            !exclude.isEmpty
                         case .anyOf:
-                            return false
+                            false
                         }
                     }())
                 }

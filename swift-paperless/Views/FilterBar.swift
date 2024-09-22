@@ -57,11 +57,10 @@ private struct FilterMenu<Content: View>: View {
 
     private var menuSavedViewSectionTitle: String {
         if let savedViewId = filterModel.filterState.savedView, let savedView = store.savedViews[savedViewId] {
-            let indicator: String
-            if filterModel.filterState.modified {
-                indicator = String(localized: .localizable(.savedViewModified(savedView.name)))
+            let indicator: String = if filterModel.filterState.modified {
+                String(localized: .localizable(.savedViewModified(savedView.name)))
             } else {
-                indicator = savedView.name
+                savedView.name
             }
             return "\(String(localized: .localizable(.savedView))): \(indicator)"
         }
@@ -173,9 +172,9 @@ private struct CircleCounter: View {
     private var color: Color {
         switch mode {
         case .include:
-            return Color.accentColor
+            Color.accentColor
         case .exclude:
-            return Color.red
+            Color.red
         }
     }
 

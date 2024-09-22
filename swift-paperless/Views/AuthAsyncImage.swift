@@ -9,6 +9,7 @@ import SwiftUI
 
 #if os(macOS)
     import Cocoa
+
     typealias UIImage = NSImage
 #endif
 

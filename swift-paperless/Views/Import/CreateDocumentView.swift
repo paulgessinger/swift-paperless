@@ -341,6 +341,7 @@ struct CreateDocumentView: View {
                         Label(String(localized: .localizable(.documentUploadComplete)), systemImage: "checkmark.circle.fill")
                             .foregroundColor(.accentColor)
                             .labelStyle(.iconOnly)
+
                     case .error:
                         Label(String(localized: .localizable(.documentUploadError)), systemImage: "exclamationmark.triangle")
                             .labelStyle(.iconOnly)

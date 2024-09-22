@@ -521,9 +521,9 @@ extension ApiRepository: Repository {
 
     func nextAsn() async throws -> UInt {
         if let backendVersion, backendVersion >= (2, 0, 0) {
-            return try await nextAsnDirectEndpoint()
+            try await nextAsnDirectEndpoint()
         } else {
-            return try await nextAsnCompatibility()
+            try await nextAsnCompatibility()
         }
     }
 

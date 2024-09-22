@@ -77,9 +77,9 @@ struct HighlightView: View {
     var document: Document? {
         switch status {
         case let .loaded(document):
-            return document
+            document
         default:
-            return nil
+            nil
         }
     }
 
@@ -147,10 +147,12 @@ struct HighlightView: View {
                 Text(.localizable(.dataScannerNoAsn(text)))
                     .fixedSize()
                     .padding()
+
             case let .invalidAsn(asn):
                 Text(.localizable(.dataScannerInvalidAsn(asn)))
                     .fixedSize()
                     .padding()
+
             case let .error(error):
                 Text(error.localizedDescription)
                     .fixedSize()

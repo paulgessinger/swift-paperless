@@ -155,7 +155,6 @@ private struct DocumentPropertyView: View {
 
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding([.horizontal, .top])
-
         .sheet(isPresented: $showMetadata) {
             DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
                 .environmentObject(store)
@@ -261,7 +260,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             }
             .animation(.spring(duration: 0.3), value: image.image)
             .scrollDisabled(true)
-
             .overlay {
                 VStack {
                     Text(.localizable(.loading))
@@ -308,7 +306,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
             .animation(.default, value: viewModel.download)
             .animation(.default, value: webviewOpacity)
-
             .safeAreaInset(edge: .bottom) {
                 DocumentPropertyView(viewModel: viewModel,
                                      showEditSheet: $showEditSheet,
@@ -378,7 +375,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         }
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(.thinMaterial, for: .navigationBar)
-
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
@@ -411,12 +407,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
         .onChange(of: bottomInsetFrame) { updateWebkitInset() }
         .onChange(of: safeAreaInsets) { updateWebkitInset() }
-
         .sheet(isPresented: $showEditSheet) {
             editDetent = defaultEditDetent
         } content: {
             DocumentEditView(document: $viewModel.document)
-
                 .presentationDetents(editDetentOptions, selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
@@ -523,7 +517,6 @@ private struct PreviewHelper: View {
         }
         .environmentObject(store)
         .environmentObject(errorController)
-
         .task {
             try? await store.fetchAll()
         }

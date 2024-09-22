@@ -148,7 +148,6 @@ struct DocumentList: View {
         case .repositoryWillChange:
             filterModel.ready = false
             viewModel.ready = false
-
         case .repositoryChanged:
             Task {
                 await viewModel.reload()
@@ -158,7 +157,6 @@ struct DocumentList: View {
                 try? await Task.sleep(for: .seconds(0.5))
                 filterModel.ready = true
             }
-
         case let .taskError(task: task):
             errorController.push(message: String(localized: .tasks(.errorNotificationTitle)),
                                  details: task.localizedResult)
