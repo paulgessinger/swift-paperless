@@ -332,6 +332,17 @@
         }
       }
     },
+    "appVersionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored app version"
+          }
+        }
+      }
+    },
     "biometricLockEnableFailure" : {
       "comment" : "Shown in error pill when auth fails",
       "extractionState" : "manual",
@@ -1195,6 +1206,28 @@
         }
       }
     },
+    "experimentsDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+          }
+        }
+      }
+    },
+    "experimentsTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UI Experiments"
+          }
+        }
+      }
+    },
     "feedbackDone" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1571,6 +1604,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preferencje"
+          }
+        }
+      }
+    },
+    "resetAppVersionDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
           }
         }
       }
