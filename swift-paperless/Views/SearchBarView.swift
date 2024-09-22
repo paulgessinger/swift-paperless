@@ -18,11 +18,11 @@ struct SearchBarView: View {
     @FocusState private var focused: Bool
     @State private var showCancel: Bool = false
 
-    var barColor: Color {
+    var barColor: AnyShapeStyle {
         if colorScheme == .dark {
-            return Color.secondarySystemGroupedBackground
+            return .init(.background.secondary)
         } else {
-            return Color.systemGroupedBackground
+            return .init(.background.tertiary)
         }
     }
 

@@ -172,11 +172,11 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
         self.navPath = navPath
     }
 
-    var gray: Color {
+    var gray: AnyShapeStyle {
         if colorScheme == .dark {
-            return Color.secondarySystemGroupedBackground
+            return .init(.background.tertiary)
         } else {
-            return Color.systemGroupedBackground
+            return .init(.background.secondary)
         }
     }
 
