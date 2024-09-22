@@ -26,6 +26,10 @@ jobs:
         ios:
           - "17.5"
           - "18.0"
+        exclude:
+          # combination does not exist
+          - device: "iPhone 16 Pro"
+            ios: "17.5"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
@@ -53,7 +57,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.0-beta"
+          xcode-version: "16.0"
 
       - name: Install dependencies
         run: bundle install
