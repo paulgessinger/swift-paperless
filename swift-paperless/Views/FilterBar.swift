@@ -281,7 +281,7 @@ private struct Pill<Label: View>: View {
         .padding(.vertical, 4)
         .background {
             Capsule()
-                .fill(Color(.elementBackground))
+                .fill(.tertiary)
         }
         .overlay(
             Capsule()

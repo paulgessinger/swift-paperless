@@ -8,24 +8,6 @@
 import PDFKit
 import SwiftUI
 
-struct PDFPreview: View {
-    private let document: PDFDocument
-    init?(file: URL) {
-        guard let document = PDFDocument(url: file) else {
-            return nil
-        }
-        self.document = document
-    }
-
-    var body: some View {
-        PDFKitView(document: document,
-                   displayMode: .singlePageContinuous,
-                   pageShadows: false,
-                   autoScales: true,
-                   userInteraction: true)
-    }
-}
-
 struct PDFThumbnail: View {
     let document: PDFDocument
     let aspectRatio: CGFloat
@@ -68,19 +50,6 @@ struct PDFView_Previews: PreviewProvider {
                     .background(.green)
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .shadow(radius: 10)
-            }
-        }
-    }
-}
-
-struct PDFPreview_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            VStack {
-                PDFPreview(file: Bundle.main.url(forResource: "demo2", withExtension: "pdf")!)
-                    .edgesIgnoringSafeArea(.bottom)
-                    .background(.gray)
-                    .safeAreaInset(edge: .top) {}
             }
         }
     }

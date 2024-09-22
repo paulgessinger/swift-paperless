@@ -9,16 +9,19 @@ import Foundation
 import SwiftUI
 
 extension Bundle {
+    @available(iOS 17, *)
     var icon: Image? {
-        if let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
-           let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
-           let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
-           let lastIcon = iconFiles.last
-        {
-            if let uiImage = UIImage(named: lastIcon) {
-                return Image(uiImage: uiImage)
+        #if !os(macOS)
+            if let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
+               let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+               let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+               let lastIcon = iconFiles.last
+            {
+                if let uiImage = UIImage(named: lastIcon) {
+                    return Image(uiImage: uiImage)
+                }
             }
-        }
+        #endif
         return nil
     }
 }

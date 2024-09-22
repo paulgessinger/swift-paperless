@@ -48,170 +48,69 @@ final class ThrottleObject<T: Equatable & Sendable>: ObservableObject, Sendable 
     }
 }
 
-extension UIColor {
-    private func makeColor(delta: CGFloat) -> UIColor {
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
+#if canImport(UIKit)
+    extension UIColor {
+        private func makeColor(delta: CGFloat) -> UIColor {
+            var red: CGFloat = 0
+            var green: CGFloat = 0
+            var blue: CGFloat = 0
+            var alpha: CGFloat = 0
 
-        getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+            getRed(&red, green: &green, blue: &blue, alpha: &alpha)
 
-        let clamp = { (v: CGFloat) in min(1, max(0, v)) }
-        return UIColor(
-            red: clamp(red + delta),
-            green: clamp(green + delta),
-            blue: clamp(blue + delta),
-            alpha: clamp(alpha + delta)
-        )
-    }
-
-    func ligher(delta: CGFloat = 0.1) -> UIColor {
-        makeColor(delta: delta)
-    }
-
-    func darker(delta: CGFloat = 0.1) -> UIColor {
-        makeColor(delta: -1 * delta)
-    }
-}
-
-extension Color {
-    enum HexError: Error {
-        case invalid(String)
-    }
-
-    init(hex: String) throws {
-        var string = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if string.hasPrefix("#") {
-            _ = string.removeFirst()
+            let clamp = { (v: CGFloat) in min(1, max(0, v)) }
+            return UIColor(
+                red: clamp(red + delta),
+                green: clamp(green + delta),
+                blue: clamp(blue + delta),
+                alpha: clamp(alpha + delta)
+            )
         }
 
-        if string.count != 6 {
-            throw HexError.invalid(hex)
+        func ligher(delta: CGFloat = 0.1) -> UIColor {
+            makeColor(delta: delta)
         }
 
-        let scanner = Scanner(string: string)
-        var color: UInt64 = 0
-        scanner.scanHexInt64(&color)
-
-        let mask = 0x0000FF
-        let r = Double(Int(color >> 16) & mask) / 255.0
-        let g = Double(Int(color >> 8) & mask) / 255.0
-        let b = Double(Int(color) & mask) / 255.0
-
-        self.init(.sRGB, red: r, green: g, blue: b)
-    }
-
-    var hexString: String {
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-
-        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-
-        let convert = { v in
-            let vv = max(0.0, min(1.0, v))
-            return UInt(vv > 0.99999 ? 255 : vv * 255.0)
+        func darker(delta: CGFloat = 0.1) -> UIColor {
+            makeColor(delta: -1 * delta)
         }
-
-        return "#" + String(format: "%02x", convert(red)) +
-            String(format: "%02x", convert(green)) +
-            String(format: "%02x", convert(blue))
-    }
-}
-
-struct HexColor: Equatable {
-    var color: Color
-
-    init(_ color: Color) {
-        self.color = color
-    }
-}
-
-extension HexColor: Codable {
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let str = try container.decode(String.self)
-        color = try Color(hex: str)
     }
 
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(color.hexString)
-    }
-}
+#endif
 
-extension Color {}
-
-extension Color {
-    static let systemBackground = Color(UIColor.systemBackground)
-    static let systemGroupedBackground = Color(UIColor.systemGroupedBackground)
-    static let secondarySystemGroupedBackground = Color(UIColor.secondarySystemGroupedBackground)
-//    static func systemBackground() -> Color {
-//        return Color(UIColor.systemBackground)
+//// @TODO: Put this into a dispatch queue
+// func pdfPreview(url: URL) -> Image? {
+//    var fileSize: UInt64 = 0
+//    do {
+//        let attr = try FileManager.default.attributesOfItem(atPath: url.path)
+//        let dict = attr as NSDictionary
+//        fileSize = dict.fileSize()
+//    } catch {}
+//
+//    if Bundle.main.bundlePath.hasSuffix(".appex") {
+//        if fileSize > 5 * 1024 * 1024 {
+//            Logger.shared.debug("Refusing to make PDF preview, file size is \(fileSize)")
+//            return nil
+//        }
 //    }
 //
-//    static func systemGroupedBackground() -> Color {
-//        return Color(UIColor.systemGroupedBackground)
+//    guard let doc = CGPDFDocument(url as CFURL) else { return nil }
+//    guard let page = doc.page(at: 1) else { return nil }
+//
+//    let rect = page.getBoxRect(.mediaBox)
+//    let renderer = UIGraphicsImageRenderer(size: rect.size)
+//    let img = renderer.image { ctx in
+//        UIColor.white.set()
+//        ctx.fill(rect)
+//
+//        ctx.cgContext.translateBy(x: 0, y: rect.size.height)
+//        ctx.cgContext.scaleBy(x: 1, y: -1.0)
+//
+//        ctx.cgContext.drawPDFPage(page)
 //    }
-
-    var hex: HexColor {
-        HexColor(self)
-    }
-}
-
-// @TODO: Put this into a dispatch queue
-func pdfPreview(url: URL) -> Image? {
-    var fileSize: UInt64 = 0
-    do {
-        let attr = try FileManager.default.attributesOfItem(atPath: url.path)
-        let dict = attr as NSDictionary
-        fileSize = dict.fileSize()
-    } catch {}
-
-    if Bundle.main.bundlePath.hasSuffix(".appex") {
-        if fileSize > 5 * 1024 * 1024 {
-            Logger.shared.debug("Refusing to make PDF preview, file size is \(fileSize)")
-            return nil
-        }
-    }
-
-    guard let doc = CGPDFDocument(url as CFURL) else { return nil }
-    guard let page = doc.page(at: 1) else { return nil }
-
-    let rect = page.getBoxRect(.mediaBox)
-    let renderer = UIGraphicsImageRenderer(size: rect.size)
-    let img = renderer.image { ctx in
-        UIColor.white.set()
-        ctx.fill(rect)
-
-        ctx.cgContext.translateBy(x: 0, y: rect.size.height)
-        ctx.cgContext.scaleBy(x: 1, y: -1.0)
-
-        ctx.cgContext.drawPDFPage(page)
-    }
-
-    return Image(uiImage: img)
-}
-
-struct ColorPalette_Previews: PreviewProvider {
-    static let colors: [Color] = [
-        .red,
-        .systemBackground,
-        .systemGroupedBackground,
-        .secondarySystemGroupedBackground,
-    ]
-
-    static var previews: some View {
-        VStack {
-            ForEach(colors, id: \.self) {
-                color in
-                Rectangle().fill(color)
-            }
-        }
-    }
-}
+//
+//    return Image(uiImage: img)
+// }
 
 extension View {
     /// Applies the given transform if the given condition evaluates to `true`.
@@ -224,58 +123,6 @@ extension View {
             transform(self)
         } else {
             self
-        }
-    }
-}
-
-@MainActor
-private struct HapticsInternal {
-    @MainActor
-    static let shared = HapticsInternal()
-
-    let impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator]
-
-    let notificationGenerator: UINotificationFeedbackGenerator
-
-    @MainActor
-    init() {
-        notificationGenerator = UINotificationFeedbackGenerator()
-        let styles = [UIImpactFeedbackGenerator.FeedbackStyle]([
-            .light, .heavy, .medium, .rigid, .soft,
-        ])
-
-        var impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
-        for style in styles {
-            impactGenerators[style] = UIImpactFeedbackGenerator(style: style)
-        }
-        self.impactGenerators = impactGenerators
-    }
-}
-
-struct Haptics {
-    static let shared = Haptics()
-
-    func prepare() {
-        Task { @MainActor in
-            for (_, gen) in HapticsInternal.shared.impactGenerators {
-                gen.prepare()
-            }
-            HapticsInternal.shared.notificationGenerator.prepare()
-        }
-    }
-
-    func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        Task { @MainActor in
-            HapticsInternal.shared.notificationGenerator.notificationOccurred(type)
-        }
-    }
-
-    func impact(style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        Task { @MainActor in
-            guard let gen = HapticsInternal.shared.impactGenerators[style] else {
-                fatalError("Invalid feedback style")
-            }
-            gen.impactOccurred()
         }
     }
 }

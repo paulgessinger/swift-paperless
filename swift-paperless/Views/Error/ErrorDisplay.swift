@@ -135,7 +135,7 @@ struct ErrorDisplay: ViewModifier {
                    },
                    actions: { $detail in
                        Button(String(localized: .localizable(.copyToClipboard))) {
-                           UIPasteboard.general.string = detail.details
+                           Pasteboard.general.string = detail.details
                        }
 
                        if let link = detail.documentationLink {
