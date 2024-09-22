@@ -411,6 +411,10 @@ private struct CredentialsStageView: View {
 
                         } header: {
                             Text(.login(.credentials))
+                        } footer: {
+                            LoginFooterView(systemImage: "info.circle") {
+                                Text(.login(.passwordStorageNotice))
+                            }
                         }
 
                     case .token:
