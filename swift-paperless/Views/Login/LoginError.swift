@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum UrlError: LocalizedError {
+enum UrlError: LocalizedError, Equatable {
     case invalidScheme(_: String)
     case other
     case cannotSplit

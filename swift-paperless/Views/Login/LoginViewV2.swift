@@ -67,10 +67,25 @@ private struct DetailsView: View {
     }
 }
 
+private struct BackgroundColorModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        #if canImport(UIKit)
+            content
+                .background(Color(uiColor: .systemGroupedBackground))
+        #else
+            content
+        #endif
+    }
+}
+
 private struct Section<Content: View, Footer: View, Header: View>: View {
     var content: () -> Content
     var header: (() -> Header)? = nil
     var footer: (() -> Footer)? = nil
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 4) {
@@ -86,8 +101,7 @@ private struct Section<Content: View, Footer: View, Header: View>: View {
                 .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .circular)
-                        .fill(
-                            Color.secondarySystemGroupedBackground)
+                        .fill(.background.secondary)
                 )
 
             footer?()
@@ -456,7 +470,7 @@ private struct CredentialsStageView: View {
             .frame(maxWidth: .infinity)
         }
 
-        .background(Color.systemGroupedBackground)
+        .modifier(BackgroundColorModifier())
         .scrollBounceBehavior(.basedOnSize)
 
         .onChange(of: viewModel.credentialMode) {
@@ -550,7 +564,7 @@ private struct ConnectionStageView: View {
             }
         }
 
-        .background(Color.systemGroupedBackground)
+        .modifier(BackgroundColorModifier())
         .scrollBounceBehavior(.basedOnSize)
 
         .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
@@ -709,7 +723,7 @@ struct LoginViewV2: LoginViewProtocol {
             Text("yo")
         }
     }
-    .background(Color.systemGroupedBackground)
+    .modifier(BackgroundColorModifier())
 }
 
 #Preview("StageSwitch") {
@@ -731,6 +745,6 @@ struct LoginViewV2: LoginViewProtocol {
     @Previewable @State var viewModel = LoginViewModel()
 
     return CredentialsStageView(onSuccess: { _ in })
-        .background(Color.systemGroupedBackground)
+        .modifier(BackgroundColorModifier())
         .environment(viewModel)
 }

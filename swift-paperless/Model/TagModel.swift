@@ -5,12 +5,14 @@
 //  Created by Paul Gessinger on 21.05.23.
 //
 
+import Common
 import Foundation
 import SwiftUI
 
 protocol TagProtocol:
     Equatable,
-    MatchingModel
+    MatchingModel,
+    Sendable
 {
     var isInboxTag: Bool { get set }
     var name: String { get set }
@@ -23,18 +25,16 @@ protocol TagProtocol:
 
 extension TagProtocol {
     var textColor: HexColor {
-        // https://github.com/paperless-ngx/paperless-ngx/blob/0dcfb97824b6184094290138fe401d8368722483/src/documents/serialisers.py#L317-L328
-
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        UIColor(color.color).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-
-        let luminance = sqrt(0.299 * pow(red, 2) + 0.587 * pow(green, 2) + 0.114 * pow(blue, 2))
-
-        return HexColor(luminance < 0.53 ? .white : .black)
+        HexColor(color.color.luminance < 0.53 ? .white : .black)
     }
+}
+
+private var placeholderColor: Color {
+    #if canImport(UIKit)
+        Color(uiColor: UIColor.systemGroupedBackground)
+    #else
+        .gray
+    #endif
 }
 
 struct ProtoTag: Encodable, TagProtocol, MatchingModel {
@@ -62,7 +62,7 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
             isInboxTag: false,
             name: name,
             slug: "",
-            color: Color(.elementBackground).hex
+            color: placeholderColor.hex
         )
     }
 }
@@ -98,12 +98,13 @@ struct Tag:
     static func placeholder(_ length: Int) -> Self {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let name = String((0 ..< length).map { _ in letters.randomElement()! })
+
         return .init(
             id: 0,
             isInboxTag: false,
             name: name,
             slug: "",
-            color: Color(.elementBackground).hex,
+            color: placeholderColor.hex,
             match: "",
             matchingAlgorithm: .auto,
             isInsensitive: true

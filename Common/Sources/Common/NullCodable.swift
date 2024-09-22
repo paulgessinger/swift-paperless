@@ -8,10 +8,10 @@
 import Foundation
 
 @propertyWrapper
-struct NullCodable<T> {
-    var wrappedValue: T?
+public struct NullCodable<T> {
+    public var wrappedValue: T?
 
-    init(wrappedValue: T?) {
+    public init(wrappedValue: T?) {
         self.wrappedValue = wrappedValue
     }
 }
@@ -19,7 +19,7 @@ struct NullCodable<T> {
 extension NullCodable: Sendable where T: Sendable {}
 
 extension NullCodable: Encodable where T: Encodable {
-    func encode(to encoder: any Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         switch wrappedValue {
         case .none:
@@ -31,7 +31,7 @@ extension NullCodable: Encodable where T: Encodable {
 }
 
 extension NullCodable: Decodable where T: Decodable {
-    init(from decoder: any Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         if !container.decodeNil() {
             wrappedValue = try container.decode(T.self)

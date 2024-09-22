@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 21.05.23.
 //
 
+import Common
 import Foundation
 
 protocol DocumentProtocol: Codable {

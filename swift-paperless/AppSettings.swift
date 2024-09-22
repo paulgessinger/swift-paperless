@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.08.23.
 //
 import Combine
+import Common
 import Foundation
 import os
 import SwiftUI
@@ -18,6 +19,12 @@ enum SettingsKeys: String {
 
     case editingUserInterfaceExperiment
     case loginScreenV2
+}
+
+extension PublishedUserDefaultsBacked {
+    convenience init(wrappedValue defaultValue: Value, _ key: SettingsKeys, storage: UserDefaults = .standard) {
+        self.init(wrappedValue: defaultValue, key.rawValue, storage: storage)
+    }
 }
 
 @MainActor

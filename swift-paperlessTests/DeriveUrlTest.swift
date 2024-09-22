@@ -1,42 +1,42 @@
-import XCTest
+import Foundation
+import Testing
 
-final class DeriveUrlTest: XCTestCase {
+@Suite("DeriveUrl") struct DeriveUrlTests {
+    @Test
     func testBasicFunctionality() throws {
-        do {
+        // implicit https scheme
+        let (base, url) = try deriveUrl(string: "paperless.example.com")
+
+        #expect(base == URL(string: "https://paperless.example.com"))
+        #expect(url == URL(string: "https://paperless.example.com/api/"))
+    }
+
+    @Test
+    func testMissingHostname() throws {
+        #expect(throws: UrlError.emptyHost) {
+            _ = try deriveUrl(string: "http://")
+        }
+    }
+
+    @Test
+    func testExplicitScheme() throws {
+        #expect(throws: UrlError.invalidScheme("file")) {
             _ = try deriveUrl(string: "file://paperless.example.com")
         }
 
-        do {
-            // implicit https scheme
-            let (base, url) = try deriveUrl(string: "paperless.example.com")
+        var (base, url) = try deriveUrl(string: "http://paperless.example.com")
+        #expect(base == URL(string: "http://paperless.example.com"))
+        #expect(url == URL(string: "http://paperless.example.com/api/"))
 
-            XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
-            XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/"))
-        }
+        (base, url) = try deriveUrl(string: "https://paperless.example.com")
+        #expect(base == URL(string: "https://paperless.example.com"))
+        #expect(url == URL(string: "https://paperless.example.com/api/"))
     }
 
-    func testMissingHostname() throws {
-        let res = try deriveUrl(string: "http://")
-        XCTAssertNil(res)
-    }
-
-    func testExplicitScheme() throws {
-        do {
-            let (base, url) = try deriveUrl(string: "http://paperless.example.com")
-            XCTAssertEqual(base, URL(string: "http://paperless.example.com"))
-            XCTAssertEqual(url, URL(string: "http://paperless.example.com/api/"))
-        }
-
-        do {
-            let (base, url) = try deriveUrl(string: "https://paperless.example.com")
-            XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
-            XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/"))
-        }
-    }
-
+    @Test
     func testSuffix() throws {
         let (base, url) = try deriveUrl(string: "https://paperless.example.com", suffix: "token")
-        XCTAssertEqual(base, URL(string: "https://paperless.example.com"))
-        XCTAssertEqual(url, URL(string: "https://paperless.example.com/api/token/"))
+        #expect(base == URL(string: "https://paperless.example.com"))
+        #expect(url == URL(string: "https://paperless.example.com/api/token/"))
     }
 }
