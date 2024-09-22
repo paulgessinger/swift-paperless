@@ -11,6 +11,7 @@ import os
 
 let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
 
+public
 extension UserDefaults {
     @MainActor
     static let group = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!
@@ -32,13 +33,13 @@ extension UserDefaults {
 // https://www.swiftbysundell.com/articles/property-wrappers-in-swift/
 
 @propertyWrapper
-class UserDefaultsBacked<Value> where Value: Codable {
-    let key: String
+public class UserDefaultsBacked<Value> where Value: Codable {
+    public let key: String
     private let storage: UserDefaults
     private let defaultValue: Value
     private var cachedValue: Value?
 
-    var wrappedValue: Value {
+    public var wrappedValue: Value {
         get {
             let key = key
             if let cachedValue {
@@ -74,9 +75,9 @@ class UserDefaultsBacked<Value> where Value: Codable {
         }
     }
 
-    var projectedValue: UserDefaultsBacked<Value> { self }
+    public var projectedValue: UserDefaultsBacked<Value> { self }
 
-    init(wrappedValue defaultValue: Value, _ key: String, storage: UserDefaults = .standard) {
+    public init(wrappedValue defaultValue: Value, _ key: String, storage: UserDefaults = .standard) {
         self.key = key
         self.storage = storage
         self.defaultValue = defaultValue
@@ -84,9 +85,8 @@ class UserDefaultsBacked<Value> where Value: Codable {
 }
 
 @propertyWrapper
-//    var backing: UserDefaultBacked<Value>
-class PublishedUserDefaultsBacked<Value> where Value: Codable {
-    static subscript<T: ObservableObject>(
+public class PublishedUserDefaultsBacked<Value> where Value: Codable {
+    public static subscript<T: ObservableObject>(
         _enclosingInstance instance: T,
         wrapped _: ReferenceWritableKeyPath<T, Value>,
         storage storageKeyPath: ReferenceWritableKeyPath<T, PublishedUserDefaultsBacked<Value>>
@@ -98,31 +98,27 @@ class PublishedUserDefaultsBacked<Value> where Value: Codable {
             if let publisher = instance.objectWillChange as? ObservableObjectPublisher {
                 publisher.send()
             } else {
-                Logger.shared.warning("objectWillChange was not ObservableObjectPublisher but \(String(describing: instance.objectWillChange))")
+                logger.warning("objectWillChange was not ObservableObjectPublisher but \(String(describing: instance.objectWillChange))")
             }
             instance[keyPath: storageKeyPath].backing = newValue
         }
     }
 
     @UserDefaultsBacked
-    private(set) var backing: Value
+    public internal(set) var backing: Value
 
-    var key: String { $backing.key }
+    public var key: String { $backing.key }
 
     @available(*, unavailable,
                message: "Can only be applied to classes")
-    var wrappedValue: Value {
+    public var wrappedValue: Value {
         get { fatalError() }
         set { fatalError() }
     }
 
-    var projectedValue: PublishedUserDefaultsBacked<Value> { self }
+    public var projectedValue: PublishedUserDefaultsBacked<Value> { self }
 
-    init(wrappedValue defaultValue: Value, _ key: String, storage: UserDefaults = .standard) {
+    public init(wrappedValue defaultValue: Value, _ key: String, storage: UserDefaults = .standard) {
         _backing = .init(wrappedValue: defaultValue, key, storage: storage)
-    }
-
-    init(wrappedValue defaultValue: Value, _ key: SettingsKeys, storage: UserDefaults = .standard) {
-        _backing = .init(wrappedValue: defaultValue, key.rawValue, storage: storage)
     }
 }

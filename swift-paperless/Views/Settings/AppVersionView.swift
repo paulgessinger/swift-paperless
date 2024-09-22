@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 13.05.2024.
 //
 
-import AsyncAlgorithms
 import Foundation
 import SwiftUI
 
@@ -40,13 +39,11 @@ struct AppVersionView: View {
         .navigationTitle(String(localized: .settings(.versionInfoLabel)))
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            let channel = AsyncChannel<Info>()
-            Task.detached {
-                await channel.send(Info(version: Bundle.main.releaseVersionNumber ?? "?",
-                                        build: Bundle.main.buildVersionNumber ?? "?",
-                                        config: Bundle.main.appConfiguration))
-            }
-            info = await channel.next()
+            info = await Task.detached {
+                Info(version: Bundle.main.releaseVersionNumber ?? "?",
+                     build: Bundle.main.buildVersionNumber ?? "?",
+                     config: Bundle.main.appConfiguration)
+            }.value
         }
     }
 }

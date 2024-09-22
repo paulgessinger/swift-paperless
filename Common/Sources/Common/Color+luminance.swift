@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+public
 extension Color {
     var luminance: Double {
         // https://github.com/paperless-ngx/paperless-ngx/blob/0dcfb97824b6184094290138fe401d8368722483/src/documents/serialisers.py#L317-L328

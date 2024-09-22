@@ -12,12 +12,12 @@
     import UIKit
 #endif
 
-struct Pasteboard {
+public struct Pasteboard {
     private init() {}
 
-    @MainActor static var general = Pasteboard()
+    @MainActor public static var general = Pasteboard()
 
-    var string: String? {
+    public var string: String? {
         get {
             #if canImport(AppKit)
                 NSPasteboard.general.string(forType: .string)

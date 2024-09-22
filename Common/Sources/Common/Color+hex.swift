@@ -7,9 +7,12 @@
 
 import SwiftUI
 
-struct HexColor: Equatable {
+public
+struct HexColor: Equatable, Sendable {
+    public
     var color: Color
 
+    public
     init(_ color: Color) {
         self.color = color
     }
@@ -28,12 +31,13 @@ extension HexColor: Codable {
     }
 }
 
+public
 extension Color {
     enum HexError: Error, Equatable {
         case invalid(String)
     }
 
-    init(hex: String) throws (HexError) {
+    init(hex: String) throws(HexError) {
         var string = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         if string.hasPrefix("#") {
             _ = string.removeFirst()

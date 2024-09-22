@@ -5,8 +5,9 @@
 //  Created by Paul Gessinger on 24.07.2024.
 //
 
-import Common
-import XCTest
+@testable import Common
+import Foundation
+import Testing
 
 private struct SubElement: Decodable {
     var value: Int
@@ -29,7 +30,9 @@ private struct ElementOpt: Codable {
     var optDecodeOnly: Int?
 }
 
-final class DecodeOnlyTest: XCTestCase {
+@Suite
+struct DecodeOnlyTest {
+    @Test
     func testDecode() throws {
         let input = """
         {
@@ -42,11 +45,12 @@ final class DecodeOnlyTest: XCTestCase {
         """.data(using: .utf8)!
 
         let result = try JSONDecoder().decode(Element.self, from: input)
-        XCTAssertEqual(result.normal, 5)
-        XCTAssertEqual(result.decodeOnly, 72)
-        XCTAssertEqual(result.decodeOnlyStruct.value, 66)
+        #expect(result.normal == 5)
+        #expect(result.decodeOnly == 72)
+        #expect(result.decodeOnlyStruct.value == 66)
     }
 
+    @Test
     func testDecodeFailsIfNotPresent() throws {
         let input1 = """
         {
@@ -57,7 +61,9 @@ final class DecodeOnlyTest: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        XCTAssertThrowsError(try JSONDecoder().decode(Element.self, from: input1))
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(Element.self, from: input1)
+        }
 
         let input2 = """
         {
@@ -68,9 +74,12 @@ final class DecodeOnlyTest: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        XCTAssertThrowsError(try JSONDecoder().decode(Element.self, from: input2))
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(Element.self, from: input2)
+        }
     }
 
+    @Test
     func testDecodeOptional() throws {
         do {
             let input = """
@@ -81,12 +90,10 @@ final class DecodeOnlyTest: XCTestCase {
             """.data(using: .utf8)!
 
             let result = try JSONDecoder().decode(ElementOpt.self, from: input)
-            XCTAssertEqual(result.normal, 5)
-            guard let optDecodeOnly = result.optDecodeOnly else {
-                XCTFail()
-                return
-            }
-            XCTAssertEqual(optDecodeOnly, 6)
+            #expect(result.normal == 5)
+
+            let optDecodeOnly = try #require(result.optDecodeOnly)
+            #expect(optDecodeOnly == 6)
         }
 
         do {
@@ -97,11 +104,12 @@ final class DecodeOnlyTest: XCTestCase {
             """.data(using: .utf8)!
 
             let result = try JSONDecoder().decode(ElementOpt.self, from: input)
-            XCTAssertEqual(result.normal, 5)
-            XCTAssertEqual(result.optDecodeOnly, nil)
+            #expect(result.normal == 5)
+            #expect(result.optDecodeOnly == nil)
         }
     }
 
+    @Test
     func testEncode() throws {
         let value = Element(
             normal: 3,
@@ -112,6 +120,6 @@ final class DecodeOnlyTest: XCTestCase {
         let data = try JSONEncoder().encode(value)
         let str = String(data: data, encoding: .utf8)!
 
-        XCTAssertEqual(str, "{\"normal\":3}")
+        #expect(str == "{\"normal\":3}")
     }
 }

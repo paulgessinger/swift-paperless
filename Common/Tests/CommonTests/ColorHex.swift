@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.02.23.
 //
 
+@testable import Common
 import Foundation
 import SwiftUI
 import Testing
@@ -48,7 +49,7 @@ import Testing
     func testFromJson() throws {
         for (s, c) in inputs {
             let input = "{\"color\":\"\(s)\"}".data(using: .utf8)!
-            let test = try #require(try decoder.decode(TestStruct.self, from: input))
+            let test = try #require(try JSONDecoder().decode(TestStruct.self, from: input))
             #expect(test.color.color == c)
         }
     }

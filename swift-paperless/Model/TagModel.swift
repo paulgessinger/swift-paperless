@@ -5,12 +5,14 @@
 //  Created by Paul Gessinger on 21.05.23.
 //
 
+import Common
 import Foundation
 import SwiftUI
 
 protocol TagProtocol:
     Equatable,
-    MatchingModel
+    MatchingModel,
+    Sendable
 {
     var isInboxTag: Bool { get set }
     var name: String { get set }

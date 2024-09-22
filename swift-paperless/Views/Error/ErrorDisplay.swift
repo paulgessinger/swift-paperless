@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 07.05.2024.
 //
 
+import Common
 import SwiftUI
 
 struct ErrorDisplay: ViewModifier {
@@ -63,9 +64,7 @@ struct ErrorDisplay: ViewModifier {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, error.details == nil ? 10 : 7)
-
                     .contentShape(Capsule())
-
                     .background(Capsule()
                         .strokeBorder(.gray, lineWidth: 0.66)
                         .background(
@@ -76,9 +75,7 @@ struct ErrorDisplay: ViewModifier {
                     )
 
                     .offset(y: min(offset, alertOffsetRaw))
-
                     .opacity(min(1, max(0, 1 - (alertOffset + 10.0) / -30.0)))
-
                     .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
                         .onChanged { gesture in
                             Task {
@@ -114,7 +111,6 @@ struct ErrorDisplay: ViewModifier {
                     )
 
                     .disabled(!ready)
-
                     .task {
                         ready = false
                         dismissTask = createAutoDismissTask(duration: duration)
