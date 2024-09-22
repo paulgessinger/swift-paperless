@@ -268,7 +268,6 @@
 		7ADA9ABC2B263797002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
 		7ADA9AC42B2637BE002C303C /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADA9ABA2B263797002C303C /* Decoder.swift */; };
 		7ADB3D222C18C363000D0576 /* issue_91.json in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB3D212C18C362000D0576 /* issue_91.json */; };
-		7AE33B322C9310E50064142F /* IdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE33B312C9310E50064142F /* IdentityManager.swift */; };
 		7AE33B332C9310E50064142F /* IdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE33B312C9310E50064142F /* IdentityManager.swift */; };
 		7AE33B342C9310E50064142F /* IdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE33B312C9310E50064142F /* IdentityManager.swift */; };
 		7AE5601C2BFF5C7A00352293 /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE5601B2BFF5C7A00352293 /* PDFKitView.swift */; };
@@ -1374,7 +1373,6 @@
 				7AF2E07229F3ECE40092948B /* SavedViewTest.swift in Sources */,
 				7A81C5AD2A1A90C50092061F /* StoragePathModel.swift in Sources */,
 				7A3E45D12BF255530007AB67 /* Bundle.swift in Sources */,
-				7AE33B322C9310E50064142F /* IdentityManager.swift in Sources */,
 				7A2E12282B14F51100E7704A /* SuggestionsModel.swift in Sources */,
 				7AF343672C721FC300EF83A7 /* PermissionsModel.swift in Sources */,
 				7A35C0BD2C117EF6006A542D /* SortOrder.swift in Sources */,
