@@ -18,11 +18,13 @@ plugins:
       redirect_maps:
         "common-issues/forbidden.md": "common_issues/forbidden.md"
         "common-issues/invalid-certificate.md": "common_issues/invalid-certificate.md"
+        "common_issues/invalid-certificate.md": "common_issues/certificates.md"
         "common-issues/local-network-denied.md": "common_issues/local-network-denied.md"
 
 markdown_extensions:
   - pymdownx.snippets:
   - attr_list
+  - admonition
 
 extra_css:
   - extra.css
