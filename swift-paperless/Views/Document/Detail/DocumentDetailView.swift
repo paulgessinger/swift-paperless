@@ -10,8 +10,6 @@ import SwiftUI
 struct DocumentDetailViewVersionSelection: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
-    @State private var show = false
-
     let available: [AppSettings.EditingUserInterface] = [
         .automatic,
         .v1,
@@ -20,19 +18,14 @@ struct DocumentDetailViewVersionSelection: View {
 
     var body: some View {
         VStack {
-            if show {
-                Picker("Document editing UI variant",
-                       selection: $appSettings.editingUserInterface)
-                {
-                    ForEach(available, id: \.self) { element in
-                        Text("\(element)")
-                            .tag(element)
-                    }
+            Picker("Document editing UI variant",
+                   selection: $appSettings.editingUserInterface)
+            {
+                ForEach(available, id: \.self) { element in
+                    Text("\(element)")
+                        .tag(element)
                 }
             }
-        }
-        .task {
-            show = Bundle.main.appConfiguration != .AppStore
         }
     }
 }
@@ -43,7 +36,7 @@ private var editingInterface: AppSettings.EditingUserInterface {
     case .automatic:
         switch Bundle.main.appConfiguration {
         case .Debug, .Simulator: .v3
-        case .AppStore: .v1
+        case .AppStore: .v3
         case .TestFlight: .v3
         }
     case .v1: .v1

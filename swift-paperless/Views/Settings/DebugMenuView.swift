@@ -10,6 +10,8 @@ import SwiftUI
 struct DebugMenuView: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
+    @State private var show = false
+
     var body: some View {
         Form {
             Section {
@@ -27,18 +29,24 @@ struct DebugMenuView: View {
                 Text(.settings(.resetAppVersionDescription))
             }
 
-            Section {
-                DocumentDetailViewVersionSelection()
+            if show {
+                Section {
+                    DocumentDetailViewVersionSelection()
 
-                LoginViewSwitchView()
-            } header: {
-                Text(.settings(.experimentsTitle))
-            } footer: {
-                Text(.settings(.experimentsDescription))
+                    LoginViewSwitchView()
+                } header: {
+                    Text(.settings(.experimentsTitle))
+                } footer: {
+                    Text(.settings(.experimentsDescription))
+                }
             }
         }
         .navigationTitle(String(localized: .settings(.debugMenu)))
         .navigationBarTitleDisplayMode(.inline)
+
+        .task {
+            show = Bundle.main.appConfiguration != .AppStore
+        }
     }
 }
 
