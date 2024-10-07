@@ -11,7 +11,6 @@ struct DocumentDetailViewVersionSelection: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
     @State private var show = false
-
     let available: [AppSettings.EditingUserInterface] = [
         .automatic,
         .v1,
@@ -39,11 +38,15 @@ struct DocumentDetailViewVersionSelection: View {
 
 @MainActor
 private var editingInterface: AppSettings.EditingUserInterface {
-    switch AppSettings.shared.editingUserInterface {
+    if Bundle.main.appConfiguration == .AppStore {
+        return .v3
+    }
+
+    return switch AppSettings.shared.editingUserInterface {
     case .automatic:
         switch Bundle.main.appConfiguration {
         case .Debug, .Simulator: .v3
-        case .AppStore: .v1
+        case .AppStore: .v3
         case .TestFlight: .v3
         }
     case .v1: .v1
