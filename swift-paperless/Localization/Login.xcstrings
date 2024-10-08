@@ -154,14 +154,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Validating"
+            "state" : "translated",
+            "value" : "Valideren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Validating"
+            "state" : "translated",
+            "value" : "Weryfikowanie"
           }
         }
       }
@@ -195,14 +195,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Self-signed certificates are supported using the operating system trust store!"
+            "state" : "translated",
+            "value" : "Zelf-ondertekende certificaten worden ondersteund met behulp van de operating system trust store!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Self-signed certificates are supported using the operating system trust store!"
+            "state" : "translated",
+            "value" : "Certyfikaty z podpisem własnym są obsługiwane przy użyciu magazynu certyfikatów systemu operacyjnego!"
           }
         }
       }
@@ -236,14 +236,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue"
+            "state" : "translated",
+            "value" : "Volgende"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue"
+            "state" : "translated",
+            "value" : "Kontynuuj"
           }
         }
       }
@@ -283,8 +283,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mode"
+            "state" : "translated",
+            "value" : "Rodzaj"
           }
         }
       }
@@ -324,8 +324,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No credentials"
+            "state" : "translated",
+            "value" : "Brak danych logowania"
           }
         }
       }
@@ -365,8 +365,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+            "state" : "translated",
+            "value" : "Logowanie bez poświadczeń. Działa to w sytuacji, gdy logowanie odbywa się przez niestandardowe nagłówki, mTLS lub podobne."
           }
         }
       }
@@ -406,7 +406,7 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Token"
           }
         }
@@ -447,8 +447,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with an API token that you obtained in the admin interface."
+            "state" : "translated",
+            "value" : "Logowani za pomocą tokena API uzyskanego w panelu administracyjnym."
           }
         }
       }
@@ -488,8 +488,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username & Password"
+            "state" : "translated",
+            "value" : "Nazwa użytkownika i hasło"
           }
         }
       }
@@ -529,8 +529,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+            "state" : "translated",
+            "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OAuth2/OIDC."
           }
         }
       }
@@ -652,8 +652,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info here"
+            "state" : "translated",
+            "value" : "Więcej informacji tutaj"
           }
         }
       }
@@ -693,8 +693,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
+            "state" : "translated",
+            "value" : "Jeśli używasz *mTLS*, może to oznaczać, że musisz dostarczyć certyfikat klienta lub certyfikat klienta nie został zaakceptowany."
           }
         }
       }
@@ -734,8 +734,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate error while connecting"
+            "state" : "translated",
+            "value" : "Błąd certyfikatu podczas łączenia"
           }
         }
       }
@@ -775,8 +775,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The user associated with these credentials has insufficient permissions"
+            "state" : "translated",
+            "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia"
           }
         }
       }
@@ -816,8 +816,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A minimum set of permissions is required to be able to use the app!"
+            "state" : "translated",
+            "value" : "Do korzystania z aplikacji wymagany jest minimalny zestaw uprawnień!"
           }
         }
       }
@@ -857,8 +857,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Request returned invalid response code *%d*."
+            "state" : "translated",
+            "value" : "Żądanie zwróciło nieprawidłowy kod odpowiedzi *%d*."
           }
         }
       }
@@ -899,8 +899,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app has not been granted access to the local network."
+            "state" : "translated",
+            "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej."
           }
         }
       }
@@ -981,8 +981,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
+            "state" : "translated",
+            "value" : "**Kombinacja nazwy użytkownika i hasła została odrzucona.**\nSprawdź, czy wpisałeś je poprawnie."
           }
         }
       }
@@ -1022,8 +1022,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error while logging in"
+            "state" : "translated",
+            "value" : "Błąd podczas logowania"
           }
         }
       }
@@ -1063,8 +1063,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
+            "state" : "translated",
+            "value" : "**Żądanie połączenia bez poświadczeń zostało odrzucone.**\nSprawdź swoją konfigurację."
           }
         }
       }
@@ -1104,8 +1104,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
+            "state" : "translated",
+            "value" : "**Token dostępu jest nieprawidłowy.**\nSprawdź, czy został wpisany poprawnie."
           }
         }
       }
