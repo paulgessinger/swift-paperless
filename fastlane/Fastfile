@@ -67,6 +67,16 @@ platform :ios do
     push_to_git_remote(tags: true)
   end
 
+  lane :bump_build do
+    previous_build_number = latest_testflight_build_number()
+    current_build_number = previous_build_number + 1
+
+    increment_build_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+      build_number: current_build_number
+    )
+  end
+
   lane :tests do
     xcodes(
       select_for_current_build_only: true
