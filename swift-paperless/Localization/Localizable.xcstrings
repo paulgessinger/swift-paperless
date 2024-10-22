@@ -726,19 +726,19 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copié dans le presse-papiers"
+            "value" : "Copié dans le presse-papier"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copied to clipboard"
+            "state" : "translated",
+            "value" : "Gekopieerd naar het klembord"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copied to clipboard"
+            "state" : "translated",
+            "value" : "Skopiowane do schowka"
           }
         }
       }
@@ -1390,14 +1390,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Details"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Szczegóły"
           }
         }
       }
@@ -1802,14 +1802,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preview"
+            "state" : "translated",
+            "value" : "Voorbeeld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preview"
+            "state" : "translated",
+            "value" : "Podgląd"
           }
         }
       }
@@ -1843,14 +1843,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Bestaat"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Już istnieje"
           }
         }
       }
@@ -2997,14 +2997,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Group"
+            "state" : "translated",
+            "value" : "Groep"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Group"
+            "state" : "translated",
+            "value" : "Grupa"
           }
         }
       }
@@ -3574,14 +3574,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Geen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Brak"
           }
         }
       }
@@ -4446,8 +4446,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+            "state" : "translated",
+            "value" : "Nie można załadować informacji o wersji dla wersji %@. Może się to zdarzyć, jeśli korzystasz z wersji beta."
           }
         }
       }
@@ -5344,14 +5344,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Delen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Udostępnij"
           }
         }
       }
@@ -5385,14 +5385,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Link to this app"
+            "state" : "translated",
+            "value" : "Link naar deze app"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Link to this app"
+            "state" : "translated",
+            "value" : "Link do tej aplikacji"
           }
         }
       }
@@ -5426,14 +5426,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Link delen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Udostępnij link"
           }
         }
       }
@@ -5467,14 +5467,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other apps"
+            "state" : "translated",
+            "value" : "Andere apps"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other apps"
+            "state" : "translated",
+            "value" : "Pozostałe aplikacje"
           }
         }
       }
@@ -5590,14 +5590,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Please log in using the app first!"
+            "state" : "translated",
+            "value" : "Log eerst in met behulp van de app!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Please log in using the app first!"
+            "state" : "translated",
+            "value" : "Proszę najpierw zalogować się przy użyciu aplikacji!"
           }
         }
       }
@@ -5918,14 +5918,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notities"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notatki"
           }
         }
       }
@@ -5959,14 +5959,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Eigenaar"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Właściciel"
           }
         }
       }
@@ -6000,14 +6000,14 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search score"
+            "state" : "translated",
+            "value" : "Zoekscore"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search score"
+            "state" : "translated",
+            "value" : "Dopasowanie"
           }
         }
       }

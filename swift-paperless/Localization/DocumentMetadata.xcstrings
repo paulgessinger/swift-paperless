@@ -36,8 +36,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date added"
+            "state" : "translated",
+            "value" : "Data dodania"
           }
         }
       }
@@ -77,8 +77,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive MD5 checksum"
+            "state" : "translated",
+            "value" : "Suma kontrolna MD5 pliku archiwalnego"
           }
         }
       }
@@ -118,8 +118,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive file size"
+            "state" : "translated",
+            "value" : "Rozmiar pliku archiwalnego"
           }
         }
       }
@@ -159,8 +159,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Media filename"
+            "state" : "translated",
+            "value" : "Nazwa pliku"
           }
         }
       }
@@ -200,8 +200,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Metadata"
+            "state" : "translated",
+            "value" : "Metadane"
           }
         }
       }
@@ -241,8 +241,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date modified"
+            "state" : "translated",
+            "value" : "Data modyfikacji"
           }
         }
       }
@@ -282,8 +282,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create note"
+            "state" : "translated",
+            "value" : "Utwórz notatkę"
           }
         }
       }
@@ -323,8 +323,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note text"
+            "state" : "translated",
+            "value" : "Treść notatki"
           }
         }
       }
@@ -364,8 +364,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notatki"
           }
         }
       }
@@ -405,8 +405,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original MD5 checksum"
+            "state" : "translated",
+            "value" : "Suma kontrolna MD5 oryginału"
           }
         }
       }
@@ -446,8 +446,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original filename"
+            "state" : "translated",
+            "value" : "Nazwa pliku oryginału"
           }
         }
       }
@@ -487,8 +487,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original file size"
+            "state" : "translated",
+            "value" : "Rozmiar pliku oryginału"
           }
         }
       }
@@ -528,8 +528,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original mime type"
+            "state" : "translated",
+            "value" : "Typ mime oryginału"
           }
         }
       }

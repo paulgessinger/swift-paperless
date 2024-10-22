@@ -36,8 +36,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Aktywna tożsamość"
           }
         }
       }
@@ -356,7 +356,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version de l'application stockée"
+            "value" : "Version de l'application enregistrée"
           }
         },
         "nl" : {
@@ -367,8 +367,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored app version"
+            "state" : "translated",
+            "value" : "Zapisana wersja aplikacji"
           }
         }
       }
@@ -492,8 +492,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't load certificate. Invalid password?"
+            "state" : "translated",
+            "value" : "Nie można załadować certyfikatu. Nieprawidłowe hasło?"
           }
         }
       }
@@ -533,8 +533,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate not loaded"
+            "state" : "translated",
+            "value" : "Nie wczytano certyfikatu"
           }
         }
       }
@@ -574,8 +574,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificates"
+            "state" : "translated",
+            "value" : "Certyfikaty"
           }
         }
       }
@@ -1260,7 +1260,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les paramètres sont des variantes ou des expériences de fonctionnalités à venir que vous pouvez désactiver. \n\nEn général, l'expérience sera mise en œuvre, et l'ancienne variante disparaîtra, ou l'expérience sera abandonnée, et la nouvelle variante disparaîtra."
+            "value" : "Les paramètres ici sont des variantes ou des expériences de fonctionnalités à venir que vous pouvez désactiver. \n\nEn général, l'expérience sera mise en œuvre, et l'ancienne variante disparaîtra, ou l'expérience sera abandonnée, et la nouvelle variante disparaîtra."
           }
         },
         "nl" : {
@@ -1271,8 +1271,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Te ustawienia to nadchodzące warianty funkcji / eksperymenty, które można wyłączyć. \n\nZazwyczaj eksperyment albo zostanie wdrożony, a stary wariant zniknie, albo eksperyment zostanie porzucony, a nowy wariant zniknie."
           }
         }
       }
@@ -1312,8 +1312,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Experiments"
+            "state" : "translated",
+            "value" : "Funkcje eksperymentalne"
           }
         }
       }
@@ -1435,8 +1435,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities"
+            "state" : "translated",
+            "value" : "Tożsamości"
           }
         }
       }
@@ -1476,8 +1476,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+            "state" : "translated",
+            "value" : "Tożsamości to certyfikaty wraz z kluczami prywatnymi, które mogą być używane do kryptograficznego uwierzytelniania użytkownika. Tożsamości są używane w konfiguracjach [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) w celu uzyskania dostępu do zabezpieczonych zasobów.\n\nJest to **zaawansowana funkcja**!"
           }
         }
       }
@@ -1752,7 +1752,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L'application effectue certaines opérations comptables en fonction de la version de l'application. Cette opération réinitialise la version de l'application, de sorte que l'application fonctionne comme s'il s'agissait d'une installation propre."
+            "value" : "L'application effectue certaines opérations de compatibilité en fonction de la version de l'application. Cette opération réinitialise la version de l'application, de sorte que l'application fonctionne comme s'il s'agissait d'une installation propre."
           }
         },
         "nl" : {
@@ -1763,8 +1763,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "Aplikacja wykonuje pewne czynności w zależności od zapisanej wersji aplikacji. Ta funkcja resetuje zapisaną wersję, dzięki czemu aplikacja działa tak, jakby była świeżo zainstalowania."
           }
         }
       }
@@ -1804,8 +1804,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select Certificate"
+            "state" : "translated",
+            "value" : "Wybierz certyfikat"
           }
         }
       }

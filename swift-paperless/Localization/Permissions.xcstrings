@@ -36,8 +36,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Change"
+            "state" : "translated",
+            "value" : "Modyfikacja"
           }
         }
       }
@@ -77,8 +77,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Grupy"
           }
         }
       }
@@ -118,8 +118,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared"
+            "state" : "translated",
+            "value" : "Udostępniony"
           }
         }
       }
@@ -159,8 +159,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Nobody"
+            "state" : "translated",
+            "value" : "Nikt"
           }
         }
       }
@@ -200,8 +200,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Właściciel"
           }
         }
       }
@@ -241,8 +241,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Private"
+            "state" : "translated",
+            "value" : "Prywatny"
           }
         }
       }
@@ -282,8 +282,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "Uprawnienia"
           }
         }
       }
@@ -323,8 +323,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Objects without an owner can be viewed and edited by all users"
+            "state" : "translated",
+            "value" : "Dokumenty bez właściciela mogą być przeglądane i edytowane przez wszystkich użytkowników"
           }
         }
       }
@@ -364,8 +364,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Użytkownicy"
           }
         }
       }
@@ -405,8 +405,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View"
+            "state" : "translated",
+            "value" : "Wyświetlanie"
           }
         }
       }
