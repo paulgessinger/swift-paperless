@@ -40,7 +40,9 @@ private struct DetailsView: View {
                     NavigationLink {
                         ExtraHeadersView(headers: $viewModel.extraHeaders)
                     } label: {
-                        Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+                        Label(
+                            markdown: .login(.extraHeaders), systemImage: "list.bullet.rectangle.fill"
+                        )
                     }
                     NavigationLink {
                         TLSListView(identityManager: identityManager)

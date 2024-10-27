@@ -12,6 +12,10 @@ extension Label where Icon == Image, Title == Text {
         self.init(String(localized: localized), systemImage: systemImage)
     }
 
+    init(markdown: LocalizedStringResource, systemImage: String) {
+        self.init(title: { Text(markdown) }, icon: { Image(systemName: systemImage) })
+    }
+
     init(localized: LocalizedStringResource, image: String) {
         self.init(String(localized: localized), image: image)
     }
