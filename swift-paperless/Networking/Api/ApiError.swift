@@ -15,6 +15,31 @@ enum RequestError: Error {
     case unauthorized(detail: String)
 }
 
+extension RequestError: DisplayableError {
+    var message: String {
+        String(localized: .localizable(.errorDefaultMessage))
+    }
+
+    var details: String? {
+        let res: LocalizedStringResource = switch self {
+        case .invalidRequest:
+            .localizable(.requestErrorInvalidRequest)
+        case .invalidResponse:
+            .localizable(.requestErrorInvalidResponse)
+        case let .unexpectedStatusCode(code):
+            .localizable(.requestErrorUnexpectedStatusCode(code))
+        case let .forbidden(detail):
+            .localizable(.requestErrorForbidden(detail))
+        case let .unauthorized(detail):
+            .localizable(.requestErrorUnauthorized(detail))
+        }
+
+        return String(localized: res)
+    }
+
+    var documentationLink: URL? { nil }
+}
+
 struct ResourceForbidden<Resource: Model>: DisplayableError {
     init(_: Resource.Type, response: String) {
         self.response = response

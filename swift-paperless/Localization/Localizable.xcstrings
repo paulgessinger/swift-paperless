@@ -4493,6 +4493,61 @@
         }
       }
     },
+    "requestErrorForbidden" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request was denied due to missing permissions: %@"
+          }
+        }
+      }
+    },
+    "requestErrorInvalidRequest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was an error with the configured URL."
+          }
+        }
+      }
+    },
+    "requestErrorInvalidResponse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The response to a request had an unexpected format"
+          }
+        }
+      }
+    },
+    "requestErrorUnauthorized" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request was rejected due to invalid credentials: %@"
+          }
+        }
+      }
+    },
+    "requestErrorUnexpectedStatusCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The response to a request had an unexpected status code %d"
+          }
+        }
+      }
+    },
     "save" : {
       "extractionState" : "manual",
       "localizations" : {
