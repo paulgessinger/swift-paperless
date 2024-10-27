@@ -50,7 +50,8 @@ actor ApiRepository {
     init(connection: Connection) async {
         self.connection = connection
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
-        Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) \(connection.token ?? "None", privacy: .private)")
+        let tokenStr = connection.token != nil ? "<token len: \(connection.token?.count ?? 0)>" : "nil"
+        Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) and token \(tokenStr, privacy: .public)")
 
         let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
 
@@ -664,7 +665,7 @@ extension ApiRepository: Repository {
     }
 
     private func loadBackendVersions() async {
-        Logger.api.notice("Getting backend versions")
+        Logger.api.info("Getting backend versions")
         do {
             let request = try request(.root())
 
@@ -674,6 +675,10 @@ extension ApiRepository: Repository {
             guard let res = res as? HTTPURLResponse else {
                 Logger.api.error("Unable to get API and backend version: Not an HTTP response")
                 return
+            }
+
+            if res.statusCode != 200 {
+                Logger.api.error("Status code for version request was \(res.statusCode), not 200. Usually this means authentication is broken.")
             }
 
             let backend1 = res.value(forHTTPHeaderField: "X-Version")

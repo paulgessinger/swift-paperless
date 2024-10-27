@@ -38,7 +38,7 @@ struct MainView: View {
 
         storeReady = false
         if let conn = manager.connection {
-            Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
+            Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
             if let store {
                 Task {
                     store.eventPublisher.send(.repositoryWillChange)

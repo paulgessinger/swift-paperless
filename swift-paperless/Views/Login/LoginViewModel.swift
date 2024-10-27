@@ -374,7 +374,10 @@ class LoginViewModel {
                                           user: currentUser,
                                           identity: selectedIdentity?.name)
             if let token = connection.token {
+                Logger.api.info("Have token for connection, storing")
                 try stored.setToken(token)
+            } else {
+                Logger.api.info("No token for connection, leaving nil")
             }
 
             Logger.api.info("Credentials are valid")

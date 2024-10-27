@@ -50,11 +50,13 @@ struct StoredConnection: Equatable, Codable, Identifiable {
             guard let data = try Keychain.read(service: url.absoluteString,
                                                account: user.username)
             else {
+                Logger.api.info("Read nil valuefrom keychain, return nil")
                 return nil
             }
             let token = String(data: data, encoding: .utf8)!
             // we might have saved empty strings as tokens before, convert to nil when reading
             if token.isEmpty {
+                Logger.api.info("Read empty string from keychain, return nil")
                 return nil
             }
             return token
@@ -265,7 +267,8 @@ class ConnectionManager: ObservableObject {
     }
 
     var connection: Connection? {
-        Logger.api.debug("Making connection object")
+        // @TODO: Downgrade these logs back to debug
+        Logger.api.info("Making connection object")
 
         if previewMode {
             Logger.api.info("Running in preview mode")
@@ -278,7 +281,7 @@ class ConnectionManager: ObservableObject {
         }
 
         if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
-            Logger.api.debug("Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)")
+            Logger.api.info("Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)")
             do {
                 return try storedConnection.connection
             } catch {
@@ -287,7 +290,7 @@ class ConnectionManager: ObservableObject {
         }
 
         // @TODO: (multi-server) Remove in a few versions
-        Logger.api.debug("Making compatibility connection from parts")
+        Logger.api.info("Making compatibility connection from parts (OLD STOAGE FLOW)")
 
         guard let apiHost, var url = URL(string: apiHost) else {
             return nil
