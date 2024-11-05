@@ -28,6 +28,12 @@
             "value" : "Ignorer"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignora"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -67,6 +73,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tout ignorer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignora tutti"
           }
         },
         "nl" : {
@@ -110,6 +122,12 @@
             "value" : "Ignorer %llu"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignora %llu"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -151,6 +169,12 @@
             "value" : "Créé"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -190,6 +214,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completato"
           }
         },
         "nl" : {
@@ -234,6 +264,12 @@
             "value" : "Impossible d'importer %@: il s'agit d'un doublon !"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile importare %@: è un duplicato!"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -273,6 +309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erreur dans le traitement du document"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore durante l'elaborazione del documento"
           }
         },
         "nl" : {
@@ -316,6 +358,12 @@
             "value" : "Nom du fichier"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome file"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -355,6 +403,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Identifiant de tâche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Task ID"
           }
         },
         "nl" : {
@@ -398,6 +452,12 @@
             "value" : "Le document avec ID #%@ associé à cette tâche n'existe pas.\nIl a peut-être été supprimé entre-temps."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -437,6 +497,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucune tâche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No tasks"
           }
         },
         "nl" : {
@@ -480,6 +546,12 @@
             "value" : "Document concerné"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documenti correlati"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -519,6 +591,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Résultat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risultato"
           }
         },
         "nl" : {
@@ -562,6 +640,12 @@
             "value" : "État"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -601,6 +685,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Échec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore"
           }
         },
         "nl" : {
@@ -644,6 +734,12 @@
             "value" : "En cours"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -683,6 +779,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réessayer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova"
           }
         },
         "nl" : {
@@ -726,6 +828,12 @@
             "value" : "Révoqué"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revocato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -765,6 +873,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Démarré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avviato"
           }
         },
         "nl" : {
@@ -808,6 +922,12 @@
             "value" : "Effectué avec succès"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -849,6 +969,12 @@
             "value" : "Tâche n°%@"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Task #%@"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -888,6 +1014,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toutes les tâches"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All tasks"
           }
         },
         "nl" : {
@@ -979,6 +1111,24 @@
             }
           }
         },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "1 more task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%llu more tasks"
+                }
+              }
+            }
+          }
+        },
         "nl" : {
           "variations" : {
             "plural" : {
@@ -1056,6 +1206,12 @@
             "value" : "Tâches"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tasks"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1095,6 +1251,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inconnu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sconosciuto"
           }
         },
         "nl" : {
