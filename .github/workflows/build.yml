@@ -43,9 +43,6 @@ jobs:
         with:
           xcode-version: "16.0"
 
-      - name: Install runtime
-        run: xcodes runtimes install "iOS ${{ matrix.ios }}"
-
       - name: Install dependencies
         run: bundle install
 
