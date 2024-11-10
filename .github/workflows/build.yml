@@ -24,12 +24,12 @@ jobs:
           - "iPhone 16 Pro"
           - "iPad Pro 13-inch (M4)"
         ios:
-          - "17.7"
+          - "17.5"
           - "18.1"
         exclude:
           # combination does not exist
           - device: "iPhone 16 Pro"
-            ios: "17.7"
+            ios: "17.5"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
@@ -44,7 +44,7 @@ jobs:
           xcode-version: "16.0"
 
       - name: Install runtime
-        run: xcodes runtimes install ${{ matrix.ios }}
+        run: xcodes runtimes install "iOS ${{ matrix.ios }}"
 
       - name: Install dependencies
         run: bundle install
