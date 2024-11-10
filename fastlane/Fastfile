@@ -107,7 +107,6 @@ platform :ios do
       scheme: "swift-paperless",
       destination: "platform=iOS Simulator,OS=#{ios},name=#{device}",
       xcargs: "-skipPackagePluginValidation",
-      skip_codesigning: true
     )
   end
 
