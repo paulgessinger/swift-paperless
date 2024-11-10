@@ -16,20 +16,14 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         device:
-          - "iPhone 15 Pro"
           - "iPhone 16 Pro"
-          - "iPad Pro (12.9-inch) (6th generation)"
+          - "iPad Pro 13-inch (M4)"
         ios:
-          - "17.5"
-          - "18.0"
-        exclude:
-          # combination does not exist
-          - device: "iPhone 16 Pro"
-            ios: "17.5"
+          - "18.1"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
@@ -49,7 +43,7 @@ jobs:
         run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
