@@ -28,6 +28,12 @@
             "value" : "Identité active"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Active Identity"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -36,8 +42,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Aktywna tożsamość"
           }
         }
       }
@@ -68,6 +74,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Serveur actif"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server attivo"
           }
         },
         "nl" : {
@@ -107,6 +119,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        },
+        "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "URL"
@@ -154,6 +172,12 @@
             "value" : "Utilisateur"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utente"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -195,6 +219,12 @@
             "value" : "Avancé"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzate"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -231,6 +261,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build"
+          }
+        },
+        "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Build"
@@ -277,6 +313,12 @@
             "value" : "Configuration"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -318,6 +360,12 @@
             "value" : "Version"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -356,7 +404,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version de l'application stockée"
+            "value" : "Version de l'application enregistrée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stored app version"
           }
         },
         "nl" : {
@@ -367,8 +421,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored app version"
+            "state" : "translated",
+            "value" : "Zapisana wersja aplikacji"
           }
         }
       }
@@ -399,6 +453,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ n'a pas pu être activée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Non può essere abilitato"
           }
         },
         "nl" : {
@@ -443,6 +503,12 @@
             "value" : "S'authentifier avec TouchID pour utiliser l'application"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticazione con TouchID per utilizzare l'app"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -484,6 +550,12 @@
             "value" : "Impossible de charger le certificat. Mot de passe invalide ?"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile caricare il certificato. Password non valida?"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -492,8 +564,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't load certificate. Invalid password?"
+            "state" : "translated",
+            "value" : "Nie można załadować certyfikatu. Nieprawidłowe hasło?"
           }
         }
       }
@@ -525,6 +597,12 @@
             "value" : "Certificat non chargé"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificato non caricato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -533,8 +611,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate not loaded"
+            "state" : "translated",
+            "value" : "Nie wczytano certyfikatu"
           }
         }
       }
@@ -566,6 +644,12 @@
             "value" : "Certificats"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificati"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -574,8 +658,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificates"
+            "state" : "translated",
+            "value" : "Certyfikaty"
           }
         }
       }
@@ -605,6 +689,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisir le serveur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona Server"
           }
         },
         "nl" : {
@@ -648,6 +738,12 @@
             "value" : "Débogage"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -687,6 +783,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réinitialiser la version de l'application stockée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset stored app version"
           }
         },
         "nl" : {
@@ -730,6 +832,12 @@
             "value" : "Mode de recherche par défaut pour la recherche en texte intégral"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La modalità di ricerca predefinita per la ricerca full-text"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -769,6 +877,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mode de recherche par défaut"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modalità di ricerca predefinita"
           }
         },
         "nl" : {
@@ -812,6 +926,12 @@
             "value" : "Champ de tri par défaut"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campo predefinito per l'ordinamento"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -851,6 +971,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ordre de tri par défault"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordine predefinito per l'ordinamento"
           }
         },
         "nl" : {
@@ -894,6 +1020,12 @@
             "value" : "Retour d'information"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -933,6 +1065,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bibliothèques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Librerie"
           }
         },
         "nl" : {
@@ -976,6 +1114,12 @@
             "value" : "Impossible de charger les détails des bibliothèques utilisées"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile caricare i dettagli della libreria utilizzata"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1015,6 +1159,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confidentialité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
           }
         },
         "nl" : {
@@ -1058,6 +1208,12 @@
             "value" : "# Confidentialité\nImpossible de charger l'URL de confidentialité. Veuillez naviguer [ici](%@) pour la trouver."
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# Privacy\\\\nImpossibile caricare l'URL della privacy. Navigare [qui](%@) per trovarlo."
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1097,6 +1253,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Code source"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice sorgente"
           }
         },
         "nl" : {
@@ -1140,6 +1302,12 @@
             "value" : "Détails"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dettagli"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1179,6 +1347,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirmer la suppression du document"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conferma eliminazione documento"
           }
         },
         "nl" : {
@@ -1222,6 +1396,12 @@
             "value" : "Demander une confirmation avant de supprimer un document"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiedi conferma prima di eliminare un documento"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1260,7 +1440,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les paramètres sont des variantes ou des expériences de fonctionnalités à venir que vous pouvez désactiver. \n\nEn général, l'expérience sera mise en œuvre, et l'ancienne variante disparaîtra, ou l'expérience sera abandonnée, et la nouvelle variante disparaîtra."
+            "value" : "Les paramètres ici sont des variantes ou des expériences de fonctionnalités à venir que vous pouvez désactiver. \n\nEn général, l'expérience sera mise en œuvre, et l'ancienne variante disparaîtra, ou l'expérience sera abandonnée, et la nouvelle variante disparaîtra."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
           }
         },
         "nl" : {
@@ -1271,8 +1457,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Te ustawienia to nadchodzące warianty funkcji / eksperymenty, które można wyłączyć. \n\nZazwyczaj eksperyment albo zostanie wdrożony, a stary wariant zniknie, albo eksperyment zostanie porzucony, a nowy wariant zniknie."
           }
         }
       }
@@ -1304,6 +1490,12 @@
             "value" : "Expériences en matière d'interface utilisateur"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperimenti UI"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -1312,8 +1504,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Experiments"
+            "state" : "translated",
+            "value" : "Funkcje eksperymentalne"
           }
         }
       }
@@ -1343,6 +1535,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Merci !"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grazie!"
           }
         },
         "nl" : {
@@ -1386,6 +1584,12 @@
             "value" : "Envoyer un courriel"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia email"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1427,6 +1631,12 @@
             "value" : "Identités"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identità"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -1435,8 +1645,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities"
+            "state" : "translated",
+            "value" : "Tożsamości"
           }
         }
       }
@@ -1468,6 +1678,12 @@
             "value" : "Les identités sont des certificats accompagnés de clés privées qui peuvent être utilisés pour vous authentifier de manière cryptographique. Les identités sont utilisées dans les configurations [*mTLS*] (https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) pour accéder aux ressources sécurisées.\n\nIl s'agit d'une **fonctionnalité avancée** !"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le identità sono certificati insieme a chiavi private che possono essere utilizzate per autenticare l'utente in modo sicuro. Le identità sono utilizzate nelle configurazioni [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) per accedere a risorse protette.\n\nQuesta è una **funzionalità avanzata**!"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -1476,8 +1692,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+            "state" : "translated",
+            "value" : "Tożsamości to certyfikaty wraz z kluczami prywatnymi, które mogą być używane do kryptograficznego uwierzytelniania użytkownika. Tożsamości są używane w konfiguracjach [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) w celu uzyskania dostępu do zabezpieczonych zasobów.\n\nJest to **zaawansowana funkcja**!"
           }
         }
       }
@@ -1507,6 +1723,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Personnaliser l'Icône"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizza logo"
           }
         },
         "nl" : {
@@ -1550,6 +1772,12 @@
             "value" : "Icône sélectionnée"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icona selezionata"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1589,6 +1817,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Icône par défaut"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icona predefinita"
           }
         },
         "nl" : {
@@ -1632,6 +1866,12 @@
             "value" : "Icône #%llu"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icona #%llu"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1671,6 +1911,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Organisation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organizzazione"
           }
         },
         "nl" : {
@@ -1714,6 +1960,12 @@
             "value" : "Préférences"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferenze"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1752,7 +2004,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L'application effectue certaines opérations comptables en fonction de la version de l'application. Cette opération réinitialise la version de l'application, de sorte que l'application fonctionne comme s'il s'agissait d'une installation propre."
+            "value" : "L'application effectue certaines opérations de compatibilité en fonction de la version de l'application. Cette opération réinitialise la version de l'application, de sorte que l'application fonctionne comme s'il s'agissait d'une installation propre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
           }
         },
         "nl" : {
@@ -1763,8 +2021,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "Aplikacja wykonuje pewne czynności w zależności od zapisanej wersji aplikacji. Ta funkcja resetuje zapisaną wersję, dzięki czemu aplikacja działa tak, jakby była świeżo zainstalowania."
           }
         }
       }
@@ -1796,6 +2054,12 @@
             "value" : "Sélectionner un certificat"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona Certificato"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -1804,8 +2068,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select Certificate"
+            "state" : "translated",
+            "value" : "Wybierz certyfikat"
           }
         }
       }
@@ -1836,6 +2100,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paramètres"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impostazioni"
           }
         },
         "nl" : {
@@ -1880,6 +2150,12 @@
             "value" : "Verrouiller l'appli avec %@"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocca app con %@"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1919,6 +2195,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Informations de version"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info versione"
           }
         },
         "nl" : {

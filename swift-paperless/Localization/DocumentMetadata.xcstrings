@@ -28,6 +28,12 @@
             "value" : "Date d'ajout"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data di aggiunta"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -36,8 +42,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date added"
+            "state" : "translated",
+            "value" : "Data dodania"
           }
         }
       }
@@ -69,6 +75,12 @@
             "value" : "Somme de contrôle MD5 de l'archive"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checksum MD5 dell'archivio"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -77,8 +89,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive MD5 checksum"
+            "state" : "translated",
+            "value" : "Suma kontrolna MD5 pliku archiwalnego"
           }
         }
       }
@@ -110,6 +122,12 @@
             "value" : "Taille du fichier d'archive"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione dell'archivio"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -118,8 +136,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive file size"
+            "state" : "translated",
+            "value" : "Rozmiar pliku archiwalnego"
           }
         }
       }
@@ -151,6 +169,12 @@
             "value" : "Nom du fichier média"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome del file multimediale"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -159,8 +183,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Media filename"
+            "state" : "translated",
+            "value" : "Nazwa pliku"
           }
         }
       }
@@ -192,6 +216,12 @@
             "value" : "Métadonnées"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadati"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -200,8 +230,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Metadata"
+            "state" : "translated",
+            "value" : "Metadane"
           }
         }
       }
@@ -233,6 +263,12 @@
             "value" : "Date de modification"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data di modifica"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -241,8 +277,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date modified"
+            "state" : "translated",
+            "value" : "Data modyfikacji"
           }
         }
       }
@@ -274,6 +310,12 @@
             "value" : "Créer une note"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea nota"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -282,8 +324,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create note"
+            "state" : "translated",
+            "value" : "Utwórz notatkę"
           }
         }
       }
@@ -315,6 +357,12 @@
             "value" : "Texte de la note"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testo della nota"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -323,8 +371,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note text"
+            "state" : "translated",
+            "value" : "Treść notatki"
           }
         }
       }
@@ -356,6 +404,12 @@
             "value" : "Notes"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -364,8 +418,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notatki"
           }
         }
       }
@@ -397,6 +451,12 @@
             "value" : "Somme de contrôle MD5 originale"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checksum MD5 originale"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -405,8 +465,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original MD5 checksum"
+            "state" : "translated",
+            "value" : "Suma kontrolna MD5 oryginału"
           }
         }
       }
@@ -438,6 +498,12 @@
             "value" : "Nom de fichier original"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome file originale"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -446,8 +512,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original filename"
+            "state" : "translated",
+            "value" : "Nazwa pliku oryginału"
           }
         }
       }
@@ -479,6 +545,12 @@
             "value" : "Taille du fichier original"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione file originale"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -487,8 +559,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original file size"
+            "state" : "translated",
+            "value" : "Rozmiar pliku oryginału"
           }
         }
       }
@@ -520,6 +592,12 @@
             "value" : "Type de mime original"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo MIME originale"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
@@ -528,8 +606,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original mime type"
+            "state" : "translated",
+            "value" : "Typ mime oryginału"
           }
         }
       }

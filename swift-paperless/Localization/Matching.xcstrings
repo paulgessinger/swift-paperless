@@ -28,6 +28,12 @@
             "value" : "Algorithme de rapprochement"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritmo di corrispondenza"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -67,6 +73,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tous"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti"
           }
         },
         "nl" : {
@@ -110,6 +122,12 @@
             "value" : "N'importe lequel"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualsiasi"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -149,6 +167,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatique"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatico"
           }
         },
         "nl" : {
@@ -192,6 +216,12 @@
             "value" : "Concordance exacte"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esatto"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -231,6 +261,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mot approximatif"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fuzzy"
           }
         },
         "nl" : {
@@ -274,6 +310,12 @@
             "value" : "Aucun"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -313,6 +355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Expression régulière"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RegEx"
           }
         },
         "nl" : {
@@ -356,6 +404,12 @@
             "value" : "Insensible à la casse"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senza distinzione tra maiuscole e minuscole"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -395,6 +449,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le document contient tous ces mots (séparés par des espaces)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il documento contiene tutte queste parole (separate da spazi)"
           }
         },
         "nl" : {
@@ -438,6 +498,12 @@
             "value" : "Le document contient l'un de ces mots (séparés par des espaces)"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il documento contiene una qualsiasi delle seguenti parole (separate da spazi)"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -477,6 +543,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apprentissage automatique du rapprochement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impara automaticamente la corrispondenza"
           }
         },
         "nl" : {
@@ -520,6 +592,12 @@
             "value" : "Le document contient cette chaîne de caractères"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il documento contiene questa stringa"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -559,6 +637,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le document contient un mot similaire à ce mot"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il documento contiene una parola simile a questa parola"
           }
         },
         "nl" : {
@@ -602,6 +686,12 @@
             "value" : "Désactiver le rapprochement automatique"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna corrispondenza automatica"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -641,6 +731,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le document correspond à cette expression regulère"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il documento corrisponde a questa RegEx"
           }
         },
         "nl" : {
@@ -684,6 +780,12 @@
             "value" : "Motif"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pattern"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -723,6 +825,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rapprochement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corrispondenza"
           }
         },
         "nl" : {
