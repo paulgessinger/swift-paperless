@@ -20,11 +20,9 @@ jobs:
     strategy:
       matrix:
         device:
-          - "iPhone 15 Pro"
           - "iPhone 16 Pro"
           - "iPad Pro 13-inch (M4)"
         ios:
-          # - "17.5"
           - "18.1"
       fail-fast: false
     env:
