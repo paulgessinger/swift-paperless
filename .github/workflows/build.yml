@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         device:
@@ -49,7 +49,7 @@ jobs:
         run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
 
   test:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
