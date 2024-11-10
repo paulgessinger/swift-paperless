@@ -22,14 +22,14 @@ jobs:
         device:
           - "iPhone 15 Pro"
           - "iPhone 16 Pro"
-          - "iPad Pro (12.9-inch) (6th generation)"
+          - "iPad Pro 13-inch (M4)"
         ios:
-          - "17.5"
-          - "18.0"
+          - "17.7"
+          - "18.1"
         exclude:
           # combination does not exist
           - device: "iPhone 16 Pro"
-            ios: "17.5"
+            ios: "17.7"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
