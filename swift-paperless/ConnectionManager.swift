@@ -290,7 +290,7 @@ class ConnectionManager: ObservableObject {
         }
 
         // @TODO: (multi-server) Remove in a few versions
-        Logger.api.info("Making compatibility connection from parts (OLD STOAGE FLOW)")
+        Logger.api.info("Making compatibility connection from parts (OLD STORAGE FLOW)")
 
         guard let apiHost, var url = URL(string: apiHost) else {
             return nil
