@@ -868,4 +868,28 @@ final class FilterRuleTest: XCTestCase {
         let result = try JSONDecoder().decode(ListResponse<SavedView>.self, from: input.data(using: .utf8)!)
         print(result)
     }
+
+    func testLoadInvalidTypePreserving() throws {
+        // This is a known rule with an invalid value
+        let input = """
+        {
+        "rule_type": 22,
+        "value": "7,10,9,12,11,13,16,XXX"
+        }
+        """.data(using: .utf8)!
+
+        // XXX at the end is to FORCE decode failure even with list unpacking, so we can test the invalid-rule preserving but ignoreing pattern
+
+        let result = try JSONDecoder().decode(FilterRule.self, from: input)
+        XCTAssertEqual(result.ruleType, .hasTagsAny)
+        XCTAssertEqual(result.value, .invalid(value: "7,10,9,12,11,13,16,XXX"))
+
+        // We can serialize it back to the same value
+        let output = try String(decoding: JSONEncoder().encode(result), as: UTF8.self)
+        XCTAssertEqual(output, "{\"rule_type\":22,\"value\":\"7,10,9,12,11,13,16,XXX\"}")
+
+        // We provide the query item verbatim with the invalid value
+        let queryItems = FilterRule.queryItems(for: [result])
+        XCTAssertEqual(queryItems, [URLQueryItem(name: "tags__id__in", value: "7,10,9,12,11,13,16,XXX")])
+    }
 }

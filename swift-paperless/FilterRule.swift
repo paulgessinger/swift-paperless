@@ -20,6 +20,7 @@ enum FilterRuleValue: Codable, Equatable {
     case correspondent(id: UInt?)
     case owner(id: UInt?)
     case string(value: String)
+    case invalid(value: String)
 
     fileprivate func string() -> String? {
         var s: String? = nil
@@ -43,6 +44,8 @@ enum FilterRuleValue: Codable, Equatable {
         case let .owner(id):
             s = id == nil ? nil : String(id!)
         case let .string(value):
+            s = value
+        case let .invalid(value):
             s = value
         }
         return s
@@ -127,6 +130,8 @@ struct FilterRule: Equatable {
             precondition(dt == .number, "Invalid data type")
         case .string:
             precondition(dt == .string, "Invalid data type")
+        case .invalid:
+            break
         }
     }
 
@@ -179,32 +184,35 @@ extension FilterRule: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         ruleType = try container.decode(FilterRuleType.self, forKey: .ruleType)
 
-        switch ruleType.dataType() {
-        case .date:
-            let dateStr = try container.decode(String.self, forKey: .value)
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-            guard let date = dateFormatter.date(from: dateStr) else {
-                Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
-                throw DateDecodingError.invalidDate(string: dateStr)
+        do {
+            switch ruleType.dataType() {
+            case .date:
+                let dateStr = try container.decode(String.self, forKey: .value)
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd"
+                dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+                guard let date = dateFormatter.date(from: dateStr) else {
+                    Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
+                    throw DateDecodingError.invalidDate(string: dateStr)
+                }
+                value = .date(value: date)
+            case .number:
+                value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
+            case .tag:
+                value = try .tag(id: container.decodeOrConvert(UInt.self, forKey: .value))
+            case .boolean:
+                value = try .boolean(value: container.decodeOrConvert(Bool.self, forKey: .value))
+            case .documentType:
+                value = try .documentType(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+            case .storagePath:
+                value = try .storagePath(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+            case .correspondent:
+                value = try .correspondent(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+            case .string:
+                value = try .string(value: container.decodeOrConvert(String.self, forKey: .value))
             }
-            value = .date(value: date)
-//            self.value = try .date(value: container.decode(Date.self, forKey: .value))
-        case .number:
-            value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
-        case .tag:
-            value = try .tag(id: container.decodeOrConvert(UInt.self, forKey: .value))
-        case .boolean:
-            value = try .boolean(value: container.decodeOrConvert(Bool.self, forKey: .value))
-        case .documentType:
-            value = try .documentType(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .storagePath:
-            value = try .storagePath(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .correspondent:
-            value = try .correspondent(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
-        case .string:
-            value = try .string(value: container.decodeOrConvert(String.self, forKey: .value))
+        } catch DecodingError.typeMismatch {
+            value = try .invalid(value: container.decodeOrConvert(String.self, forKey: .value))
         }
     }
 
