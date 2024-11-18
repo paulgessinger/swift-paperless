@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 07.05.2024.
 //
 
-@testable import swift_paperless
 import Testing
 
 @Test

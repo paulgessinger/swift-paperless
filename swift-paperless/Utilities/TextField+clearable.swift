@@ -30,6 +30,7 @@ struct ClearableModifier: ViewModifier {
 }
 
 extension TextField {
+    @MainActor
     func clearable(_ text: Binding<String>) -> some View {
         let m = ClearableModifier(text: text)
         return modifier(m)
