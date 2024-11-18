@@ -327,6 +327,10 @@ final class FilterRuleTest: XCTestCase {
             FilterState(correspondent: .anyOf(ids: [8, 19]))
         )
 
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .hasCorrespondentAny, value: .invalid(value: "11,12"))]).correspondent,
+                       .anyOf(ids: [11, 12]))
+
         // New noneOf rule
         XCTAssertEqual(
             FilterState(rules: [
@@ -342,6 +346,10 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(correspondent: .noneOf(ids: [8, 19]))
         )
+
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .doesNotHaveCorrespondent, value: .invalid(value: "11,12"))]).correspondent,
+                       .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
@@ -378,6 +386,10 @@ final class FilterRuleTest: XCTestCase {
             FilterState(documentType: .anyOf(ids: [8, 19]))
         )
 
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .hasDocumentTypeAny, value: .invalid(value: "11,12"))]).documentType,
+                       .anyOf(ids: [11, 12]))
+
         // New noneOf rule
         XCTAssertEqual(
             FilterState(rules: [
@@ -393,6 +405,10 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(documentType: .noneOf(ids: [8, 19]))
         )
+
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .doesNotHaveDocumentType, value: .invalid(value: "11,12"))]).documentType,
+                       .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
@@ -429,6 +445,13 @@ final class FilterRuleTest: XCTestCase {
             FilterState(tags: .allOf(include: [66, 71], exclude: [75]))
         )
 
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .hasTagsAll, value: .invalid(value: "11,12"))]).tags,
+                       .allOf(include: [11, 12], exclude: []))
+
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .doesNotHaveTag, value: .invalid(value: "11,12"))]).tags,
+                       .allOf(include: [], exclude: [11, 12]))
+
         XCTAssertEqual(
             FilterState(rules: Array(tagAll.suffix(1))),
             FilterState(tags: .allOf(include: [], exclude: [75]))
@@ -453,6 +476,10 @@ final class FilterRuleTest: XCTestCase {
             FilterState(rules: tagAny),
             FilterState(tags: .anyOf(ids: [66, 71]))
         )
+
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .hasTagsAny, value: .invalid(value: "11,12"))]).tags,
+                       .anyOf(ids: [11, 12]))
 
         XCTAssertEqual(
             FilterState(rules: [
@@ -501,6 +528,10 @@ final class FilterRuleTest: XCTestCase {
             FilterState(owner: .anyOf(ids: [8, 99]))
         )
 
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .ownerAny, value: .invalid(value: "11,12"))]).owner,
+                       .anyOf(ids: [11, 12]))
+
         XCTAssertEqual(
             FilterState(rules: [
                 .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
@@ -515,6 +546,10 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(owner: .noneOf(ids: [8, 99]))
         )
+
+        // Invalid multi-value recovery
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .ownerDoesNotInclude, value: .invalid(value: "11,12"))]).owner,
+                       .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
@@ -551,6 +586,9 @@ final class FilterRuleTest: XCTestCase {
             FilterState(storagePath: .anyOf(ids: [8, 19]))
         )
 
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .hasStoragePathAny, value: .invalid(value: "11,12"))]).storagePath,
+                       .anyOf(ids: [11, 12]))
+
         // New noneOf rule
         XCTAssertEqual(
             FilterState(rules: [
@@ -566,6 +604,9 @@ final class FilterRuleTest: XCTestCase {
             ]),
             FilterState(storagePath: .noneOf(ids: [8, 19]))
         )
+
+        XCTAssertEqual(FilterState(rules: [FilterRule(ruleType: .doesNotHaveStoragePath, value: .invalid(value: "11,12"))]).storagePath,
+                       .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }

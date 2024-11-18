@@ -51,28 +51,46 @@ enum FilterRuleValue: Codable, Equatable {
         return s
     }
 
-    var correspondentId: UInt? {
+    var correspondentId: [UInt]? {
         switch self {
         case let .correspondent(id):
-            id
+            if let id {
+                [id]
+            } else {
+                nil
+            }
+        case let .invalid(value):
+            value.components(separatedBy: ",").compactMap { UInt($0) }
         default:
             nil
         }
     }
 
-    var documentTypeId: UInt? {
+    var documentTypeId: [UInt]? {
         switch self {
         case let .documentType(id):
-            id
+            if let id {
+                [id]
+            } else {
+                nil
+            }
+        case let .invalid(value):
+            value.components(separatedBy: ",").compactMap { UInt($0) }
         default:
             nil
         }
     }
 
-    var storagePathId: UInt? {
+    var storagePathId: [UInt]? {
         switch self {
         case let .storagePath(id):
-            id
+            if let id {
+                [id]
+            } else {
+                nil
+            }
+        case let .invalid(value):
+            value.components(separatedBy: ",").compactMap { UInt($0) }
         default:
             nil
         }
@@ -356,6 +374,30 @@ struct FilterState: Equatable, Codable, Sendable {
     }
 
     init(rules: [FilterRule]) {
+        let getTagIds = { (rule: FilterRule) -> [UInt]? in
+            switch rule.value {
+            case let .tag(id):
+                return [id]
+            case let .invalid(value):
+                Logger.shared.warning("Recovering multi-value rule \(String(describing: rule.ruleType), privacy: .public) from value \(String(describing: value), privacy: .public)")
+                return value.components(separatedBy: ",").compactMap { UInt($0) }
+            default:
+                return nil
+            }
+        }
+
+        let getOwnerIds = { (rule: FilterRule) -> [UInt]? in
+            switch rule.value {
+            case let .number(id):
+                return [UInt(id)]
+            case let .invalid(value):
+                Logger.shared.warning("Recovering multi-value rule \(String(describing: rule.ruleType), privacy: .public) from value \(String(describing: value), privacy: .public)")
+                return value.components(separatedBy: ",").compactMap { UInt($0) }
+            default:
+                return nil
+            }
+        }
+
         for rule in rules {
             switch rule.ruleType {
             case .title, .content, .titleContent, .fulltextQuery:
@@ -380,12 +422,12 @@ struct FilterState: Equatable, Codable, Sendable {
                 correspondent = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasCorrespondentAny:
-                correspondent = handleElementAny(id: rule.value.correspondentId,
+                correspondent = handleElementAny(ids: rule.value.correspondentId,
                                                  filter: correspondent,
                                                  rule: rule)
 
             case .doesNotHaveCorrespondent:
-                correspondent = handleElementNone(id: rule.value.correspondentId,
+                correspondent = handleElementNone(ids: rule.value.correspondentId,
                                                   filter: correspondent,
                                                   rule: rule)
 
@@ -399,12 +441,12 @@ struct FilterState: Equatable, Codable, Sendable {
                 documentType = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasDocumentTypeAny:
-                documentType = handleElementAny(id: rule.value.documentTypeId,
+                documentType = handleElementAny(ids: rule.value.documentTypeId,
                                                 filter: documentType,
                                                 rule: rule)
 
             case .doesNotHaveDocumentType:
-                documentType = handleElementNone(id: rule.value.documentTypeId,
+                documentType = handleElementNone(ids: rule.value.documentTypeId,
                                                  filter: documentType,
                                                  rule: rule)
 
@@ -417,44 +459,44 @@ struct FilterState: Equatable, Codable, Sendable {
                 storagePath = id == nil ? .notAssigned : .anyOf(ids: [id!])
 
             case .hasStoragePathAny:
-                storagePath = handleElementAny(id: rule.value.storagePathId,
+                storagePath = handleElementAny(ids: rule.value.storagePathId,
                                                filter: storagePath,
                                                rule: rule)
 
             case .doesNotHaveStoragePath:
-                storagePath = handleElementNone(id: rule.value.storagePathId,
+                storagePath = handleElementNone(ids: rule.value.storagePathId,
                                                 filter: storagePath,
                                                 rule: rule)
 
             case .hasTagsAll:
-                guard case let .tag(id) = rule.value else {
-                    Logger.shared.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                guard let ids = getTagIds(rule) else {
+                    Logger.shared.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
 
                 if case let .allOf(include, exclude) = tags {
                     // have allOf already
-                    self.tags = .allOf(include: include + [id], exclude: exclude)
+                    self.tags = .allOf(include: include + ids, exclude: exclude)
                 } else if case .any = tags {
-                    self.tags = .allOf(include: [id], exclude: [])
+                    self.tags = .allOf(include: ids, exclude: [])
                 } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
                 }
 
             case .doesNotHaveTag:
-                guard case let .tag(id) = rule.value else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                guard let ids = getTagIds(rule) else {
+                    Logger.shared.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
 
                 if case let .allOf(include, exclude) = tags {
                     // have allOf already
-                    self.tags = .allOf(include: include, exclude: exclude + [id])
+                    self.tags = .allOf(include: include, exclude: exclude + ids)
                 } else if case .any = tags {
-                    self.tags = .allOf(include: [], exclude: [id])
+                    self.tags = .allOf(include: [], exclude: ids)
                 } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
@@ -462,16 +504,16 @@ struct FilterState: Equatable, Codable, Sendable {
                 }
 
             case .hasTagsAny:
-                guard case let .tag(id) = rule.value else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                guard let ruleIds = getTagIds(rule) else {
+                    Logger.shared.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
 
                 if case let .anyOf(ids) = tags {
-                    tags = .anyOf(ids: ids + [id])
+                    tags = .anyOf(ids: ids + ruleIds)
                 } else if case .any = tags {
-                    tags = .anyOf(ids: [id])
+                    tags = .anyOf(ids: ruleIds)
                 } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
@@ -543,43 +585,39 @@ struct FilterState: Equatable, Codable, Sendable {
                 }
 
             case .ownerAny:
-                guard case let .number(sid) = rule.value, sid >= 0 else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                guard let ids = getOwnerIds(rule) else {
+                    Logger.shared.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
 
-                let id = UInt(sid)
-
                 switch owner {
-                case let .anyOf(ids):
-                    owner = .anyOf(ids: ids + [id])
+                case let .anyOf(existing):
+                    owner = .anyOf(ids: existing + ids)
                 case .noneOf, .notAssigned:
                     let ownerCopy = owner
-                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerAny=\(id)")
+                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerAny=\(ids)")
                     fallthrough // reset anyway
                 case .any:
-                    owner = .anyOf(ids: [id])
+                    owner = .anyOf(ids: ids)
                 }
 
             case .ownerDoesNotInclude:
-                guard case let .number(sid) = rule.value, sid >= 0 else {
-                    Logger.shared.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                guard let ids = getOwnerIds(rule) else {
+                    Logger.shared.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
                     remaining.append(rule)
                     break
                 }
 
-                let id = UInt(sid)
-
                 switch owner {
-                case let .noneOf(ids):
-                    owner = .noneOf(ids: ids + [id])
+                case let .noneOf(existing):
+                    owner = .noneOf(ids: existing + ids)
                 case .anyOf, .notAssigned:
                     let ownerCopy = owner
-                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerDoesNotInclude=\(id)")
+                    Logger.shared.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerDoesNotInclude=\(ids)")
                     fallthrough // reset anyway
                 case .any:
-                    owner = .noneOf(ids: [id])
+                    owner = .noneOf(ids: ids)
                 }
 
             default:
@@ -590,41 +628,41 @@ struct FilterState: Equatable, Codable, Sendable {
 
     // MARK: Methods
 
-    mutating func handleElementAny(id: UInt?, filter: Filter,
+    mutating func handleElementAny(ids: [UInt]?, filter: Filter,
                                    rule: FilterRule) -> Filter
     {
-        guard let id else {
+        guard let ids else {
             Logger.shared.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
             remaining.append(rule)
             return filter
         }
 
         switch filter {
-        case let .anyOf(ids):
-            return .anyOf(ids: ids + [id])
+        case let .anyOf(existing):
+            return .anyOf(ids: existing + ids)
         case .noneOf:
             Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
             fallthrough
         default:
-            return .anyOf(ids: [id])
+            return .anyOf(ids: ids)
         }
     }
 
-    mutating func handleElementNone(id: UInt?, filter: Filter, rule: FilterRule) -> Filter {
-        guard let id else {
+    mutating func handleElementNone(ids: [UInt]?, filter: Filter, rule: FilterRule) -> Filter {
+        guard let ids else {
             Logger.shared.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
             remaining.append(rule)
             return filter
         }
 
         switch filter {
-        case let .noneOf(ids):
-            return .noneOf(ids: ids + [id])
+        case let .noneOf(existing):
+            return .noneOf(ids: existing + ids)
         case .anyOf:
             Logger.shared.notice("Rule set combination invalid: anyOf + noneOf")
             fallthrough
         default:
-            return .noneOf(ids: [id])
+            return .noneOf(ids: ids)
         }
     }
 
