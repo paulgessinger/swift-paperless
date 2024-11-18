@@ -874,22 +874,30 @@ final class FilterRuleTest: XCTestCase {
         let input = """
         {
         "rule_type": 22,
-        "value": "7,10,9,12,11,13,16,XXX"
+        "value": "7,10,9"
         }
         """.data(using: .utf8)!
 
-        // XXX at the end is to FORCE decode failure even with list unpacking, so we can test the invalid-rule preserving but ignoreing pattern
-
         let result = try JSONDecoder().decode(FilterRule.self, from: input)
         XCTAssertEqual(result.ruleType, .hasTagsAny)
-        XCTAssertEqual(result.value, .invalid(value: "7,10,9,12,11,13,16,XXX"))
+        XCTAssertEqual(result.value, .invalid(value: "7,10,9"))
 
-        // We can serialize it back to the same value
-        let output = try String(decoding: JSONEncoder().encode(result), as: UTF8.self)
-        XCTAssertEqual(output, "{\"rule_type\":22,\"value\":\"7,10,9,12,11,13,16,XXX\"}")
+        let output = try JSONEncoder().encode(result)
+        struct Payload: Decodable {
+            var rule_type: UInt
+            var value: String
+        }
+        let payload = try JSONDecoder().decode(Payload.self, from: output)
+        XCTAssertEqual(payload.rule_type, 22)
+        XCTAssertEqual(payload.value, "7,10,9")
 
-        // We provide the query item verbatim with the invalid value
         let queryItems = FilterRule.queryItems(for: [result])
-        XCTAssertEqual(queryItems, [URLQueryItem(name: "tags__id__in", value: "7,10,9,12,11,13,16,XXX")])
+        XCTAssertEqual(queryItems, [URLQueryItem(name: "tags__id__in", value: "7,10,9")])
+
+        // Multiple ones get properly concatenated "by accident"
+        let rule = FilterRule(ruleType: .hasTagsAny, value: .tag(id: 12))
+
+        let queryItems2 = FilterRule.queryItems(for: [result, rule])
+        XCTAssertEqual(queryItems2, [URLQueryItem(name: "tags__id__in", value: "12,7,10,9")])
     }
 }
