@@ -8,16 +8,16 @@
 import Foundation
 
 struct Suggestions: Codable {
-    var correspondents: [UInt] = []
-    var tags: [UInt] = []
-    var documentTypes: [UInt] = []
-    var storagePaths: [UInt] = []
-    var dates: [Date] = []
+  var correspondents: [UInt] = []
+  var tags: [UInt] = []
+  var documentTypes: [UInt] = []
+  var storagePaths: [UInt] = []
+  var dates: [Date] = []
 
-    private enum CodingKeys: String, CodingKey {
-        case correspondents, tags
-        case documentTypes = "document_types"
-        case storagePaths = "storage_paths"
-        case dates
-    }
+  private enum CodingKeys: String, CodingKey {
+    case correspondents, tags
+    case documentTypes = "document_types"
+    case storagePaths = "storage_paths"
+    case dates
+  }
 }

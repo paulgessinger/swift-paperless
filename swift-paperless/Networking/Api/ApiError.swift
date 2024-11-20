@@ -8,52 +8,53 @@
 import Foundation
 
 enum RequestError: Error {
-    case invalidRequest
-    case invalidResponse
-    case unexpectedStatusCode(code: Int)
-    case forbidden(detail: String)
-    case unauthorized(detail: String)
+  case invalidRequest
+  case invalidResponse
+  case unexpectedStatusCode(code: Int)
+  case forbidden(detail: String)
+  case unauthorized(detail: String)
 }
 
 extension RequestError: DisplayableError {
-    var message: String {
-        String(localized: .localizable(.errorDefaultMessage))
-    }
+  var message: String {
+    String(localized: .localizable(.errorDefaultMessage))
+  }
 
-    var details: String? {
-        let res: LocalizedStringResource = switch self {
-        case .invalidRequest:
-            .localizable(.requestErrorInvalidRequest)
-        case .invalidResponse:
-            .localizable(.requestErrorInvalidResponse)
-        case let .unexpectedStatusCode(code):
-            .localizable(.requestErrorUnexpectedStatusCode(code))
-        case let .forbidden(detail):
-            .localizable(.requestErrorForbidden(detail))
-        case let .unauthorized(detail):
-            .localizable(.requestErrorUnauthorized(detail))
-        }
+  var details: String? {
+    let res: LocalizedStringResource =
+      switch self {
+      case .invalidRequest:
+        .localizable(.requestErrorInvalidRequest)
+      case .invalidResponse:
+        .localizable(.requestErrorInvalidResponse)
+      case let .unexpectedStatusCode(code):
+        .localizable(.requestErrorUnexpectedStatusCode(code))
+      case let .forbidden(detail):
+        .localizable(.requestErrorForbidden(detail))
+      case let .unauthorized(detail):
+        .localizable(.requestErrorUnauthorized(detail))
+      }
 
-        return String(localized: res)
-    }
+    return String(localized: res)
+  }
 
-    var documentationLink: URL? { nil }
+  var documentationLink: URL? { nil }
 }
 
 struct ResourceForbidden<Resource: Model>: DisplayableError {
-    init(_: Resource.Type, response: String) {
-        self.response = response
-    }
+  init(_: Resource.Type, response: String) {
+    self.response = response
+  }
 
-    let response: String
+  let response: String
 
-    var message: String {
-        String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
-    }
+  var message: String {
+    String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
+  }
 
-    var details: String? {
-        String(localized: .localizable(.apiForbiddenDetails(Resource.localizedName, response)))
-    }
+  var details: String? {
+    String(localized: .localizable(.apiForbiddenDetails(Resource.localizedName, response)))
+  }
 
-    var documentationLink: URL? { DocumentationLinks.forbidden }
+  var documentationLink: URL? { DocumentationLinks.forbidden }
 }

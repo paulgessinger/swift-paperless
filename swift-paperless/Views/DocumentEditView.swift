@@ -5,355 +5,365 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
-import os
 import SwiftUI
+import os
 
 private struct SuggestionView<Element>: View
-    where Element: Named, Element: Identifiable, Element.ID == UInt
-{
-    @Binding var document: Document
-    let property: WritableKeyPath<Document, UInt?>
-    let elements: [UInt: Element]
-    let suggestions: [UInt]?
+where Element: Named, Element: Identifiable, Element.ID == UInt {
+  @Binding var document: Document
+  let property: WritableKeyPath<Document, UInt?>
+  let elements: [UInt: Element]
+  let suggestions: [UInt]?
 
-    var body: some View {
-        if let suggestions {
-            let selected = suggestions
-                .filter { $0 != document[keyPath: property] }
-                .compactMap { elements[$0] }
-            if !selected.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ForEach(selected, id: \.id) { element in
-                            Text("\(element.name)")
-                                .foregroundColor(.accentColor)
-                                .underline()
-                                .font(.footnote)
-                                .onTapGesture {
-                                    Task {
-                                        withAnimation {
-                                            document[keyPath: property] = element.id
-                                        }
-                                    }
-                                }
-                        }
+  var body: some View {
+    if let suggestions {
+      let selected =
+        suggestions
+        .filter { $0 != document[keyPath: property] }
+        .compactMap { elements[$0] }
+      if !selected.isEmpty {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack {
+            ForEach(selected, id: \.id) { element in
+              Text("\(element.name)")
+                .foregroundColor(.accentColor)
+                .underline()
+                .font(.footnote)
+                .onTapGesture {
+                  Task {
+                    withAnimation {
+                      document[keyPath: property] = element.id
                     }
+                  }
                 }
-                .transition(.opacity)
             }
+          }
         }
+        .transition(.opacity)
+      }
     }
+  }
 }
 
 struct DocumentEditView: View {
-    @Environment(\.dismiss) var dismiss
+  @Environment(\.dismiss) var dismiss
 
-    @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var errorController: ErrorController
+  @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var errorController: ErrorController
 
-    var navPath: Binding<NavigationPath>? = nil
+  var navPath: Binding<NavigationPath>? = nil
 
-    @Binding var documentOut: Document
-    @State private var document: Document
-    private var modified: Bool {
-        document != documentOut
-    }
+  @Binding var documentOut: Document
+  @State private var document: Document
+  private var modified: Bool {
+    document != documentOut
+  }
 
-    @State private var selectedState = FilterState()
-    @State private var showDeleteConfirmation = false
+  @State private var selectedState = FilterState()
+  @State private var showDeleteConfirmation = false
 
-    @ObservedObject private var appSettings = AppSettings.shared
+  @ObservedObject private var appSettings = AppSettings.shared
 
-    @State private var deleted = false
+  @State private var deleted = false
 
-    @State private var suggestions: Suggestions?
+  @State private var suggestions: Suggestions?
 
-    @State var isAsnValid = true
+  @State var isAsnValid = true
 
-    private var isSaveDisabled: Bool {
-        !modified || document.title.isEmpty || !isAsnValid
-    }
+  private var isSaveDisabled: Bool {
+    !modified || document.title.isEmpty || !isAsnValid
+  }
 
-    init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
-        _documentOut = document
-        _document = State(initialValue: document.wrappedValue)
-        self.navPath = navPath
-    }
+  init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
+    _documentOut = document
+    _document = State(initialValue: document.wrappedValue)
+    self.navPath = navPath
+  }
 
-    func doDocumentDelete() {
-        DispatchQueue.main.async {
-            Task {
-                do {
-                    Logger.shared.notice("Deleted document from Edit view")
-                    try await store.deleteDocument(document)
-                    deleted = true
-                    let impact = UIImpactFeedbackGenerator(style: .rigid)
-                    impact.impactOccurred()
-                    try await Task.sleep(for: .seconds(0.2))
-                    dismiss()
-                    if let navPath {
-                        Logger.shared.notice("Pop navigation to root")
-                        navPath.wrappedValue.popToRoot()
-                    }
-                } catch {
-                    errorController.push(error: error)
-                }
-            }
+  func doDocumentDelete() {
+    DispatchQueue.main.async {
+      Task {
+        do {
+          Logger.shared.notice("Deleted document from Edit view")
+          try await store.deleteDocument(document)
+          deleted = true
+          let impact = UIImpactFeedbackGenerator(style: .rigid)
+          impact.impactOccurred()
+          try await Task.sleep(for: .seconds(0.2))
+          dismiss()
+          if let navPath {
+            Logger.shared.notice("Pop navigation to root")
+            navPath.wrappedValue.popToRoot()
+          }
+        } catch {
+          errorController.push(error: error)
         }
+      }
     }
+  }
 
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(String(localized: .localizable(.title)), text: $document.title) {}
-                        .clearable($document.title)
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section {
+          TextField(String(localized: .localizable(.title)), text: $document.title) {}
+            .clearable($document.title)
 
-                    DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
-                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+          DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
-                    DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)),
-                               selection: $document.created.animation(.default),
-                               displayedComponents: .date)
+          DatePicker(
+            String(localized: .localizable(.documentEditCreatedDateLabel)),
+            selection: $document.created.animation(.default),
+            displayedComponents: .date)
 
-                    if let suggestions, !suggestions.dates.isEmpty {
-                        let valid = suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }
-                        if !valid.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack {
-                                    ForEach(valid, id: \.self) { date in
-                                        Text(date, style: .date)
-                                            .foregroundColor(.accentColor)
-                                            .font(.footnote)
-                                            .underline()
-                                            .onTapGesture {
-                                                Task {
-                                                    withAnimation {
-                                                        document.created = date
-                                                    }
-                                                }
-                                            }
-                                    }
-                                }
-                            }
-                            .transition(.opacity)
-                        }
-                    }
-                }
-
-                Section {
-                    HStack { // Prevents problem when applying suggestions
-                        NavigationLink(destination: {
-                            CommonPickerEdit(
-                                manager: CorrespondentManager.self,
-                                document: $document,
-                                store: store
-                            )
-                            .navigationTitle(Text(.localizable(.correspondent)))
-                        }) {
-                            HStack {
-                                Text(.localizable(.correspondent))
-                                Spacer()
-                                Group {
-                                    if let id = document.correspondent {
-                                        Text(store.correspondents[id]?.name ?? String(localized: .localizable(.error)))
-                                    } else {
-                                        Text(.localizable(.correspondentNotAssignedFilter))
-                                    }
-                                }
-                                .foregroundColor(.gray)
-                            }
-                        }
-                    }
-                    SuggestionView(document: $document,
-                                   property: \.correspondent,
-                                   elements: store.correspondents,
-                                   suggestions: suggestions?.correspondents)
-                }
-
-                Section {
-                    HStack { // Prevents problem when applying suggestions
-                        NavigationLink(destination: {
-                            CommonPickerEdit(
-                                manager: DocumentTypeManager.self,
-                                document: $document,
-                                store: store
-                            )
-                            .navigationTitle(Text(.localizable(.documentType)))
-                        }) {
-                            HStack {
-                                Text(.localizable(.documentType))
-                                Spacer()
-                                Group {
-                                    if let id = document.documentType {
-                                        Text(store.documentTypes[id]?.name ?? String(localized: .localizable(.error)))
-                                    } else {
-                                        Text(.localizable(.documentTypeNotAssignedFilter))
-                                    }
-                                }
-                                .foregroundColor(.gray)
-                            }
-                        }
-                    }
-
-                    SuggestionView(document: $document,
-                                   property: \.documentType,
-                                   elements: store.documentTypes,
-                                   suggestions: suggestions?.documentTypes)
-                }
-
-                Section {
-                    HStack { // Prevents problem when applying suggestions
-                        NavigationLink(destination: {
-                            CommonPickerEdit(
-                                manager: StoragePathManager.self,
-                                document: $document,
-                                store: store
-                            )
-                            .navigationTitle(Text(.localizable(.storagePath)))
-                        }) {
-                            HStack {
-                                Text(.localizable(.storagePath))
-                                Spacer()
-                                Group {
-                                    if let id = document.storagePath {
-                                        Text(store.storagePaths[id]?.name ?? String(localized: .localizable(.error)))
-                                    } else {
-                                        Text(.localizable(.storagePathNotAssignedFilter))
-                                    }
-                                }
-                                .foregroundColor(.gray)
-                            }
-                        }
-                    }
-
-                    SuggestionView(document: $document,
-                                   property: \.storagePath,
-                                   elements: store.storagePaths,
-                                   suggestions: suggestions?.storagePaths)
-                }
-
-                Section {
-                    NavigationLink(destination: {
-                        DocumentTagEditView(document: $document)
-                    }) {
-                        if document.tags.isEmpty {
-                            Text(.localizable(.numberOfTags(0)))
-                        } else {
-                            TagsView(tags: document.tags.compactMap { store.tags[$0] })
-                                .contentShape(Rectangle())
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-
-                Section {
-                    NavigationLink(.permissions(.title)) {
-                        PermissionsEditView(element: $document)
-                    }
-                }
-
-                Section {
-                    Button(action: {
-                        if appSettings.documentDeleteConfirmation {
-                            showDeleteConfirmation = true
-                        } else {
-                            doDocumentDelete()
-                        }
-                    }) {
-                        Label(localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
-                              systemImage: deleted ? "checkmark.circle.fill" : "trash")
-                            .contentTransition(.symbolEffect)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .foregroundColor(Color.red)
-                    .bold()
-                }
-                .animation(.default, value: deleted)
+          if let suggestions, !suggestions.dates.isEmpty {
+            let valid = suggestions.dates.filter {
+              $0.formatted(date: .abbreviated, time: .omitted)
+                != document.created.formatted(date: .abbreviated, time: .omitted)
             }
-
-            .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
-                                isPresented: $showDeleteConfirmation,
-                                titleVisibility: .visible)
-            {
-                Button(String(localized: .localizable(.delete)), role: .destructive) {
-                    // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                    doDocumentDelete()
-                }
-                Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-            }
-
-            .scrollBounceBehavior(.basedOnSize)
-
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    CancelIconButton()
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized: .localizable(.save))) {
+            if !valid.isEmpty {
+              ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                  ForEach(valid, id: \.self) { date in
+                    Text(date, style: .date)
+                      .foregroundColor(.accentColor)
+                      .font(.footnote)
+                      .underline()
+                      .onTapGesture {
                         Task {
-                            let copy = document
-                            documentOut = document
-                            do {
-                                documentOut = try await store.updateDocument(document)
-                            } catch {
-                                errorController.push(error: error)
-                                documentOut = copy
-                            }
+                          withAnimation {
+                            document.created = date
+                          }
                         }
-                        dismiss()
-                    }
-                    .bold()
-                    .disabled(isSaveDisabled)
+                      }
+                  }
                 }
+              }
+              .transition(.opacity)
             }
-
-            .task {
-                do {
-                    let store = store
-                    async let all: Void = store.fetchAll()
-                    let suggestions = try await store.repository.suggestions(documentId: document.id)
-                    withAnimation {
-                        self.suggestions = suggestions
-                    }
-                    try await all
-                } catch {
-                    Logger.shared.error("Error getting suggestions: \(error)")
-                    errorController.push(error: error)
-                }
-            }
+          }
         }
-        .errorOverlay(errorController: errorController)
+
+        Section {
+          HStack {  // Prevents problem when applying suggestions
+            NavigationLink(destination: {
+              CommonPickerEdit(
+                manager: CorrespondentManager.self,
+                document: $document,
+                store: store
+              )
+              .navigationTitle(Text(.localizable(.correspondent)))
+            }) {
+              HStack {
+                Text(.localizable(.correspondent))
+                Spacer()
+                Group {
+                  if let id = document.correspondent {
+                    Text(store.correspondents[id]?.name ?? String(localized: .localizable(.error)))
+                  } else {
+                    Text(.localizable(.correspondentNotAssignedFilter))
+                  }
+                }
+                .foregroundColor(.gray)
+              }
+            }
+          }
+          SuggestionView(
+            document: $document,
+            property: \.correspondent,
+            elements: store.correspondents,
+            suggestions: suggestions?.correspondents)
+        }
+
+        Section {
+          HStack {  // Prevents problem when applying suggestions
+            NavigationLink(destination: {
+              CommonPickerEdit(
+                manager: DocumentTypeManager.self,
+                document: $document,
+                store: store
+              )
+              .navigationTitle(Text(.localizable(.documentType)))
+            }) {
+              HStack {
+                Text(.localizable(.documentType))
+                Spacer()
+                Group {
+                  if let id = document.documentType {
+                    Text(store.documentTypes[id]?.name ?? String(localized: .localizable(.error)))
+                  } else {
+                    Text(.localizable(.documentTypeNotAssignedFilter))
+                  }
+                }
+                .foregroundColor(.gray)
+              }
+            }
+          }
+
+          SuggestionView(
+            document: $document,
+            property: \.documentType,
+            elements: store.documentTypes,
+            suggestions: suggestions?.documentTypes)
+        }
+
+        Section {
+          HStack {  // Prevents problem when applying suggestions
+            NavigationLink(destination: {
+              CommonPickerEdit(
+                manager: StoragePathManager.self,
+                document: $document,
+                store: store
+              )
+              .navigationTitle(Text(.localizable(.storagePath)))
+            }) {
+              HStack {
+                Text(.localizable(.storagePath))
+                Spacer()
+                Group {
+                  if let id = document.storagePath {
+                    Text(store.storagePaths[id]?.name ?? String(localized: .localizable(.error)))
+                  } else {
+                    Text(.localizable(.storagePathNotAssignedFilter))
+                  }
+                }
+                .foregroundColor(.gray)
+              }
+            }
+          }
+
+          SuggestionView(
+            document: $document,
+            property: \.storagePath,
+            elements: store.storagePaths,
+            suggestions: suggestions?.storagePaths)
+        }
+
+        Section {
+          NavigationLink(destination: {
+            DocumentTagEditView(document: $document)
+          }) {
+            if document.tags.isEmpty {
+              Text(.localizable(.numberOfTags(0)))
+            } else {
+              TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                .contentShape(Rectangle())
+            }
+          }
+          .contentShape(Rectangle())
+        }
+
+        Section {
+          NavigationLink(.permissions(.title)) {
+            PermissionsEditView(element: $document)
+          }
+        }
+
+        Section {
+          Button(action: {
+            if appSettings.documentDeleteConfirmation {
+              showDeleteConfirmation = true
+            } else {
+              doDocumentDelete()
+            }
+          }) {
+            Label(
+              localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+              systemImage: deleted ? "checkmark.circle.fill" : "trash"
+            )
+            .contentTransition(.symbolEffect)
+          }
+          .frame(maxWidth: .infinity, alignment: .center)
+          .foregroundColor(Color.red)
+          .bold()
+        }
+        .animation(.default, value: deleted)
+      }
+
+      .confirmationDialog(
+        String(localized: .localizable(.confirmationPromptTitle)),
+        isPresented: $showDeleteConfirmation,
+        titleVisibility: .visible
+      ) {
+        Button(String(localized: .localizable(.delete)), role: .destructive) {
+          // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
+          doDocumentDelete()
+        }
+        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+      }
+
+      .scrollBounceBehavior(.basedOnSize)
+
+      .toolbar {
+        ToolbarItem(placement: .navigationBarLeading) {
+          CancelIconButton()
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(String(localized: .localizable(.save))) {
+            Task {
+              let copy = document
+              documentOut = document
+              do {
+                documentOut = try await store.updateDocument(document)
+              } catch {
+                errorController.push(error: error)
+                documentOut = copy
+              }
+            }
+            dismiss()
+          }
+          .bold()
+          .disabled(isSaveDisabled)
+        }
+      }
+
+      .task {
+        do {
+          let store = store
+          async let all: Void = store.fetchAll()
+          let suggestions = try await store.repository.suggestions(documentId: document.id)
+          withAnimation {
+            self.suggestions = suggestions
+          }
+          try await all
+        } catch {
+          Logger.shared.error("Error getting suggestions: \(error)")
+          errorController.push(error: error)
+        }
+      }
     }
+    .errorOverlay(errorController: errorController)
+  }
 }
 
 private struct PreviewHelper: View {
-    @EnvironmentObject var store: DocumentStore
-    @State var document: Document?
-    @State var navPath = NavigationPath()
+  @EnvironmentObject var store: DocumentStore
+  @State var document: Document?
+  @State var navPath = NavigationPath()
 
-    var body: some View {
-        VStack {
-            if document != nil {
-                DocumentEditView(document: Binding($document)!, navPath: $navPath)
-            }
-        }
-        .task {
-            document = try? await store.document(id: 1)
-            guard document != nil else {
-                fatalError()
-            }
-        }
+  var body: some View {
+    VStack {
+      if document != nil {
+        DocumentEditView(document: Binding($document)!, navPath: $navPath)
+      }
     }
+    .task {
+      document = try? await store.document(id: 1)
+      guard document != nil else {
+        fatalError()
+      }
+    }
+  }
 }
 
 struct DocumentEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-    @StateObject static var errorController = ErrorController()
+  @StateObject static var store = DocumentStore(repository: PreviewRepository())
+  @StateObject static var errorController = ErrorController()
 
-    static var previews: some View {
-        PreviewHelper()
-            .environmentObject(store)
-            .environmentObject(errorController)
-    }
+  static var previews: some View {
+    PreviewHelper()
+      .environmentObject(store)
+      .environmentObject(errorController)
+  }
 }

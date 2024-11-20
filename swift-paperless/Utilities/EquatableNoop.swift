@@ -7,23 +7,23 @@
 
 @propertyWrapper
 struct EquatableNoop<Value>: Equatable {
-    var wrappedValue: Value
+  var wrappedValue: Value
 
-    static func == (_: EquatableNoop<Value>, _: EquatableNoop<Value>) -> Bool {
-        true
-    }
+  static func == (_: EquatableNoop<Value>, _: EquatableNoop<Value>) -> Bool {
+    true
+  }
 }
 
 extension EquatableNoop: Sendable where Value: Sendable {}
 
 extension EquatableNoop: Codable where Value: Codable {
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        wrappedValue = try container.decode(Value.self)
-    }
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    wrappedValue = try container.decode(Value.self)
+  }
 
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(wrappedValue)
-    }
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(wrappedValue)
+  }
 }

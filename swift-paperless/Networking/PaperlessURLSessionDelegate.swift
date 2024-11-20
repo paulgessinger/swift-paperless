@@ -9,57 +9,60 @@ import Foundation
 import os
 
 final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
-    private let credential: URLCredential?
+  private let credential: URLCredential?
 
-    init(identityName: String?) {
-        if
-            let pName = identityName,
-            let identity = Keychain.readIdentity(name: pName)
-        {
-            credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
-        } else {
-            Logger.shared.info("Did not get identities from keychain")
-            credential = nil
-        }
+  init(identityName: String?) {
+    if let pName = identityName,
+      let identity = Keychain.readIdentity(name: pName)
+    {
+      credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
+    } else {
+      Logger.shared.info("Did not get identities from keychain")
+      credential = nil
+    }
+  }
+
+  init(identity: TLSIdentity?) {
+    if let identity {
+      credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
+    } else {
+      credential = nil
+    }
+  }
+
+  public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (
+    URLSession.AuthChallengeDisposition, URLCredential?
+  ) {
+    guard
+      challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
+    else {
+      return (.performDefaultHandling, nil)
     }
 
-    init(identity: TLSIdentity?) {
-        if let identity {
-            credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
-        } else {
-            credential = nil
-        }
+    guard let cred = credential else {
+      Logger.shared.info("Delegate without cert called")
+      return (.performDefaultHandling, nil)
     }
 
-    public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
-        guard
-            challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
-        else {
-            return (.performDefaultHandling, nil)
-        }
+    challenge.sender?.use(cred, for: challenge)
+    return (.useCredential, cred)
+  }
 
-        guard let cred = credential else {
-            Logger.shared.info("Delegate without cert called")
-            return (.performDefaultHandling, nil)
-        }
-
-        challenge.sender?.use(cred, for: challenge)
-        return (.useCredential, cred)
+  func urlSession(
+    _: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge
+  ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+    guard
+      challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
+    else {
+      return (.performDefaultHandling, nil)
     }
 
-    func urlSession(_: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
-        guard
-            challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
-        else {
-            return (.performDefaultHandling, nil)
-        }
-
-        guard let cred = credential else {
-            Logger.shared.info("DelegateTask without cert called")
-            return (.performDefaultHandling, nil)
-        }
-
-        challenge.sender?.use(cred, for: challenge)
-        return (.useCredential, cred)
+    guard let cred = credential else {
+      Logger.shared.info("DelegateTask without cert called")
+      return (.performDefaultHandling, nil)
     }
+
+    challenge.sender?.use(cred, for: challenge)
+    return (.useCredential, cred)
+  }
 }

@@ -8,64 +8,64 @@
 import Foundation
 
 protocol SavedViewProtocol: Codable {
-    var name: String { get set }
-    var showOnDashboard: Bool { get set }
-    var showInSidebar: Bool { get set }
-    var sortField: SortField { get set }
-    var sortOrder: SortOrder { get set }
-    var filterRules: [FilterRule] { get set }
+  var name: String { get set }
+  var showOnDashboard: Bool { get set }
+  var showInSidebar: Bool { get set }
+  var sortField: SortField { get set }
+  var sortOrder: SortOrder { get set }
+  var filterRules: [FilterRule] { get set }
 }
 
 struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
-    var id: UInt
-    var name: String
-    var showOnDashboard: Bool
-    var showInSidebar: Bool
-    // Backend will sometimes return no sort field
-    private var sortFieldInternal: SortField?
-    var sortOrder: SortOrder
-    var filterRules: [FilterRule]
+  var id: UInt
+  var name: String
+  var showOnDashboard: Bool
+  var showInSidebar: Bool
+  // Backend will sometimes return no sort field
+  private var sortFieldInternal: SortField?
+  var sortOrder: SortOrder
+  var filterRules: [FilterRule]
 
-    var sortField: SortField {
-        get {
-            sortFieldInternal ?? AppSettings.value(for: .defaultSortField, or: .added)
-        }
-        set {
-            sortFieldInternal = newValue
-        }
+  var sortField: SortField {
+    get {
+      sortFieldInternal ?? AppSettings.value(for: .defaultSortField, or: .added)
     }
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case showOnDashboard = "show_on_dashboard"
-        case showInSidebar = "show_in_sidebar"
-        case sortFieldInternal = "sort_field"
-        case sortOrder = "sort_reverse"
-        case filterRules = "filter_rules"
+    set {
+      sortFieldInternal = newValue
     }
+  }
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+  private enum CodingKeys: String, CodingKey {
+    case id
+    case name
+    case showOnDashboard = "show_on_dashboard"
+    case showInSidebar = "show_in_sidebar"
+    case sortFieldInternal = "sort_field"
+    case sortOrder = "sort_reverse"
+    case filterRules = "filter_rules"
+  }
 
-    static var localizedName: String { String(localized: .localizable(.savedView)) }
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
+  static var localizedName: String { String(localized: .localizable(.savedView)) }
 }
 
 struct ProtoSavedView: Codable, SavedViewProtocol {
-    var name: String = ""
-    var showOnDashboard: Bool = false
-    var showInSidebar: Bool = false
-    var sortField: SortField = .created
-    var sortOrder: SortOrder = .descending
-    var filterRules: [FilterRule] = []
+  var name: String = ""
+  var showOnDashboard: Bool = false
+  var showInSidebar: Bool = false
+  var sortField: SortField = .created
+  var sortOrder: SortOrder = .descending
+  var filterRules: [FilterRule] = []
 
-    private enum CodingKeys: String, CodingKey {
-        case name
-        case showOnDashboard = "show_on_dashboard"
-        case showInSidebar = "show_in_sidebar"
-        case sortField = "sort_field"
-        case sortOrder = "sort_reverse"
-        case filterRules = "filter_rules"
-    }
+  private enum CodingKeys: String, CodingKey {
+    case name
+    case showOnDashboard = "show_on_dashboard"
+    case showInSidebar = "show_in_sidebar"
+    case sortField = "sort_field"
+    case sortOrder = "sort_reverse"
+    case filterRules = "filter_rules"
+  }
 }

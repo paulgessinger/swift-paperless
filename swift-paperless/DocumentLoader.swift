@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct BindingHelper<Element, Content: View>: View {
-    @State var element: Element
-    @ViewBuilder var content: (Binding<Element>) -> Content
+  @State var element: Element
+  @ViewBuilder var content: (Binding<Element>) -> Content
 
-    var body: some View {
-        content($element)
-    }
+  var body: some View {
+    content($element)
+  }
 }

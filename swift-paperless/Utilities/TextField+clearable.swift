@@ -7,31 +7,31 @@
 import SwiftUI
 
 struct ClearableModifier: ViewModifier {
-    @Binding var text: String
-    @FocusState var focused: Bool
+  @Binding var text: String
+  @FocusState var focused: Bool
 
-    func body(content: Content) -> some View {
-        HStack {
-            content
-                .focused($focused) // @TODO: This is probably not ideal if I want to manage focus externally.
+  func body(content: Content) -> some View {
+    HStack {
+      content
+        .focused($focused)  // @TODO: This is probably not ideal if I want to manage focus externally.
 
-            Spacer()
+      Spacer()
 
-            Label(String(localized: .localizable(.clearText)), systemImage: "xmark.circle.fill")
-                .labelStyle(.iconOnly)
-                .foregroundColor(.gray)
-                .onTapGesture {
-                    text = ""
-                    focused = true
-                }
-                .opacity(text.isEmpty ? 0 : 1)
+      Label(String(localized: .localizable(.clearText)), systemImage: "xmark.circle.fill")
+        .labelStyle(.iconOnly)
+        .foregroundColor(.gray)
+        .onTapGesture {
+          text = ""
+          focused = true
         }
+        .opacity(text.isEmpty ? 0 : 1)
     }
+  }
 }
 
 extension TextField {
-    func clearable(_ text: Binding<String>) -> some View {
-        let m = ClearableModifier(text: text)
-        return modifier(m)
-    }
+  func clearable(_ text: Binding<String>) -> some View {
+    let m = ClearableModifier(text: text)
+    return modifier(m)
+  }
 }

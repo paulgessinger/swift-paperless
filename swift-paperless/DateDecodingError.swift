@@ -8,5 +8,5 @@
 import Foundation
 
 enum DateDecodingError: Error {
-    case invalidDate(string: String)
+  case invalidDate(string: String)
 }
