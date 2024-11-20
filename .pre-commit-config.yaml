@@ -9,10 +9,10 @@ repos:
   - id: check-yaml
   - id: check-added-large-files
 
-- repo: https://github.com/nicklockwood/SwiftFormat
-  rev: 0.54.5
+- repo: https://github.com/swiftlang/swift-format
+  rev: "602.0.0"
   hooks:
-  - id: swiftformat
+  - id: swift-format
 
 - repo: https://github.com/psf/black
   rev: "24.4.2"
