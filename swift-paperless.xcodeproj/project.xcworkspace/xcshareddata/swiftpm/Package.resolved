@@ -1,5 +1,5 @@
 {
-  "originHash" : "e532b2563ec752101b3b399467c426dd49b7fd00f933eee4ded1ba4c012dff0c",
+  "originHash" : "bde895e94ab3e871d2b9c066fb6157c6f9adca50ece9b4c2e70032817830083d",
   "pins" : [
     {
       "identity" : "networkimage",
@@ -69,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/liamnichols/xcstrings-tool-plugin",
       "state" : {
-        "revision" : "e99d6ad477aaf87d5808997b09ad0accb420a25e",
-        "version" : "0.5.2"
+        "revision" : "448890f1c47c0d70b6e539341f623c33bd1385af",
+        "version" : "1.0.0"
       }
     }
   ],
