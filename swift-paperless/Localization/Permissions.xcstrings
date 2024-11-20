@@ -36,8 +36,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Change"
+            "state" : "translated",
+            "value" : "Wijzigen"
           }
         },
         "pl" : {
@@ -83,8 +83,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Groepen"
           }
         },
         "pl" : {
@@ -130,8 +130,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared"
+            "state" : "translated",
+            "value" : "Gedeeld"
           }
         },
         "pl" : {
@@ -177,8 +177,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Nobody"
+            "state" : "translated",
+            "value" : "Niemand"
           }
         },
         "pl" : {
@@ -224,8 +224,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Eigenaar"
           }
         },
         "pl" : {
@@ -271,8 +271,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Private"
+            "state" : "translated",
+            "value" : "Privé"
           }
         },
         "pl" : {
@@ -318,8 +318,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "Machtigingen"
           }
         },
         "pl" : {
@@ -365,8 +365,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Objects without an owner can be viewed and edited by all users"
+            "state" : "translated",
+            "value" : "Objecten zonder eigenaar kunnen door alle gebruikers worden weergegeven en bewerkt"
           }
         },
         "pl" : {
@@ -412,8 +412,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Gebruikers"
           }
         },
         "pl" : {
@@ -459,8 +459,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View"
+            "state" : "translated",
+            "value" : "Weergave"
           }
         },
         "pl" : {

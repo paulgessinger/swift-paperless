@@ -36,8 +36,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date added"
+            "state" : "translated",
+            "value" : "Datum toegevoegd"
           }
         },
         "pl" : {
@@ -83,8 +83,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive MD5 checksum"
+            "state" : "translated",
+            "value" : "Archief MD5 checksum"
           }
         },
         "pl" : {
@@ -130,8 +130,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive file size"
+            "state" : "translated",
+            "value" : "Grootte archiefbestand"
           }
         },
         "pl" : {
@@ -177,8 +177,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Media filename"
+            "state" : "translated",
+            "value" : "Mediabestandsnaam"
           }
         },
         "pl" : {
@@ -224,8 +224,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Metadata"
+            "state" : "translated",
+            "value" : "Metagegevens"
           }
         },
         "pl" : {
@@ -271,8 +271,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date modified"
+            "state" : "translated",
+            "value" : "Datum van wijziging"
           }
         },
         "pl" : {
@@ -318,8 +318,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create note"
+            "state" : "translated",
+            "value" : "Notitie maken"
           }
         },
         "pl" : {
@@ -365,8 +365,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note text"
+            "state" : "translated",
+            "value" : "Tekst notitie"
           }
         },
         "pl" : {
@@ -412,8 +412,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notities"
           }
         },
         "pl" : {
@@ -459,8 +459,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original MD5 checksum"
+            "state" : "translated",
+            "value" : "Originele MD5 checksum"
           }
         },
         "pl" : {
@@ -506,8 +506,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original filename"
+            "state" : "translated",
+            "value" : "Oorspronkelijke bestandsnaam"
           }
         },
         "pl" : {
@@ -553,8 +553,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original file size"
+            "state" : "translated",
+            "value" : "Originele bestandsgrootte"
           }
         },
         "pl" : {
@@ -600,8 +600,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original mime type"
+            "state" : "translated",
+            "value" : "Oorspronkelijke mime-type"
           }
         },
         "pl" : {
