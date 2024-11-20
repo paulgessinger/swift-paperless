@@ -319,8 +319,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mode"
+            "state" : "translated",
+            "value" : "Modus"
           }
         },
         "pl" : {
@@ -366,8 +366,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No credentials"
+            "state" : "translated",
+            "value" : "Geen inloggegevens"
           }
         },
         "pl" : {
@@ -413,8 +413,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+            "state" : "translated",
+            "value" : "Log in zonder expliciete inloggegevens. Dit werkt in pro-authenticatie-scenario's met aangepaste headers, of wanneer je mTLS gebruikt met vertrouwde forwarding."
           }
         },
         "pl" : {
@@ -460,7 +460,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Token"
           }
         },
@@ -507,8 +507,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with an API token that you obtained in the admin interface."
+            "state" : "translated",
+            "value" : "Log in met een API-token dat je hebt verkregen in de beheerdersinterface."
           }
         },
         "pl" : {
@@ -554,8 +554,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username & Password"
+            "state" : "translated",
+            "value" : "Gebruikersnaam en wachtwoord"
           }
         },
         "pl" : {
@@ -601,8 +601,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+            "state" : "translated",
+            "value" : "Inloggen met een gebruikersnaam en wachtwoord. Dit werkt alleen met lokale accounts en niet met accounts die geverifieerd zijn via OAuth2/OIDC."
           }
         },
         "pl" : {
@@ -742,8 +742,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info here"
+            "state" : "translated",
+            "value" : "Meer informatie"
           }
         },
         "pl" : {
@@ -789,8 +789,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
+            "state" : "translated",
+            "value" : "Als je *mTLS* gebruikt, kan dit aangeven dat je een client certificaat moet verstrekken of dat het client certificaat niet is geaccepteerd."
           }
         },
         "pl" : {
@@ -836,8 +836,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate error while connecting"
+            "state" : "translated",
+            "value" : "Certificaat fout tijdens het verbinden"
           }
         },
         "pl" : {
@@ -883,8 +883,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The user associated with these credentials has insufficient permissions"
+            "state" : "translated",
+            "value" : "De gebruiker die geassocieerd is met deze inloggegevens heeft onvoldoende rechten"
           }
         },
         "pl" : {
@@ -930,8 +930,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A minimum set of permissions is required to be able to use the app!"
+            "state" : "translated",
+            "value" : "Een minimum aan toestemmingen is vereist om de app te kunnen gebruiken!"
           }
         },
         "pl" : {
@@ -977,8 +977,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Request returned invalid response code *%d*."
+            "state" : "translated",
+            "value" : "Verzoek gaf ongeldige responscode *%d*."
           }
         },
         "pl" : {
@@ -1025,8 +1025,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app has not been granted access to the local network."
+            "state" : "translated",
+            "value" : "De app heeft geen toegang gekregen tot het lokale netwerk."
           }
         },
         "pl" : {
@@ -1119,8 +1119,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
+            "state" : "translated",
+            "value" : "**De combinatie van gebruikersnaam en wachtwoord is geweigerd.**\nControleer of u de gegevens juist hebt ingevoerd."
           }
         },
         "pl" : {
@@ -1166,8 +1166,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error while logging in"
+            "state" : "translated",
+            "value" : "Fout bij inloggen"
           }
         },
         "pl" : {
@@ -1213,8 +1213,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
+            "state" : "translated",
+            "value" : "**Het verbindingsverzoek zonder referenties is afgewezen.**\nControleer je configuratie."
           }
         },
         "pl" : {
@@ -1260,8 +1260,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
+            "state" : "translated",
+            "value" : "**Het toegangstoken is ongeldig.**\nControleer of je het goed hebt ingevoerd."
           }
         },
         "pl" : {
@@ -1307,8 +1307,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
+            "state" : "translated",
+            "value" : "**De gebruikersnaam en het wachtwoord zijn geaccepteerd, maar het teruggestuurde toegangstoken is geweigerd.**\nDit is waarschijnlijk een interne fout. Stuur een bugrapport met logbestanden."
           }
         },
         "pl" : {
@@ -1354,8 +1354,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid"
+            "state" : "translated",
+            "value" : "De opgegeven URL is ongeldig"
           }
         },
         "pl" : {
@@ -1589,8 +1589,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If at all possible, use HTTPS to connect to the API for non-local addresses."
+            "state" : "translated",
+            "value" : "Gebruik, indien mogelijk, HTTPS om verbinding te maken met de API voor niet-lokale adressen."
           }
         },
         "pl" : {
@@ -1636,8 +1636,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select a client certificate to use when connecting to the target server."
+            "state" : "translated",
+            "value" : "Selecteer een clientcertificaat om te gebruiken bij het verbinden met de doelserver."
           }
         },
         "pl" : {
@@ -1683,8 +1683,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identity"
+            "state" : "translated",
+            "value" : "Identiteit"
           }
         },
         "pl" : {
@@ -1777,8 +1777,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Geen"
           }
         },
         "pl" : {
@@ -1918,8 +1918,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select scheme"
+            "state" : "translated",
+            "value" : "Selecteer schema"
           }
         },
         "pl" : {
@@ -1965,8 +1965,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection"
+            "state" : "translated",
+            "value" : "Verbinding"
           }
         },
         "pl" : {
@@ -2012,8 +2012,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Credentials"
+            "state" : "translated",
+            "value" : "Inloggegevens"
           }
         },
         "pl" : {
@@ -2106,7 +2106,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Token"
           }
         },
@@ -2200,7 +2200,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "paperless.example.com"
           }
         },

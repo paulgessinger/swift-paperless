@@ -36,8 +36,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Huidige identiteit"
           }
         },
         "pl" : {
@@ -415,8 +415,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored app version"
+            "state" : "translated",
+            "value" : "Opgeslagen app-versie"
           }
         },
         "pl" : {
@@ -558,8 +558,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't load certificate. Invalid password?"
+            "state" : "translated",
+            "value" : "Kan certificaat niet laden. Ongeldig wachtwoord?"
           }
         },
         "pl" : {
@@ -605,8 +605,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate not loaded"
+            "state" : "translated",
+            "value" : "Certificaat niet geladen"
           }
         },
         "pl" : {
@@ -652,8 +652,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificates"
+            "state" : "translated",
+            "value" : "Certificaten"
           }
         },
         "pl" : {
@@ -1451,8 +1451,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Instellingen hier zijn aankomende functievariaties / experimenten die je kunt uitschakelen. \n\nMeestal wordt een experiment geïmplementeerd en verdwijnt de oude variant, of wordt het experiment stopgezet en verdwijnt de nieuwe variant."
           }
         },
         "pl" : {
@@ -1498,8 +1498,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Experiments"
+            "state" : "translated",
+            "value" : "UI-experimenten"
           }
         },
         "pl" : {
@@ -1639,8 +1639,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities"
+            "state" : "translated",
+            "value" : "Identiteiten"
           }
         },
         "pl" : {
@@ -1686,8 +1686,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+            "state" : "translated",
+            "value" : "Identiteiten zijn certificaten samen met privésleutels die gebruikt kunnen worden om je cryptografisch te authenticeren. Identiteiten worden gebruikt in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configuraties om toegang te krijgen tot beveiligde bronnen.\n\nDit is een **geavanceerde functie**!"
           }
         },
         "pl" : {
@@ -2015,8 +2015,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "De app voert een bepaalde boekhouding op basis van de app-versie. Hierdoor wordt de app-versie gereset, waardoor de app presteert alsof het een schone installatie is."
           }
         },
         "pl" : {
@@ -2062,8 +2062,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select Certificate"
+            "state" : "translated",
+            "value" : "Selecteer certificaat"
           }
         },
         "pl" : {

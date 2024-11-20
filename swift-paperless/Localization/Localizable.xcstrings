@@ -5088,8 +5088,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+            "state" : "translated",
+            "value" : "Kan release notes voor versie %@niet laden. Dit kan gebeuren als je een bètaversie gebruikt."
           }
         },
         "pl" : {
@@ -5182,8 +5182,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions: %@"
+            "state" : "translated",
+            "value" : "Het verzoek is geweigerd vanwege ontbrekende toestemmingen: %@"
           }
         },
         "pl" : {
@@ -5229,8 +5229,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Er is een fout opgetreden met de geconfigureerde URL."
           }
         },
         "pl" : {
@@ -5276,8 +5276,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "Het antwoord op een verzoek had een onverwachte indeling"
           }
         },
         "pl" : {
@@ -5323,8 +5323,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "state" : "translated",
+            "value" : "Het verzoek is geweigerd vanwege ongeldige aanmeldgegevens: %@"
           }
         },
         "pl" : {
@@ -5370,8 +5370,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status code %d"
+            "state" : "translated",
+            "value" : "Het antwoord op een verzoek had een onverwachte statuscode %d"
           }
         },
         "pl" : {
