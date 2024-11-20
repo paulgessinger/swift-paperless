@@ -133,7 +133,8 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     .padding(.horizontal)
                     .padding(.bottom, 3)
                 List {
-                    ForEach(elements.filter(filter), id: \.self) { element in
+                    let displayElements = elements.filter { filter(element: $0) }
+                    ForEach(displayElements, id: \.self) { element in
                         NavigationLink {
                             Edit(model: model, element: element)
                         } label: {

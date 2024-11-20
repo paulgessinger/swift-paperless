@@ -173,7 +173,6 @@
 		7A63415D2B150AE000535FE5 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2831B12A62748D009E86CE /* UserModel.swift */; };
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A65F18E2C5AC061001A5A4C /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A65F18D2C5AC061001A5A4C /* LoginViewModel.swift */; };
-		7A65F1B32C5AC111001A5A4C /* PermissionsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFE3EC62C5699DC00A567CD /* PermissionsModel.swift */; };
 		7A68F0AB29B356A300878223 /* TagSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A68F0AA29B356A300878223 /* TagSelectionView.swift */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6AA3442C1EDEBE007A1866 /* MarkdownUI */; };
@@ -330,13 +329,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 7A4AA8E329BB969400D845A2;
 			remoteInfo = ShareExtension;
-		};
-		7A5482BD299AD56E00D5061E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7A5482A3299AD56C00D5061E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7A5482AA299AD56C00D5061E;
-			remoteInfo = "swift-paperless";
 		};
 		7A5482C7299AD56E00D5061E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -966,7 +958,6 @@
 			);
 			dependencies = (
 				7A35C0A92C117D79006A542D /* PBXTargetDependency */,
-				7A5482BE299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessTests";
 			productName = "swift-paperlessTests";
@@ -1000,7 +991,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1600;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					7A4AA8E329BB969400D845A2 = {
 						CreatedOnToolsVersion = 14.2;
@@ -1389,7 +1380,6 @@
 				7A4648082A1D5AED00078968 /* DateDecodingError.swift in Sources */,
 				7A2792182C50EBF800DC0352 /* Metadata.swift in Sources */,
 				7A8E1F7F2A1A8F7D002A7CB3 /* DocumentTypeModel.swift in Sources */,
-				7A65F1B32C5AC111001A5A4C /* PermissionsModel.swift in Sources */,
 				7A58A24829E19BF400986FE9 /* Model.swift in Sources */,
 				7A9086F32BC31055006FC837 /* ErrorController.swift in Sources */,
 				7A8E1F872A1A8FD4002A7CB3 /* SavedViewModel.swift in Sources */,
@@ -1434,11 +1424,6 @@
 		7A4D51702C0F97EB0066E75A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 7A4D516F2C0F97EB0066E75A /* XCStringsToolPlugin */;
-		};
-		7A5482BE299AD56E00D5061E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7A5482AA299AD56C00D5061E /* swift-paperless */;
-			targetProxy = 7A5482BD299AD56E00D5061E /* PBXContainerItemProxy */;
 		};
 		7A5482C8299AD56E00D5061E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1490,7 +1475,7 @@
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1525,7 +1510,7 @@
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1593,6 +1578,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -1651,6 +1637,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -1701,7 +1688,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1753,7 +1740,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -1777,7 +1764,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1801,7 +1788,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -1824,7 +1811,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "swift-paperless";
 			};
@@ -1848,7 +1835,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "swift-paperless";
 			};
