@@ -82,6 +82,8 @@ platform :ios do
       select_for_current_build_only: true
     )
 
+    disable_automatic_code_signing
+
     run_tests(
       scheme: "swift-paperlessTests",
       xcargs: "-skipPackagePluginValidation",
