@@ -330,13 +330,6 @@
 			remoteGlobalIDString = 7A4AA8E329BB969400D845A2;
 			remoteInfo = ShareExtension;
 		};
-		7A5482BD299AD56E00D5061E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7A5482A3299AD56C00D5061E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7A5482AA299AD56C00D5061E;
-			remoteInfo = "swift-paperless";
-		};
 		7A5482C7299AD56E00D5061E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7A5482A3299AD56C00D5061E /* Project object */;
@@ -965,7 +958,6 @@
 			);
 			dependencies = (
 				7A35C0A92C117D79006A542D /* PBXTargetDependency */,
-				7A5482BE299AD56E00D5061E /* PBXTargetDependency */,
 			);
 			name = "swift-paperlessTests";
 			productName = "swift-paperlessTests";
@@ -1432,11 +1424,6 @@
 		7A4D51702C0F97EB0066E75A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 7A4D516F2C0F97EB0066E75A /* XCStringsToolPlugin */;
-		};
-		7A5482BE299AD56E00D5061E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7A5482AA299AD56C00D5061E /* swift-paperless */;
-			targetProxy = 7A5482BD299AD56E00D5061E /* PBXContainerItemProxy */;
 		};
 		7A5482C8299AD56E00D5061E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
