@@ -82,7 +82,9 @@ platform :ios do
       select_for_current_build_only: true
     )
 
-    disable_automatic_code_signing
+    if ENV['CI']
+      disable_automatic_code_signing
+    end
 
     run_tests(
       scheme: "swift-paperlessTests",
