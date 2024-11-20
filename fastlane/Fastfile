@@ -85,6 +85,7 @@ platform :ios do
     run_tests(
       scheme: "swift-paperlessTests",
       xcargs: "-skipPackagePluginValidation",
+      destination: "platform=macOS",
       output_types: ""
     )
 
