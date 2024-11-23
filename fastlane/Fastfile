@@ -99,8 +99,8 @@ platform :ios do
       select_for_current_build_only: true
     )
 
-    device = options.fetch(:device, "iPhone 15 Pro")
-    ios = options.fetch(:ios, "17.4")
+    device = options.fetch(:device, "iPhone 16 Pro")
+    ios = options.fetch(:ios, "18.1")
 
 
     build_app(
