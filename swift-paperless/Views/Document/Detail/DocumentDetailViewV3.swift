@@ -22,8 +22,8 @@ private struct Aspect: View {
     @ScaledMetric(relativeTo: .body) private var imageWidth = 20.0
     @ScaledMetric(relativeTo: .body) private var spacing = 5.0
 
-    init(_ label: LocalizedStringResource, systemImage: String) {
-        self.label = String(localized: label)
+    init(localized: LocalizedStringResource, systemImage: String) {
+        label = String(localized: localized)
         self.systemImage = systemImage
     }
 
@@ -95,7 +95,7 @@ private struct DocumentPropertyView: View {
                 VStack(alignment: .leading) {
                     HFlow(itemSpacing: spacing) {
                         if let asn = document.asn {
-                            Aspect(.localizable(.documentAsn(asn)), systemImage: "qrcode")
+                            Aspect(localized: .localizable(.documentAsn(asn)), systemImage: "qrcode")
                         }
 
                         if let id = document.correspondent, let name = store.correspondents[id]?.name {
