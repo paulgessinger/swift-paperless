@@ -15,6 +15,7 @@ struct SettingsView: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var connectionManager: ConnectionManager
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.openURL) private var openURL
 
     @State private var feedbackLogs: URL? = nil
     @State private var showMailSheet: Bool = false
@@ -26,6 +27,24 @@ struct SettingsView: View {
             try await fn()
         } catch {
             errorController.push(error: error)
+        }
+    }
+
+    private func openBugReportLink() {
+        Task {
+            let appVersion = AppSettings.shared.currentAppVersion?.description
+
+            var url = URL(string: "https://github.com/paulgessinger/swift-paperless/issues/new")!
+
+            var queryItems = [URLQueryItem(name: "template", value: "bug_report.yml"), URLQueryItem(name: "app_version", value: appVersion)]
+
+            if let backendVersion = await (store.repository as? ApiRepository)?.backendVersion?.description {
+                queryItems.append(URLQueryItem(name: "backend_version", value: backendVersion))
+            }
+
+            url = url.appending(queryItems: queryItems)
+
+            openURL(url)
         }
     }
 
@@ -157,6 +176,18 @@ struct SettingsView: View {
             } label: {
                 Label(localized: .settings(.debugMenu), systemImage: "ladybug.fill")
             }
+
+            Button {
+                openBugReportLink()
+            } label: {
+                Label {
+                    Text(.settings(.reportBug))
+                        .accentColor(.primary)
+                } icon: {
+                    Image(systemName: "exclamationmark.bubble.fill")
+                }
+            }
+
             NavigationLink {
                 TLSListView()
             } label: {
