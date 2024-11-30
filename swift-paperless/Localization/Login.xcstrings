@@ -851,9 +851,45 @@
     "errorInsufficientApiVersion" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
           }
         }
