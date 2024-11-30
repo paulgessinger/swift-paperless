@@ -317,7 +317,6 @@ private struct CredentialsStageView: View {
                 onSuccess(stored)
             } catch {
                 Logger.shared.error("Got error validating credentials: \(error)")
-                errorController.push(error: error)
             }
         }
     }
