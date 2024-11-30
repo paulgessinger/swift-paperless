@@ -201,6 +201,8 @@ actor ApiRepository {
                 throw RequestError.forbidden(detail: decodeDetails(data))
             } else if response.statusCode == 401 {
                 throw RequestError.unauthorized(detail: decodeDetails(data))
+            } else if response.statusCode == 406 {
+                throw RequestError.unsupportedVersion
             } else {
                 throw RequestError.unexpectedStatusCode(code: response.statusCode)
             }

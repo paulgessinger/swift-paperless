@@ -35,6 +35,8 @@ enum LoginError: DisplayableError, Equatable {
 
     case badRequest
 
+    case insufficientApiVersion
+
     case localNetworkDenied
 
     case insufficientPermissions
@@ -99,6 +101,9 @@ extension LoginError {
             let msg = String(localized: .login(.errorInvalidResponse(400))) + String(localized: .login(.errorBadRequest))
 
             return try? AttributedString(markdown: msg)
+
+        case .insufficientApiVersion:
+            return try? AttributedString(markdown: String(localized: .login(.errorInsufficientApiVersion(ApiRepository.minimumApiVersion, DocumentationLinks.supportedVersions.absoluteString))))
 
         case .localNetworkDenied:
             return loc(.login(.errorLocalNetworkDenied))

@@ -13,6 +13,7 @@ enum RequestError: Error {
     case unexpectedStatusCode(code: Int)
     case forbidden(detail: String)
     case unauthorized(detail: String)
+    case unsupportedVersion
 }
 
 extension RequestError: DisplayableError {
@@ -32,12 +33,23 @@ extension RequestError: DisplayableError {
             .localizable(.requestErrorForbidden(detail))
         case let .unauthorized(detail):
             .localizable(.requestErrorUnauthorized(detail))
+        case .unsupportedVersion:
+            .localizable(.requestErrorUnsupportedVersion(ApiRepository.minimumApiVersion))
         }
 
         return String(localized: res)
     }
 
-    var documentationLink: URL? { nil }
+    var documentationLink: URL? {
+        switch self {
+        case .forbidden:
+            DocumentationLinks.insufficientPermissions
+        case .unsupportedVersion:
+            DocumentationLinks.supportedVersions
+        default:
+            nil
+        }
+    }
 }
 
 struct ResourceForbidden<Resource: Model>: DisplayableError {

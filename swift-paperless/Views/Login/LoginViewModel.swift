@@ -166,6 +166,7 @@ class LoginViewModel {
 
         var request = URLRequest(url: apiUrl)
         extraHeaders.apply(toRequest: &request)
+        request.setValue("application/json; version=\(ApiRepository.minimumApiVersion)", forHTTPHeaderField: "Accept")
 
         Logger.api.info("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
 
@@ -181,30 +182,23 @@ class LoginViewModel {
 
             let (data, response) = try await session.getData(for: request)
 
-            if let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode != 200 {
+            let httpResponse = response as? HTTPURLResponse
+
+            if let statusCode = httpResponse?.statusCode, statusCode != 200 {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                if statusCode == 400 {
+                switch statusCode {
+                case 400:
                     loginState = .error(.badRequest)
-                } else {
+                case 406:
+                    loginState = .error(.insufficientApiVersion)
+                default:
                     loginState = .error(.invalidResponse(statusCode: statusCode,
                                                          details: decodeDetails(data)))
                 }
                 return
             }
 
-            struct Response: Decodable {
-                var correspondents: URL
-                var document_types: URL
-                var logs: URL
-                var mail_accounts: URL
-                var mail_rules: URL
-                var saved_views: URL
-                var storage_paths: URL
-                var tags: URL
-                var tasks: URL
-            }
-
-            _ = try JSONDecoder().decode(Response.self, from: data)
+            _ = try JSONDecoder().decode([String: URL].self, from: data)
             loginState = .valid
 
         } catch is CancellationError {

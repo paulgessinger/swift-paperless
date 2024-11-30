@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 11.04.2024.
 //
 
+import Common
 import os
 import SwiftUI
 
@@ -34,6 +35,8 @@ struct ConnectionsView: View {
     @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
 
     @State private var logoutRequested = false
+
+    @State private var backendVersion: Version?
 
     init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
         self.connectionManager = connectionManager
@@ -108,8 +111,24 @@ struct ConnectionsView: View {
                 .buttonStyle(BorderlessButtonStyle())
             }
         }
+        footer: {
+            if let backendVersion, backendVersion < ApiRepository.minimumVersion {
+                Text(.settings(.unsupportedVersion(backendVersion.description, ApiRepository.minimumVersion.description)))
+            }
+        }
 
         .navigationBarTitleDisplayMode(.inline)
+
+        .task {
+            if let stored = connectionManager.storedConnection {
+                do {
+                    let repository = try await ApiRepository(connection: stored.connection)
+                    backendVersion = await repository.backendVersion
+                } catch {
+                    Logger.shared.error("Could not make ApiRepository for settings display: \(error)")
+                }
+            }
+        }
     }
 }
 
