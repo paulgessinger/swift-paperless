@@ -1980,6 +1980,17 @@
         }
       }
     },
+    "reportBug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a bug"
+          }
+        }
+      }
+    },
     "resetAppVersionDescription" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -97,6 +97,7 @@ class AppSettings: ObservableObject {
     @PublishedUserDefaultsBacked(.loginScreenV2)
     var loginScreenV2: Bool = true
 
+    // @TODO: Refactor this with the new Common.Version
     struct Version: CustomStringConvertible, Codable, Equatable {
         private let releaseStored: [UInt]
 
