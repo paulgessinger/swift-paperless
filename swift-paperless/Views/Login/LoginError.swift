@@ -8,23 +8,6 @@
 import Foundation
 import SwiftUI
 
-enum UrlError: LocalizedError, Equatable {
-    case invalidScheme(_: String)
-    case other
-    case cannotSplit
-    case emptyHost
-
-    var errorDescription: String? {
-        switch self {
-        case let .invalidScheme(scheme):
-            "Invalid scheme: \(scheme)"
-        case .other: "other"
-        case .cannotSplit: "cannot split"
-        case .emptyHost: "empty host"
-        }
-    }
-}
-
 enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: String?)
     case invalidLogin
