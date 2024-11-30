@@ -2125,9 +2125,45 @@
     "unsupportedVersion" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
           }
         }
