@@ -16,7 +16,7 @@ struct ExtraHeadersView: View {
 
         var body: some View {
             Form {
-                Section(String(localized: .login(.extraHeadersKey))) {
+                Section {
                     TextField(String(localized: .login(.extraHeadersKey)), text: $header.key)
                         .clearable($header.key)
                         .autocorrectionDisabled(true)
@@ -24,7 +24,15 @@ struct ExtraHeadersView: View {
                         .onChange(of: header.key) { _, value in
                             header.key = value.replacingOccurrences(of: " ", with: "")
                         }
+                } header: {
+                    Text(.login(.extraHeadersKey))
                 }
+                footer: {
+                    if header.key == "Authorization" {
+                        Text(.login(.extraHeaderAuthorization))
+                    }
+                }
+
                 Section(String(localized: .login(.extraHeadersValue))) {
                     TextField(String(localized: .login(.extraHeadersValue)), text: $header.value)
                         .clearable($header.value)
