@@ -2122,6 +2122,17 @@
         }
       }
     },
+    "unsupportedVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+          }
+        }
+      }
+    },
     "useBiometricLock" : {
       "comment" : "Placeholder refers to biometric type (as of writing) FaceID or TouchID",
       "extractionState" : "manual",

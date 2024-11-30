@@ -8,23 +8,6 @@
 import Foundation
 import SwiftUI
 
-enum UrlError: LocalizedError, Equatable {
-    case invalidScheme(_: String)
-    case other
-    case cannotSplit
-    case emptyHost
-
-    var errorDescription: String? {
-        switch self {
-        case let .invalidScheme(scheme):
-            "Invalid scheme: \(scheme)"
-        case .other: "other"
-        case .cannotSplit: "cannot split"
-        case .emptyHost: "empty host"
-        }
-    }
-}
-
 enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: String?)
     case invalidLogin
@@ -34,6 +17,8 @@ enum LoginError: DisplayableError, Equatable {
     case invalidResponse(statusCode: Int, details: String?)
 
     case badRequest
+
+    case insufficientApiVersion
 
     case localNetworkDenied
 
@@ -99,6 +84,9 @@ extension LoginError {
             let msg = String(localized: .login(.errorInvalidResponse(400))) + String(localized: .login(.errorBadRequest))
 
             return try? AttributedString(markdown: msg)
+
+        case .insufficientApiVersion:
+            return try? AttributedString(markdown: String(localized: .login(.errorInsufficientApiVersion(ApiRepository.minimumApiVersion, DocumentationLinks.supportedVersions.absoluteString))))
 
         case .localNetworkDenied:
             return loc(.login(.errorLocalNetworkDenied))

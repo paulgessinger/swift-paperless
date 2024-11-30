@@ -848,6 +848,17 @@
         }
       }
     },
+    "errorInsufficientApiVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+          }
+        }
+      }
+    },
     "errorInsufficientPermissions" : {
       "extractionState" : "manual",
       "localizations" : {

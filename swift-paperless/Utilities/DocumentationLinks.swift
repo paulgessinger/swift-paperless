@@ -18,4 +18,6 @@ struct DocumentationLinks {
     static let insufficientPermissions = Self.baseUrl.appending(path: "common-issues/minimum-permissions")
 
     static let certificate = Self.baseUrl.appending(path: "common-issues/certificates")
+
+    static let supportedVersions = Self.baseUrl.appending(path: "supported-versions")
 }
