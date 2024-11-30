@@ -32,6 +32,19 @@ actor ApiDocumentSource: DocumentSource {
     func hasMore() async -> Bool { await sequence.hasMore }
 }
 
+struct DecodingErrorWithRootType: Error, DisplayableError {
+    let type: any Any.Type
+    let error: DecodingError
+
+    var message: String {
+        error.message
+    }
+
+    var details: String? {
+        error.makeDetails("\(type)")
+    }
+}
+
 actor ApiRepository {
     nonisolated
     let connection: Connection
@@ -225,7 +238,7 @@ actor ApiRepository {
             } else {
                 Logger.api.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
             }
-            throw error
+            throw DecodingErrorWithRootType(type: T.self, error: error)
         }
     }
 
