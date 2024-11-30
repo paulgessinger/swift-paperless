@@ -8,6 +8,51 @@
 import os
 import SwiftUI
 
+private struct LoadingView: View {
+    let url: String?
+    let manager: ConnectionManager
+
+    @State private var showProgress = false
+    @State private var showFailSafe = false
+
+    var body: some View {
+        VStack {
+            LogoView()
+
+            if showProgress {
+                ProgressView()
+                    .controlSize(.large)
+            }
+
+            if showFailSafe {
+                Text(.localizable(.loginFailSafe(url ?? "???")))
+                    .padding(.horizontal)
+                    .padding(.top, 50)
+
+                Button {
+                    showFailSafe = false
+                    manager.logout()
+                } label: {
+                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
+                }
+                .foregroundColor(Color.red)
+                .bold()
+                .padding(.top)
+            }
+        }
+
+        .animation(.default, value: showProgress)
+        .animation(.default, value: showFailSafe)
+
+        .task {
+            try? await Task.sleep(for: .seconds(1))
+            showProgress = true
+            try? await Task.sleep(for: .seconds(15))
+            showFailSafe = true
+        }
+    }
+}
+
 struct MainView: View {
     @State private var showLoginScreen = false
 
@@ -66,19 +111,17 @@ struct MainView: View {
         }
     }
 
-    private var loadingView: some View {
-        VStack {
-            LogoView()
-            ProgressView()
-                .controlSize(.large)
-        }
-    }
-
     var body: some View {
         VStack {
             ZStack {
                 if manager.connection == nil || !storeReady {
-                    loadingView
+                    VStack {
+                        if !showLoginScreen {
+                            LoadingView(url: manager.connection?.url.absoluteString,
+                                        manager: manager)
+                        }
+                    }
+                    .animation(.default, value: showLoginScreen)
                 } else {
                     DocumentView()
                         .errorOverlay(errorController: errorController)
