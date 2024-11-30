@@ -88,8 +88,12 @@ struct LogRecordExportButton: View {
             Button {
                 export()
             } label: {
-                Label(String(localized: .localizable(.logsExport)), systemImage: "text.word.spacing")
-                    .accentColor(.primary)
+                Label {
+                    Text(.localizable(.logsExport))
+                        .accentColor(.primary)
+                } icon: {
+                    Image(systemName: "text.word.spacing")
+                }
             }
 
         case .loading:

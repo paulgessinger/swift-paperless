@@ -84,8 +84,12 @@ struct SettingsView: View {
             Button {
                 UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
             } label: {
-                Label(String(localized: .settings(.detailsSourceCode)), systemImage: "terminal.fill")
-                    .accentColor(.primary)
+                Label {
+                    Text(.settings(.detailsSourceCode))
+                        .accentColor(.primary)
+                } icon: {
+                    Image(systemName: "terminal.fill")
+                }
             }
 
             NavigationLink {
@@ -101,8 +105,12 @@ struct SettingsView: View {
                         Button {
                             export()
                         } label: {
-                            Label(String(localized: .settings(.detailsFeedback)), systemImage: "paperplane.fill")
-                                .accentColor(.primary)
+                            Label {
+                                Text(.settings(.detailsFeedback))
+                                    .accentColor(.primary)
+                            } icon: {
+                                Image(systemName: "paperplane.fill")
+                            }
                         }
 
                     case .loading:
