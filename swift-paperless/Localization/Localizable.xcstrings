@@ -4249,6 +4249,17 @@
         }
       }
     },
+    "noSavedViews" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved views"
+          }
+        }
+      }
+    },
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {

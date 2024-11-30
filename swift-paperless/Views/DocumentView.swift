@@ -263,17 +263,23 @@ struct DocumentView: View {
                         } label: {
                             Text(.localizable(.allDocuments))
                         }
-                        Divider()
-                        ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
-                            Button {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    withAnimation {
-                                        filterModel.filterState = .init(savedView: savedView)
+                    }
+
+                    Section(String(localized: .localizable(.savedViews))) {
+                        if !store.savedViews.isEmpty {
+                            ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
+                                Button {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        withAnimation {
+                                            filterModel.filterState = .init(savedView: savedView)
+                                        }
                                     }
+                                } label: {
+                                    Text(savedView.name)
                                 }
-                            } label: {
-                                Text(savedView.name)
                             }
+                        } else {
+                            Text(.localizable(.noSavedViews))
                         }
                     }
                 }
