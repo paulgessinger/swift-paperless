@@ -130,6 +130,10 @@ extension LoginError {
                     .italic()
             }
 
+            if code == 403 {
+                Text(.login(.autologinHint))
+            }
+
         case .badRequest:
             VStack(alignment: .leading) {
                 Text(.login(.errorInvalidResponse(400)))

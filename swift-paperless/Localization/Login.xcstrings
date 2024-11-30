@@ -96,6 +96,17 @@
         }
       }
     },
+    "autologinHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        }
+      }
+    },
     "buttonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
