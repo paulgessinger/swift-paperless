@@ -6,7 +6,7 @@
 //
 
 public
-struct Version: LosslessStringConvertible, Equatable, Comparable {
+struct Version: LosslessStringConvertible, Equatable, Comparable, Sendable {
     let major: UInt
     let minor: UInt
     let patch: UInt
