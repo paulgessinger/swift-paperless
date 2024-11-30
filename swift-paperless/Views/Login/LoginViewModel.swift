@@ -141,9 +141,17 @@ class LoginViewModel {
 
     func decodeDetails(_ body: Data) -> String? {
         struct Response: Decodable {
-            var details: String
+            var detail: String
         }
-        return try? JSONDecoder().decode(Response.self, from: body).details
+        if let detail = try? JSONDecoder().decode(Response.self, from: body).detail {
+            return detail
+        }
+
+        if let detail = String(data: body, encoding: .utf8) {
+            return detail
+        }
+
+        return nil
     }
 
     func checkUrl(string value: String) async {
@@ -297,8 +305,7 @@ class LoginViewModel {
                 if statusCode == 400 {
                     throw LoginError.invalidLogin
                 }
-                let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-                throw LoginError.invalidResponse(statusCode: statusCode, details: body)
+                throw LoginError.invalidResponse(statusCode: statusCode, details: decodeDetails(data))
             }
 
             struct TokenResponse: Decodable {
