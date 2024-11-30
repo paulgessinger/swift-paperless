@@ -6,6 +6,7 @@
 //
 
 import AsyncAlgorithms
+import Common
 import Foundation
 import os
 import Semaphore
@@ -39,12 +40,13 @@ actor ApiRepository {
     private let urlSessionDelegate: PaperlessURLSessionDelegate
 
     private var apiVersion: UInt?
-    private var minimumApiVersion: UInt = 3
-    private var maximumApiVersion: UInt = 5
-    private var backendVersion: (UInt, UInt, UInt)?
+    static let minimumApiVersion: UInt = 3
+    static let minimumVersion = Version(1, 14, 1)
+    static let maximumApiVersion: UInt = 5
+    private(set) var backendVersion: Version?
 
-    private var effectiveApiVersion: UInt {
-        min(maximumApiVersion, max(minimumApiVersion, apiVersion ?? minimumApiVersion))
+    var effectiveApiVersion: UInt {
+        min(Self.maximumApiVersion, max(Self.minimumApiVersion, apiVersion ?? Self.minimumApiVersion))
     }
 
     init(connection: Connection) async {
@@ -61,11 +63,11 @@ actor ApiRepository {
         await loadBackendVersions()
 
         if let apiVersion, let backendVersion {
-            Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion.0).\(backendVersion.1).\(backendVersion.2)")
+            Logger.api.notice("Backend version info: API version: \(apiVersion), backend version: \(backendVersion)")
 
-            if apiVersion < minimumApiVersion || maximumApiVersion < apiVersion {
-                let minimumApiVersion = minimumApiVersion
-                let maximumApiVersion = maximumApiVersion
+            if apiVersion < Self.minimumApiVersion || Self.maximumApiVersion < apiVersion {
+                let minimumApiVersion = Self.minimumApiVersion
+                let maximumApiVersion = Self.maximumApiVersion
                 Logger.api.info("Backend API version \(apiVersion) is outside of tested range of API versions [\(minimumApiVersion), \(maximumApiVersion)]")
             }
 
@@ -521,7 +523,7 @@ extension ApiRepository: Repository {
     }
 
     func nextAsn() async throws -> UInt {
-        if let backendVersion, backendVersion >= (2, 0, 0) {
+        if let backendVersion, backendVersion >= Version(2, 0, 0) {
             try await nextAsnDirectEndpoint()
         } else {
             try await nextAsnCompatibility()
@@ -690,13 +692,10 @@ extension ApiRepository: Repository {
             }
             let backend = [backend1, backend2].compactMap { $0 }.first!
 
-            let parts = backend.components(separatedBy: ".").compactMap { UInt($0) }
-            guard parts.count == 3 else {
+            guard let backendVersion = Version(backend) else {
                 Logger.api.error("Unable to get API and backend version: Invalid format \(backend)")
                 return
             }
-
-            let backendVersion = (parts[0], parts[1], parts[2])
 
             guard let apiVersion = res.value(forHTTPHeaderField: "X-Api-Version"), let apiVersion = UInt(apiVersion) else {
                 Logger.api.error("Unable to get API and backend version: X-Api-Version not found")
