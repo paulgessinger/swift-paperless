@@ -103,7 +103,7 @@ private struct Section<Content: View, Footer: View, Header: View>: View {
                 .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .circular)
-                        .fill(.background.secondary)
+                        .fill(.background.tertiary)
                 )
 
             footer?()

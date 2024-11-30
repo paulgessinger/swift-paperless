@@ -280,12 +280,17 @@ private struct Pill<Label: View>: View {
         .padding(.vertical, 4)
         .background {
             Capsule()
-                .fill(.tertiary)
+                .fill(.background.tertiary)
         }
-        .overlay(
-            Capsule()
-                .strokeBorder(active ? Color(.accent) : Color(.elementBorder),
-                              lineWidth: 0.66))
+        .overlay {
+            if active {
+                Capsule()
+                    .strokeBorder(Color(.accent), lineWidth: 0.66)
+            } else {
+                Capsule()
+                    .strokeBorder(.tertiary, lineWidth: 0.66)
+            }
+        }
         .foregroundColor(active ? Color(.accent) : Color.primary)
         .if(active) { view in view.bold() }
     }
