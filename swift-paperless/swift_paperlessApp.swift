@@ -103,6 +103,7 @@ struct MainView: View {
             LoginView(connectionManager: manager)
                 .errorOverlay(errorController: errorController)
                 .environmentObject(errorController)
+                .interactiveDismissDisabled()
         }
 
         .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
