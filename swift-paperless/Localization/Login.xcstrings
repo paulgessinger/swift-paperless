@@ -99,9 +99,45 @@
     "autologinHint" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
           }
         }
@@ -1427,9 +1463,45 @@
     "extraHeaderAuthorization" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
           }
         }
