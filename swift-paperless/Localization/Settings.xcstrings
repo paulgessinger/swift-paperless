@@ -1991,8 +1991,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Fehler melden"
           }
         },
         "en" : {
@@ -2180,8 +2180,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Dieser Server hat die Version \"%@\", die niedriger ist als die Version \"%@\", die die Anwendung benötigt. Das kann Fehler verursachen!"
           }
         },
         "en" : {

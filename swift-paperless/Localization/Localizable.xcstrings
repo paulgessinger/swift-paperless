@@ -1429,8 +1429,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Fehler bei der Antwortverarbeitung"
           }
         },
         "en" : {
@@ -1476,8 +1476,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Es ist ein Fehler bei der Verarbeitung einer Serverantwort aufgetreten. Die Dekodierung von %@ ist fehlgeschlagen.\n\nDies kann passieren, wenn die Serverversion nicht unterstützt wird oder die Verbindung auf unerwartete Weise geändert wurde."
           }
         },
         "en" : {
@@ -3743,8 +3743,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
+            "state" : "translated",
+            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@zu verbinden. Du kannst versuchen, dich ab- und wieder anzumelden:"
           }
         },
         "en" : {
@@ -4260,8 +4260,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Keine gespeicherten Ansichten"
           }
         },
         "en" : {
@@ -5581,8 +5581,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "state" : "translated",
+            "value" : "Das Backend unterstützt nicht die minimale API-Version %u, die diese Version der App benötigt."
           }
         },
         "en" : {

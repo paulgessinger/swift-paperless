@@ -107,8 +107,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Falls du *Autologin* mit `PAPERLESS_AUTO_LOGIN_USERNAME` aktiviert hast, versuche, dich ohne Anmeldedaten anzumelden."
           }
         },
         "en" : {
@@ -906,8 +906,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
+            "state" : "translated",
+            "value" : "Das Backend unterstützt nicht die minimale API-Version %u, die diese Version der App benötigt. Klicke [hier](%@) für mehr Informationen."
           }
         },
         "en" : {
@@ -1471,8 +1471,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Warnung:** Der *Authorization*-Header wird von Paperless-ngx für die tokenbasierte API-Autorisierung verwendet. Die Verwendung dieses Headers für Basic auth führt oft zu Problemen. Du kannst versuchen, einen alternativen Header für Basic auth in deinem Reverse-Proxy einzustellen."
           }
         },
         "en" : {
