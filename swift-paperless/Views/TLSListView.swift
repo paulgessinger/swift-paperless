@@ -29,12 +29,8 @@ struct TLSListView: View {
 
     private var identityManager: IdentityManager
 
-    init(identityManager: IdentityManager? = nil) {
-        if let identityManager {
-            self.identityManager = identityManager
-        } else {
-            self.identityManager = IdentityManager()
-        }
+    init(identityManager: IdentityManager) {
+        self.identityManager = identityManager
     }
 
     var body: some View {
@@ -231,7 +227,9 @@ private struct TLSSingleView: View {
 // - MARK: Previews
 
 #Preview {
+    @Previewable @State var identityManager = IdentityManager()
+
     NavigationView {
-        TLSListView()
+        TLSListView(identityManager: identityManager)
     }
 }

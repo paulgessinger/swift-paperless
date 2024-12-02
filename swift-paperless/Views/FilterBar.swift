@@ -102,7 +102,7 @@ private struct FilterMenu<Content: View>: View {
                 }
 
                 NavigationLink {
-                    ManageView<SavedViewManager>(store: store)
+                    ManageView<SavedViewManager>()
                         .navigationTitle(Text(.localizable(.savedViews)))
                         .task { Task {
                             do {

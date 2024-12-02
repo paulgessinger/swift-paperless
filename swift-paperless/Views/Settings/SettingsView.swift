@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var showMailSheet: Bool = false
     @State private var showLoginSheet: Bool = false
     @State private var result: Result<MFMailComposeResult, any Error>? = nil
+    @State var identityManager = IdentityManager()
 
     private func checked(_ fn: @escaping () async throws -> Void) async {
         do {
@@ -51,44 +52,41 @@ struct SettingsView: View {
     private var organizationSection: some View {
         Section(String(localized: .settings(.organization))) {
             NavigationLink {
-                ManageView<TagManager>(store: store)
+                ManageView<TagManager>()
                     .navigationTitle(Text(.localizable(.tags)))
-                    .task { await checked(store.fetchAllTags) }
             } label: {
                 Label(String(localized: .localizable(.tags)), systemImage: "tag.fill")
             }
 
             NavigationLink {
-                ManageView<CorrespondentManager>(store: store)
+                ManageView<CorrespondentManager>()
                     .navigationTitle(Text(.localizable(.correspondents)))
-                    .task { await checked(store.fetchAllCorrespondents) }
             } label: {
                 Label(String(localized: .localizable(.correspondents)), systemImage: "person.fill")
             }
 
             NavigationLink {
-                ManageView<DocumentTypeManager>(store: store)
+                ManageView<DocumentTypeManager>()
                     .navigationTitle(Text(.localizable(.documentTypes)))
-                    .task { await checked(store.fetchAllDocumentTypes) }
             } label: {
                 Label(String(localized: .localizable(.documentTypes)), systemImage: "doc.fill")
             }
 
             NavigationLink {
-                ManageView<SavedViewManager>(store: store)
-                    .navigationTitle(Text(.localizable(.savedViews)))
-                    .task { await checked(store.fetchAllDocumentTypes) }
+                ManageView<SavedViewManager>()
             } label: {
                 Label(String(localized: .localizable(.savedViews)), systemImage: "line.3.horizontal.decrease.circle.fill")
             }
 
             NavigationLink {
-                ManageView<StoragePathManager>(store: store)
+                ManageView<StoragePathManager>()
                     .navigationTitle(Text(.localizable(.storagePaths)))
-                    .task { await checked(store.fetchAllStoragePaths) }
             } label: {
                 Label(String(localized: .localizable(.storagePaths)), systemImage: "archivebox.fill")
             }
+        }
+        .task {
+            await checked(store.fetchAll)
         }
     }
 
@@ -189,7 +187,7 @@ struct SettingsView: View {
             }
 
             NavigationLink {
-                TLSListView()
+                TLSListView(identityManager: identityManager)
             } label: {
                 Label(localized: .settings(.identities), systemImage: "lock.fill")
             }

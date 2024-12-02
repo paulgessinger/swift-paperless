@@ -57,16 +57,12 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     @EnvironmentObject var errorController: ErrorController
     @EnvironmentObject var store: DocumentStore
 
-    var model: Manager.Model
+    @State var model: Manager.Model?
     @State private var elementToDelete: Element?
 
     @State private var elements: [Element] = []
 
     @State private var searchText = ""
-
-    init(store: DocumentStore) {
-        model = .init(store: store)
-    }
 
     struct Edit: View {
         @Environment(\.dismiss) private var dismiss
@@ -123,31 +119,33 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var body: some View {
         VStack {
-            if elements.isEmpty {
-                Divider()
-                Text(.localizable(.noElementsFound))
-                    .multilineTextAlignment(.center)
-                Spacer()
-            } else {
-                SearchBarView(text: $searchText, cancelEnabled: true)
-                    .padding(.horizontal)
-                    .padding(.bottom, 3)
-                List {
-                    let displayElements = elements.filter { filter(element: $0) }
-                    ForEach(displayElements, id: \.self) { element in
-                        NavigationLink {
-                            Edit(model: model, element: element)
-                        } label: {
-                            Manager.RowView(element: element)
-                        }
-                        .swipeActions {
-                            Button("Delete") {
-                                elementToDelete = element
+            if let model {
+                if elements.isEmpty {
+                    Divider()
+                    Text(.localizable(.noElementsFound))
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                } else {
+                    SearchBarView(text: $searchText, cancelEnabled: true)
+                        .padding(.horizontal)
+                        .padding(.bottom, 3)
+                    List {
+                        let displayElements = elements.filter { filter(element: $0) }
+                        ForEach(displayElements, id: \.self) { element in
+                            NavigationLink {
+                                Edit(model: model, element: element)
+                            } label: {
+                                Manager.RowView(element: element)
                             }
-                            .tint(.red)
+                            .swipeActions {
+                                Button("Delete") {
+                                    elementToDelete = element
+                                }
+                                .tint(.red)
+                            }
                         }
+                        .onDelete { _ in }
                     }
-                    .onDelete { _ in }
                 }
             }
         }
@@ -158,7 +156,9 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     NavigationLink {
-                        Create(model: model)
+                        if let model {
+                            Create(model: model)
+                        }
                     } label: {
                         Label(String(localized: .localizable(.add)), systemImage: "plus")
                     }
@@ -178,18 +178,18 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                                     let item = item
                                     Task {
                                         do {
-                                            try await model.delete(item)
+                                            try await model?.delete(item)
                                             elementToDelete = nil
                                         } catch {
                                             Logger.shared.error("Error deleting element: \(error)")
                                             errorController.push(error: error)
-                                            elements = model.load()
+                                            elements = model?.load() ?? []
                                         }
                                     }
                                 }
                                 Button(String(localized: .localizable(.cancel)), role: .cancel) {
                                     withAnimation {
-                                        elements = model.load()
+                                        elements = model?.load() ?? []
                                     }
                                 }
                             })
@@ -197,8 +197,10 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         .refreshable {
             do {
                 try await store.fetchAll()
-                withAnimation {
-                    elements = model.load()
+                if let model {
+                    withAnimation {
+                        elements = model.load()
+                    }
                 }
             } catch {
                 errorController.push(error: error)
@@ -206,7 +208,8 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
         .task {
-            elements = model.load()
+            model = Manager.Model(store: store)
+            elements = model!.load()
         }
     }
 }
@@ -217,7 +220,7 @@ private struct Container<M: ManagerProtocol>: View {
 
     var body: some View {
         NavigationStack {
-            ManageView<M>(store: store)
+            ManageView<M>()
         }
         .environmentObject(store)
         .errorOverlay(errorController: errorController)
