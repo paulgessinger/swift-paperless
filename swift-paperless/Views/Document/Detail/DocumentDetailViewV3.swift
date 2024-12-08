@@ -401,12 +401,17 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                             showPropertyBar = true
                         } label: {
                             Label(localized: .localizable(.showDocumentPropertiesLabel),
-                                  systemImage: "chevron.up.circle.fill")
+                                  systemImage: "chevron.up")
                                 .labelStyle(.iconOnly)
-                                .font(.largeTitle)
+                                .font(.title)
                                 .fontWeight(.bold)
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(.primary, .tertiary)
+                                .foregroundStyle(.primary)
+                                .padding(5)
+                                .background(
+                                    Circle()
+                                        .fill(.background.secondary)
+                                        .opacity(0.9)
+                                )
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 10)
