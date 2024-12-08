@@ -190,12 +190,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @State private var editDetent: PresentationDetent = .medium
 
     private var defaultEditDetent: PresentationDetent {
-        switch horizontalSizeClass {
-        case .compact:
-            .medium
-        default:
-            .large
-        }
+        .large
     }
 
     private var editDetentOptions: Set<PresentationDetent> {
