@@ -189,6 +189,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @State private var editDetent: PresentationDetent = .medium
 
+    @State private var showPropertyBar = true
+
     private var defaultEditDetent: PresentationDetent {
         .large
     }
@@ -225,7 +227,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     }
 
     func updateWebkitInset() {
-        bottomPadding = UIScreen.main.bounds.size.height - bottomInsetFrame.maxY + bottomInsetFrame.height + safeAreaInsets.bottom
+        bottomPadding = UIScreen.main.bounds.size.height - bottomInsetFrame.maxY + bottomInsetFrame.height // + safeAreaInsets.bottom
     }
 
     init(store: DocumentStore, document: Document, navPath _: Binding<NavigationPath>?) {
@@ -280,16 +282,89 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         }
     }
 
+    @ViewBuilder
+    private var documentPropertyBar: some View {
+        if showPropertyBar {
+            DocumentPropertyView(viewModel: viewModel,
+                                 showEditSheet: $showEditSheet,
+                                 dragOffset: $dragOffset)
+                .padding(.bottom, bottomSpacing)
+                .overlay(alignment: .bottom) {
+                    Image(systemName: "chevron.compact.up")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                        .opacity(chevronOpacity)
+                        .padding(15)
+                        .offset(y: -1)
+                        .scaleEffect(chevronSize, anchor: .center)
+                        .offset(y: -10 - chevronOffset)
+                }
+
+                .background(
+                    GeometryReader { geo in
+                        UnevenRoundedRectangle(topLeadingRadius: 20,
+                                               bottomLeadingRadius: 0,
+                                               bottomTrailingRadius: 0,
+                                               topTrailingRadius: 20,
+                                               style: .continuous)
+                            .fill(.thinMaterial)
+                            .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
+                            .task {
+                                bottomInsetFrame = geo.frame(in: .global)
+                                updateWebkitInset()
+                            }
+                            .onChange(of: geo.size) {
+                                bottomInsetFrame = geo.frame(in: .global)
+                                updateWebkitInset()
+                            }
+                    }
+                )
+
+                .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
+                    .onChanged { value in
+                        Haptics.shared.prepare()
+                        if dragOffset.height >= -dragThreshold, value.translation.height < -dragThreshold {
+                            Haptics.shared.impact(style: .medium)
+                        }
+
+                        withAnimation(.interactiveSpring) {
+                            dragOffset = value.translation
+                        }
+                    }
+                    .onEnded { value in
+                        if value.translation.height < -dragThreshold {
+                            showEditSheet = true
+                        }
+                        let velocity = (-value.translation.height < maxDragOffset) ? min(max(-20, value.velocity.height), 0) : 0
+                        withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
+                            dragOffset = .zero
+                        }
+                    }
+                )
+        }
+    }
+
     var body: some View {
         GeometryReader { geoOuter in
             ZStack(alignment: .center) {
                 if case let .loaded(url) = viewModel.download {
-                    WebView(url: url, topPadding: $topPadding, bottomPadding: $bottomPadding, load: {
-                        webviewOpacity = 1.0
-                    })
-                    .equatable()
-                    .ignoresSafeArea(edges: [.top, .bottom])
-                    .opacity(webviewOpacity)
+                    WebView(url: url,
+                            topPadding: $topPadding,
+                            bottomPadding: $bottomPadding,
+                            safeAreaInsets: $safeAreaInsets,
+                            load: {
+                                webviewOpacity = 1.0
+                            },
+                            onTap: {
+                                if showPropertyBar {
+                                    bottomPadding = 0
+                                }
+                                showPropertyBar.toggle()
+                            })
+                            .equatable()
+                            .ignoresSafeArea(edges: [.top, .bottom])
+                            .opacity(webviewOpacity)
                 } else {
                     // Somewhat hacky way to center progress view + not push it by swiping up
                     LoadingView(viewModel: viewModel)
@@ -301,60 +376,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
             .animation(.default, value: viewModel.download)
             .animation(.default, value: webviewOpacity)
-            .safeAreaInset(edge: .bottom) {
-                DocumentPropertyView(viewModel: viewModel,
-                                     showEditSheet: $showEditSheet,
-                                     dragOffset: $dragOffset)
-                    .padding(.bottom, bottomSpacing)
-                    .overlay(alignment: .bottom) {
-                        Image(systemName: "chevron.compact.up")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 12, height: 12)
-                            .opacity(chevronOpacity)
-                            .padding(15)
-                            .offset(y: -1)
-                            .scaleEffect(chevronSize, anchor: .center)
-                            .offset(y: -10 - chevronOffset)
-                    }
-
-                    .background(
-                        GeometryReader { geo in
-                            UnevenRoundedRectangle(topLeadingRadius: 20,
-                                                   bottomLeadingRadius: 0,
-                                                   bottomTrailingRadius: 0,
-                                                   topTrailingRadius: 20,
-                                                   style: .continuous)
-                                .fill(.thinMaterial)
-                                .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
-                                .task {
-                                    bottomInsetFrame = geo.frame(in: .global)
-                                }
-                        }
-                    )
-
-                    .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
-                        .onChanged { value in
-                            Haptics.shared.prepare()
-                            if dragOffset.height >= -dragThreshold, value.translation.height < -dragThreshold {
-                                Haptics.shared.impact(style: .medium)
-                            }
-
-                            withAnimation(.interactiveSpring) {
-                                dragOffset = value.translation
-                            }
-                        }
-                        .onEnded { value in
-                            if value.translation.height < -dragThreshold {
-                                showEditSheet = true
-                            }
-                            let velocity = (-value.translation.height < maxDragOffset) ? min(max(-20, value.velocity.height), 0) : 0
-                            withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
-                                dragOffset = .zero
-                            }
-                        }
-                    )
-            }
+            .safeAreaInset(edge: .bottom) { documentPropertyBar }
 
             .ignoresSafeArea(edges: [.bottom])
         }
@@ -400,8 +422,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             }
         }
 
-        .onChange(of: bottomInsetFrame) { updateWebkitInset() }
-        .onChange(of: safeAreaInsets) { updateWebkitInset() }
         .sheet(isPresented: $showEditSheet) {
             editDetent = defaultEditDetent
         } content: {
@@ -419,6 +439,7 @@ private struct WebView: View, Equatable {
     let url: URL
     @Binding var topPadding: CGFloat
     @Binding var bottomPadding: CGFloat
+    @Binding var safeAreaInsets: EdgeInsets
     let load: (() -> Void)?
     let onTap: (() -> Void)?
 
@@ -434,6 +455,7 @@ private struct WebView: View, Equatable {
         WebViewInternal(url: url,
                         topPadding: $topPadding,
                         bottomPadding: $bottomPadding,
+                        safeAreaInsets: $safeAreaInsets,
                         tapTask: $tapTask,
                         load: load)
             .onTapGesture {
@@ -451,6 +473,8 @@ private struct WebViewInternal: UIViewRepresentable {
     let url: URL
     @Binding var topPadding: CGFloat
     @Binding var bottomPadding: CGFloat
+    @Binding var safeAreaInsets: EdgeInsets
+
     @Binding var tapTask: Task<Void, Never>?
 
     let load: (() -> Void)?
@@ -499,9 +523,12 @@ private struct WebViewInternal: UIViewRepresentable {
     @MainActor
     private func updateInsets(_ webView: WKWebView) {
 //        print("Update bottom: \(bottomPadding)")
-        let insets = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
-        webView.scrollView.contentInset = insets
-        webView.scrollView.verticalScrollIndicatorInsets = insets
+        let contentInsets = UIEdgeInsets(top: topPadding, left: 0, bottom: bottomPadding, right: 0)
+        webView.scrollView.contentInset = contentInsets
+        let scrollInsets = UIEdgeInsets(top: topPadding, left: 0,
+                                        bottom: max(0, bottomPadding - safeAreaInsets.bottom),
+                                        right: 0)
+        webView.scrollView.verticalScrollIndicatorInsets = scrollInsets
     }
 
     func updateUIView(_: WKWebView, context: Context) {
