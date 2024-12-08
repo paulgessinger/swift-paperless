@@ -503,7 +503,6 @@ private struct WebView: View, Equatable {
             .simultaneousGesture(
                 TapGesture(count: 2).onEnded {
                     tapTask?.cancel()
-                    print("DOUBLE TAP")
                 }.exclusively(before: TapGesture(count: 1).onEnded {
                     tapTask?.cancel()
                     tapTask = Task {
