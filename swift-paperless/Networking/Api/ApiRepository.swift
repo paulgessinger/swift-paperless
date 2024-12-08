@@ -575,7 +575,7 @@ extension ApiRepository: Repository {
 
     nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest {
-        Logger.api.notice("Get thumbnail for document \(document.id, privacy: .public)")
+        Logger.api.debug("Get thumbnail for document \(document.id, privacy: .public)")
         let url = try url(Endpoint.thumbnail(documentId: document.id))
 
         var request = URLRequest(url: url)
