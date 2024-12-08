@@ -255,6 +255,7 @@ private struct StageSelection: View {
                 if el == stage {
                     el.label
                         .foregroundStyle(Color.accentColor)
+                        .matchedGeometryEffect(id: el, in: animation)
                         .padding(.bottom, 3)
                         .background(alignment: .bottom) {
                             RoundedRectangle(cornerRadius: 5)
@@ -269,6 +270,7 @@ private struct StageSelection: View {
                                 stage = el
                             }
                         }
+                        .matchedGeometryEffect(id: el, in: animation)
                 }
             }
         }
@@ -278,7 +280,7 @@ private struct StageSelection: View {
         .padding(.vertical, 10)
         .padding(.horizontal)
         .background(
-            RoundedRectangle(cornerRadius: 15, style: .circular)
+            Capsule()
                 .fill(.thickMaterial)
                 .stroke(.tertiary)
                 .shadow(color: Color(white: 0.2, opacity: 0.1), radius: 10)
