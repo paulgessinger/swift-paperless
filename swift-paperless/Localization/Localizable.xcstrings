@@ -6888,6 +6888,17 @@
         }
       }
     },
+    "showDocumentPropertiesLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show document properties"
+          }
+        }
+      }
+    },
     "sortBy" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -393,6 +393,29 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             .safeAreaInset(edge: .bottom) { documentPropertyBar }
 
             .ignoresSafeArea(edges: [.bottom])
+
+            .overlay(alignment: .bottomLeading) {
+                VStack {
+                    if !showPropertyBar {
+                        Button {
+                            showPropertyBar = true
+                        } label: {
+                            Label(localized: .localizable(.showDocumentPropertiesLabel),
+                                  systemImage: "chevron.up.circle.fill")
+                                .labelStyle(.iconOnly)
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.primary, .tertiary)
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 10)
+                        .tint(.primary)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                }
+                .animation(.spring(duration: 0.2), value: showPropertyBar)
+            }
         }
 
         .task {
