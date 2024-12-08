@@ -481,7 +481,7 @@ private struct WebView: View, Equatable {
     let onTap: (() -> Void)?
 
     @State private var tapTask: Task<Void, Never>?
-    private let tapDelay = Duration.seconds(0.1)
+    private let tapDelay = Duration.seconds(0.05)
 
     nonisolated
     static func == (lhs: WebView, rhs: WebView) -> Bool {
@@ -495,14 +495,20 @@ private struct WebView: View, Equatable {
                         safeAreaInsets: $safeAreaInsets,
                         tapTask: $tapTask,
                         load: load)
-            .onTapGesture {
-                tapTask = Task {
-                    do {
-                        try await Task.sleep(for: tapDelay)
-                        onTap?()
-                    } catch {}
-                }
-            }
+            .simultaneousGesture(
+                TapGesture(count: 2).onEnded {
+                    tapTask?.cancel()
+                    print("DOUBLE TAP")
+                }.exclusively(before: TapGesture(count: 1).onEnded {
+                    tapTask?.cancel()
+                    tapTask = Task {
+                        do {
+                            try await Task.sleep(for: tapDelay)
+                            onTap?()
+                        } catch {}
+                    }
+                })
+            )
     }
 }
 
