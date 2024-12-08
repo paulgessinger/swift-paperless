@@ -12,7 +12,8 @@ import SwiftUI
 import UIKit
 import WebKit
 
-private let dragThreshold = 40.0
+private let dragThresholdUp = 40.0
+private let dragThresholdDown = 40.0
 private let maxDragOffset = 100.0
 
 private struct Aspect: View {
@@ -74,6 +75,7 @@ private struct DocumentPropertyView: View {
                             .font(.title2)
                     }
                 }
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .offset(y: secondaryOffset)
 
@@ -180,6 +182,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @State private var showEditSheet = false
     @State private var dragOffset = CGSize.zero
+    @State private var dragging = false
 
     @State private var safeAreaInsets = EdgeInsets()
     @State private var shareLinkUrl: URL?
@@ -206,28 +209,31 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     private var chevronSize: CGFloat {
         let y = max(-dragOffset.height, 0)
-        return min(1 + y / dragThreshold, 2)
+        return min(1 + y / dragThresholdUp, 2)
     }
 
     private var chevronOpacity: CGFloat {
         let y = max(-dragOffset.height, 0)
-        return min(1, y / (dragThreshold * 0.9))
+        return min(1, y / (dragThresholdUp * 0.9))
     }
 
     private var chevronOffset: CGFloat {
         let y = max(-dragOffset.height, 0)
         let m = safeAreaInsets.bottom - 20
         let o = 20.0
-        return min(o, o * y / dragThreshold) + m
+        return min(o, o * y / dragThresholdUp) + m
     }
 
     private var bottomSpacing: CGFloat {
         let bottom = safeAreaInsets.bottom + 20
-        return max(min(bottom - dragOffset.height, maxDragOffset), bottom)
+        return max(min(bottom - dragOffset.height, maxDragOffset), bottom - 100)
     }
 
     func updateWebkitInset() {
+        guard !dragging else { return }
+
         bottomPadding = UIScreen.main.bounds.size.height - bottomInsetFrame.maxY + bottomInsetFrame.height // + safeAreaInsets.bottom
+//        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
     }
 
     init(store: DocumentStore, document: Document, navPath _: Binding<NavigationPath>?) {
@@ -284,65 +290,76 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @ViewBuilder
     private var documentPropertyBar: some View {
-        if showPropertyBar {
-            DocumentPropertyView(viewModel: viewModel,
-                                 showEditSheet: $showEditSheet,
-                                 dragOffset: $dragOffset)
-                .padding(.bottom, bottomSpacing)
-                .overlay(alignment: .bottom) {
-                    Image(systemName: "chevron.compact.up")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 12)
-                        .opacity(chevronOpacity)
-                        .padding(15)
-                        .offset(y: -1)
-                        .scaleEffect(chevronSize, anchor: .center)
-                        .offset(y: -10 - chevronOffset)
+        DocumentPropertyView(viewModel: viewModel,
+                             showEditSheet: $showEditSheet,
+                             dragOffset: $dragOffset)
+            .padding(.bottom, bottomSpacing)
+            .overlay(alignment: .bottom) {
+                Image(systemName: "chevron.compact.up")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 12, height: 12)
+                    .opacity(chevronOpacity)
+                    .padding(15)
+                    .offset(y: -1)
+                    .scaleEffect(chevronSize, anchor: .center)
+                    .offset(y: -10 - chevronOffset)
+            }
+
+//        .frame(maxHeight: showPropertyBar ? .infinity : 20)
+            .frame(height: showPropertyBar ? nil : 0, alignment: .top)
+            .clipped()
+
+            .background(
+                GeometryReader { geo in
+                    UnevenRoundedRectangle(topLeadingRadius: 20,
+                                           bottomLeadingRadius: 0,
+                                           bottomTrailingRadius: 0,
+                                           topTrailingRadius: 20,
+                                           style: .continuous)
+                        .fill(.thinMaterial)
+                        .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
+                        .task {
+                            bottomInsetFrame = geo.frame(in: .global)
+                            updateWebkitInset()
+                        }
+                        .onChange(of: geo.size) {
+                            bottomInsetFrame = geo.frame(in: .global)
+                            updateWebkitInset()
+                        }
                 }
+            )
 
-                .background(
-                    GeometryReader { geo in
-                        UnevenRoundedRectangle(topLeadingRadius: 20,
-                                               bottomLeadingRadius: 0,
-                                               bottomTrailingRadius: 0,
-                                               topTrailingRadius: 20,
-                                               style: .continuous)
-                            .fill(.thinMaterial)
-                            .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
-                            .task {
-                                bottomInsetFrame = geo.frame(in: .global)
-                                updateWebkitInset()
-                            }
-                            .onChange(of: geo.size) {
-                                bottomInsetFrame = geo.frame(in: .global)
-                                updateWebkitInset()
-                            }
-                    }
-                )
+            .animation(.spring(duration: 0.2), value: showPropertyBar)
 
-                .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
-                    .onChanged { value in
-                        Haptics.shared.prepare()
-                        if dragOffset.height >= -dragThreshold, value.translation.height < -dragThreshold {
-                            Haptics.shared.impact(style: .medium)
-                        }
+            .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
+                .onChanged { value in
+                    dragging = true
+                    Haptics.shared.prepare()
+                    if dragOffset.height >= -dragThresholdUp, value.translation.height < -dragThresholdUp {
+                        Haptics.shared.impact(style: .medium)
+                    }
 
-                        withAnimation(.interactiveSpring) {
-                            dragOffset = value.translation
-                        }
+                    withAnimation(.interactiveSpring) {
+                        dragOffset = value.translation
                     }
-                    .onEnded { value in
-                        if value.translation.height < -dragThreshold {
-                            showEditSheet = true
-                        }
-                        let velocity = (-value.translation.height < maxDragOffset) ? min(max(-20, value.velocity.height), 0) : 0
-                        withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
-                            dragOffset = .zero
-                        }
+                }
+                .onEnded { value in
+                    if value.translation.height < -dragThresholdUp {
+                        showEditSheet = true
                     }
-                )
-        }
+
+                    if value.translation.height > dragThresholdDown {
+                        showPropertyBar = false
+                    }
+
+                    let velocity = (-value.translation.height < maxDragOffset) ? min(max(-20, value.velocity.height), 0) : 0
+                    withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
+                        dragOffset = .zero
+                    }
+                    dragging = false
+                }
+            )
     }
 
     var body: some View {
@@ -357,9 +374,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                 webviewOpacity = 1.0
                             },
                             onTap: {
-                                if showPropertyBar {
-                                    bottomPadding = 0
-                                }
                                 showPropertyBar.toggle()
                             })
                             .equatable()
