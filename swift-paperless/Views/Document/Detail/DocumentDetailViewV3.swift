@@ -425,6 +425,10 @@ private struct WebView: View, Equatable {
     @Binding var topPadding: CGFloat
     @Binding var bottomPadding: CGFloat
     let load: (() -> Void)?
+    let onTap: (() -> Void)?
+
+    @State private var tapTask: Task<Void, Never>?
+    private let tapDelay = Duration.seconds(0.1)
 
     nonisolated
     static func == (lhs: WebView, rhs: WebView) -> Bool {
@@ -435,7 +439,16 @@ private struct WebView: View, Equatable {
         WebViewInternal(url: url,
                         topPadding: $topPadding,
                         bottomPadding: $bottomPadding,
+                        tapTask: $tapTask,
                         load: load)
+            .onTapGesture {
+                tapTask = Task {
+                    do {
+                        try await Task.sleep(for: tapDelay)
+                        onTap?()
+                    } catch {}
+                }
+            }
     }
 }
 
@@ -443,15 +456,16 @@ private struct WebViewInternal: UIViewRepresentable {
     let url: URL
     @Binding var topPadding: CGFloat
     @Binding var bottomPadding: CGFloat
+    @Binding var tapTask: Task<Void, Never>?
 
     let load: (() -> Void)?
 
+    @MainActor
     class Coordinator: NSObject, WKNavigationDelegate {
         var parent: WebViewInternal
 
         let webView: WKWebView
 
-        @MainActor
         init(_ parent: WebViewInternal) {
             self.parent = parent
             webView = WKWebView()
@@ -461,6 +475,17 @@ private struct WebViewInternal: UIViewRepresentable {
 
         func webView(_: WKWebView, didFinish _: WKNavigation!) {
             parent.load?()
+        }
+
+        func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+            if navigationAction.navigationType == WKNavigationType.linkActivated {
+                if let url = navigationAction.request.url {
+                    await UIApplication.shared.open(url)
+                }
+                parent.tapTask?.cancel()
+                return .cancel
+            }
+            return .allow
         }
     }
 
