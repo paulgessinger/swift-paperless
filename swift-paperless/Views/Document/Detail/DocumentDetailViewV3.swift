@@ -406,7 +406,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundStyle(.primary)
-                                .padding(5)
+                                .padding(10)
                                 .background(
                                     Circle()
                                         .fill(.background.secondary)
