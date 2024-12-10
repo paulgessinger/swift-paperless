@@ -401,7 +401,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                             showPropertyBar = true
                         } label: {
                             Label(localized: .localizable(.showDocumentPropertiesLabel),
-                                  systemImage: "chevron.up")
+                                  systemImage: "inset.filled.bottomthird.square")
                                 .labelStyle(.iconOnly)
                                 .font(.title)
                                 .fontWeight(.bold)
