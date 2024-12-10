@@ -501,22 +501,30 @@ private struct WebView: View, Equatable {
                         tapTask: $tapTask,
                         load: load)
             .simultaneousGesture(
-                TapGesture()
-                    .onEnded {
-                        if let tapTask {
-                            // tap task already pending, we tapped shortly before and a likely now double tapping
-                            tapTask.cancel()
-                        } else {
-                            // no task pending, we're ok to schedule the tap
-                            tapTask = Task {
-                                do {
-                                    try await Task.sleep(for: tapDelay)
-                                    onTap?()
-                                } catch {}
-                                tapTask = nil
+                ExclusiveGesture(
+                    LongPressGesture()
+                        .onEnded { finished in
+                            print("we long pressed \(finished)")
+                        },
+
+                    TapGesture()
+                        .onEnded {
+                            print("tap")
+                            if let tapTask {
+                                // tap task already pending, we tapped shortly before and a likely now double tapping
+                                tapTask.cancel()
+                            } else {
+                                // no task pending, we're ok to schedule the tap
+                                tapTask = Task {
+                                    do {
+                                        try await Task.sleep(for: tapDelay)
+                                        onTap?()
+                                    } catch {}
+                                    tapTask = nil
+                                }
                             }
                         }
-                    }
+                )
             )
     }
 }
