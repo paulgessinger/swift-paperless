@@ -188,8 +188,8 @@ class LoginViewModel {
                 case 406:
                     loginState = .error(.insufficientApiVersion)
                 default:
-                    loginState = .error(.invalidResponse(statusCode: statusCode,
-                                                         details: decodeDetails(data)))
+                    loginState = .error(.unexpectedStatusCode(statusCode: statusCode,
+                                                              details: decodeDetails(data)))
                 }
                 return
             }
@@ -294,7 +294,7 @@ class LoginViewModel {
                 if statusCode == 400 {
                     throw LoginError.invalidLogin
                 }
-                throw LoginError.invalidResponse(statusCode: statusCode, details: decodeDetails(data))
+                throw LoginError.unexpectedStatusCode(statusCode: statusCode, details: decodeDetails(data))
             }
 
             struct TokenResponse: Decodable {

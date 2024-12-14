@@ -10,11 +10,12 @@ import SwiftUI
 
 enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: String?)
+
     case invalidLogin
 
     case invalidToken
 
-    case invalidResponse(statusCode: Int, details: String?)
+    case unexpectedStatusCode(statusCode: Int, details: String?)
 
     case badRequest
 
@@ -73,7 +74,7 @@ extension LoginError {
         case .invalidToken:
             return loc(.login(.errorTokenInvalid))
 
-        case let .invalidResponse(statusCode, details):
+        case let .unexpectedStatusCode(statusCode, details):
             var msg = String(localized: .login(.errorInvalidResponse(statusCode)))
             if let details {
                 msg = "\(msg) Details: \(details)"
@@ -121,7 +122,7 @@ extension LoginError {
     @ViewBuilder
     var presentation: some View {
         switch self {
-        case let .invalidResponse(code, details):
+        case let .unexpectedStatusCode(code, details):
             Text(.login(.errorInvalidResponse(code)))
                 .bold()
 
@@ -204,8 +205,8 @@ private struct TestLocalizedError: LocalizedError {
     VStack(alignment: .leading, spacing: 10) {
         h(.init(invalidUrl: TestLocalizedError()))
         h(.invalidLogin)
-        h(.invalidResponse(statusCode: 123, details: "Detail string"))
-        h(.invalidResponse(statusCode: 123, details: nil))
+        h(.unexpectedStatusCode(statusCode: 123, details: "Detail string"))
+        h(.unexpectedStatusCode(statusCode: 123, details: nil))
         h(.insufficientPermissions)
         h(.init(certificate: TestError()))
         h(.init(certificate: TestLocalizedError()))
