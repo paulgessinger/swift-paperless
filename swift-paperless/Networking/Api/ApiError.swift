@@ -15,7 +15,7 @@ enum RequestError: Error {
     case invalidResponse
 
     // A status code that was not expected was returned
-    case unexpectedStatusCode(code: Int)
+    case unexpectedStatusCode(code: Int, detail: String?)
 
     // A 403 status code was returned (and was not expected)
     case forbidden(detail: String)
@@ -38,7 +38,7 @@ extension RequestError: DisplayableError {
             .localizable(.requestErrorInvalidRequest)
         case .invalidResponse:
             .localizable(.requestErrorInvalidResponse)
-        case let .unexpectedStatusCode(code):
+        case let .unexpectedStatusCode(code, _):
             .localizable(.requestErrorUnexpectedStatusCode(code))
         case let .forbidden(detail):
             .localizable(.requestErrorForbidden(detail))
