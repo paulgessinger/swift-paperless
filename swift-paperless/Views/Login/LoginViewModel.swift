@@ -72,7 +72,6 @@ class LoginViewModel {
     var url: String = ""
 
     var checkUrlTask: Task<Void, Never>?
-    var loadingSpinnerTimeout: Task<Void, Never>?
 
     enum Scheme: String {
         case http
@@ -98,30 +97,18 @@ class LoginViewModel {
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
         checkUrlTask = Task {
+            loginState = .checking
             if !immediate {
                 do {
-                    try await Task.sleep(for: .seconds(0.25))
-                } catch {}
-                guard !Task.isCancelled else {
+                    try await Task.sleep(for: .seconds(1.0))
+                } catch {
                     return
                 }
-            }
-
-            // Arm loading spinner: if loading takes more than half a second, show spinner
-            loadingSpinnerTimeout = Task {
-                try? await Task.sleep(for: .seconds(0.5))
-                guard !Task.isCancelled else {
-                    return
-                }
-                loginState = .checking
             }
 
             if !url.isEmpty {
                 await checkUrl(string: fullUrl)
             }
-
-            // Avoid showing the spinner
-            loadingSpinnerTimeout?.cancel()
         }
 
         if url.isEmpty {
