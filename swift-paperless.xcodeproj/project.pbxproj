@@ -236,6 +236,7 @@
 		7AAC44542CA0A37D003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44532CA0A37D003E6A3A /* Common */; };
 		7AAC44562CA0A38B003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44552CA0A38B003E6A3A /* Common */; };
 		7AAC44582CA0A391003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44572CA0A391003E6A3A /* Common */; };
+		7AAC4F182D0F795F004FA4B5 /* DocumentedError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEACFB22D0DD3D600EC2744 /* DocumentedError.swift */; };
 		7AB057712AA481A700ABA6B1 /* LibrariesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057702AA481A700ABA6B1 /* LibrariesView.swift */; };
 		7AB057772AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */; };
 		7AB057782AA4832C00ABA6B1 /* SettingsManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB057762AA4832C00ABA6B1 /* SettingsManagers.swift */; };
@@ -1392,6 +1393,7 @@
 				7A495D232BD958A300A2E5CF /* View+alert.swift in Sources */,
 				7AEACF4F2D0DC8EF00EC2744 /* PresentableError.swift in Sources */,
 				7A63415C2B150AD700535FE5 /* TaskModel.swift in Sources */,
+				7AAC4F182D0F795F004FA4B5 /* DocumentedError.swift in Sources */,
 				7ACB386729D9EA91006CE102 /* FilterRuleTest.swift in Sources */,
 				7A0772DF2BEA2DF800DCC8CD /* ErrorParsingTest.swift in Sources */,
 				7A7057102C43C29200287AEF /* Keychain.swift in Sources */,
