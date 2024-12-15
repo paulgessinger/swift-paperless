@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 31.07.2024.
 //
 
+import Common
 import Foundation
 import os
 import SwiftUI
@@ -199,12 +200,13 @@ class LoginViewModel {
         } catch is CancellationError {
             // do nothing
             return
-        } catch let error as NSError where error.code == -999 {
+        } catch let error as NSError where error.domain == NSURLErrorDomain && NSURLError(rawValue: error.code) == NSURLError.cancelled {
             // also a cancellation error
+            return
         } catch let error as NSError where LoginViewModel.isLocalNetworkDenied(error) {
             Logger.shared.error("Unable to connect to API: local network access denied")
             loginState = .error(.localNetworkDenied)
-        } catch let error as NSError where error.code == -1202 {
+        } catch let error as NSError where error.domain == NSURLErrorDomain && NSURLError.value(error.code, inCategory: .ssl) {
             Logger.shared.error("Certificate error when connecting to the API: \(error)")
             loginState = .error(.init(certificate: error))
         } catch {
