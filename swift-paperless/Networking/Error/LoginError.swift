@@ -23,13 +23,6 @@ enum LoginError: DisplayableError, Equatable {
     case request(_: RequestError)
 
     init(other error: any Error) { self = .other(string(for: error)) }
-//    init(invalidUrl error: any Error) {
-//        if let error = error as? any LocalizedError {
-//            self = .invalidUrl(string(for: error))
-//        } else {
-//            self = .invalidUrl(nil)
-//        }
-//    }
 
     init(certificate error: any Error) { self = .request(.certificate(detail: string(for: error))) }
 }

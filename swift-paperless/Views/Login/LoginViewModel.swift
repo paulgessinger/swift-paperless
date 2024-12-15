@@ -178,20 +178,18 @@ class LoginViewModel {
 
             let (data, response) = try await session.getData(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse else {
+            guard let httpResponse = response as? HTTPURLResponse, let status = httpResponse.status else {
                 loginState = .error(.request(.invalidResponse))
                 return
             }
 
-            let statusCode = httpResponse.statusCode
-
-            guard statusCode == 200 else {
-                Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
-                switch statusCode {
-                case 406:
+            guard status == .ok else {
+                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue)")
+                switch status {
+                case .notAcceptable:
                     loginState = .error(.request(.unsupportedVersion))
                 default:
-                    loginState = .error(.request(.unexpectedStatusCode(code: statusCode,
+                    loginState = .error(.request(.unexpectedStatusCode(code: status,
                                                                        detail: decodeDetails(data))))
                 }
                 return
@@ -308,23 +306,21 @@ class LoginViewModel {
             throw LoginError(other: error)
         }
 
-        guard let response = response as? HTTPURLResponse else {
+        guard let response = response as? HTTPURLResponse, let status = response.status else {
             throw LoginError.request(.invalidResponse)
         }
 
-        let statusCode = response.statusCode
-
-        switch statusCode {
-        case 200:
+        switch status {
+        case .ok:
             break
-        case 400:
+        case .badRequest:
             let details = decodeDetails(data)
             Logger.shared.error("Credentials were rejected when requesting token: \(details, privacy: .public)")
             throw LoginError.invalidLogin
         default:
             let details = decodeDetails(data)
-            Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), detail: \(details, privacy: .public)")
-            throw LoginError.request(.unexpectedStatusCode(code: statusCode,
+            Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details, privacy: .public)")
+            throw LoginError.request(.unexpectedStatusCode(code: status,
                                                            detail: decodeDetails(data)))
         }
 

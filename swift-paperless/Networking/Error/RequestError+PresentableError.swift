@@ -17,7 +17,7 @@ extension RequestError: PresentableError {
                 .bold()
 
         case let .unexpectedStatusCode(code, details):
-            Text(.localizable(.requestErrorUnexpectedStatusCode(code)))
+            Text(.localizable(.requestErrorUnexpectedStatusCode(code.description)))
                 .bold()
             if let details {
                 Text(.localizable(.requestErrorDetailLabel)) + Text(": ")

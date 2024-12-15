@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.05.2024.
 //
 
+import Common
 import Foundation
 
 enum RequestError: Error, Equatable {
@@ -15,7 +16,7 @@ enum RequestError: Error, Equatable {
     case invalidResponse
 
     // A status code that was not expected was returned
-    case unexpectedStatusCode(code: Int, detail: String?)
+    case unexpectedStatusCode(code: HTTPStatusCode, detail: String?)
 
     // A 403 status code was returned (and was not expected)
     case forbidden(detail: String?)
@@ -48,7 +49,7 @@ extension RequestError: DisplayableError {
             raw = String(localized: .localizable(.requestErrorInvalidResponse))
 
         case let .unexpectedStatusCode(code, _):
-            raw = String(localized: .localizable(.requestErrorUnexpectedStatusCode(code)))
+            raw = String(localized: .localizable(.requestErrorUnexpectedStatusCode(code.description)))
 
         case let .forbidden(detail):
             var s = String(localized: .localizable(.requestErrorForbidden))

@@ -174,7 +174,7 @@ actor ApiRepository {
         }
     }
 
-    private func fetchData(for request: URLRequest, code: Int = 200,
+    private func fetchData(for request: URLRequest, code: HTTPStatusCode = .ok,
                            progress: (@Sendable (Double) -> Void)? = nil) async throws -> (Data, URLResponse)
     {
         guard let url = request.url else {
@@ -201,23 +201,25 @@ actor ApiRepository {
 
         Logger.api.trace("Checking response of url \(sanitizedUrl, privacy: .public)")
 
-        guard let response = response as? HTTPURLResponse else {
+        guard let response = response as? HTTPURLResponse, let status = response.status else {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             Logger.api.error("Response to \(sanitizedUrl, privacy: .public) is not HTTPURLResponse, body: \(body, privacy: .public)")
             throw RequestError.invalidResponse
         }
 
-        if response.statusCode != code {
+        if status != code {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             Logger.api.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
-            if response.statusCode == 403 {
+
+            switch status {
+            case .forbidden:
                 throw RequestError.forbidden(detail: decodeDetail(data))
-            } else if response.statusCode == 401 {
+            case .unauthorized:
                 throw RequestError.unauthorized(detail: decodeDetail(data))
-            } else if response.statusCode == 406 {
+            case .notAcceptable:
                 throw RequestError.unsupportedVersion
-            } else {
-                throw RequestError.unexpectedStatusCode(code: response.statusCode, detail: decodeDetail(data))
+            default:
+                throw RequestError.unexpectedStatusCode(code: status, detail: decodeDetail(data))
             }
         }
 
@@ -226,7 +228,7 @@ actor ApiRepository {
         return (data, response)
     }
 
-    func fetchData<T: Decodable>(for request: URLRequest, as type: T.Type, code: Int = 200) async throws -> T {
+    func fetchData<T: Decodable>(for request: URLRequest, as type: T.Type, code: HTTPStatusCode = .ok) async throws -> T {
         let (data, _) = try await fetchData(for: request, code: code)
         do {
             return try decoder.decode(type, from: data)
@@ -268,7 +270,7 @@ actor ApiRepository {
         request.httpBody = body
 
         do {
-            let (data, _) = try await fetchData(for: request, code: 201)
+            let (data, _) = try await fetchData(for: request, code: .created)
 
             let created = try decoder.decode(returns, from: data)
             return created
@@ -299,7 +301,7 @@ actor ApiRepository {
         request.httpMethod = "DELETE"
 
         do {
-            _ = try await fetchData(for: request, code: 204)
+            _ = try await fetchData(for: request, code: .noContent)
         } catch {
             Logger.api.error("Api delete \(Element.self) failed: \(error)")
             throw error
@@ -336,8 +338,8 @@ extension ApiRepository: Repository {
         mp.addTo(request: &request)
 
         do {
-            let _ = try await fetchData(for: request, code: 200)
-        } catch let RequestError.unexpectedStatusCode(code, _) where code == 413 {
+            let _ = try await fetchData(for: request, code: .ok)
+        } catch let RequestError.unexpectedStatusCode(code, _) where code == .contentTooLarge {
             throw DocumentCreateError.tooLarge
         } catch {
             Logger.api.error("Error uploading document: \(error)")
@@ -362,7 +364,7 @@ extension ApiRepository: Repository {
         do {
             let request = try request(.download(documentId: documentID))
 
-            let (data, response) = try await fetchData(for: request, code: 200,
+            let (data, response) = try await fetchData(for: request, code: .ok,
                                                        progress: progress)
 
             guard let suggestedFilename = response.suggestedFilename else {
@@ -482,7 +484,7 @@ extension ApiRepository: Repository {
         request.httpBody = body
 
         do {
-            return try await fetchData(for: request, as: [Document.Note].self, code: 200)
+            return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
         } catch {
             Logger.shared.error("Error creating note on document \(documentId): \(error)")
             throw error
@@ -494,7 +496,7 @@ extension ApiRepository: Repository {
         request.httpMethod = "DELETE"
 
         do {
-            return try await fetchData(for: request, as: [Document.Note].self, code: 200)
+            return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
         } catch {
             Logger.shared.error("Error deleting note on document \(documentId): \(error)")
             throw error
@@ -674,7 +676,7 @@ extension ApiRepository: Repository {
         request.httpBody = body
 
         do {
-            _ = try await fetchData(for: request, code: 200)
+            _ = try await fetchData(for: request, code: .ok)
         } catch {
             Logger.api.error("Api acknowledge failed: \(error)")
             throw error
