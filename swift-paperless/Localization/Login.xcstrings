@@ -851,6 +851,12 @@
     "errorInsufficientPermissionsDetail" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The user associated with these credentials has insufficient permissions. A minimum set of permissions is required to be able to use the app!"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",

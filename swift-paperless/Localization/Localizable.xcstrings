@@ -149,14 +149,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ressourcen \"%@\" er ikke tilgængelig med de godkendte legitimationsoplysninger. I mange tilfælde er der tale om en rettighedsfejl. \n\nServeren rapporterede: %@"
+            "state" : "translated",
+            "value" : "Ressourcen \"%@\" er ikke tilgængelig med de godkendte legitimationsoplysninger. I mange tilfælde er der tale om en rettighedsfejl."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Die Ressource \"%@\" ist mit dem konfigurierten Zugang nicht zugänglich. In den meisten Fällen liegt das an fehlenden Berechtigungen.\n\nDer Server hat folgenden Fehler gemeldet: %@"
+            "state" : "translated",
+            "value" : "Die Ressource \"%@\" ist mit dem konfigurierten Zugang nicht zugänglich. In den meisten Fällen liegt das an fehlenden Berechtigungen. "
           }
         },
         "en" : {
@@ -167,26 +167,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La ressource \"%@\" n'est pas accessible avec les identifiants authentifiés. Dans la plupart des cas, il s'agit d'une erreur de permission.\n\nLe backend a signalé : %@"
+            "state" : "translated",
+            "value" : "La ressource \"%@\" n'est pas accessible avec les identifiants authentifiés. Dans la plupart des cas, il s'agit d'une erreur de permission. "
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "La risorsa \"%@\" non è accessibile utilizzando le credenziali autenticate. In molti casi si tratta di un errore di autorizzazione. \n\nIl backend ha segnalato: %@"
+            "state" : "translated",
+            "value" : "La risorsa \"%@\" non è accessibile utilizzando le credenziali autenticate. In molti casi si tratta di un errore di autorizzazione. "
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "De bron \"%@\" is niet toegankelijk met de geauthenticeerde credentialen. In veel gevallen is dit een toestemmingsfout. \n\nHet backend rapporteerde: %@"
+            "state" : "translated",
+            "value" : "De bron \"%@\" is niet toegankelijk met de geauthenticeerde credentialen. In veel gevallen is dit een toestemmingsfout. "
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Żądany \"%@\" nie jest dostępny przy użyciu uwierzytelnionych poświadczeń. W wielu przypadkach jest to błąd uprawnień.\n\nSerwer odpowiedział: %@"
+            "state" : "translated",
+            "value" : "Żądany \"%@\" nie jest dostępny przy użyciu uwierzytelnionych poświadczeń. W wielu przypadkach jest to błąd uprawnień. "
           }
         }
       }
@@ -5338,6 +5338,12 @@
     "requestErrorCertificate" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Certificate error while connecting"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5426,10 +5432,16 @@
     "requestErrorForbidden" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The request was denied due to missing permissions"
+          }
+        },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Der mit diesen Anmeldeinformationen verbundene Benutzer hat unzureichende Berechtigungen"
+            "state" : "translated",
+            "value" : "Die Anfrage wurde aufgrund fehlender Berechtigungen abgelehnt"
           }
         },
         "en" : {
@@ -5438,9 +5450,15 @@
             "value" : "The request was denied due to missing permissions"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The request was denied due to missing permissions"
+          }
+        },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "L'utente associato a queste credenziali non ha autorizzazioni sufficienti"
           }
         },
@@ -5452,7 +5470,7 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia"
           }
         }
@@ -5605,13 +5623,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "value" : "The request was rejected due to invalid credentials"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Die Anfrage wurde aufgrund ungültiger Anmeldedaten abgelehnt: %@"
+            "state" : "translated",
+            "value" : "Die Anfrage wurde aufgrund ungültiger Anmeldedaten abgelehnt"
           }
         },
         "en" : {
@@ -5623,25 +5641,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "value" : "The request was rejected due to invalid credentials"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "value" : "The request was rejected due to invalid credentials"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Het verzoek is geweigerd vanwege ongeldige aanmeldgegevens: %@"
+            "state" : "translated",
+            "value" : "Het verzoek is geweigerd vanwege ongeldige aanmeldgegevens"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "value" : "The request was rejected due to invalid credentials"
           }
         }
       }
@@ -5649,6 +5667,12 @@
     "requestErrorUnexpectedStatusCode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5661,10 +5685,28 @@
             "value" : "The response to a request had an unexpected status %@"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het antwoord op een verzoek had een onverwachte status %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@"
           }
         }
       }
@@ -5675,13 +5717,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Das Backend unterstützt nicht die minimale API-Version %u, die diese Version der App benötigt."
+            "state" : "translated",
+            "value" : "Das Backend unterstützt nicht die minimale API-Version `%u`, die diese Version der App benötigt."
           }
         },
         "en" : {
@@ -5693,25 +5735,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         }
       }
