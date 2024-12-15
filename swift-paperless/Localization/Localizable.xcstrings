@@ -149,43 +149,43 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Ressourcen \"%@\" er ikke tilgængelig med de godkendte legitimationsoplysninger. I mange tilfælde er der tale om en rettighedsfejl. \n\nServeren rapporterede: %@"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Die Ressource \"%@\" ist mit dem konfigurierten Zugang nicht zugänglich. In den meisten Fällen liegt das an fehlenden Berechtigungen.\n\nDer Server hat folgenden Fehler gemeldet: %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. \n\nThe backend reported: %@"
+            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. "
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La ressource \"%@\" n'est pas accessible avec les identifiants authentifiés. Dans la plupart des cas, il s'agit d'une erreur de permission.\n\nLe backend a signalé : %@"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "La risorsa \"%@\" non è accessibile utilizzando le credenziali autenticate. In molti casi si tratta di un errore di autorizzazione. \n\nIl backend ha segnalato: %@"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De bron \"%@\" is niet toegankelijk met de geauthenticeerde credentialen. In veel gevallen is dit een toestemmingsfout. \n\nHet backend rapporteerde: %@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Żądany \"%@\" nie jest dostępny przy użyciu uwierzytelnionych poświadczeń. W wielu przypadkach jest to błąd uprawnień.\n\nSerwer odpowiedział: %@"
           }
         }
@@ -5335,49 +5335,125 @@
         }
       }
     },
-    "requestErrorForbidden" : {
+    "requestErrorCertificate" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions: %@"
-          }
-        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Anfrage wurde aufgrund fehlender Berechtigungen abgelehnt: %@"
+            "value" : "Zertifikatsfehler bei der Verbindung"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The request was denied due to missing permissions: %@"
+            "value" : "Certificate error while connecting"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions: %@"
+            "state" : "translated",
+            "value" : "Erreur de certificat lors de la connexion"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions: %@"
+            "state" : "translated",
+            "value" : "Errore di certificazione durante la connessione"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het verzoek is geweigerd vanwege ontbrekende toestemmingen: %@"
+            "value" : "Certificaat fout tijdens het verbinden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions: %@"
+            "state" : "translated",
+            "value" : "Błąd certyfikatu podczas łączenia"
+          }
+        }
+      }
+    },
+    "requestErrorDetailLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detaljer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dettagli"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szczegóły"
+          }
+        }
+      }
+    },
+    "requestErrorForbidden" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der mit diesen Anmeldeinformationen verbundene Benutzer hat unzureichende Berechtigungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request was denied due to missing permissions"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "L'utente associato a queste credenziali non ha autorizzazioni sufficienti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het verzoek is geweigerd vanwege ontbrekende toestemmingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia"
           }
         }
       }
@@ -5476,6 +5552,53 @@
         }
       }
     },
+    "requestErrorLocalNetworkDenied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appen er ikke blevet tildelt adgang til det lokale netværk."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der App wurde kein Zugriff auf das lokale Netzwerk gewährt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app has not been granted access to the local network."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'application n'a pas été autorisée à accéder au réseau local."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All'applicazione non è stato concesso l'accesso alla rete locale."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De app heeft geen toegang gekregen tot het lokale netwerk."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej."
+          }
+        }
+      }
+    },
     "requestErrorUnauthorized" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5487,14 +5610,14 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Die Anfrage wurde aufgrund ungültiger Anmeldedaten abgelehnt: %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The request was rejected due to invalid credentials: %@"
+            "value" : "The request was rejected due to invalid credentials"
           }
         },
         "fr" : {
@@ -5511,7 +5634,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Het verzoek is geweigerd vanwege ongeldige aanmeldgegevens: %@"
           }
         },
@@ -5581,14 +5704,14 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Das Backend unterstützt nicht die minimale API-Version %u, die diese Version der App benötigt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires."
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
           }
         },
         "fr" : {

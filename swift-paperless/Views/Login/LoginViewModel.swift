@@ -127,7 +127,7 @@ class LoginViewModel {
         }
     }
 
-    func decodeDetails(_ body: Data) -> String? {
+    func decodeDetails(_ body: Data) -> String {
         struct Response: Decodable {
             var detail: String
         }
@@ -139,7 +139,7 @@ class LoginViewModel {
             return detail
         }
 
-        return nil
+        return "no details"
     }
 
     func checkUrl(string value: String) async {
@@ -152,11 +152,11 @@ class LoginViewModel {
 
         let apiUrl: URL
 
-        do {
+        do throws(UrlError) {
             (_, apiUrl) = try deriveUrl(string: value)
         } catch {
             Logger.shared.error("Cannot derive URL: \(value) -> \(error)")
-            loginState = .error(.init(invalidUrl: error))
+            loginState = .error(.invalidUrl(error))
             return
         }
 
@@ -178,18 +178,21 @@ class LoginViewModel {
 
             let (data, response) = try await session.getData(for: request)
 
-            let httpResponse = response as? HTTPURLResponse
+            guard let httpResponse = response as? HTTPURLResponse else {
+                loginState = .error(.request(.invalidResponse))
+                return
+            }
 
-            if let statusCode = httpResponse?.statusCode, statusCode != 200 {
+            let statusCode = httpResponse.statusCode
+
+            guard statusCode == 200 else {
                 Logger.shared.warning("Checking API status was not 200 but \(statusCode)")
                 switch statusCode {
-                case 400:
-                    loginState = .error(.badRequest)
                 case 406:
-                    loginState = .error(.insufficientApiVersion)
+                    loginState = .error(.request(.unsupportedVersion))
                 default:
-                    loginState = .error(.unexpectedStatusCode(statusCode: statusCode,
-                                                              details: decodeDetails(data)))
+                    loginState = .error(.request(.unexpectedStatusCode(code: statusCode,
+                                                                       detail: decodeDetails(data))))
                 }
                 return
             }
@@ -204,10 +207,13 @@ class LoginViewModel {
             // also a cancellation error
             return
         } catch let error as NSError where LoginViewModel.isLocalNetworkDenied(error) {
+            // @TODO: Handle these cases in a `RequestError` factory or init func
+            // @TODO: Check error domain in this case
             Logger.shared.error("Unable to connect to API: local network access denied")
-            loginState = .error(.localNetworkDenied)
+            loginState = .error(.request(.localNetworkDenied))
         } catch let error as NSError where error.domain == NSURLErrorDomain && NSURLError.value(error.code, inCategory: .ssl) {
             Logger.shared.error("Certificate error when connecting to the API: \(error)")
+            // @TODO: Check error string conversion
             loginState = .error(.init(certificate: error))
         } catch {
             Logger.shared.error("Checking API error: \(error)")
@@ -216,6 +222,7 @@ class LoginViewModel {
         }
     }
 
+    // @TODO: Centralize this to RequestError
     nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
         Logger.shared.debug("Checking API NSError: \(error)")
@@ -263,47 +270,72 @@ class LoginViewModel {
         return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
     }
 
-    private func fetchToken(url tokenUrl: URL) async throws -> String {
+    private func fetchToken(url tokenUrl: URL) async throws(LoginError) -> String {
         let username = username
         let password = password
         Logger.shared.info("Fetching token from username \(username) and password \(password)")
 
+        struct TokenRequest: Encodable {
+            var username: String
+            var password: String
+        }
+
+        let json: Data
         do {
-            struct TokenRequest: Encodable {
-                var username: String
-                var password: String
-            }
+            json = try JSONEncoder().encode(TokenRequest(username: username,
+                                                         password: password))
+        } catch {
+            // This should never ever happen
+            Logger.shared.error("Unable to encode TokenRequest, this is an internal error")
+            fatalError("Unable to encode TokenRequest, this is an internal error")
+        }
 
-            let json = try JSONEncoder().encode(TokenRequest(username: username,
-                                                             password: password))
+        var request = URLRequest(url: tokenUrl)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = json
+        extraHeaders.apply(toRequest: &request)
 
-            var request = URLRequest(url: tokenUrl)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = json
-            extraHeaders.apply(toRequest: &request)
+        Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
 
-            Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
+        let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identity: selectedIdentity), delegateQueue: nil)
 
-            let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identity: selectedIdentity), delegateQueue: nil)
-            let (data, response) = try await session.getData(for: request)
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.getData(for: request)
+        } catch {
+            throw LoginError(other: error)
+        }
 
-            if statusCode != 200 {
-                Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), \(String(decoding: data, as: UTF8.self))")
-                if statusCode == 400 {
-                    throw LoginError.invalidLogin
-                }
-                throw LoginError.unexpectedStatusCode(statusCode: statusCode, details: decodeDetails(data))
-            }
+        guard let response = response as? HTTPURLResponse else {
+            throw LoginError.request(.invalidResponse)
+        }
 
-            struct TokenResponse: Decodable {
-                var token: String
-            }
+        let statusCode = response.statusCode
 
+        switch statusCode {
+        case 200:
+            break
+        case 400:
+            Logger.shared.error("Credentials were rejected when requesting token: \(decodeDetails(data), privacy: .public)")
+            throw LoginError.invalidLogin
+        default:
+            Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), detail: \(decodeDetails(data), privacy: .public)")
+            throw LoginError.request(.unexpectedStatusCode(code: statusCode,
+                                                           detail: decodeDetails(data)))
+        }
+
+        struct TokenResponse: Decodable {
+            var token: String
+        }
+
+        do {
             let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-
             return tokenResponse.token
+        } catch {
+            Logger.shared.error("Token response could not be decoded, even though status code was good")
+            throw LoginError.request(.invalidResponse)
         }
     }
 
@@ -314,83 +346,85 @@ class LoginViewModel {
 
         let baseUrl: URL
         let tokenUrl: URL
-        do {
+        do throws(UrlError) {
             (baseUrl, tokenUrl) = try deriveUrl(string: fullUrl, suffix: "token")
         } catch {
             // In principle this is checked before, so should not fail here
             Logger.shared.warning("Error making URL for logging in (url: \(fullUrl)) \(error)")
-            throw LoginError(invalidUrl: error)
+            throw .invalidUrl(error)
         }
 
+        let connection: Connection
+
+        let makeConnection = { [self] (token: String?) -> Connection in
+            Connection(url: baseUrl,
+                       token: token,
+                       extraHeaders: extraHeaders,
+                       identityName: selectedIdentity?.name)
+        }
+
+        switch credentialMode {
+        case .usernameAndPassword:
+            Logger.shared.info("Credential mode is username and password")
+
+            let token = try await fetchToken(url: tokenUrl)
+            Logger.shared.info("Username and password are valid, have token")
+            connection = makeConnection(token)
+
+        case .token:
+            connection = makeConnection(token)
+
+        case .none:
+            connection = makeConnection(nil)
+        }
+
+        Logger.shared.debug("Building repository instance with connection for testing")
+        let repository = await ApiRepository(connection: connection)
+
+        Logger.shared.info("Requesting current user")
+        let currentUser: User
         do {
-            let connection: Connection
-
-            let makeConnection = { [self] (token: String?) -> Connection in
-                Connection(url: baseUrl,
-                           token: token,
-                           extraHeaders: extraHeaders,
-                           identityName: selectedIdentity?.name)
-            }
-
-            switch credentialMode {
-            case .usernameAndPassword:
-                Logger.shared.info("Credential mode is username and password")
-
-                let token = try await fetchToken(url: tokenUrl)
-                Logger.shared.info("Username and password are valid, have token")
-                connection = makeConnection(token)
-
-            case .token:
-                connection = makeConnection(token)
-
-            case .none:
-                connection = makeConnection(nil)
-            }
-
-            Logger.shared.debug("Building repository instance with connection for testing")
-            let repository = await ApiRepository(connection: connection)
-
-            Logger.shared.info("Requesting current user")
-            let currentUser = try await repository.currentUser()
-
-            Logger.shared.info("Have user: \(currentUser.username)")
-
-            if currentUser.username != username {
-                Logger.api.warning("Username from login and logged in username not the same")
-            }
-
-            let stored = StoredConnection(url: baseUrl,
-                                          extraHeaders: extraHeaders,
-                                          user: currentUser,
-                                          identity: selectedIdentity?.name)
-            if let token = connection.token {
-                Logger.api.info("Have token for connection, storing")
-                try stored.setToken(token)
-            } else {
-                Logger.api.info("No token for connection, leaving nil")
-            }
-
-            Logger.api.info("Credentials are valid")
-
-            credentialState = .valid
-
-            return stored
-
+            currentUser = try await repository.currentUser()
         } catch RequestError.forbidden {
             Logger.shared.error("User logging in does not have permissions to get permissions")
-            credentialState = .error(.insufficientPermissions)
-            throw .insufficientPermissions
+            credentialState = .error(.request(.unsupportedVersion))
+            throw .request(.unsupportedVersion)
         } catch RequestError.unauthorized {
             credentialState = .error(.invalidToken)
             throw .invalidLogin
-        } catch let error as LoginError {
-            Logger.shared.error("Error during login with url \(error)")
-            credentialState = .error(error)
-            throw error
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             credentialState = .error(.init(other: error))
             throw LoginError(other: error)
         }
+
+        Logger.shared.info("Have user: \(currentUser.username)")
+
+        if currentUser.username != username {
+            Logger.api.warning("Username from login and logged in username not the same")
+        }
+
+        let stored = StoredConnection(url: baseUrl,
+                                      extraHeaders: extraHeaders,
+                                      user: currentUser,
+                                      identity: selectedIdentity?.name)
+        if let token = connection.token {
+            Logger.api.info("Have token for connection, storing")
+            do throws(Keychain.KeychainError) {
+                try stored.setToken(token)
+            } catch {
+                Logger.shared.error("Error during login with url (failed to store token in keychain: \(error)")
+                credentialState = .error(.init(other: error))
+                throw LoginError(other: error)
+            }
+        } else {
+            Logger.api.info("No token for connection, leaving nil")
+        }
+
+        Logger.api.info("Credentials are valid")
+
+        credentialState = .valid
+
+        return stored
     }
 }

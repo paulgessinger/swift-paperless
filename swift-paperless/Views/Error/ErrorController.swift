@@ -3,10 +3,9 @@ import Foundation
 import os
 import SwiftUI
 
-protocol DisplayableError: Error {
+protocol DisplayableError: Error, DocumentedError {
     var message: String { get }
     var details: String? { get }
-    var documentationLink: URL? { get }
 }
 
 extension DisplayableError {

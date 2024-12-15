@@ -94,12 +94,12 @@ struct LoginViewV1: LoginViewProtocol {
 
             let baseUrl: URL
             let tokenUrl: URL
-            do {
+            do throws(UrlError) {
                 (baseUrl, tokenUrl) = try deriveUrl(string: url.text, suffix: "token")
             } catch {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)) \(error)")
-                viewModel.loginState = .error(.init(invalidUrl: error))
-                throw LoginError(invalidUrl: error)
+                viewModel.loginState = .error(.invalidUrl(error))
+                throw LoginError.invalidUrl(error)
             }
 
             var request = URLRequest(url: tokenUrl)
@@ -160,10 +160,9 @@ struct LoginViewV1: LoginViewProtocol {
                 dismiss()
             }
 
-        } catch RequestError.forbidden {
-            Logger.shared.error("User logging in does not have permissions to get permissions")
-            viewModel.loginState = .error(.insufficientPermissions)
-            throw LoginError.insufficientPermissions
+        } catch let error as RequestError {
+            viewModel.loginState = .error(.request(error))
+            throw LoginError.request(error)
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             viewModel.loginState = .error(.init(other: error))
@@ -176,10 +175,13 @@ struct LoginViewV1: LoginViewProtocol {
             loginOngoing = true
             defer { loginOngoing = false }
 
-            guard let (baseUrl, _) = try? deriveUrl(string: url.text, suffix: "token") else {
+            let baseUrl: URL
+            do throws(UrlError) {
+                (baseUrl, _) = try deriveUrl(string: url.text, suffix: "token")
+            } catch {
                 Logger.shared.warning("Error making URL for logging in (url: \(url.text)")
-                viewModel.loginState = .error(.invalidUrl(nil))
-                throw LoginError.invalidUrl(nil)
+                viewModel.loginState = .error(.invalidUrl(error))
+                throw LoginError.invalidUrl(error)
             }
 
             Logger.shared.info("Trying to load data from api ")
@@ -204,10 +206,9 @@ struct LoginViewV1: LoginViewProtocol {
             Haptics.shared.notification(.success)
             showSuccessOverlay = true
 
-        } catch RequestError.forbidden {
-            Logger.shared.error("User logging in does not have permissions to get permissions")
-            viewModel.loginState = .error(.insufficientPermissions)
-            throw LoginError.insufficientPermissions
+        } catch let error as RequestError {
+            viewModel.loginState = .error(.request(error))
+            throw LoginError.request(error)
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             viewModel.loginState = .error(.init(other: error))
