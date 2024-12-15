@@ -13,6 +13,7 @@ struct DocumentationLinks {
     static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev")!
 
     static let localNetworkDenied = Self.baseUrl.appending(path: "common-issues/local-network-denied")
+
     static let forbidden = Self.baseUrl.appending(path: "common-issues/forbidden")
 
     static let insufficientPermissions = Self.baseUrl.appending(path: "common-issues/minimum-permissions")

@@ -63,7 +63,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
         }
     }
 
-    func setToken(_ token: String) throws {
+    func setToken(_ token: String) throws(Keychain.KeychainError) {
         try Keychain.saveOrUpdate(service: url.absoluteString,
                                   account: user.username,
                                   value: token.data(using: .utf8)!)

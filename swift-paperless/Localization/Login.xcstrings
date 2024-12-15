@@ -848,285 +848,43 @@
         }
       }
     },
-    "errorCertificate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate error while connecting"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikatsfehler bei der Verbindung"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificate error while connecting"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erreur de certificat lors de la connexion"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Errore di certificazione durante la connessione"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificaat fout tijdens het verbinden"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Błąd certyfikatu podczas łączenia"
-          }
-        }
-      }
-    },
-    "errorInsufficientApiVersion" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Backend unterstützt nicht die minimale API-Version %u, die diese Version der App benötigt. Klicke [hier](%@) für mehr Informationen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version %u that this version of the app requires. See [here](%@) for more information."
-          }
-        }
-      }
-    },
-    "errorInsufficientPermissions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The user associated with these credentials has insufficient permissions"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der mit diesen Anmeldeinformationen verbundene Benutzer hat unzureichende Berechtigungen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The user associated with these credentials has insufficient permissions"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'utilisateur associé à ces informations d'identification ne dispose pas d'autorisations suffisantes"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'utente associato a queste credenziali non ha autorizzazioni sufficienti"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De gebruiker die geassocieerd is met deze inloggegevens heeft onvoldoende rechten"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia"
-          }
-        }
-      }
-    },
     "errorInsufficientPermissionsDetail" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "A minimum set of permissions is required to be able to use the app!"
-          }
-        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein Minimum an Berechtigungen wird benötigt, um die App nutzen zu können!"
+            "value" : "Der mit diesen Anmeldeinformationen verbundene Benutzer hat unzureichende Berechtigungen. Ein Minimum an Berechtigungen wird benötigt, um die App nutzen zu können!"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A minimum set of permissions is required to be able to use the app!"
+            "value" : "The user associated with these credentials has insufficient permissions. A minimum set of permissions is required to be able to use the app!"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un minimum d'autorisations est requis pour pouvoir utiliser l'application !"
+            "value" : "L'utilisateur associé à ces informations d'identification ne dispose pas d'autorisations suffisantes. Un minimum d'autorisations est requis pour pouvoir utiliser l'application !"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per poter utilizzare l'app è necessario un set minimo di autorizzazioni!"
+            "value" : "L'utente associato a queste credenziali non ha autorizzazioni sufficienti. Per poter utilizzare l'app è necessario un set minimo di autorizzazioni!"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Een minimum aan toestemmingen is vereist om de app te kunnen gebruiken!"
+            "value" : "De gebruiker die geassocieerd is met deze inloggegevens heeft onvoldoende rechten. Een minimum aan toestemmingen is vereist om de app te kunnen gebruiken!"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Do korzystania z aplikacji wymagany jest minimalny zestaw uprawnień!"
-          }
-        }
-      }
-    },
-    "errorInvalidResponse" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmodning til returnerede ugyldig svarkode: %d*."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anfrage hat einen ungültigen Antwort-Code zurückgegeben: %d*"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request returned invalid response code *%d*."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La requête a renvoyé un code de réponse invalide : *%d*."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La richiesta ha restituito un codice di risposta non valido *%d*."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verzoek gaf ongeldige responscode *%d*."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Żądanie zwróciło nieprawidłowy kod odpowiedzi *%d*."
-          }
-        }
-      }
-    },
-    "errorLocalNetworkDenied" : {
-      "comment" : "Variable gets replaced with documentation URL",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appen er ikke blevet tildelt adgang til det lokale netværk."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der App wurde kein Zugriff auf das lokale Netzwerk gewährt."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app has not been granted access to the local network."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'application n'a pas été autorisée à accéder au réseau local."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All'applicazione non è stato concesso l'accesso alla rete locale."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De app heeft geen toegang gekregen tot het lokale netwerk."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej."
+            "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia. Do korzystania z aplikacji wymagany jest minimalny zestaw uprawnień!"
           }
         }
       }

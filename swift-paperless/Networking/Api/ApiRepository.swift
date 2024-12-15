@@ -161,7 +161,7 @@ actor ApiRepository {
         #endif
     }
 
-    private func decodeDetails(_ data: Data) -> String {
+    private func decodeDetail(_ data: Data) -> String {
         struct Details: Decodable {
             var detail: String
         }
@@ -211,13 +211,13 @@ actor ApiRepository {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
             Logger.api.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
             if response.statusCode == 403 {
-                throw RequestError.forbidden(detail: decodeDetails(data))
+                throw RequestError.forbidden(detail: decodeDetail(data))
             } else if response.statusCode == 401 {
-                throw RequestError.unauthorized(detail: decodeDetails(data))
+                throw RequestError.unauthorized(detail: decodeDetail(data))
             } else if response.statusCode == 406 {
                 throw RequestError.unsupportedVersion
             } else {
-                throw RequestError.unexpectedStatusCode(code: response.statusCode)
+                throw RequestError.unexpectedStatusCode(code: response.statusCode, detail: decodeDetail(data))
             }
         }
 
@@ -337,7 +337,7 @@ extension ApiRepository: Repository {
 
         do {
             let _ = try await fetchData(for: request, code: 200)
-        } catch let RequestError.unexpectedStatusCode(code) where code == 413 {
+        } catch let RequestError.unexpectedStatusCode(code, _) where code == 413 {
             throw DocumentCreateError.tooLarge
         } catch {
             Logger.api.error("Error uploading document: \(error)")
