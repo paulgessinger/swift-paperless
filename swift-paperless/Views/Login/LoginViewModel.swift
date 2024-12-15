@@ -318,10 +318,12 @@ class LoginViewModel {
         case 200:
             break
         case 400:
-            Logger.shared.error("Credentials were rejected when requesting token: \(decodeDetails(data), privacy: .public)")
+            let details = decodeDetails(data)
+            Logger.shared.error("Credentials were rejected when requesting token: \(details, privacy: .public)")
             throw LoginError.invalidLogin
         default:
-            Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), detail: \(decodeDetails(data), privacy: .public)")
+            let details = decodeDetails(data)
+            Logger.shared.error("Token request response was not 200 but \(statusCode, privacy: .public), detail: \(details, privacy: .public)")
             throw LoginError.request(.unexpectedStatusCode(code: statusCode,
                                                            detail: decodeDetails(data)))
         }
