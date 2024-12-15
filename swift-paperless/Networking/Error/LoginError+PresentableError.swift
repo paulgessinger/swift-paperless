@@ -51,12 +51,12 @@ extension LoginError: PresentableError {
         // In some cases: augment the generale request error message
 
         switch error {
-        case let .unexpectedStatusCode(code, _) where code == 403:
+        case let .unexpectedStatusCode(code, _) where code == .forbidden:
             // In the login scenario, a 403 can indicate that the user has auto login configured.
             error.presentation
             Text(.login(.autologinHint))
 
-        case let .unexpectedStatusCode(code, _) where code == 400:
+        case let .unexpectedStatusCode(code, _) where code == .badRequest:
             // Bad request can indicate mTLS issues
             error.presentation
             Text(.login(.errorBadRequest))
@@ -95,10 +95,10 @@ private struct TestLocalizedError: LocalizedError {
         VStack(alignment: .leading, spacing: 10) {
             h(.invalidUrl(.emptyHost))
             h(.invalidLogin)
-            h(.request(.unexpectedStatusCode(code: 123, detail: "Detail string")))
-            h(.request(.unexpectedStatusCode(code: 123, detail: nil)))
-            h(.request(.unexpectedStatusCode(code: 403, detail: nil)))
-            h(.request(.unexpectedStatusCode(code: 400, detail: nil)))
+            h(.request(.unexpectedStatusCode(code: .imATeapot, detail: "Detail string")))
+            h(.request(.unexpectedStatusCode(code: .imATeapot, detail: nil)))
+            h(.request(.unexpectedStatusCode(code: .forbidden, detail: nil)))
+            h(.request(.unexpectedStatusCode(code: .badRequest, detail: nil)))
             h(.request(.forbidden(detail: "Blubb")))
             h(.init(certificate: TestError()))
             h(.init(certificate: TestLocalizedError()))

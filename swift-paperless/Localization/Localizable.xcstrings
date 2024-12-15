@@ -5649,46 +5649,22 @@
     "requestErrorUnexpectedStatusCode" : {
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status code %d"
-          }
-        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Antwort auf eine Anfrage hatte einen unerwarteten Statuscode %d"
+            "value" : "Die Antwort auf eine Anfrage hatte einen unerwarteten Status %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The response to a request had an unexpected status code %d"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status code %d"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status code %d"
+            "value" : "The response to a request had an unexpected status %@"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het antwoord op een verzoek had een onverwachte statuscode %d"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status code %d"
+            "value" : "Het antwoord op een verzoek had een onverwachte status %@"
           }
         }
       }
