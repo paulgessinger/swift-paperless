@@ -2138,7 +2138,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show  the document properties in the bottom of the document detail screen by default."
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
           }
         }
       }
