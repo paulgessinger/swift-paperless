@@ -34,7 +34,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.0"
+          xcode-version: "16.1"
 
       - name: Install dependencies
         run: bundle install
@@ -51,7 +51,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.0"
+          xcode-version: "16.1"
 
       - name: Install dependencies
         run: bundle install
