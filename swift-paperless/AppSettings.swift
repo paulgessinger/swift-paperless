@@ -19,6 +19,8 @@ enum SettingsKeys: String {
 
     case editingUserInterfaceExperiment
     case loginScreenV2
+
+    case showDocumentDetailPropertyBar
 }
 
 extension PublishedUserDefaultsBacked {
@@ -96,6 +98,9 @@ class AppSettings: ObservableObject {
 
     @PublishedUserDefaultsBacked(.loginScreenV2)
     var loginScreenV2: Bool = true
+
+    @PublishedUserDefaultsBacked(.showDocumentDetailPropertyBar)
+    var showDocumentDetailPropertyBar: Bool = true
 
     // @TODO: Refactor this with the new Common.Version
     struct Version: CustomStringConvertible, Codable, Equatable {

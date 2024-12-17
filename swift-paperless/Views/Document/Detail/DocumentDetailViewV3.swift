@@ -192,7 +192,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @State private var editDetent: PresentationDetent = .medium
 
-    @State private var showPropertyBar = true
+    @State private var showPropertyBar = AppSettings.shared.showDocumentDetailPropertyBar
 
     private var defaultEditDetent: PresentationDetent {
         .large
@@ -373,12 +373,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                             load: {
                                 webviewOpacity = 1.0
                             },
-                            onTap: {
-                                showPropertyBar.toggle()
-                            })
-                            .equatable()
-                            .ignoresSafeArea(edges: [.top, .bottom])
-                            .opacity(webviewOpacity)
+                            onTap: nil)
+                        .equatable()
+                        .ignoresSafeArea(edges: [.top, .bottom])
+                        .opacity(webviewOpacity)
                 } else {
                     // Somewhat hacky way to center progress view + not push it by swiping up
                     LoadingView(viewModel: viewModel)
