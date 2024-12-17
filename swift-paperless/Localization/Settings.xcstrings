@@ -2121,6 +2121,28 @@
         }
       }
     },
+    "showDocumentDetailPropertyBar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show document property bar"
+          }
+        }
+      }
+    },
+    "showDocumentDetailPropertyBarDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show  the document properties in the bottom of the document detail screen by default."
+          }
+        }
+      }
+    },
     "title" : {
       "comment" : "Details menu",
       "extractionState" : "manual",

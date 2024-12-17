@@ -29,6 +29,13 @@ struct PreferencesView: View {
                 Text(.settings(.documentDeleteConfirmationLabelDescription))
             }
 
+            Section {
+                Toggle(String(localized: .settings(.showDocumentDetailPropertyBar)),
+                       isOn: $appSettings.showDocumentDetailPropertyBar)
+            } footer: {
+                Text(.settings(.showDocumentDetailPropertyBarDescription))
+            }
+
             if let biometricName = BiometricLockManager.biometricName {
                 Section {
                     Toggle(String(localized: .settings(.useBiometricLock(biometricName))),

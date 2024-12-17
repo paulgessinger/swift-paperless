@@ -192,7 +192,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     @State private var editDetent: PresentationDetent = .medium
 
-    @State private var showPropertyBar = true
+    @State private var showPropertyBar = AppSettings.shared.showDocumentDetailPropertyBar
 
     private var defaultEditDetent: PresentationDetent {
         .large
