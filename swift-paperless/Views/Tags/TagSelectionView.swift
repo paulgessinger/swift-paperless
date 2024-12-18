@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.03.23.
 //
 
+import DataModel
 import SwiftUI
 
 // - MARK: TagFilterView
