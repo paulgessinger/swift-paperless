@@ -384,6 +384,15 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
 
 // MARK: - Previews
 
+private struct BindingHelper<Element, Content: View>: View {
+    @State var element: Element
+    @ViewBuilder var content: (Binding<Element>) -> Content
+
+    var body: some View {
+        content($element)
+    }
+}
+
 struct TagFilterView_Previews: PreviewProvider {
     @StateObject static var store = DocumentStore(repository: PreviewRepository())
 

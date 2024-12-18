@@ -26,32 +26,9 @@
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7AC40CB62D134ED1003F68B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */; };
 		7AC40CB82D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */; };
-		7AC40D282D134ED1003F68B1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C992D134ED1003F68B1 /* AppSettings.swift */; };
-		7AC40D292D134ED1003F68B1 /* AttachmentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C9B2D134ED1003F68B1 /* AttachmentManager.swift */; };
-		7AC40D2C2D134ED1003F68B1 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C9E2D134ED1003F68B1 /* DocumentLoader.swift */; };
-		7AC40D2D2D134ED1003F68B1 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C9F2D134ED1003F68B1 /* DocumentStore.swift */; };
-		7AC40D2E2D134ED1003F68B1 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA02D134ED1003F68B1 /* FilterModel.swift */; };
-		7AC40D2F2D134ED1003F68B1 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA12D134ED1003F68B1 /* FilterRule.swift */; };
-		7AC40D302D134ED1003F68B1 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA22D134ED1003F68B1 /* FilterRuleType.swift */; };
-		7AC40D312D134ED1003F68B1 /* IdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA32D134ED1003F68B1 /* IdentityManager.swift */; };
-		7AC40D322D134ED1003F68B1 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA52D134ED1003F68B1 /* Keychain.swift */; };
-		7AC40D332D134ED1003F68B1 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA62D134ED1003F68B1 /* PreviewRepository.swift */; };
 		7AC40D402D134ED1003F68B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */; };
 		7AC40D422D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */; };
-		7AC40DB22D134ED1003F68B1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C992D134ED1003F68B1 /* AppSettings.swift */; };
-		7AC40DB62D134ED1003F68B1 /* DocumentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C9E2D134ED1003F68B1 /* DocumentLoader.swift */; };
-		7AC40DB72D134ED1003F68B1 /* DocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C9F2D134ED1003F68B1 /* DocumentStore.swift */; };
-		7AC40DB82D134ED1003F68B1 /* FilterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA02D134ED1003F68B1 /* FilterModel.swift */; };
-		7AC40DB92D134ED1003F68B1 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA12D134ED1003F68B1 /* FilterRule.swift */; };
-		7AC40DBA2D134ED1003F68B1 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA22D134ED1003F68B1 /* FilterRuleType.swift */; };
-		7AC40DBB2D134ED1003F68B1 /* IdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA32D134ED1003F68B1 /* IdentityManager.swift */; };
-		7AC40DBC2D134ED1003F68B1 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA52D134ED1003F68B1 /* Keychain.swift */; };
-		7AC40DBD2D134ED1003F68B1 /* PreviewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA62D134ED1003F68B1 /* PreviewRepository.swift */; };
 		7AC40DBE2D134ED1003F68B1 /* swift_paperlessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA92D134ED1003F68B1 /* swift_paperlessApp.swift */; };
-		7AC40DCD2D134ED1003F68B1 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA52D134ED1003F68B1 /* Keychain.swift */; };
-		7AC40DD12D134ED1003F68B1 /* FilterRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA12D134ED1003F68B1 /* FilterRule.swift */; };
-		7AC40DD22D134ED1003F68B1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40C992D134ED1003F68B1 /* AppSettings.swift */; };
-		7AC40DE12D134ED1003F68B1 /* FilterRuleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AC40CA22D134ED1003F68B1 /* FilterRuleType.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,18 +69,8 @@
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7AAC44512CA0A31E003E6A3A /* Common */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Common; sourceTree = "<group>"; };
-		7AC40C992D134ED1003F68B1 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		7AC40C9B2D134ED1003F68B1 /* AttachmentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentManager.swift; sourceTree = "<group>"; };
-		7AC40C9E2D134ED1003F68B1 /* DocumentLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentLoader.swift; sourceTree = "<group>"; };
-		7AC40C9F2D134ED1003F68B1 /* DocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentStore.swift; sourceTree = "<group>"; };
-		7AC40CA02D134ED1003F68B1 /* FilterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterModel.swift; sourceTree = "<group>"; };
-		7AC40CA12D134ED1003F68B1 /* FilterRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRule.swift; sourceTree = "<group>"; };
-		7AC40CA22D134ED1003F68B1 /* FilterRuleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterRuleType.swift; sourceTree = "<group>"; };
-		7AC40CA32D134ED1003F68B1 /* IdentityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityManager.swift; sourceTree = "<group>"; };
 		7AC40CA42D134ED1003F68B1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7AC40CA52D134ED1003F68B1 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
-		7AC40CA62D134ED1003F68B1 /* PreviewRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewRepository.swift; sourceTree = "<group>"; };
 		7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7AC40CA82D134ED1003F68B1 /* swift_paperless.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_paperless.entitlements; sourceTree = "<group>"; };
 		7AC40CA92D134ED1003F68B1 /* swift_paperlessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_paperlessApp.swift; sourceTree = "<group>"; };
@@ -135,12 +102,14 @@
 		7AC40FA52D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppSettings.swift,
 				Binding.swift,
 				Bundle.swift,
 				DocumentationLinks.swift,
 				EquatableNoop.swift,
 				Gather.swift,
 				Haptics.swift,
+				Keychain.swift,
 				Logging.swift,
 				"View+alert.swift",
 			);
@@ -241,6 +210,13 @@
 			);
 			target = 7A5482C5299AD56E00D5061E /* swift-paperlessUITests */;
 		};
+		7AC411792D134FE7003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AttachmentManager.swift,
+			);
+			target = 7A5482AA299AD56C00D5061E /* swift-paperless */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -254,6 +230,7 @@
 		7AC40F622D134EDE003F68B1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FAC2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
 		7AC40F7B2D134EDE003F68B1 /* Networking */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FAB2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Networking; sourceTree = "<group>"; };
 		7AC411772D134F85003F68B1 /* Document */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Document; sourceTree = "<group>"; };
+		7AC411782D134FDB003F68B1 /* ViewModel */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC411792D134FE7003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ViewModel; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -338,6 +315,7 @@
 		7AC40CAA2D134ED1003F68B1 /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
+				7AC411782D134FDB003F68B1 /* ViewModel */,
 				7AC411772D134F85003F68B1 /* Document */,
 				7AC40DFC2D134EDE003F68B1 /* Localization */,
 				7AC40E272D134EDE003F68B1 /* Model */,
@@ -345,18 +323,8 @@
 				7AC40F622D134EDE003F68B1 /* Preview Content */,
 				7AC40E672D134EDE003F68B1 /* Utilities */,
 				7AC40EDE2D134EDE003F68B1 /* Views */,
-				7AC40C992D134ED1003F68B1 /* AppSettings.swift */,
 				7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */,
-				7AC40C9B2D134ED1003F68B1 /* AttachmentManager.swift */,
-				7AC40C9E2D134ED1003F68B1 /* DocumentLoader.swift */,
-				7AC40C9F2D134ED1003F68B1 /* DocumentStore.swift */,
-				7AC40CA02D134ED1003F68B1 /* FilterModel.swift */,
-				7AC40CA12D134ED1003F68B1 /* FilterRule.swift */,
-				7AC40CA22D134ED1003F68B1 /* FilterRuleType.swift */,
-				7AC40CA32D134ED1003F68B1 /* IdentityManager.swift */,
 				7AC40CA42D134ED1003F68B1 /* Info.plist */,
-				7AC40CA52D134ED1003F68B1 /* Keychain.swift */,
-				7AC40CA62D134ED1003F68B1 /* PreviewRepository.swift */,
 				7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */,
 				7AC40CA82D134ED1003F68B1 /* swift_paperless.entitlements */,
 				7AC40CA92D134ED1003F68B1 /* swift_paperlessApp.swift */,
@@ -388,6 +356,7 @@
 				7AC40EDE2D134EDE003F68B1 /* Views */,
 				7AC40F7B2D134EDE003F68B1 /* Networking */,
 				7AC411772D134F85003F68B1 /* Document */,
+				7AC411782D134FDB003F68B1 /* ViewModel */,
 			);
 			name = ShareExtension;
 			packageProductDependencies = (
@@ -424,6 +393,7 @@
 				7AC40F622D134EDE003F68B1 /* Preview Content */,
 				7AC40F7B2D134EDE003F68B1 /* Networking */,
 				7AC411772D134F85003F68B1 /* Document */,
+				7AC411782D134FDB003F68B1 /* ViewModel */,
 			);
 			name = "swift-paperless";
 			packageProductDependencies = (
@@ -588,16 +558,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AC40D282D134ED1003F68B1 /* AppSettings.swift in Sources */,
-				7AC40D292D134ED1003F68B1 /* AttachmentManager.swift in Sources */,
-				7AC40D2C2D134ED1003F68B1 /* DocumentLoader.swift in Sources */,
-				7AC40D2D2D134ED1003F68B1 /* DocumentStore.swift in Sources */,
-				7AC40D2E2D134ED1003F68B1 /* FilterModel.swift in Sources */,
-				7AC40D2F2D134ED1003F68B1 /* FilterRule.swift in Sources */,
-				7AC40D302D134ED1003F68B1 /* FilterRuleType.swift in Sources */,
-				7AC40D312D134ED1003F68B1 /* IdentityManager.swift in Sources */,
-				7AC40D322D134ED1003F68B1 /* Keychain.swift in Sources */,
-				7AC40D332D134ED1003F68B1 /* PreviewRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -605,15 +565,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AC40DB22D134ED1003F68B1 /* AppSettings.swift in Sources */,
-				7AC40DB62D134ED1003F68B1 /* DocumentLoader.swift in Sources */,
-				7AC40DB72D134ED1003F68B1 /* DocumentStore.swift in Sources */,
-				7AC40DB82D134ED1003F68B1 /* FilterModel.swift in Sources */,
-				7AC40DB92D134ED1003F68B1 /* FilterRule.swift in Sources */,
-				7AC40DBA2D134ED1003F68B1 /* FilterRuleType.swift in Sources */,
-				7AC40DBB2D134ED1003F68B1 /* IdentityManager.swift in Sources */,
-				7AC40DBC2D134ED1003F68B1 /* Keychain.swift in Sources */,
-				7AC40DBD2D134ED1003F68B1 /* PreviewRepository.swift in Sources */,
 				7AC40DBE2D134ED1003F68B1 /* swift_paperlessApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -622,10 +573,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AC40DCD2D134ED1003F68B1 /* Keychain.swift in Sources */,
-				7AC40DD12D134ED1003F68B1 /* FilterRule.swift in Sources */,
-				7AC40DD22D134ED1003F68B1 /* AppSettings.swift in Sources */,
-				7AC40DE12D134ED1003F68B1 /* FilterRuleType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
