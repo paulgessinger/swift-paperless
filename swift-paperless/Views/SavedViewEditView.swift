@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.04.23.
 //
 
+import DataModel
 import SwiftUI
 
 struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {

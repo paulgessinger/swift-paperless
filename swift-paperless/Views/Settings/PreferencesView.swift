@@ -1,3 +1,4 @@
+import DataModel
 import LocalAuthentication
 import os
 import SwiftUI

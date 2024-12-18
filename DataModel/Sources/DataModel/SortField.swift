@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SortField: String, Codable, CaseIterable, Equatable, Hashable {
+public enum SortField: String, Codable, CaseIterable, Equatable, Hashable, Sendable {
     case asn = "archive_serial_number"
     case correspondent = "correspondent__name"
     case title
@@ -20,7 +20,7 @@ enum SortField: String, Codable, CaseIterable, Equatable, Hashable {
     case notes
     case score
 
-    var localizedName: String {
+    public var localizedName: String {
         let res: LocalizedStringResource = switch self {
         case .asn: .localizable(.asn)
         case .correspondent: .localizable(.correspondent)

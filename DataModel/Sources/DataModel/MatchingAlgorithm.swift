@@ -11,38 +11,38 @@ public enum MatchingAlgorithm: Int, Codable, CaseIterable, Sendable {
     public var title: String {
         switch self {
         case .none:
-            String(localized: .matching(.algorithmNone))
+            String(localized: .localizable(.algorithmNone))
         case .any:
-            String(localized: .matching(.algorithmAny))
+            String(localized: .localizable(.algorithmAny))
         case .all:
-            String(localized: .matching(.algorithmAll))
+            String(localized: .localizable(.algorithmAll))
         case .literal:
-            String(localized: .matching(.algorithmExact))
+            String(localized: .localizable(.algorithmExact))
         case .regex:
-            String(localized: .matching(.algorithmRegEx))
+            String(localized: .localizable(.algorithmRegEx))
         case .fuzzy:
-            String(localized: .matching(.algorithmFuzzy))
+            String(localized: .localizable(.algorithmFuzzy))
         case .auto:
-            String(localized: .matching(.algorithmAuto))
+            String(localized: .localizable(.algorithmAuto))
         }
     }
 
     public var label: String {
         switch self {
         case .none:
-            String(localized: .matching(.explanationNone))
+            String(localized: .localizable(.explanationNone))
         case .any:
-            String(localized: .matching(.explanationAny))
+            String(localized: .localizable(.explanationAny))
         case .all:
-            String(localized: .matching(.explanationAny))
+            String(localized: .localizable(.explanationAny))
         case .literal:
-            String(localized: .matching(.explanationExact))
+            String(localized: .localizable(.explanationExact))
         case .regex:
-            String(localized: .matching(.explanationRegEx))
+            String(localized: .localizable(.explanationRegEx))
         case .fuzzy:
-            String(localized: .matching(.explanationFuzzy))
+            String(localized: .localizable(.explanationFuzzy))
         case .auto:
-            String(localized: .matching(.explanationAuto))
+            String(localized: .localizable(.explanationAuto))
         }
     }
 }
