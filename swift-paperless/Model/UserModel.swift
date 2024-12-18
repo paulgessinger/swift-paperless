@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 15.07.23.
 //
 
+import DataModel
 import Foundation
 
 struct User: Codable, Model, Identifiable, Equatable {

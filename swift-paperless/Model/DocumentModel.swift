@@ -6,6 +6,7 @@
 //
 
 import Common
+import DataModel
 import Foundation
 
 protocol DocumentProtocol: Codable {

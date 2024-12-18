@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.07.23.
 //
 
+import DataModel
 import Foundation
 
 enum TaskStatus: String, Codable {

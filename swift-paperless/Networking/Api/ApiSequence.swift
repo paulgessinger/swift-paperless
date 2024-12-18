@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.05.2024.
 //
 
+import DataModel
 import Foundation
 import os
 import Semaphore

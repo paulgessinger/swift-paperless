@@ -5,13 +5,14 @@
 //  Created by Paul Gessinger on 21.05.23.
 //
 
+import DataModel
 import Foundation
 
 protocol CorrespondentProtocol: Equatable, MatchingModel {
     var name: String { get set }
 }
 
-struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProtocol, Named {
+struct Correspondent: Codable, Hashable, Identifiable, Model, CorrespondentProtocol, Named, Sendable {
     var id: UInt
     var documentCount: UInt?
     var lastCorrespondence: Date?
