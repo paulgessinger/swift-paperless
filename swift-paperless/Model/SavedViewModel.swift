@@ -13,7 +13,7 @@ protocol SavedViewProtocol: Codable {
     var showOnDashboard: Bool { get set }
     var showInSidebar: Bool { get set }
     var sortField: SortField { get set }
-    var sortOrder: SortOrder { get set }
+    var sortOrder: DataModel.SortOrder { get set }
     var filterRules: [FilterRule] { get set }
 }
 
@@ -24,7 +24,7 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
     var showInSidebar: Bool
     // Backend will sometimes return no sort field
     private var sortFieldInternal: SortField?
-    var sortOrder: SortOrder
+    var sortOrder: DataModel.SortOrder
     var filterRules: [FilterRule]
 
     var sortField: SortField {
@@ -56,7 +56,7 @@ struct ProtoSavedView: Codable, SavedViewProtocol {
     var showOnDashboard: Bool = false
     var showInSidebar: Bool = false
     var sortField: SortField = .created
-    var sortOrder: SortOrder = .descending
+    var sortOrder: DataModel.SortOrder = .descending
     var filterRules: [FilterRule] = []
 
     private enum CodingKeys: String, CodingKey {

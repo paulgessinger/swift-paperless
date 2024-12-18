@@ -54,10 +54,10 @@ struct PreferencesView: View {
                 }
 
                 Picker(selection: $appSettings.defaultSortOrder) {
-                    Text(SortOrder.ascending.localizedName)
-                        .tag(SortOrder.ascending)
-                    Text(SortOrder.descending.localizedName)
-                        .tag(SortOrder.descending)
+                    Text(DataModel.SortOrder.ascending.localizedName)
+                        .tag(DataModel.SortOrder.ascending)
+                    Text(DataModel.SortOrder.descending.localizedName)
+                        .tag(DataModel.SortOrder.descending)
                 } label: {
                     Text(.settings(.defaultSortOrder))
                 }

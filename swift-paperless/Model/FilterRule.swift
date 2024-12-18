@@ -321,7 +321,7 @@ struct FilterState: Equatable, Codable, Sendable {
         didSet { modified = modified || sortField != oldValue }
     }
 
-    var sortOrder: SortOrder = AppSettings.value(for: .defaultSortOrder, or: .descending) {
+    var sortOrder: DataModel.SortOrder = AppSettings.value(for: .defaultSortOrder, or: .descending) {
         didSet { modified = modified || sortOrder != oldValue }
     }
 
