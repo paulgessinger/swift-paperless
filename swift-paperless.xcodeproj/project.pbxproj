@@ -171,7 +171,6 @@
 		7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				DateDecodingError.swift,
 				Decoder.swift,
 				DeriveUrl.swift,
 				Error/DocumentedError.swift,
