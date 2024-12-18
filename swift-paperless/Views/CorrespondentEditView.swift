@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 25.04.23.
 //
 
+import DataModel
 import SwiftUI
 
 struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol {
