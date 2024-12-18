@@ -98,7 +98,7 @@ extension RequestError: DisplayableError {
     }
 }
 
-struct ResourceForbidden<Resource: Model>: DisplayableError {
+struct ResourceForbidden<Resource>: DisplayableError where Resource: Model & NamedLocalized {
     init(_: Resource.Type, response: String?) {
         self.response = response
     }

@@ -86,8 +86,6 @@ struct Document: Identifiable, Equatable, Hashable, Sendable {
         case permissions
         case setPermissions = "set_permissions"
     }
-
-    static var localizedName: String { String(localized: .localizable(.document)) }
 }
 
 extension Document: Model {}

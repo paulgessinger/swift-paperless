@@ -10,8 +10,6 @@ import SwiftUI
 
 public protocol Model: Identifiable {
     var id: UInt { get }
-
-    static var localizedName: String { get }
 }
 
 public protocol Named {

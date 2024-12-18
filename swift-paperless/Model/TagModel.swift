@@ -115,6 +115,4 @@ struct Tag:
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-
-    static var localizedName: String { String(localized: .localizable(.tag)) }
 }

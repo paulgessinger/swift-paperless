@@ -49,8 +49,6 @@ struct SavedView: Codable, Identifiable, Hashable, Model, SavedViewProtocol {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-
-    static var localizedName: String { String(localized: .localizable(.savedView)) }
 }
 
 struct ProtoSavedView: Codable, SavedViewProtocol {
