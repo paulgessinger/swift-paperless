@@ -8,6 +8,7 @@
 import AuthenticationServices
 import Common
 import CryptoKit
+import DataModel
 import Foundation
 import os
 

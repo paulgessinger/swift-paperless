@@ -7,6 +7,7 @@
 
 import Combine
 import Common
+import DataModel
 import SwiftUI
 
 struct TagEditView<Element>: View where Element: TagProtocol & Sendable {

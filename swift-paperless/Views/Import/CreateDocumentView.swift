@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 12.03.23.
 //
 
+import DataModel
 import os
 import SwiftUI
 import UniformTypeIdentifiers

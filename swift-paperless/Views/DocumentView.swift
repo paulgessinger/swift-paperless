@@ -6,6 +6,7 @@
 //
 
 import Combine
+import DataModel
 import os
 import PhotosUI
 import QuickLook
@@ -361,7 +362,7 @@ struct DocumentView: View {
 
                 .sheet(item: $taskViewNavState, content: tasksSheet)
 
-                .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
+                .fullScreenConfirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested) {
                     Button(String(localized: .localizable(.logout)), role: .destructive) {
                         connectionManager.logout()
                     }
@@ -380,6 +381,7 @@ struct DocumentView: View {
                     }
                 }
         }
+
         .environmentObject(filterModel)
     }
 

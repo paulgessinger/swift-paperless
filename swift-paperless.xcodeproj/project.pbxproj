@@ -14,6 +14,9 @@
 		7A4AA8EE29BB969400D845A2 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7A4AA90329BE048800D845A2 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA90229BE048800D845A2 /* Flow */; };
 		7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA91929BE730B00D845A2 /* Semaphore */; };
+		7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D58882D13568900FCB1F1 /* DataModel */; };
+		7A4D588B2D13569500FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588A2D13569500FCB1F1 /* DataModel */; };
+		7A4D588D2D13569A00FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588C2D13569A00FCB1F1 /* DataModel */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
@@ -64,6 +67,7 @@
 
 /* Begin PBXFileReference section */
 		7A4AA8E429BB969400D845A2 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A4D58862D13563B00FCB1F1 /* DataModel */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DataModel; sourceTree = "<group>"; };
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482BC299AD56E00D5061E /* swift-paperlessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,14 +94,6 @@
 				Permissions.xcstrings,
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
-		};
-		7AC40FA42D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				SortField.swift,
-				SortOrder.swift,
-			);
-			target = 7A5482C5299AD56E00D5061E /* swift-paperlessUITests */;
 		};
 		7AC40FA52D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -175,12 +171,9 @@
 		7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				DateDecodingError.swift,
-				Decoder.swift,
 				DeriveUrl.swift,
 				Error/DocumentedError.swift,
 				Error/PresentableError.swift,
-				ListResponse.swift,
 				MultiPartFormDataRequest.swift,
 				Repository.swift,
 			);
@@ -192,13 +185,6 @@
 				DeriveUrl.swift,
 				Error/LoginError.swift,
 				"Error/LoginError+PresentableError.swift",
-			);
-			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
-		};
-		7AC40FAC2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				PreviewModel.swift,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
@@ -224,10 +210,10 @@
 		7A40DD832D10BEA10033DDE5 /* swift-paperlessUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "swift-paperlessUITests"; sourceTree = "<group>"; };
 		7A40DD912D10BEAA0033DDE5 /* ShareExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7A40DD982D10BEAA0033DDE5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ShareExtension; sourceTree = "<group>"; };
 		7AC40DFC2D134EDE003F68B1 /* Localization */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA32D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FAD2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Localization; sourceTree = "<group>"; };
-		7AC40E272D134EDE003F68B1 /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA42D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
+		7AC40E272D134EDE003F68B1 /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
 		7AC40E672D134EDE003F68B1 /* Utilities */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA52D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA62D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA72D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Utilities; sourceTree = "<group>"; };
 		7AC40EDE2D134EDE003F68B1 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA82D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA92D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
-		7AC40F622D134EDE003F68B1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FAC2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
+		7AC40F622D134EDE003F68B1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
 		7AC40F7B2D134EDE003F68B1 /* Networking */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FAB2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Networking; sourceTree = "<group>"; };
 		7AC411772D134F85003F68B1 /* Document */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Document; sourceTree = "<group>"; };
 		7AC411782D134FDB003F68B1 /* ViewModel */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC411792D134FE7003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ViewModel; sourceTree = "<group>"; };
@@ -240,6 +226,7 @@
 			files = (
 				7AAC44562CA0A38B003E6A3A /* Common in Frameworks */,
 				7A4AA90329BE048800D845A2 /* Flow in Frameworks */,
+				7A4D588D2D13569A00FCB1F1 /* DataModel in Frameworks */,
 				7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */,
 				7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */,
 				7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */,
@@ -255,6 +242,7 @@
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
+				7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
 				7AAC44542CA0A37D003E6A3A /* Common in Frameworks */,
@@ -267,6 +255,7 @@
 			files = (
 				7AAC43182CA06F8D003E6A3A /* AsyncAlgorithms in Frameworks */,
 				7AAC44582CA0A391003E6A3A /* Common in Frameworks */,
+				7A4D588B2D13569500FCB1F1 /* DataModel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,6 +279,7 @@
 		7A5482A2299AD56C00D5061E = {
 			isa = PBXGroup;
 			children = (
+				7A4D58862D13563B00FCB1F1 /* DataModel */,
 				7AAC44512CA0A31E003E6A3A /* Common */,
 				7AC40CAA2D134ED1003F68B1 /* swift-paperless */,
 				7A64771B2BDD50D200217C18 /* libraries.md */,
@@ -365,6 +355,7 @@
 				7AB060DA29C62395004E6C63 /* AsyncAlgorithms */,
 				7A1C32C42A5EB08D00C18B44 /* NukeUI */,
 				7AAC44552CA0A38B003E6A3A /* Common */,
+				7A4D588C2D13569A00FCB1F1 /* DataModel */,
 			);
 			productName = ShareExtension;
 			productReference = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */;
@@ -405,6 +396,7 @@
 				7A1C32C22A5EAF1A00C18B44 /* NukeUI */,
 				7A6AA3442C1EDEBE007A1866 /* MarkdownUI */,
 				7AAC44532CA0A37D003E6A3A /* Common */,
+				7A4D58882D13568900FCB1F1 /* DataModel */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -504,6 +496,7 @@
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
 				7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7AAC44522CA0A37D003E6A3A /* XCLocalSwiftPackageReference "Common" */,
+				7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1076,6 +1069,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = DataModel;
+		};
 		7AAC44522CA0A37D003E6A3A /* XCLocalSwiftPackageReference "Common" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Common;
@@ -1191,6 +1188,18 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
+		};
+		7A4D58882D13568900FCB1F1 /* DataModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DataModel;
+		};
+		7A4D588A2D13569500FCB1F1 /* DataModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DataModel;
+		};
+		7A4D588C2D13569A00FCB1F1 /* DataModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DataModel;
 		};
 		7A5C138929AA7E2F00D71F51 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;

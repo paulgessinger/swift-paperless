@@ -5,11 +5,14 @@
 //  Created by Paul Gessinger on 04.05.2024.
 //
 
+import DataModel
 import Foundation
 import os
 import Semaphore
 
-actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol where Element: Model & Decodable & Sendable {
+actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
+    where Element: Model & NamedLocalized & Decodable & Sendable
+{
     private var nextPage: URL?
     private let repository: ApiRepository
 

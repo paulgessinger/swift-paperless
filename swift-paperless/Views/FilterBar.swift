@@ -6,6 +6,7 @@
 //
 
 import Combine
+import DataModel
 import Foundation
 import os
 import SwiftUI
@@ -14,8 +15,8 @@ import SwiftUI
 
 // MARK: FilterMenu
 
-extension ProtoSavedView: Identifiable {
-    var id: UInt { 0 }
+extension ProtoSavedView: @retroactive Identifiable {
+    public var id: UInt { 0 }
 }
 
 private struct SavedViewError: LocalizedError {

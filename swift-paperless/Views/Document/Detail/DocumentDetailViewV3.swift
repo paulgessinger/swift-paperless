@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 20.07.2024.
 //
 
+import DataModel
 import Flow
 import NukeUI
 import os

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.03.23.
 //
 
+import DataModel
 import GameplayKit
 import os
 import SwiftUI

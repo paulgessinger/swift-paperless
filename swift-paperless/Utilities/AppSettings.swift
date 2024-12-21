@@ -6,6 +6,7 @@
 //
 import Combine
 import Common
+import DataModel
 import Foundation
 import os
 import SwiftUI
@@ -84,7 +85,7 @@ class AppSettings: ObservableObject {
     var defaultSortField = SortField.added
 
     @PublishedUserDefaultsBacked(.defaultSortOrder)
-    var defaultSortOrder = SortOrder.descending
+    var defaultSortOrder = DataModel.SortOrder.descending
 
     enum EditingUserInterface: Codable, CaseIterable {
         case automatic
