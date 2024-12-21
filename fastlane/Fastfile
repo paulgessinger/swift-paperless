@@ -60,7 +60,10 @@ platform :ios do
       target: "swift-paperless"
     )
 
-    build_app(scheme: "swift-paperless")
+    build_app(
+      scheme: "swift-paperless",
+      xcargs: "-skipPackagePluginValidation" # seemingly no alternative on CI
+    )
 
     git_commit(
       path: "swift-paperless.xcodeproj",
