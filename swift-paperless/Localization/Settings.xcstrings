@@ -1675,7 +1675,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les identités sont des certificats accompagnés de clés privées qui peuvent être utilisés pour vous authentifier de manière cryptographique. Les identités sont utilisées dans les configurations [*mTLS*] (https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) pour accéder aux ressources sécurisées.\n\nIl s'agit d'une **fonctionnalité avancée** !"
+            "value" : "Les identités sont des certificats accompagnés de clés privées qui peuvent être utilisés pour vous authentifier de manière cryptographique. Les identités sont utilisées dans les configurations [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) pour accéder aux ressources sécurisées.\n\nIl s'agit d'une **fonctionnalité avancée** !"
           }
         },
         "it" : {
