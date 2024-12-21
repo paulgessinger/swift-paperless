@@ -14,13 +14,13 @@ extension PaperlessTask {
         }
 
         // @TODO: More sophisticated parsing of errors
-        //        let fileName = taskFileName ?? String(localized: .tasks(.unknownFileName))
+        let fileName = taskFileName ?? String(localized: .tasks(.unknownFileName))
 
-        //        let duplicatePattern = /(.*): Not consuming (.*): It is a duplicate of (.*) \(#(\d*)\)/
+        let duplicatePattern = /(.*): Not consuming (.*): It is a duplicate of (.*) \(#(\d*)\)/
 
-        //        if (try? duplicatePattern.wholeMatch(in: result)) != nil {
-        //            return String(localized: .tasks(.errorDuplicate(fileName)))
-        //        }
+        if (try? duplicatePattern.wholeMatch(in: result)) != nil {
+            return String(localized: .tasks(.errorDuplicate(fileName)))
+        }
 
         return String(stringLiteral: result)
     }
