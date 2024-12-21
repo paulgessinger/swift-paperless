@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.06.2024.
 //
 
+import DataModel
 import SwiftUI
 
 struct DocumentDetailViewVersionSelection: View {
