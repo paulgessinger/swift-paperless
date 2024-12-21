@@ -75,7 +75,7 @@ platform :ios do
 
     github_release = set_github_release(
       repository_name: "paulgessinger/swift-paperless",
-      api_token: ENV["GITHUB_TOKEN"],
+      api_bearer: ENV["GITHUB_TOKEN"],
       name: "v#{version} (#{current_build_number})",
       tag_name: "builds/#{version}/#{current_build_number}",
       description: changelog,
