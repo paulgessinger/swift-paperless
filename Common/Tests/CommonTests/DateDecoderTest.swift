@@ -6,7 +6,6 @@
 //
 
 import Common
-import DataModel
 import XCTest
 
 final class DateDecoderTest: XCTestCase {

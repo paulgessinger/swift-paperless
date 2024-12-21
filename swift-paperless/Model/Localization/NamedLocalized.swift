@@ -35,6 +35,17 @@ extension SortField {
     }
 }
 
+extension DataModel.SortOrder {
+    var localizedName: String {
+        switch self {
+        case .ascending:
+            String(localized: .localizable(.ascending))
+        case .descending:
+            String(localized: .localizable(.descending))
+        }
+    }
+}
+
 extension Tag: NamedLocalized {
     static var localizedName: String { String(localized: .localizable(.tag)) }
 }
@@ -62,9 +73,6 @@ extension SavedView: NamedLocalized {
 extension StoragePath: NamedLocalized {
     static var localizedName: String { String(localized: .localizable(.storagePath)) }
 }
-
-// extension Correspondent : NamedLocalized {
-// }
 
 extension FilterState.SearchMode {
     var localizedName: String {

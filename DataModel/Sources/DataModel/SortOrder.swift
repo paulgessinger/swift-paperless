@@ -22,15 +22,6 @@ public enum SortOrder: Codable, Sendable {
         try container.encode(reverse)
     }
 
-    public var localizedName: String {
-        switch self {
-        case .ascending:
-            String(localized: .localizable(.ascending))
-        case .descending:
-            String(localized: .localizable(.descending))
-        }
-    }
-
     public var reverse: Bool {
         switch self {
         case .descending:

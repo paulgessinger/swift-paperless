@@ -17,7 +17,6 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/liamnichols/xcstrings-tool-plugin.git", from: "1.0.0"),
         .package(path: "../Common"),
     ],
     targets: [
@@ -26,7 +25,6 @@ let package = Package(
         .target(
             name: "DataModel",
             dependencies: [
-                .product(name: "XCStringsToolPlugin", package: "xcstrings-tool-plugin"),
                 .product(name: "Common", package: "Common"),
             ],
             path: "Sources",
