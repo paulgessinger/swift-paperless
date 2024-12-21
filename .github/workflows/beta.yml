@@ -26,4 +26,7 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-        run: fastlane beta
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.MATCH_DEPLOY_PRIVATE_KEY }}'
+          fastlane beta
