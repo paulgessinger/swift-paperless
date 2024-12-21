@@ -1,5 +1,7 @@
 import XCTest
 
+import DataModel
+
 final class SavedViewTest: XCTestCase {
     func testDecoding() throws {
         do {

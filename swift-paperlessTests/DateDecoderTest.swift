@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 18.05.2024.
 //
 
+import DataModel
 import XCTest
 
 final class DateDecoderTest: XCTestCase {

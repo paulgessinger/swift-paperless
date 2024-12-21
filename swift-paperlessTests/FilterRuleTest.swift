@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 02.04.23.
 //
 
+import DataModel
 import Foundation
 import Testing
 
