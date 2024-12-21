@@ -1,5 +1,7 @@
 import XCTest
 
+import DataModel
+
 final class SavedViewTest: XCTestCase {
     func testDecoding() throws {
         do {
@@ -94,7 +96,7 @@ final class SavedViewTest: XCTestCase {
         XCTAssertEqual(result.name, "Inbox")
         XCTAssertEqual(result.showOnDashboard, true)
         XCTAssertEqual(result.showInSidebar, true)
-        XCTAssertEqual(result.sortField, .added)
+        XCTAssertEqual(result.sortField, nil)
         XCTAssertEqual(result.sortOrder, .ascending)
     }
 

@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-func makeDecoder(tz: TimeZone) -> JSONDecoder {
+public func makeDecoder(tz: TimeZone) -> JSONDecoder {
     let d = JSONDecoder()
     d.dateDecodingStrategy = .custom { decoder -> Date in
         let container = try decoder.singleValueContainer()
@@ -34,11 +34,10 @@ func makeDecoder(tz: TimeZone) -> JSONDecoder {
             return res
         }
 
-        Logger.shared.error("Unable to decode date from string: \(dateStr, privacy: .public)")
         throw DateDecodingError.invalidDate(string: dateStr)
     }
 //    d.keyDecodingStrategy = .convertFromSnakeCase
     return d
 }
 
-let decoder: JSONDecoder = makeDecoder(tz: .current)
+public let decoder: JSONDecoder = makeDecoder(tz: .current)

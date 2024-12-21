@@ -7,8 +7,8 @@
 
 import Foundation
 
-enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
-    init?(rawValue: Int) {
+public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable, Sendable {
+    public init?(rawValue: Int) {
         self = switch rawValue {
         case 0: .title
         case 1: .content
@@ -57,7 +57,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    var rawValue: Int {
+    public var rawValue: Int {
         switch self {
         case .title: 0
         case .content: 1
@@ -106,7 +106,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    static let allCases: [FilterRuleType] = [
+    public static let allCases: [FilterRuleType] = [
         .title,
         .content,
         .asn,
@@ -152,7 +152,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         .customFieldsQuery,
     ]
 
-    enum DataType {
+    public enum DataType {
         case boolean
         case correspondent
         case date
@@ -208,7 +208,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
     case customFieldsQuery
     case other(Int)
 
-    func filterVar() -> String? {
+    public func filterVar() -> String? {
         switch self {
         case .title: "title__icontains"
         case .content: "content__icontains"
@@ -257,7 +257,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    func dataType() -> DataType {
+    public func dataType() -> DataType {
         switch self {
         case .title: .string
         case .content: .string
@@ -306,7 +306,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    func defaultValue() -> Bool {
+    public func defaultValue() -> Bool {
         switch self {
         case .isInInbox: true
         case .hasAnyTag: true
@@ -315,7 +315,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    func multiple() -> Bool {
+    public func multiple() -> Bool {
         switch self {
         case .hasCorrespondentAny: true
         case .doesNotHaveCorrespondent: true
@@ -336,7 +336,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         }
     }
 
-    static func allMultiples() -> Set<FilterRuleType> {
+    public static func allMultiples() -> Set<FilterRuleType> {
         [
             .hasCorrespondentAny,
             .doesNotHaveCorrespondent,
@@ -356,7 +356,7 @@ enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable {
         ]
     }
 
-    func isNullFilterVar() -> String? {
+    public func isNullFilterVar() -> String? {
         switch self {
         case .correspondent: "correspondent__isnull"
         case .storagePath: "storage_path__isnull"

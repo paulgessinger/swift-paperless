@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.04.23.
 //
 
+import DataModel
 import SwiftUI
 
 struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
@@ -40,8 +41,10 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
                 }
 
                 Picker(String(localized: .localizable(.sortOrder)), selection: $savedView.sortOrder) {
-                    Text(.localizable(.ascending)).tag(SortOrder.ascending)
-                    Text(.localizable(.descending)).tag(SortOrder.descending)
+                    Text(DataModel.SortOrder.ascending.localizedName)
+                        .tag(DataModel.SortOrder.ascending)
+                    Text(DataModel.SortOrder.descending.localizedName)
+                        .tag(DataModel.SortOrder.descending)
                 }
             }
         }

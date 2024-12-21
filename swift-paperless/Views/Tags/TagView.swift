@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.02.23.
 //
 
+import DataModel
 import Flow
 import SwiftUI
 

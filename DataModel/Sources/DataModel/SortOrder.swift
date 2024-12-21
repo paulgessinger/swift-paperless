@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SortOrder: Codable {
+public enum SortOrder: Codable, Sendable {
     case ascending
     case descending
 
@@ -22,16 +22,7 @@ enum SortOrder: Codable {
         try container.encode(reverse)
     }
 
-    var localizedName: String {
-        switch self {
-        case .ascending:
-            String(localized: .localizable(.ascending))
-        case .descending:
-            String(localized: .localizable(.descending))
-        }
-    }
-
-    var reverse: Bool {
+    public var reverse: Bool {
         switch self {
         case .descending:
             true
@@ -40,7 +31,7 @@ enum SortOrder: Codable {
         }
     }
 
-    init(_ reverse: Bool) {
+    public init(_ reverse: Bool) {
         if reverse {
             self = .descending
         } else {

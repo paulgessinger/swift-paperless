@@ -38,8 +38,8 @@ jobs:
 
       - name: Generate filter rules
         run: |
-          scripts/generate_filterrules.py --output swift-paperless/Model/FilterRuleType.swift
-          pre-commit run swiftformat --files swift-paperless/Model/FilterRuleType.swift || true
+          scripts/generate_filterrules.py --output DataModel/Sources/DataModel/FilterRuleType.swift
+          pre-commit run swiftformat --files DataModel/Sources/DataModel/FilterRuleType.swift || true
 
       - run: git diff
 
@@ -53,4 +53,4 @@ jobs:
           delete-branch: true
           body: "Automated update of Filter Rule types."
           base: main
-          add-paths: swift-paperless/Model/FilterRuleType.swift
+          add-paths: DataModel/Sources/DataModel/FilterRuleType.swift

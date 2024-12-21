@@ -9,7 +9,7 @@ import Common
 import Foundation
 import SwiftUI
 
-protocol TagProtocol:
+public protocol TagProtocol:
     Equatable,
     MatchingModel,
     Sendable
@@ -23,7 +23,7 @@ protocol TagProtocol:
     static func placeholder(_ length: Int) -> Self
 }
 
-extension TagProtocol {
+public extension TagProtocol {
     var textColor: HexColor {
         HexColor(color.color.luminance < 0.53 ? .white : .black)
     }
@@ -37,15 +37,25 @@ private var placeholderColor: Color {
     #endif
 }
 
-struct ProtoTag: Encodable, TagProtocol, MatchingModel {
-    var isInboxTag: Bool = false
-    var name: String = ""
-    var slug: String = ""
-    var color: HexColor = Color.gray.hex
+public struct ProtoTag: Encodable, TagProtocol, MatchingModel {
+    public var isInboxTag: Bool
+    public var name: String
+    public var slug: String
+    public var color: HexColor
 
-    var match: String = ""
-    var matchingAlgorithm: MatchingAlgorithm = .auto
-    var isInsensitive: Bool = true
+    public var match: String
+    public var matchingAlgorithm: MatchingAlgorithm
+    public var isInsensitive: Bool
+
+    public init(isInboxTag: Bool = false, name: String = "", slug: String = "", color: HexColor = Color.gray.hex, match: String = "", matchingAlgorithm: MatchingAlgorithm = .auto, isInsensitive: Bool = true) {
+        self.isInboxTag = isInboxTag
+        self.name = name
+        self.slug = slug
+        self.color = color
+        self.match = match
+        self.matchingAlgorithm = matchingAlgorithm
+        self.isInsensitive = isInsensitive
+    }
 
     private enum CodingKeys: String, CodingKey {
         case isInboxTag = "is_inbox_tag"
@@ -55,7 +65,7 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
         case isInsensitive = "is_insensitive"
     }
 
-    static func placeholder(_ length: Int) -> Self {
+    public static func placeholder(_ length: Int) -> Self {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let name = String((0 ..< length).map { _ in letters.randomElement()! })
         return .init(
@@ -67,24 +77,36 @@ struct ProtoTag: Encodable, TagProtocol, MatchingModel {
     }
 }
 
-struct Tag:
+public struct Tag:
     Codable,
     Identifiable,
     Model,
     TagProtocol,
     MatchingModel,
     Equatable,
-    Hashable
+    Hashable,
+    Sendable
 {
-    var id: UInt
-    var isInboxTag: Bool
-    var name: String
-    var slug: String
-    var color: HexColor
+    public var id: UInt
+    public var isInboxTag: Bool
+    public var name: String
+    public var slug: String
+    public var color: HexColor
 
-    var match: String
-    var matchingAlgorithm: MatchingAlgorithm
-    var isInsensitive: Bool
+    public var match: String
+    public var matchingAlgorithm: MatchingAlgorithm
+    public var isInsensitive: Bool
+
+    public init(id: UInt, isInboxTag: Bool, name: String, slug: String, color: HexColor, match: String, matchingAlgorithm: MatchingAlgorithm, isInsensitive: Bool) {
+        self.id = id
+        self.isInboxTag = isInboxTag
+        self.name = name
+        self.slug = slug
+        self.color = color
+        self.match = match
+        self.matchingAlgorithm = matchingAlgorithm
+        self.isInsensitive = isInsensitive
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id
@@ -95,7 +117,7 @@ struct Tag:
         case isInsensitive = "is_insensitive"
     }
 
-    static func placeholder(_ length: Int) -> Self {
+    public static func placeholder(_ length: Int) -> Self {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let name = String((0 ..< length).map { _ in letters.randomElement()! })
 
@@ -111,9 +133,7 @@ struct Tag:
         )
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-
-    static var localizedName: String { String(localized: .localizable(.tag)) }
 }

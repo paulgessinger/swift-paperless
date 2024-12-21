@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct ListResponse<Element> {
-    var count: UInt
-    var next: URL?
-    var previous: URL?
-    var results: [Element]
+public struct ListResponse<Element> {
+    public var count: UInt
+    public var next: URL?
+    public var previous: URL?
+    public var results: [Element]
 }
 
 extension ListResponse: Decodable

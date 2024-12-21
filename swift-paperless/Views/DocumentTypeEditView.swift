@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 30.04.23.
 //
 
+import DataModel
 import SwiftUI
 
 struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {

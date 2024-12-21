@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.09.23.
 //
 
+import DataModel
 import Foundation
 import SwiftUI
 

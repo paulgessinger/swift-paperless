@@ -7,6 +7,7 @@
 
 import AsyncAlgorithms
 import Common
+import DataModel
 import Foundation
 import os
 import Semaphore
@@ -255,7 +256,9 @@ actor ApiRepository {
         }
     }
 
-    private func all<T: Decodable & Model & Sendable>(_: T.Type) async throws -> [T] {
+    private func all<T>(_: T.Type) async throws -> [T]
+        where T: Decodable & Model & Sendable & NamedLocalized
+    {
         let sequence = try ApiSequence<T>(repository: self,
                                           url: url(.listAll(T.self)))
         return try await Array(sequence)

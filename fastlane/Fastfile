@@ -92,6 +92,11 @@ platform :ios do
       command: "test",
       package_path: "Common",
     )
+
+    spm(
+      command: "test",
+      package_path: "DataModel",
+    )
   end
 
   lane :build do |options|

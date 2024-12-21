@@ -1,32 +1,13 @@
 //
-//  Model.swift
+//  MatchingAlgorithm+title+label.swift
 //  swift-paperless
 //
-//  Created by Paul Gessinger on 18.02.23.
+//  Created by Paul Gessinger on 21.12.24.
 //
 
-import Foundation
-import SwiftUI
+import DataModel
 
-protocol MatchingModel {
-    var match: String { get set }
-    var matchingAlgorithm: MatchingAlgorithm { get set }
-    var isInsensitive: Bool { get set }
-}
-
-protocol Model: Identifiable {
-    var id: UInt { get }
-
-    static var localizedName: String { get }
-}
-
-protocol Named {
-    var name: String { get }
-}
-
-enum MatchingAlgorithm: Int, Codable, CaseIterable {
-    case none, any, all, literal, regex, fuzzy, auto
-
+public extension MatchingAlgorithm {
     var title: String {
         switch self {
         case .none:

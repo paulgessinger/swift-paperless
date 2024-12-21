@@ -6,6 +6,7 @@
 //
 
 import Combine
+import DataModel
 import os
 import PhotosUI
 import QuickLook

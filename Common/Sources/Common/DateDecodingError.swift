@@ -7,6 +7,6 @@
 
 import Foundation
 
-enum DateDecodingError: Error {
+public enum DateDecodingError: Error {
     case invalidDate(string: String)
 }
