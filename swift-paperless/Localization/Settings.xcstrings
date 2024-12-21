@@ -2124,9 +2124,45 @@
     "showDocumentDetailPropertyBar" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Show document property bar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Show document property bar"
           }
         }
@@ -2135,9 +2171,45 @@
     "showDocumentDetailPropertyBarDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Show the document properties in the bottom of the document detail screen by default."
           }
         }
