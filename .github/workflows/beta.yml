@@ -20,6 +20,8 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
 
+      - uses: mxschmitt/action-tmate@v3
+
       - name: Deploy to TestFlight
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSPHRASE }}
