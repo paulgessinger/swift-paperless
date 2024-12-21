@@ -3744,7 +3744,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@zu verbinden. Du kannst versuchen, dich ab- und wieder anzumelden:"
+            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen, dich ab- und wieder anzumelden:"
           }
         },
         "en" : {
