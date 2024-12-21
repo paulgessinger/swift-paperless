@@ -16,3 +16,5 @@ swift-paperless.xcodeproj/project.xcworkspace/xcuserdata/*
 swift-paperless.xcodeproj/xcuserdata
 .env
 scripts/frames
+
+/vendor
