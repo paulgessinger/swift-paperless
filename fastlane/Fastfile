@@ -22,6 +22,8 @@ platform :ios do
       select_for_current_build_only: true
     )
 
+    setup_ci if ENV['CI']
+
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
@@ -37,9 +39,9 @@ platform :ios do
         "com.paulgessinger.swift-paperless.ShareExtension"
     ])
 
-    ensure_git_branch(branch: "^main|develop\/.+$")
-    ensure_git_status_clean
-    git_pull(rebase: true)
+    ensure_git_branch(branch: "^beta|develop\/.+$")
+    # ensure_git_status_clean
+    # git_pull(rebase: true)
 
     previous_build_number = latest_testflight_build_number()
     current_build_number = previous_build_number + 1
@@ -53,18 +55,34 @@ platform :ios do
       build_number: current_build_number
     )
 
+    version = get_version_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+      target: "swift-paperless"
+    )
+
     build_app(scheme: "swift-paperless")
 
     git_commit(
       path: "swift-paperless.xcodeproj",
       message: "Bump build number to #{current_build_number}"
     )
+    push_to_git_remote()
 
-    add_git_tag(prefix: "v", includes_lane: false)
+    github_release = set_github_release(
+      repository_name: "paulgessinger/swift-paperless",
+      api_token: ENV["GITHUB_TOKEN"],
+      name: "v#{version} (#{current_build_number})",
+      tag_name: "builds/#{version}/#{current_build_number}",
+      description: changelog,
+      commitish: "beta",
+      is_prerelease: true
+    )
 
-    upload_to_testflight(changelog: changelog)
+    upload_to_testflight(
+      changelog: changelog,
+      skip_waiting_for_build_processing: ENV["CI"]
+    )
 
-    push_to_git_remote(tags: true)
   end
 
   lane :bump_build do

@@ -1,0 +1,29 @@
+name: TestFlight
+
+on:
+  push:
+    branches:
+      - beta
+jobs:
+  upload_to_testflight:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install git-cliff
+
+      - name: Setup git user
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+
+      - name: Deploy to TestFlight
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSPHRASE }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: fastlane beta
