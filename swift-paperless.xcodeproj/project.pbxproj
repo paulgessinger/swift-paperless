@@ -622,7 +622,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -661,7 +661,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -829,7 +829,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -884,7 +884,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-paperless/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -933,7 +933,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -957,7 +957,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -981,7 +981,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1005,7 +1005,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
 				GENERATE_INFOPLIST_FILE = YES;
