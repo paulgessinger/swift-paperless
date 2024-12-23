@@ -22,6 +22,8 @@ platform :ios do
       select_for_current_build_only: true
     )
 
+    setup_ci if is_ci
+
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
@@ -30,14 +32,16 @@ platform :ios do
       in_house: false,
     )
 
-    sync_code_signing(
+    match(
       type: "appstore",
       app_identifier: [
         "com.paulgessinger.swift-paperless",
         "com.paulgessinger.swift-paperless.ShareExtension"
-    ])
+      ],
+      readonly: is_ci
+    )
 
-    ensure_git_branch(branch: "^main|develop\/.+$")
+    ensure_git_branch(branch: "^beta|develop\/.+$")
     ensure_git_status_clean
     git_pull(rebase: true)
 
@@ -48,23 +52,45 @@ platform :ios do
 
     changelog = sh("git cliff --config fastlane/cliff.toml -w .. --unreleased 2> /dev/null")
 
+    header = File.read("../changelog_header.md")
+    changelog = changelog.gsub("<<<HEADER>>>", header)
+
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
       build_number: current_build_number
     )
 
-    build_app(scheme: "swift-paperless")
+    version = get_version_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+      target: "swift-paperless"
+    )
+
+    build_app(
+      scheme: "swift-paperless",
+      xcargs: "-skipPackagePluginValidation" # seemingly no alternative on CI
+    )
 
     git_commit(
       path: "swift-paperless.xcodeproj",
       message: "Bump build number to #{current_build_number}"
     )
+    push_to_git_remote()
 
-    add_git_tag(prefix: "v", includes_lane: false)
+    github_release = set_github_release(
+      repository_name: "paulgessinger/swift-paperless",
+      api_bearer: ENV["GITHUB_TOKEN"],
+      name: "v#{version} (#{current_build_number})",
+      tag_name: "builds/#{version}/#{current_build_number}",
+      description: changelog,
+      commitish: "beta",
+      is_prerelease: true
+    )
 
-    upload_to_testflight(changelog: changelog)
+    upload_to_testflight(
+      changelog: changelog,
+      skip_waiting_for_build_processing: ENV["CI"]
+    )
 
-    push_to_git_remote(tags: true)
   end
 
   lane :bump_build do

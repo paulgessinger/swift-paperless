@@ -13,13 +13,7 @@ Redact screenshots to not include information that you do not wish to expose.
 
 ---
 
-1. Test if the updated login screen is correctly translated! Please let me know if it's not!
-2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
-   I've been getting reports of people being logged out after updating
-
-In both cases, logs would be extremely helpful!
-
----
+<<<HEADER>>>
 
 """
 # template for the changelog body
@@ -30,15 +24,26 @@ body = """
 {% else %}\
 {% endif %}\
 
-{% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | striptags | trim | upper_first }}
-    {% for commit in commits %}
-        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-            {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }}\
+{%- set commits_with_footer = [] -%}
+{%- for commit in commits -%}
+  {%- for footer in commit.footers -%}
+    {%- if footer.token == "CHANGELOG" -%}
+      {%- set_global commits_with_footer = commits_with_footer | concat(with=commit) -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+
+{% for group, commits in commits_with_footer | group_by(attribute="group") %}
+  ### {{ group | striptags | trim | upper_first }}
+  {% for commit in commits %}
+    {% for footer in commit.footers %}
+        - {{ footer.value | upper_first}}
     {% endfor %}
-{% endfor %}\n
+  {% endfor %}
+{% endfor %}
 """
+
 # template for the changelog footer
 footer = """
 """
