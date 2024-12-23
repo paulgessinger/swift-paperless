@@ -288,7 +288,9 @@ struct DocumentDetailViewV1: DocumentDetailViewProtocol {
         }
 
         .sheet(isPresented: $editing) {
-            DocumentEditView(document: $document, navPath: navPath)
+            DocumentEditView(store: store,
+                             document: $document,
+                             navPath: navPath)
         }
     }
 }

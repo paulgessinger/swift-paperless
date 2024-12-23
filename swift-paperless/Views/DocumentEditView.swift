@@ -49,7 +49,7 @@ private struct SuggestionView<Element>: View
 struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
-    @EnvironmentObject private var store: DocumentStore
+    @ObservedObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
     var navPath: Binding<NavigationPath>? = nil
@@ -75,7 +75,11 @@ struct DocumentEditView: View {
         !modified || document.title.isEmpty || !isAsnValid
     }
 
-    init(document: Binding<Document>, navPath: Binding<NavigationPath>? = nil) {
+    init(
+        store: DocumentStore,
+        document: Binding<Document>, navPath: Binding<NavigationPath>? = nil
+    ) {
+        self.store = store
         _documentOut = document
         _document = State(initialValue: document.wrappedValue)
         self.navPath = navPath
@@ -336,7 +340,7 @@ private struct PreviewHelper: View {
     var body: some View {
         VStack {
             if document != nil {
-                DocumentEditView(document: Binding($document)!, navPath: $navPath)
+                DocumentEditView(store: store, document: Binding($document)!, navPath: $navPath)
             }
         }
         .task {
