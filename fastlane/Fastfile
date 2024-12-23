@@ -42,8 +42,8 @@ platform :ios do
     )
 
     ensure_git_branch(branch: "^beta|develop\/.+$")
-    # ensure_git_status_clean
-    # git_pull(rebase: true)
+    ensure_git_status_clean
+    git_pull(rebase: true)
 
     previous_build_number = latest_testflight_build_number()
     current_build_number = previous_build_number + 1
@@ -51,6 +51,9 @@ platform :ios do
     last_tag = last_git_tag()
 
     changelog = sh("git cliff --config fastlane/cliff.toml -w .. --unreleased 2> /dev/null")
+
+    header = File.read("../changelog_header.md")
+    changelog = changelog.gsub("<<<HEADER>>>", header)
 
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
