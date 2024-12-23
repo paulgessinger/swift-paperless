@@ -16,12 +16,14 @@ import UIKit
 
 enum DocumentImportError: LocalizedError {
     case photosReceivalFailed
+    case nilTransferableImage
+    case imageRenderFailed
     case pdfWriteFailed
     case pdfCreatePageFailed
 
     var errorDescription: String? {
         switch self {
-        case .photosReceivalFailed:
+        case .photosReceivalFailed, .nilTransferableImage, .imageRenderFailed:
             String(localized: .localizable(.photosReceivalFailed))
         case .pdfCreatePageFailed:
             String(localized: .localizable(.documentScanErrorCreatePageFailed))
@@ -31,34 +33,21 @@ enum DocumentImportError: LocalizedError {
     }
 }
 
-// Somehow, this avoids PhotosPickerItem to have to be sendable, which it isn't
-@MainActor
-private func loadTransferableImage(item: PhotosPickerItem) async throws -> Image? {
-    try await withCheckedThrowingContinuation { continuation in
-        item.loadTransferable(type: Image.self) { result in
-            switch result {
-            case let .success(image):
-                continuation.resume(returning: image)
-            case let .failure(error):
-                continuation.resume(throwing: error)
-            }
-        }
-    }
-}
-
 @MainActor
 func createPDFFrom(photos: [PhotosPickerItem]) async throws -> URL {
     Logger.shared.debug("Creating PDF from \(photos.count) PhotosPickerItems")
     var images: [UIImage] = []
     for item in photos {
-        guard let image = try await loadTransferableImage(item: item) else {
-            throw DocumentImportError.photosReceivalFailed
+        guard let image = try await item.loadTransferable(type: Image.self) else {
+            Logger.shared.error("loadTransferableImage returned nil instead of image")
+            throw DocumentImportError.nilTransferableImage
         }
 
         let renderer = ImageRenderer(content: image)
 
         guard let uiImage = renderer.uiImage else {
-            throw DocumentImportError.photosReceivalFailed
+            Logger.shared.error("Image renderer returned nil instead of UIImage")
+            throw DocumentImportError.imageRenderFailed
         }
         images.append(uiImage)
     }

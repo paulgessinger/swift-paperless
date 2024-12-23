@@ -337,7 +337,7 @@ struct DocumentView: View {
                     DataScannerView()
                 }
 
-                .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos)
+                .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)
 
                 .onChange(of: selectedPhotos) {
                     Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
@@ -346,7 +346,7 @@ struct DocumentView: View {
                         return
                     }
 
-                    Task {
+                    Task { @MainActor in
                         do {
                             let url = try await createPDFFrom(photos: selectedPhotos)
                             Logger.shared.debug("Have PDF at \(url)")

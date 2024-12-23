@@ -1753,7 +1753,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dass Passwort wird nur zum Login benutzt, und nicht gespeichert!"
+            "value" : "Das Passwort wird nur zum Login verwendet und nicht gespeichert!"
           }
         },
         "en" : {

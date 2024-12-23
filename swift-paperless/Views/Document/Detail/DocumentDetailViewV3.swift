@@ -466,7 +466,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .sheet(isPresented: $showEditSheet) {
             editDetent = defaultEditDetent
         } content: {
-            DocumentEditView(document: $viewModel.document)
+            DocumentEditView(store: viewModel.store,
+                             document: $viewModel.document)
                 .presentationDetents(editDetentOptions, selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
