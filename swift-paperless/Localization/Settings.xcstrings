@@ -2132,8 +2132,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Dokumenteneigenschaftsleiste anzeigen"
           }
         },
         "en" : {
@@ -2179,8 +2179,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Dokumenteigenschaften standardmäßig am Ende des Dokument-Detailbildschirms anzeigen."
           }
         },
         "en" : {
