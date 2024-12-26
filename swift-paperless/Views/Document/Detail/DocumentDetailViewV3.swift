@@ -189,7 +189,9 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @State private var shareLinkUrl: URL?
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    var navPath: Binding<NavigationPath>? = nil
 
     @State private var editDetent: PresentationDetent = .medium
 
@@ -237,9 +239,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
     }
 
-    init(store: DocumentStore, document: Document, navPath _: Binding<NavigationPath>?) {
+    init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>?) {
         _viewModel = State(initialValue: DocumentDetailModel(store: store,
                                                              document: document))
+        self.navPath = navPath
     }
 
     private struct LoadingView: View {
@@ -467,7 +470,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             editDetent = defaultEditDetent
         } content: {
             DocumentEditView(store: viewModel.store,
-                             document: $viewModel.document)
+                             document: $viewModel.document,
+                             navPath: navPath)
                 .presentationDetents(editDetentOptions, selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
