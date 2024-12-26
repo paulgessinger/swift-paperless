@@ -8,18 +8,19 @@
 import DataModel
 import Foundation
 import Nuke
+import Observation
 import os
 import SwiftUI
 
 @MainActor
-class DocumentListViewModel: ObservableObject {
+@Observable
+class DocumentListViewModel {
     private var store: DocumentStore
     private var filterState: FilterState
     private var errorController: ErrorController
 
-    @Published var documents: [Document] = []
-    @Published var loading = false
-    @Published var ready = false
+    var documents: [Document] = []
+    var ready = false
 
     private var source: (any DocumentSource)?
     private var exhausted: Bool = false
@@ -49,6 +50,7 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func reload() async {
+        Logger.shared.debug("DocumentListViewModel.reload")
         documents = []
         source = nil
         await load()
@@ -57,8 +59,8 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func load() async {
-        guard documents.isEmpty, !loading else { return }
-        loading = true
+        Logger.shared.debug("DocumentListViewModel.load")
+        guard documents.isEmpty else { return }
         do {
             if source == nil {
                 source = try await store.repository.documents(filter: filterState)
@@ -73,7 +75,7 @@ class DocumentListViewModel: ObservableObject {
             imagePrefetcher.startPrefetching(with: requests)
 
             documents = batch
-            loading = false
+            Logger.shared.debug("DocumentListViewModel.load loading complete")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
             errorController.push(error: error)
@@ -83,8 +85,6 @@ class DocumentListViewModel: ObservableObject {
     func fetchMoreIfNeeded(currentIndex: Int) async {
         if exhausted { return }
         if currentIndex >= documents.count - fetchMargin {
-            guard !loading else { return }
-            await MainActor.run { loading = true }
             let repository = store.repository
             Task.detached {
                 do {
@@ -96,7 +96,6 @@ class DocumentListViewModel: ObservableObject {
                     if batch.isEmpty {
                         await MainActor.run {
                             self.exhausted = true
-                            self.loading = false
                         }
                         return
                     }
@@ -110,7 +109,6 @@ class DocumentListViewModel: ObservableObject {
 
                     await MainActor.run {
                         self.documents += batch
-                        self.loading = false
                     }
                 } catch {
                     Logger.shared.error("DocumentList failed to load more if needed: \(error)")
