@@ -49,6 +49,7 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func reload() async {
+        Logger.shared.debug("DocumentListViewModel.reload")
         documents = []
         source = nil
         await load()
@@ -57,7 +58,11 @@ class DocumentListViewModel: ObservableObject {
     }
 
     func load() async {
-        guard documents.isEmpty, !loading else { return }
+        Logger.shared.debug("DocumentListViewModel.load")
+        guard documents.isEmpty, !loading else {
+            Logger.shared.debug("DocumentListViewModel.load: already loading")
+            return
+        }
         loading = true
         do {
             if source == nil {
@@ -74,6 +79,7 @@ class DocumentListViewModel: ObservableObject {
 
             documents = batch
             loading = false
+            Logger.shared.debug("DocumentListViewModel.load loading complete")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
             errorController.push(error: error)
