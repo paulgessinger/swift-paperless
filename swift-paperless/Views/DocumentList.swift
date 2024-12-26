@@ -43,7 +43,7 @@ struct DocumentList: View {
 
     @State private var documentToDelete: Document?
 
-    @StateObject private var viewModel: DocumentListViewModel
+    @State private var viewModel: DocumentListViewModel
 
     @EnvironmentObject private var errorController: ErrorController
 
@@ -53,7 +53,9 @@ struct DocumentList: View {
         self.store = store
         _navPath = navPath
         self.filterModel = filterModel
-        _viewModel = StateObject(wrappedValue: DocumentListViewModel(store: store, filterState: filterModel.filterState, errorController: errorController))
+        _viewModel = State(initialValue: DocumentListViewModel(store: store,
+                                                               filterState: filterModel.filterState,
+                                                               errorController: errorController))
     }
 
     struct Cell: View {

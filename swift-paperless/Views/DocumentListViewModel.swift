@@ -8,18 +8,20 @@
 import DataModel
 import Foundation
 import Nuke
+import Observation
 import os
 import SwiftUI
 
 @MainActor
-class DocumentListViewModel: ObservableObject {
+@Observable
+class DocumentListViewModel {
     private var store: DocumentStore
     private var filterState: FilterState
     private var errorController: ErrorController
 
-    @Published var documents: [Document] = []
-    @Published var loading = false
-    @Published var ready = false
+    var documents: [Document] = []
+    var loading = false
+    var ready = false
 
     private var source: (any DocumentSource)?
     private var exhausted: Bool = false
