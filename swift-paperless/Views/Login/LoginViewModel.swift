@@ -338,7 +338,7 @@ class LoginViewModel {
         }
     }
 
-    func validateCredentials() async throws(LoginError) -> StoredConnection {
+    func validateCredentials() async -> StoredConnection? {
         let fullUrl = fullUrl
         Logger.shared.info("Validating credentials against url: \(fullUrl)")
         credentialState = .validating
@@ -350,7 +350,8 @@ class LoginViewModel {
         } catch {
             // In principle this is checked before, so should not fail here
             Logger.shared.warning("Error making URL for logging in (url: \(fullUrl)) \(error)")
-            throw .invalidUrl(error)
+            loginState = .error(.invalidUrl(error))
+            return nil
         }
 
         let connection: Connection
@@ -366,9 +367,14 @@ class LoginViewModel {
         case .usernameAndPassword:
             Logger.shared.info("Credential mode is username and password")
 
-            let token = try await fetchToken(url: tokenUrl)
-            Logger.shared.info("Username and password are valid, have token")
-            connection = makeConnection(token)
+            do throws(LoginError) {
+                let token = try await fetchToken(url: tokenUrl)
+                Logger.shared.info("Username and password are valid, have token")
+                connection = makeConnection(token)
+            } catch {
+                credentialState = .error(error)
+                return nil
+            }
 
         case .token:
             connection = makeConnection(token)
@@ -387,14 +393,14 @@ class LoginViewModel {
         } catch RequestError.forbidden {
             Logger.shared.error("User logging in does not have permissions to get permissions")
             credentialState = .error(.request(.unsupportedVersion))
-            throw .request(.unsupportedVersion)
+            return nil
         } catch RequestError.unauthorized {
             credentialState = .error(.invalidToken)
-            throw .invalidLogin
+            return nil
         } catch {
             Logger.shared.error("Error during login with url \(error)")
             credentialState = .error(.init(other: error))
-            throw LoginError(other: error)
+            return nil
         }
 
         Logger.shared.info("Have user: \(currentUser.username)")
@@ -414,7 +420,7 @@ class LoginViewModel {
             } catch {
                 Logger.shared.error("Error during login with url (failed to store token in keychain: \(error)")
                 credentialState = .error(.init(other: error))
-                throw LoginError(other: error)
+                return nil
             }
         } else {
             Logger.api.info("No token for connection, leaving nil")
