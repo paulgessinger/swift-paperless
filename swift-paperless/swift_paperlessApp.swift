@@ -8,55 +8,11 @@
 import os
 import SwiftUI
 
-private struct LoadingView: View {
-    let url: String?
-    let manager: ConnectionManager
-
-    @State private var showProgress = false
-    @State private var showFailSafe = false
-
-    var body: some View {
-        VStack {
-            LogoView()
-
-            if showProgress {
-                ProgressView()
-                    .controlSize(.large)
-            }
-
-            if showFailSafe {
-                Text(.localizable(.loginFailSafe(url ?? "???")))
-                    .padding(.horizontal)
-                    .padding(.top, 50)
-
-                Button {
-                    showFailSafe = false
-                    manager.logout()
-                } label: {
-                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .foregroundColor(Color.red)
-                .bold()
-                .padding(.top)
-            }
-        }
-
-        .animation(.default, value: showProgress)
-        .animation(.default, value: showFailSafe)
-
-        .task {
-            try? await Task.sleep(for: .seconds(1))
-            showProgress = true
-            try? await Task.sleep(for: .seconds(15))
-            showFailSafe = true
-        }
-    }
-}
-
 struct MainView: View {
     @State private var showLoginScreen = false
 
     @State private var storeReady = false
+    @State private var showLoadingScreen = false
     @State private var store: DocumentStore?
 
     @StateObject private var manager = ConnectionManager()
@@ -78,23 +34,34 @@ struct MainView: View {
         _biometricLockManager = StateObject(wrappedValue: BiometricLockManager(errorController: errorController))
     }
 
-    private func refreshConnection() {
+    private func refreshConnection(animated: Bool) {
         Logger.api.info("Connection info changed, reloading!")
-
-        storeReady = false
         if let conn = manager.connection {
+            storeReady = false
+            if animated {
+                showLoadingScreen = true
+            }
+
+            let sleep = { (duration: Duration) async in
+                if animated {
+                    try? await Task.sleep(for: duration)
+                }
+            }
+
             Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
             if let store {
                 Task {
+                    await sleep(.seconds(0.1))
                     store.eventPublisher.send(.repositoryWillChange)
-                    try? await Task.sleep(for: .seconds(0.3))
+                    await sleep(.seconds(0.3))
                     await store.set(repository: ApiRepository(connection: conn))
-                    Task {
-                        try? await Task.sleep(for: .seconds(0.25))
-                        storeReady = true
-                    }
+                    await sleep(.seconds(0.4))
+                    storeReady = true
                     try? await store.fetchAll()
                     store.startTaskPolling()
+
+                    await sleep(.seconds(0.2))
+                    showLoadingScreen = false
                 }
             } else {
                 Task {
@@ -102,10 +69,12 @@ struct MainView: View {
                     storeReady = true
                     try? await store!.fetchAll()
                     store!.startTaskPolling()
+                    showLoadingScreen = false
                 }
             }
             showLoginScreen = false
         } else {
+            storeReady = false
             Logger.shared.trace("App does not have any active connection, show login screen")
             showLoginScreen = true
         }
@@ -114,15 +83,7 @@ struct MainView: View {
     var body: some View {
         VStack {
             ZStack {
-                if manager.connection == nil || !storeReady {
-                    VStack {
-                        if !showLoginScreen {
-                            LoadingView(url: manager.connection?.url.absoluteString,
-                                        manager: manager)
-                        }
-                    }
-                    .animation(.default, value: showLoginScreen)
-                } else {
+                if manager.connection != nil, storeReady {
                     DocumentView()
                         .errorOverlay(errorController: errorController)
                         .environmentObject(store!)
@@ -135,6 +96,16 @@ struct MainView: View {
                             }
                         }
                 }
+
+                VStack {
+                    if manager.connection == nil || !storeReady || showLoadingScreen {
+                        MainLoadingView(url: manager.connection?.url.absoluteString,
+                                        manager: manager)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(.white)
+                    }
+                }
+                .animation(.default, value: showLoadingScreen)
             }
         }
         .animation(.default, value: storeReady)
@@ -157,7 +128,7 @@ struct MainView: View {
             biometricLockManager.lockIfEnabled()
 
             Logger.shared.notice("Checking login status")
-            refreshConnection()
+            refreshConnection(animated: false)
 
             // @TODO: Remove in a few versions
             Task {
@@ -166,8 +137,12 @@ struct MainView: View {
             }
         }
 
-        .onChange(of: manager.activeConnectionId) { refreshConnection() }
-        .onChange(of: manager.connections) { refreshConnection() }
+        .onReceive(manager.eventPublisher) { event in
+            switch event {
+            case let .connectionChange(animated):
+                refreshConnection(animated: animated)
+            }
+        }
 
         .onChange(of: scenePhase) { _, value in
             switch value {
