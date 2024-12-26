@@ -3750,31 +3750,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
           }
         }
       }
