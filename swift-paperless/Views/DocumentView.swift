@@ -364,7 +364,7 @@ struct DocumentView: View {
 
                 .fullScreenConfirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested) {
                     Button(String(localized: .localizable(.logout)), role: .destructive) {
-                        connectionManager.logout()
+                        connectionManager.logout(animated: true)
                     }
                     Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                 }

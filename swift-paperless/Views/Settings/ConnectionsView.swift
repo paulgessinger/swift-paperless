@@ -111,7 +111,7 @@ struct ConnectionsView: View {
 
                 .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
                     Button(String(localized: .localizable(.logout)), role: .destructive) {
-                        connectionManager.logout()
+                        connectionManager.logout(animated: false)
                     }
                     Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                 }

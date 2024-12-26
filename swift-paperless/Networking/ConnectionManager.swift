@@ -364,7 +364,7 @@ class ConnectionManager: ObservableObject {
         connections[stored.id] = stored
     }
 
-    func logout() {
+    func logout(animated: Bool) {
         Logger.api.info("Requested logout from current server")
 
         // @TODO: (multi-server) Remove in a few versions
@@ -390,7 +390,7 @@ class ConnectionManager: ObservableObject {
             Logger.api.info("Have \(count)")
             if let newConn = connections.first?.value {
                 Logger.api.info("Setting connection to \(newConn.id)")
-                setActiveConnection(id: newConn.id, animated: true)
+                setActiveConnection(id: newConn.id, animated: animated)
             } else {
                 Logger.api.info("Setting active connection to nil")
                 self.activeConnectionId = nil

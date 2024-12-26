@@ -43,7 +43,7 @@ struct MainLoadingView: View {
 
             Button {
                 showFailSafe = false
-                manager.logout()
+                manager.logout(animated: false)
             } label: {
                 Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
             }

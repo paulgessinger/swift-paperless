@@ -55,12 +55,10 @@ struct MainView: View {
                     store.eventPublisher.send(.repositoryWillChange)
                     await sleep(.seconds(0.3))
                     await store.set(repository: ApiRepository(connection: conn))
-                    await sleep(.seconds(0.4))
                     storeReady = true
                     try? await store.fetchAll()
                     store.startTaskPolling()
-
-                    await sleep(.seconds(0.2))
+                    await sleep(.seconds(0.3))
                     showLoadingScreen = false
                 }
             } else {
@@ -98,7 +96,7 @@ struct MainView: View {
                 }
 
                 VStack {
-                    if manager.connection == nil || !storeReady || showLoadingScreen {
+                    if manager.connection == nil || showLoadingScreen {
                         MainLoadingView(url: manager.connection?.url.absoluteString,
                                         manager: manager)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
