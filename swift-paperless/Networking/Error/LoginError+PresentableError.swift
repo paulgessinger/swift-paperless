@@ -56,11 +56,6 @@ extension LoginError: PresentableError {
             error.presentation
             Text(.login(.autologinHint))
 
-        case let .unexpectedStatusCode(code, _) where code == .badRequest:
-            // Bad request can indicate mTLS issues
-            error.presentation
-            Text(.login(.errorBadRequest))
-
         case .forbidden:
             error.presentation
             Text(.login(.errorInsufficientPermissionsDetail))

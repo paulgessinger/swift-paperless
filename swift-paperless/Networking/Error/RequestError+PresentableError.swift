@@ -19,9 +19,14 @@ extension RequestError: PresentableError {
         case let .unexpectedStatusCode(code, details):
             Text(.localizable(.requestErrorUnexpectedStatusCode(code.description)))
                 .bold()
+
             if let details {
-                Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
-                    + (Text(details).italic())
+                if !Self.isMTLSError(code: code, message: details) {
+                    // We're not sure this is an SSL error, show details just in case
+                    Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+                        + (Text(details).italic())
+                }
+                Text(.localizable(.requestErrorMTLS))
             }
 
         case .invalidRequest:
