@@ -200,25 +200,10 @@ struct CreateDocumentView: View {
                 Spacer()
 
                 Form {
-                    if share, let stored = connectionManager.storedConnection {
+                    if share, connectionManager.storedConnection != nil {
                         Section(String(localized: .settings(.activeServer))) {
-                            Menu {
-                                ConnectionSelectionMenu(connectionManager: connectionManager)
-                            } label: {
-                                HStack {
-                                    let label = connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
-                                    Text(label)
-                                        .font(.body)
-                                        .foregroundStyle(.gray)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .multilineTextAlignment(.leading)
-                                    Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
-                                          systemImage: "chevron.up.chevron.down")
-                                        .labelStyle(.iconOnly)
-                                        .foregroundStyle(.gray)
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
+                            ConnectionSelectionMenu(connectionManager: connectionManager,
+                                                    animated: false)
                         }
                     }
 

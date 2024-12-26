@@ -163,6 +163,7 @@ class LoginViewModel {
 
         var request = URLRequest(url: apiUrl)
         extraHeaders.apply(toRequest: &request)
+        request.timeoutInterval = 15
         request.setValue("application/json; version=\(ApiRepository.minimumApiVersion)", forHTTPHeaderField: "Accept")
 
         Logger.api.info("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
