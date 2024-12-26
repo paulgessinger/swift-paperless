@@ -86,23 +86,21 @@ struct DocumentEditView: View {
     }
 
     func doDocumentDelete() {
-        DispatchQueue.main.async {
-            Task {
-                do {
-                    Logger.shared.notice("Deleted document from Edit view")
-                    try await store.deleteDocument(document)
-                    deleted = true
-                    let impact = UIImpactFeedbackGenerator(style: .rigid)
-                    impact.impactOccurred()
-                    try await Task.sleep(for: .seconds(0.2))
-                    dismiss()
-                    if let navPath {
-                        Logger.shared.notice("Pop navigation to root")
-                        navPath.wrappedValue.popToRoot()
-                    }
-                } catch {
-                    errorController.push(error: error)
+        Task { @MainActor in
+            do {
+                Logger.shared.notice("Deleted document from Edit view")
+                try await store.deleteDocument(document)
+                deleted = true
+                let impact = UIImpactFeedbackGenerator(style: .rigid)
+                impact.impactOccurred()
+                try await Task.sleep(for: .seconds(0.2))
+                dismiss()
+                if let navPath {
+                    Logger.shared.notice("Pop navigation to root")
+                    navPath.wrappedValue.popToRoot()
                 }
+            } catch {
+                errorController.push(error: error)
             }
         }
     }
