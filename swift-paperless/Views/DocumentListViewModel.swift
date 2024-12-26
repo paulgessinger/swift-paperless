@@ -20,7 +20,6 @@ class DocumentListViewModel {
     private var errorController: ErrorController
 
     var documents: [Document] = []
-    var loading = false
     var ready = false
 
     private var source: (any DocumentSource)?
@@ -61,11 +60,7 @@ class DocumentListViewModel {
 
     func load() async {
         Logger.shared.debug("DocumentListViewModel.load")
-        guard documents.isEmpty, !loading else {
-            Logger.shared.debug("DocumentListViewModel.load: already loading")
-            return
-        }
-        loading = true
+        guard documents.isEmpty else { return }
         do {
             if source == nil {
                 source = try await store.repository.documents(filter: filterState)
@@ -80,7 +75,6 @@ class DocumentListViewModel {
             imagePrefetcher.startPrefetching(with: requests)
 
             documents = batch
-            loading = false
             Logger.shared.debug("DocumentListViewModel.load loading complete")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
@@ -91,8 +85,6 @@ class DocumentListViewModel {
     func fetchMoreIfNeeded(currentIndex: Int) async {
         if exhausted { return }
         if currentIndex >= documents.count - fetchMargin {
-            guard !loading else { return }
-            await MainActor.run { loading = true }
             let repository = store.repository
             Task.detached {
                 do {
@@ -104,7 +96,6 @@ class DocumentListViewModel {
                     if batch.isEmpty {
                         await MainActor.run {
                             self.exhausted = true
-                            self.loading = false
                         }
                         return
                     }
@@ -118,7 +109,6 @@ class DocumentListViewModel {
 
                     await MainActor.run {
                         self.documents += batch
-                        self.loading = false
                     }
                 } catch {
                     Logger.shared.error("DocumentList failed to load more if needed: \(error)")
