@@ -186,13 +186,14 @@ class LoginViewModel {
             }
 
             guard status == .ok else {
-                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue)")
+                let detail = decodeDetails(data)
+                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail, privacy: .public)")
                 switch status {
                 case .notAcceptable:
                     loginState = .error(.request(.unsupportedVersion))
                 default:
                     loginState = .error(.request(.unexpectedStatusCode(code: status,
-                                                                       detail: decodeDetails(data))))
+                                                                       detail: detail)))
                 }
                 return
             }
@@ -323,7 +324,7 @@ class LoginViewModel {
             let details = decodeDetails(data)
             Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details, privacy: .public)")
             throw LoginError.request(.unexpectedStatusCode(code: status,
-                                                           detail: decodeDetails(data)))
+                                                           detail: details))
         }
 
         struct TokenResponse: Decodable {
