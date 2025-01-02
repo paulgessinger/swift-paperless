@@ -333,6 +333,10 @@ extension ApiRepository: Repository {
             mp.add(name: "document_type", string: String(dt))
         }
 
+        if let storagePath = document.storagePath {
+            mp.add(name: "storage_path", string: String(storagePath))
+        }
+
         for tag in document.tags {
             mp.add(name: "tags", string: String(tag))
         }
