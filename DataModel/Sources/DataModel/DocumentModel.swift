@@ -101,7 +101,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
         case id, title
         case asn = "archive_serial_number"
         case documentType = "document_type"
-        case correspondent, created, tags, added
+        case correspondent, created, tags, added, modified
         case storagePath = "storage_path"
         case notes
         case _userCanChange = "user_can_change"

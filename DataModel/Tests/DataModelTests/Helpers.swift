@@ -21,3 +21,23 @@ func testData(_ file: String) -> Data? {
         return nil
     }
 }
+
+func datetime(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0, second: Double = 0, tz: TimeZone = .current) -> Date {
+    var dateComponents = DateComponents()
+    dateComponents.year = year
+    dateComponents.month = month
+    dateComponents.day = day
+    dateComponents.timeZone = tz
+    dateComponents.hour = hour
+    dateComponents.minute = minute
+
+    let fullSeconds = Int(second)
+    let nanoseconds = Int((second - Double(fullSeconds)) * 1_000_000_000)
+    dateComponents.second = fullSeconds
+    dateComponents.nanosecond = nanoseconds
+
+    var cal = Calendar.current
+    cal.timeZone = tz
+    let date = cal.date(from: dateComponents)!
+    return date
+}

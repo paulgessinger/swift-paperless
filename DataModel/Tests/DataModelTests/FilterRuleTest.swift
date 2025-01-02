@@ -15,19 +15,6 @@ struct DecodeHelper: Codable, Equatable {
     let value: String?
 }
 
-private func datetime(year: Int, month: Int, day: Int) -> Date {
-    var dateComponents = DateComponents()
-    dateComponents.year = year
-    dateComponents.month = month
-    dateComponents.day = day
-    dateComponents.timeZone = TimeZone(abbreviation: "UTC")
-    dateComponents.hour = 0
-    dateComponents.minute = 0
-
-    let date = Calendar.current.date(from: dateComponents)!
-    return date
-}
-
 @Suite
 struct FilterRuleTest {
     @Test
