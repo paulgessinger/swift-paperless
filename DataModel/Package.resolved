@@ -1,0 +1,42 @@
+{
+  "originHash" : "c64782484e845e6b60cc1f76bce41735032278b3e001ae203e5a38b859a19e23",
+  "pins" : [
+    {
+      "identity" : "metacodable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyLab/MetaCodable",
+      "state" : {
+        "revision" : "7246a7fde82c8ca2c361e9537a5058646ac8aab7",
+        "version" : "1.4.0"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "state" : {
+        "revision" : "41982a3656a71c768319979febd796c6fd111d5c",
+        "version" : "1.5.0"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "revision" : "671108c96644956dddcd89dd59c203dcdb36cec7",
+        "version" : "1.1.4"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
+      }
+    }
+  ],
+  "version" : 3
+}
