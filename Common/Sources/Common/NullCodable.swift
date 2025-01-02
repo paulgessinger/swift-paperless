@@ -6,38 +6,22 @@
 //
 
 import Foundation
+import MetaCodable
 
-@propertyWrapper
-public struct NullCodable<T> {
-    public var wrappedValue: T?
+public struct NullCoder<T>: HelperCoder where T: Codable {
+    public init() {}
 
-    public init(wrappedValue: T?) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension NullCodable: Sendable where T: Sendable {}
-
-extension NullCodable: Encodable where T: Encodable {
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch wrappedValue {
-        case .none:
-            try container.encodeNil()
-        case let .some(value):
-            try container.encode(value)
-        }
-    }
-}
-
-extension NullCodable: Decodable where T: Decodable {
-    public init(from decoder: any Decoder) throws {
+    public func decode(from decoder: any Decoder) throws -> T {
         let container = try decoder.singleValueContainer()
-        if !container.decodeNil() {
-            wrappedValue = try container.decode(T.self)
+        return try container.decode(T.self)
+    }
+
+    public func encodeIfPresent<EncodingContainer>(_ value: T?, to container: inout EncodingContainer, atKey key: EncodingContainer.Key) throws where EncodingContainer: KeyedEncodingContainerProtocol {
+        var svc = container.superEncoder(forKey: key).singleValueContainer()
+        if let value {
+            try svc.encode(value)
+        } else {
+            try svc.encodeNil()
         }
     }
 }
-
-extension NullCodable: Equatable where T: Equatable {}
-extension NullCodable: Hashable where T: Hashable {}

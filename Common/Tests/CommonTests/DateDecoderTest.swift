@@ -43,4 +43,20 @@ struct DateDecoderTest {
         #expect(components.day == 21)
         #expect(components.hour == 0)
     }
+
+    @Test
+    func testDecodeDateOnly() throws {
+        let input = "\"2024-12-21\"".data(using: .utf8)!
+        let date = try makeDecoder(tz: tz).decode(Date.self, from: input)
+        print(date)
+
+        var cal = Calendar.current
+        cal.timeZone = tz
+
+        let components = cal.dateComponents([.year, .month, .day, .hour], from: date)
+        #expect(components.year == 2024)
+        #expect(components.month == 12)
+        #expect(components.day == 21)
+        #expect(components.hour == 0)
+    }
 }

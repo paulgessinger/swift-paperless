@@ -22,6 +22,11 @@ func testData(_ file: String) -> Data? {
     }
 }
 
+func dateApprox(_ lhs: Date, _ rhs: Date) -> Bool {
+    let distance = lhs.distance(to: rhs)
+    return abs(distance) < 1
+}
+
 func datetime(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0, second: Double = 0, tz: TimeZone = .current) -> Date {
     var dateComponents = DateComponents()
     dateComponents.year = year

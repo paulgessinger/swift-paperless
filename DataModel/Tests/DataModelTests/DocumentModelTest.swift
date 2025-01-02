@@ -12,11 +12,6 @@ import Testing
 let tz = TimeZone(secondsFromGMT: 60 * 60)!
 let decoder = makeDecoder(tz: tz)
 
-func dateApprox(_ lhs: Date, _ rhs: Date) -> Bool {
-    let distance = lhs.distance(to: rhs)
-    return abs(distance) < 1
-}
-
 @Suite
 struct DocumentModelTest {
     @Test
@@ -53,6 +48,8 @@ struct DocumentModelTest {
     @Test
     func testSetPermissionsKey() throws {
         var document = Document(id: 123, title: "hallo", created: .now, tags: [], notes: [])
+        document.added = .now
+        document.modified = .now
         document.permissions = Permissions(view: Permissions.Set(users: [1], groups: [2]), change: Permissions.Set(users: [3], groups: [4]))
 
         let json = try JSONEncoder().encode(document)
@@ -64,10 +61,18 @@ struct DocumentModelTest {
         let decoded = try JSONDecoder().decode(Helper.self, from: json)
         #expect(decoded.set_permissions == document.permissions)
 
-        // 'permissions' key is not written at all
         let string = try #require(String(data: json, encoding: .utf8))
-        let ex = /"permissions":/
-        #expect(string.contains(ex) == false)
+
+        let absent = { (key: String) -> Bool in
+            let ex = try Regex("\"\(key)\":")
+            return string.contains(ex) == false
+        }
+
+        #expect(try absent("notes"))
+        #expect(try absent("user_can_change"))
+        #expect(try absent("permissions"))
+        #expect(try absent("added"))
+        #expect(try absent("modified"))
     }
 
     @Test
@@ -118,9 +123,9 @@ struct DocumentModelTest {
         document[keyPath: component.keyPath] = nil
 
         let json = try #require(String(data: JSONEncoder().encode(document), encoding: .utf8))
-        print(json)
         let ex = try Regex("\"\(component.rawValue)\": ?null")
 
-        #expect(try ex.firstMatch(in: json) != nil)
+        let match = try ex.firstMatch(in: json)
+        #expect(match != nil)
     }
 }
