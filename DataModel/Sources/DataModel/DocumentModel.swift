@@ -19,6 +19,7 @@ public protocol DocumentProtocol: Codable {
 
 @Codable
 @CodingKeys(.snake_case)
+@MemberInit
 public struct Document: Identifiable, Equatable, Hashable, Sendable {
     public var id: UInt
     public var title: String
@@ -64,13 +65,10 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     public var notes: [Note]
 
     // Presense of this depends on the endpoint
+    // If we didn't get a value, we likely just modified
     @IgnoreEncoding
-    var _userCanChange: Bool?
-
-    public var userCanChange: Bool {
-        // If we didn't get a value, we likely just modified
-        _userCanChange ?? true
-    }
+    @Default(true)
+    var userCanChange: Bool?
 
     // Presense of this depends on the endpoint
     @IgnoreEncoding
@@ -82,24 +80,6 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 
     // The API wants this extra key for writing perms
     public var setPermissions: Permissions?
-
-    public init(id: UInt, title: String, asn: UInt? = nil, documentType: UInt? = nil, correspondent: UInt? = nil, created: Date, tags: [UInt], added: Date? = nil, modified: Date? = nil, storagePath: UInt? = nil, owner: UInt? = nil, notes: [Note], userCanChange: Bool = true, permissions: Permissions? = nil, setPermissions: Permissions? = nil) {
-        self.id = id
-        self.title = title
-        self.asn = asn
-        self.documentType = documentType
-        self.correspondent = correspondent
-        self.created = created
-        self.tags = tags
-        self.added = added
-        self.modified = modified
-        self.storagePath = storagePath
-        self.owner = owner
-        self.notes = notes
-        _userCanChange = userCanChange
-        self.permissions = permissions
-        self.setPermissions = setPermissions
-    }
 }
 
 extension Document: Model {}
