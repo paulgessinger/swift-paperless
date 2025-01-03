@@ -801,53 +801,6 @@
         }
       }
     },
-    "errorBadRequest" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wenn du *mTLS* verwendest, könnte dies bedeuten, dass du ein Client-Zertifikat bereitstellen musst, oder dass das Client-Zertifikat nicht akzeptiert wurde."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si vous utilisez *mTLS*, cela peut indiquer que vous devez fournir un certificat client ou que le certificat client n'a pas été accepté."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se stai usando *mTLS*, questo potrebbe indicare la necessità di fornire un certificato cliente o il certificato cliente non è stato accettato."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Als je *mTLS* gebruikt, kan dit aangeven dat je een client certificaat moet verstrekken of dat het client certificaat niet is geaccepteerd."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeśli używasz *mTLS*, może to oznaczać, że musisz dostarczyć certyfikat klienta lub certyfikat klienta nie został zaakceptowany."
-          }
-        }
-      }
-    },
     "errorInsufficientPermissionsDetail" : {
       "extractionState" : "manual",
       "localizations" : {

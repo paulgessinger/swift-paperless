@@ -168,7 +168,7 @@ actor PreviewRepository: Repository {
                                        notes: notes)
         }
 
-        documents[2]?.title = "I am a very long document title that will not fit into a single line."
+        documents[2]?.title = "I am a very long document title that will not."
 
         self.documents = documents
         self.correspondents = correspondents

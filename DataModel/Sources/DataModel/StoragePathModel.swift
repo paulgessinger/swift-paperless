@@ -6,12 +6,16 @@
 //
 
 import Foundation
+import MetaCodable
 
 public protocol StoragePathProtocol: Codable, MatchingModel {
     var name: String { get set }
     var path: String { get set }
 }
 
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
 public struct StoragePath:
     StoragePathProtocol, Model, Identifiable, Hashable, Named, Sendable
 {
@@ -23,46 +27,24 @@ public struct StoragePath:
     public var matchingAlgorithm: MatchingAlgorithm
     public var match: String
     public var isInsensitive: Bool
-
-    public init(id: UInt, name: String, path: String, slug: String, matchingAlgorithm: MatchingAlgorithm, match: String, isInsensitive: Bool) {
-        self.id = id
-        self.name = name
-        self.path = path
-        self.slug = slug
-        self.matchingAlgorithm = matchingAlgorithm
-        self.match = match
-        self.isInsensitive = isInsensitive
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case id, name, path, slug
-
-        case match
-        case matchingAlgorithm = "matching_algorithm"
-        case isInsensitive = "is_insensitive"
-    }
 }
 
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
 public struct ProtoStoragePath: StoragePathProtocol, Sendable {
+    @Default("")
     public var name: String
+
+    @Default("")
     public var path: String
 
+    @Default(MatchingAlgorithm.none)
     public var matchingAlgorithm: MatchingAlgorithm
+
+    @Default("")
     public var match: String
+
+    @Default(false)
     public var isInsensitive: Bool
-
-    public init(name: String = "", path: String = "", matchingAlgorithm: MatchingAlgorithm = .none, match: String = "", isInsensitive: Bool = false) {
-        self.name = name
-        self.path = path
-        self.matchingAlgorithm = matchingAlgorithm
-        self.match = match
-        self.isInsensitive = isInsensitive
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case name, path
-        case match
-        case matchingAlgorithm = "matching_algorithm"
-        case isInsensitive = "is_insensitive"
-    }
 }

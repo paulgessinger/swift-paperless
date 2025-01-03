@@ -6,13 +6,16 @@
 //
 
 import Foundation
+import MetaCodable
 
 public protocol DocumentTypeProtocol: Equatable, MatchingModel {
     var name: String { get set }
 }
 
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
 public struct DocumentType:
-    Codable,
     Hashable,
     Identifiable,
     Model,
@@ -27,42 +30,21 @@ public struct DocumentType:
     public var match: String
     public var matchingAlgorithm: MatchingAlgorithm
     public var isInsensitive: Bool
-
-    public init(id: UInt, name: String, slug: String, match: String, matchingAlgorithm: MatchingAlgorithm, isInsensitive: Bool) {
-        self.id = id
-        self.name = name
-        self.slug = slug
-        self.match = match
-        self.matchingAlgorithm = matchingAlgorithm
-        self.isInsensitive = isInsensitive
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case id, name, slug
-        case match
-        case matchingAlgorithm = "matching_algorithm"
-        case isInsensitive = "is_insensitive"
-    }
 }
 
-public struct ProtoDocumentType: Codable, Hashable, DocumentTypeProtocol, Sendable {
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
+public struct ProtoDocumentType: Hashable, DocumentTypeProtocol, Sendable {
+    @Default("")
     public var name: String
 
+    @Default("")
     public var match: String
+
+    @Default(MatchingAlgorithm.auto)
     public var matchingAlgorithm: MatchingAlgorithm
+
+    @Default(false)
     public var isInsensitive: Bool
-
-    public init(name: String = "", match: String = "", matchingAlgorithm: MatchingAlgorithm = .auto, isInsensitive: Bool = false) {
-        self.name = name
-        self.match = match
-        self.matchingAlgorithm = matchingAlgorithm
-        self.isInsensitive = isInsensitive
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case name
-        case match
-        case matchingAlgorithm = "matching_algorithm"
-        case isInsensitive = "is_insensitive"
-    }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum SortOrder: Codable, Sendable {
+public enum SortOrder: Codable, Sendable, Equatable {
     case ascending
     case descending
 

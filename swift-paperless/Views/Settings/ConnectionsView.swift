@@ -9,19 +9,47 @@ import Common
 import os
 import SwiftUI
 
-struct ConnectionSelectionMenu: View {
+private struct ConnectionSelectionViews: View {
     @ObservedObject var connectionManager: ConnectionManager
+    let animated: Bool
 
     var body: some View {
         ForEach(connectionManager.connections.values.sorted(by: { $0.url.absoluteString < $1.url.absoluteString })) { conn in
             Button {
-                connectionManager.activeConnectionId = conn.id
+                connectionManager.setActiveConnection(id: conn.id,
+                                                      animated: animated)
             } label: {
                 // Bit of a hack to have by-character line breaks
                 let label = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
                 Text(label.map { String($0) }.joined(separator: "\u{200B}"))
             }
             .disabled(conn.id == connectionManager.activeConnectionId)
+        }
+    }
+}
+
+struct ConnectionSelectionMenu: View {
+    @ObservedObject var connectionManager: ConnectionManager
+    let animated: Bool
+
+    var body: some View {
+        if let stored = connectionManager.storedConnection {
+            Menu {
+                ConnectionSelectionViews(connectionManager: connectionManager, animated: animated)
+            } label: {
+                HStack {
+                    let label = connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
+                    Text(label)
+                        .font(.body)
+                        .foregroundStyle(.gray)
+                        .multilineTextAlignment(.leading)
+                    Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
+                          systemImage: "chevron.up.chevron.down")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.gray)
+                }
+//            .frame(maxWidth: .infinity)
+            }
         }
     }
 }
@@ -50,7 +78,8 @@ struct ConnectionsView: View {
                 HStack {
                     Text(.settings(.activeServerUrl))
                     Menu {
-                        ConnectionSelectionMenu(connectionManager: connectionManager)
+                        ConnectionSelectionViews(connectionManager: connectionManager,
+                                                 animated: false)
                     } label: {
                         Text(stored.url.absoluteString)
                             .font(.body)
@@ -82,7 +111,7 @@ struct ConnectionsView: View {
 
                 .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
                     Button(String(localized: .localizable(.logout)), role: .destructive) {
-                        connectionManager.logout()
+                        connectionManager.logout(animated: false)
                     }
                     Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                 }
@@ -138,7 +167,7 @@ struct ConnectionQuickChangeMenu: View {
     var body: some View {
         if connectionManager.connections.count > 1 {
             Menu {
-                ConnectionSelectionMenu(connectionManager: connectionManager)
+                ConnectionSelectionViews(connectionManager: connectionManager, animated: true)
             } label: {
                 Text(.settings(.activeServer))
             }

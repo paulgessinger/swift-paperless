@@ -1,0 +1,37 @@
+[
+    {
+        "id": 42,
+        "username": "testuser123",
+        "email": "test.user@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "date_joined": "2024-03-03T15:30:45.123456+01:00",
+        "is_staff": true,
+        "is_active": true,
+        "is_superuser": false,
+        "groups": [1, 3, 5],
+        "user_permissions": [
+            "view_document",
+            "add_document",
+            "delete_document"
+        ],
+        "inherited_permissions": [
+            "view_tag",
+            "add_tag"
+        ]
+    },
+    {
+        "id": 77,
+        "username": "admin",
+        "email": "admin@example.com",
+        "first_name": "System",
+        "last_name": "Administrator",
+        "date_joined": "2023-12-25T08:15:30.987654+01:00",
+        "is_staff": true,
+        "is_active": true,
+        "is_superuser": true,
+        "groups": [1],
+        "user_permissions": ["*"],
+        "inherited_permissions": []
+    }
+]

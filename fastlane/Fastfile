@@ -67,7 +67,7 @@ platform :ios do
 
     build_app(
       scheme: "swift-paperless",
-      xcargs: "-skipPackagePluginValidation" # seemingly no alternative on CI
+      xcargs: "-skipPackagePluginValidation -skipMacroValidation" # seemingly no alternative on CI
     )
 
     git_commit(
@@ -110,7 +110,7 @@ platform :ios do
 
     run_tests(
       scheme: "swift-paperlessTests",
-      xcargs: "-skipPackagePluginValidation",
+      xcargs: "-skipPackagePluginValidation -skipMacroValidation",
       output_types: ""
     )
 
@@ -131,13 +131,13 @@ platform :ios do
     )
 
     device = options.fetch(:device, "iPhone 16 Pro")
-    ios = options.fetch(:ios, "18.1")
+    ios = options.fetch(:ios, "18.2")
 
 
     build_app(
       scheme: "swift-paperless",
       destination: "platform=iOS Simulator,OS=#{ios},name=#{device}",
-      xcargs: "-skipPackagePluginValidation",
+      xcargs: "-skipPackagePluginValidation -skipMacroValidation",
     )
   end
 

@@ -36,7 +36,6 @@ public func makeDecoder(tz: TimeZone) -> JSONDecoder {
 
         throw DateDecodingError.invalidDate(string: dateStr)
     }
-//    d.keyDecodingStrategy = .convertFromSnakeCase
     return d
 }
 

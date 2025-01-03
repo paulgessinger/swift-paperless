@@ -17,15 +17,13 @@ import Testing
 
     @Test
     func testFromHex() throws {
-        #expect(throws: Color.HexError.invalid("nope")) {
-            try Color(hex: "nope")
-        }
+        #expect(Color(hex: "nope") == nil)
 
-        try #expect(Color(hex: "#ffffff") == Color.white)
-        try #expect(Color(hex: "#000000") == Color.black)
-        try #expect(Color(hex: "#ff0000") == Color(.sRGB, red: 1, green: 0, blue: 0))
-        try #expect(Color(hex: "#00ff00") == Color(.sRGB, red: 0, green: 1, blue: 0))
-        try #expect(Color(hex: "#0000ff") == Color(.sRGB, red: 0, green: 0, blue: 1))
+        #expect(Color(hex: "#ffffff")! == Color.white)
+        #expect(Color(hex: "#000000")! == Color.black)
+        #expect(Color(hex: "#ff0000")! == Color(.sRGB, red: 1, green: 0, blue: 0))
+        #expect(Color(hex: "#00ff00")! == Color(.sRGB, red: 0, green: 1, blue: 0))
+        #expect(Color(hex: "#0000ff")! == Color(.sRGB, red: 0, green: 0, blue: 1))
     }
 
     @Test

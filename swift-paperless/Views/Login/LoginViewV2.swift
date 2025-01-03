@@ -314,11 +314,11 @@ private struct CredentialsStageView: View {
         guard loginEnabled else { return }
         Logger.shared.info("Attempting to validate the credentials")
         Task {
-            do {
-                let stored = try await viewModel.validateCredentials()
+            // Getting nil here means we got an error, but the view model handles this internally
+            if let stored = await viewModel.validateCredentials() {
                 onSuccess(stored)
-            } catch {
-                Logger.shared.error("Got error validating credentials: \(error)")
+            } else {
+                Logger.shared.error("Got error validating credentials")
             }
         }
     }

@@ -6,6 +6,7 @@
 //
 
 import AuthenticationServices
+import Combine
 import Common
 import CryptoKit
 import DataModel
@@ -185,6 +186,13 @@ class ConnectionManager: ObservableObject {
         }
     }
 
+    enum Event {
+        case connectionChange(animated: Bool)
+    }
+
+    var eventPublisher =
+        PassthroughSubject<Event, Never>()
+
     let previewMode: Bool
 
     init(previewMode: Bool? = nil) {
@@ -221,10 +229,15 @@ class ConnectionManager: ObservableObject {
     }
 
     @UserDefaultsBacked("ActiveConnectionId", storage: .group)
-    var activeConnectionId: UUID? = nil {
+    private(set) var activeConnectionId: UUID? = nil {
         willSet {
             objectWillChange.send()
         }
+    }
+
+    func setActiveConnection(id: UUID, animated: Bool = true) {
+        activeConnectionId = id
+        eventPublisher.send(.connectionChange(animated: animated))
     }
 
     func isServerUnique(_ url: URL) -> Bool {
@@ -338,7 +351,7 @@ class ConnectionManager: ObservableObject {
     func login(_ connection: StoredConnection) {
         Logger.api.info("Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
         connections[connection.id] = connection
-        activeConnectionId = connection.id
+        setActiveConnection(id: connection.id, animated: false)
     }
 
     func setExtraHeaders(_ headers: [HeaderValue]) {
@@ -351,7 +364,7 @@ class ConnectionManager: ObservableObject {
         connections[stored.id] = stored
     }
 
-    func logout() {
+    func logout(animated: Bool) {
         Logger.api.info("Requested logout from current server")
 
         // @TODO: (multi-server) Remove in a few versions
@@ -377,7 +390,7 @@ class ConnectionManager: ObservableObject {
             Logger.api.info("Have \(count)")
             if let newConn = connections.first?.value {
                 Logger.api.info("Setting connection to \(newConn.id)")
-                self.activeConnectionId = newConn.id
+                setActiveConnection(id: newConn.id, animated: animated)
             } else {
                 Logger.api.info("Setting active connection to nil")
                 self.activeConnectionId = nil

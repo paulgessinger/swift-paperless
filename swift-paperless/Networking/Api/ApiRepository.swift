@@ -333,6 +333,10 @@ extension ApiRepository: Repository {
             mp.add(name: "document_type", string: String(dt))
         }
 
+        if let storagePath = document.storagePath {
+            mp.add(name: "storage_path", string: String(storagePath))
+        }
+
         for tag in document.tags {
             mp.add(name: "tags", string: String(tag))
         }
@@ -640,15 +644,14 @@ extension ApiRepository: Repository {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
-    private struct UiSettingsResponse: Codable {
-        var user: User
+    func currentUser() async throws -> User {
+        try await uiSettings().user
     }
 
-    func currentUser() async throws -> User {
+    func uiSettings() async throws -> UISettings {
         let request = try request(.uiSettings())
         let (data, _) = try await fetchData(for: request)
-        let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
-        return uiSettings.user
+        return try decoder.decode(UISettings.self, from: data)
     }
 
     func tasks() async throws -> [PaperlessTask] {

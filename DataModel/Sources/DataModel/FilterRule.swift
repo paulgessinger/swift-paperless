@@ -11,7 +11,7 @@ import os
 
 extension FilterRuleType: Codable {}
 
-public enum FilterRuleValue: Codable, Equatable, Sendable {
+public enum FilterRuleValue: Equatable, Sendable {
     case date(value: Date)
     case number(value: Int)
     case tag(id: UInt)
@@ -28,6 +28,7 @@ public enum FilterRuleValue: Codable, Equatable, Sendable {
         switch self {
         case let .date(value):
             let dateFormatter = DateFormatter()
+            dateFormatter.timeZone = .gmt
             dateFormatter.dateFormat = "yyyy-MM-dd"
             s = dateFormatter.string(from: value)
         case let .number(value):
@@ -154,11 +155,6 @@ public struct FilterRule: Equatable, Sendable {
         }
     }
 
-    private enum CodingKeys: String, CodingKey {
-        case ruleType = "rule_type"
-        case value
-    }
-
     public static func queryItems(for rules: [FilterRule]) -> [URLQueryItem] {
         var result: [URLQueryItem] = []
 
@@ -199,6 +195,11 @@ public struct FilterRule: Equatable, Sendable {
 }
 
 extension FilterRule: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case ruleType = "rule_type"
+        case value
+    }
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         ruleType = try container.decode(FilterRuleType.self, forKey: .ruleType)

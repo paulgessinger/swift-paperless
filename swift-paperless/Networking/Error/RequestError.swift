@@ -49,8 +49,18 @@ extension RequestError: DisplayableError {
         case .invalidResponse:
             raw = String(localized: .localizable(.requestErrorInvalidResponse))
 
-        case let .unexpectedStatusCode(code, _):
-            raw = String(localized: .localizable(.requestErrorUnexpectedStatusCode(code.description)))
+        case let .unexpectedStatusCode(code, details):
+            var msg = String(localized: .localizable(.requestErrorUnexpectedStatusCode(code.description)))
+
+            if let details {
+                if !Self.isMTLSError(code: code, message: details) {
+                    // We're not sure this is an SSL error, show details just in case
+                    msg += " " + .localizable(.requestErrorDetailLabel) + ": \n\n"
+                        + details
+                }
+                msg += " " + .localizable(.requestErrorMTLS)
+            }
+            raw = msg
 
         case let .forbidden(detail):
             var s = String(localized: .localizable(.requestErrorForbidden))
@@ -90,11 +100,21 @@ extension RequestError: DisplayableError {
             DocumentationLinks.supportedVersions
         case .localNetworkDenied:
             DocumentationLinks.localNetworkDenied
+        case let .unexpectedStatusCode(code, detail) where code == .badRequest && detail != nil && Self.isMTLSError(code: code, message: detail!):
+            DocumentationLinks.certificate
         case .certificate:
             DocumentationLinks.certificate
         default:
             nil
         }
+    }
+
+    static func isMTLSError(code: HTTPStatusCode, message: String) -> Bool {
+        guard code == .badRequest else {
+            return false
+        }
+
+        return message.contains("SSL") || message.contains("certificate")
     }
 }
 

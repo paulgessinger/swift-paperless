@@ -6,5 +6,5 @@
 //
 
 public enum MatchingAlgorithm: Int, Codable, CaseIterable, Sendable {
-    case none, any, all, literal, regex, fuzzy, auto
+    case none = 0, any = 1, all = 2, literal = 3, regex = 4, fuzzy = 5, auto = 6
 }
