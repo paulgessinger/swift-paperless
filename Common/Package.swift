@@ -19,6 +19,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "600.0.1"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.5.2"),
+        .package(url: "https://github.com/SwiftyLab/MetaCodable", from: "1.4.0"),
 
     ],
     targets: [
@@ -31,7 +32,8 @@ let package = Package(
         ),
         .target(
             name: "Common",
-            dependencies: ["CommonMacros"],
+            dependencies: ["CommonMacros",
+                           .product(name: "MetaCodable", package: "MetaCodable")],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
                 .enableExperimentalFeature("StrictConcurrency"),

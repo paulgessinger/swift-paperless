@@ -28,6 +28,7 @@ public enum FilterRuleValue: Codable, Equatable, Sendable {
         switch self {
         case let .date(value):
             let dateFormatter = DateFormatter()
+            dateFormatter.timeZone = .gmt
             dateFormatter.dateFormat = "yyyy-MM-dd"
             s = dateFormatter.string(from: value)
         case let .number(value):

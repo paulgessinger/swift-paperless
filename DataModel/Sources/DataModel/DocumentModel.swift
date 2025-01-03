@@ -7,6 +7,7 @@
 
 import Common
 import Foundation
+import MetaCodable
 
 public protocol DocumentProtocol: Codable {
     var documentType: UInt? { get set }
@@ -16,32 +17,36 @@ public protocol DocumentProtocol: Codable {
     var storagePath: UInt? { get set }
 }
 
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
 public struct Document: Identifiable, Equatable, Hashable, Sendable {
     public var id: UInt
     public var title: String
 
-    @NullCodable
+    @CodedAt("archive_serial_number")
+    @CodedBy(NullCoder<UInt>())
     public var asn: UInt?
 
-    @NullCodable
+    @CodedBy(NullCoder<UInt>())
     public var documentType: UInt?
 
-    @NullCodable
+    @CodedBy(NullCoder<UInt>())
     public var correspondent: UInt?
 
     public var created: Date
     public var tags: [UInt]
 
-    @DecodeOnly
+    @IgnoreEncoding
     public var added: Date?
 
-    @DecodeOnly
+    @IgnoreEncoding
     public var modified: Date?
 
-    @NullCodable
+    @CodedBy(NullCoder<UInt>())
     public var storagePath: UInt?
 
-    @NullCodable
+    @CodedBy(NullCoder<UInt>())
     public var owner: UInt?
 
     public struct Note: Identifiable, Equatable, Sendable, Codable, Hashable {
@@ -56,20 +61,17 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
         }
     }
 
-    @DecodeOnly
+    @IgnoreEncoding
     public var notes: [Note]
 
     // Presense of this depends on the endpoint
-    @DecodeOnly
-    var _userCanChange: Bool?
-
-    public var userCanChange: Bool {
-        // If we didn't get a value, we likely just modified
-        _userCanChange ?? true
-    }
+    // If we didn't get a value, we likely just modified
+    @IgnoreEncoding
+    @Default(true)
+    var userCanChange: Bool?
 
     // Presense of this depends on the endpoint
-    @DecodeOnly
+    @IgnoreEncoding
     public var permissions: Permissions? {
         didSet {
             setPermissions = permissions
@@ -78,37 +80,6 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 
     // The API wants this extra key for writing perms
     public var setPermissions: Permissions?
-
-    public init(id: UInt, title: String, asn: UInt? = nil, documentType: UInt? = nil, correspondent: UInt? = nil, created: Date, tags: [UInt], added: Date? = nil, modified: Date? = nil, storagePath: UInt? = nil, owner: UInt? = nil, notes: [Note], userCanChange: Bool = true, permissions: Permissions? = nil, setPermissions: Permissions? = nil) {
-        self.id = id
-        self.title = title
-        self.asn = asn
-        self.documentType = documentType
-        self.correspondent = correspondent
-        self.created = created
-        self.tags = tags
-        self.added = added
-        self.modified = modified
-        self.storagePath = storagePath
-        self.owner = owner
-        self.notes = notes
-        _userCanChange = userCanChange
-        self.permissions = permissions
-        self.setPermissions = setPermissions
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case id, title
-        case asn = "archive_serial_number"
-        case documentType = "document_type"
-        case correspondent, created, tags, added
-        case storagePath = "storage_path"
-        case notes
-        case _userCanChange = "user_can_change"
-        case owner
-        case permissions
-        case setPermissions = "set_permissions"
-    }
 }
 
 extension Document: Model {}

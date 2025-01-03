@@ -6,21 +6,57 @@
 //
 
 import Common
-import XCTest
+import Foundation
+import Testing
 
-final class DateDecoderTest: XCTestCase {
-    func testISO8691() throws {
+let tz = TimeZone(secondsFromGMT: 60 * 60)!
+
+@Suite
+struct DateDecoderTest {
+    @Test
+    func testISO8691Zulu() throws {
         let input = "\"2024-05-13T23:38:10.546679Z\"".data(using: .utf8)!
-        _ = try makeDecoder(tz: .current).decode(Date.self, from: input)
+        let date = try makeDecoder(tz: .current).decode(Date.self, from: input)
+        var cal = Calendar.current
+        cal.timeZone = tz
+        let components = cal.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        #expect(components.year == 2024)
+        #expect(components.month == 5)
+        #expect(components.day == 14)
+        #expect(components.hour == 0)
+        #expect(components.minute == 38)
+        #expect(components.second == 10)
     }
 
-    func testDates() throws {
-        let input = "\"2023-02-25T10:13:54.057805+01:00\"".data(using: .utf8)!
-        let date = try decoder.decode(Date.self, from: input)
-        XCTAssertNotNil(date)
+    @Test
+    func testMidnightTimeZone() throws {
+        let input = "\"2024-12-21T00:00:00+01:00\"".data(using: .utf8)!
+        let date = try makeDecoder(tz: tz).decode(Date.self, from: input)
+        print(tz.secondsFromGMT())
 
-        let input2 = "\"2023-02-18T00:00:00+01:00\"".data(using: .utf8)!
-        let date2 = try decoder.decode(Date.self, from: input2)
-        XCTAssertNotNil(date2)
+        var cal = Calendar.current
+        cal.timeZone = tz
+
+        let components = cal.dateComponents([.year, .month, .day, .hour], from: date)
+        #expect(components.year == 2024)
+        #expect(components.month == 12)
+        #expect(components.day == 21)
+        #expect(components.hour == 0)
+    }
+
+    @Test
+    func testDecodeDateOnly() throws {
+        let input = "\"2024-12-21\"".data(using: .utf8)!
+        let date = try makeDecoder(tz: tz).decode(Date.self, from: input)
+        print(date)
+
+        var cal = Calendar.current
+        cal.timeZone = tz
+
+        let components = cal.dateComponents([.year, .month, .day, .hour], from: date)
+        #expect(components.year == 2024)
+        #expect(components.month == 12)
+        #expect(components.day == 21)
+        #expect(components.hour == 0)
     }
 }

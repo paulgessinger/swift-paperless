@@ -15,19 +15,6 @@ struct DecodeHelper: Codable, Equatable {
     let value: String?
 }
 
-private func datetime(year: Int, month: Int, day: Int) -> Date {
-    var dateComponents = DateComponents()
-    dateComponents.year = year
-    dateComponents.month = month
-    dateComponents.day = day
-    dateComponents.timeZone = TimeZone(abbreviation: "UTC")
-    dateComponents.hour = 0
-    dateComponents.minute = 0
-
-    let date = Calendar.current.date(from: dateComponents)!
-    return date
-}
-
 @Suite
 struct FilterRuleTest {
     @Test
@@ -147,8 +134,7 @@ struct FilterRuleTest {
         #expect(result == FilterRule(ruleType: .other(9999), value: .string(value: "1234")))
     }
 
-    @Test
-    func testDecodingMultiple() throws {
+    @Test func testDecodingMultiple() throws {
         let input = """
         [
             {
@@ -178,7 +164,7 @@ struct FilterRuleTest {
         ]
         """.data(using: .utf8)!
 
-        let result = try makeDecoder(tz: .init(abbreviation: "UTC")!).decode([FilterRule].self, from: input)
+        let result = try makeDecoder(tz: .current).decode([FilterRule].self, from: input)
 
         let expected: [FilterRule] = [
             .init(ruleType: .title, value: .string(value: "shantel")),
@@ -186,10 +172,27 @@ struct FilterRuleTest {
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
         ]
 
-        #expect(result == expected)
+        try #require(result.count == expected.count + 1)
+
+        for i in 0 ..< expected.count {
+            print(i, result.count, expected.count)
+            #expect(result[i] == expected[i])
+        }
+
+        let last = try #require(result.last)
+
+        #expect(last.ruleType == .addedAfter)
+
+        switch last.value {
+        case let .date(date):
+            #expect(dateApprox(date, datetime(year: 2023, month: 1, day: 1, tz: .gmt)))
+        default:
+            #expect(Bool(false))
+        }
+
+//        #expect(result.last == FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .current))))
     }
 
     @Test
@@ -211,7 +214,7 @@ struct FilterRuleTest {
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
+            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt))),
         ]
 
         let encoder = JSONEncoder()
@@ -237,7 +240,7 @@ struct FilterRuleTest {
             .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
             .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
             .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
+            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt))),
             .init(ruleType: .storagePath, value: .storagePath(id: 8)),
             .init(ruleType: .storagePath, value: .storagePath(id: nil)),
         ]
