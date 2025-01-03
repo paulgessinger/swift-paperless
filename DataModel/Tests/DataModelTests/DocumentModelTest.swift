@@ -9,8 +9,8 @@ import Common
 import Foundation
 import Testing
 
-let tz = TimeZone(secondsFromGMT: 60 * 60)!
-let decoder = makeDecoder(tz: tz)
+private let tz = TimeZone(secondsFromGMT: 60 * 60)!
+private let decoder = makeDecoder(tz: tz)
 
 @Suite
 struct DocumentModelTest {
