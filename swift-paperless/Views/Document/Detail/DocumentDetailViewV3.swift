@@ -39,6 +39,74 @@ private struct Aspect: View {
     }
 }
 
+private struct ScrollViewFade<Content: View>: View {
+    let content: () -> Content
+
+    @State private var offset: Double = 0
+    @State private var height: CGFloat = 0
+
+    private func adapt(_ view: some View) -> some View {
+        if #available(iOS 18.0, *) {
+            return view
+                .onScrollGeometryChange(for: Double.self, of: { geo in geo.contentOffset.y }, action: {
+                    _, newValue in
+                    offset = newValue
+                })
+        } else {
+            return view
+        }
+    }
+
+    private var showGradient: Bool {
+        offset <= 0
+    }
+
+    private var gradient: some View {
+        VStack {
+            if showGradient {
+                LinearGradient(stops: [
+                    Gradient.Stop(color: Color.white, location: 0),
+                    Gradient.Stop(color: Color.clear, location: 1),
+                ], startPoint: .top, endPoint: .bottom)
+            } else {
+                Rectangle().fill(Color.white)
+            }
+        }
+        .animation(.default, value: showGradient)
+    }
+
+    var body: some View {
+        adapt(
+            ScrollView(.vertical) {
+                content()
+            }
+            .scrollIndicators(.hidden)
+        )
+        .mask(
+            gradient
+        )
+    }
+}
+
+#Preview("ScrollViewFade") {
+    VStack {
+        ScrollViewFade { Text("""
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        Test I am very long and will therefore overflow and allow previewing the behavior of this component.
+        """) }
+        .frame(maxHeight: 300)
+
+        .padding()
+    }
+    .background(Color.red)
+}
+
 private struct DocumentPropertyView: View {
     @Bindable var viewModel: DocumentDetailModel
     @Binding var showEditSheet: Bool
@@ -63,37 +131,13 @@ private struct DocumentPropertyView: View {
 
     @ScaledMetric(relativeTo: .body) private var spacing = 15.0
 
-    var body: some View {
+    @State private var panelHeight: CGFloat = 0
+
+    @ViewBuilder
+    private var panel: some View {
         let document = viewModel.document
-        VStack(alignment: .leading) {
-            HStack(alignment: .top) {
-                Group {
-                    if document.title.count < 20 {
-                        Text("\(document.title)")
-                            .font(.title)
-                    } else {
-                        Text("\(document.title)")
-                            .font(.title2)
-                    }
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .offset(y: secondaryOffset)
 
-                Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.primary, .tertiary)
-                    .offset(y: secondaryOffset)
-                    .onTapGesture {
-                        Haptics.shared.impact(style: .medium)
-                        showEditSheet = true
-                    }
-                    .accessibilityIdentifier("documentEditButton")
-            }
-
+        ScrollView(.vertical) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading) {
                     HFlow(itemSpacing: spacing) {
@@ -147,17 +191,80 @@ private struct DocumentPropertyView: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(.ultraThinMaterial)
-                    .stroke(.tertiary)
-            )
-            .offset(y: detailOffset)
-            .contentShape(RoundedRectangle(cornerRadius: 15))
+
+            .background {
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear {
+                            panelHeight = geo.size.height
+                        }
+                        .onChange(of: geo.size) {
+                            panelHeight = geo.size.height
+                        }
+                }
+            }
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
+        .frame(height: min(panelHeight, 150))
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(.ultraThinMaterial)
+                .stroke(.tertiary)
+        )
+        .offset(y: detailOffset)
+        .contentShape(RoundedRectangle(cornerRadius: 15))
+    }
+
+    var body: some View {
+        let document = viewModel.document
+        VStack(alignment: .leading) {
+            HStack(alignment: .top) {
+                Text("\(document.title)")
+                    .font(.title)
+                    .foregroundStyle(.blue)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .opacity(0)
+
+                    .overlay {
+                        ViewThatFits(in: .vertical) {
+                            Text("\(document.title)")
+                                .font(.title)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                            ScrollViewFade {
+                                Text("\(document.title)")
+                                    .font(.title)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                        }
+                    }
+                    .offset(y: secondaryOffset)
+
+                Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.primary, .tertiary)
+                    .offset(y: secondaryOffset)
+                    .onTapGesture {
+                        Haptics.shared.impact(style: .medium)
+                        showEditSheet = true
+                    }
+                    .accessibilityIdentifier("documentEditButton")
+            }
+
+            panel
         }
 
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity,
+               alignment: .topLeading)
         .padding([.horizontal, .top])
+
         .sheet(isPresented: $showMetadata) {
             DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
                 .environmentObject(store)
@@ -336,7 +443,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
             .animation(.spring(duration: 0.2), value: showPropertyBar)
 
-            .highPriorityGesture(DragGesture(minimumDistance: 5, coordinateSpace: .global)
+            .gesture(DragGesture(minimumDistance: 15, coordinateSpace: .global)
                 .onChanged { value in
                     dragging = true
                     Haptics.shared.prepare()
@@ -610,6 +717,12 @@ private struct PreviewHelper: View {
     @State var document: Document?
     @State var navPath = NavigationPath()
 
+    let documentId: UInt
+
+    init(id documentId: UInt) {
+        self.documentId = documentId
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -618,7 +731,7 @@ private struct PreviewHelper: View {
                 }
             }
             .task {
-                document = try? await store.document(id: 1)
+                document = try? await store.document(id: documentId)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -635,5 +748,9 @@ private struct PreviewHelper: View {
 }
 
 #Preview("DocumentDetailsView") {
-    PreviewHelper()
+    PreviewHelper(id: 1)
+}
+
+#Preview("Long title") {
+    PreviewHelper(id: 2)
 }
