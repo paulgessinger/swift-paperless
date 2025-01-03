@@ -61,29 +61,15 @@ private struct ScrollViewFade<Content: View>: View {
         offset <= 0
     }
 
-    private let gradientHeight: CGFloat = 30
-    private var gradientStart: CGFloat {
-        1 - gradientHeight / height
-    }
-
     private var gradient: some View {
-        GeometryReader { geo in
-            VStack {
-                if showGradient {
-                    LinearGradient(stops: [
-                        Gradient.Stop(color: Color.white, location: 0),
-//                        Gradient.Stop(color: Color.white, location: gradientStart),
-                        Gradient.Stop(color: Color.clear, location: 1),
-                    ], startPoint: .top, endPoint: .bottom)
-                } else {
-                    Rectangle().fill(Color.white)
-                }
-            }
-            .onAppear {
-                height = geo.size.height
-            }
-            .onChange(of: geo.size) {
-                height = geo.size.height
+        VStack {
+            if showGradient {
+                LinearGradient(stops: [
+                    Gradient.Stop(color: Color.white, location: 0),
+                    Gradient.Stop(color: Color.clear, location: 1),
+                ], startPoint: .top, endPoint: .bottom)
+            } else {
+                Rectangle().fill(Color.white)
             }
         }
         .animation(.default, value: showGradient)
@@ -99,19 +85,6 @@ private struct ScrollViewFade<Content: View>: View {
         .mask(
             gradient
         )
-//        .frame(height: 100)
-//        .background(Color.red)
-//            .overlay(alignment: .bottom) {
-//                VStack {
-//                    if showGradient {
-//                        LinearGradient(gradient: Gradient(colors: [.clear, .white]), startPoint: .top, endPoint: .bottom)
-//                            .frame(height: 20)
-//                    }
-//                }
-//                .animation(.default, value: showGradient)
-//
-//            }
-//            .background(Color.red)
     }
 }
 
