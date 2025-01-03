@@ -1,0 +1,59 @@
+[
+    {
+        "id": 3438,
+        "task_id": "373a38ca-5f44-46f5-9466-32e55e103533",
+        "task_file_name": "sample_document_001.pdf",
+        "date_created": "2025-01-03T10:45:02.684333+01:00",
+        "date_done": "2025-01-03T10:45:04.371895+01:00",
+        "type": "file",
+        "status": "SUCCESS",
+        "result": "Success. New document id 2737 created",
+        "acknowledged": false,
+        "related_document": "2737"
+    },
+    {
+        "id": 3437,
+        "task_id": "9b7519d6-5dd9-4686-8eac-ce5df3da8592",
+        "task_file_name": "sample_document_002.pdf",
+        "date_created": "2025-01-03T10:44:55.733248+01:00",
+        "type": "file",
+        "status": "PENDING",
+        "result": null,
+        "acknowledged": false,
+        "related_document": null
+    },
+    {
+        "id": 3436,
+        "task_id": "2577b5c2-0b6b-4293-821e-8e3a8d521510",
+        "task_file_name": "sample_document_003.pdf",
+        "date_created": "2025-01-03T10:44:50.733248+01:00",
+        "type": "file",
+        "status": "STARTED",
+        "result": "Processing document...",
+        "acknowledged": false,
+        "related_document": null
+    },
+    {
+        "id": 3435,
+        "task_id": "21e24f8f-8e5a-4584-a787-86b3f9ae5aef",
+        "task_file_name": "sample_document_004.pdf",
+        "date_created": "2025-01-03T10:44:45.733248+01:00",
+        "date_done": "2025-01-03T10:44:47.733248+01:00",
+        "type": "file",
+        "status": "FAILURE",
+        "result": "Document processing failed: invalid file format",
+        "acknowledged": false,
+        "related_document": null
+    },
+    {
+        "id": 3434,
+        "task_id": "37d12c82-6dbf-4973-b87a-fc40b6b7b576",
+        "task_file_name": "sample_document_005.pdf",
+        "date_created": "2025-01-03T10:44:40.733248+01:00",
+        "type": "file",
+        "status": "RETRY",
+        "result": "Retrying after temporary error",
+        "acknowledged": false,
+        "related_document": null
+    }
+]
