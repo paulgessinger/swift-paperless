@@ -1,0 +1,44 @@
+[
+    {
+        "id": 66,
+        "slug": "tech-dept",
+        "name": "Tech Department",
+        "color": "#bde38f",
+        "text_color": "#000000",
+        "match": "",
+        "matching_algorithm": 6,
+        "is_insensitive": false,
+        "is_inbox_tag": false,
+        "document_count": 0,
+        "owner": 2,
+        "user_can_change": true
+    },
+    {
+        "id": 71,
+        "slug": "project-alpha",
+        "name": "Project Alpha",
+        "color": "#ca6beb",
+        "text_color": "#000000",
+        "match": "",
+        "matching_algorithm": 1,
+        "is_insensitive": false,
+        "is_inbox_tag": false,
+        "document_count": 0,
+        "owner": 2,
+        "user_can_change": true
+    },
+    {
+        "id": 131,
+        "slug": "finance-2023",
+        "name": "Finance 2023",
+        "color": "#eb87e0",
+        "text_color": "#000000",
+        "match": "",
+        "matching_algorithm": 6,
+        "is_insensitive": true,
+        "is_inbox_tag": false,
+        "document_count": 2,
+        "owner": 2,
+        "user_can_change": true
+    }
+]
