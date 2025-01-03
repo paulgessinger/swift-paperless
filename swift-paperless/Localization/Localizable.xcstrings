@@ -1441,8 +1441,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Erreur de traitement de la réponse"
           }
         },
         "it" : {
@@ -1488,8 +1488,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Une erreur s'est produite lors du traitement d'une réponse du serveur. Le décodage de %@ a échoué.\n\nCela peut se produire si la version du serveur n'est pas prise en charge ou si la connexion est modifiée de manière inattendue."
           }
         },
         "it" : {
@@ -3738,18 +3738,42 @@
         "da" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try logging out and back in again:"
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen, dich ab- und wieder anzumelden:"
+            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen den Server zu wechseln, oder dich ab- und wieder anzumelden:"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
           }
         }
@@ -5596,6 +5620,12 @@
     "requestErrorMTLS" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5684,6 +5714,12 @@
     "requestErrorUnexpectedStatusCode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@."
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5696,10 +5732,28 @@
             "value" : "The response to a request had an unexpected status %@."
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@."
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het antwoord op een verzoek had een onverwachte status %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@."
           }
         }
       }
