@@ -5,8 +5,12 @@
 //  Created by Paul Gessinger on 15.09.2024.
 //
 
+import Common
+@testable import DataModel
 import Foundation
 import Testing
+
+private let decoder = makeDecoder(tz: .current)
 
 struct PermissionsTest {
     private func getTestData() -> Data {
