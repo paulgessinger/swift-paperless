@@ -644,15 +644,14 @@ extension ApiRepository: Repository {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
-    private struct UiSettingsResponse: Codable {
-        var user: User
+    func currentUser() async throws -> User {
+        try await uiSettings().user
     }
 
-    func currentUser() async throws -> User {
+    func uiSettings() async throws -> UISettings {
         let request = try request(.uiSettings())
         let (data, _) = try await fetchData(for: request)
-        let uiSettings = try decoder.decode(UiSettingsResponse.self, from: data)
-        return uiSettings.user
+        return try decoder.decode(UISettings.self, from: data)
     }
 
     func tasks() async throws -> [PaperlessTask] {
