@@ -22,7 +22,10 @@ extension HexColor: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let str = try container.decode(String.self)
-        color = try Color(hex: str)
+        guard let color = Color(hex: str) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid hex color: \(str)"))
+        }
+        self.color = color
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -33,18 +36,14 @@ extension HexColor: Codable {
 
 public
 extension Color {
-    enum HexError: Error, Equatable {
-        case invalid(String)
-    }
-
-    init(hex: String) throws(HexError) {
+    init?(hex: String) {
         var string = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         if string.hasPrefix("#") {
             _ = string.removeFirst()
         }
 
         if string.count != 6 {
-            throw .invalid(hex)
+            return nil
         }
 
         let scanner = Scanner(string: string)
