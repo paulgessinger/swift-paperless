@@ -392,9 +392,9 @@ class LoginViewModel {
         let currentUser: User
         do {
             currentUser = try await repository.currentUser()
-        } catch RequestError.forbidden {
+        } catch let RequestError.forbidden(detail) {
             Logger.shared.error("User logging in does not have permissions to get permissions")
-            credentialState = .error(.request(.unsupportedVersion))
+            credentialState = .error(.request(.forbidden(detail: detail)))
             return nil
         } catch RequestError.unauthorized {
             credentialState = .error(.invalidToken)
