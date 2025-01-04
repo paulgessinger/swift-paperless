@@ -25,7 +25,7 @@ public struct UserGroup: Model, Identifiable, Equatable, Sendable {
     public var name: String
 }
 
-public struct UserPermissions: Decodable {
+public struct UserPermissions {
     public enum Operation: Int, CaseIterable {
         case view
         case add
@@ -75,7 +75,9 @@ public struct UserPermissions: Decodable {
 
         return rule.test(operation)
     }
+}
 
+extension UserPermissions: Decodable {
     public init(from decoder: any Decoder) throws {
         var rules = Resource.allCases.reduce(into: [Resource: PermissionSet]()) {
             $0[$1] = PermissionSet()
