@@ -35,4 +35,7 @@ public struct UISettings {
 
     @Default(UISettingsSettings.default)
     public var settings: UISettingsSettings
+
+    @IgnoreEncoding
+    public var permissions: UserPermissions
 }
