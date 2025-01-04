@@ -29,6 +29,8 @@ final class DocumentStore: ObservableObject, Sendable {
 
     @Published private(set) var tasks: [PaperlessTask] = []
 
+    private(set) var permissions: UserPermissions = .empty
+
     var activeTasks: [PaperlessTask] {
         tasks.filter(\.isActive)
     }
@@ -115,6 +117,7 @@ final class DocumentStore: ObservableObject, Sendable {
         groups = [:]
         currentUser = nil
         tasks = []
+        permissions = .empty
     }
 
     func set(repository: some Repository) {
@@ -230,16 +233,31 @@ final class DocumentStore: ObservableObject, Sendable {
         defer { fetchAllSemaphore.signal() }
         Logger.shared.notice("Fetch all store")
 
-        async let correspondents: Void = fetchAllCorrespondents()
-        async let documentTypes: Void = fetchAllDocumentTypes()
-        async let tags: Void = fetchAllTags()
-        async let savedViews: Void = fetchAllSavedViews()
-        async let storagePaths: Void = fetchAllStoragePaths()
-        async let currentUser: Void = fetchCurrentUser()
-        async let users: Void = fetchAllUsers()
-        async let groups: Void = fetchAllGroups()
+        do {
+            // This can fail if we don't have the required permissions to even access UI settings
+            // Older versions of the backend return an ok response here even if the perms aren't valid
+            let uiSettings = try await repository.uiSettings()
+            permissions = uiSettings.permissions
+        } catch {
+            // If we don't get permissions here, log a warning and assume full permissions.
+            Logger.shared.error("Error getting UI settings: \(error)")
+            Logger.shared.error("Assuming full permissions to proceed")
+            permissions = UserPermissions.full
+        }
 
-        _ = try await (correspondents, documentTypes, tags, savedViews, storagePaths, currentUser, users, groups)
+        let permissions = permissions
+        Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
+
+        try await withThrowingDiscardingTaskGroup { group in
+            for task in [fetchAllCorrespondents, fetchAllDocumentTypes, fetchAllTags, fetchAllSavedViews,
+                         fetchAllStoragePaths, fetchCurrentUser, fetchAllUsers, fetchAllGroups]
+            {
+                group.addTask {
+                    // @FIXME: We're not propagating 403s right now, replace with explicit perms checks!
+                    try? await task()
+                }
+            }
+        }
 
         Logger.shared.notice("Fetch all store complete")
     }
