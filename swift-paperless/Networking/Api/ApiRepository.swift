@@ -650,8 +650,7 @@ extension ApiRepository: Repository {
 
     func uiSettings() async throws -> UISettings {
         let request = try request(.uiSettings())
-        let (data, _) = try await fetchData(for: request)
-        return try decoder.decode(UISettings.self, from: data)
+        return try await fetchData(for: request, as: UISettings.self)
     }
 
     func tasks() async throws -> [PaperlessTask] {
