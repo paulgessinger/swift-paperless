@@ -180,6 +180,9 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func fetchTasks() async {
+        guard (try? checkPermission(.view, for: .paperlessTask)) != nil else {
+            return
+        }
         guard let tasks = try? await repository.tasks() else {
             return
         }
@@ -192,31 +195,41 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func fetchAllCorrespondents() async throws {
+        // @TODO: For the `fetchAll` calls: centralize this to that method.
+        //        Use a property on the resource to map to the permissions resource.
+        //        Also: clear the associated resource if there's a permissions error
+        try checkPermission(.view, for: .correspondent)
         try await fetchAll(elements: repository.correspondents(),
                            collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async throws {
+        try checkPermission(.view, for: .documentType)
         try await fetchAll(elements: repository.documentTypes(),
                            collection: \.documentTypes)
     }
 
     func fetchAllTags() async throws {
+        try checkPermission(.view, for: .tag)
         try await fetchAll(elements: repository.tags(),
                            collection: \.tags)
     }
 
     func fetchAllSavedViews() async throws {
+        try checkPermission(.view, for: .savedView)
         try await fetchAll(elements: repository.savedViews(),
                            collection: \.savedViews)
     }
 
     func fetchAllStoragePaths() async throws {
+        try checkPermission(.view, for: .storagePath)
         try await fetchAll(elements: repository.storagePaths(),
                            collection: \.storagePaths)
     }
 
     func fetchCurrentUser() async throws {
+        // this should basically always be the case but let's be safe
+        try checkPermission(.view, for: .uiSettings)
         if currentUser != nil {
             // We don't expect this to change
             return
@@ -233,11 +246,13 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func fetchAllUsers() async throws {
+        try checkPermission(.view, for: .user)
         try await fetchAll(elements: repository.users(),
                            collection: \.users)
     }
 
     func fetchAllGroups() async throws {
+        try checkPermission(.view, for: .group)
         try await fetchAll(elements: repository.groups(),
                            collection: \.groups)
     }
@@ -335,13 +350,15 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func getCorrespondent(id: UInt) async throws -> (Bool, Correspondent)? {
-        try await getSingleCached(get: { try await repository.correspondent(id: $0) }, id: id,
-                                  cache: \.correspondents)
+        try checkPermission(.view, for: .correspondent)
+        return try await getSingleCached(get: { try await repository.correspondent(id: $0) }, id: id,
+                                         cache: \.correspondents)
     }
 
     func getDocumentType(id: UInt) async throws -> (Bool, DocumentType)? {
-        try await getSingleCached(get: { try await repository.documentType(id: $0) }, id: id,
-                                  cache: \.documentTypes)
+        try checkPermission(.view, for: .documentType)
+        return try await getSingleCached(get: { try await repository.documentType(id: $0) }, id: id,
+                                         cache: \.documentTypes)
     }
 
     func document(id: UInt) async throws -> Document? {
@@ -350,11 +367,13 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func getTag(id: UInt) async throws -> (Bool, Tag)? {
-        try await getSingleCached(get: { try await repository.tag(id: $0) }, id: id,
-                                  cache: \.tags)
+        try checkPermission(.view, for: .tag)
+        return try await getSingleCached(get: { try await repository.tag(id: $0) }, id: id,
+                                         cache: \.tags)
     }
 
     func getTags(_ ids: [UInt]) async throws -> (Bool, [Tag]) {
+        try checkPermission(.view, for: .tag)
         var tags: [Tag] = []
         var allCached = true
         for id in ids {
