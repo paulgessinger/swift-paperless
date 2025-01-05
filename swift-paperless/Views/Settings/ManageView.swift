@@ -138,7 +138,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                                 Manager.RowView(element: element)
                             }
                             .swipeActions {
-                                Button("Delete") {
+                                Button(String(localized: .localizable(.delete))) {
                                     elementToDelete = element
                                 }
                                 .tint(.red)
