@@ -122,10 +122,13 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         VStack {
             if let model {
                 if elements.isEmpty {
-                    Divider()
-                    Text(.localizable(.noElementsFound))
-                        .multilineTextAlignment(.center)
-                    Spacer()
+                    VStack {
+                        ScrollView(.vertical) {
+                            Text(.localizable(.noElementsFound))
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    }
                 } else {
                     SearchBarView(text: $searchText, cancelEnabled: true)
                         .padding(.horizontal)
