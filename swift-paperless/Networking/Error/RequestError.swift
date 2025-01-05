@@ -118,6 +118,7 @@ extension RequestError: DisplayableError {
     }
 }
 
+// @TODO: Unify this with PermissionsError
 struct ResourceForbidden<Resource>: DisplayableError where Resource: Model & NamedLocalized {
     init(_: Resource.Type, response: String?) {
         self.response = response
