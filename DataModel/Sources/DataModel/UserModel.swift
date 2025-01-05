@@ -26,7 +26,7 @@ public struct UserGroup: Model, Identifiable, Equatable, Sendable {
 }
 
 public struct UserPermissions: Sendable {
-    public enum Operation: Int, CaseIterable, CustomStringConvertible {
+    public enum Operation: Int, CaseIterable, CustomStringConvertible, Sendable {
         case view
         case add
         case change
