@@ -30,7 +30,7 @@ extension RequestError: DisplayableError {
             if let details {
                 if !Self.isMTLSError(code: code, message: details) {
                     // We're not sure this is an SSL error, show details just in case
-                    msg += " " + .localizable(.requestErrorDetailLabel) + ": "
+                    msg += " " + label + " "
                         + details
                 } else {
                     msg += " " + .localizable(.requestErrorMTLS)
@@ -41,14 +41,14 @@ extension RequestError: DisplayableError {
         case let .forbidden(detail):
             var s = String(localized: .localizable(.requestErrorForbidden))
             if let detail {
-                s += " " + label
+                s += " " + label + " "
                     + detail
             }
             raw = s
 
         case let .unauthorized(detail):
             var s = String(localized: .localizable(.requestErrorUnauthorized))
-            s += " " + label + detail
+            s += " " + label + " " + detail
             raw = s
 
         case .unsupportedVersion:
