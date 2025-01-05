@@ -75,6 +75,14 @@ extension StoragePath: NamedLocalized {
     static var localizedName: String { String(localized: .localizable(.storagePath)) }
 }
 
+extension PaperlessTask: NamedLocalized {
+    static var localizedName: String { String(localized: .tasks(.title)) }
+}
+
+extension UISettings: NamedLocalized {
+    static var localizedName: String { String(localized: .localizable(.uiSettings)) }
+}
+
 extension FilterState.SearchMode {
     var localizedName: String {
         switch self {

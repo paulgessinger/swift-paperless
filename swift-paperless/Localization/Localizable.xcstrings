@@ -9263,6 +9263,17 @@
         }
       }
     },
+    "uiSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UI Settings"
+          }
+        }
+      }
+    },
     "user" : {
       "extractionState" : "manual",
       "localizations" : {
