@@ -131,8 +131,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Als je *autologin* hebt ingeschakeld met `PAPERLESS_AUTO_LOGIN_USERNAME`, probeer dan in te loggen zonder inloggegevens."
           }
         },
         "pl" : {
@@ -1212,8 +1212,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Waarschuwing:** de *Authorization* header wordt gebruikt door Paperless-ngx voor token-gebaseerde API autorisatie. Het gebruik van deze header voor Basic auth zal waarschijnlijk leiden tot problemen. U kunt proberen een alternatieve header te configureren voor Basic auth in uw Reverse Proxy configuratie."
           }
         },
         "pl" : {
