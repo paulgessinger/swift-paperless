@@ -189,8 +189,8 @@ actor ApiRepository {
         let result: (Data, URLResponse)
         do {
             result = try await urlSession.getData(for: request, progress: progress)
-        } catch let error as CancellationError {
-            Logger.api.trace("Fetch request task was cancelled")
+        } catch let error where error.isCancellationError {
+            Logger.api.info("Fetch request task for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public) was cancelled")
             throw error
         } catch {
             let sanitizedError = sanitizedError(error)
