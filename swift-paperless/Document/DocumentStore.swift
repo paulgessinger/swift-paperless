@@ -263,7 +263,7 @@ final class DocumentStore: ObservableObject, Sendable {
         let permissions = permissions
         Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
 
-        await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             for task in [fetchAllCorrespondents, fetchAllDocumentTypes, fetchAllTags, fetchAllSavedViews,
                          fetchAllStoragePaths, fetchCurrentUser, fetchAllUsers, fetchAllGroups]
             {
@@ -275,9 +275,7 @@ final class DocumentStore: ObservableObject, Sendable {
                     try await group.next()
                 } catch let error where error.isCancellationError {
                     continue
-                } catch {
-                    Logger.shared.error("Error fetching all (suppressing): \(error)")
-                }
+                } catch { throw error }
             }
         }
 
