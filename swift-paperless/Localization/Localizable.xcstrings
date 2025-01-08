@@ -2454,6 +2454,17 @@
         }
       }
     },
+    "documentsNoPermissionsDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view documents. Please contact your administrator."
+          }
+        }
+      }
+    },
     "documentType" : {
       "extractionState" : "manual",
       "localizations" : {
