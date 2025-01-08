@@ -31,7 +31,7 @@
         "is_active": true,
         "is_superuser": true,
         "groups": [1],
-        "user_permissions": ["*"],
+        "user_permissions": [],
         "inherited_permissions": []
     }
 ]

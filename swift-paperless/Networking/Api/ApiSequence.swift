@@ -89,6 +89,9 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
         } catch let RequestError.forbidden(details) {
             Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: Forbidden")
             throw ResourceForbidden(Element.self, response: details)
+        } catch let error where error.isCancellationError {
+            Logger.api.info("\(Element.self, privacy: .public) API sequence was cancelled")
+            throw error
         } catch {
             let sanitizedError = await repository.sanitizedError(error)
             Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: \(sanitizedError, privacy: .public)")

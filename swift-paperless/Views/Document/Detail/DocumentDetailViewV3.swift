@@ -216,13 +216,18 @@ private struct DocumentPropertyView: View {
         .contentShape(RoundedRectangle(cornerRadius: 15))
     }
 
+    @ViewBuilder
+    var documentTitle: some View {
+        let document = viewModel.document
+        Text("\(document.title)")
+            .font(.title2)
+    }
+
     var body: some View {
         let document = viewModel.document
         VStack(alignment: .leading) {
             HStack(alignment: .top) {
-                Text("\(document.title)")
-                    .font(.title)
-                    .foregroundStyle(.blue)
+                documentTitle
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -230,8 +235,7 @@ private struct DocumentPropertyView: View {
 
                     .overlay {
                         ViewThatFits(in: .vertical) {
-                            Text("\(document.title)")
-                                .font(.title)
+                            documentTitle
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .topLeading)
 

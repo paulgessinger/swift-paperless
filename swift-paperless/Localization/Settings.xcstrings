@@ -2015,8 +2015,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Meld een bug"
           }
         },
         "pl" : {
@@ -2156,8 +2156,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Documenteigenschappen weergeven"
           }
         },
         "pl" : {
@@ -2203,8 +2203,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Toon standaard de document eigenschappen onderaan het document detail scherm."
           }
         },
         "pl" : {
@@ -2298,8 +2298,8 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Deze server heeft versie `%@` die lager is dan versie `%@` die de app vereist. Je zou problemen kunnen ondervinden!"
           }
         },
         "pl" : {

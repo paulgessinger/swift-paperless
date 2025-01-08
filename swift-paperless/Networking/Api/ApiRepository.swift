@@ -189,8 +189,8 @@ actor ApiRepository {
         let result: (Data, URLResponse)
         do {
             result = try await urlSession.getData(for: request, progress: progress)
-        } catch let error as CancellationError {
-            Logger.api.trace("Fetch request task was cancelled")
+        } catch let error where error.isCancellationError {
+            Logger.api.info("Fetch request task for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public) was cancelled")
             throw error
         } catch {
             let sanitizedError = sanitizedError(error)
@@ -335,6 +335,10 @@ extension ApiRepository: Repository {
 
         if let storagePath = document.storagePath {
             mp.add(name: "storage_path", string: String(storagePath))
+        }
+
+        if let asn = document.asn {
+            mp.add(name: "archive_serial_number", string: String(asn))
         }
 
         for tag in document.tags {
@@ -650,8 +654,7 @@ extension ApiRepository: Repository {
 
     func uiSettings() async throws -> UISettings {
         let request = try request(.uiSettings())
-        let (data, _) = try await fetchData(for: request)
-        return try decoder.decode(UISettings.self, from: data)
+        return try await fetchData(for: request, as: UISettings.self)
     }
 
     func tasks() async throws -> [PaperlessTask] {

@@ -10,7 +10,7 @@ import MetaCodable
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
-public struct UISettingsDocumentEditing {
+public struct UISettingsDocumentEditing: Sendable {
     @Default(false)
     public var removeInboxTags: Bool
 
@@ -21,7 +21,7 @@ public struct UISettingsDocumentEditing {
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
-public struct UISettingsSettings {
+public struct UISettingsSettings: Sendable {
     @Default(UISettingsDocumentEditing.default)
     public var documentEditing: UISettingsDocumentEditing
 
@@ -30,9 +30,13 @@ public struct UISettingsSettings {
 }
 
 @Codable
-public struct UISettings {
+@MemberInit
+public struct UISettings: Sendable {
     public var user: User
 
     @Default(UISettingsSettings.default)
     public var settings: UISettingsSettings
+
+    @IgnoreEncoding
+    public var permissions: UserPermissions
 }
