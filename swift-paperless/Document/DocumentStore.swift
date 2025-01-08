@@ -129,10 +129,21 @@ final class DocumentStore: ObservableObject, Sendable {
 
     func updateDocument(_ document: Document) async throws -> Document {
         eventPublisher.send(.changed(document: document))
-        let document = try await repository.update(document: document)
-        documents[document.id] = document
-        eventPublisher.send(.changeReceived(document: document))
-        return document
+
+        var document = document
+
+        if settings.documentEditing.removeInboxTags {
+            Logger.shared.debug("Removing inbox tags from document as per setting")
+            let inboxTags = tags.values.filter(\.isInboxTag)
+            for tag in inboxTags {
+                document.tags.removeAll(where: { $0 == tag.id })
+            }
+        }
+
+        let updated = try await repository.update(document: document)
+        documents[updated.id] = updated
+        eventPublisher.send(.changeReceived(document: updated))
+        return updated
     }
 
     func deleteDocument(_ document: Document) async throws {
