@@ -41,3 +41,4 @@ in certain cases
 - Fix for storage path not being added to newly created documents
 - Fix ASN not being saved when uploading documents with restricted user accounts
 - Reintroduce delay when typing search text
+- If configured, remove inbox tags from documents automatically when saving
