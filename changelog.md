@@ -39,3 +39,4 @@ in certain cases
 - Prepare for granular handling of user permissions
 - Improved layout of the document detail screen for larger dynamic text sizes
 - Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts

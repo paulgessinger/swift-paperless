@@ -337,6 +337,10 @@ extension ApiRepository: Repository {
             mp.add(name: "storage_path", string: String(storagePath))
         }
 
+        if let asn = document.asn {
+            mp.add(name: "archive_serial_number", string: String(asn))
+        }
+
         for tag in document.tags {
             mp.add(name: "tags", string: String(tag))
         }
