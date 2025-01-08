@@ -30,6 +30,7 @@ final class DocumentStore: ObservableObject, Sendable {
     @Published private(set) var tasks: [PaperlessTask] = []
 
     private(set) var permissions: UserPermissions = .empty
+    private(set) var settings = UISettingsSettings()
 
     var activeTasks: [PaperlessTask] {
         tasks.filter(\.isActive)
@@ -238,11 +239,13 @@ final class DocumentStore: ObservableObject, Sendable {
             // Older versions of the backend return an ok response here even if the perms aren't valid
             let uiSettings = try await repository.uiSettings()
             permissions = uiSettings.permissions
+            settings = uiSettings.settings
         } catch {
             // If we don't get permissions here, log a warning and assume full permissions.
             Logger.shared.error("Error getting UI settings: \(error)")
             Logger.shared.error("Assuming full permissions to proceed")
             permissions = UserPermissions.full
+            settings = UISettingsSettings()
         }
 
         let permissions = permissions
