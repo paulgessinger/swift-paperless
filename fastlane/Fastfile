@@ -32,14 +32,7 @@ platform :ios do
       in_house: false,
     )
 
-    match(
-      type: "development",
-      app_identifier: [
-        "com.paulgessinger.swift-paperless",
-        "com.paulgessinger.swift-paperless.ShareExtension"
-      ],
-      readonly: is_ci
-    )
+    match(type: "development", readonly: is_ci)
 
     match(
       type: "appstore",
