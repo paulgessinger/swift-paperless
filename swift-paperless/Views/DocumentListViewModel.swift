@@ -154,6 +154,10 @@ class DocumentListViewModel {
             imagePrefetcher.startPrefetching(with: requests)
 
             return batch
+        } catch let error as PermissionsError {
+            Logger.shared.error("Insufficient permissions to refresh documents: \(error)")
+            noPermissions = true
+            throw error
         } catch {
             Logger.shared.error("DocumentList failed to refresh: \(error)")
             errorController.push(error: error)
