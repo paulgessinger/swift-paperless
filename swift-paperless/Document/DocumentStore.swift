@@ -262,13 +262,20 @@ final class DocumentStore: ObservableObject, Sendable {
         let permissions = permissions
         Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
 
-        try await withThrowingDiscardingTaskGroup { group in
+        await withThrowingTaskGroup(of: Void.self) { group in
             for task in [fetchAllCorrespondents, fetchAllDocumentTypes, fetchAllTags, fetchAllSavedViews,
                          fetchAllStoragePaths, fetchCurrentUser, fetchAllUsers, fetchAllGroups]
             {
-                group.addTask {
-                    // @FIXME: We're not propagating 403s right now, replace with explicit perms checks!
-                    try? await task()
+                group.addTask { try await task() }
+            }
+
+            while !group.isEmpty {
+                do {
+                    try await group.next()
+                } catch let error where error.isCancellationError {
+                    continue
+                } catch {
+                    Logger.shared.error("Error fetching all (suppressing): \(error)")
                 }
             }
         }
