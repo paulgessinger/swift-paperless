@@ -132,6 +132,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func updateDocument(_ document: Document) async throws -> Document {
+        try checkPermission(.change, for: .document)
         eventPublisher.send(.changed(document: document))
 
         var document = document
@@ -151,12 +152,14 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func deleteDocument(_ document: Document) async throws {
+        try checkPermission(.delete, for: .document)
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
         eventPublisher.send(.deleted(document: document))
     }
 
     func deleteNote(from document: Document, id: UInt) async throws {
+        try checkPermission(.change, for: .document)
         eventPublisher.send(.changed(document: document))
         _ = try await repository.deleteNote(id: id, documentId: document.id)
 
@@ -164,6 +167,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func addNote(to document: Document, note: ProtoDocument.Note) async throws {
+        try checkPermission(.change, for: .document)
         eventPublisher.send(.changed(document: document))
 
         _ = try await repository.createNote(documentId: document.id, note: note)
@@ -341,7 +345,8 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func document(id: UInt) async throws -> Document? {
-        try await repository.document(id: id)
+        try checkPermission(.view, for: .document)
+        return try await repository.document(id: id)
     }
 
     func getTag(id: UInt) async throws -> (Bool, Tag)? {
@@ -476,5 +481,11 @@ final class DocumentStore: ObservableObject, Sendable {
         try await delete(storagePath,
                          store: \.storagePaths,
                          method: repository.delete(storagePath:))
+    }
+
+    private func checkPermission(_ operation: UserPermissions.Operation, for resource: UserPermissions.Resource) throws {
+        if !permissions.test(operation, for: resource) {
+            throw PermissionsError(resource: resource, operation: operation)
+        }
     }
 }
