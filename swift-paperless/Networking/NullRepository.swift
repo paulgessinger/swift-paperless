@@ -23,6 +23,9 @@ actor NullRepository: Repository {
     func delete(tag _: Tag) async throws { throw NotImplemented() }
 
     func tags() async -> [Tag] { [] }
+    func uiSettings() async throws -> UISettings {
+        UISettings(user: User(id: 0, isSuperUser: false, username: "nobody"), permissions: .empty)
+    }
 
     func correspondent(id _: UInt) async -> Correspondent? { nil }
     func create(correspondent _: ProtoCorrespondent) async throws -> Correspondent { throw NotImplemented() }

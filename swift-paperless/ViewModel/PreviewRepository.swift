@@ -363,4 +363,12 @@ actor PreviewRepository: Repository {
 
     nonisolated
     var delegate: (any URLSessionDelegate)? { nil }
+
+    func uiSettings() async -> UISettings {
+        UISettings(
+            user: User(id: 1, isSuperUser: true, username: "user"),
+            settings: UISettingsSettings(),
+            permissions: UserPermissions.full
+        )
+    }
 }
