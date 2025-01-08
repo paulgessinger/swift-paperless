@@ -48,13 +48,8 @@ struct DocumentView: View {
 
     // MARK: State
 
-    @StateObject private var searchDebounce = DebounceObject(delay: 0.4)
     @State private var navPath = NavigationPath()
 
-    @State private var searchSuggestions: [String] = []
-    @State private var initialLoad = true
-    @State private var isLoading = false
-    @State private var refreshRequested = false
     @State private var showFileImporter = false
     @State private var isDocumentScannerAvailable = false
     @State private var isDataScannerAvailable = false
@@ -403,10 +398,14 @@ struct DocumentView: View {
 struct FilterAssembly: View {
     @ObservedObject var filterModel: FilterModel
 
+    @State private var searchText: String = ""
+    @State private var searchTask: Task<Void, Never>?
+    private let searchTaskDelay: Duration = .seconds(0.5)
+
     var body: some View {
         VStack {
             HStack {
-                SearchBarView(text: $filterModel.filterState.searchText, cancelEnabled: false) {}
+                SearchBarView(text: $searchText, cancelEnabled: false) {}
 
                 Menu {
                     ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
@@ -431,6 +430,23 @@ struct FilterAssembly: View {
         }
         .opacity(filterModel.ready ? 1.0 : 0.0)
         .animation(.default, value: filterModel.ready)
+
+        .onChange(of: searchText) {
+            searchTask?.cancel()
+
+            guard searchText != filterModel.filterState.searchText else { return }
+
+            searchTask = Task {
+                do {
+                    try await Task.sleep(for: searchTaskDelay)
+                    filterModel.filterState.searchText = searchText
+                } catch {}
+            }
+        }
+
+        .task {
+            searchText = filterModel.filterState.searchText
+        }
     }
 }
 
