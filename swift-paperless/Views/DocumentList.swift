@@ -181,6 +181,9 @@ struct DocumentList: View {
         VStack {
             if !viewModel.ready {
                 LoadingDocumentList()
+            } else if viewModel.noPermissions {
+                NoPermissionsView(onRefresh: { refresh() })
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
                 let documents = viewModel.documents
                 if !documents.isEmpty {
@@ -213,6 +216,7 @@ struct DocumentList: View {
             }
         }
         .animation(.default, value: viewModel.ready)
+        .animation(.default, value: viewModel.noPermissions)
 
         .onChange(of: filterModel.filterState) { _, filter in
             Task {
@@ -284,6 +288,24 @@ private struct NoDocumentsView: View, Equatable {
     nonisolated
     static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool {
         true
+    }
+}
+
+private struct NoPermissionsView: View {
+    var onRefresh: () -> Void
+
+    var body: some View {
+        ScrollView(.vertical) {
+            ContentUnavailableView {
+                Label(String(localized: .localizable(.requestErrorForbidden)), systemImage: "lock.fill")
+            } description: {
+                Text(.localizable(.documentsNoPermissionsDescription))
+            }
+            .padding(.top, 40)
+            .refreshable {
+                onRefresh()
+            }
+        }
     }
 }
 
