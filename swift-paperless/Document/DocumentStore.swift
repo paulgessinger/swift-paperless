@@ -119,6 +119,7 @@ final class DocumentStore: ObservableObject, Sendable {
         currentUser = nil
         tasks = []
         permissions = .empty
+        settings = UISettingsSettings()
     }
 
     func set(repository: some Repository) {
