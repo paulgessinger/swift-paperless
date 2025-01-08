@@ -201,11 +201,8 @@ class LoginViewModel {
             _ = try JSONDecoder().decode([String: URL].self, from: data)
             loginState = .valid
 
-        } catch is CancellationError {
+        } catch let error where error.isCancellationError {
             // do nothing
-            return
-        } catch let error as NSError where error.domain == NSURLErrorDomain && NSURLError(rawValue: error.code) == NSURLError.cancelled {
-            // also a cancellation error
             return
         } catch let error as NSError where LoginViewModel.isLocalNetworkDenied(error) {
             // @TODO: Handle these cases in a `RequestError` factory or init func
@@ -392,9 +389,9 @@ class LoginViewModel {
         let currentUser: User
         do {
             currentUser = try await repository.currentUser()
-        } catch RequestError.forbidden {
+        } catch let RequestError.forbidden(detail) {
             Logger.shared.error("User logging in does not have permissions to get permissions")
-            credentialState = .error(.request(.unsupportedVersion))
+            credentialState = .error(.request(.forbidden(detail: detail)))
             return nil
         } catch RequestError.unauthorized {
             credentialState = .error(.invalidToken)
