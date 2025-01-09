@@ -49,6 +49,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
 
     var token: String? {
         get throws {
+            Logger.api.debug("Loading token from keychain for \(user.username) \(url.absoluteString)")
             guard let data = try Keychain.read(service: url.absoluteString,
                                                account: user.username)
             else {
@@ -66,6 +67,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
     }
 
     func setToken(_ token: String) throws(Keychain.KeychainError) {
+        Logger.api.debug("Saving token \(token) to keychain for \(user.username) \(url.absoluteString)")
         try Keychain.saveOrUpdate(service: url.absoluteString,
                                   account: user.username,
                                   value: token.data(using: .utf8)!)
