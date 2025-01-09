@@ -42,3 +42,6 @@ in certain cases
 - Fix ASN not being saved when uploading documents with restricted user accounts
 - Reintroduce delay when typing search text
 - If configured, remove inbox tags from documents automatically when saving
+- Fix a bug during migration from single-server (v1.1.1 and before) to
+  multi-server: the login token was not correctly persisted. This led to a
+  connection error the next time the app was launched.
