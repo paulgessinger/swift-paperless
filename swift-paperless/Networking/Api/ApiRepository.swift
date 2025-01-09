@@ -66,7 +66,11 @@ actor ApiRepository {
     init(connection: Connection) async {
         self.connection = connection
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
-        let tokenStr = connection.token != nil ? "<token len: \(connection.token?.count ?? 0)>" : "nil"
+        #if DEBUG
+            let tokenStr = connection.token ?? "nil"
+        #else
+            let tokenStr = connection.token != nil ? "<token len: \(connection.token?.count ?? 0)>" : "nil"
+        #endif
         Logger.api.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) and token \(tokenStr, privacy: .public)")
 
         let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)

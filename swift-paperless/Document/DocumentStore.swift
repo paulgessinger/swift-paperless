@@ -29,6 +29,9 @@ final class DocumentStore: ObservableObject, Sendable {
 
     @Published private(set) var tasks: [PaperlessTask] = []
 
+    private(set) var permissions: UserPermissions = .empty
+    private(set) var settings = UISettingsSettings()
+
     var activeTasks: [PaperlessTask] {
         tasks.filter(\.isActive)
     }
@@ -115,6 +118,8 @@ final class DocumentStore: ObservableObject, Sendable {
         groups = [:]
         currentUser = nil
         tasks = []
+        permissions = .empty
+        settings = UISettingsSettings()
     }
 
     func set(repository: some Repository) {
@@ -125,10 +130,21 @@ final class DocumentStore: ObservableObject, Sendable {
 
     func updateDocument(_ document: Document) async throws -> Document {
         eventPublisher.send(.changed(document: document))
-        let document = try await repository.update(document: document)
-        documents[document.id] = document
-        eventPublisher.send(.changeReceived(document: document))
-        return document
+
+        var document = document
+
+        if settings.documentEditing.removeInboxTags {
+            Logger.shared.debug("Removing inbox tags from document as per setting")
+            let inboxTags = tags.values.filter(\.isInboxTag)
+            for tag in inboxTags {
+                document.tags.removeAll(where: { $0 == tag.id })
+            }
+        }
+
+        let updated = try await repository.update(document: document)
+        documents[updated.id] = updated
+        eventPublisher.send(.changeReceived(document: updated))
+        return updated
     }
 
     func deleteDocument(_ document: Document) async throws {
@@ -230,16 +246,40 @@ final class DocumentStore: ObservableObject, Sendable {
         defer { fetchAllSemaphore.signal() }
         Logger.shared.notice("Fetch all store")
 
-        async let correspondents: Void = fetchAllCorrespondents()
-        async let documentTypes: Void = fetchAllDocumentTypes()
-        async let tags: Void = fetchAllTags()
-        async let savedViews: Void = fetchAllSavedViews()
-        async let storagePaths: Void = fetchAllStoragePaths()
-        async let currentUser: Void = fetchCurrentUser()
-        async let users: Void = fetchAllUsers()
-        async let groups: Void = fetchAllGroups()
+        do {
+            // This can fail if we don't have the required permissions to even access UI settings
+            // Older versions of the backend return an ok response here even if the perms aren't valid
+            let uiSettings = try await repository.uiSettings()
+            permissions = uiSettings.permissions
+            settings = uiSettings.settings
+        } catch {
+            // If we don't get permissions here, log a warning and assume full permissions.
+            Logger.shared.error("Error getting UI settings: \(error)")
+            Logger.shared.error("Assuming full permissions to proceed")
+            permissions = UserPermissions.full
+            settings = UISettingsSettings()
+        }
 
-        _ = try await (correspondents, documentTypes, tags, savedViews, storagePaths, currentUser, users, groups)
+        let permissions = permissions
+        Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
+
+        await withThrowingTaskGroup(of: Void.self) { group in
+            for task in [fetchAllCorrespondents, fetchAllDocumentTypes, fetchAllTags, fetchAllSavedViews,
+                         fetchAllStoragePaths, fetchCurrentUser, fetchAllUsers, fetchAllGroups]
+            {
+                group.addTask { try await task() }
+            }
+
+            while !group.isEmpty {
+                do {
+                    try await group.next()
+                } catch let error where error.isCancellationError {
+                    continue
+                } catch {
+                    Logger.shared.error("Error fetching all (suppressing): \(error)")
+                }
+            }
+        }
 
         Logger.shared.notice("Fetch all store complete")
     }

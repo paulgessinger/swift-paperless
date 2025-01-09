@@ -143,6 +143,7 @@ protocol Repository: Sendable, Actor {
     func currentUser() async throws -> User
     func users() async throws -> [User]
     func groups() async throws -> [UserGroup]
+    func uiSettings() async throws -> UISettings
 
     func task(id: UInt) async throws -> PaperlessTask?
     func tasks() async throws -> [PaperlessTask]
