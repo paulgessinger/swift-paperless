@@ -271,6 +271,11 @@ class ConnectionManager: ObservableObject {
                     let newConnection = StoredConnection(url: connection.url, extraHeaders: connection.extraHeaders, user: currentUser)
                     Logger.migration.info("Connection to store is: \(String(describing: newConnection))")
 
+                    if let token = connection.token, token != "" {
+                        Logger.migration.debug("Saving token into keychain under new lookup parameters")
+                        try newConnection.setToken(token)
+                    }
+
                     connections[newConnection.id] = newConnection
                     activeConnectionId = newConnection.id
                 } catch {
