@@ -55,7 +55,7 @@ extension RequestError: DisplayableError {
             if let details {
                 if !Self.isMTLSError(code: code, message: details) {
                     // We're not sure this is an SSL error, show details just in case
-                    msg += " " + .localizable(.requestErrorDetailLabel) + ": \n\n"
+                    msg += " " + .localizable(.requestErrorDetailLabel) + ": "
                         + details
                 }
                 msg += " " + .localizable(.requestErrorMTLS)
@@ -65,14 +65,14 @@ extension RequestError: DisplayableError {
         case let .forbidden(detail):
             var s = String(localized: .localizable(.requestErrorForbidden))
             if let detail {
-                s += "\n\n" + label
+                s += " " + label
                     + detail
             }
             raw = s
 
         case let .unauthorized(detail):
             var s = String(localized: .localizable(.requestErrorUnauthorized))
-            s += "\n\n" + label + detail
+            s += " " + label + detail
             raw = s
 
         case .unsupportedVersion:
@@ -82,7 +82,7 @@ extension RequestError: DisplayableError {
             raw = String(localized: .localizable(.requestErrorLocalNetworkDenied))
 
         case let .certificate(detail):
-            raw = String(localized: .localizable(.requestErrorCertificate)) + "\n\n" + detail
+            raw = String(localized: .localizable(.requestErrorCertificate)) + " " + detail
         }
 
         // Single source strings that might contain markdown markup: use AttributedString to remove them
