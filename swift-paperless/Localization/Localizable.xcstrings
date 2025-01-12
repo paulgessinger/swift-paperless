@@ -3599,6 +3599,17 @@
         }
       }
     },
+    "groups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groups"
+          }
+        }
+      }
+    },
     "importDocument" : {
       "comment" : "Document add menu item for adding files",
       "extractionState" : "manual",
@@ -9400,6 +9411,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Użytkownik"
+          }
+        }
+      }
+    },
+    "users" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Users"
           }
         }
       }
