@@ -11,7 +11,7 @@ import os
 import Semaphore
 
 actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
-    where Element: Model & NamedLocalized & Decodable & Sendable
+    where Element: Model & LocalizedResource & Decodable & Sendable
 {
     private var nextPage: URL?
     private let repository: ApiRepository
