@@ -253,7 +253,7 @@ public actor ApiRepository {
     }
 
     private func all<T>(_: T.Type) async throws -> [T]
-        where T: Decodable & Model & Sendable
+        where T: Decodable & Model & Sendable 
     {
         let endpoint: Endpoint = switch T.self {
         case is Correspondent.Type:
