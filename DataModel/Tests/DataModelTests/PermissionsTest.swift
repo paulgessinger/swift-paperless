@@ -195,4 +195,40 @@ struct PermissionsTest {
                     "Expected line to end with 'vacd': \(line)")
         }
     }
+
+    @Test func testSubscriptOperator() {
+        var permissions = UserPermissions(rules: [:])
+
+        // Test empty permissions
+        #expect(permissions[.document].description == "----")
+        #expect(permissions[.tag].description == "----")
+        #expect(!permissions[.document].test(.view))
+        #expect(!permissions[.document].test(.add))
+
+        // Test setting and reading permissions
+        permissions.set(.view, to: true, for: .document)
+        permissions.set(.add, to: true, for: .document)
+        #expect(permissions[.document].description == "va--")
+        #expect(permissions[.document].test(.view))
+        #expect(permissions[.document].test(.add))
+        #expect(!permissions[.document].test(.change))
+        #expect(!permissions[.document].test(.delete))
+
+        permissions.set(.change, to: true, for: .tag)
+        #expect(permissions[.tag].description == "--c-")
+        #expect(!permissions[.tag].test(.view))
+        #expect(!permissions[.tag].test(.add))
+        #expect(permissions[.tag].test(.change))
+        #expect(!permissions[.tag].test(.delete))
+
+        // Test full permissions
+        let fullPerms = UserPermissions.full
+        #expect(fullPerms[.document].description == "vacd")
+        #expect(fullPerms[.user].description == "vacd")
+        #expect(fullPerms[.tag].description == "vacd")
+        #expect(fullPerms[.document].test(.view))
+        #expect(fullPerms[.document].test(.add))
+        #expect(fullPerms[.document].test(.change))
+        #expect(fullPerms[.document].test(.delete))
+    }
 }
