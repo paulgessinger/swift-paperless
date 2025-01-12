@@ -92,6 +92,10 @@ public struct UserPermissions: Sendable {
         return rule.test(operation)
     }
 
+    public subscript(resource: Resource) -> PermissionSet {
+        rules[resource] ?? PermissionSet()
+    }
+
     public mutating func set(_ operation: Operation, to value: Bool, for resource: Resource) {
         if rules[resource] == nil {
             rules[resource] = PermissionSet()
