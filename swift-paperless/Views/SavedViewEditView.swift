@@ -6,16 +6,17 @@
 //
 
 import DataModel
+import os
 import SwiftUI
 
 struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     @State private var savedView: Element
-    var onSave: (Element) throws -> Void
+    var onSave: ((Element) throws -> Void)?
 
     private var saveLabel: String
 
     init(element savedView: Element,
-         onSave: @escaping (Element) throws -> Void)
+         onSave: ((Element) throws -> Void)?)
     {
         _savedView = State(initialValue: savedView)
         self.onSave = onSave
@@ -53,9 +54,9 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(String(localized: .localizable(.save))) {
                     do {
-                        try onSave(savedView)
+                        try onSave?(savedView)
                     } catch {
-                        print("Save saved view error: \(error)")
+                        Logger.shared.error("Save saved view error: \(error)")
                     }
                 }
                 .disabled(savedView.name.isEmpty)
@@ -70,7 +71,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 }
 
 extension SavedViewEditView where Element == ProtoSavedView {
-    init(onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(onSave: @escaping (Element) throws -> Void) {
         self.init(element: ProtoSavedView(), onSave: onSave)
         saveLabel = String(localized: .localizable(.add))
     }

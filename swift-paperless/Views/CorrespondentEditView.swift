@@ -6,22 +6,27 @@
 //
 
 import DataModel
+import os
 import SwiftUI
 
 struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol {
     @State private var element: Element
-    var onSave: (Element) throws -> Void
+    var onSave: ((Element) throws -> Void)?
 
     private var saveLabel: String
 
-    init(element: Element, onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(element: Element, onSave: ((Element) throws -> Void)?) {
         _element = State(initialValue: element)
         self.onSave = onSave
         saveLabel = String(localized: .localizable(.save))
     }
 
+    private var editable: Bool {
+        onSave != nil
+    }
+
     private func valid() -> Bool {
-        !element.name.isEmpty
+        !element.name.isEmpty && editable
     }
 
     var body: some View {
@@ -37,9 +42,9 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(saveLabel) {
                     do {
-                        try onSave(element)
+                        try onSave?(element)
                     } catch {
-                        print("Save correspondent error: \(error)")
+                        Logger.shared.error("Save correspondent error: \(error)")
                     }
                 }
                 .disabled(!valid())
@@ -50,7 +55,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
 }
 
 extension CorrespondentEditView where Element == ProtoCorrespondent {
-    init(onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(onSave: @escaping (Element) throws -> Void) {
         self.init(element: ProtoCorrespondent(), onSave: onSave)
         saveLabel = String(localized: .localizable(.add))
     }
@@ -60,7 +65,7 @@ struct CorrespondentEditView_Previews: PreviewProvider {
     struct Container: View {
         var body: some View {
             NavigationStack {
-                CorrespondentEditView<ProtoCorrespondent>()
+                CorrespondentEditView<ProtoCorrespondent>(onSave: { _ in })
                     .navigationBarTitleDisplayMode(.inline)
                     .navigationTitle(Text(.localizable(.correspondentCreateTitle)))
             }

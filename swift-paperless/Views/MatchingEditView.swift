@@ -11,15 +11,7 @@ import SwiftUI
 
 struct MatchEditView<Element>: View where Element: MatchingModel {
     @Binding var element: Element
-
-//    @State private var showTextField: Bool
-
-//    init(element: Binding<Element>) {
-//        self._element = element
-//        self._showTextField = State(initialValue: element.)
-//    }
-//
-//    static private func
+    var editable = true
 
     var showTextField: Bool {
         switch element.matchingAlgorithm {
@@ -37,6 +29,7 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
                     Text(alg.title).tag(alg)
                 }
             }
+            .disabled(!editable)
         } header: {
             Text(.matching(.title))
         } footer: {
@@ -47,8 +40,11 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
         Section {
             if showTextField {
                 TextField(String(localized: .matching(.pattern)), text: $element.match)
-                    .clearable($element.match)
+                    .if(editable) {
+                        $0.clearable($element.match)
+                    }
                 Toggle(String(localized: .matching(.caseInsensitive)), isOn: $element.isInsensitive)
+                    .disabled(!editable)
             }
         }
     }
