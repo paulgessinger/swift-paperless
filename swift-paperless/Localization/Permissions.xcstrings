@@ -189,6 +189,116 @@
         }
       }
     },
+    "noViewPermissionsCorrespondents" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view correspondents."
+          }
+        }
+      }
+    },
+    "noViewPermissionsDisplayTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient permissions"
+          }
+        }
+      }
+    },
+    "noViewPermissionsDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view documents."
+          }
+        }
+      }
+    },
+    "noViewPermissionsDocumentTypes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view document types."
+          }
+        }
+      }
+    },
+    "noViewPermissionsGroups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view groups."
+          }
+        }
+      }
+    },
+    "noViewPermissionsSavedViews" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view saved views."
+          }
+        }
+      }
+    },
+    "noViewPermissionsStoragePaths" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view storage paths."
+          }
+        }
+      }
+    },
+    "noViewPermissionsTags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view tags."
+          }
+        }
+      }
+    },
+    "noViewPermissionsUISettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view UI settings."
+          }
+        }
+      }
+    },
+    "noViewPermissionsUsers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view users."
+          }
+        }
+      }
+    },
     "owner" : {
       "extractionState" : "manual",
       "localizations" : {
