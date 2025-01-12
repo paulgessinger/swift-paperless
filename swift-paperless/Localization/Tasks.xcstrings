@@ -1226,6 +1226,17 @@
         }
       }
     },
+    "titleSingular" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task"
+          }
+        }
+      }
+    },
     "unknownFileName" : {
       "extractionState" : "manual",
       "localizations" : {
