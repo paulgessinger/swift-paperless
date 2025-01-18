@@ -286,6 +286,9 @@ final class DocumentStore: ObservableObject, Sendable {
             while !group.isEmpty {
                 do {
                     try await group.next()
+                } catch is PermissionsError {
+                    Logger.shared.debug("Fetch all task returned permissions error, suppressing")
+                    continue
                 } catch let error where error.isCancellationError {
                     Logger.shared.debug("Fetch all task caught cancellation, suppressing")
                     continue
