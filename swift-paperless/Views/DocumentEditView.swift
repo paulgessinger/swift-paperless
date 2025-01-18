@@ -326,6 +326,8 @@ struct DocumentEditView: View {
                 }
             }
         }
+        .presentationDragIndicator(.hidden)
+
         .errorOverlay(errorController: errorController)
     }
 }
