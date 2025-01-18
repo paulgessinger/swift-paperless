@@ -176,6 +176,7 @@
 				Error/PresentableError.swift,
 				MultiPartFormDataRequest.swift,
 				Repository.swift,
+				TransientRepository.swift,
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
