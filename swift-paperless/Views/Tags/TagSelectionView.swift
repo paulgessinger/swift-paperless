@@ -254,7 +254,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
 
     @Binding var document: D
 
-    @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+    @State private var searchText = ""
 
     @Namespace private var animation
 
@@ -298,57 +298,68 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
 
     private func tagFilter(tag: Tag) -> Bool {
         if document.tags.contains(tag.id) { return false }
-        if searchDebounce.debouncedText.isEmpty { return true }
-        if let _ = tag.name.range(of: searchDebounce.debouncedText, options: .caseInsensitive) {
+        if searchText.isEmpty { return true }
+        if let _ = tag.name.range(of: searchText, options: .caseInsensitive) {
             return true
         } else {
             return false
         }
     }
 
+    private var displayTags: [Tag] {
+        store.tags.values
+            .filter { tagFilter(tag: $0) }
+            .sorted { $0.name < $1.name }
+    }
+
+    private struct NoElementsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .localizable(.noElementsFound)),
+                                   systemImage: "exclamationmark.magnifyingglass",
+                                   description: Text(Tag.localizedNamePlural))
+        }
+    }
+
+    private struct NoPermissionsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                                   systemImage: "lock.fill",
+                                   description: Text(Tag.localizedNoViewPermissions))
+        }
+    }
+
     var body: some View {
-        VStack {
-            VStack {
-                SearchBarView(text: $searchDebounce.text)
-            }
-            .transition(.opacity)
-            .padding(.horizontal)
-            .padding(.vertical, 2)
-
-            // MARK: - Tag selection list
-
-            Form {
-                if !document.tags.isEmpty {
-                    Section {
-                        ForEach(document.tags, id: \.self) { id in
-                            let tag = store.tags[id]
-                            Button(action: {
-                                withAnimation {
-                                    document.tags = document.tags.filter { $0 != id }
-                                }
-                            }) {
-                                HStack {
-                                    TagView(tag: tag).if(tag == nil) { view in
-                                        view.redacted(reason: .placeholder)
-                                    }
-                                    Spacer()
-                                    Label(String(localized: .localizable(.remove)), systemImage: "xmark.circle.fill")
-                                        .labelStyle(.iconOnly)
-                                        .foregroundColor(.gray)
-                                }
+        Form {
+            if !store.permissions.test(.view, for: .tag) {
+                NoPermissionsView()
+            } else {
+                Section {
+                    ForEach(document.tags, id: \.self) { id in
+                        let tag = store.tags[id]
+                        Button(action: {
+                            withAnimation {
+                                document.tags = document.tags.filter { $0 != id }
+                            }
+                        }) {
+                            HStack {
+                                TagView(tag: tag)
+                                    .if(tag == nil) { $0.redacted(reason: .placeholder) }
+                                Spacer()
+                                Label(String(localized: .localizable(.remove)), systemImage: "xmark.circle.fill")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundColor(.gray)
                             }
                         }
-                    } header: {
-                        Text(.localizable(.selected))
                     }
+                    if document.tags.isEmpty {
+                        Text(.localizable(.none))
+                    }
+                } header: {
+                    Text(.localizable(.selected))
                 }
 
                 Section {
-                    ForEach(
-                        store.tags.sorted { $0.value.name < $1.value.name }
-                            .filter { tagFilter(tag: $0.value) },
-                        id: \.value.id
-                    ) { _, tag in
+                    ForEach(displayTags, id: \.id) { tag in
                         Button(action: {
                             withAnimation {
                                 document.tags.append(tag.id)
@@ -365,12 +376,20 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                     }
                 }
             }
-            .overlay(
-                Rectangle()
-                    .fill(Color(.divider))
-                    .frame(maxWidth: .infinity, maxHeight: 1),
-                alignment: .top
-            )
+        }
+        .searchable(text: $searchText)
+
+        .animation(.spring, value: displayTags)
+        .animation(.spring, value: store.permissions[.tag])
+
+        .refreshable {
+            Task {
+                do {
+                    try await store.fetchAll()
+                } catch {
+                    errorController.push(error: error)
+                }
+            }
         }
 
         .navigationTitle(Text(.localizable(.tags)))
@@ -382,6 +401,8 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                 } label: {
                     Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
                 }
+
+                .disabled(!store.permissions.test(.add, for: .tag))
             }
         }
     }
