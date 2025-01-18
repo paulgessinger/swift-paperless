@@ -48,9 +48,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
         Form {
             Section {
                 TextField(String(localized: .localizable(.tagName)), text: $tag.value.name)
-                    .if(editable) { $0
-                        .clearable($tag.value.name)
-                    }
+                    .clearable($tag.value.name)
                     .disabled(!editable)
 
                 Toggle(String(localized: .localizable(.tagIsInbox)), isOn: $tag.value.isInboxTag)
@@ -88,7 +86,8 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
                 .disabled(!editable)
             }
 
-            MatchEditView(element: $tag.value, editable: editable)
+            MatchEditView(element: $tag.value)
+                .disabled(!editable)
         }
 
         .toolbar {

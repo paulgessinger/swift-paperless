@@ -167,10 +167,13 @@ struct DocumentList: View {
     }
 
     func refresh() async {
-        if let documents = try? await viewModel.refresh() {
+        do {
+            let documents = try await viewModel.refresh()
             withAnimation {
                 viewModel.replace(documents: documents)
             }
+        } catch {
+            Logger.shared.error("Error refreshing documents: \(error)")
         }
     }
 
@@ -182,7 +185,9 @@ struct DocumentList: View {
                 NoPermissionsView(for: Document.self)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .refreshable {
-                        await refresh()
+                        await Task {
+                            await refresh()
+                        }.value
                     }
             } else {
                 let documents = viewModel.documents
@@ -211,7 +216,9 @@ struct DocumentList: View {
                     NoDocumentsView(filtering: filterModel.filterState.filtering)
                         .equatable()
                         .refreshable {
-                            await refresh()
+                            await Task {
+                                await refresh()
+                            }.value
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
@@ -231,7 +238,11 @@ struct DocumentList: View {
         // @TODO: Re-evaluate if we want an animation here
         .animation(.default, value: viewModel.documents)
 
-        .refreshable { await refresh() }
+        .refreshable {
+            await Task {
+                await refresh()
+            }.value
+        }
 
         .task {
             await viewModel.load()
