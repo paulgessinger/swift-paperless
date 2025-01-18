@@ -255,22 +255,30 @@ struct CommonPickerEdit<Manager, D>: View
     where
     Manager: ManagerProtocol,
     Manager.Model.Element: Pickable,
-//    Manager.CreateView.Element: Pickable,
     D: DocumentProtocol
 {
     typealias Element = Manager.Model.Element
 
     @ObservedObject var store: DocumentStore
 
+    @EnvironmentObject var errorController: ErrorController
+
     @Binding var document: D
 
     @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
-    @State private var showNone = true
-
     private var model: Manager.Model
 
-    private func elements() -> [(UInt, String)] {
+    private var resource: UserPermissions.Resource? {
+        UserPermissions.Resource(for: Element.self)
+    }
+
+    private var permissions: UserPermissions.PermissionSet {
+        guard let resource else { return .empty }
+        return store.permissions[resource]
+    }
+
+    private var elements: [(UInt, String)] {
         let all = model.load()
             .map { ($0.id, $0.name) }
 
@@ -326,36 +334,52 @@ struct CommonPickerEdit<Manager, D>: View
         }
     }
 
+    private struct NoElementsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .localizable(.noElementsFound)),
+                                   systemImage: "exclamationmark.magnifyingglass",
+                                   description: Text(Element.localizedNamePlural))
+        }
+    }
+
+    private struct NoPermissionsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                                   systemImage: "lock.fill",
+                                   description: Text(Element.localizedNoViewPermissions))
+        }
+    }
+
     var body: some View {
-        VStack {
-            SearchBarView(text: $searchDebounce.text)
-                .transition(.opacity)
-                .padding(.horizontal)
-                .padding(.vertical, 2)
-            Form {
-                if showNone {
-                    Section {
-                        row(Element.notAssignedPicker, value: nil)
-                    }
+        Form {
+            if !permissions.test(.view) {
+                NoPermissionsView()
+            } else if elements.isEmpty, searchDebounce.debouncedText.isEmpty {
+                NoElementsView()
+            } else {
+                Section {
+                    row(Element.notAssignedPicker, value: nil)
                 }
                 Section {
-                    ForEach(elements(), id: \.0) { id, name in
+                    ForEach(elements, id: \.0) { id, name in
                         row(name, value: id)
                     }
                 }
             }
-            .overlay(
-                Rectangle()
-                    .fill(Color(.divider))
-                    .frame(maxWidth: .infinity, maxHeight: 1),
-                alignment: .top
-            )
         }
+        .animation(.spring, value: searchDebounce.debouncedText)
+        .animation(.spring, value: permissions)
 
-        .onChange(of: searchDebounce.debouncedText) { _, value in
-            withAnimation {
-                showNone = value.isEmpty
-            }
+        .searchable(text: $searchDebounce.text)
+
+        .refreshable {
+            await Task {
+                do {
+                    try await store.fetchAll()
+                } catch {
+                    errorController.push(error: error)
+                }
+            }.value
         }
 
         .toolbar {
@@ -366,8 +390,10 @@ struct CommonPickerEdit<Manager, D>: View
                 } label: {
                     Label(String(localized: .localizable(.add)), systemImage: "plus")
                 }
+                .disabled(!permissions.test(.add))
             }
         }
+        .presentationDragIndicator(.hidden)
     }
 }
 
