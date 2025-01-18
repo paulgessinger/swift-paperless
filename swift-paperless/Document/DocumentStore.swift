@@ -504,6 +504,7 @@ final class DocumentStore: ObservableObject, Sendable {
 
     private func checkPermission(_ operation: UserPermissions.Operation, for resource: UserPermissions.Resource) throws {
         if !permissions.test(operation, for: resource) {
+            Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
             throw PermissionsError(resource: resource, operation: operation)
         }
     }
