@@ -34,9 +34,11 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
             Section {
                 TextField(String(localized: .localizable(.name)), text: $element.name)
                     .clearable($element.name)
+                    .disabled(!editable)
             }
 
             MatchEditView(element: $element)
+                .disabled(!editable)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

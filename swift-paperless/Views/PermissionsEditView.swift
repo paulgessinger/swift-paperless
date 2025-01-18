@@ -57,6 +57,29 @@ private struct ElementPicker<T: Identifiable>: View where T.ID == UInt {
 struct PermissionsEditView<Element>: View where Element: PermissionsModel {
     @Binding var element: Element
 
+    @State private var ownerUser: User?
+
+//    init(element: Binding<Element>) {
+//        // @TODO: The initialization needs to go into `task`
+//        self._element = element
+//    }
+
+    private func initialize() async {
+        do {
+            // update users and groups just in case
+            async let users: Void = try await store.fetchAllUsers()
+            async let groups: Void = try await store.fetchAllGroups()
+
+            _ = try await (users, groups)
+        } catch is CancellationError {}
+        catch {
+            Logger.shared.error("Error loading users for permissions editing: \(error)")
+        }
+        if let owner = element.owner {
+            ownerUser = store.users[owner] ?? User(id: owner, isSuperUser: false, username: .permissions(.private))
+        }
+    }
+
     @EnvironmentObject private var store: DocumentStore
 
     private var permissions: Permissions {
@@ -91,12 +114,6 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
         binding(kind: \.change, element: \.groups)
     }
 
-    private var users: [User] {
-        store.users
-            .values
-            .sorted(by: { $0.username < $1.username })
-    }
-
     private func nameList<T>(_ ids: [UInt],
                              storePath: KeyPath<DocumentStore, [UInt: T]>,
                              name: KeyPath<T, String>) -> Text
@@ -125,18 +142,47 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
         nameList(ids, storePath: \.groups, name: \.name)
     }
 
+    private var users: [User] {
+        store.users.values.sorted { $0.username < $1.username }
+    }
+
+    // @TODO: Check edge cases for when logged in user can't see any users (we inject themselves)
+    // - can only set read write perms for themselves
+    // - can only set owner to themselves or nobody
+
+    @ViewBuilder
+    private var ownerPicker: some View {
+        if !store.permissions.test(.view, for: .user) {
+            Picker(.permissions(.owner), selection: $element.owner) {
+                Text(.permissions(.noOwner))
+                    .tag(nil as UInt?)
+                if let currentUser = store.currentUser {
+                    Text(currentUser.username)
+                        .tag(currentUser.id as UInt?)
+                }
+
+                if let owner = element.owner, owner != store.currentUser?.id, let ownerUser {
+                    Text(ownerUser.username)
+                        .tag(owner as UInt?)
+                }
+            }
+        } else {
+            Picker(.permissions(.owner), selection: $element.owner) {
+                Text(.permissions(.noOwner))
+                    .tag(nil as UInt?)
+                ForEach(users, id: \.id) { user in
+                    Text(user.username)
+                        .tag(user.id as UInt?)
+                }
+            }
+        }
+    }
+
     var body: some View {
         Form {
             Section {
                 HStack {
-                    Picker(.permissions(.owner), selection: $element.owner) {
-                        Text(.permissions(.noOwner))
-                            .tag(nil as UInt?)
-                        ForEach(users, id: \.id) { user in
-                            Text(user.username)
-                                .tag(user.id as UInt?)
-                        }
-                    }
+                    ownerPicker
                 }
             } footer: {
                 Text(.permissions(.unownedDescription))
@@ -199,18 +245,7 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                 }
             }
         }
-        .task {
-            do {
-                // update users and groups just in case
-                async let users: Void = try await store.fetchAllUsers()
-                async let groups: Void = try await store.fetchAllGroups()
-
-                _ = try await (users, groups)
-            } catch is CancellationError {}
-            catch {
-                Logger.shared.error("Error loading users for permissions editing: \(error)")
-            }
-        }
+        .task { await initialize() }
     }
 }
 
@@ -228,18 +263,19 @@ private struct PreviewHelper: View {
             }
         }
         .task {
-            document = try? await store.document(id: 1)
-            document?.permissions = .init(view: .init(users: [1]), change: .init(groups: [2]))
-            guard document != nil else {
-                fatalError()
-            }
+//            document = try? await store.document(id: 1)
+//            document?.permissions = .init(view: .init(users: [1]), change: .init(groups: [2]))
+//            print(document)
+//            guard document != nil else {
+//                fatalError()
+//            }
         }
     }
 }
 
 #Preview {
     @Previewable
-    @StateObject var store = DocumentStore(repository: PreviewRepository())
+    @StateObject var store = DocumentStore(repository: TransientRepository())
     @Previewable
     @StateObject var errorController = ErrorController()
 

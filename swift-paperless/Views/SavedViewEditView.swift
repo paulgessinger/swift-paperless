@@ -15,6 +15,12 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 
     private var saveLabel: String
 
+    private var editable: Bool { onSave != nil }
+
+    private var valid: Bool {
+        !savedView.name.isEmpty && editable
+    }
+
     init(element savedView: Element,
          onSave: ((Element) throws -> Void)?)
     {
@@ -33,6 +39,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 
                 Toggle(String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar)
             }
+            .disabled(!editable)
 
             Section(String(localized: .localizable(.sorting))) {
                 Picker(String(localized: .localizable(.sortBy)), selection: $savedView.sortField) {
@@ -48,6 +55,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
                         .tag(DataModel.SortOrder.descending)
                 }
             }
+            .disabled(!editable)
         }
 
         .toolbar {
@@ -59,7 +67,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
                         Logger.shared.error("Save saved view error: \(error)")
                     }
                 }
-                .disabled(savedView.name.isEmpty)
+                .disabled(!valid)
                 .bold()
             }
         }

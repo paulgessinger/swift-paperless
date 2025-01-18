@@ -21,8 +21,12 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
         saveLabel = String(localized: .localizable(.save))
     }
 
+    private var editable: Bool {
+        onSave != nil
+    }
+
     private func valid() -> Bool {
-        !element.name.isEmpty
+        !element.name.isEmpty && editable
     }
 
     var body: some View {
@@ -30,9 +34,11 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
             Section {
                 TextField(String(localized: .localizable(.name)), text: $element.name)
                     .clearable($element.name)
+                    .disabled(!editable)
             }
 
             MatchEditView(element: $element)
+                .disabled(!editable)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
