@@ -313,6 +313,7 @@ final class DocumentStore: ObservableObject, Sendable {
                     continue
                 } catch {
                     Logger.shared.error("Fetch all task caught error: \(error)")
+                    // @TODO: This cancels the other tasks, maybe we want to continue
                     throw error
                 }
             }
