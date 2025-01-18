@@ -33,7 +33,7 @@ public struct UserPermissions: Sendable {
         case delete
     }
 
-    public struct PermissionSet: Sendable, CustomStringConvertible {
+    public struct PermissionSet: Sendable, CustomStringConvertible, Equatable {
         public var values = [Bool](repeating: false, count: Operation.allCases.count)
 
         public func test(_ operation: Operation) -> Bool {
@@ -50,6 +50,10 @@ public struct UserPermissions: Sendable {
                 .map { String($0) }
 
             return enabledPermissions.joined(separator: "")
+        }
+
+        public static var empty: PermissionSet {
+            PermissionSet()
         }
     }
 
@@ -194,6 +198,23 @@ extension UserPermissions.Operation: CustomStringConvertible {
         case "add": self = .add
         case "change": self = .change
         case "delete": self = .delete
+        default: return nil
+        }
+    }
+}
+
+public extension UserPermissions.Resource {
+    init?(for type: (some Any).Type) {
+        switch type {
+        case is Document.Type: self = .document
+        case is Tag.Type: self = .tag
+        case is Correspondent.Type: self = .correspondent
+        case is DocumentType.Type: self = .documentType
+        case is StoragePath.Type: self = .storagePath
+        case is SavedView.Type: self = .savedView
+        case is PaperlessTask.Type: self = .paperlessTask
+        case is User.Type: self = .user
+        case is UserGroup.Type: self = .group
         default: return nil
         }
     }
