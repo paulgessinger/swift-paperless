@@ -142,19 +142,23 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     }
 
     private var noElementsView: some View {
-        ScrollableContentUnavailableView {
-            Label(String(localized: .localizable(.noElementsFound)), systemImage: "exclamationmark.magnifyingglass")
-        } description: {
-            Text(Element.localizedNamePlural)
-        }
+        ContentUnavailableView(String(localized: .localizable(.noElementsFound)),
+                               systemImage: "exclamationmark.magnifyingglass",
+                               description: Text(Element.localizedNamePlural))
     }
 
     private var noPermissionsView: some View {
-        NoPermissionsView(for: Element.self)
+        ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                               systemImage: "lock.fill",
+                               description: Text(Element.localizedNoViewPermissions))
     }
 
     private func test(_ operation: UserPermissions.Operation) -> Bool {
         model?.permissions.test(operation) ?? false
+    }
+
+    private var permissions: UserPermissions.PermissionSet {
+        model?.permissions ?? .empty
     }
 
     private func deleteRow(at offsets: IndexSet) {
@@ -176,32 +180,31 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         let displayElements = elements.filter { filter(element: $0) }
         VStack {
             if let model {
-                if !model.permissions.test(.view) {
-                    noPermissionsView
-                } else if elements.isEmpty, searchText.isEmpty {
-                    noElementsView
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .refreshable {
-                            await refresh()
-                        }
-                } else {
-                    List {
-                        ForEach(displayElements, id: \.self) { element in
-                            NavigationLink {
-                                Edit(model: model, element: element)
-                            } label: {
-                                Manager.RowView(element: element)
+                List {
+                    if !model.permissions.test(.view) {
+                        noPermissionsView
+                    } else if elements.isEmpty, searchText.isEmpty {
+                        noElementsView
+                    } else {
+                        if !displayElements.isEmpty {
+                            ForEach(displayElements, id: \.self) { element in
+                                NavigationLink {
+                                    Edit(model: model, element: element)
+                                } label: {
+                                    Manager.RowView(element: element)
+                                }
+                            }
+                            .if(test(.delete)) {
+                                $0.onDelete(perform: deleteRow)
                             }
                         }
-                        .if(test(.delete)) {
-                            $0.onDelete(perform: deleteRow)
-                        }
                     }
-                    .searchable(text: $searchText)
                 }
+                .searchable(text: $searchText)
             }
         }
         .animation(.spring, value: displayElements)
+        .animation(.spring, value: permissions)
 
         .navigationBarTitleDisplayMode(.inline)
 
@@ -224,7 +227,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
         .refreshable {
-            await refresh()
+            await Task { await refresh() }.value
         }
 
         .task {
