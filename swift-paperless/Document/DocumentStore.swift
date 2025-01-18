@@ -29,7 +29,9 @@ final class DocumentStore: ObservableObject, Sendable {
 
     @Published private(set) var tasks: [PaperlessTask] = []
 
+    @Published
     private(set) var permissions: UserPermissions = .empty
+    @Published
     private(set) var settings = UISettingsSettings()
 
     var activeTasks: [PaperlessTask] {
@@ -263,9 +265,15 @@ final class DocumentStore: ObservableObject, Sendable {
         let permissions = permissions
         Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
 
-        await withThrowingTaskGroup(of: Void.self) { group in
-            for task in [fetchAllCorrespondents, fetchAllDocumentTypes, fetchAllTags, fetchAllSavedViews,
-                         fetchAllStoragePaths, fetchCurrentUser, fetchAllUsers, fetchAllGroups]
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for task in [fetchAllCorrespondents,
+                         fetchAllDocumentTypes,
+                         fetchAllTags,
+                         fetchAllSavedViews,
+                         fetchAllStoragePaths,
+                         fetchCurrentUser,
+                         fetchAllUsers,
+                         fetchAllGroups]
             {
                 group.addTask { try await task() }
             }
@@ -274,9 +282,11 @@ final class DocumentStore: ObservableObject, Sendable {
                 do {
                     try await group.next()
                 } catch let error where error.isCancellationError {
+                    Logger.shared.debug("Fetch all task caught cancellation, suppressing")
                     continue
                 } catch {
-                    Logger.shared.error("Error fetching all (suppressing): \(error)")
+                    Logger.shared.error("Fetch all task caught error: \(error)")
+                    throw error
                 }
             }
         }

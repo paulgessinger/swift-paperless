@@ -49,7 +49,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
         defer { semaphore.signal() }
 
         guard !Task.isCancelled else {
-            Logger.api.notice("API sequence next task was cancelled.")
+            Logger.api.notice("API sequence (\(Element.self, privacy: .public) next task was cancelled.")
             return nil
         }
 
