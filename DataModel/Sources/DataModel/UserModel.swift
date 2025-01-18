@@ -26,30 +26,11 @@ public struct UserGroup: Model, Identifiable, Equatable, Sendable {
 }
 
 public struct UserPermissions: Sendable {
-    public enum Operation: Int, CaseIterable, CustomStringConvertible, Sendable {
+    public enum Operation: Int, CaseIterable, Sendable {
         case view
         case add
         case change
         case delete
-
-        public var description: String {
-            switch self {
-            case .view: "view"
-            case .add: "add"
-            case .change: "change"
-            case .delete: "delete"
-            }
-        }
-
-        public init?(_ description: some StringProtocol) {
-            switch description {
-            case "view": self = .view
-            case "add": self = .add
-            case "change": self = .change
-            case "delete": self = .delete
-            default: return nil
-            }
-        }
     }
 
     public struct PermissionSet: Sendable, CustomStringConvertible {
@@ -194,5 +175,26 @@ extension UserPermissions: Codable {
         }
 
         try container.encode(values)
+    }
+}
+
+extension UserPermissions.Operation: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .view: "view"
+        case .add: "add"
+        case .change: "change"
+        case .delete: "delete"
+        }
+    }
+
+    public init?(_ description: some StringProtocol) {
+        switch description {
+        case "view": self = .view
+        case "add": self = .add
+        case "change": self = .change
+        case "delete": self = .delete
+        default: return nil
+        }
     }
 }
