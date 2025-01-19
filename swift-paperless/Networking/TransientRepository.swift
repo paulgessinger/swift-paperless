@@ -14,6 +14,8 @@ actor TransientRepository {
     private var groups: [UserGroup]
     private var savedViews: [UInt: SavedView]
 
+    var permissions: UserPermissions = .full
+
     private var nextId: UInt = 1
     private var currentLoggedInUser: User?
 
@@ -41,6 +43,11 @@ actor TransientRepository {
         users.append(user)
     }
 
+    /// Adds a group to the repository's group list
+    func addGroup(_ group: UserGroup) {
+        groups.append(group)
+    }
+
     /// Logs in a user by ID. The user must exist in the repository's user list.
     /// - Parameter userId: The ID of the user to log in
     /// - Throws: RepositoryError.userNotFound if the user doesn't exist
@@ -64,6 +71,14 @@ actor TransientRepository {
     /// Logs out the current user
     func logout() {
         currentLoggedInUser = nil
+    }
+
+    func set(permissions: UserPermissions) {
+        self.permissions = permissions
+    }
+
+    func set(permissionTo op: UserPermissions.Operation, for resource: UserPermissions.Resource, to value: Bool) {
+        permissions.set(op, to: value, for: resource)
     }
 }
 
@@ -381,7 +396,7 @@ extension TransientRepository: Repository {
         try await UISettings(
             user: currentUser(),
             settings: UISettingsSettings(),
-            permissions: UserPermissions.full
+            permissions: permissions
         )
     }
 
