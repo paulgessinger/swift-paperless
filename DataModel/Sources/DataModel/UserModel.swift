@@ -182,6 +182,22 @@ extension UserPermissions: Codable {
     }
 }
 
+public extension UserPermissions {
+    private static func build(_ initial: Self, _ configure: (inout Self) -> Void) -> Self {
+        var initial = initial
+        configure(&initial)
+        return initial
+    }
+
+    static func empty(with configure: (inout Self) -> Void) -> Self {
+        build(.empty, configure)
+    }
+
+    static func full(with configure: (inout Self) -> Void) -> Self {
+        build(.full, configure)
+    }
+}
+
 extension UserPermissions.Operation: CustomStringConvertible {
     public var description: String {
         switch self {
