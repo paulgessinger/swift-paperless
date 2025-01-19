@@ -5,20 +5,25 @@
 //  Created by Paul Gessinger on 29.04.23.
 //
 
+import DataModel
 import os
 import SwiftUI
 
 protocol ManagerModel: Sendable {
-    associatedtype Element: Hashable, Identifiable, Sendable
+    associatedtype Element: Hashable, Identifiable, Sendable, LocalizedResource
     associatedtype ProtoElement: Sendable
 
     init(store: DocumentStore)
 
     @MainActor
     func load() -> [Element]
+
     func update(_ element: Element) async throws
     func create(_ element: ProtoElement) async throws -> Element
     func delete(_ element: Element) async throws
+
+    @MainActor
+    var permissions: UserPermissions.PermissionSet { get }
 }
 
 protocol RowViewProtocol: View {
@@ -32,7 +37,7 @@ protocol EditViewProtocol: View {
     associatedtype Element: Sendable
 
     @MainActor
-    init(element: Element, onSave: @escaping (Element) throws -> Void)
+    init(element: Element, onSave: ((Element) throws -> Void)?)
 }
 
 protocol CreateViewProtocol: View {
@@ -58,7 +63,6 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     @EnvironmentObject var store: DocumentStore
 
     @State var model: Manager.Model?
-    @State private var elementToDelete: Element?
 
     @State private var elements: [Element] = []
 
@@ -71,8 +75,11 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
         var element: Element
 
-        var body: some View {
-            Manager.EditView(element: element, onSave: { newElement in
+        private var onSave: ((Element) throws -> Void)? {
+            guard model.permissions.test(.change) else {
+                return nil
+            }
+            return { newElement in
                 Task {
                     do {
                         try await model.update(newElement)
@@ -82,8 +89,11 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                         errorController.push(error: error)
                     }
                 }
+            }
+        }
 
-            })
+        var body: some View {
+            Manager.EditView(element: element, onSave: onSave)
         }
     }
 
@@ -117,38 +127,83 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
     }
 
-    var body: some View {
-        VStack {
+    private func refresh() async {
+        do {
+            try await store.fetchAll()
             if let model {
-                if elements.isEmpty {
-                    Divider()
-                    Text(.localizable(.noElementsFound))
-                        .multilineTextAlignment(.center)
-                    Spacer()
-                } else {
-                    SearchBarView(text: $searchText, cancelEnabled: true)
-                        .padding(.horizontal)
-                        .padding(.bottom, 3)
-                    List {
-                        let displayElements = elements.filter { filter(element: $0) }
-                        ForEach(displayElements, id: \.self) { element in
-                            NavigationLink {
-                                Edit(model: model, element: element)
-                            } label: {
-                                Manager.RowView(element: element)
-                            }
-                            .swipeActions {
-                                Button(String(localized: .localizable(.delete))) {
-                                    elementToDelete = element
-                                }
-                                .tint(.red)
-                            }
-                        }
-                        .onDelete { _ in }
-                    }
+                withAnimation {
+                    elements = model.load()
+                }
+            }
+        } catch {
+            errorController.push(error: error)
+        }
+    }
+
+    private var noElementsView: some View {
+        ContentUnavailableView(String(localized: .localizable(.noElementsFound)),
+                               systemImage: "exclamationmark.magnifyingglass",
+                               description: Text(Element.localizedNamePlural))
+    }
+
+    private var noPermissionsView: some View {
+        ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                               systemImage: "lock.fill",
+                               description: Text(Element.localizedNoViewPermissions))
+    }
+
+    private func test(_ operation: UserPermissions.Operation) -> Bool {
+        model?.permissions.test(operation) ?? false
+    }
+
+    private var permissions: UserPermissions.PermissionSet {
+        model?.permissions ?? .empty
+    }
+
+    private func deleteRow(at offsets: IndexSet) {
+        for (i, element) in elements.enumerated() {
+            guard offsets.contains(i) else { continue }
+            Task {
+                do {
+                    try await model?.delete(element)
+                } catch {
+                    Logger.shared.error("Error deleting element: \(error)")
+                    errorController.push(error: error)
                 }
             }
         }
+        elements.remove(atOffsets: offsets)
+    }
+
+    var body: some View {
+        let displayElements = elements.filter { filter(element: $0) }
+        VStack {
+            if let model {
+                List {
+                    if !model.permissions.test(.view) {
+                        noPermissionsView
+                    } else if elements.isEmpty, searchText.isEmpty {
+                        noElementsView
+                    } else {
+                        if !displayElements.isEmpty {
+                            ForEach(displayElements, id: \.self) { element in
+                                NavigationLink {
+                                    Edit(model: model, element: element)
+                                } label: {
+                                    Manager.RowView(element: element)
+                                }
+                            }
+                            .if(test(.delete)) {
+                                $0.onDelete(perform: deleteRow)
+                            }
+                        }
+                    }
+                }
+                .searchable(text: $searchText)
+            }
+        }
+        .animation(.spring, value: displayElements)
+        .animation(.spring, value: permissions)
 
         .navigationBarTitleDisplayMode(.inline)
 
@@ -162,49 +217,16 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
                     } label: {
                         Label(String(localized: .localizable(.add)), systemImage: "plus")
                     }
+                    .disabled(!test(.add))
 
                     EditButton()
+                        .disabled(!test(.change))
                 }
             }
         }
 
-        .confirmationDialog(unwrapping: $elementToDelete,
-                            title: { _ in String(localized: .localizable(.delete)) },
-                            actions: { $item in
-                                Button(String(localized: .localizable(.delete)), role: .destructive) {
-                                    withAnimation {
-                                        elements.removeAll(where: { $0 == item })
-                                    }
-                                    let item = item
-                                    Task {
-                                        do {
-                                            try await model?.delete(item)
-                                            elementToDelete = nil
-                                        } catch {
-                                            Logger.shared.error("Error deleting element: \(error)")
-                                            errorController.push(error: error)
-                                            elements = model?.load() ?? []
-                                        }
-                                    }
-                                }
-                                Button(String(localized: .localizable(.cancel)), role: .cancel) {
-                                    withAnimation {
-                                        elements = model?.load() ?? []
-                                    }
-                                }
-                            })
-
         .refreshable {
-            do {
-                try await store.fetchAll()
-                if let model {
-                    withAnimation {
-                        elements = model.load()
-                    }
-                }
-            } catch {
-                errorController.push(error: error)
-            }
+            await Task { await refresh() }.value
         }
 
         .task {
