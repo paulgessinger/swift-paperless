@@ -25,6 +25,11 @@ public struct Permissions: Codable, Equatable, Hashable, Sendable {
         self.view = view
         self.change = change
     }
+
+    public init(_ factory: (inout Permissions) -> Void) {
+        self.init()
+        factory(&self)
+    }
 }
 
 public protocol PermissionsModel {
