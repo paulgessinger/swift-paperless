@@ -393,6 +393,17 @@
         }
       }
     },
+    "privateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+          }
+        }
+      }
+    },
     "title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -530,6 +541,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Użytkownicy"
+          }
+        }
+      }
+    },
+    "userYouLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (you)"
           }
         }
       }
