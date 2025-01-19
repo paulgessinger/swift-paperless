@@ -241,13 +241,7 @@ final class DocumentStore: ObservableObject, Sendable {
                            collection: \.groups)
     }
 
-    func fetchAll() async throws {
-        // @TODO: This gets called concurrently during startup, maybe debounce
-        Logger.shared.notice("Fetch all store request")
-        await fetchAllSemaphore.wait()
-        defer { fetchAllSemaphore.signal() }
-        Logger.shared.notice("Fetch all store")
-
+    func fetchUISettings() async throws {
         do {
             // This can fail if we don't have the required permissions to even access UI settings
             // Older versions of the backend return an ok response here even if the perms aren't valid
@@ -260,7 +254,19 @@ final class DocumentStore: ObservableObject, Sendable {
             Logger.shared.error("Assuming full permissions to proceed")
             permissions = UserPermissions.full
             settings = UISettingsSettings()
+            throw error
         }
+    }
+
+    func fetchAll() async throws {
+        // @TODO: This gets called concurrently during startup, maybe debounce
+        Logger.shared.notice("Fetch all store request")
+        await fetchAllSemaphore.wait()
+        defer { fetchAllSemaphore.signal() }
+        Logger.shared.notice("Fetch all store")
+        print("start fetch all")
+
+        try? await fetchUISettings()
 
         let permissions = permissions
         Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
@@ -438,7 +444,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func create(document: ProtoDocument, file: URL) async throws {
-        try await repository.create(document: document, file: file)
+        _ = try await repository.create(document: document, file: file)
         startTaskPolling()
     }
 
