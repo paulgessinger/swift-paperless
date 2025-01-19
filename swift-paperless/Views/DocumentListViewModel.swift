@@ -72,6 +72,8 @@ class DocumentListViewModel {
         Logger.shared.debug("DocumentListViewModel.load")
         guard documents.isEmpty else { return }
         do {
+            // Ensure we have up-to-date permissions
+            try await store.fetchUISettings()
             if source == nil {
                 source = try await store.repository.documents(filter: filterState)
             }
@@ -87,9 +89,9 @@ class DocumentListViewModel {
 
             documents = batch
             Logger.shared.debug("DocumentListViewModel.load loading complete")
-        } catch is PermissionsError {
+        } catch let error as PermissionsError {
             noPermissions = true
-            Logger.shared.error("Insufficient permissions to load documents")
+            Logger.shared.error("Insufficient permissions to load documents: \(error)")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
             errorController.push(error: error)
