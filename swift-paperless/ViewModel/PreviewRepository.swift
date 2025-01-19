@@ -222,7 +222,7 @@ actor PreviewRepository: Repository {
 
     func update(document: Document) async throws -> Document { document }
     func delete(document _: Document) async throws {}
-    func create(document _: ProtoDocument, file _: URL) async throws {}
+    func create(document _: ProtoDocument, file _: URL) async throws -> Document { throw NotImplemented() }
 
     func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
         var elapsed = 0.0
