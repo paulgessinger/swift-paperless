@@ -407,8 +407,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task ID"
+            "state" : "translated",
+            "value" : "ID Task"
           }
         },
         "nl" : {
@@ -454,8 +454,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
+            "state" : "translated",
+            "value" : "Il documento con ID #%@ associato a questo task non esiste.\nForse nel frattempo è stato eliminato."
           }
         },
         "nl" : {
@@ -501,8 +501,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No tasks"
+            "state" : "translated",
+            "value" : "Nessun task"
           }
         },
         "nl" : {
@@ -971,7 +971,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Task #%@"
           }
         },
@@ -1018,8 +1018,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tasks"
+            "state" : "translated",
+            "value" : "Tutti i task"
           }
         },
         "nl" : {
@@ -1116,14 +1116,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "1 more task"
+                  "state" : "translated",
+                  "value" : "1 altra task"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%llu more tasks"
+                  "state" : "translated",
+                  "value" : "%llu altre task"
                 }
               }
             }
@@ -1208,7 +1208,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Tasks"
           }
         },
