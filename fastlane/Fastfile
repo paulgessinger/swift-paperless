@@ -72,15 +72,15 @@ platform :ios do
       profile_name: "match Development com.paulgessinger.swift-paperless",
     )
 
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "swift-paperless.xcodeproj",
-      team_id: "ZHKJ4NHK6F",
-      bundle_identifier: "com.paulgessinger.swift-paperless.ShareExtension",
-      code_sign_identity: "iPhone Developer",
-      sdk: "iphoneos*",
-      profile_name: "match Development com.paulgessinger.swift-paperless.ShareExtension",
-    )
+    # update_code_signing_settings(
+    #   use_automatic_signing: false,
+    #   path: "swift-paperless.xcodeproj",
+    #   team_id: "ZHKJ4NHK6F",
+    #   bundle_identifier: "com.paulgessinger.swift-paperless.ShareExtension",
+    #   code_sign_identity: "iPhone Developer",
+    #   sdk: "iphoneos*",
+    #   profile_name: "match Development com.paulgessinger.swift-paperless.ShareExtension",
+    # )
 
     version = get_version_number(
       xcodeproj: "swift-paperless.xcodeproj",
