@@ -61,6 +61,16 @@ platform :ios do
 
     ensure_git_status_clean
 
+    changelog = File.read(changelog_file)
+
+    changelog = %{
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+    } + changelog
+
     # Change code signing settings after committing
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -87,20 +97,10 @@ platform :ios do
       target: "swift-paperless"
     )
 
-    build_app(
+    build_ios_app(
       scheme: "swift-paperless",
       xcargs: "-skipPackagePluginValidation -skipMacroValidation" # seemingly no alternative on CI
     )
-
-    changelog = File.read(changelog_file)
-
-    changelog = %{
-PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
-Redact screenshots to not include information that you do not wish to expose.
-
----
-
-    } + changelog
 
     upload_to_testflight(
       changelog: changelog,
