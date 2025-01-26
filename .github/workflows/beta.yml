@@ -1,18 +1,14 @@
 name: TestFlight
 
 on:
-  push:
-    branches:
-      - beta
+  release:
+    types: [prereleased]
 jobs:
   upload_to_testflight:
     runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: brew install git-cliff
 
       - name: Setup git user
         run: |
@@ -29,4 +25,4 @@ jobs:
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< '${{ secrets.MATCH_DEPLOY_PRIVATE_KEY }}'
-          fastlane beta
+          fastlane beta_ci

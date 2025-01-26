@@ -13,11 +13,14 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
+current_changelog_file = File.dirname(Dir.pwd)+"/current_changelog.txt"
+changelog_file = File.dirname(Dir.pwd)+"/changelog.txt"
+
 default_platform(:ios)
 
 platform :ios do
   desc "Push a new beta build to TestFlight"
-  lane :beta do
+  lane :beta_ci do
     xcodes(
       select_for_current_build_only: true
     )
@@ -32,6 +35,21 @@ platform :ios do
       in_house: false,
     )
 
+    previous_build_number = latest_testflight_build_number()
+    next_build_number = previous_build_number + 1
+
+    current_build_number = Integer(get_build_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+    ))
+
+    puts "Current build number: #{current_build_number}"
+    puts "Next build number: #{next_build_number}"
+    if current_build_number != next_build_number
+      UI.user_error!("Build number is not at #{next_build_number}, but at #{current_build_number}")
+    end
+
+    match(type: "development", readonly: is_ci)
+
     match(
       type: "appstore",
       app_identifier: [
@@ -41,20 +59,27 @@ platform :ios do
       readonly: is_ci
     )
 
-    ensure_git_branch(branch: "^beta|develop\/.+$")
     ensure_git_status_clean
-    git_pull(rebase: true)
 
-    previous_build_number = latest_testflight_build_number()
-    current_build_number = previous_build_number + 1
+    # Change code signing settings after committing
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "swift-paperless.xcodeproj",
+      team_id: "ZHKJ4NHK6F",
+      code_sign_identity: "iPhone Developer",
+      sdk: "iphoneos*",
+      targets: ["swift-paperless"],
+      profile_name: "match Development com.paulgessinger.swift-paperless",
+    )
 
-    last_tag = last_git_tag()
-
-    changelog = File.read("../changelog.md")
-
-    increment_build_number(
-      xcodeproj: "swift-paperless.xcodeproj",
-      build_number: current_build_number
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "swift-paperless.xcodeproj",
+      team_id: "ZHKJ4NHK6F",
+      code_sign_identity: "iPhone Developer",
+      sdk: "iphoneos*",
+      targets: ["ShareExtension"],
+      profile_name: "match Development com.paulgessinger.swift-paperless.ShareExtension",
     )
 
     version = get_version_number(
@@ -67,27 +92,83 @@ platform :ios do
       xcargs: "-skipPackagePluginValidation -skipMacroValidation" # seemingly no alternative on CI
     )
 
-    git_commit(
-      path: "swift-paperless.xcodeproj",
-      message: "Bump build number to #{current_build_number}"
-    )
-    push_to_git_remote()
+    changelog = File.read(changelog_file)
 
-    github_release = set_github_release(
-      repository_name: "paulgessinger/swift-paperless",
-      api_bearer: ENV["GITHUB_TOKEN"],
-      name: "v#{version} (#{current_build_number})",
-      tag_name: "builds/#{version}/#{current_build_number}",
-      description: changelog,
-      commitish: "beta",
-      is_prerelease: true
-    )
+    changelog = %{
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+    } + changelog
 
     upload_to_testflight(
       changelog: changelog,
       skip_waiting_for_build_processing: ENV["CI"]
     )
 
+  end
+
+  lane :beta do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_KEY_FILEPATH"],
+      key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+      in_house: false,
+    )
+
+    ensure_git_branch(branch: "^main|develop\/.+$")
+    ensure_git_status_clean
+    git_pull(rebase: true)
+
+    previous_build_number = latest_testflight_build_number()
+    next_build_number = previous_build_number + 1
+
+    current_build_number = Integer(get_build_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+    ))
+
+    puts "Current build number: #{current_build_number}"
+    puts "Next build number: #{next_build_number}"
+    if current_build_number == next_build_number
+      puts "Build number is already at #{current_build_number}, nothing to do"
+      next
+    end
+
+    version = get_version_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+      target: "swift-paperless"
+    )
+
+    increment_build_number(
+      xcodeproj: "swift-paperless.xcodeproj",
+      build_number: next_build_number
+    )
+
+    current_changelog = File.read(current_changelog_file)
+    changelog = File.read(changelog_file)
+    combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog + "\n" + changelog
+
+    File.write(changelog_file, combined_changelog)
+    File.write(current_changelog_file, "")
+
+    git_commit(
+      path: ["swift-paperless.xcodeproj", changelog_file, current_changelog_file],
+      message: "Bump build number to #{next_build_number}"
+    )
+
+    push_to_git_remote()
+
+    github_release = set_github_release(
+      repository_name: "paulgessinger/swift-paperless",
+      api_bearer: ENV["GITHUB_TOKEN"],
+      name: "v#{version} (#{next_build_number})",
+      tag_name: "builds/#{version}/#{next_build_number}",
+      description: current_changelog,
+      commitish: "main",
+      is_prerelease: true
+    )
   end
 
   lane :bump_build do

@@ -1,5 +1,6 @@
-- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+Previous:
 
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
 - All new login screen with a new design
   - Improved error handling with more detailed error messages in many scenarios
   - Added the ability to log in with a token or without credentials (auto-auth,
