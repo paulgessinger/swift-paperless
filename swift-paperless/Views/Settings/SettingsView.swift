@@ -5,7 +5,9 @@
 //  Created by Paul Gessinger on 23.04.23.
 //
 
-import MessageUI
+#if canImport(MessageUI)
+    import MessageUI
+#endif
 import os
 import SwiftUI
 
@@ -115,41 +117,43 @@ struct SettingsView: View {
                 Label(String(localized: .settings(.detailsPrivacy)), systemImage: "hand.raised.fill")
             }
 
-            if MFMailComposeViewController.canSendMail() {
-                LogRecordExportButton { (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
-                    switch state {
-                    case .none:
-                        Button {
-                            export()
-                        } label: {
-                            Label {
-                                Text(.settings(.detailsFeedback))
-                                    .accentColor(.primary)
-                            } icon: {
-                                Image(systemName: "paperplane.fill")
+            #if canImport(MessageUI)
+                if MFMailComposeViewController.canSendMail() {
+                    LogRecordExportButton { (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
+                        switch state {
+                        case .none:
+                            Button {
+                                export()
+                            } label: {
+                                Label {
+                                    Text(.settings(.detailsFeedback))
+                                        .accentColor(.primary)
+                                } icon: {
+                                    Image(systemName: "paperplane.fill")
+                                }
                             }
+
+                        case .loading:
+                            LogRecordExportButton.loadingView()
+
+                        case .loaded:
+                            Label(String(localized: .settings(.feedbackDone)), systemImage: "checkmark.circle.fill")
+                                .accentColor(.primary)
+
+                        case let .error(error):
+                            Label(error.localizedDescription, systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
                         }
-
-                    case .loading:
-                        LogRecordExportButton.loadingView()
-
-                    case .loaded:
-                        Label(String(localized: .settings(.feedbackDone)), systemImage: "checkmark.circle.fill")
-                            .accentColor(.primary)
-
-                    case let .error(error):
-                        Label(error.localizedDescription, systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
-                    }
-                } change: { state in
-                    switch state {
-                    case let .loaded(logs):
-                        feedbackLogs = logs
-                    default:
-                        break
+                    } change: { state in
+                        switch state {
+                        case let .loaded(logs):
+                            feedbackLogs = logs
+                        default:
+                            break
+                        }
                     }
                 }
-            }
+            #endif
 
             NavigationLink {
                 AppVersionView()
@@ -214,6 +218,7 @@ struct SettingsView: View {
             detailSection
         }
 
+        #if canImport(MessageUI)
         .sheet(isPresented: $showMailSheet) {
             // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
             MailView(result: $result, isPresented: $showMailSheet) { vc in
@@ -231,6 +236,7 @@ struct SettingsView: View {
                 """, isHTML: false)
             }
         }
+        #endif
 
         .sheet(isPresented: $showLoginSheet) {
             LoginView(connectionManager: connectionManager, initial: false)

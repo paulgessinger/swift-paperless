@@ -198,98 +198,82 @@ struct HighlightView: View {
     }
 }
 
-private struct DataScannerViewInternal: UIViewControllerRepresentable {
-    var store: DocumentStore
-    var isScanning: Binding<Bool>
-    var action: ((Document) -> Void)?
+#if !targetEnvironment(macCatalyst)
+    private struct DataScannerViewInternal: UIViewControllerRepresentable {
+        var store: DocumentStore
+        var isScanning: Binding<Bool>
+        var action: ((Document) -> Void)?
 
-    class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        let parent: DataScannerViewInternal
+        class Coordinator: NSObject, DataScannerViewControllerDelegate {
+            let parent: DataScannerViewInternal
 
-        private var items: [UUID: UIHostingController<HighlightView>] = [:]
+            private var items: [UUID: UIHostingController<HighlightView>] = [:]
 
-        init(_ parent: DataScannerViewInternal) {
-            self.parent = parent
-        }
-
-        func dataScanner(_: DataScannerViewController, didTapOn item: RecognizedItem) {
-            guard case let .barcode(text) = item else {
-                Logger.shared.notice("Tapped on none-barcode element")
-                return
-            }
-            guard let payload = text.observation.payloadStringValue else {
-                Logger.shared.notice("Tapped on element without payload")
-                return
+            init(_ parent: DataScannerViewInternal) {
+                self.parent = parent
             }
 
-            var patterns: [Regex<AnyRegexOutput>] = []
-            if let pattern = makeAsnUrlPattern(store: parent.store) {
-                patterns.append(pattern)
-            }
-
-            guard let asn = extractAsn(payload, patterns: patterns) else {
-                Logger.shared.notice("Tapped on element but failed to extract ASN")
-                return
-            }
-
-            Task {
-                do {
-                    guard let document = try await parent.store.repository.document(asn: asn) else {
-                        return
-                    }
-
-                    parent.action?(document)
-                } catch {
-                    Logger.shared.error("Error getting document by ASN \(asn): \(error)")
-                }
-            }
-        }
-
-        private func centerFromBounds(_ bounds: RecognizedItem.Bounds) -> CGPoint {
-            CGPoint(x: (bounds.bottomLeft.x + bounds.bottomRight.x) / 2.0,
-                    y: (bounds.bottomLeft.y + bounds.bottomRight.y) / 2.0 + 50)
-        }
-
-        private func addHighlightView(id: UUID, text: String, center: CGPoint, dataScanner: DataScannerViewController) {
-            let vc = UIHostingController(rootView: HighlightView(text: text))
-//            vc.view.sizeToFit()
-            vc.view.anchorPoint = CGPoint(x: 0.5, y: 1)
-            vc.view.center = center
-            vc.view.isOpaque = false
-            vc.view.backgroundColor = .clear
-
-            items[id] = vc
-            dataScanner.addChild(vc)
-            vc.didMove(toParent: dataScanner)
-            dataScanner.overlayContainerView.addSubview(vc.view)
-        }
-
-        private func removeHightlightView(id: UUID) {
-            guard let vc = items[id] else { return }
-            items.removeValue(forKey: id)
-            vc.removeFromParent()
-            vc.view.removeFromSuperview()
-        }
-
-        func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
-            for item in addedItems {
+            func dataScanner(_: DataScannerViewController, didTapOn item: RecognizedItem) {
                 guard case let .barcode(text) = item else {
-                    continue
+                    Logger.shared.notice("Tapped on none-barcode element")
+                    return
                 }
                 guard let payload = text.observation.payloadStringValue else {
-                    continue
+                    Logger.shared.notice("Tapped on element without payload")
+                    return
                 }
 
-                addHighlightView(id: item.id,
-                                 text: payload,
-                                 center: centerFromBounds(item.bounds),
-                                 dataScanner: dataScanner)
-            }
-        }
+                var patterns: [Regex<AnyRegexOutput>] = []
+                if let pattern = makeAsnUrlPattern(store: parent.store) {
+                    patterns.append(pattern)
+                }
 
-        func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
-            for item in updatedItems {
-                if let vc = items[item.id] {
+                guard let asn = extractAsn(payload, patterns: patterns) else {
+                    Logger.shared.notice("Tapped on element but failed to extract ASN")
+                    return
+                }
+
+                Task {
+                    do {
+                        guard let document = try await parent.store.repository.document(asn: asn) else {
+                            return
+                        }
+
+                        parent.action?(document)
+                    } catch {
+                        Logger.shared.error("Error getting document by ASN \(asn): \(error)")
+                    }
+                }
+            }
+
+            private func centerFromBounds(_ bounds: RecognizedItem.Bounds) -> CGPoint {
+                CGPoint(x: (bounds.bottomLeft.x + bounds.bottomRight.x) / 2.0,
+                        y: (bounds.bottomLeft.y + bounds.bottomRight.y) / 2.0 + 50)
+            }
+
+            private func addHighlightView(id: UUID, text: String, center: CGPoint, dataScanner: DataScannerViewController) {
+                let vc = UIHostingController(rootView: HighlightView(text: text))
+//            vc.view.sizeToFit()
+                vc.view.anchorPoint = CGPoint(x: 0.5, y: 1)
+                vc.view.center = center
+                vc.view.isOpaque = false
+                vc.view.backgroundColor = .clear
+
+                items[id] = vc
+                dataScanner.addChild(vc)
+                vc.didMove(toParent: dataScanner)
+                dataScanner.overlayContainerView.addSubview(vc.view)
+            }
+
+            private func removeHightlightView(id: UUID) {
+                guard let vc = items[id] else { return }
+                items.removeValue(forKey: id)
+                vc.removeFromParent()
+                vc.view.removeFromSuperview()
+            }
+
+            func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
+                for item in addedItems {
                     guard case let .barcode(text) = item else {
                         continue
                     }
@@ -297,65 +281,83 @@ private struct DataScannerViewInternal: UIViewControllerRepresentable {
                         continue
                     }
 
-                    if vc.rootView.text != payload {
-                        removeHightlightView(id: item.id)
+                    addHighlightView(id: item.id,
+                                     text: payload,
+                                     center: centerFromBounds(item.bounds),
+                                     dataScanner: dataScanner)
+                }
+            }
 
-                        addHighlightView(id: item.id,
-                                         text: payload,
-                                         center: centerFromBounds(item.bounds),
-                                         dataScanner: dataScanner)
-                    } else {
-                        UIView.animate(withDuration: 0.2) {
-                            vc.view.center = self.centerFromBounds(item.bounds)
+            func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
+                for item in updatedItems {
+                    if let vc = items[item.id] {
+                        guard case let .barcode(text) = item else {
+                            continue
+                        }
+                        guard let payload = text.observation.payloadStringValue else {
+                            continue
+                        }
+
+                        if vc.rootView.text != payload {
+                            removeHightlightView(id: item.id)
+
+                            addHighlightView(id: item.id,
+                                             text: payload,
+                                             center: centerFromBounds(item.bounds),
+                                             dataScanner: dataScanner)
+                        } else {
+                            UIView.animate(withDuration: 0.2) {
+                                vc.view.center = self.centerFromBounds(item.bounds)
+                            }
                         }
                     }
                 }
             }
-        }
 
-        func dataScanner(_: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
-            for item in removedItems {
-                removeHightlightView(id: item.id)
+            func dataScanner(_: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems _: [RecognizedItem]) {
+                for item in removedItems {
+                    removeHightlightView(id: item.id)
+                }
             }
         }
-    }
 
-    func makeUIViewController(context: Context) -> DataScannerViewController {
-        let viewController = DataScannerViewController(
-            recognizedDataTypes: [
-                .barcode(),
-            ],
-            qualityLevel: .fast,
-            recognizesMultipleItems: false,
-            isHighFrameRateTrackingEnabled: !ProcessInfo.processInfo.isLowPowerModeEnabled,
-            isHighlightingEnabled: true
-        )
+        func makeUIViewController(context: Context) -> DataScannerViewController {
+            let viewController = DataScannerViewController(
+                recognizedDataTypes: [
+                    .barcode(),
+                ],
+                qualityLevel: .fast,
+                recognizesMultipleItems: false,
+                isHighFrameRateTrackingEnabled: !ProcessInfo.processInfo.isLowPowerModeEnabled,
+                isHighlightingEnabled: true
+            )
 
-        viewController.delegate = context.coordinator
+            viewController.delegate = context.coordinator
 
-        if isScanning.wrappedValue {
-            try? viewController.startScanning()
+            if isScanning.wrappedValue {
+                try? viewController.startScanning()
+            }
+
+            return viewController
         }
 
-        return viewController
-    }
+        func updateUIViewController(_ uiViewController: DataScannerViewController, context _: Context) {
+            if isScanning.wrappedValue {
+                try? uiViewController.startScanning()
+            } else {
+                uiViewController.stopScanning()
+            }
+        }
 
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context _: Context) {
-        if isScanning.wrappedValue {
-            try? uiViewController.startScanning()
-        } else {
+        static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator _: Coordinator) {
             uiViewController.stopScanning()
         }
-    }
 
-    static func dismantleUIViewController(_ uiViewController: DataScannerViewController, coordinator _: Coordinator) {
-        uiViewController.stopScanning()
+        func makeCoordinator() -> Coordinator {
+            Coordinator(self)
+        }
     }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-}
+#endif
 
 private struct DetailView: View {
     var document: Document
@@ -521,81 +523,86 @@ struct DataScannerView: View {
     @State private var showTypeAsn = false
     @State private var isScanning = true
 
-    var body: some View {
-        DataScannerViewInternal(store: store, isScanning: $isScanning) { document in
-            self.document = document
-        }
-        .transaction { t in
-            t.animation = nil
-        }
+    #if !targetEnvironment(macCatalyst)
+        var body: some View {
+            DataScannerViewInternal(store: store, isScanning: $isScanning) { document in
+                self.document = document
+            }
+            .transaction { t in
+                t.animation = nil
+            }
 
-        .interactiveDismissDisabled(true)
-        .ignoresSafeArea(.container, edges: .bottom)
+            .interactiveDismissDisabled(true)
+            .ignoresSafeArea(.container, edges: .bottom)
 
-        .overlay(alignment: .top) {
-            HStack {
-                Button(role: .cancel) {
-                    dismiss()
-                } label: {
-                    Label(String(localized: .localizable(.cancel)), systemImage: "xmark")
-                        .labelStyle(.iconOnly)
-                        .font(.title2)
-                        .padding(15)
-                        .background(Circle().fill(.regularMaterial))
-                }
-                .padding()
-
-                Spacer()
-
-                Button {
-                    if showTypeAsn {
-                        withAnimation {
-                            showTypeAsn = false
-                        }
-                        Task {
-                            try? await Task.sleep(for: .seconds(0.5))
-                            isScanning = true
-                        }
-                    } else {
-                        isScanning = false
-                        withAnimation {
-                            showTypeAsn = true
-                        }
+            .overlay(alignment: .top) {
+                HStack {
+                    Button(role: .cancel) {
+                        dismiss()
+                    } label: {
+                        Label(String(localized: .localizable(.cancel)), systemImage: "xmark")
+                            .labelStyle(.iconOnly)
+                            .font(.title2)
+                            .padding(15)
+                            .background(Circle().fill(.regularMaterial))
                     }
-                } label: {
-                    Label(String(localized: .localizable(.dataScannerTypeInAsn)), systemImage: "keyboard")
-                        .labelStyle(.iconOnly)
-                        .font(.title2)
-                        .padding(15)
-                        .background(Circle().fill(.regularMaterial))
+                    .padding()
+
+                    Spacer()
+
+                    Button {
+                        if showTypeAsn {
+                            withAnimation {
+                                showTypeAsn = false
+                            }
+                            Task {
+                                try? await Task.sleep(for: .seconds(0.5))
+                                isScanning = true
+                            }
+                        } else {
+                            isScanning = false
+                            withAnimation {
+                                showTypeAsn = true
+                            }
+                        }
+                    } label: {
+                        Label(String(localized: .localizable(.dataScannerTypeInAsn)), systemImage: "keyboard")
+                            .labelStyle(.iconOnly)
+                            .font(.title2)
+                            .padding(15)
+                            .background(Circle().fill(.regularMaterial))
+                    }
+                    .padding()
                 }
-                .padding()
+            }
+
+            .safeAreaInset(edge: .bottom) {
+                if showTypeAsn {
+                    TypeAsnView { document in
+                        self.document = document
+                    }
+                    .transition(.move(edge: .bottom))
+                }
+            }
+
+            .sheet(item: $document) { document in
+                DetailView(document: document)
             }
         }
-
-        .safeAreaInset(edge: .bottom) {
-            if showTypeAsn {
-                TypeAsnView { document in
-                    self.document = document
-                }
-                .transition(.move(edge: .bottom))
-            }
+    #else
+        var body: some View {
+            EmptyView()
         }
-
-        .sheet(item: $document) { document in
-            DetailView(document: document)
-        }
-
-//        .sheet(isPresented: $showTypeAsn) {
-//            TextField()
-//                .presentationDetents([.medium])
-//        }
-    }
+    #endif
 
     static var isAvailable: Bool {
         get async {
-            let (isSupported, isAvailable) = (DataScannerViewController.isSupported, DataScannerViewController.isAvailable)
-            return isSupported && isAvailable
+            #if targetEnvironment(macCatalyst)
+                return false
+            #else
+                let (isSupported, isAvailable) = (DataScannerViewController.isSupported, DataScannerViewController.isAvailable)
+                return isSupported && isAvailable
+            #endif
         }
     }
 }

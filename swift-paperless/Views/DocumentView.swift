@@ -326,6 +326,7 @@ struct DocumentView: View {
                                          callback: createCallback,
                                          title: createDocumentTitle)
                         .environmentObject(store)
+                        .environmentObject(errorController)
                 }
 
                 .sheet(isPresented: $showDataScanner, onDismiss: {}) {
@@ -391,6 +392,8 @@ struct DocumentView: View {
             fatalError("Invalid task view navigation state pushed")
         }
         return TasksView(navPath: navPath)
+            .environmentObject(store)
+            .environmentObject(errorController)
             .errorOverlay(errorController: errorController, offset: 15)
     }
 }
