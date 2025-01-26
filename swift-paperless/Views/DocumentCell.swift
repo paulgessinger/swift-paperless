@@ -64,7 +64,7 @@ struct DocumentCellAspect: View {
 }
 
 struct DocumentCell: View {
-    var store: DocumentStore
+    @ObservedObject var store: DocumentStore
     @Environment(\.redactionReasons) var redactionReasons
 
     var document: Document
