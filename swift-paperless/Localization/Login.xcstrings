@@ -119,14 +119,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Si vous avez activé la *connexion automatique* en utilisant `PAPERLESS_AUTO_LOGIN_USERNAME`, essayez de vous connecter sans informations d'identification."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Se è stato attivato l'*accesso automatico* con `PAPERLESS_AUTO_LOGIN_USERNAME` abilitato, provare ad accedere senza credenziali."
           }
         },
         "nl" : {
@@ -137,8 +137,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Jeśli masz włączone *automatyczne logowanie* przy użyciu `PAPERLESS_AUTO_LOGIN_USERNAME`, spróbuj zalogować się bez poświadczeń."
           }
         }
       }
@@ -266,8 +266,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Self-signed certificates are supported using the operating system trust store!"
+            "state" : "translated",
+            "value" : "I certificati autofirmati sono supportati utilizzando il trust store del sistema operativo!"
           }
         },
         "nl" : {
@@ -420,7 +420,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brak danych logowania"
+            "value" : "Brak poświadczeń"
           }
         }
       }
@@ -454,8 +454,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+            "state" : "translated",
+            "value" : "Accesso senza credenziali esplicite. Questo funziona in scenari di autenticazione con header personalizzati o quando si usa mTLS con inoltro fidato."
           }
         },
         "nl" : {
@@ -561,7 +561,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logowani za pomocą tokena API uzyskanego w panelu administracyjnym."
+            "value" : "Logowanie za pomocą tokena API uzyskanego w panelu administracyjnym."
           }
         }
       }
@@ -937,7 +937,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Kombinacja nazwy użytkownika i hasła została odrzucona.**\nSprawdź, czy wpisałeś je poprawnie."
+            "value" : "**Podane nazwy użytkownika i hasło zostały odrzucone.**\nSprawdź, czy wpisałeś je poprawnie."
           }
         }
       }
@@ -1200,14 +1200,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Avertissement:** l'en-tête *Authorization* est utilisé par Paperless-ngx pour l'autorisation de l'API basée sur un jeton. L'utilisation de cet en-tête pour l'authentification de base entraînera probablement des problèmes. Vous pouvez essayer de configurer un autre en-tête pour l'authentification de base dans la configuration de votre Reverse Proxy."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Attenzione:** l'header *Authorization* è utilizzato da Paperless-ngx per l'autorizzazione API basata su token. L'uso di questa intestazione per l'autenticazione di base potrebbe causare problemi. Si può provare a configurare un header alternativo per l'autenticazione di base nella configurazione del Reverse Proxy."
           }
         },
         "nl" : {
@@ -1218,8 +1218,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Ostrzeżenie:** Nagłówek *Authorization* jest używany przez Paperless-ngx do autoryzacji API opartej na tokenach. Użycie tego nagłówka dla Basic auth prawdopodobnie doprowadzi do problemów. Możesz spróbować skonfigurować alternatywny nagłówek dla Basic auth w konfiguracji Reverse Proxy."
           }
         }
       }
@@ -1300,8 +1300,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+            "state" : "translated",
+            "value" : "Header extra da includere in tutte le richieste API che l'applicazione fa alla vostra installazione."
           }
         },
         "nl" : {
@@ -1782,8 +1782,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select scheme"
+            "state" : "translated",
+            "value" : "Wybierz protokół"
           }
         }
       }

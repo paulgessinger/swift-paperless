@@ -362,7 +362,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN"
           }
         },
@@ -409,7 +409,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN:"
           }
         },
@@ -456,7 +456,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN: %u"
           }
         },
@@ -644,8 +644,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear text"
+            "state" : "translated",
+            "value" : "Cancella testo"
           }
         },
         "nl" : {
@@ -1306,8 +1306,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid ASN: %u"
+            "state" : "translated",
+            "value" : "ASN non valido: %u"
           }
         },
         "nl" : {
@@ -1353,7 +1353,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "No ASN: %@"
           }
         },
@@ -1400,8 +1400,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Type in ASN"
+            "state" : "translated",
+            "value" : "Inserisci ASN"
           }
         },
         "nl" : {
@@ -1447,8 +1447,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Errore nell'elaborazione della risposta"
           }
         },
         "nl" : {
@@ -1459,8 +1459,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Błąd przetwarzania odpowiedzi"
           }
         }
       }
@@ -1494,8 +1494,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Si è verificato un errore nell'elaborazione di una risposta del server. La decodifica di %@ non è riuscita.\n\nQuesto può accadere se la versione del server non è supportata o se la connessione viene modificata in modo imprevisto."
           }
         },
         "nl" : {
@@ -1506,8 +1506,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Wystąpił błąd przetwarzania odpowiedzi serwera. Dekodowanie %@ nie powiodło się.\n\nMoże się to zdarzyć, jeśli wersja serwera nie jest obsługiwana lub połączenie jest modyfikowane w nieoczekiwany sposób."
           }
         }
       }
@@ -3523,8 +3523,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Group"
+            "state" : "translated",
+            "value" : "Gruppo"
           }
         },
         "nl" : {
@@ -3571,8 +3571,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import document"
+            "state" : "translated",
+            "value" : "Importa Documento"
           }
         },
         "nl" : {
@@ -3619,8 +3619,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import photos"
+            "state" : "translated",
+            "value" : "Importa foto"
           }
         },
         "nl" : {
@@ -3667,8 +3667,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Include element"
+            "state" : "translated",
+            "value" : "Includi elemento"
           }
         },
         "nl" : {
@@ -3714,8 +3714,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading"
+            "state" : "translated",
+            "value" : "Caricamento"
           }
         },
         "nl" : {
@@ -3755,14 +3755,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "state" : "translated",
+            "value" : "Il semble que l'application ne puisse pas se connecter à %@. Vous pouvez essayer de changer de serveur ou de vous déconnecter et de vous reconnecter :"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "state" : "translated",
+            "value" : "Sembra che l'applicazione non riesca a connettersi a %@. Puoi provare a cambiare server o fare il log out e riprovare ad accedere:"
           }
         },
         "nl" : {
@@ -3773,8 +3773,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "state" : "translated",
+            "value" : "Wygląda na to, że aplikacja nie może połączyć się z %@. Możesz spróbować zmienić serwer lub wylogować się i zalogować ponownie:"
           }
         }
       }
@@ -3808,7 +3808,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Log out"
           }
         },
@@ -3855,8 +3855,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Export logs"
+            "state" : "translated",
+            "value" : "Esporta i logs"
           }
         },
         "nl" : {
@@ -3902,8 +3902,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting logs"
+            "state" : "translated",
+            "value" : "Esportando i logs"
           }
         },
         "nl" : {
@@ -3949,8 +3949,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share logs"
+            "state" : "translated",
+            "value" : "Condivi logs"
           }
         },
         "nl" : {
@@ -3996,8 +3996,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Altro"
           }
         },
         "nl" : {
@@ -4043,8 +4043,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name"
+            "state" : "translated",
+            "value" : "Nome"
           }
         },
         "nl" : {
@@ -4090,8 +4090,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents"
+            "state" : "translated",
+            "value" : "Nessun documento"
           }
         },
         "nl" : {
@@ -4137,8 +4137,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your current filter did not match any documents"
+            "state" : "translated",
+            "value" : "Il filtro attuale non corrisponde ad alcun documento"
           }
         },
         "nl" : {
@@ -4184,8 +4184,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No elements found"
+            "state" : "translated",
+            "value" : "Nessun elemento trovato"
           }
         },
         "nl" : {
@@ -4231,8 +4231,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Niente"
           }
         },
         "nl" : {
@@ -4272,14 +4272,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Pas de vues enregistrées"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Nessuna visualizzazione salvata"
           }
         },
         "nl" : {
@@ -4290,8 +4290,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Brak zapisanych widoków"
           }
         }
       }
@@ -4376,13 +4376,13 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
+                  "state" : "translated",
                   "value" : "%d tag"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
+                  "state" : "translated",
                   "value" : "%d tags"
                 }
               }
@@ -4468,7 +4468,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "OK"
           }
         },
@@ -4515,8 +4515,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Apri"
           }
         },
         "nl" : {
@@ -4562,8 +4562,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tutto"
           }
         },
         "nl" : {
@@ -4610,8 +4610,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner filter is in explicit user mode."
+            "state" : "translated",
+            "value" : "Il filtro proprietario è in modalità utente esplicito."
           }
         },
         "nl" : {
@@ -4657,8 +4657,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Utenti"
           }
         },
         "nl" : {
@@ -4704,8 +4704,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "My documents"
+            "state" : "translated",
+            "value" : "I miei documenti"
           }
         },
         "nl" : {
@@ -4751,8 +4751,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Nessuno"
           }
         },
         "nl" : {
@@ -4798,8 +4798,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Non assegnato"
           }
         },
         "nl" : {
@@ -4845,8 +4845,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared with me"
+            "state" : "translated",
+            "value" : "Condiviso con me"
           }
         },
         "nl" : {
@@ -4892,8 +4892,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unowned"
+            "state" : "translated",
+            "value" : "Senza proprietario"
           }
         },
         "nl" : {
@@ -4990,14 +4990,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld page"
+                  "state" : "translated",
+                  "value" : "%lld pagina"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld pages"
+                  "state" : "translated",
+                  "value" : "%lld pagine"
                 }
               }
             }
@@ -5082,8 +5082,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Path"
+            "state" : "translated",
+            "value" : "Percorso"
           }
         },
         "nl" : {
@@ -5129,8 +5129,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "Permessi"
           }
         },
         "nl" : {
@@ -5176,8 +5176,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error when receiving picked photos"
+            "state" : "translated",
+            "value" : "Errore durante la ricezione delle foto selezionate"
           }
         },
         "nl" : {
@@ -5223,8 +5223,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Properties"
+            "state" : "translated",
+            "value" : "Proprietà"
           }
         },
         "nl" : {
@@ -5270,8 +5270,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+            "state" : "translated",
+            "value" : "Impossibile caricare le note di rilascio per la versione %@. Questo può accadere se ci si trova su una versione beta."
           }
         },
         "nl" : {
@@ -5317,8 +5317,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
+            "state" : "translated",
+            "value" : "Elimina"
           }
         },
         "nl" : {
@@ -5452,8 +5452,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions"
+            "state" : "translated",
+            "value" : "La demande a été refusée en raison d'autorisations manquantes"
           }
         },
         "it" : {
@@ -5471,7 +5471,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia"
+            "value" : "Żądanie zostało odrzucone z powodu niewystarczających uprawnień"
           }
         }
       }
@@ -5499,14 +5499,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Il y a eu une erreur avec l'URL configuré."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Si è verificato un errore con l'URL configurato."
           }
         },
         "nl" : {
@@ -5517,8 +5517,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Wystąpił problem ze skonfigurowanym adresem URL."
           }
         }
       }
@@ -5546,14 +5546,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "La réponse à une demande avait un format inattendu"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "La risposta a una richiesta aveva un formato inaspettato"
           }
         },
         "nl" : {
@@ -5564,8 +5564,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "Odpowiedź na żądanie miała nieoczekiwany format"
           }
         }
       }
@@ -5594,7 +5594,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L'application n'a pas été autorisée à accéder au réseau local."
+            "value" : "L'application n'est pas autorisée à accéder au réseau local."
           }
         },
         "it" : {
@@ -5687,14 +5687,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials"
+            "state" : "translated",
+            "value" : "La demande a été refusée en raison d'informations d'identification non valides"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials"
+            "state" : "translated",
+            "value" : "La richiesta è stata rifiutata a causa di credenziali non valide."
           }
         },
         "nl" : {
@@ -5705,8 +5705,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials"
+            "state" : "translated",
+            "value" : "Żądanie zostało odrzucone z powodu nieprawidłowych poświadczeń"
           }
         }
       }
@@ -5734,14 +5734,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status %@."
+            "state" : "translated",
+            "value" : "La réponse à une demande avait un statut inattendu %@."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status %@."
+            "state" : "translated",
+            "value" : "La risposta a una richiesta aveva uno stato inatteso %@."
           }
         },
         "nl" : {
@@ -5752,8 +5752,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status %@."
+            "state" : "translated",
+            "value" : "Odpowiedź na żądanie miała nieoczekiwany status %@."
           }
         }
       }
@@ -5781,14 +5781,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "state" : "translated",
+            "value" : "Le serveur ne supporte pas la version minimale de l'API `%u` que cette version de l'application requiert."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "state" : "translated",
+            "value" : "Il backend non supporta la versione minima dell'API `%u` richiesta da questa versione dell'applicazione."
           }
         },
         "nl" : {
@@ -5799,8 +5799,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "state" : "translated",
+            "value" : "Serwer nie obsługuje wersji API `%u`, której wymaga ta wersja aplikacji."
           }
         }
       }
@@ -5834,8 +5834,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Save"
+            "state" : "translated",
+            "value" : "Salva"
           }
         },
         "nl" : {
@@ -5881,8 +5881,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved view"
+            "state" : "translated",
+            "value" : "Viste salvate"
           }
         },
         "nl" : {
@@ -5928,8 +5928,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create saved view"
+            "state" : "translated",
+            "value" : "Crea una vista salvata"
           }
         },
         "nl" : {
@@ -5975,8 +5975,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Are you sure you want to delete %@?"
+            "state" : "translated",
+            "value" : "Sei sicuro di voler cancellare %@?"
           }
         },
         "nl" : {
@@ -6022,8 +6022,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete saved view"
+            "state" : "translated",
+            "value" : "Cancella vista salvata"
           }
         },
         "nl" : {
@@ -6069,8 +6069,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved view"
+            "state" : "translated",
+            "value" : "Modifica vista salvata"
           }
         },
         "nl" : {
@@ -6117,7 +6117,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%@*"
           }
         },
@@ -6164,8 +6164,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved views"
+            "state" : "translated",
+            "value" : "Viste salvate"
           }
         },
         "nl" : {
@@ -6212,8 +6212,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved views"
+            "state" : "translated",
+            "value" : "Modifica viste salvate"
           }
         },
         "nl" : {
@@ -6259,8 +6259,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show in sidebar"
+            "state" : "translated",
+            "value" : "Mostra nella barra laterale"
           }
         },
         "nl" : {
@@ -6306,8 +6306,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show on dashboard"
+            "state" : "translated",
+            "value" : "Mostra nella dashboard"
           }
         },
         "nl" : {
@@ -6353,8 +6353,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan document"
+            "state" : "translated",
+            "value" : "Scansiona il documento"
           }
         },
         "nl" : {
@@ -6400,8 +6400,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search"
+            "state" : "translated",
+            "value" : "Cerca"
           }
         },
         "nl" : {
@@ -6447,8 +6447,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Avanzate"
           }
         },
         "nl" : {
@@ -6494,8 +6494,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear search"
+            "state" : "translated",
+            "value" : "Cancella la ricerca"
           }
         },
         "nl" : {
@@ -6541,8 +6541,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Contenuto"
           }
         },
         "nl" : {
@@ -6588,8 +6588,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titolo"
           }
         },
         "nl" : {
@@ -6635,8 +6635,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title & Content"
+            "state" : "translated",
+            "value" : "Titolo e Contenuto"
           }
         },
         "nl" : {
@@ -6682,8 +6682,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Seleziona"
           }
         },
         "nl" : {
@@ -6729,8 +6729,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Selezionato"
           }
         },
         "nl" : {
@@ -6776,8 +6776,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Condividi"
           }
         },
         "nl" : {
@@ -6823,8 +6823,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Link to this app"
+            "state" : "translated",
+            "value" : "Link a questa app"
           }
         },
         "nl" : {
@@ -6870,8 +6870,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Condividi link"
           }
         },
         "nl" : {
@@ -6917,8 +6917,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other apps"
+            "state" : "translated",
+            "value" : "Altre app"
           }
         },
         "nl" : {
@@ -6964,8 +6964,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+            "state" : "translated",
+            "value" : "Si è verificato un errore durante l'elaborazione dell'elemento condiviso.\n\nIn teoria questo non dovrebbe accadere, ma è successo!\n\nSe volete contribuire alla risoluzione del problema, condividete i log qui sotto:"
           }
         },
         "nl" : {
@@ -7011,8 +7011,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid attachment"
+            "state" : "translated",
+            "value" : "Allegato non valido"
           }
         },
         "nl" : {
@@ -7058,8 +7058,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Please log in using the app first!"
+            "state" : "translated",
+            "value" : "Effettuare prima il login con l'app!"
           }
         },
         "nl" : {
@@ -7071,7 +7071,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proszę najpierw zalogować się przy użyciu aplikacji!"
+            "value" : "Proszę, najpierw zaloguj się w aplikacji!"
           }
         }
       }
@@ -7099,14 +7099,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document properties"
+            "state" : "translated",
+            "value" : "Afficher les propriétés du document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document properties"
+            "state" : "translated",
+            "value" : "Mostra proprietà documento"
           }
         },
         "nl" : {
@@ -7117,8 +7117,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document properties"
+            "state" : "translated",
+            "value" : "Pokaż właściwości dokumentu"
           }
         }
       }
@@ -7152,8 +7152,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort by"
+            "state" : "translated",
+            "value" : "Ordina Per"
           }
         },
         "nl" : {
@@ -7199,8 +7199,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sorting"
+            "state" : "translated",
+            "value" : "Ordinamento"
           }
         },
         "nl" : {
@@ -7246,8 +7246,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort menu"
+            "state" : "translated",
+            "value" : "Menu di ordinamento"
           }
         },
         "nl" : {
@@ -7293,8 +7293,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort order"
+            "state" : "translated",
+            "value" : "Ordinamento"
           }
         },
         "nl" : {
@@ -7340,8 +7340,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Added"
+            "state" : "translated",
+            "value" : "Aggiunto"
           }
         },
         "nl" : {
@@ -7387,8 +7387,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Creato"
           }
         },
         "nl" : {
@@ -7434,8 +7434,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Modified"
+            "state" : "translated",
+            "value" : "Modificato"
           }
         },
         "nl" : {
@@ -7481,8 +7481,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Note"
           }
         },
         "nl" : {
@@ -7528,8 +7528,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Proprietario"
           }
         },
         "nl" : {
@@ -7575,8 +7575,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search score"
+            "state" : "translated",
+            "value" : "Rilevanza ricerca"
           }
         },
         "nl" : {
@@ -7622,8 +7622,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage path"
+            "state" : "translated",
+            "value" : "Percorso di archiviazione"
           }
         },
         "nl" : {
@@ -7669,8 +7669,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage path"
+            "state" : "translated",
+            "value" : "Percorso di archiviazione"
           }
         },
         "nl" : {
@@ -7716,8 +7716,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create storage path"
+            "state" : "translated",
+            "value" : "Crea percorso di archiviazione"
           }
         },
         "nl" : {
@@ -7763,8 +7763,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit storage path"
+            "state" : "translated",
+            "value" : "Modifica percorso di archiviazione"
           }
         },
         "nl" : {
@@ -7810,8 +7810,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude storage path"
+            "state" : "translated",
+            "value" : "Escludi percorso di archiviazione"
           }
         },
         "nl" : {
@@ -7857,8 +7857,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "e.g. {created_year}-{title} or use slashes to add directories e.g. {created_year}/{correspondent}/{title}. See [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for full list."
+            "state" : "translated",
+            "value" : "ad esempio {created_year}-{title} o utilizza degli slash per aggiungere delle cartelle, ad esempio {created_year}/{correspondent}/{title}. Guarda la [documentazione](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) per l'elenco completo."
           }
         },
         "nl" : {
@@ -7904,8 +7904,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Nessuno"
           }
         },
         "nl" : {
@@ -7951,8 +7951,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default"
+            "state" : "translated",
+            "value" : "Predefinito"
           }
         },
         "nl" : {
@@ -7998,8 +7998,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage paths"
+            "state" : "translated",
+            "value" : "Percorsi di archiviazione"
           }
         },
         "nl" : {
@@ -8045,8 +8045,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Etichetta"
           }
         },
         "nl" : {
@@ -8092,8 +8092,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add tag"
+            "state" : "translated",
+            "value" : "Aggiungi etichetta"
           }
         },
         "nl" : {
@@ -8139,8 +8139,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Random color"
+            "state" : "translated",
+            "value" : "Colore casuale"
           }
         },
         "nl" : {
@@ -8186,8 +8186,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create tag"
+            "state" : "translated",
+            "value" : "Crea etichetta"
           }
         },
         "nl" : {
@@ -8233,8 +8233,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit tag"
+            "state" : "translated",
+            "value" : "Modifica Etichetta"
           }
         },
         "nl" : {
@@ -8280,8 +8280,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude tag"
+            "state" : "translated",
+            "value" : "Escludi etichette"
           }
         },
         "nl" : {
@@ -8327,8 +8327,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag excluded"
+            "state" : "translated",
+            "value" : "Etichette escluse"
           }
         },
         "nl" : {
@@ -8374,8 +8374,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag included"
+            "state" : "translated",
+            "value" : "Etichette incluse"
           }
         },
         "nl" : {
@@ -8421,8 +8421,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Inbox tag"
+            "state" : "translated",
+            "value" : "Etichetta posta in arrivo"
           }
         },
         "nl" : {
@@ -8468,8 +8468,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag is not selected"
+            "state" : "translated",
+            "value" : "Etichetta non selezionata"
           }
         },
         "nl" : {
@@ -8515,8 +8515,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag is selected"
+            "state" : "translated",
+            "value" : "Etichetta selezionata"
           }
         },
         "nl" : {
@@ -8562,8 +8562,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag name"
+            "state" : "translated",
+            "value" : "Nome etichetta"
           }
         },
         "nl" : {
@@ -8609,8 +8609,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etichette"
           }
         },
         "nl" : {
@@ -8656,8 +8656,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tags"
+            "state" : "translated",
+            "value" : "Tutte le etichette"
           }
         },
         "nl" : {
@@ -8703,8 +8703,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any tag"
+            "state" : "translated",
+            "value" : "Qualsiasi etichetta"
           }
         },
         "nl" : {
@@ -8751,8 +8751,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Qualsiasi"
           }
         },
         "nl" : {
@@ -8798,8 +8798,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag filter mode"
+            "state" : "translated",
+            "value" : "Modalità filtro etichette"
           }
         },
         "nl" : {
@@ -8845,8 +8845,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Niente"
           }
         },
         "nl" : {
@@ -8892,8 +8892,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Non assegnato"
           }
         },
         "nl" : {
@@ -8939,8 +8939,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove inbox tags"
+            "state" : "translated",
+            "value" : "Rimuovere etichetta della posta in arrivo"
           }
         },
         "nl" : {
@@ -9037,14 +9037,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending task"
+                  "state" : "translated",
+                  "value" : "%u compito in sospeso"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending tasks"
+                  "state" : "translated",
+                  "value" : "%u compiti in sospeso"
                 }
               }
             }
@@ -9129,8 +9129,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Processing \"%@\""
+            "state" : "translated",
+            "value" : "Elaborazione \"%@\""
           }
         },
         "nl" : {
@@ -9176,8 +9176,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titolo"
           }
         },
         "nl" : {
@@ -9223,7 +9223,7 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN"
           }
         },
@@ -9270,8 +9270,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "User"
+            "state" : "translated",
+            "value" : "Utente"
           }
         },
         "nl" : {

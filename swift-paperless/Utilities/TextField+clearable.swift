@@ -9,22 +9,25 @@ import SwiftUI
 struct ClearableModifier: ViewModifier {
     @Binding var text: String
     @FocusState var focused: Bool
+    @Environment(\.isEnabled) private var isEnabled
 
     func body(content: Content) -> some View {
         HStack {
             content
                 .focused($focused) // @TODO: This is probably not ideal if I want to manage focus externally.
 
-            Spacer()
+            if isEnabled {
+                Spacer()
 
-            Label(String(localized: .localizable(.clearText)), systemImage: "xmark.circle.fill")
-                .labelStyle(.iconOnly)
-                .foregroundColor(.gray)
-                .onTapGesture {
-                    text = ""
-                    focused = true
-                }
-                .opacity(text.isEmpty ? 0 : 1)
+                Label(String(localized: .localizable(.clearText)), systemImage: "xmark.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .foregroundColor(.gray)
+                    .onTapGesture {
+                        text = ""
+                        focused = true
+                    }
+                    .opacity(text.isEmpty ? 0 : 1)
+            }
         }
     }
 }

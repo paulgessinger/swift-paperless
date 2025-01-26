@@ -30,8 +30,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Identità attiva"
           }
         },
         "nl" : {
@@ -409,8 +409,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored app version"
+            "state" : "translated",
+            "value" : "Versione dell'app memorizzata"
           }
         },
         "nl" : {
@@ -787,8 +787,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Reset stored app version"
+            "state" : "translated",
+            "value" : "Ripristino della versione dell'app memorizzata"
           }
         },
         "nl" : {
@@ -1445,8 +1445,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Queste impostazioni sono sperimentali e puoi decidere di disattivarle.\n\nDi solito, l'impostazione sperimentale sarà implementata e la vecchia impostazione rimossa, oppure l'impostazione sperimentale sarà rimossa."
           }
         },
         "nl" : {
@@ -2003,14 +2003,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Signaler une erreur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Segnala un bug"
           }
         },
         "nl" : {
@@ -2021,8 +2021,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Zgłoś błąd"
           }
         }
       }
@@ -2056,8 +2056,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "L'applicazione esegue alcune operazioni contabili in base alla versione dell'applicazione. Ripristinando la versione dell'app, questa si comporterà come se fosse un'installazione pulita."
           }
         },
         "nl" : {
@@ -2144,14 +2144,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Afficher la barre de propriétés du document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Mostra barra delle proprietà documento"
           }
         },
         "nl" : {
@@ -2162,8 +2162,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Pokaż pasek właściwości dokumentu"
           }
         }
       }
@@ -2191,14 +2191,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Afficher les propriétés du document au bas de l'écran détaillé du document par défaut."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Mostra le proprietà del documento nella parte inferiore della schermata di dettaglio del documento."
           }
         },
         "nl" : {
@@ -2209,8 +2209,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Domyślnie wyświetlaj właściwości dokumentu w dolnej części ekranu szczegółów dokumentu."
           }
         }
       }
@@ -2286,14 +2286,14 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Ce serveur a la version `%@` qui est inférieure à la version `%@` requise par l'application. Vous pourriez rencontrer des problèmes !"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Questo server ha la versione `%@` che è inferiore alla versione `%@` richiesta dall'applicazione. Potreste riscontrare dei problemi!"
           }
         },
         "nl" : {
@@ -2304,8 +2304,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Ten serwer ma wersję `%@`, która jest starsza niż wersja `%@` wymagana przez aplikację. Mogą wystąpić problemy!"
           }
         }
       }
