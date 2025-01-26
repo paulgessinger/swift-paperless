@@ -1,13 +1,4 @@
-PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
-Redact screenshots to not include information that you do not wish to expose.
-
----
-
 - PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
-
----
-
-# What's new?
 
 - All new login screen with a new design
   - Improved error handling with more detailed error messages in many scenarios
