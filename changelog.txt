@@ -1,3 +1,8 @@
+1.6.0 (128)
+
+- Fixed crash on macOS
+- Fixed display name of share extension on macOS
+
 Previous:
 
 - PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!

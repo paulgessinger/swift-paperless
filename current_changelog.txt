@@ -1,2 +1,0 @@
-- Fixed crash on macOS
-- Fixed display name of share extension on macOS
