@@ -302,6 +302,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
+    @EnvironmentObject private var errorController: ErrorController
+
     var navPath: Binding<NavigationPath>? = nil
 
     @State private var editDetent: PresentationDetent = .medium
@@ -583,6 +585,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             DocumentEditView(store: viewModel.store,
                              document: $viewModel.document,
                              navPath: navPath)
+                .environmentObject(viewModel.store)
+                .environmentObject(errorController)
                 .presentationDetents(editDetentOptions, selection: $editDetent)
                 .presentationBackgroundInteraction(
                     .enabled(upThrough: .medium)
