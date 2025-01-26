@@ -50,13 +50,36 @@ platform :ios do
     previous_build_number = latest_testflight_build_number()
     current_build_number = previous_build_number + 1
 
-    last_tag = last_git_tag()
-
-    changelog = File.read("../changelog.md")
 
     increment_build_number(
       xcodeproj: "swift-paperless.xcodeproj",
       build_number: current_build_number
+    )
+
+    git_commit(
+      path: "swift-paperless.xcodeproj",
+      message: "Bump build number to #{current_build_number}"
+    )
+
+    # Change code signing settings after committing
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "swift-paperless.xcodeproj",
+      team_id: "ZHKJ4NHK6F",
+      bundle_identifier: "com.paulgessinger.swift-paperless",
+      code_sign_identity: "iPhone Developer",
+      sdk: "iphoneos*",
+      profile_name: "match Development com.paulgessinger.swift-paperless",
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "swift-paperless.xcodeproj",
+      team_id: "ZHKJ4NHK6F",
+      bundle_identifier: "com.paulgessinger.swift-paperless.ShareExtension",
+      code_sign_identity: "iPhone Developer",
+      sdk: "iphoneos*",
+      profile_name: "match Development com.paulgessinger.swift-paperless.ShareExtension",
     )
 
     version = get_version_number(
@@ -69,12 +92,9 @@ platform :ios do
       xcargs: "-skipPackagePluginValidation -skipMacroValidation" # seemingly no alternative on CI
     )
 
-    git_commit(
-      path: "swift-paperless.xcodeproj",
-      message: "Bump build number to #{current_build_number}"
-    )
     push_to_git_remote()
 
+    changelog = File.read("../changelog.md")
     github_release = set_github_release(
       repository_name: "paulgessinger/swift-paperless",
       api_bearer: ENV["GITHUB_TOKEN"],
@@ -112,7 +132,7 @@ platform :ios do
     )
 
     match(type: "appstore")
-    match(type: "development")
+    match(type: "development", force: true)
   end
 
   lane :tests do
