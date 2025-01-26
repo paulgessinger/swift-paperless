@@ -12,7 +12,6 @@ import Foundation
 import os
 import Semaphore
 import SwiftUI
-import UIKit
 
 actor ApiDocumentSource: DocumentSource {
     typealias DocumentSequence = ApiSequence<Document>
@@ -568,11 +567,10 @@ extension ApiRepository: Repository {
 
     func thumbnail(document: Document) async throws -> Image? {
         let data = try await thumbnailData(document: document)
-        guard let uiImage = UIImage(data: data) else {
+        guard let image = Image(data: data) else {
             Logger.api.error("Thumbnail data did not decode as image")
             return nil
         }
-        let image = Image(uiImage: uiImage)
         return image
     }
 

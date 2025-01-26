@@ -306,10 +306,7 @@ actor PreviewRepository: Repository {
 
     func thumbnail(document: Document) async throws -> Image? {
         let data = try await thumbnailData(document: document)
-
-        guard let uiImage = UIImage(data: data) else { return nil }
-        let image = Image(uiImage: uiImage)
-
+        let image = Image(data: data)
         return image
     }
 

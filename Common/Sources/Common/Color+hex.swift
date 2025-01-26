@@ -64,10 +64,10 @@ extension Color {
         var blue: CGFloat = 0
         var alpha: CGFloat = 0
 
-        #if canImport(AppKit)
-            NSColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        #elseif canImport(UIKit)
+        #if canImport(UIKit)
             UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        #elseif canImport(AppKit)
+            NSColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         #endif
 
         let convert = { v in

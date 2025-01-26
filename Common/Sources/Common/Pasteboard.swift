@@ -19,22 +19,26 @@ public struct Pasteboard {
 
     public var string: String? {
         get {
-            #if canImport(AppKit)
+            #if canImport(UIKit)
+                UIPasteboard.general.string
+            #elseif canImport(AppKit)
                 NSPasteboard.general.string(forType: .string)
             #else
-                UIPasteboard.general.string
+                #error("Unsupported platform")
             #endif
         }
 
         set {
-            #if canImport(AppKit)
+            #if canImport(UIKit)
+                UIPasteboard.general.string = newValue
+            #elseif canImport(AppKit)
                 if let newValue {
                     NSPasteboard.general.setString(newValue, forType: .string)
                 } else {
                     NSPasteboard.general.clearContents()
                 }
             #else
-                UIPasteboard.general.string = newValue
+                #error("Unsupported platform")
             #endif
         }
     }

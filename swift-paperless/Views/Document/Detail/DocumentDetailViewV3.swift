@@ -10,7 +10,6 @@ import Flow
 import NukeUI
 import os
 import SwiftUI
-import UIKit
 import WebKit
 
 private let dragThresholdUp = 40.0

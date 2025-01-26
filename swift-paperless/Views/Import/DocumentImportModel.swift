@@ -8,7 +8,6 @@
 import Foundation
 import os
 import SwiftUI
-import UIKit
 import UniformTypeIdentifiers
 
 @MainActor
