@@ -16,6 +16,8 @@ enum LoginError: DisplayableError, Equatable {
 
     case invalidLogin(detail: String? = nil)
 
+    case otpRequired
+
     case invalidToken
 
     case other(_: String)
@@ -48,6 +50,8 @@ extension LoginError {
             return error
         case let .request(error):
             return error.details
+        case .otpRequired:
+            return String(localized: .login(.otpDescription))
         }
     }
 

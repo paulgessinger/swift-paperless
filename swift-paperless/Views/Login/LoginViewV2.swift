@@ -191,11 +191,3 @@ struct LoginViewV2: LoginViewProtocol {
         }
     }
 }
-
-#Preview("Credentials") {
-    @Previewable @State var viewModel = LoginViewModel()
-
-    return CredentialsStageView(onSuccess: { _ in })
-        .modifier(BackgroundColorModifier())
-        .environment(viewModel)
-}

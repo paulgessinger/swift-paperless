@@ -97,6 +97,15 @@ struct CredentialsStageView: View {
         .padding(.horizontal)
     }
 
+    private func checkOtp(_ old: String, _ new: String) {
+        let ex = /^[0-9]*$/
+        let isDigits: Bool = (try? ex.wholeMatch(in: new)) != nil
+        if (!isDigits && !new.isEmpty) || new.count > 6 {
+            viewModel.otp = old
+            return
+        }
+    }
+
     var body: some View {
         @Bindable var viewModel = viewModel
         ScrollView(.vertical) {
@@ -160,6 +169,22 @@ struct CredentialsStageView: View {
                             }
                         }
 
+                        if viewModel.otpEnabled {
+                            Section {
+                                TextField(String("123456"), text: $viewModel.otp)
+                                    .textContentType(.oneTimeCode)
+                                    .keyboardType(.numberPad)
+                                    .submitLabel(.go)
+                                    .onChange(of: viewModel.otp) { old, new in checkOtp(old, new) }
+                            } header: {
+                                Text(.login(.otp))
+                            } footer: {
+                                LoginFooterView(systemImage: "numbers.rectangle") {
+                                    Text(.login(.otpDescription))
+                                }
+                            }
+                        }
+
                     case .token:
                         Section {
                             TextField(.login(.token), text: $viewModel.token)
@@ -192,6 +217,7 @@ struct CredentialsStageView: View {
                 }
                 .animation(.default, value: viewModel.credentialMode)
             }
+            .animation(.spring(duration: 0.3), value: viewModel.otpEnabled)
             .frame(maxWidth: .infinity)
         }
 
@@ -200,6 +226,20 @@ struct CredentialsStageView: View {
 
         .onChange(of: viewModel.credentialMode) {
             viewModel.credentialState = .none
+        }
+    }
+}
+
+#Preview("Credentials") {
+    @Previewable @State var viewModel = LoginViewModel()
+
+    return VStack {
+        CredentialsStageView(onSuccess: { _ in })
+            .modifier(BackgroundColorModifier())
+            .environment(viewModel)
+
+        Button("Toggle OTP") {
+            viewModel.otpEnabled.toggle()
         }
     }
 }

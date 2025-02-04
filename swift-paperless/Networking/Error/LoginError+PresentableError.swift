@@ -32,6 +32,10 @@ extension LoginError: PresentableError {
         case let .request(error):
             augment(error: error)
 
+        case .otpRequired:
+            // This should always work, but don't crash
+            Text(details ?? "invalid")
+
         case let .other(error):
             Text(.login(.errorMessage))
                 .fixedSize(horizontal: false, vertical: true)
