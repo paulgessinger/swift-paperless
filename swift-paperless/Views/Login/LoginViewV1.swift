@@ -117,9 +117,9 @@ struct LoginViewV1: LoginViewProtocol {
             if statusCode != 200 {
                 Logger.shared.error("Token request response was not 200 but \(statusCode ?? -1, privacy: .public), \(String(decoding: data, as: UTF8.self))")
                 if statusCode == 400 {
-                    viewModel.loginState = .error(.invalidLogin)
+                    viewModel.loginState = .error(.invalidLogin())
                 }
-                throw LoginError.invalidLogin
+                throw LoginError.invalidLogin()
             }
 
             struct TokenResponse: Decodable {

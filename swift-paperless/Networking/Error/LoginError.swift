@@ -14,7 +14,7 @@ private func string(for error: any Error) -> String {
 enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: UrlError)
 
-    case invalidLogin
+    case invalidLogin(detail: String? = nil)
 
     case invalidToken
 

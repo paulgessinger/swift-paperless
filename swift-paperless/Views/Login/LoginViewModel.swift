@@ -128,19 +128,37 @@ class LoginViewModel {
         }
     }
 
-    func decodeDetails(_ body: Data) -> String {
+    private func decodeDetails(_ body: Data) -> String? {
+        let raw = String(data: body, encoding: .utf8)
+        Logger.shared.info("Decoding details from response: \(raw ?? "no data", privacy: .public)")
         struct Response: Decodable {
-            var detail: String
+            var detail: String?
+            var non_field_errors: [String]
         }
-        if let detail = try? JSONDecoder().decode(Response.self, from: body).detail {
-            return detail
+        var results = [String]()
+        do {
+            let response = try JSONDecoder().decode(Response.self, from: body)
+            if let detail = response.detail {
+                results.append(detail)
+            }
+
+            results.append(contentsOf: response.non_field_errors.map {
+                $0.hasSuffix(".") ? $0 : "\($0)."
+            })
+        } catch is DecodingError {
+            // Recover error message if decoding fails
+            if let raw {
+                results.append(raw)
+            }
+        } catch {
+            // Not much we can do here.
         }
 
-        if let detail = String(data: body, encoding: .utf8) {
-            return detail
+        if results.isEmpty {
+            return nil
+        } else {
+            return results.joined(separator: " ")
         }
-
-        return "no details"
     }
 
     func checkUrl(string value: String) async {
@@ -187,7 +205,7 @@ class LoginViewModel {
 
             guard status == .ok else {
                 let detail = decodeDetails(data)
-                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail, privacy: .public)")
+                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail ?? "no detail", privacy: .public)")
                 switch status {
                 case .notAcceptable:
                     loginState = .error(.request(.unsupportedVersion))
@@ -315,11 +333,11 @@ class LoginViewModel {
             break
         case .badRequest:
             let details = decodeDetails(data)
-            Logger.shared.error("Credentials were rejected when requesting token: \(details, privacy: .public)")
-            throw LoginError.invalidLogin
+            Logger.shared.error("Credentials were rejected when requesting token: \(details ?? "no details", privacy: .public)")
+            throw LoginError.invalidLogin(detail: details)
         default:
             let details = decodeDetails(data)
-            Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details, privacy: .public)")
+            Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details ?? "no details", privacy: .public)")
             throw LoginError.request(.unexpectedStatusCode(code: status,
                                                            detail: details))
         }
