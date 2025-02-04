@@ -1,3 +1,7 @@
+1.6.0 (129)
+
+- Add support for 2FA/MFA/OTP codes during login with credentials
+
 1.6.0 (128)
 
 - Fixed crash on macOS
