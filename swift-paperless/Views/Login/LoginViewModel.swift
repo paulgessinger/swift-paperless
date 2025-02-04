@@ -89,6 +89,10 @@ class LoginViewModel {
     var credentialMode = CredentialMode.usernameAndPassword
     var credentialState = CredentialState.none
 
+    // Display OTP input field
+    var otpEnabled = false
+    var otp: String = ""
+
     // For user password login
     var username: String = ""
     var password: String = ""
@@ -128,19 +132,37 @@ class LoginViewModel {
         }
     }
 
-    func decodeDetails(_ body: Data) -> String {
+    private func decodeDetails(_ body: Data) -> String? {
+        let raw = String(data: body, encoding: .utf8)
+        Logger.shared.info("Decoding details from response: \(raw ?? "no data", privacy: .public)")
         struct Response: Decodable {
-            var detail: String
+            var detail: String?
+            var non_field_errors: [String]
         }
-        if let detail = try? JSONDecoder().decode(Response.self, from: body).detail {
-            return detail
+        var results = [String]()
+        do {
+            let response = try JSONDecoder().decode(Response.self, from: body)
+            if let detail = response.detail {
+                results.append(detail)
+            }
+
+            results.append(contentsOf: response.non_field_errors.map {
+                $0.hasSuffix(".") ? $0 : "\($0)."
+            })
+        } catch is DecodingError {
+            // Recover error message if decoding fails
+            if let raw {
+                results.append(raw)
+            }
+        } catch {
+            // Not much we can do here.
         }
 
-        if let detail = String(data: body, encoding: .utf8) {
-            return detail
+        if results.isEmpty {
+            return nil
+        } else {
+            return results.joined(separator: " ")
         }
-
-        return "no details"
     }
 
     func checkUrl(string value: String) async {
@@ -187,7 +209,7 @@ class LoginViewModel {
 
             guard status == .ok else {
                 let detail = decodeDetails(data)
-                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail, privacy: .public)")
+                Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail ?? "no detail", privacy: .public)")
                 switch status {
                 case .notAcceptable:
                     loginState = .error(.request(.unsupportedVersion))
@@ -268,6 +290,25 @@ class LoginViewModel {
         return (ip >= (10, 0, 0, 0) && ip <= (10, 255, 255, 255)) || (ip >= (172, 16, 0, 0) && ip <= (172, 31, 255, 255)) || (ip >= (192, 168, 0, 0) && ip <= (192, 168, 255, 255))
     }
 
+    private static func isMFAFailure(body: Data) -> Bool {
+        Logger.shared.info("Checking for MFA failure from response: \(String(data: body, encoding: .utf8) ?? "no data", privacy: .public)")
+        struct Response: Decodable {
+            var non_field_errors: [String]
+        }
+
+        guard let response = try? JSONDecoder().decode(Response.self, from: body) else {
+            return false
+        }
+
+        guard let error = response.non_field_errors.first else {
+            return false
+        }
+
+        let mfaSentinel = "MFA code is required"
+
+        return error == mfaSentinel
+    }
+
     private func fetchToken(url tokenUrl: URL) async throws(LoginError) -> String {
         let username = username
         let password = password
@@ -276,12 +317,12 @@ class LoginViewModel {
         struct TokenRequest: Encodable {
             var username: String
             var password: String
+            var code: String?
         }
 
         let json: Data
         do {
-            json = try JSONEncoder().encode(TokenRequest(username: username,
-                                                         password: password))
+            json = try JSONEncoder().encode(TokenRequest(username: username, password: password, code: otpEnabled ? otp : nil))
         } catch {
             // This should never ever happen
             Logger.shared.error("Unable to encode TokenRequest, this is an internal error")
@@ -315,11 +356,17 @@ class LoginViewModel {
             break
         case .badRequest:
             let details = decodeDetails(data)
-            Logger.shared.error("Credentials were rejected when requesting token: \(details, privacy: .public)")
-            throw LoginError.invalidLogin
+            Logger.shared.error("Credentials were rejected when requesting token: \(details ?? "no details", privacy: .public)")
+            // @TODO: Add check for invalid MFA code maybe?
+            if Self.isMFAFailure(body: data) {
+                Logger.shared.info("Detected MFA failure, show OTP code input field")
+                throw LoginError.otpRequired
+            } else {
+                throw LoginError.invalidLogin(detail: details)
+            }
         default:
             let details = decodeDetails(data)
-            Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details, privacy: .public)")
+            Logger.shared.error("Token request response was not 200 but \(status.rawValue, privacy: .public), detail: \(details ?? "no details", privacy: .public)")
             throw LoginError.request(.unexpectedStatusCode(code: status,
                                                            detail: details))
         }
@@ -370,6 +417,11 @@ class LoginViewModel {
                 let token = try await fetchToken(url: tokenUrl)
                 Logger.shared.info("Username and password are valid, have token")
                 connection = makeConnection(token)
+            } catch .otpRequired {
+                Logger.shared.debug("OTP required, enabling OTP input field")
+                otpEnabled = true
+                credentialState = .none
+                return nil
             } catch {
                 credentialState = .error(error)
                 return nil

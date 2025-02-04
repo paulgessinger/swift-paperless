@@ -19,14 +19,22 @@ extension LoginError: PresentableError {
                     .italic()
             }
 
-        case .invalidLogin:
+        case let .invalidLogin(details):
             Text(.login(.errorLoginInvalidDetails))
+            if let details {
+                Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+                    + (Text(details).italic())
+            }
 
         case .invalidToken:
             Text(.login(.errorMessage))
 
         case let .request(error):
             augment(error: error)
+
+        case .otpRequired:
+            // This should always work, but don't crash
+            Text(details ?? "invalid")
 
         case let .other(error):
             Text(.login(.errorMessage))
@@ -89,7 +97,7 @@ private struct TestLocalizedError: LocalizedError {
     ScrollView(.vertical) {
         VStack(alignment: .leading, spacing: 10) {
             h(.invalidUrl(.emptyHost))
-            h(.invalidLogin)
+            h(.invalidLogin(detail: "MFA bla bla bla"))
             h(.request(.unexpectedStatusCode(code: .imATeapot, detail: "Detail string")))
             h(.request(.unexpectedStatusCode(code: .imATeapot, detail: nil)))
             h(.request(.unexpectedStatusCode(code: .forbidden, detail: nil)))

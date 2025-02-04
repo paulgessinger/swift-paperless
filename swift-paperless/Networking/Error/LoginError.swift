@@ -14,7 +14,9 @@ private func string(for error: any Error) -> String {
 enum LoginError: DisplayableError, Equatable {
     case invalidUrl(_: UrlError)
 
-    case invalidLogin
+    case invalidLogin(detail: String? = nil)
+
+    case otpRequired
 
     case invalidToken
 
@@ -48,6 +50,8 @@ extension LoginError {
             return error
         case let .request(error):
             return error.details
+        case .otpRequired:
+            return String(localized: .login(.otpDescription))
         }
     }
 
