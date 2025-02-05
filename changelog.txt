@@ -1,3 +1,6 @@
+1.6.0 (130)
+
+
 1.6.0 (129)
 
 - Add support for 2FA/MFA/OTP codes during login with credentials
