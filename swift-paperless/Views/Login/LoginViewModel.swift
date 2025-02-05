@@ -220,7 +220,11 @@ class LoginViewModel {
                 return
             }
 
-            _ = try JSONDecoder().decode([String: URL].self, from: data)
+            do {
+                _ = try JSONDecoder().decode([String: URL].self, from: data)
+            } catch is DecodingError {
+                Logger.shared.error("Checking API response could not be decoded as URL dictionary: \(String(decoding: data, as: UTF8.self), privacy: .public)")
+            }
             loginState = .valid
 
         } catch let error where error.isCancellationError {
