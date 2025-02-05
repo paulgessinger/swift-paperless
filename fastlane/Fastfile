@@ -69,7 +69,7 @@ Redact screenshots to not include information that you do not wish to expose.
 
 ---
 
-    } + changelog
+} + changelog
 
     # Change code signing settings after committing
     update_code_signing_settings(
@@ -147,11 +147,13 @@ Redact screenshots to not include information that you do not wish to expose.
     )
 
     current_changelog = File.read(current_changelog_file)
-    changelog = File.read(changelog_file)
-    combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog + "\n" + changelog
+    if current_changelog.empty?
+      changelog = File.read(changelog_file)
+      combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog + "\n" + changelog
 
-    File.write(changelog_file, combined_changelog)
-    File.write(current_changelog_file, "")
+      File.write(changelog_file, combined_changelog)
+      File.write(current_changelog_file, "")
+    end
 
     git_commit(
       path: ["swift-paperless.xcodeproj", changelog_file, current_changelog_file],
