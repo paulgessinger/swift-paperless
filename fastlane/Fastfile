@@ -147,7 +147,7 @@ Redact screenshots to not include information that you do not wish to expose.
     )
 
     current_changelog = File.read(current_changelog_file)
-    if current_changelog.empty?
+    if not current_changelog.empty?
       changelog = File.read(changelog_file)
       combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog + "\n" + changelog
 
