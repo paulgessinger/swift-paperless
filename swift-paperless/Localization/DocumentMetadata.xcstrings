@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date added"
+            "state" : "translated",
+            "value" : "Dato tilføjet"
           }
         },
         "de" : {
@@ -53,8 +53,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive MD5 checksum"
+            "state" : "translated",
+            "value" : "Arkivets MD5-checksum"
           }
         },
         "de" : {
@@ -100,8 +100,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive file size"
+            "state" : "translated",
+            "value" : "Størrelse på arkivfil"
           }
         },
         "de" : {
@@ -147,8 +147,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Media filename"
+            "state" : "translated",
+            "value" : "Navn på mediefil"
           }
         },
         "de" : {
@@ -194,7 +194,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Metadata"
           }
         },
@@ -241,8 +241,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date modified"
+            "state" : "translated",
+            "value" : "Dato for ændring"
           }
         },
         "de" : {
@@ -288,8 +288,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create note"
+            "state" : "translated",
+            "value" : "Opret en note"
           }
         },
         "de" : {
@@ -335,8 +335,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note text"
+            "state" : "translated",
+            "value" : "Bemærk tekst"
           }
         },
         "de" : {
@@ -382,8 +382,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Noter"
           }
         },
         "de" : {
@@ -429,8 +429,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original MD5 checksum"
+            "state" : "translated",
+            "value" : "Original MD5-checksum"
           }
         },
         "de" : {
@@ -476,8 +476,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original filename"
+            "state" : "translated",
+            "value" : "Oprindeligt filnavn"
           }
         },
         "de" : {
@@ -523,8 +523,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original file size"
+            "state" : "translated",
+            "value" : "Original filstørrelse"
           }
         },
         "de" : {
@@ -570,8 +570,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original mime type"
+            "state" : "translated",
+            "value" : "Original mime-type"
           }
         },
         "de" : {

@@ -101,8 +101,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Hvis du har aktiveret *autologin* med `PAPERLESS_AUTO_LOGIN_USERNAME`, kan du prøve at logge ind uden legitimationsoplysninger."
           }
         },
         "de" : {
@@ -195,8 +195,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Validating"
+            "state" : "translated",
+            "value" : "Validering"
           }
         },
         "de" : {
@@ -242,8 +242,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Self-signed certificates are supported using the operating system trust store!"
+            "state" : "translated",
+            "value" : "Selvsignerede certifikater understøttes ved hjælp af operativsystemets trust store!"
           }
         },
         "de" : {
@@ -289,8 +289,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue"
+            "state" : "translated",
+            "value" : "Fortsæt"
           }
         },
         "de" : {
@@ -336,8 +336,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mode"
+            "state" : "translated",
+            "value" : "Tilstand"
           }
         },
         "de" : {
@@ -383,8 +383,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No credentials"
+            "state" : "translated",
+            "value" : "Ingen legitimationsoplysninger"
           }
         },
         "de" : {
@@ -430,8 +430,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+            "state" : "translated",
+            "value" : "Login uden eksplicitte legitimationsoplysninger. Dette fungerer i scenarier med videresendelse af godkendelse med brugerdefinerede overskrifter, eller når man bruger mTLS med pålidelig videresendelse."
           }
         },
         "de" : {
@@ -477,7 +477,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Token"
           }
         },
@@ -524,8 +524,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with an API token that you obtained in the admin interface."
+            "state" : "translated",
+            "value" : "Log ind med et API-token, som du har fået i admin-grænsefladen."
           }
         },
         "de" : {
@@ -571,8 +571,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username & Password"
+            "state" : "translated",
+            "value" : "Brugernavn og adgangskode"
           }
         },
         "de" : {
@@ -618,8 +618,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+            "state" : "translated",
+            "value" : "Log ind med et brugernavn og en adgangskode. Dette fungerer kun med lokale konti og ikke med konti, der er godkendt via OAuth2/OIDC."
           }
         },
         "de" : {
@@ -759,8 +759,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info here"
+            "state" : "translated",
+            "value" : "Mere information her"
           }
         },
         "de" : {
@@ -806,8 +806,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The user associated with these credentials has insufficient permissions. A minimum set of permissions is required to be able to use the app!"
+            "state" : "translated",
+            "value" : "Den bruger, der er knyttet til disse oplysninger, har ikke tilstrækkelige tilladelser. Der kræves et minimum af tilladelser for at kunne bruge appen!"
           }
         },
         "de" : {
@@ -900,8 +900,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
+            "state" : "translated",
+            "value" : "**Kombinationen af brugernavn og adgangskode blev afvist.\nTjek venligst, at du har indtastet dem korrekt."
           }
         },
         "de" : {
@@ -947,8 +947,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error while logging in"
+            "state" : "translated",
+            "value" : "Fejl under indlogning"
           }
         },
         "de" : {
@@ -994,8 +994,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
+            "state" : "translated",
+            "value" : "**Forbindelsesanmodningen uden legitimationsoplysninger blev afvist.**\nTjek venligst din konfiguration."
           }
         },
         "de" : {
@@ -1041,8 +1041,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
+            "state" : "translated",
+            "value" : "**Adgangstokenet er ugyldigt.**\nTjek venligst, at du har indtastet det korrekt."
           }
         },
         "de" : {
@@ -1088,8 +1088,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
+            "state" : "translated",
+            "value" : "**Brugernavn og adgangskode blev accepteret, men det returnerede adgangstoken blev afvist.**\nDette er sandsynligvis en intern fejl. Send venligst en fejlrapport med logfiler."
           }
         },
         "de" : {
@@ -1182,8 +1182,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Advarsel:** headeren *Authorization* bruges af Paperless-ngx til token-baseret API-autorisation. Brug af denne header til Basic auth vil sandsynligvis føre til problemer. Du kan prøve at konfigurere en alternativ header til Basic auth i din Reverse Proxy-konfiguration."
           }
         },
         "de" : {
@@ -1464,8 +1464,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select a client certificate to use when connecting to the target server."
+            "state" : "translated",
+            "value" : "Vælg et klientcertifikat, der skal bruges, når du opretter forbindelse til målserveren."
           }
         },
         "de" : {
@@ -1511,8 +1511,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identity"
+            "state" : "translated",
+            "value" : "Identitet"
           }
         },
         "de" : {
@@ -1650,10 +1650,46 @@
     "otp" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2FA-kode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweiter-Faktor Code"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "2FA code"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code A2F"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice A2F"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2FA-code"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kod 2FA"
           }
         }
       }
@@ -1661,10 +1697,46 @@
     "otpDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2FA er aktiveret, og der kræves en OTP."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwei-Faktor Authentifizierung ist aktiviert, ein OTP ist erforderlich."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "2FA is enabled, an OTP is required."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2FA est activé, un OTP est nécessaire."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il 2FA è abilitato, è necessario un OTP."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als 2FA is ingeschakeld, is een OTP vereist."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2FA jest włączone, wymagany jest OTP."
           }
         }
       }
@@ -1768,8 +1840,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select scheme"
+            "state" : "translated",
+            "value" : "Vælg skema"
           }
         },
         "de" : {
@@ -1815,8 +1887,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection"
+            "state" : "translated",
+            "value" : "Forbindelse"
           }
         },
         "de" : {
@@ -1956,7 +2028,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Token"
           }
         },

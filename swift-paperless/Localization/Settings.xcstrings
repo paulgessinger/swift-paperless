@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Aktiv identitet"
           }
         },
         "de" : {
@@ -528,8 +528,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't load certificate. Invalid password?"
+            "state" : "translated",
+            "value" : "Kan ikke indlæse certifikat. Ugyldig adgangskode?"
           }
         },
         "de" : {
@@ -575,8 +575,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate not loaded"
+            "state" : "translated",
+            "value" : "Certifikat ikke indlæst"
           }
         },
         "de" : {
@@ -622,8 +622,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificates"
+            "state" : "translated",
+            "value" : "Certifikater"
           }
         },
         "de" : {
@@ -1421,8 +1421,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Indstillingerne her er kommende funktionsvarianter/eksperimenter, som du kan slå fra. \n\nNormalt vil et eksperiment enten blive implementeret, og den gamle variant vil forsvinde, eller eksperimentet vil blive opgivet, og den nye variant vil forsvinde."
           }
         },
         "de" : {
@@ -1468,8 +1468,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Experiments"
+            "state" : "translated",
+            "value" : "UI-eksperimenter"
           }
         },
         "de" : {
@@ -1609,8 +1609,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities"
+            "state" : "translated",
+            "value" : "Identiteter"
           }
         },
         "de" : {
@@ -1656,8 +1656,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+            "state" : "translated",
+            "value" : "Identiteter er certifikater sammen med private nøgler, der kan bruges til at autentificere dig kryptografisk. Identiteter bruges i [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) konfigurationer til at få adgang til sikrede ressourcer.\n\nDette er en **avanceret funktion**!"
           }
         },
         "de" : {
@@ -1985,8 +1985,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Rapporter en fejl"
           }
         },
         "de" : {
@@ -2032,8 +2032,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "Appen foretager en vis bogføring baseret på app-versionen. Dette nulstiller app-versionen og får appen til at fungere, som om det var en ren installation."
           }
         },
         "de" : {
@@ -2079,8 +2079,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select Certificate"
+            "state" : "translated",
+            "value" : "Vælg certifikat"
           }
         },
         "de" : {
@@ -2126,8 +2126,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Vis dokumentets egenskabslinje"
           }
         },
         "de" : {
@@ -2173,8 +2173,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Vis som standard dokumentegenskaberne i bunden af skærmbilledet med dokumentoplysninger."
           }
         },
         "de" : {
@@ -2268,8 +2268,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Denne server har version `%@`, som er lavere end version `%@`, som appen kræver. Du kan opleve problemer!"
           }
         },
         "de" : {
