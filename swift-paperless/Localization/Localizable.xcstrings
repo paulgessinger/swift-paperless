@@ -1423,8 +1423,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Fejl i behandling af svar"
           }
         },
         "de" : {
@@ -1470,8 +1470,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Der opstod en fejl i behandlingen af et serversvar. Afkodning af %@ mislykkedes.\n\nDette kan ske, hvis serverversionen ikke understøttes, eller hvis forbindelsen ændres på en uventet måde."
           }
         },
         "de" : {
@@ -2130,8 +2130,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preview"
+            "state" : "translated",
+            "value" : "Forhåndsvisning"
           }
         },
         "de" : {
@@ -2177,8 +2177,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Eksisterer"
           }
         },
         "de" : {
@@ -3499,8 +3499,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Group"
+            "state" : "translated",
+            "value" : "Gruppe"
           }
         },
         "de" : {
@@ -3737,8 +3737,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "state" : "translated",
+            "value" : "Det ser ud til, at appen ikke er i stand til at oprette forbindelse til %@. Du kan prøve at skifte server eller logge ud og ind igen:"
           }
         },
         "de" : {
@@ -4207,8 +4207,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Ingen"
           }
         },
         "de" : {
@@ -4254,8 +4254,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Ingen gemte visninger"
           }
         },
         "de" : {
@@ -5246,8 +5246,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+            "state" : "translated",
+            "value" : "Kan ikke indlæse release notes for version %@. Dette kan ske, hvis du er på en betaversion."
           }
         },
         "de" : {
@@ -5340,8 +5340,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate error while connecting"
+            "state" : "translated",
+            "value" : "Certifikatfejl under tilslutning"
           }
         },
         "de" : {
@@ -5434,8 +5434,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions"
+            "state" : "translated",
+            "value" : "Anmodningen blev afvist på grund af manglende tilladelser"
           }
         },
         "de" : {
@@ -5481,8 +5481,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Der opstod en fejl med den konfigurerede URL."
           }
         },
         "de" : {
@@ -5528,8 +5528,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "Svaret på en anmodning havde et uventet format"
           }
         },
         "de" : {
@@ -5622,8 +5622,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
+            "state" : "translated",
+            "value" : "Hvis du bruger *mTLS*, kan det betyde, at du skal levere et klientcertifikat, eller at klientcertifikatet ikke blev accepteret."
           }
         },
         "de" : {
@@ -5669,8 +5669,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials"
+            "state" : "translated",
+            "value" : "Anmodningen blev afvist på grund af ugyldige legitimationsoplysninger"
           }
         },
         "de" : {
@@ -5716,8 +5716,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status %@."
+            "state" : "translated",
+            "value" : "Svaret på en anmodning havde en uventet status %@."
           }
         },
         "de" : {
@@ -5763,8 +5763,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "state" : "translated",
+            "value" : "Backend'en understøtter ikke den mindste API-version `%u`, som denne version af appen kræver."
           }
         },
         "de" : {
@@ -6752,8 +6752,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Del"
           }
         },
         "de" : {
@@ -6799,8 +6799,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Link to this app"
+            "state" : "translated",
+            "value" : "Link til denne app"
           }
         },
         "de" : {
@@ -6846,8 +6846,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Del link"
           }
         },
         "de" : {
@@ -6893,8 +6893,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other apps"
+            "state" : "translated",
+            "value" : "Andre apps"
           }
         },
         "de" : {
@@ -7034,8 +7034,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Please log in using the app first!"
+            "state" : "translated",
+            "value" : "Log venligst ind med appen først!"
           }
         },
         "de" : {
@@ -7081,8 +7081,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document properties"
+            "state" : "translated",
+            "value" : "Vis dokumentets egenskaber"
           }
         },
         "de" : {
@@ -7457,8 +7457,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Noter"
           }
         },
         "de" : {
@@ -7504,8 +7504,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Ejer"
           }
         },
         "de" : {
@@ -7551,8 +7551,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search score"
+            "state" : "translated",
+            "value" : "Søg efter score"
           }
         },
         "de" : {
