@@ -1,3 +1,7 @@
+1.6.0 (131)
+
+- Updated translations
+
 1.6.0 (130)
 
 
