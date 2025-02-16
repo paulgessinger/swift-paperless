@@ -22,13 +22,17 @@ struct CredentialsStageView: View {
             return false
         }
 
-        return switch viewModel.credentialMode {
+        switch viewModel.credentialMode {
         case .usernameAndPassword:
-            !viewModel.username.isEmpty && !viewModel.password.isEmpty
+            var valid = !viewModel.username.isEmpty && !viewModel.password.isEmpty
+            if viewModel.otpEnabled {
+                valid = valid && otpValid
+            }
+            return valid
         case .token:
-            !viewModel.token.isEmpty
+            return !viewModel.token.isEmpty
         case .none:
-            true
+            return true
         }
     }
 
@@ -95,6 +99,12 @@ struct CredentialsStageView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+    }
+
+    private var otpValid: Bool {
+        let ex = /^[0-9]*$/
+        let isDigits: Bool = (try? ex.wholeMatch(in: viewModel.otp)) != nil
+        return isDigits && viewModel.otp.count == 6
     }
 
     private func checkOtp(_ old: String, _ new: String) {
