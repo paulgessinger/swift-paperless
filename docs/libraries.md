@@ -8,6 +8,10 @@ Swift Paperless uses the following third-party libraries for various features:
 [GitHub](https://github.com/apple/swift-async-algorithms)
 *Apache-2.0 license*
 
+## swift-collections
+[GitHub](https://github.com/apple/swift-collections)
+*Apache-2.0 license*
+
 ## SwiftUI Flow Layout
 [GitHub](https://github.com/tevelee/SwiftUI-Flow)
 *MIT license*
@@ -26,4 +30,8 @@ Swift Paperless uses the following third-party libraries for various features:
 
 ## XCStrings Tool
 [GitHub](https://github.com/liamnichols/xcstrings-tool)
+*MIT license*
+
+## MetaCodable
+[GitHub](https://github.com/SwiftyLab/MetaCodable)
 *MIT license*
