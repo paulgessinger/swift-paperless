@@ -1,3 +1,7 @@
+---
+title: "Error: Forbidden"
+---
+
 # Error "No access: XXX"
 
 This error occurs when the user does not have the necessary permissions to access the requested resource. This is usually the result of a faulty configuation in Paperless-ngx itself.

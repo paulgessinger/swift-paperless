@@ -63,13 +63,17 @@ def validate_urls(urls: List[str]) -> None:
         sys.exit(1)
 
 
-@app.command()
-def main(base_url: str | None = None):
-    script_dir = Path(__file__).parent.parent
-    links_file = (
-        script_dir / "swift-paperless" / "Utilities" / "DocumentationLinks.swift"
-    )
+script_dir = Path(__file__).parent.parent
 
+
+@app.command()
+def main(
+    base_url: str | None = None,
+    links_file: Path = script_dir
+    / "swift-paperless"
+    / "Utilities"
+    / "DocumentationLinks.swift",
+):
     if not links_file.exists():
         print(f"Error: Could not find {links_file}")
         sys.exit(1)
