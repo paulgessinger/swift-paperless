@@ -174,16 +174,17 @@ class LoginViewModel {
         }
 
         let apiUrl: URL
+        let tokenUrl: URL
 
         do throws(UrlError) {
-            (_, apiUrl) = try deriveUrl(string: value)
+            (apiUrl, tokenUrl) = try deriveUrl(string: fullUrl, suffix: "token")
         } catch {
             Logger.shared.error("Cannot derive URL: \(value) -> \(error)")
             loginState = .error(.invalidUrl(error))
             return
         }
 
-        var request = URLRequest(url: apiUrl)
+        var request = URLRequest(url: tokenUrl)
         extraHeaders.apply(toRequest: &request)
         request.timeoutInterval = 15
         request.setValue("application/json; version=\(ApiRepository.minimumApiVersion)", forHTTPHeaderField: "Accept")
@@ -207,7 +208,8 @@ class LoginViewModel {
                 return
             }
 
-            guard status == .ok else {
+            // As per https://github.com/paperless-ngx/paperless-ngx/pull/8948#issuecomment-2661515625, a 405 indicates the version is ok, but the method is not allowed
+            guard status == .methodNotAllowed else {
                 let detail = decodeDetails(data)
                 Logger.shared.warning("Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail ?? "no detail", privacy: .public)")
                 switch status {
@@ -220,11 +222,6 @@ class LoginViewModel {
                 return
             }
 
-            do {
-                _ = try JSONDecoder().decode([String: URL].self, from: data)
-            } catch is DecodingError {
-                Logger.shared.error("Checking API response could not be decoded as URL dictionary: \(String(decoding: data, as: UTF8.self), privacy: .public)")
-            }
             loginState = .valid
 
         } catch let error where error.isCancellationError {
