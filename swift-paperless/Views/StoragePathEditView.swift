@@ -6,16 +6,17 @@
 //
 
 import DataModel
+import os
 import SwiftUI
 
 struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
     @State private var storagePath: Element
-    var onSave: (Element) throws -> Void
+    var onSave: ((Element) throws -> Void)?
 
     private var saveLabel: String
 
     init(element storagePath: Element,
-         onSave: @escaping (Element) throws -> Void)
+         onSave: ((Element) throws -> Void)?)
     {
         _storagePath = State(initialValue: storagePath)
         self.onSave = onSave
@@ -50,9 +51,9 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(saveLabel) {
                     do {
-                        try onSave(storagePath)
+                        try onSave?(storagePath)
                     } catch {
-                        print("Save storage path error: \(error)")
+                        Logger.shared.error("Save storage path error: \(error)")
                     }
                 }
                 .disabled(!isValid)
@@ -67,7 +68,7 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 }
 
 extension StoragePathEditView where Element == ProtoStoragePath {
-    init(onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(onSave: @escaping (Element) throws -> Void) {
         self.init(element: ProtoStoragePath(), onSave: onSave)
         saveLabel = String(localized: .localizable(.add))
     }
