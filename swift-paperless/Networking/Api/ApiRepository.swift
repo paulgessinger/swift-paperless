@@ -677,7 +677,13 @@ extension ApiRepository: Repository {
     }
 
     func acknowledge(tasks ids: [UInt]) async throws {
-        var request = try request(.acknowlegdeTasks())
+        let endpoint: Endpoint = if let backendVersion, backendVersion >= Version(2, 14, 0) {
+            .acknowlegdeTasks()
+        } else {
+            .acknowlegdeTasksV1()
+        }
+
+        var request = try request(endpoint)
 
         let payload: [String: [UInt]] = ["tasks": ids]
 

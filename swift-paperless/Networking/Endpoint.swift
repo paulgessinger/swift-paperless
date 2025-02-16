@@ -218,8 +218,13 @@ extension Endpoint {
         .init(path: "/api/tasks/\(id)")
     }
 
-    static func acknowlegdeTasks() -> Endpoint {
+    static func acknowlegdeTasksV1() -> Endpoint {
         .init(path: "/api/acknowledge_tasks")
+    }
+
+    // https://github.com/paperless-ngx/paperless-ngx/pull/8195
+    static func acknowlegdeTasks() -> Endpoint {
+        .init(path: "/api/tasks/acknowledge")
     }
 
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
