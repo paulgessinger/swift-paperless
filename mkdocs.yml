@@ -5,6 +5,17 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme)"
+
+    # Palette for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+
+    # Palette for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+
 
 repo_url: https://github.com/paulgessinger/swift-paperless
 
