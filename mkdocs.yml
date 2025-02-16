@@ -5,6 +5,17 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme)"
+
+    # Palette for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+
+    # Palette for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+
 
 repo_url: https://github.com/paulgessinger/swift-paperless
 
@@ -17,10 +28,13 @@ plugins:
   - redirects:
       redirect_maps:
         "common-issues/forbidden.md": "common_issues/forbidden.md"
-        "common-issues/invalid-certificate.md": "common_issues/invalid-certificate.md"
+        "common-issues/invalid-certificate.md": "common_issues/certificates.md"
         "common_issues/invalid-certificate.md": "common_issues/certificates.md"
         "common-issues/local-network-denied.md": "common_issues/local-network-denied.md"
 
+
+        # @TODO: Remove when https://github.com/paulgessinger/swift-paperless/pull/200 lands in App Store release
+        "common_issues/insufficient-permissions.md": "common_issues/forbidden.md"
 markdown_extensions:
   - pymdownx.snippets:
   - attr_list
@@ -32,6 +46,15 @@ extra_css:
 nav:
   - index.md
   - Release notes: release_notes/
-  - Common Issues: common_issues/
+  - Common Issues:
+      # @TODO: Remove when v1.6.0 is live
+      - common_issues/forbidden.md
+
+
+      # @TODO: Make separate page when https://github.com/paulgessinger/swift-paperless/pull/200 lands in App Store release
+      # - common_issues/insufficient-permissions.md
+      - common_issues/local-network-denied.md
+      - common_issues/certificates.md
+      - common_issues/supported-versions.md
   - privacy.md
   - libraries.md
