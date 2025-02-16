@@ -1,0 +1,2 @@
+- Adapt to new API versions and recent Paperless-ngx releases
+- Fix acknowledgement of tasks after the API endpoint changed
