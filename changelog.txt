@@ -1,3 +1,8 @@
+1.6.0 (132)
+
+- Adapt to new API versions and recent Paperless-ngx releases
+- Fix acknowledgement of tasks after the API endpoint changed
+
 1.6.0 (131)
 
 - Updated translations
