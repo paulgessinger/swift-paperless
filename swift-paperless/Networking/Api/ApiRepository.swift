@@ -55,7 +55,7 @@ actor ApiRepository {
     private var apiVersion: UInt?
     static let minimumApiVersion: UInt = 3
     static let minimumVersion = Version(1, 14, 1)
-    static let maximumApiVersion: UInt = 5
+    static let maximumApiVersion: UInt = 7
     private(set) var backendVersion: Version?
 
     var effectiveApiVersion: UInt {
@@ -703,7 +703,8 @@ extension ApiRepository: Repository {
     private func loadBackendVersions() async {
         Logger.api.info("Getting backend versions")
         do {
-            let request = try request(.root())
+            // @TODO: Maybe switch to `/api/remote_version`
+            let request = try request(.uiSettings())
 
             let (_, res) = try await fetchData(for: request)
 
