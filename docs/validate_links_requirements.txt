@@ -1,0 +1,2 @@
+requests==2.31.0
+types-requests==2.31.0.20240311
