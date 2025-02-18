@@ -57,8 +57,9 @@ extension RequestError: DisplayableError {
                     // We're not sure this is an SSL error, show details just in case
                     msg += " " + .localizable(.requestErrorDetailLabel) + ": "
                         + details
+                } else {
+                    msg += " " + .localizable(.requestErrorMTLS)
                 }
-                msg += " " + .localizable(.requestErrorMTLS)
             }
             raw = msg
 
