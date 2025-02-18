@@ -1,2 +1,0 @@
-- Fix issue editing storage paths
-- Improve accuracy of storage path format description

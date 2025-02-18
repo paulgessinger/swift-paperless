@@ -1,3 +1,8 @@
+1.6.0 (133)
+
+- Fix issue editing storage paths
+- Improve accuracy of storage path format description
+
 1.6.0 (132)
 
 - Adapt to new API versions and recent Paperless-ngx releases
