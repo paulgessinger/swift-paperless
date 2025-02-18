@@ -7833,14 +7833,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "f.eks. {created_year}-{title} eller brug skråstreger for at tilføje mapper, f.eks. {created_year}/{correspondent}/{title}. Se [dokumentationen](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) for den fulde liste."
+            "state" : "translated",
+            "value" : "Se [dokumentationen](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "z. B. {created_year}-{title} oder benutze Schrägstriche, um bspw. Verzeichnisse hinzuzufügen {created_year}/{correspondent}/{title}. Siehe [Dokumentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) für eine vollständige Liste."
+            "state" : "translated",
+            "value" : "Siehe [Dokumentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         },
         "en" : {
@@ -7851,26 +7851,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "par exemple {created_year}-{title} ou utilisez des barres obliques pour ajouter des répertoires par exemple {created_year}/{correspondent}/{title}. Voir la [documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) pour la liste complète."
+            "state" : "translated",
+            "value" : "Voir [la documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ad esempio {created_year}-{title} o utilizza degli slash per aggiungere delle cartelle, ad esempio {created_year}/{correspondent}/{title}. Guarda la [documentazione](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) per l'elenco completo."
+            "state" : "translated",
+            "value" : "Vedere [la documentazione](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "bijv. {created_year}-{title} of gebruik slashes om mappen toe te voegen: {created_year}/{correspondent}/{title}. Zie [documentatie](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) voor de volledige lijst."
+            "state" : "translated",
+            "value" : "Zie [de documentatie](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "np. {created_year}-{title} lub użyj ukośników do dodawania katalogów np. {created_year}/{correspondent}/{title}. Pełna lista w [dokumentacji](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
+            "state" : "translated",
+            "value" : "Zobacz [dokumentację](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
         }
       }
