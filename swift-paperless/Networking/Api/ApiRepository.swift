@@ -643,7 +643,7 @@ extension ApiRepository: Repository {
     }
 
     func update(storagePath: StoragePath) async throws -> StoragePath {
-        try await update(element: storagePath, endpoint: .savedView(id: storagePath.id))
+        try await update(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
     func delete(storagePath: StoragePath) async throws {
