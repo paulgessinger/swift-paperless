@@ -34,10 +34,11 @@ openssl req \
   -out ca.crt \
   -days 365 \
   -nodes \
-  -subj "/CN=SwiftPaperlessCA"
+  -subj "/CN=MyCA"
 ```
 
 This command generates:
+
 - `ca.key`: Private key for the CA
 - `ca.crt`: Public CA certificate used to sign server certificates
 
