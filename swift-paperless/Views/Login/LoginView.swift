@@ -20,8 +20,7 @@ struct LoginView: LoginViewProtocol {
     @ObservedObject private var appSettings = AppSettings.shared
 
     var body: some View {
-        // @TODO: Enable new lgoin screen for AppStore
-        if appSettings.loginScreenV2, Bundle.main.appConfiguration != .AppStore {
+        if appSettings.loginScreenV2 {
             LoginViewV2(connectionManager: connectionManager, initial: initial)
         } else {
             LoginViewV1(connectionManager: connectionManager, initial: initial)
