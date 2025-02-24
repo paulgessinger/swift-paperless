@@ -23,7 +23,7 @@ jobs:
           - "iPhone 16 Pro"
           - "iPad Pro 13-inch (M4)"
         ios:
-          - "18.1"
+          - "18.2"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
