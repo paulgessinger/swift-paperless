@@ -1,3 +1,7 @@
+1.6.1 (134)
+
+- Fix issue with display of new login screen
+
 1.6.0 (133)
 
 - Fix issue editing storage paths
