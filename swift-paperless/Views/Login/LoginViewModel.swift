@@ -103,6 +103,12 @@ class LoginViewModel {
 
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
+        
+        guard !url.isEmpty else {
+            loginState = .empty
+            return
+        }
+
         checkUrlTask = Task {
             loginState = .checking
             if !immediate {
@@ -118,9 +124,6 @@ class LoginViewModel {
             }
         }
 
-        if url.isEmpty {
-            loginState = .empty
-        }
 
         if url.starts(with: "https://") {
             scheme = .https
@@ -233,13 +236,19 @@ class LoginViewModel {
             // @TODO: Check error domain in this case
             Logger.shared.error("Unable to connect to API: local network access denied")
             loginState = .error(.request(.localNetworkDenied))
-        } catch let error as NSError where error.domain == NSURLErrorDomain && NSURLError.value(error.code, inCategory: .ssl) {
-            Logger.shared.error("Certificate error when connecting to the API: \(error)")
-            // @TODO: Check error string conversion
-            loginState = .error(.init(certificate: error))
+        } catch let nsError as NSError where nsError.domain == NSURLErrorDomain {
+            if let error = RequestError(from: nsError) {
+                Logger.shared.error("Checking API converted NSError \(nsError) to known error: \(String(describing: error))")
+                loginState = .error(.request(error))
+            }
+            else {
+                Logger.shared.error("Checking API unknown NSError: \(nsError)")
+                loginState = .error(LoginError(other: nsError))
+                return
+            }
         } catch {
             Logger.shared.error("Checking API error: \(error)")
-            loginState = .error(.init(other: error))
+            loginState = .error(LoginError(other: error))
             return
         }
     }
