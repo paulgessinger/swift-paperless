@@ -6,3 +6,6 @@ docs:
 
 bump version:
   uv run bump.py swift-paperless.xcodeproj/project.pbxproj {{version}}
+
+beta:
+  fastlane beta
