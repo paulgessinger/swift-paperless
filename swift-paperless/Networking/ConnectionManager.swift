@@ -402,6 +402,8 @@ class ConnectionManager: ObservableObject {
                 Logger.api.info("Setting active connection to nil")
                 self.activeConnectionId = nil
             }
+        } else {
+            activeConnectionId = nil
         }
     }
 }
