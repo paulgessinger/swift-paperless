@@ -245,6 +245,8 @@ final class DocumentStore: ObservableObject, Sendable {
             let uiSettings = try await repository.uiSettings()
             permissions = uiSettings.permissions
             settings = uiSettings.settings
+        } catch let error where error.isCancellationError {
+            Logger.shared.debug("Cancelled fetch UI settings")
         } catch {
             // If we don't get permissions here, log a warning and assume full permissions.
             Logger.shared.error("Error getting UI settings: \(error)")
