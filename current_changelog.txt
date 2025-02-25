@@ -1,1 +1,0 @@
-- Fix error logging out of the last server connection
