@@ -149,7 +149,11 @@ Redact screenshots to not include information that you do not wish to expose.
     current_changelog = File.read(current_changelog_file)
     if not current_changelog.empty?
       changelog = File.read(changelog_file)
-      combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog + "\n" + changelog
+      combined_changelog = "#{version} (#{next_build_number})\n\n" + current_changelog
+
+      if changelog != ""
+        combined_changelog += "\n" + changelog
+      end
 
       File.write(changelog_file, combined_changelog)
       File.write(current_changelog_file, "")
