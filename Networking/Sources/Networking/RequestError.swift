@@ -33,6 +33,34 @@ public enum RequestError: Error, Equatable {
     case certificate(detail: String)
 }
 
+private func string(for error: any Error) -> String {
+    (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
+}
+
+extension RequestError {
+    init?(from error: NSError) {
+        guard error.domain == NSURLErrorDomain else {
+            return nil
+        }
+        
+        guard let code = NSURLError(rawValue: error.code) else {
+            return nil
+        }
+        
+        if code.category == .ssl {
+            self = .certificate(detail: string(for: error))
+            return
+        }
+        
+        switch code {
+        case .badURL, .unsupportedURL, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost, .dnsLookupFailed, .httpTooManyRedirects, .resourceUnavailable, .notConnectedToInternet, .redirectToNonExistentLocation, .badServerResponse:
+            self = .other(string(for: error))
+        default:
+            return nil
+        }
+    }
+}
+
 public struct ResourceForbidden<Resource>: Error {
     public let response: String?
 
