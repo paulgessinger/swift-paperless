@@ -59,6 +59,9 @@ extension RequestError: DisplayableError {
 
         case let .certificate(detail):
             raw = String(localized: .localizable(.requestErrorCertificate)) + " " + detail
+            
+        case let .other(detail):
+            raw = detail
         }
 
         // Single source strings that might contain markdown markup: use AttributedString to remove them
@@ -93,3 +96,4 @@ extension RequestError: DisplayableError {
         return message.contains("SSL") || message.contains("certificate")
     }
 }
+

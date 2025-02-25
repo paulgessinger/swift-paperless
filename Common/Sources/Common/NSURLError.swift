@@ -88,8 +88,7 @@ public enum NSURLError: Int {
              .serverCertificateHasUnknownRoot,
              .serverCertificateNotYetValid,
              .clientCertificateRejected,
-             .clientCertificateRequired,
-             .cannotLoadFromNetwork:
+             .clientCertificateRequired:
             .ssl
 
         case .cannotCreateFile,
