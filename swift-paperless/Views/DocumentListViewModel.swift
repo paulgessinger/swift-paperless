@@ -91,7 +91,7 @@ class DocumentListViewModel {
             Logger.shared.debug("DocumentListViewModel.load loading complete")
         } catch let error as PermissionsError {
             noPermissions = true
-            Logger.shared.error("Insufficient permissions to load documents: \(error)")
+            Logger.shared.warning("Insufficient permissions to load documents: \(error)")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
             errorController.push(error: error)
