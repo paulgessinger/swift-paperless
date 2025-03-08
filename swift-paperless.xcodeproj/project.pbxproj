@@ -85,29 +85,21 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7A2883A82D3C099700B88C70 /* Exceptions for "Model" folder in "swift-paperlessTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Localization/LocalizedResource.swift,
-				"Localization/UserPermissionsResource+localizedName.swift",
-			);
-			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
-		};
-		7A40DD982D10BEAA0033DDE5 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */ = {
+		7A40DD982D10BEAA0033DDE5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
-		7AC40FA32D134EDE003F68B1 /* Exceptions for "Localization" folder in "swift-paperlessTests" target */ = {
+		7AC40FA32D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Permissions.xcstrings,
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
-		7AC40FA52D134EDE003F68B1 /* Exceptions for "Utilities" folder in "swift-paperlessTests" target */ = {
+		7AC40FA52D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AppSettings.swift,
@@ -121,7 +113,7 @@
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
-		7AC40FA62D134EDE003F68B1 /* Exceptions for "Utilities" folder in "swift-paperlessUITests" target */ = {
+		7AC40FA62D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Binding.swift,
@@ -130,14 +122,14 @@
 			);
 			target = 7A5482C5299AD56E00D5061E /* swift-paperlessUITests */;
 		};
-		7AC40FA72D134EDE003F68B1 /* Exceptions for "Utilities" folder in "ShareExtension" target */ = {
+		7AC40FA72D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BiometricLockManager.swift,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
-		7AC40FA82D134EDE003F68B1 /* Exceptions for "Views" folder in "swift-paperlessTests" target */ = {
+		7AC40FA82D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CancelIconButton.swift,
@@ -147,7 +139,7 @@
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
-		7AC40FA92D134EDE003F68B1 /* Exceptions for "Views" folder in "ShareExtension" target */ = {
+		7AC40FA92D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DataScannerView.swift,
@@ -185,7 +177,7 @@
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
-		7AC40FAA2D134EDE003F68B1 /* Exceptions for "Networking" folder in "swift-paperlessTests" target */ = {
+		7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DeriveUrl.swift,
@@ -194,7 +186,7 @@
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
-		7AC40FAB2D134EDE003F68B1 /* Exceptions for "Networking" folder in "ShareExtension" target */ = {
+		7AC40FAB2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DeriveUrl.swift,
@@ -203,7 +195,7 @@
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
-		7AC40FAD2D134EDE003F68B1 /* Exceptions for "Localization" folder in "swift-paperlessUITests" target */ = {
+		7AC40FAD2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DocumentMetadata.xcstrings,
@@ -211,7 +203,7 @@
 			);
 			target = 7A5482C5299AD56E00D5061E /* swift-paperlessUITests */;
 		};
-		7AC411792D134FE7003F68B1 /* Exceptions for "ViewModel" folder in "swift-paperless" target */ = {
+		7AC411792D134FE7003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AttachmentManager.swift,
@@ -221,139 +213,17 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7A40DD7A2D10BE630033DDE5 /* swift-paperlessTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = "swift-paperlessTests";
-			sourceTree = "<group>";
-		};
-		7A40DD832D10BEA10033DDE5 /* swift-paperlessUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = "swift-paperlessUITests";
-			sourceTree = "<group>";
-		};
-		7A40DD912D10BEAA0033DDE5 /* ShareExtension */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7A40DD982D10BEAA0033DDE5 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = ShareExtension;
-			sourceTree = "<group>";
-		};
-		7AC40DFC2D134EDE003F68B1 /* Localization */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7AC40FA32D134EDE003F68B1 /* Exceptions for "Localization" folder in "swift-paperlessTests" target */,
-				7AC40FAD2D134EDE003F68B1 /* Exceptions for "Localization" folder in "swift-paperlessUITests" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Localization;
-			sourceTree = "<group>";
-		};
-		7AC40E272D134EDE003F68B1 /* Model */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7A2883A82D3C099700B88C70 /* Exceptions for "Model" folder in "swift-paperlessTests" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Model;
-			sourceTree = "<group>";
-		};
-		7AC40E672D134EDE003F68B1 /* Utilities */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7AC40FA52D134EDE003F68B1 /* Exceptions for "Utilities" folder in "swift-paperlessTests" target */,
-				7AC40FA62D134EDE003F68B1 /* Exceptions for "Utilities" folder in "swift-paperlessUITests" target */,
-				7AC40FA72D134EDE003F68B1 /* Exceptions for "Utilities" folder in "ShareExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Utilities;
-			sourceTree = "<group>";
-		};
-		7AC40EDE2D134EDE003F68B1 /* Views */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7AC40FA82D134EDE003F68B1 /* Exceptions for "Views" folder in "swift-paperlessTests" target */,
-				7AC40FA92D134EDE003F68B1 /* Exceptions for "Views" folder in "ShareExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		7AC40F622D134EDE003F68B1 /* Preview Content */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		7AC40F7B2D134EDE003F68B1 /* Networking */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7AC40FAA2D134EDE003F68B1 /* Exceptions for "Networking" folder in "swift-paperlessTests" target */,
-				7AC40FAB2D134EDE003F68B1 /* Exceptions for "Networking" folder in "ShareExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Networking;
-			sourceTree = "<group>";
-		};
-		7AC411772D134F85003F68B1 /* Document */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = Document;
-			sourceTree = "<group>";
-		};
-		7AC411782D134FDB003F68B1 /* ViewModel */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7AC411792D134FE7003F68B1 /* Exceptions for "ViewModel" folder in "swift-paperless" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = ViewModel;
-			sourceTree = "<group>";
-		};
+		7A40DD7A2D10BE630033DDE5 /* swift-paperlessTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "swift-paperlessTests"; sourceTree = "<group>"; };
+		7A40DD832D10BEA10033DDE5 /* swift-paperlessUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "swift-paperlessUITests"; sourceTree = "<group>"; };
+		7A40DD912D10BEAA0033DDE5 /* ShareExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7A40DD982D10BEAA0033DDE5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ShareExtension; sourceTree = "<group>"; };
+		7AC40DFC2D134EDE003F68B1 /* Localization */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA32D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FAD2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Localization; sourceTree = "<group>"; };
+		7AC40E272D134EDE003F68B1 /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
+		7AC40E672D134EDE003F68B1 /* Utilities */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA52D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA62D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA72D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Utilities; sourceTree = "<group>"; };
+		7AC40EDE2D134EDE003F68B1 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FA82D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FA92D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
+		7AC40F622D134EDE003F68B1 /* Preview Content */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Preview Content"; sourceTree = "<group>"; };
+		7AC40F7B2D134EDE003F68B1 /* Networking */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC40FAA2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 7AC40FAB2D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Networking; sourceTree = "<group>"; };
+		7AC411772D134F85003F68B1 /* Document */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Document; sourceTree = "<group>"; };
+		7AC411782D134FDB003F68B1 /* ViewModel */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7AC411792D134FE7003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ViewModel; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -725,11 +595,11 @@
 /* Begin PBXTargetDependency section */
 		7A35C0A92C117D79006A542D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A35C0A82C117D79006A542D /* plugin:XCStringsToolPlugin */;
+			productRef = 7A35C0A82C117D79006A542D /* XCStringsToolPlugin */;
 		};
 		7A35C0AB2C117D7D006A542D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A35C0AA2C117D7D006A542D /* plugin:XCStringsToolPlugin */;
+			productRef = 7A35C0AA2C117D7D006A542D /* XCStringsToolPlugin */;
 		};
 		7A4AA8ED29BB969400D845A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -739,11 +609,11 @@
 		};
 		7A4D51692C0F96ED0066E75A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A4D51682C0F96ED0066E75A /* plugin:XCStringsToolPlugin */;
+			productRef = 7A4D51682C0F96ED0066E75A /* XCStringsToolPlugin */;
 		};
 		7A4D51702C0F97EB0066E75A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7A4D516F2C0F97EB0066E75A /* plugin:XCStringsToolPlugin */;
+			productRef = 7A4D516F2C0F97EB0066E75A /* XCStringsToolPlugin */;
 		};
 		7A5482C8299AD56E00D5061E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1302,12 +1172,12 @@
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
 		};
-		7A35C0A82C117D79006A542D /* plugin:XCStringsToolPlugin */ = {
+		7A35C0A82C117D79006A542D /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A35C0AA2C117D7D006A542D /* plugin:XCStringsToolPlugin */ = {
+		7A35C0AA2C117D7D006A542D /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
@@ -1322,12 +1192,12 @@
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
 		};
-		7A4D51682C0F96ED0066E75A /* plugin:XCStringsToolPlugin */ = {
+		7A4D51682C0F96ED0066E75A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A4D516F2C0F97EB0066E75A /* plugin:XCStringsToolPlugin */ = {
+		7A4D516F2C0F97EB0066E75A /* XCStringsToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
