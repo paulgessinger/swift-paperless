@@ -17,10 +17,6 @@ public enum TaskStatus: String, Codable, Sendable {
     case REVOKED
 }
 
-public enum TaskType: String, Codable, Sendable {
-    case file
-}
-
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
@@ -31,7 +27,7 @@ public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
     public var taskName: String?
     public var dateCreated: Date?
     public var dateDone: Date?
-    public var type: TaskType
+    public var type: String
     public var status: TaskStatus
     public var result: String?
     public var acknowledged: Bool
