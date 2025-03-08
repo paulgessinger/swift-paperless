@@ -240,7 +240,7 @@ final class DocumentStore: ObservableObject, Sendable {
             await MainActor.run {
                 currentUser = user
             }
-        } catch {
+        } catch let error where !error.isCancellationError {
             Logger.shared.error("Unable to get current user: \(error)")
         }
     }
