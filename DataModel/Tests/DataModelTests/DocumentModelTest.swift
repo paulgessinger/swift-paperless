@@ -34,10 +34,32 @@ struct DocumentModelTest {
         #expect(document.owner == 2)
         #expect(document.notes.count == 1)
 
-        let note = try #require(document.notes.first)
-        #expect(note.id == 40)
-        #expect(note.note == "hallo")
-        #expect(dateApprox(note.created, datetime(year: 2025, month: 1, day: 2, hour: 16, minute: 3, second: 36, tz: tz)))
+        #expect(document.userCanChange == true)
+
+        // No permissions by default
+        #expect(document.permissions == nil)
+    }
+
+    @Test("Tests that new notes are correctly decoded")
+    // After bundled notes payload changed: https://github.com/paperless-ngx/paperless-ngx/pull/8948
+    func testNewNotesDecode() throws {
+        let data = try #require(testData("Data/Document/full_new_notes.json"))
+        let document = try decoder.decode(Document.self, from: data)
+
+        #expect(document.id == 2724)
+        #expect(document.correspondent == 123)
+        #expect(document.documentType == 5)
+        #expect(document.storagePath == 1)
+        #expect(document.title == "Quittung")
+        #expect(document.tags == [1, 2, 3])
+
+        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0, tz: tz)))
+        #expect(try dateApprox(#require(document.modified), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 41, second: 49, tz: tz)))
+        #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
+
+        #expect(document.asn == 666)
+        #expect(document.owner == 2)
+        #expect(document.notes.count == 1)
 
         #expect(document.userCanChange == true)
 
@@ -54,7 +76,7 @@ struct DocumentModelTest {
 
     @Test
     func testSetPermissionsKey() throws {
-        var document = Document(id: 123, title: "hallo", created: .now, tags: [], notes: [])
+        var document = Document(id: 123, title: "hallo", created: .now, tags: [])
         document.added = .now
         document.modified = .now
         document.permissions = Permissions(view: Permissions.Set(users: [1], groups: [2]), change: Permissions.Set(users: [3], groups: [4]))
