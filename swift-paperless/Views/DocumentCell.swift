@@ -120,8 +120,9 @@ struct DocumentCell: View {
                     Aspect("#\(asn)", systemImage: "qrcode")
                 }
 
-                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                    Aspect(name, systemImage: "person")
+                if let id = document.correspondent {
+                    let name = store.correspondents[id]?.name
+                    Aspect(stringOrPrivate(name), systemImage: "person")
                         .foregroundColor(.accentColor)
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(1)
