@@ -8,13 +8,6 @@
 import os
 import SwiftUI
 
-struct TLSIdentity: Identifiable, Equatable, Hashable {
-    var name: String
-    var identity: SecIdentity
-
-    var id: String { name }
-}
-
 private enum CertificateState {
     case notloaded
     case wrongPassword
