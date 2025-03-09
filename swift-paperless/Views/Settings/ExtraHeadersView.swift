@@ -5,14 +5,15 @@
 //  Created by Paul Gessinger on 07.05.23.
 //
 
+import Networking
 import os
 import SwiftUI
 
 struct ExtraHeadersView: View {
-    @Binding var headers: [ConnectionManager.HeaderValue]
+    @Binding var headers: [Connection.HeaderValue]
 
     private struct SingleView: View {
-        @Binding var header: ConnectionManager.HeaderValue
+        @Binding var header: Connection.HeaderValue
 
         var body: some View {
             Form {

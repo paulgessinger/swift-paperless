@@ -5,15 +5,9 @@
 //  Created by Nils Witt on 24.06.24.
 //
 
+import Networking
 import os
 import SwiftUI
-
-struct TLSIdentity: Identifiable, Equatable, Hashable {
-    var name: String
-    var identity: SecIdentity
-
-    var id: String { name }
-}
 
 private enum CertificateState {
     case notloaded

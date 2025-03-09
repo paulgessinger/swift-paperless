@@ -5,25 +5,26 @@
 //  Created by Nils Witt on 24.06.24.
 //
 
+import Common
 import Foundation
 import os
 
-final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
+public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
     private let credential: URLCredential?
 
-    init(identityName: String?) {
+    public init(identityName: String?) {
         if
             let pName = identityName,
             let identity = Keychain.readIdentity(name: pName)
         {
             credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
         } else {
-            Logger.shared.info("Did not get identities from keychain")
+            Logger.networking.info("Did not get identities from keychain")
             credential = nil
         }
     }
 
-    init(identity: TLSIdentity?) {
+    public init(identity: TLSIdentity?) {
         if let identity {
             credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
         } else {
@@ -39,7 +40,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         }
 
         guard let cred = credential else {
-            Logger.shared.info("Delegate without cert called")
+            Logger.networking.info("Delegate without cert called")
             return (.performDefaultHandling, nil)
         }
 
@@ -47,7 +48,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         return (.useCredential, cred)
     }
 
-    func urlSession(_: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+    public func urlSession(_: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         guard
             challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
         else {
@@ -55,7 +56,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         }
 
         guard let cred = credential else {
-            Logger.shared.info("DelegateTask without cert called")
+            Logger.networking.info("DelegateTask without cert called")
             return (.performDefaultHandling, nil)
         }
 

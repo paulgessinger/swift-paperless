@@ -5,11 +5,12 @@
 //  Created by Paul Gessinger on 25.03.23.
 //
 
+import Networking
 import os
 import SwiftUI
 
 private struct DetailsView: View {
-    @Binding var extraHeaders: [ConnectionManager.HeaderValue]
+    @Binding var extraHeaders: [Connection.HeaderValue]
     @Environment(\.dismiss) private var dismiss
     @Environment(IdentityManager.self) private var identityManager
 

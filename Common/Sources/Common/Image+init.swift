@@ -12,7 +12,7 @@
 #endif
 import SwiftUI
 
-extension Image {
+public extension Image {
     init?(data: Data) {
         #if canImport(UIKit)
             guard let uiImage = UIImage(data: data) else { return nil }

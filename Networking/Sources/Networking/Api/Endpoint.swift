@@ -9,9 +9,9 @@ import DataModel
 import Foundation
 import os
 
-struct Endpoint {
-    let path: String
-    let queryItems: [URLQueryItem]
+public struct Endpoint {
+    public let path: String
+    public let queryItems: [URLQueryItem]
 
     init(path: String, queryItems: [URLQueryItem] = []) {
         self.path = path
@@ -19,14 +19,14 @@ struct Endpoint {
     }
 }
 
-extension Endpoint {
+public extension Endpoint {
     static func root() -> Endpoint {
         Endpoint(path: "/api", queryItems: [])
     }
 
-    private static let defaultDocumentPageSize: UInt = 250
+    static let defaultDocumentPageSize: UInt = 250
 
-    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
+    static func documents(page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
         let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
 
         var ordering: String = filter.sortField.rawValue
@@ -145,29 +145,6 @@ extension Endpoint {
         Endpoint(path: "/api/documents/post_document", queryItems: [])
     }
 
-    static func listAll(_ type: (some Model).Type) -> Endpoint {
-        switch type {
-        case is Correspondent.Type:
-            correspondents()
-        case is DocumentType.Type:
-            documentTypes()
-        case is Tag.Type:
-            tags()
-        case is Document.Type:
-            documents(page: 1, filter: FilterState())
-        case is SavedView.Type:
-            savedViews()
-        case is StoragePath.Type:
-            storagePaths()
-        case is User.Type:
-            users()
-        case is UserGroup.Type:
-            groups()
-        default:
-            fatalError("Invalid type")
-        }
-    }
-
     static func savedViews() -> Endpoint {
         Endpoint(path: "/api/saved_views",
                  queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
@@ -184,47 +161,47 @@ extension Endpoint {
     }
 
     static func storagePaths() -> Endpoint {
-        .init(path: "/api/storage_paths",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/storage_paths",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createStoragePath() -> Endpoint {
-        .init(path: "/api/storage_paths")
+        Endpoint(path: "/api/storage_paths")
     }
 
     static func storagePath(id: UInt) -> Endpoint {
-        .init(path: "/api/storage_paths/\(id)")
+        Endpoint(path: "/api/storage_paths/\(id)")
     }
 
     static func users() -> Endpoint {
-        .init(path: "/api/users",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/users",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func groups() -> Endpoint {
-        .init(path: "/api/groups",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/groups",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func uiSettings() -> Endpoint {
-        .init(path: "/api/ui_settings")
+        Endpoint(path: "/api/ui_settings")
     }
 
     static func tasks() -> Endpoint {
-        .init(path: "/api/tasks")
+        Endpoint(path: "/api/tasks")
     }
 
     static func task(id: UInt) -> Endpoint {
-        .init(path: "/api/tasks/\(id)")
+        Endpoint(path: "/api/tasks/\(id)")
     }
 
     static func acknowlegdeTasksV1() -> Endpoint {
-        .init(path: "/api/acknowledge_tasks")
+        Endpoint(path: "/api/acknowledge_tasks")
     }
 
     // https://github.com/paperless-ngx/paperless-ngx/pull/8195
     static func acknowlegdeTasks() -> Endpoint {
-        .init(path: "/api/tasks/acknowledge")
+        Endpoint(path: "/api/tasks/acknowledge")
     }
 
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
@@ -253,20 +230,20 @@ extension Endpoint {
     func url(url: URL) -> URL? {
         // Break down the URL into components
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.api.error("URL component decomposition for endpoint building failed")
+            Logger.networking.error("URL component decomposition for endpoint building failed")
             return nil
         }
         // Remove trailing slashes from the path
         components.path = components.path.replacingOccurrences(of: "/$", with: "")
         if components.url == nil {
-            Logger.api.error("URL trailing slash removal for endpoint building failed")
+            Logger.networking.error("URL trailing slash removal for endpoint building failed")
             return nil
         }
         var result = components.url!.appending(path: path, directoryHint: .isDirectory)
         if !queryItems.isEmpty {
             result.append(queryItems: queryItems)
         }
-        Logger.shared.trace("URL for Endpoint \(path): \(result)")
+        Logger.networking.trace("URL for Endpoint \(path): \(result)")
         return result
     }
 }

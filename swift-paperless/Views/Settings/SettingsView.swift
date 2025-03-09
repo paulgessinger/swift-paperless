@@ -8,6 +8,7 @@
 #if canImport(MessageUI)
     import MessageUI
 #endif
+import Networking
 import os
 import SwiftUI
 

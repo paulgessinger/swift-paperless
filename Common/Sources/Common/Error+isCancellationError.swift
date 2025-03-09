@@ -5,10 +5,9 @@
 //  Created by Paul Gessinger on 05.01.25.
 //
 
-import Common
 import Foundation
 
-extension Error {
+public extension Error {
     var isCancellationError: Bool {
         if self is CancellationError {
             return true

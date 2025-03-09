@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Networking
 import os
 import SwiftUI
 
@@ -60,7 +61,7 @@ struct DocumentEditView: View {
         document != documentOut
     }
 
-    @State private var selectedState = FilterState()
+    @State private var selectedState = FilterState.default
     @State private var showDeleteConfirmation = false
 
     @ObservedObject private var appSettings = AppSettings.shared

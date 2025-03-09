@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Networking
 import SwiftUI
 
 extension RequestError: PresentableError {

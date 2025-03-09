@@ -220,6 +220,11 @@ Redact screenshots to not include information that you do not wish to expose.
       command: "test",
       package_path: "DataModel",
     )
+
+    spm(
+      command: "test",
+      package_path: "Networking",
+    )
   end
 
   lane :build do |options|

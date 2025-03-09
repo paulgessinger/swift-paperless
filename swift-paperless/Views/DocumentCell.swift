@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Networking
 import Nuke
 import NukeUI
 import os
@@ -173,7 +174,7 @@ private struct HelperView: View {
         }
         .task {
             // @TODO: Fix this preview
-            if let documents = try? await store.repository.documents(filter: FilterState()).fetch(limit: 3) {
+            if let documents = try? await store.repository.documents(filter: .default).fetch(limit: 3) {
                 self.documents = documents
             }
         }

@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Networking
 import SwiftUI
 
 // - MARK: TagFilterView
@@ -397,7 +398,7 @@ private struct BindingHelper<Element, Content: View>: View {
 struct TagFilterView_Previews: PreviewProvider {
     @StateObject static var store = DocumentStore(repository: PreviewRepository())
 
-    @State static var filterState = FilterState()
+    @State static var filterState = FilterState.default
 
     static var previews: some View {
         BindingHelper(element: filterState.tags) { tags in

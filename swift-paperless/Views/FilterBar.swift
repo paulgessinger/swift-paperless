@@ -314,7 +314,7 @@ struct FilterBar: View {
         case storagePath
     }
 
-    @State private var filterState = FilterState()
+    @State private var filterState = FilterState.default
 
     @State var offset = CGSize()
     @State var menuWidth = 0.0

@@ -6,6 +6,7 @@
 //
 
 import Combine
+import DataModel
 import Foundation
 import os
 
@@ -22,7 +23,7 @@ class FilterModel: ObservableObject {
         Logger.shared.trace("Loading FilterState")
         guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
             Logger.shared.trace("No default")
-            return FilterState()
+            return .default
         }
         do {
             let value = try JSONDecoder().decode(FilterState.self, from: data)
@@ -30,7 +31,7 @@ class FilterModel: ObservableObject {
             return value
         } catch {
             Logger.shared.warning("Decoding filter state from UserDefaults failed: \(String(decoding: data, as: UTF8.self)) -> \(error)")
-            return FilterState()
+            return .default
         }
     }() {
         didSet {

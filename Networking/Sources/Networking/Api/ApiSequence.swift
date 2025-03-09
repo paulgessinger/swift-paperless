@@ -10,8 +10,8 @@ import Foundation
 import os
 import Semaphore
 
-actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
-    where Element: Model & NamedLocalized & Decodable & Sendable
+public actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
+    where Element: Model & Decodable & Sendable
 {
     private var nextPage: URL?
     private let repository: ApiRepository
@@ -23,33 +23,33 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
 
     private let semaphore = AsyncSemaphore(value: 1)
 
-    init(repository: ApiRepository, url: URL) {
+    public init(repository: ApiRepository, url: URL) {
         self.repository = repository
         nextPage = url
     }
 
     private func fixUrl(_ url: URL) -> URL {
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.api.error("Unable to decompose next-page URL for sequence URL fix, continuing with original URL")
+            Logger.networking.error("Unable to decompose next-page URL for sequence URL fix, continuing with original URL")
             return url
         }
 
         components.scheme = repository.connection.scheme
 
         guard let result = components.url else {
-            Logger.api.error("Could not reassemble URL after sequence URL fix, continuing with original URL")
+            Logger.networking.error("Could not reassemble URL after sequence URL fix, continuing with original URL")
             return url
         }
 
         return result
     }
 
-    func next() async throws -> Element? {
+    public func next() async throws -> Element? {
         await semaphore.wait()
         defer { semaphore.signal() }
 
         guard !Task.isCancelled else {
-            Logger.api.notice("API sequence (\(Element.self, privacy: .public) next task was cancelled.")
+            Logger.networking.notice("API sequence (\(Element.self, privacy: .public) next task was cancelled.")
             return nil
         }
 
@@ -60,7 +60,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
         }
 
         guard let url = nextPage else {
-            Logger.api.notice("\(Element.self, privacy: .public) API sequence has reached end (nextPage is nil)")
+            Logger.networking.notice("\(Element.self, privacy: .public) API sequence has reached end (nextPage is nil)")
             hasMore = false
             return nil
         }
@@ -70,13 +70,13 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
             let decoded = try await repository.fetchData(for: request, as: ListResponse<Element>.self)
 
             guard !decoded.results.isEmpty else {
-                Logger.api.notice("\(Element.self, privacy: .public) API sequence fetch was empty")
+                Logger.networking.notice("\(Element.self, privacy: .public) API sequence fetch was empty")
                 hasMore = false
                 return nil
             }
 
             // Workaround for https://github.com/paulgessinger/swift-paperless/issues/68
-            Logger.api.trace("Fixing URL to next page with configured backend scheme")
+            Logger.networking.trace("Fixing URL to next page with configured backend scheme")
 
             nextPage = nil
             if let next = decoded.next {
@@ -87,19 +87,19 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
             return decoded.results[0]
 
         } catch let RequestError.forbidden(details) {
-            Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: Forbidden")
+            Logger.networking.error("Error in \(Element.self, privacy: .public) API sequence: Forbidden")
             throw ResourceForbidden(Element.self, response: details)
         } catch let error where error.isCancellationError {
-            Logger.api.info("\(Element.self, privacy: .public) API sequence was cancelled")
+            Logger.networking.info("\(Element.self, privacy: .public) API sequence was cancelled")
             throw error
         } catch {
             let sanitizedError = await repository.sanitizedError(error)
-            Logger.api.error("Error in \(Element.self, privacy: .public) API sequence: \(sanitizedError, privacy: .public)")
+            Logger.networking.error("Error in \(Element.self, privacy: .public) API sequence: \(sanitizedError, privacy: .public)")
             throw error
         }
     }
 
-    nonisolated
+    public nonisolated
     func makeAsyncIterator() -> ApiSequence {
         self
     }
