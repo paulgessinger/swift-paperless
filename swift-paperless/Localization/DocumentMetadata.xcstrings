@@ -283,6 +283,17 @@
         }
       }
     },
+    "note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        }
+      }
+    },
     "noteCreate" : {
       "extractionState" : "manual",
       "localizations" : {

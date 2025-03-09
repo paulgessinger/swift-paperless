@@ -6,21 +6,25 @@
 //
 
 import DataModel
+import os
 
 extension UserPermissions.Resource {
     var localizedName: String {
         switch self {
-        case .document: Document.localizedName
-        case .tag: Tag.localizedName
-        case .correspondent: Correspondent.localizedName
-        case .documentType: DocumentType.localizedName
-        case .storagePath: StoragePath.localizedName
-        case .savedView: SavedView.localizedName
-        case .paperlessTask: PaperlessTask.localizedName
-        case .uiSettings: UISettings.localizedName
-        case .user: User.localizedName
-        case .group: UserGroup.localizedName
-        default: rawValue
+        case .document: return Document.localizedName
+        case .note: return Document.Note.localizedName
+        case .tag: return Tag.localizedName
+        case .correspondent: return Correspondent.localizedName
+        case .documentType: return DocumentType.localizedName
+        case .storagePath: return StoragePath.localizedName
+        case .savedView: return SavedView.localizedName
+        case .paperlessTask: return PaperlessTask.localizedName
+        case .uiSettings: return UISettings.localizedName
+        case .user: return User.localizedName
+        case .group: return UserGroup.localizedName
+        default:
+            Logger.shared.warning("Localized name for unknown resource \(rawValue, privacy: .public) requested")
+            return rawValue
         }
     }
 }
