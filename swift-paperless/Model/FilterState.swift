@@ -12,122 +12,49 @@ import os
 
 // MARK: - FilterState
 
-struct FilterState: Equatable, Codable, Sendable {
-    enum Filter: Equatable, Hashable, Codable, Sendable {
-        case any
-        case notAssigned
-        case anyOf(ids: [UInt])
-        case noneOf(ids: [UInt])
+extension FilterState {
+    private static var defaultSearchMode: SearchMode {
+        AppSettings.value(for: .defaultSearchMode, or: .titleContent)
     }
 
-    enum TagFilter: Equatable, Hashable, Codable, Sendable {
-        case any
-        case notAssigned
-        case allOf(include: [UInt], exclude: [UInt])
-        case anyOf(ids: [UInt])
+    private static var defaultSortField: SortField {
+        AppSettings.value(for: .defaultSortField, or: .added)
     }
 
-    enum SearchMode: Equatable, Codable, CaseIterable, Sendable {
-        case title
-        case content
-        case titleContent
-        case advanced
-
-        var ruleType: FilterRuleType {
-            switch self {
-            case .title:
-                .title
-            case .content:
-                .content
-            case .titleContent:
-                .titleContent
-            case .advanced:
-                .fulltextQuery
-            }
-        }
-
-        init?(ruleType: FilterRuleType) {
-            switch ruleType {
-            case .title:
-                self = .title
-            case .content:
-                self = .content
-            case .titleContent:
-                self = .titleContent
-            case .fulltextQuery:
-                self = .advanced
-            default:
-                return nil
-            }
-        }
-    }
-
-    var correspondent: Filter = .any { didSet { modified = modified || correspondent != oldValue }}
-    var documentType: Filter = .any { didSet { modified = modified || documentType != oldValue }}
-    var storagePath: Filter = .any { didSet { modified = modified || storagePath != oldValue }}
-    var owner: Filter = .any { didSet { modified = modified || owner != oldValue } }
-
-    var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue }}
-    var remaining: [FilterRule] = [] { didSet { modified = modified || remaining != oldValue }}
-
-    var sortField: SortField = AppSettings.value(for: .defaultSortField, or: .added) {
-        didSet { modified = modified || sortField != oldValue }
-    }
-
-    var sortOrder: DataModel.SortOrder = AppSettings.value(for: .defaultSortOrder, or: .descending) {
-        didSet { modified = modified || sortOrder != oldValue }
-    }
-
-    var defaultSorting: Bool {
-        sortField == AppSettings.value(for: .defaultSortField, or: .added) && sortOrder == AppSettings.value(for: .defaultSortOrder, or: .descending)
-    }
-
-    var savedView: UInt? = nil
-
-    @EquatableNoop
-    var modified = false
-
-    var searchText: String = "" {
-        didSet {
-            modified = modified || searchText != oldValue
-        }
-    }
-
-    var searchMode = AppSettings.value(for: .defaultSearchMode, or: SearchMode.titleContent) {
-        didSet { modified = searchMode != oldValue }
+    private static var defaultSortOrder: DataModel.SortOrder {
+        AppSettings.value(for: .defaultSortOrder, or: .descending)
     }
 
     // MARK: Initializers
 
-    init(correspondent: Filter = .any,
-         documentType: Filter = .any,
-         storagePath: Filter = .any,
-         owner: Filter = .any,
-         tags: TagFilter = .any,
-         remaining: [FilterRule] = [],
-         savedView: UInt? = nil,
-         searchText: String? = nil,
-         searchMode: SearchMode = AppSettings.value(for: .defaultSearchMode, or: .titleContent))
-    {
-        self.correspondent = correspondent
-        self.documentType = documentType
-        self.storagePath = storagePath
-        self.owner = owner
-        self.tags = tags
-        self.remaining = remaining
-        self.savedView = savedView
-        self.searchText = searchText ?? ""
-        self.searchMode = searchMode
+    static var `default`: Self {
+        Self(
+            correspondent: .any,
+            documentType: .any,
+            storagePath: .any,
+            owner: .any,
+            tags: .any,
+            sortField: defaultSortField,
+            sortOrder: defaultSortOrder,
+            remaining: [],
+            savedView: nil,
+            searchText: nil,
+            searchMode: defaultSearchMode
+        )
     }
 
     init(savedView: SavedView) {
         self.init(rules: savedView.filterRules)
         self.savedView = savedView.id
-        self.sortField = savedView.sortField ?? AppSettings.value(for: .defaultSortField, or: .added)
-        self.sortOrder = savedView.sortOrder
+        if let sortField = savedView.sortField {
+            self.sortField = sortField
+        }
+        sortOrder = savedView.sortOrder
     }
 
     init(rules: [FilterRule]) {
+        self = .default
+
         let getTagIds = { (rule: FilterRule) -> [UInt]? in
             switch rule.value {
             case let .tag(id):
@@ -231,9 +158,9 @@ struct FilterState: Equatable, Codable, Sendable {
 
                 if case let .allOf(include, exclude) = tags {
                     // have allOf already
-                    self.tags = .allOf(include: include + ids, exclude: exclude)
+                    tags = .allOf(include: include + ids, exclude: exclude)
                 } else if case .any = tags {
-                    self.tags = .allOf(include: ids, exclude: [])
+                    tags = .allOf(include: ids, exclude: [])
                 } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
@@ -248,9 +175,9 @@ struct FilterState: Equatable, Codable, Sendable {
 
                 if case let .allOf(include, exclude) = tags {
                     // have allOf already
-                    self.tags = .allOf(include: include, exclude: exclude + ids)
+                    tags = .allOf(include: include, exclude: exclude + ids)
                 } else if case .any = tags {
-                    self.tags = .allOf(include: [], exclude: ids)
+                    tags = .allOf(include: [], exclude: ids)
                 } else {
                     Logger.shared.error("Already found .anyOf tag rule, inconsistent rule set?")
                     remaining.append(rule)
@@ -378,6 +305,10 @@ struct FilterState: Equatable, Codable, Sendable {
                 remaining.append(rule)
             }
         }
+    }
+
+    var defaultSorting: Bool {
+        sortField == Self.defaultSortField && sortOrder == Self.defaultSortOrder
     }
 
     // MARK: Methods
@@ -556,13 +487,6 @@ struct FilterState: Equatable, Codable, Sendable {
     }
 
     mutating func clear() {
-//        documentType = .any
-//        correspondent = .any
-//        tags = .any
-//        searchText = ""
-//        searchMode = .titleContent
-//        savedView = nil
-//        modified = false
-        self = FilterState()
+        self = FilterState.default
     }
 }

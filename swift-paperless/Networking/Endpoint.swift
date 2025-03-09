@@ -26,7 +26,7 @@ extension Endpoint {
 
     private static let defaultDocumentPageSize: UInt = 250
 
-    static func documents(page: UInt, filter: FilterState = FilterState(), pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
+    static func documents(page: UInt, filter: FilterState = .default, pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
         let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
 
         var ordering: String = filter.sortField.rawValue
@@ -154,7 +154,7 @@ extension Endpoint {
         case is Tag.Type:
             tags()
         case is Document.Type:
-            documents(page: 1, filter: FilterState())
+            documents(page: 1, filter: .default)
         case is SavedView.Type:
             savedViews()
         case is StoragePath.Type:

@@ -529,7 +529,7 @@ extension ApiRepository: Repository {
 
     private func nextAsnCompatibility() async throws -> UInt {
         Logger.api.notice("Getting next ASN with legacy compatibility method")
-        var fs = FilterState()
+        var fs = FilterState.default
         fs.sortField = .asn
         fs.sortOrder = .descending
         let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
