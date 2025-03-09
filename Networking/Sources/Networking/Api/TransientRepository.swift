@@ -3,7 +3,7 @@ import Foundation
 import os
 import SwiftUI
 
-actor TransientRepository {
+public actor TransientRepository {
     private var documents: [UInt: Document]
     private var tags: [UInt: Tag]
     private var documentTypes: [UInt: DocumentType]
@@ -21,7 +21,7 @@ actor TransientRepository {
     private var nextId: UInt = 1
     private var currentLoggedInUser: User?
 
-    init() {
+    public init() {
         documents = [:]
         tags = [:]
         documentTypes = [:]
@@ -43,19 +43,19 @@ actor TransientRepository {
     // MARK: - User Management
 
     /// Adds a user to the repository's user list
-    func addUser(_ user: User) {
+    public func addUser(_ user: User) {
         users.append(user)
     }
 
     /// Adds a group to the repository's group list
-    func addGroup(_ group: UserGroup) {
+    public func addGroup(_ group: UserGroup) {
         groups.append(group)
     }
 
     /// Logs in a user by ID. The user must exist in the repository's user list.
     /// - Parameter userId: The ID of the user to log in
     /// - Throws: RepositoryError.userNotFound if the user doesn't exist
-    func login(userId: UInt) throws {
+    public func login(userId: UInt) throws {
         guard let user = users.first(where: { $0.id == userId }) else {
             throw RepositoryError.userNotFound
         }
@@ -65,7 +65,7 @@ actor TransientRepository {
     /// Logs in a user by username. The user must exist in the repository's user list.
     /// - Parameter username: The username of the user to log in
     /// - Throws: RepositoryError.userNotFound if the user doesn't exist
-    func login(username: String) throws {
+    public func login(username: String) throws {
         guard let user = users.first(where: { $0.username == username }) else {
             throw RepositoryError.userNotFound
         }
@@ -73,15 +73,15 @@ actor TransientRepository {
     }
 
     /// Logs out the current user
-    func logout() {
+    public func logout() {
         currentLoggedInUser = nil
     }
 
-    func set(permissions: UserPermissions) {
+    public func set(permissions: UserPermissions) {
         self.permissions = permissions
     }
 
-    func set(permissionTo op: UserPermissions.Operation, for resource: UserPermissions.Resource, to value: Bool) {
+    public func set(permissionTo op: UserPermissions.Operation, for resource: UserPermissions.Resource, to value: Bool) {
         permissions.set(op, to: value, for: resource)
     }
 }
@@ -91,32 +91,32 @@ actor TransientRepository {
 extension TransientRepository: Repository {
     // MARK: - Documents
 
-    func update(document: Document) async throws -> Document {
+    public func update(document: Document) async throws -> Document {
         documents[document.id] = document
         return document
     }
 
-    func document(id: UInt) async throws -> Document? {
+    public func document(id: UInt) async throws -> Document? {
         documents[id]
     }
 
-    func document(asn: UInt) async throws -> Document? {
+    public func document(asn: UInt) async throws -> Document? {
         documents.first(where: { $0.value.asn == asn })?.value
     }
 
-    func documents(filter _: FilterState) throws -> any DocumentSource {
+    public func documents(filter _: FilterState) throws -> any DocumentSource {
         TransientDocumentSource(sequence: documents.map(\.value))
     }
 
-    func nextAsn() async throws -> UInt {
+    public func nextAsn() async throws -> UInt {
         (documents.compactMap(\.value.asn).max() ?? 0) + 1
     }
 
-    func delete(document: Document) async throws {
+    public func delete(document: Document) async throws {
         documents.removeValue(forKey: document.id)
     }
 
-    func create(document: ProtoDocument, file _: URL, filename _: String) async throws ->Document {
+    public func create(document: ProtoDocument, file _: URL, filename _:String) async throws -> Document {
         let id = generateId()
         let newDoc = Document(
             id: id,
@@ -136,15 +136,15 @@ extension TransientRepository: Repository {
 
     // MARK: - Tags
 
-    func tag(id: UInt) async throws -> Tag? {
+    public func tag(id: UInt) async throws -> Tag? {
         tags[id]
     }
 
-    func tags() async throws -> [Tag] {
+    public func tags() async throws -> [Tag] {
         tags.map(\.value)
     }
 
-    func create(tag: ProtoTag) async throws -> Tag {
+    public func create(tag: ProtoTag) async throws -> Tag {
         let id = generateId()
         let newTag = Tag(
             id: id,
@@ -160,26 +160,26 @@ extension TransientRepository: Repository {
         return newTag
     }
 
-    func update(tag: Tag) async throws -> Tag {
+    public func update(tag: Tag) async throws -> Tag {
         tags[tag.id] = tag
         return tag
     }
 
-    func delete(tag: Tag) async throws {
+    public func delete(tag: Tag) async throws {
         tags.removeValue(forKey: tag.id)
     }
 
     // MARK: - Correspondents
 
-    func correspondent(id: UInt) async throws -> Correspondent? {
+    public func correspondent(id: UInt) async throws -> Correspondent? {
         correspondents[id]
     }
 
-    func correspondents() async throws -> [Correspondent] {
+    public func correspondents() async throws -> [Correspondent] {
         correspondents.map(\.value)
     }
 
-    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
+    public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
         let id = generateId()
         let newCorrespondent = Correspondent(
             id: id,
@@ -193,22 +193,22 @@ extension TransientRepository: Repository {
         return newCorrespondent
     }
 
-    func update(correspondent: Correspondent) async throws -> Correspondent {
+    public func update(correspondent: Correspondent) async throws -> Correspondent {
         correspondents[correspondent.id] = correspondent
         return correspondent
     }
 
-    func delete(correspondent: Correspondent) async throws {
+    public func delete(correspondent: Correspondent) async throws {
         correspondents.removeValue(forKey: correspondent.id)
     }
 
     // MARK: - Document Types
 
-    func documentType(id: UInt) async throws -> DocumentType? {
+    public func documentType(id: UInt) async throws -> DocumentType? {
         documentTypes[id]
     }
 
-    func create(documentType: ProtoDocumentType) async throws -> DocumentType {
+    public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
         let id = generateId()
         let newDocumentType = DocumentType(
             id: id,
@@ -222,26 +222,26 @@ extension TransientRepository: Repository {
         return newDocumentType
     }
 
-    func update(documentType: DocumentType) async throws -> DocumentType {
+    public func update(documentType: DocumentType) async throws -> DocumentType {
         documentTypes[documentType.id] = documentType
         return documentType
     }
 
-    func delete(documentType: DocumentType) async throws {
+    public func delete(documentType: DocumentType) async throws {
         documentTypes.removeValue(forKey: documentType.id)
     }
 
-    func documentTypes() async throws -> [DocumentType] {
+    public func documentTypes() async throws -> [DocumentType] {
         documentTypes.map(\.value)
     }
 
     // MARK: - Storage Paths
 
-    func storagePaths() async throws -> [StoragePath] {
+    public func storagePaths() async throws -> [StoragePath] {
         storagePaths.map(\.value)
     }
 
-    func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
+    public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
         let id = generateId()
         let newStoragePath = StoragePath(
             id: id,
@@ -256,22 +256,22 @@ extension TransientRepository: Repository {
         return newStoragePath
     }
 
-    func update(storagePath: StoragePath) async throws -> StoragePath {
+    public func update(storagePath: StoragePath) async throws -> StoragePath {
         storagePaths[storagePath.id] = storagePath
         return storagePath
     }
 
-    func delete(storagePath: StoragePath) async throws {
+    public func delete(storagePath: StoragePath) async throws {
         storagePaths.removeValue(forKey: storagePath.id)
     }
 
     // MARK: - Saved Views
 
-    func savedViews() async throws -> [SavedView] {
+    public func savedViews() async throws -> [SavedView] {
         savedViews.map(\.value)
     }
 
-    func create(savedView: ProtoSavedView) async throws -> SavedView {
+    public func create(savedView: ProtoSavedView) async throws -> SavedView {
         let id = generateId()
         let newSavedView = SavedView(
             id: id,
@@ -286,43 +286,43 @@ extension TransientRepository: Repository {
         return newSavedView
     }
 
-    func update(savedView: SavedView) async throws -> SavedView {
+    public func update(savedView: SavedView) async throws -> SavedView {
         savedViews[savedView.id] = savedView
         return savedView
     }
 
-    func delete(savedView: SavedView) async throws {
+    public func delete(savedView: SavedView) async throws {
         savedViews.removeValue(forKey: savedView.id)
     }
 
     // MARK: - Users and Groups
 
-    func currentUser() async throws -> User {
+    public func currentUser() async throws -> User {
         if let currentLoggedInUser {
             return currentLoggedInUser
         }
         throw RepositoryError.noUserLoggedIn
     }
 
-    func users() async throws -> [User] {
+    public func users() async throws -> [User] {
         users
     }
 
-    func groups() async throws -> [UserGroup] {
+    public func groups() async throws -> [UserGroup] {
         groups
     }
 
     // MARK: - Tasks
 
-    func tasks() async throws -> [PaperlessTask] {
+    public func tasks() async throws -> [PaperlessTask] {
         tasks
     }
 
-    func task(id: UInt) async throws -> PaperlessTask? {
+    public func task(id: UInt) async throws -> PaperlessTask? {
         tasks.first { $0.id == id }
     }
 
-    func acknowledge(tasks ids: [UInt]) async throws {
+    public func acknowledge(tasks ids: [UInt]) async throws {
         for id in ids {
             if let index = tasks.firstIndex(where: { $0.id == id }) {
                 var task = tasks[index]
@@ -334,7 +334,7 @@ extension TransientRepository: Repository {
 
     // MARK: - Document Operations
 
-    func metadata(documentId _: UInt) async throws -> Metadata {
+    public func metadata(documentId _: UInt) async throws -> Metadata {
         Metadata(
             originalChecksum: "transient-checksum",
             originalSize: 0,
@@ -351,11 +351,11 @@ extension TransientRepository: Repository {
         )
     }
 
-    func notes(documentId: UInt) async throws -> [Document.Note] {
+    public func notes(documentId: UInt) async throws -> [Document.Note] {
         notesByDocument[documentId, default: []]
     }
 
-    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+    public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
         guard let document = documents[documentId] else {
             throw RepositoryError.documentNotFound
         }
@@ -369,7 +369,7 @@ extension TransientRepository: Repository {
         return notesByDocument[documentId, default: []]
     }
 
-    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+    public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
         guard documents[documentId] != nil else {
             throw RepositoryError.documentNotFound
         }
@@ -385,7 +385,7 @@ extension TransientRepository: Repository {
         return notes
     }
 
-    func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
+    public func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
         // Simulate download progress
         for i in 1 ... 10 {
             try await Task.sleep(for: .seconds(0.1))
@@ -394,20 +394,20 @@ extension TransientRepository: Repository {
         return nil
     }
 
-    func thumbnail(document _: Document) async throws -> Image? {
+    public func thumbnail(document _: Document) async throws -> Image? {
         nil
     }
 
-    func thumbnailData(document _: Document) async throws -> Data {
+    public func thumbnailData(document _: Document) async throws -> Data {
         Data()
     }
 
-    nonisolated
+    public nonisolated
     func thumbnailRequest(document _: Document) throws -> URLRequest {
         URLRequest(url: URL(string: "about:blank")!)
     }
 
-    func uiSettings() async throws -> UISettings {
+    public func uiSettings() async throws -> UISettings {
         try await UISettings(
             user: currentUser(),
             settings: UISettingsSettings(),
@@ -415,17 +415,17 @@ extension TransientRepository: Repository {
         )
     }
 
-    nonisolated
+    public nonisolated
     var delegate: (any URLSessionDelegate)? { nil }
 
-    func suggestions(documentId _: UInt) async throws -> Suggestions {
+    public func suggestions(documentId _: UInt) async throws -> Suggestions {
         Suggestions(correspondents: [], tags: [], documentTypes: [], storagePaths: [], dates: [])
     }
 }
 
 // MARK: - Support Types
 
-enum RepositoryError: Error {
+public enum RepositoryError: Error {
     case documentNotFound
     case noUserLoggedIn
     case userNotFound
@@ -440,11 +440,11 @@ actor TransientDocumentSource: DocumentSource {
         self.sequence = sequence
     }
 
-    func fetch(limit: UInt) async -> [Document] {
+    public func fetch(limit: UInt) async -> [Document] {
         Array(sequence.prefix(Int(limit)))
     }
 
-    func hasMore() async -> Bool {
+    public func hasMore() async -> Bool {
         false
     }
 }
