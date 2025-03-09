@@ -490,6 +490,16 @@ extension ApiRepository: Repository {
         }
     }
 
+    func notes(documentId: UInt) async throws -> [Document.Note] {
+        let request = try request(.notes(documentId: documentId))
+        do {
+            return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
+        } catch {
+            Logger.shared.error("Error fetching notes for document \(documentId): \(error)")
+            throw error
+        }
+    }
+
     func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
         var request = try request(.notes(documentId: documentId))
         let body = try JSONEncoder().encode(note)

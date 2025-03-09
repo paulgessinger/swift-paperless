@@ -11,6 +11,7 @@ import SwiftUI
 
 private struct CreateNoteView: View {
     @Binding var document: Document
+    @Binding var notes: [Document.Note]
 
     @State private var noteText: String = ""
     @State private var saving = false
@@ -29,9 +30,8 @@ private struct CreateNoteView: View {
 
         do {
             try await store.addNote(to: document, note: note)
-            if let document = try await store.document(id: document.id) {
-                self.document = document
-            }
+            // We have no way to only get the new note here
+            notes = try await store.notes(for: document)
             Haptics.shared.notification(.success)
             dismiss()
         } catch {
@@ -87,6 +87,8 @@ private struct CreateNoteView: View {
 struct DocumentNoteView: View {
     @Binding var document: Document
 
+    @State private var notes: [Document.Note] = []
+
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
 
@@ -95,16 +97,25 @@ struct DocumentNoteView: View {
     @State private var adding = false
     @State private var noteToDelete: Document.Note?
 
-    func delete(_ note: Document.Note) {
+    private func delete(_ note: Document.Note) {
         Task {
             do {
                 try await store.deleteNote(from: document, id: note.id)
-                document.notes = document.notes.filter { $0.id != note.id }
-            } catch is CancellationError {}
-            catch {
+                notes = notes.filter { $0.id != note.id }
+            } catch let error where !error.isCancellationError {
                 Logger.shared.error("Error deleting note from document: \(error)")
                 errorController.push(error: error)
             }
+        }
+    }
+
+    private func loadNotes() async {
+        do {
+            notes = try await store.notes(for: document)
+        } catch let error where error.isCancellationError {}
+        catch {
+            Logger.shared.error("Error loading notes for document: \(error)")
+            errorController.push(error: error)
         }
     }
 
@@ -112,7 +123,7 @@ struct DocumentNoteView: View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(document.notes) { note in
+                    ForEach(notes) { note in
                         VStack(alignment: .leading) {
                             Text(note.created, style: .date)
                                 .font(.caption)
@@ -140,8 +151,6 @@ struct DocumentNoteView: View {
             }
             .animation(.spring, value: document)
 
-            .scrollBounceBehavior(.basedOnSize)
-
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle(.documentMetadata(.notes))
 
@@ -159,24 +168,20 @@ struct DocumentNoteView: View {
                 }
             }
 
-//            .confirmationDialog(unwrapping: $noteToDelete) { _ in
-//                String(localized: .documentMetadata(.noteDeleteConfirmation))
-//            } actions: {  note  in
-//                Button(.localizable(.delete), role: .destructive) {
-//                    delete(note.wrappedValue)
-//                }
-//
-//                Button(.localizable(.cancel), role: .cancel) {
-//                    noteToDelete = nil
-//                }
-//            }
+            .refreshable {
+                Task { await loadNotes() }
+            }
 
             .sheet(isPresented: $adding) {
-                CreateNoteView(document: $document)
+                CreateNoteView(document: $document, notes: $notes)
             }
         }
 
         .errorOverlay(errorController: errorController, offset: 20)
+
+        .task {
+            await loadNotes()
+        }
     }
 }
 

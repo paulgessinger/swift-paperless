@@ -17,6 +17,21 @@ public protocol DocumentProtocol: Codable {
     var storagePath: UInt? { get set }
 }
 
+public struct NotesPayload: Decodable, Equatable, Sendable, Hashable {
+    public var count: Int = 0
+
+    public init() {}
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let notes = try? container.decode([Document.Note].self) {
+            count = notes.count
+        } else {
+            count = try (container.decode([UInt].self)).count
+        }
+    }
+}
+
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
@@ -62,7 +77,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     }
 
     @IgnoreEncoding
-    public var notes: [Note]
+    public internal(set) var notes: NotesPayload = .init()
 
     // Presense of this depends on the endpoint
     // If we didn't get a value, we likely just modified

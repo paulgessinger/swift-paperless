@@ -14,6 +14,8 @@ actor TransientRepository {
     private var groups: [UserGroup]
     private var savedViews: [UInt: SavedView]
 
+    private var notesByDocument: [UInt: [Document.Note]]
+
     private var nextId: UInt = 1
     private var currentLoggedInUser: User?
 
@@ -27,6 +29,8 @@ actor TransientRepository {
         users = []
         groups = []
         savedViews = [:]
+
+        notesByDocument = [:]
     }
 
     private func generateId() -> UInt {
@@ -109,8 +113,7 @@ extension TransientRepository: Repository {
             tags: document.tags,
             added: .now,
             modified: .now,
-            storagePath: document.storagePath,
-            notes: []
+            storagePath: document.storagePath
         )
         documents[id] = newDoc
     }
@@ -332,26 +335,38 @@ extension TransientRepository: Repository {
         )
     }
 
+    func notes(documentId: UInt) async throws -> [Document.Note] {
+        notesByDocument[documentId, default: []]
+    }
+
     func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
-        guard var document = documents[documentId] else {
+        guard let document = documents[documentId] else {
             throw RepositoryError.documentNotFound
         }
 
-        let nextId = (document.notes.map(\.id).max() ?? 0) + 1
+        // Get higest note id and increment it
+        let values = notesByDocument.flatMap { $0.value.map(\.id) }
+        let nextId = values.max() ?? 0 + 1
         let newNote = Document.Note(id: nextId, note: note.note, created: .now)
-        document.notes.append(newNote)
+        notesByDocument[documentId, default: []].append(newNote)
         documents[documentId] = document
-        return document.notes
+        return notesByDocument[documentId, default: []]
     }
 
     func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
-        guard var document = documents[documentId] else {
+        guard documents[documentId] != nil else {
             throw RepositoryError.documentNotFound
         }
 
-        document.notes.removeAll { $0.id == id }
-        documents[documentId] = document
-        return document.notes
+        guard var notes = notesByDocument[documentId] else {
+            return []
+        }
+
+        notes = notes.filter { $0.id != id }
+
+        notesByDocument[documentId] = notes
+
+        return notes
     }
 
     func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {

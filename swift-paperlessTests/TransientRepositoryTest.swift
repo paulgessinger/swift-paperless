@@ -176,6 +176,12 @@ import Testing
         #expect(notes.count == 1)
         #expect(notes.first?.note == "Test Note")
 
+        // Get notes
+        let notes2 = try await repository.notes(documentId: 1)
+        #expect(notes2.count == 1)
+        #expect(notes2.first?.note == "Test Note")
+        #expect(notes2.first?.id == 1)
+
         // Delete the note
         let notesAfterDelete = try await repository.deleteNote(id: notes[0].id, documentId: 1)
         #expect(notesAfterDelete.isEmpty)

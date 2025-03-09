@@ -51,6 +51,7 @@ actor PreviewRepository: Repository {
     private let tasks: [PaperlessTask]
     private let users: [User]
     private let groups: [UserGroup]
+    private var notesByDocument: [UInt: [Document.Note]]
 
     private let downloadDelay: Double
 
@@ -149,11 +150,6 @@ actor PreviewRepository: Repository {
             return maxAsn
         }
 
-        let notes: [Document.Note] = [
-            .init(id: 1, note: "Hallo", created: .now),
-            .init(id: 2, note: "Another note", created: .now),
-        ]
-
         for i in 0 ..< 30 {
             documents[UInt(i)] = .init(id: UInt(i),
                                        title: "Document \(i + 1)",
@@ -164,8 +160,7 @@ actor PreviewRepository: Repository {
                                        tags: t(),
                                        added: .now,
                                        modified: .now,
-                                       storagePath: p(),
-                                       notes: notes)
+                                       storagePath: p())
         }
 
         documents[2]?.title = "I am a very long document title that will not."
@@ -214,6 +209,8 @@ actor PreviewRepository: Repository {
                 relatedDocument: nil
             ),
         ]
+
+        notesByDocument = [:]
     }
 
     func nextAsn() async -> UInt {
@@ -278,26 +275,37 @@ actor PreviewRepository: Repository {
 
     struct NoteError: Error {}
 
+    func notes(documentId _: UInt) async -> [Document.Note] {
+        notesByDocument.flatMap(\.value)
+    }
+
     func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
-        guard var document = documents[documentId] else {
+        guard let document = documents[documentId] else {
             throw NoteError()
         }
 
-        let nextId = (document.notes.map(\.id).max() ?? 0) + 1
-        document.notes.append(Document.Note(id: nextId, note: note.note, created: .now))
-
+        let values = notesByDocument.flatMap { $0.value.map(\.id) }
+        let nextId = values.max() ?? 0 + 1
+        let newNote = Document.Note(id: nextId, note: note.note, created: .now)
+        notesByDocument[documentId, default: []].append(newNote)
         documents[documentId] = document
-        return document.notes
+        return notesByDocument[documentId, default: []]
     }
 
     func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
-        guard var document = documents[documentId] else {
-            throw NoteError()
+        guard documents[documentId] != nil else {
+            throw RepositoryError.documentNotFound
         }
 
-        document.notes = document.notes.filter { $0.id != id }
-        documents[documentId] = document
-        return document.notes
+        guard var notes = notesByDocument[documentId] else {
+            return []
+        }
+
+        notes = notes.filter { $0.id != id }
+
+        notesByDocument[documentId] = notes
+
+        return notes
     }
 
     func documents(filter _: FilterState) -> any DocumentSource {

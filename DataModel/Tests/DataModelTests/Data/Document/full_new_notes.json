@@ -1,0 +1,23 @@
+{
+    "id": 2724,
+    "correspondent": 123,
+    "document_type": 5,
+    "storage_path": 1,
+    "title": "Quittung",
+    "content": "bla bla bla",
+    "tags": [1, 2, 3],
+    "created": "2024-12-21T00:00:00+01:00",
+    "created_date": "2024-12-21",
+    "modified": "2024-12-21T21:41:49.907469+01:00",
+    "added": "2024-12-21T21:26:36.217383+01:00",
+    "deleted_at": null,
+    "archive_serial_number": 666,
+    "original_file_name": "original.pdf",
+    "archived_file_name": "archived.pdf",
+    "owner": 2,
+    "user_can_change": true,
+    "is_shared_by_requester": true,
+    "notes": [40],
+    "custom_fields": [],
+    "page_count": 1
+}
