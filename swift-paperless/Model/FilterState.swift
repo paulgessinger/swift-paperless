@@ -43,6 +43,12 @@ extension FilterState {
         )
     }
 
+    func with(_ factory: (inout Self) -> Void) -> Self {
+        var copy = self
+        factory(&copy)
+        return copy
+    }
+
     init(savedView: SavedView) {
         self.init(rules: savedView.filterRules)
         self.savedView = savedView.id
