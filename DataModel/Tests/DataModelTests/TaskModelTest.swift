@@ -25,7 +25,7 @@ struct TaskModelTest {
         #expect(tasks[0].taskFileName == "sample_document_001.pdf")
         #expect(try dateApprox(#require(tasks[0].dateCreated), datetime(year: 2025, month: 1, day: 3, hour: 10, minute: 45, second: 2, tz: tz)))
         #expect(try dateApprox(#require(tasks[0].dateDone), datetime(year: 2025, month: 1, day: 3, hour: 10, minute: 45, second: 4, tz: tz)))
-        #expect(tasks[0].type == .file)
+        #expect(tasks[0].type == "file")
         #expect(tasks[0].status == .SUCCESS)
         #expect(tasks[0].result == "Success. New document id 2737 created")
         #expect(tasks[0].acknowledged == false)
