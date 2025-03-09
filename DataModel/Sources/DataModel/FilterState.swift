@@ -6,6 +6,7 @@
 //
 
 import Common
+import os
 
 public struct FilterState: Equatable, Codable, Sendable {
     public enum Filter: Equatable, Hashable, Codable, Sendable {
@@ -111,5 +112,176 @@ public struct FilterState: Equatable, Codable, Sendable {
         self.savedView = savedView
         self.searchText = searchText ?? ""
         self.searchMode = searchMode
+    }
+
+    // MARK: Methods
+
+    public mutating func handleElementAny(ids: [UInt]?, filter: Filter,
+                                          rule: FilterRule) -> Filter
+    {
+        guard let ids else {
+            Logger.dataModel.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
+            remaining.append(rule)
+            return filter
+        }
+
+        switch filter {
+        case let .anyOf(existing):
+            return .anyOf(ids: existing + ids)
+        case .noneOf:
+            Logger.dataModel.notice("Rule set combination invalid: anyOf + noneOf")
+            fallthrough
+        default:
+            return .anyOf(ids: ids)
+        }
+    }
+
+    public mutating func handleElementNone(ids: [UInt]?, filter: Filter, rule: FilterRule) -> Filter {
+        guard let ids else {
+            Logger.dataModel.error("Invalid value for rule type or nil id \(String(describing: rule.ruleType)), \(String(describing: rule.value))")
+            remaining.append(rule)
+            return filter
+        }
+
+        switch filter {
+        case let .noneOf(existing):
+            return .noneOf(ids: existing + ids)
+        case .anyOf:
+            Logger.dataModel.notice("Rule set combination invalid: anyOf + noneOf")
+            fallthrough
+        default:
+            return .noneOf(ids: ids)
+        }
+    }
+
+    public var rules: [FilterRule] {
+        var result = remaining
+
+        if !searchText.isEmpty {
+            result.append(
+                .init(ruleType: searchMode.ruleType, value: .string(value: searchText))
+            )
+        }
+
+        switch correspondent {
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .correspondent, value: .correspondent(id: nil))
+            )
+        case let .anyOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: id))
+                )
+            }
+        case let .noneOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: id))
+                )
+            }
+        case .any: break
+        }
+
+        switch documentType {
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .documentType, value: .documentType(id: nil))
+            )
+        case let .anyOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: id))
+                )
+            }
+        case let .noneOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: id))
+                )
+            }
+        case .any: break
+        }
+
+        switch storagePath {
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .storagePath, value: .storagePath(id: nil)))
+        case let .anyOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasStoragePathAny, value: .storagePath(id: id)))
+            }
+        case let .noneOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: id)))
+            }
+        case .any: break
+        }
+
+        switch tags {
+        case .any: break
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .hasAnyTag, value: .boolean(value: false))
+            )
+        case let .allOf(include, exclude):
+            for id in include {
+                result.append(
+                    .init(ruleType: .hasTagsAll, value: .tag(id: id)))
+            }
+            for id in exclude {
+                result.append(
+                    .init(ruleType: .doesNotHaveTag, value: .tag(id: id)))
+            }
+        case let .anyOf(ids):
+            for id in ids {
+                result.append(
+                    .init(ruleType: .hasTagsAny, value: .tag(id: id)))
+            }
+        }
+
+        switch owner {
+        case .any: break
+        case .notAssigned:
+            result.append(
+                .init(ruleType: .ownerIsnull, value: .boolean(value: true))
+            )
+        case let .anyOf(ids):
+            for id in ids {
+                result.append(.init(ruleType: .ownerAny, value: .number(value: Int(id))))
+            }
+        case let .noneOf(ids):
+            for id in ids {
+                result.append(.init(ruleType: .ownerDoesNotInclude, value: .number(value: Int(id))))
+            }
+        }
+
+        return result
+    }
+
+    public var ruleCount: Int {
+        var result = 0
+        if documentType != .any {
+            result += 1
+        }
+        if correspondent != .any {
+            result += 1
+        }
+        if storagePath != .any {
+            result += 1
+        }
+        if owner != .any {
+            result += 1
+        }
+        if tags != .any {
+            result += 1
+        }
+        if !searchText.isEmpty {
+            result += 1
+        }
+
+        return result
     }
 }
