@@ -172,11 +172,13 @@ private struct DocumentPropertyView: View {
                               systemImage: "info.circle")
                     }
 
-                    Button {
-                        showNotes = true
-                    } label: {
-                        Label(localized: .documentMetadata(.notes),
-                              systemImage: "note.text")
+                    if viewModel.store.permissions.test(.view, for: .note) {
+                        Button {
+                            showNotes = true
+                        } label: {
+                            Label(localized: .documentMetadata(.notes),
+                                  systemImage: "note.text")
+                        }
                     }
 
                 } label: {
@@ -248,18 +250,20 @@ private struct DocumentPropertyView: View {
                     }
                     .offset(y: secondaryOffset)
 
-                Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
-                    .labelStyle(.iconOnly)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.primary, .tertiary)
-                    .offset(y: secondaryOffset)
-                    .onTapGesture {
-                        Haptics.shared.impact(style: .medium)
-                        showEditSheet = true
-                    }
-                    .accessibilityIdentifier("documentEditButton")
+                if viewModel.store.permissions.test(.change, for: .document) {
+                    Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.primary, .tertiary)
+                        .offset(y: secondaryOffset)
+                        .onTapGesture {
+                            Haptics.shared.impact(style: .medium)
+                            showEditSheet = true
+                        }
+                        .accessibilityIdentifier("documentEditButton")
+                }
             }
 
             panel
@@ -352,6 +356,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
     }
 
+    private var canEditDocument: Bool {
+        viewModel.store.permissions.test(.change, for: .document)
+    }
+
     init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>?) {
         _viewModel = State(initialValue: DocumentDetailModel(store: store,
                                                              document: document))
@@ -412,15 +420,17 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                              dragOffset: $dragOffset)
             .padding(.bottom, bottomSpacing)
             .overlay(alignment: .bottom) {
-                Image(systemName: "chevron.compact.up")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 12, height: 12)
-                    .opacity(chevronOpacity)
-                    .padding(15)
-                    .offset(y: -1)
-                    .scaleEffect(chevronSize, anchor: .center)
-                    .offset(y: -10 - chevronOffset)
+                if canEditDocument {
+                    Image(systemName: "chevron.compact.up")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                        .opacity(chevronOpacity)
+                        .padding(15)
+                        .offset(y: -1)
+                        .scaleEffect(chevronSize, anchor: .center)
+                        .offset(y: -10 - chevronOffset)
+                }
             }
 
 //        .frame(maxHeight: showPropertyBar ? .infinity : 20)
@@ -462,7 +472,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                     }
                 }
                 .onEnded { value in
-                    if value.translation.height < -dragThresholdUp {
+                    if value.translation.height < -dragThresholdUp, canEditDocument {
                         showEditSheet = true
                     }
 

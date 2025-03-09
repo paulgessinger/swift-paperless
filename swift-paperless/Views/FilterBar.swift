@@ -33,8 +33,6 @@ private struct FilterMenu<Content: View>: View {
     @Binding var savedView: ProtoSavedView?
     @ViewBuilder var label: () -> Content
 
-    @State private var showDeletePrompt = false
-
     private func saveSavedView() {
         Logger.shared.info("Saving active saved view")
         guard let id = filterModel.filterState.savedView, var updated = store.savedViews[id] else {
@@ -51,6 +49,7 @@ private struct FilterMenu<Content: View>: View {
                 filterModel.filterState = .init(savedView: updated)
             } catch {
                 Logger.shared.error("Error saving saved view: \(error)")
+                errorController.push(error: error)
             }
         }
         Logger.shared.info("Finished saving active saved view \(String(describing: updated))")
@@ -74,11 +73,14 @@ private struct FilterMenu<Content: View>: View {
                 if filterModel.filterState.filtering, filterModel.filterState.modified {
                     Section(menuSavedViewSectionTitle) {
                         if let savedViewId = filterModel.filterState.savedView, let savedView = store.savedViews[savedViewId] {
-                            Button {
-                                saveSavedView()
-                            } label: {
-                                Label(String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
+                            if store.permissions.test(.change, for: .savedView) {
+                                Button {
+                                    saveSavedView()
+                                } label: {
+                                    Label(String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
+                                }
                             }
+
                             Button {
                                 filterModel.filterState = .init(savedView: savedView)
                             } label: {
@@ -86,38 +88,35 @@ private struct FilterMenu<Content: View>: View {
                             }
                         }
 
-                        Button {
-                            let proto = ProtoSavedView(
-                                name: "",
-                                sortField: filterModel.filterState.sortField,
-                                sortOrder: filterModel.filterState.sortOrder,
-                                filterRules: filterModel.filterState.rules
-                            )
+                        if store.permissions.test(.add, for: .savedView) {
+                            Button {
+                                let proto = ProtoSavedView(
+                                    name: "",
+                                    sortField: filterModel.filterState.sortField,
+                                    sortOrder: filterModel.filterState.sortOrder,
+                                    filterRules: filterModel.filterState.rules
+                                )
 
-                            savedView = proto
+                                savedView = proto
 
-                        } label: {
-                            Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
+                            } label: {
+                                Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
+                            }
                         }
                     }
                 }
 
-                NavigationLink {
-                    ManageView<SavedViewManager>()
-                        .navigationTitle(Text(.localizable(.savedViews)))
-                        .task { Task {
-                            do {
-                                try await store.fetchAllDocumentTypes()
-                            } catch {
-                                errorController.push(error: error)
-                            }
-                        }}
-                } label: {
-                    Label(String(localized: .localizable(.savedViewsEditButtonLabel)), systemImage: "list.bullet")
+                if store.permissions.test(.view, for: .savedView) {
+                    NavigationLink {
+                        ManageView<SavedViewManager>()
+                            .navigationTitle(Text(.localizable(.savedViews)))
+                    } label: {
+                        Label(String(localized: .localizable(.savedViewsEditButtonLabel)), systemImage: "list.bullet")
+                    }
                 }
 
                 if filterState.filtering {
-                    if !store.savedViews.isEmpty {
+                    if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
                         Divider()
                     }
                     Text(.localizable(.filtersApplied(UInt(filterState.ruleCount))))
@@ -137,27 +136,6 @@ private struct FilterMenu<Content: View>: View {
                 label()
             }
         }
-
-        .alert(Text(.localizable(.savedViewDeleteConfirmationTitle)), isPresented: $showDeletePrompt,
-               presenting: filterState.savedView,
-               actions: { id in
-                   Button(String(localized: .localizable(.delete)), role: .destructive) {
-                       Task {
-                           do {
-                               filterModel.filterState.savedView = nil
-                               try? await Task.sleep(for: .seconds(0.2))
-                               try await store.delete(savedView: store.savedViews[id]!)
-                           } catch {
-                               // @TODO: Add improved error handling
-                               print("Error deleting view")
-                               filterModel.filterState.savedView = id
-                           }
-                       }
-                   }
-               }, message: { id in
-                   let sv = store.savedViews[id]!
-                   Text(.localizable(.savedViewDeleteConfirmationText(sv.name)))
-               })
     }
 }
 

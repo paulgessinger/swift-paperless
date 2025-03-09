@@ -23,6 +23,8 @@ class DocumentListViewModel {
     var documents: [Document] = []
     var ready = false
 
+    var noPermissions = false
+
     private var source: (any DocumentSource)?
     private var exhausted: Bool = false
 
@@ -59,13 +61,23 @@ class DocumentListViewModel {
         ready = true
     }
 
+    private func ensurePermissions() throws {
+        guard store.permissions.test(.view, for: .document) else {
+            throw PermissionsError(resource: .document, operation: .view)
+        }
+        noPermissions = false
+    }
+
     func load() async {
         Logger.shared.debug("DocumentListViewModel.load")
         guard documents.isEmpty else { return }
         do {
+            // Ensure we have up-to-date permissions
+            try await store.fetchUISettings()
             if source == nil {
                 source = try await store.repository.documents(filter: filterState)
             }
+            try ensurePermissions()
             let batch = try await source!.fetch(limit: initialBatchSize)
 
             let requests = try batch
@@ -77,6 +89,9 @@ class DocumentListViewModel {
 
             documents = batch
             Logger.shared.debug("DocumentListViewModel.load loading complete")
+        } catch let error as PermissionsError {
+            noPermissions = true
+            Logger.shared.warning("Insufficient permissions to load documents: \(error)")
         } catch {
             Logger.shared.error("DocumentList failed to load documents: \(error)")
             errorController.push(error: error)
@@ -93,6 +108,7 @@ class DocumentListViewModel {
                     guard let source = await self.source else {
                         return
                     }
+
                     let batch = try await source.fetch(limit: self.batchSize)
                     if batch.isEmpty {
                         await MainActor.run {
@@ -120,17 +136,17 @@ class DocumentListViewModel {
     }
 
     func refresh(filter: FilterState? = nil, retain: Bool = false) async throws -> [Document] {
+        try await store.fetchAll()
+
         if let filter {
             filterState = filter
         }
         exhausted = false
         do {
+            try ensurePermissions()
             source = try await store.repository.documents(filter: filterState)
-            guard let source else {
-                return []
-            }
 
-            let batch = try await source.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
+            let batch = try await source!.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
 
             let requests = try batch
                 .map { try self.store.repository.thumbnailRequest(document: $0) }
@@ -140,6 +156,10 @@ class DocumentListViewModel {
             imagePrefetcher.startPrefetching(with: requests)
 
             return batch
+        } catch let error as PermissionsError {
+            Logger.shared.error("Insufficient permissions to refresh documents: \(error)")
+            noPermissions = true
+            throw error
         } catch {
             Logger.shared.error("DocumentList failed to refresh: \(error)")
             errorController.push(error: error)
