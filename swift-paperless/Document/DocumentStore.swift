@@ -159,7 +159,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func deleteNote(from document: Document, id: UInt) async throws {
-        try checkPermission(.change, for: .document)
+        try checkPermission(.delete, for: .note)
         eventPublisher.send(.changed(document: document))
         _ = try await repository.deleteNote(id: id, documentId: document.id)
 
@@ -167,7 +167,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func addNote(to document: Document, note: ProtoDocument.Note) async throws {
-        try checkPermission(.change, for: .document)
+        try checkPermission(.add, for: .note)
         eventPublisher.send(.changed(document: document))
 
         _ = try await repository.createNote(documentId: document.id, note: note)
@@ -176,7 +176,8 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func notes(for document: Document) async throws -> [Document.Note] {
-        try await repository.notes(documentId: document.id)
+        try checkPermission(.view, for: .note)
+        return try await repository.notes(documentId: document.id)
     }
 
     func fetchTasks() async {

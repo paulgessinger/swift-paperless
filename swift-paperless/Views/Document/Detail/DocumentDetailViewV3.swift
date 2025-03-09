@@ -172,11 +172,13 @@ private struct DocumentPropertyView: View {
                               systemImage: "info.circle")
                     }
 
-                    Button {
-                        showNotes = true
-                    } label: {
-                        Label(localized: .documentMetadata(.notes),
-                              systemImage: "note.text")
+                    if viewModel.store.permissions.test(.view, for: .note) {
+                        Button {
+                            showNotes = true
+                        } label: {
+                            Label(localized: .documentMetadata(.notes),
+                                  systemImage: "note.text")
+                        }
                     }
 
                 } label: {

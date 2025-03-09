@@ -132,22 +132,26 @@ struct DocumentNoteView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                        .swipeActions(edge: .trailing) {
-                            Button(.localizable(.delete), role: .destructive,
-                                   action: { delete(note) })
+                        .if(store.permissions.test(.delete, for: .note)) {
+                            $0.swipeActions(edge: .trailing) {
+                                Button(.localizable(.delete), role: .destructive,
+                                       action: { delete(note) })
+                            }
                         }
                     }
                 }
 
-                Section {
-                    Button {
-                        adding = true
-                    } label: {
-                        Label(.localizable(.add), systemImage: "plus.circle.fill")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .bold()
+                if store.permissions.test(.add, for: .note) {
+                    Section {
+                        Button {
+                            adding = true
+                        } label: {
+                            Label(.localizable(.add), systemImage: "plus.circle.fill")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .bold()
+                        }
+                        .buttonStyle(.borderless)
                     }
-                    .buttonStyle(.borderless)
                 }
             }
             .animation(.spring, value: document)
@@ -160,11 +164,13 @@ struct DocumentNoteView: View {
                     CancelIconButton()
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        adding = true
-                    } label: {
-                        Label(.localizable(.add), systemImage: "plus")
+                if store.permissions.test(.add, for: .note) {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            adding = true
+                        } label: {
+                            Label(.localizable(.add), systemImage: "plus")
+                        }
                     }
                 }
             }
