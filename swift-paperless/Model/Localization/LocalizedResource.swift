@@ -21,6 +21,13 @@ extension Document: LocalizedResource {
     static var localizedNoViewPermissions: String { String(localized: .permissions(.noViewPermissionsDocument)) }
 }
 
+extension Document.Note: LocalizedResource {
+    static var localizedName: String { String(localized: .documentMetadata(.note)) }
+    static var localizedNamePlural: String { String(localized: .documentMetadata(.notes)) }
+
+    static var localizedNoViewPermissions: String { String(localized: .permissions(.noViewPermissionsNotes)) }
+}
+
 extension Tag: LocalizedResource {
     static var localizedName: String { String(localized: .localizable(.tag)) }
     static var localizedNamePlural: String { String(localized: .localizable(.tags)) }
