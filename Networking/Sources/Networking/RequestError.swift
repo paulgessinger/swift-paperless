@@ -31,27 +31,30 @@ public enum RequestError: Error, Equatable {
     case localNetworkDenied
 
     case certificate(detail: String)
+
+    // Can split this up into additional cases for customized error messages
+    case other(_: String)
 }
 
 private func string(for error: any Error) -> String {
     (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
 }
 
-extension RequestError {
+public extension RequestError {
     init?(from error: NSError) {
         guard error.domain == NSURLErrorDomain else {
             return nil
         }
-        
+
         guard let code = NSURLError(rawValue: error.code) else {
             return nil
         }
-        
+
         if code.category == .ssl {
             self = .certificate(detail: string(for: error))
             return
         }
-        
+
         switch code {
         case .badURL, .unsupportedURL, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost, .dnsLookupFailed, .httpTooManyRedirects, .resourceUnavailable, .notConnectedToInternet, .redirectToNonExistentLocation, .badServerResponse:
             self = .other(string(for: error))
