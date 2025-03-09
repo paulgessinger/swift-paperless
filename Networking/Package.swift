@@ -41,10 +41,7 @@ let package = Package(
         ),
         .testTarget(
             name: "NetworkingTests",
-            dependencies: ["Networking"],
-            resources: [
-                .copy("Networking"),
-            ]
+            dependencies: ["Networking"]
         ),
     ]
 )

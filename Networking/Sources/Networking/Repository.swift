@@ -10,54 +10,54 @@ import DataModel
 import Foundation
 import SwiftUI
 
-enum DocumentCreateError: Error {
+public enum DocumentCreateError: Error {
     case tooLarge
 }
 
-actor AnyAsyncSequence<Element>: AsyncSequence & Sendable where Element: Sendable {
-    typealias AsyncIterator = AnyAsyncIterator<Element>
-    typealias Element = Element
+public actor AnyAsyncSequence<Element>: AsyncSequence & Sendable where Element: Sendable {
+    public typealias AsyncIterator = AnyAsyncIterator<Element>
+    public typealias Element = Element
 
     private let _makeAsyncIterator: @Sendable () -> AnyAsyncIterator<Element>
 
-    actor AnyAsyncIterator<E>: AsyncIteratorProtocol, Sendable where E: Sendable {
-        typealias Element = E
+    public actor AnyAsyncIterator<E>: AsyncIteratorProtocol, Sendable where E: Sendable {
+        public typealias Element = E
 
         private let _next: () async throws -> Element?
 
-        init<I: AsyncIteratorProtocol>(itr: I) where I.Element == Element {
+        public init<I: AsyncIteratorProtocol>(itr: I) where I.Element == Element {
             var itr = itr
             _next = {
                 try await itr.next()
             }
         }
 
-        func next() async throws -> Element? {
+        public func next() async throws -> Element? {
             try await _next()
         }
     }
 
-    init<S: AsyncSequence & Sendable>(seq: S) where S.Element == Element, S.AsyncIterator: Sendable {
+    public init<S: AsyncSequence & Sendable>(seq: S) where S.Element == Element, S.AsyncIterator: Sendable {
         _makeAsyncIterator = { AnyAsyncIterator(itr: seq.makeAsyncIterator()) }
     }
 
-    nonisolated func makeAsyncIterator() -> AnyAsyncIterator<Element> {
+    public nonisolated func makeAsyncIterator() -> AnyAsyncIterator<Element> {
         _makeAsyncIterator()
     }
 }
 
-extension AsyncSequence where Self: Sendable, Element: Sendable, AsyncIterator: Sendable {
+public extension AsyncSequence where Self: Sendable, Element: Sendable, AsyncIterator: Sendable {
     func eraseToAnyAsyncSequence() -> AnyAsyncSequence<Element> {
         AnyAsyncSequence(seq: self)
     }
 }
 
-enum DocumentDownloadEvent {
+public enum DocumentDownloadEvent {
     case progress
     case complete
 }
 
-protocol Repository: Sendable, Actor {
+public protocol Repository: Sendable, Actor {
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws
     func create(document: ProtoDocument, file: URL) async throws
@@ -142,14 +142,14 @@ protocol Repository: Sendable, Actor {
     var delegate: (any URLSessionDelegate)? { get }
 }
 
-extension Repository {
+public extension Repository {
     func download(documentID: UInt) async throws -> URL? {
         try await download(documentID: documentID, progress: nil)
     }
 }
 
 // - MARK: DocumentSource
-protocol DocumentSource: Actor {
+public protocol DocumentSource: Actor {
     func fetch(limit: UInt) async throws -> [Document]
     func hasMore() async -> Bool
 }

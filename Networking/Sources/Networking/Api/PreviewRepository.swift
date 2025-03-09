@@ -10,20 +10,20 @@ import GameplayKit
 import os
 import SwiftUI
 
-actor PreviewDocumentSource: DocumentSource {
-    typealias DocumentSequence = [Document]
+public actor PreviewDocumentSource: DocumentSource {
+    public typealias DocumentSequence = [Document]
 
-    var sequence: DocumentSequence
+    public var sequence: DocumentSequence
 
-    init(sequence: DocumentSequence) {
+    public init(sequence: DocumentSequence) {
         self.sequence = sequence
     }
 
-    func fetch(limit: UInt) async -> [Document] {
+    public func fetch(limit: UInt) async -> [Document] {
         Array(sequence.prefix(Int(limit)))
     }
 
-    func hasMore() async -> Bool { false }
+    public func hasMore() async -> Bool { false }
 }
 
 struct SeededGenerator: RandomNumberGenerator {
@@ -42,7 +42,7 @@ struct SeededGenerator: RandomNumberGenerator {
     }
 }
 
-actor PreviewRepository: Repository {
+public actor PreviewRepository: Repository {
     private var documents: [UInt: Document]
     private let tags: [UInt: Tag]
     private let documentTypes: [UInt: DocumentType]
@@ -55,7 +55,7 @@ actor PreviewRepository: Repository {
 
     private let downloadDelay: Double
 
-    init(downloadDelay: Double = 0.0) {
+    public init(downloadDelay: Double = 0.0) {
         self.downloadDelay = downloadDelay
 
         users = [
@@ -213,15 +213,15 @@ actor PreviewRepository: Repository {
         notesByDocument = [:]
     }
 
-    func nextAsn() async -> UInt {
+    public func nextAsn() async -> UInt {
         (documents.compactMap(\.value.asn).max() ?? 0) + 1
     }
 
-    func update(document: Document) async throws -> Document { document }
-    func delete(document _: Document) async throws {}
-    func create(document _: ProtoDocument, file _: URL) async throws {}
+    public func update(document: Document) async throws -> Document { document }
+    public func delete(document _: Document) async throws {}
+    public func create(document _: ProtoDocument, file _: URL) async throws {}
 
-    func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
+    public func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
         var elapsed = 0.0
         for i in 1 ... 10 {
             try? await Task.sleep(for: .seconds(downloadDelay / 10.0))
@@ -231,32 +231,32 @@ actor PreviewRepository: Repository {
         return Bundle.main.url(forResource: "demo2", withExtension: "pdf")
     }
 
-    func tag(id: UInt) async -> Tag? { tags[id] }
-    func create(tag _: ProtoTag) async throws -> Tag { throw NotImplemented() }
-    func update(tag: Tag) async throws -> Tag { tag }
-    func delete(tag _: Tag) async throws {}
+    public func tag(id: UInt) async -> Tag? { tags[id] }
+    public func create(tag _: ProtoTag) async throws -> Tag { throw NotImplemented() }
+    public func update(tag: Tag) async throws -> Tag { tag }
+    public func delete(tag _: Tag) async throws {}
 
-    func tags() async -> [Tag] { tags.map(\.value) }
+    public func tags() async -> [Tag] { tags.map(\.value) }
 
-    func correspondent(id: UInt) async -> Correspondent? { correspondents[id] }
-    func create(correspondent _: ProtoCorrespondent) async throws -> Correspondent { throw NotImplemented() }
-    func update(correspondent _: Correspondent) async throws -> Correspondent { throw NotImplemented() }
-    func delete(correspondent _: Correspondent) async throws {}
-    func correspondents() async -> [Correspondent] { correspondents.map(\.value) }
+    public func correspondent(id: UInt) async -> Correspondent? { correspondents[id] }
+    public func create(correspondent _: ProtoCorrespondent) async throws -> Correspondent { throw NotImplemented() }
+    public func update(correspondent _: Correspondent) async throws -> Correspondent { throw NotImplemented() }
+    public func delete(correspondent _: Correspondent) async throws {}
+    public func correspondents() async -> [Correspondent] { correspondents.map(\.value) }
 
-    func documentType(id: UInt) async -> DocumentType? { documentTypes[id] }
-    func create(documentType _: ProtoDocumentType) async throws -> DocumentType { throw NotImplemented() }
-    func update(documentType _: DocumentType) async throws -> DocumentType { throw NotImplemented() }
-    func delete(documentType _: DocumentType) async throws {}
-    func documentTypes() async -> [DocumentType] { documentTypes.map(\.value) }
+    public func documentType(id: UInt) async -> DocumentType? { documentTypes[id] }
+    public func create(documentType _: ProtoDocumentType) async throws -> DocumentType { throw NotImplemented() }
+    public func update(documentType _: DocumentType) async throws -> DocumentType { throw NotImplemented() }
+    public func delete(documentType _: DocumentType) async throws {}
+    public func documentTypes() async -> [DocumentType] { documentTypes.map(\.value) }
 
-    func document(id: UInt) async -> Document? { documents[id] }
+    public func document(id: UInt) async -> Document? { documents[id] }
 
-    func document(asn: UInt) async -> Document? {
+    public func document(asn: UInt) async -> Document? {
         documents.first(where: { $0.value.asn == asn })?.value
     }
 
-    func metadata(documentId _: UInt) async throws -> Metadata {
+    public func metadata(documentId _: UInt) async throws -> Metadata {
         Metadata(
             originalChecksum: "4e3db09db50373773325e278e4a9919",
             originalSize: 61337,
@@ -275,11 +275,11 @@ actor PreviewRepository: Repository {
 
     struct NoteError: Error {}
 
-    func notes(documentId _: UInt) async -> [Document.Note] {
+    public func notes(documentId _: UInt) async -> [Document.Note] {
         notesByDocument.flatMap(\.value)
     }
 
-    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+    public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
         guard let document = documents[documentId] else {
             throw NoteError()
         }
@@ -292,7 +292,7 @@ actor PreviewRepository: Repository {
         return notesByDocument[documentId, default: []]
     }
 
-    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+    public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
         guard documents[documentId] != nil else {
             throw RepositoryError.documentNotFound
         }
@@ -308,17 +308,17 @@ actor PreviewRepository: Repository {
         return notes
     }
 
-    func documents(filter _: FilterState) -> any DocumentSource {
+    public func documents(filter _: FilterState) -> any DocumentSource {
         PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
     }
 
-    func thumbnail(document: Document) async throws -> Image? {
+    public func thumbnail(document: Document) async throws -> Image? {
         let data = try await thumbnailData(document: document)
         let image = Image(data: data)
         return image
     }
 
-    func thumbnailData(document: Document) async throws -> Data {
+    public func thumbnailData(document: Document) async throws -> Data {
         let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
 
         do {
@@ -326,50 +326,50 @@ actor PreviewRepository: Repository {
 
             return data
         } catch {
-            Logger.shared.error("Unable to get preview document thumbnail (somehow): \(error)")
+            Logger.networking.error("Unable to get preview document thumbnail (somehow): \(error)")
             throw error
         }
     }
 
-    nonisolated
+    public nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest {
         URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
     }
 
-    func suggestions(documentId _: UInt) async -> Suggestions {
+    public func suggestions(documentId _: UInt) async -> Suggestions {
         .init(correspondents: [1], tags: [2, 3], documentTypes: [4], storagePaths: [2], dates: [.now, .now.advanced(by: 86400)])
     }
 
     struct NotImplemented: Error {}
 
-    func savedViews() async -> [SavedView] { [] }
-    func create(savedView _: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
-    func update(savedView: SavedView) async throws -> SavedView { savedView }
-    func delete(savedView _: SavedView) async throws { throw NotImplemented() }
+    public func savedViews() async -> [SavedView] { [] }
+    public func create(savedView _: ProtoSavedView) async throws -> SavedView { throw NotImplemented() }
+    public func update(savedView: SavedView) async throws -> SavedView { savedView }
+    public func delete(savedView _: SavedView) async throws { throw NotImplemented() }
 
-    func storagePaths() async -> [StoragePath] { storagePaths.map(\.value) }
-    func create(storagePath _: ProtoStoragePath) async throws -> StoragePath { throw NotImplemented() }
-    func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
-    func delete(storagePath _: StoragePath) async throws { throw NotImplemented() }
+    public func storagePaths() async -> [StoragePath] { storagePaths.map(\.value) }
+    public func create(storagePath _: ProtoStoragePath) async throws -> StoragePath { throw NotImplemented() }
+    public func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
+    public func delete(storagePath _: StoragePath) async throws { throw NotImplemented() }
 
-    func currentUser() async throws -> User {
+    public func currentUser() async throws -> User {
         .init(id: 1, isSuperUser: true, username: "user")
     }
 
-    func users() async -> [User] { users }
-    func groups() async throws -> [UserGroup] { groups }
+    public func users() async -> [User] { users }
+    public func groups() async throws -> [UserGroup] { groups }
 
-    func tasks() async -> [PaperlessTask] { tasks }
-    func task(id _: UInt) async throws -> PaperlessTask? { nil }
+    public func tasks() async -> [PaperlessTask] { tasks }
+    public func task(id _: UInt) async throws -> PaperlessTask? { nil }
 
-    func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
+    public func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
 
-    func acknowledge(tasks _: [UInt]) async throws {}
+    public func acknowledge(tasks _: [UInt]) async throws {}
 
-    nonisolated
+    public nonisolated
     var delegate: (any URLSessionDelegate)? { nil }
 
-    func uiSettings() async -> UISettings {
+    public func uiSettings() async -> UISettings {
         UISettings(
             user: User(id: 1, isSuperUser: true, username: "user"),
             settings: UISettingsSettings(),

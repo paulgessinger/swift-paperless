@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 14.12.2024.
 //
 
+import Networking
 import SwiftUI
 
 extension LoginError: PresentableError {

@@ -5,7 +5,11 @@
 //  Created by Paul Gessinger on 09.03.25.
 //
 
-extension ResourceForbidden<Resource>: DisplayableError where Resource: Model & NamedLocalized {
+import DataModel
+import Foundation
+import Networking
+
+extension ResourceForbidden: DisplayableError where Resource: Model & NamedLocalized {
     var message: String {
         String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
     }
@@ -17,6 +21,8 @@ extension ResourceForbidden<Resource>: DisplayableError where Resource: Model & 
         }
         return msg
     }
+}
 
+extension ResourceForbidden: DocumentedError {
     var documentationLink: URL? { DocumentationLinks.forbidden }
 }

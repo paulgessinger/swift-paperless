@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Networking
 
 private func string(for error: any Error) -> String {
     (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription

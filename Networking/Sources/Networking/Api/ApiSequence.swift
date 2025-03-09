@@ -10,7 +10,7 @@ import Foundation
 import os
 import Semaphore
 
-actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
+public actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
     where Element: Model & Decodable & Sendable
 {
     private var nextPage: URL?
@@ -23,7 +23,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
 
     private let semaphore = AsyncSemaphore(value: 1)
 
-    init(repository: ApiRepository, url: URL) {
+    public init(repository: ApiRepository, url: URL) {
         self.repository = repository
         nextPage = url
     }
@@ -44,7 +44,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
         return result
     }
 
-    func next() async throws -> Element? {
+    public func next() async throws -> Element? {
         await semaphore.wait()
         defer { semaphore.signal() }
 
@@ -99,7 +99,7 @@ actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
         }
     }
 
-    nonisolated
+    public nonisolated
     func makeAsyncIterator() -> ApiSequence {
         self
     }

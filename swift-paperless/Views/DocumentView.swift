@@ -5,14 +5,14 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import AsyncAlgorithms
 import Combine
 import DataModel
+import Networking
 import os
 import PhotosUI
 import QuickLook
 import SwiftUI
-
-import AsyncAlgorithms
 
 enum NavigationState: Equatable, Hashable, Identifiable {
     case root

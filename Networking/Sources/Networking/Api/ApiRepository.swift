@@ -13,48 +13,48 @@ import os
 import Semaphore
 import SwiftUI
 
-actor ApiDocumentSource: DocumentSource {
-    typealias DocumentSequence = ApiSequence<Document>
+public actor ApiDocumentSource: DocumentSource {
+    public typealias DocumentSequence = ApiSequence<Document>
 
     private let sequence: DocumentSequence
 
-    init(sequence: DocumentSequence) {
+    public init(sequence: DocumentSequence) {
         self.sequence = sequence
     }
 
-    func fetch(limit: UInt) async throws -> [Document] {
+    public func fetch(limit: UInt) async throws -> [Document] {
         guard await sequence.hasMore else {
             return []
         }
         return try await Array(sequence.prefix(Int(limit)))
     }
 
-    func hasMore() async -> Bool { await sequence.hasMore }
+    public func hasMore() async -> Bool { await sequence.hasMore }
 }
 
-struct DecodingErrorWithRootType: Error {
-    let type: any Any.Type
-    let error: DecodingError
+public struct DecodingErrorWithRootType: Error {
+    public let type: any Any.Type
+    public let error: DecodingError
 }
 
-actor ApiRepository {
-    nonisolated
+public actor ApiRepository {
+    public nonisolated
     let connection: Connection
 
     private let urlSession: URLSession
     private let urlSessionDelegate: PaperlessURLSessionDelegate
 
     private var apiVersion: UInt?
-    static let minimumApiVersion: UInt = 3
-    static let minimumVersion = Version(1, 14, 1)
-    static let maximumApiVersion: UInt = 7
-    private(set) var backendVersion: Version?
+    public static let minimumApiVersion: UInt = 3
+    public static let minimumVersion = Version(1, 14, 1)
+    public static let maximumApiVersion: UInt = 7
+    public private(set) var backendVersion: Version?
 
-    var effectiveApiVersion: UInt {
+    public var effectiveApiVersion: UInt {
         min(Self.maximumApiVersion, max(Self.minimumApiVersion, apiVersion ?? Self.minimumApiVersion))
     }
 
-    init(connection: Connection) async {
+    public init(connection: Connection) async {
         self.connection = connection
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
         #if DEBUG
@@ -85,7 +85,7 @@ actor ApiRepository {
         }
     }
 
-    nonisolated
+    public nonisolated
     var delegate: (any URLSessionDelegate)? {
         urlSessionDelegate
     }
@@ -95,7 +95,7 @@ actor ApiRepository {
         connection.token
     }
 
-    nonisolated
+    public nonisolated
     func url(_ endpoint: Endpoint) throws -> URL {
         let connection = connection
         Logger.networking.trace("Making API endpoint URL with \(connection.url) for \(endpoint.path)")
@@ -113,7 +113,7 @@ actor ApiRepository {
         return encoder
     }()
 
-    func request(url: URL) -> URLRequest {
+    public func request(url: URL) -> URLRequest {
         let sanitizedUrl = Self.sanitizeUrlForLog(url)
         var request = URLRequest(url: url)
         if let apiToken {
@@ -125,7 +125,7 @@ actor ApiRepository {
         return request
     }
 
-    func request(_ endpoint: Endpoint) throws -> URLRequest {
+    public func request(_ endpoint: Endpoint) throws -> URLRequest {
         try request(url: url(endpoint))
     }
 
@@ -328,12 +328,12 @@ actor ApiRepository {
 }
 
 extension ApiRepository: Repository {
-    func update(document: Document) async throws -> Document {
+    public func update(document: Document) async throws -> Document {
         try await update(element: document,
                          endpoint: .document(id: document.id, fullPerms: false))
     }
 
-    func create(document: ProtoDocument, file: URL) async throws {
+    public func create(document: ProtoDocument, file: URL) async throws {
         Logger.networking.notice("Creating document")
         var request = try request(.createDocument())
 
@@ -373,19 +373,19 @@ extension ApiRepository: Repository {
         }
     }
 
-    func delete(document: Document) async throws {
+    public func delete(document: Document) async throws {
         Logger.networking.notice("Deleting document")
         try await delete(element: document, endpoint: .document(id: document.id))
     }
 
-    func documents(filter: FilterState) throws -> any DocumentSource {
+    public func documents(filter: FilterState) throws -> any DocumentSource {
         Logger.networking.notice("Getting document sequence for filter")
         return try ApiDocumentSource(
             sequence: ApiSequence<Document>(repository: self,
                                             url: url(.documents(page: 1, filter: filter))))
     }
 
-    func download(documentID: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
+    public func download(documentID: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
         Logger.networking.notice("Downloading document")
         do {
             let request = try request(.download(documentId: documentID))
@@ -411,65 +411,65 @@ extension ApiRepository: Repository {
         }
     }
 
-    func tag(id: UInt) async throws -> Tag? { try await get(Tag.self, id: id) }
+    public func tag(id: UInt) async throws -> Tag? { try await get(Tag.self, id: id) }
 
-    func create(tag: ProtoTag) async throws -> Tag {
+    public func create(tag: ProtoTag) async throws -> Tag {
         try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
     }
 
-    func update(tag: Tag) async throws -> Tag {
+    public func update(tag: Tag) async throws -> Tag {
         try await update(element: tag, endpoint: .tag(id: tag.id))
     }
 
-    func delete(tag: Tag) async throws {
+    public func delete(tag: Tag) async throws {
         try await delete(element: tag, endpoint: .tag(id: tag.id))
     }
 
-    func tags() async throws -> [Tag] { try await all(Tag.self) }
+    public func tags() async throws -> [Tag] { try await all(Tag.self) }
 
-    func correspondent(id: UInt) async throws -> Correspondent? { try await get(Correspondent.self, id: id) }
+    public func correspondent(id: UInt) async throws -> Correspondent? { try await get(Correspondent.self, id: id) }
 
-    func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
+    public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
         try await create(element: correspondent,
                          endpoint: .createCorrespondent(),
                          returns: Correspondent.self)
     }
 
-    func update(correspondent: Correspondent) async throws -> Correspondent {
+    public func update(correspondent: Correspondent) async throws -> Correspondent {
         try await update(element: correspondent,
                          endpoint: .correspondent(id: correspondent.id))
     }
 
-    func delete(correspondent: Correspondent) async throws {
+    public func delete(correspondent: Correspondent) async throws {
         try await delete(element: correspondent,
                          endpoint: .correspondent(id: correspondent.id))
     }
 
-    func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
+    public func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
 
-    func documentType(id: UInt) async throws -> DocumentType? { try await get(DocumentType.self, id: id) }
+    public func documentType(id: UInt) async throws -> DocumentType? { try await get(DocumentType.self, id: id) }
 
-    func create(documentType: ProtoDocumentType) async throws -> DocumentType {
+    public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
         try await create(element: documentType,
                          endpoint: .createDocumentType(),
                          returns: DocumentType.self)
     }
 
-    func update(documentType: DocumentType) async throws -> DocumentType {
+    public func update(documentType: DocumentType) async throws -> DocumentType {
         try await update(element: documentType,
                          endpoint: .documentType(id: documentType.id))
     }
 
-    func delete(documentType: DocumentType) async throws {
+    public func delete(documentType: DocumentType) async throws {
         try await delete(element: documentType,
                          endpoint: .documentType(id: documentType.id))
     }
 
-    func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
+    public func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
 
-    func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
+    public func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
 
-    func document(asn: UInt) async throws -> Document? {
+    public func document(asn: UInt) async throws -> Document? {
         Logger.networking.notice("Getting document by ASN")
         let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
 
@@ -491,7 +491,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func metadata(documentId: UInt) async throws -> Metadata {
+    public func metadata(documentId: UInt) async throws -> Metadata {
         let request = try request(.metadata(documentId: documentId))
         do {
             let decoded = try await fetchData(for: request, as: Metadata.self)
@@ -502,7 +502,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func notes(documentId: UInt) async throws -> [Document.Note] {
+    public func notes(documentId: UInt) async throws -> [Document.Note] {
         let request = try request(.notes(documentId: documentId))
         do {
             return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
@@ -512,7 +512,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+    public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
         var request = try request(.notes(documentId: documentId))
         let body = try JSONEncoder().encode(note)
         request.httpMethod = "POST"
@@ -527,7 +527,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+    public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
         var request = try request(.note(documentId: documentId, noteId: id))
         request.httpMethod = "DELETE"
 
@@ -584,7 +584,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    func nextAsn() async throws -> UInt {
+    public func nextAsn() async throws -> UInt {
         if let backendVersion, backendVersion >= Version(2, 0, 0) {
             try await nextAsnDirectEndpoint()
         } else {
@@ -592,11 +592,11 @@ extension ApiRepository: Repository {
         }
     }
 
-    func users() async throws -> [User] { try await all(User.self) }
+    public func users() async throws -> [User] { try await all(User.self) }
 
-    func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
+    public func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
 
-    func thumbnail(document: Document) async throws -> Image? {
+    public func thumbnail(document: Document) async throws -> Image? {
         let data = try await thumbnailData(document: document)
         guard let image = Image(data: data) else {
             Logger.networking.error("Thumbnail data did not decode as image")
@@ -605,7 +605,7 @@ extension ApiRepository: Repository {
         return image
     }
 
-    func thumbnailData(document: Document) async throws -> Data {
+    public func thumbnailData(document: Document) async throws -> Data {
         let request = try thumbnailRequest(document: document)
         do {
             let (data, _) = try await fetchData(for: request)
@@ -619,7 +619,7 @@ extension ApiRepository: Repository {
         }
     }
 
-    nonisolated
+    public nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest {
         Logger.networking.debug("Get thumbnail for document \(document.id, privacy: .public)")
         let url = try url(Endpoint.thumbnail(documentId: document.id))
@@ -633,7 +633,7 @@ extension ApiRepository: Repository {
         return request
     }
 
-    func suggestions(documentId: UInt) async throws -> Suggestions {
+    public func suggestions(documentId: UInt) async throws -> Suggestions {
         Logger.networking.notice("Get suggestions")
         let request = try request(.suggestions(documentId: documentId))
 
@@ -647,50 +647,50 @@ extension ApiRepository: Repository {
 
     // MARK: Saved views
 
-    func savedViews() async throws -> [SavedView] {
+    public func savedViews() async throws -> [SavedView] {
         try await all(SavedView.self)
     }
 
-    func create(savedView view: ProtoSavedView) async throws -> SavedView {
+    public func create(savedView view: ProtoSavedView) async throws -> SavedView {
         try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
     }
 
-    func update(savedView view: SavedView) async throws -> SavedView {
+    public func update(savedView view: SavedView) async throws -> SavedView {
         try await update(element: view, endpoint: .savedView(id: view.id))
     }
 
-    func delete(savedView view: SavedView) async throws {
+    public func delete(savedView view: SavedView) async throws {
         try await delete(element: view, endpoint: .savedView(id: view.id))
     }
 
     // MARK: Storage paths
 
-    func storagePaths() async throws -> [StoragePath] {
+    public func storagePaths() async throws -> [StoragePath] {
         try await all(StoragePath.self)
     }
 
-    func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
+    public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
         try await create(element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
     }
 
-    func update(storagePath: StoragePath) async throws -> StoragePath {
+    public func update(storagePath: StoragePath) async throws -> StoragePath {
         try await update(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
-    func delete(storagePath: StoragePath) async throws {
+    public func delete(storagePath: StoragePath) async throws {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
-    func currentUser() async throws -> User {
+    public func currentUser() async throws -> User {
         try await uiSettings().user
     }
 
-    func uiSettings() async throws -> UISettings {
+    public func uiSettings() async throws -> UISettings {
         let request = try request(.uiSettings())
         return try await fetchData(for: request, as: UISettings.self)
     }
 
-    func tasks() async throws -> [PaperlessTask] {
+    public func tasks() async throws -> [PaperlessTask] {
         let request = try request(.tasks())
 
         do {
@@ -701,13 +701,13 @@ extension ApiRepository: Repository {
         }
     }
 
-    func task(id: UInt) async throws -> PaperlessTask? {
+    public func task(id: UInt) async throws -> PaperlessTask? {
         let request = try request(.task(id: id))
 
         return try await fetchData(for: request, as: PaperlessTask.self)
     }
 
-    func acknowledge(tasks ids: [UInt]) async throws {
+    public func acknowledge(tasks ids: [UInt]) async throws {
         let endpoint: Endpoint = if let backendVersion, backendVersion >= Version(2, 14, 0) {
             .acknowlegdeTasks()
         } else {

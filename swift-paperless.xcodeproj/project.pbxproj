@@ -21,6 +21,8 @@
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6AA3442C1EDEBE007A1866 /* MarkdownUI */; };
+		7A6DA7002D7DD3E900B3B185 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6DA6FF2D7DD3E900B3B185 /* Networking */; };
+		7A6DA7022D7DD3F000B3B185 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6DA7012D7DD3F000B3B185 /* Networking */; };
 		7AAC43182CA06F8D003E6A3A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC43172CA06F8D003E6A3A /* AsyncAlgorithms */; };
 		7AAC44542CA0A37D003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44532CA0A37D003E6A3A /* Common */; };
 		7AAC44562CA0A38B003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44552CA0A38B003E6A3A /* Common */; };
@@ -72,6 +74,7 @@
 		7A5482BC299AD56E00D5061E /* swift-paperlessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
+		7A6DA7212D7DD42100B3B185 /* Networking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Networking; sourceTree = "<group>"; };
 		7AAC44512CA0A31E003E6A3A /* Common */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Common; sourceTree = "<group>"; };
 		7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AC40CA42D134ED1003F68B1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -179,7 +182,6 @@
 				DeriveUrl.swift,
 				Error/DocumentedError.swift,
 				Error/PresentableError.swift,
-				TransientRepository.swift,
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
 		};
@@ -233,6 +235,7 @@
 				7A4D588D2D13569A00FCB1F1 /* DataModel in Frameworks */,
 				7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */,
 				7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */,
+				7A6DA7022D7DD3F000B3B185 /* Networking in Frameworks */,
 				7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -249,6 +252,7 @@
 				7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
 				7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */,
+				7A6DA7002D7DD3E900B3B185 /* Networking in Frameworks */,
 				7AAC44542CA0A37D003E6A3A /* Common in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -283,6 +287,7 @@
 		7A5482A2299AD56C00D5061E = {
 			isa = PBXGroup;
 			children = (
+				7A6DA7212D7DD42100B3B185 /* Networking */,
 				7A4D58862D13563B00FCB1F1 /* DataModel */,
 				7AAC44512CA0A31E003E6A3A /* Common */,
 				7AC40CAA2D134ED1003F68B1 /* swift-paperless */,
@@ -360,6 +365,7 @@
 				7A1C32C42A5EB08D00C18B44 /* NukeUI */,
 				7AAC44552CA0A38B003E6A3A /* Common */,
 				7A4D588C2D13569A00FCB1F1 /* DataModel */,
+				7A6DA7012D7DD3F000B3B185 /* Networking */,
 			);
 			productName = ShareExtension;
 			productReference = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */;
@@ -401,6 +407,7 @@
 				7A6AA3442C1EDEBE007A1866 /* MarkdownUI */,
 				7AAC44532CA0A37D003E6A3A /* Common */,
 				7A4D58882D13568900FCB1F1 /* DataModel */,
+				7A6DA6FF2D7DD3E900B3B185 /* Networking */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -501,6 +508,7 @@
 				7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				7AAC44522CA0A37D003E6A3A /* XCLocalSwiftPackageReference "Common" */,
 				7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */,
+				7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1064,6 +1072,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Networking;
+		};
 		7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = DataModel;
@@ -1210,6 +1222,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
+		};
+		7A6DA6FF2D7DD3E900B3B185 /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */;
+			productName = Networking;
+		};
+		7A6DA7012D7DD3F000B3B185 /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */;
+			productName = Networking;
 		};
 		7AAC43172CA06F8D003E6A3A /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;

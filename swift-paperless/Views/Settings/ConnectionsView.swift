@@ -6,6 +6,7 @@
 //
 
 import Common
+import Networking
 import os
 import SwiftUI
 
@@ -60,7 +61,7 @@ struct ConnectionsView: View {
 
     @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
 
-    @State private var extraHeaders: [ConnectionManager.HeaderValue] = []
+    @State private var extraHeaders: [Connection.HeaderValue] = []
 
     @State private var logoutRequested = false
 

@@ -8,6 +8,7 @@
 import Common
 import DataModel
 import Foundation
+import Networking
 import os
 import SwiftUI
 
@@ -67,7 +68,7 @@ class LoginViewModel {
         }
     }
 
-    var extraHeaders: [ConnectionManager.HeaderValue] = []
+    var extraHeaders: [Connection.HeaderValue] = []
 
     var selectedIdentity: TLSIdentity?
 

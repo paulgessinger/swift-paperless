@@ -11,39 +11,13 @@ import Common
 import CryptoKit
 import DataModel
 import Foundation
+import Networking
 import os
-
-struct Connection: Equatable {
-    let url: URL
-    let token: String?
-    let extraHeaders: [ConnectionManager.HeaderValue]
-    let identity: String?
-
-    init(url: URL, token: String? = nil, extraHeaders: [ConnectionManager.HeaderValue] = [], identityName: String?) {
-        self.url = url
-        self.token = token
-        self.extraHeaders = extraHeaders
-        identity = identityName
-    }
-
-    var scheme: String {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            Logger.api.error("Unable to decompose connection URL for scheme, returning https")
-            return "https"
-        }
-        guard let scheme = components.scheme else {
-            Logger.api.error("Connection URL does not have scheme, returning https")
-            return "https"
-        }
-
-        return scheme
-    }
-}
 
 struct StoredConnection: Equatable, Codable, Identifiable {
     var id: UUID = .init()
     var url: URL
-    var extraHeaders: [ConnectionManager.HeaderValue]
+    var extraHeaders: [Connection.HeaderValue]
     var user: User
     var identity: String?
 
@@ -165,29 +139,6 @@ struct StoredConnection: Equatable, Codable, Identifiable {
 
 @MainActor
 class ConnectionManager: ObservableObject {
-    struct HeaderValue: Codable, Equatable {
-        // @TODO: (multi-server) Replace with direct field
-        private var _id: UUID?
-        var key: String
-        var value: String
-
-        var id: UUID {
-            get { _id ?? UUID() }
-            set { _id = newValue }
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case _id = "id"
-            case key, value
-        }
-
-        init(key: String, value: String) {
-            _id = UUID()
-            self.key = key
-            self.value = value
-        }
-    }
-
     enum Event {
         case connectionChange(animated: Bool)
     }
@@ -207,7 +158,7 @@ class ConnectionManager: ObservableObject {
 
     // @TODO: (multi-server) Remove in a few versions
     @UserDefaultsBacked("ExtraHeaders", storage: .group)
-    private var extraHeaders: [HeaderValue] = []
+    private var extraHeaders: [Connection.HeaderValue] = []
 
     // @TODO: (multi-server) Remove in a few versions
     private var apiHost: String? {
@@ -361,7 +312,7 @@ class ConnectionManager: ObservableObject {
         setActiveConnection(id: connection.id, animated: false)
     }
 
-    func setExtraHeaders(_ headers: [HeaderValue]) {
+    func setExtraHeaders(_ headers: [Connection.HeaderValue]) {
         guard let activeConnectionId, var stored = connections[activeConnectionId] else {
             Logger.api.warning("Tried to set extra headers but have no active connection (?)")
             return
@@ -408,7 +359,7 @@ class ConnectionManager: ObservableObject {
     }
 }
 
-extension [ConnectionManager.HeaderValue] {
+extension [Connection.HeaderValue] {
     func apply(toRequest req: inout URLRequest) {
         for kv in self {
             if kv.key.contains(" ") || kv.key.isEmpty { continue }

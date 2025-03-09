@@ -1,5 +1,6 @@
 import DataModel
 import Foundation
+@testable import Networking
 import Testing
 
 @Suite struct TransientRepositoryTest {

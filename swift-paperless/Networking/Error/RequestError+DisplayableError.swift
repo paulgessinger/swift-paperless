@@ -4,6 +4,9 @@
 //
 //  Created by Paul Gessinger on 09.03.25.
 //
+import Common
+import Foundation
+import Networking
 
 extension RequestError: DisplayableError {
     var message: String {

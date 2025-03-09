@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import Networking
 import SwiftUI
 
 private typealias Section = CustomSection

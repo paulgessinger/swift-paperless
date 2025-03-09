@@ -5,10 +5,10 @@ public struct Connection: Equatable, Sendable {
     public struct HeaderValue: Codable, Equatable, Sendable {
         // @TODO: (multi-server) Replace with direct field
         private var _id: UUID?
-        var key: String
-        var value: String
+        public var key: String
+        public var value: String
 
-        var id: UUID {
+        public var id: UUID {
             get { _id ?? UUID() }
             set { _id = newValue }
         }
@@ -18,7 +18,7 @@ public struct Connection: Equatable, Sendable {
             case key, value
         }
 
-        init(key: String, value: String) {
+        public init(key: String, value: String) {
             _id = UUID()
             self.key = key
             self.value = value

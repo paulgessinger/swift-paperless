@@ -9,7 +9,7 @@ import Common
 import DataModel
 import Foundation
 
-enum RequestError: Error, Equatable {
+public enum RequestError: Error, Equatable {
     // Error building a request in the first place
     case invalidRequest
 
@@ -33,10 +33,10 @@ enum RequestError: Error, Equatable {
     case certificate(detail: String)
 }
 
-struct ResourceForbidden<Resource>: Error {
-    let response: String?
+public struct ResourceForbidden<Resource>: Error {
+    public let response: String?
 
-    init(_: Resource.Type, response: String?) {
+    public init(_: Resource.Type, response: String?) {
         self.response = response
     }
 }

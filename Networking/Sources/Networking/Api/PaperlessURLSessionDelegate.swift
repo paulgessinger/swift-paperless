@@ -9,10 +9,10 @@ import Common
 import Foundation
 import os
 
-final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
+public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Sendable {
     private let credential: URLCredential?
 
-    init(identityName: String?) {
+    public init(identityName: String?) {
         if
             let pName = identityName,
             let identity = Keychain.readIdentity(name: pName)
@@ -24,7 +24,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         }
     }
 
-    init(identity: TLSIdentity?) {
+    public init(identity: TLSIdentity?) {
         if let identity {
             credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
         } else {
@@ -48,7 +48,7 @@ final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate, Senda
         return (.useCredential, cred)
     }
 
-    func urlSession(_: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+    public func urlSession(_: URLSession, task _: URLSessionTask, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         guard
             challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodClientCertificate
         else {

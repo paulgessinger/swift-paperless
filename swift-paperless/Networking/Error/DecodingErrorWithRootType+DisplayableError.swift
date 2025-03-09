@@ -7,7 +7,7 @@
 
 import Networking
 
-struct DecodingErrorWithRootType: DisplayableError {
+extension DecodingErrorWithRootType: DisplayableError {
     var message: String {
         error.message
     }

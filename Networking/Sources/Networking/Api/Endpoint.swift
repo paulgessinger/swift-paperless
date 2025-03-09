@@ -9,9 +9,9 @@ import DataModel
 import Foundation
 import os
 
-struct Endpoint {
-    let path: String
-    let queryItems: [URLQueryItem]
+public struct Endpoint {
+    public let path: String
+    public let queryItems: [URLQueryItem]
 
     init(path: String, queryItems: [URLQueryItem] = []) {
         self.path = path
@@ -19,12 +19,12 @@ struct Endpoint {
     }
 }
 
-extension Endpoint {
+public extension Endpoint {
     static func root() -> Endpoint {
         Endpoint(path: "/api", queryItems: [])
     }
 
-    private static let defaultDocumentPageSize: UInt = 250
+    static let defaultDocumentPageSize: UInt = 250
 
     static func documents(page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize) -> Endpoint {
         let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
@@ -161,47 +161,47 @@ extension Endpoint {
     }
 
     static func storagePaths() -> Endpoint {
-        .init(path: "/api/storage_paths",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/storage_paths",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func createStoragePath() -> Endpoint {
-        .init(path: "/api/storage_paths")
+        Endpoint(path: "/api/storage_paths")
     }
 
     static func storagePath(id: UInt) -> Endpoint {
-        .init(path: "/api/storage_paths/\(id)")
+        Endpoint(path: "/api/storage_paths/\(id)")
     }
 
     static func users() -> Endpoint {
-        .init(path: "/api/users",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/users",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func groups() -> Endpoint {
-        .init(path: "/api/groups",
-              queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+        Endpoint(path: "/api/groups",
+                 queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
     static func uiSettings() -> Endpoint {
-        .init(path: "/api/ui_settings")
+        Endpoint(path: "/api/ui_settings")
     }
 
     static func tasks() -> Endpoint {
-        .init(path: "/api/tasks")
+        Endpoint(path: "/api/tasks")
     }
 
     static func task(id: UInt) -> Endpoint {
-        .init(path: "/api/tasks/\(id)")
+        Endpoint(path: "/api/tasks/\(id)")
     }
 
     static func acknowlegdeTasksV1() -> Endpoint {
-        .init(path: "/api/acknowledge_tasks")
+        Endpoint(path: "/api/acknowledge_tasks")
     }
 
     // https://github.com/paperless-ngx/paperless-ngx/pull/8195
     static func acknowlegdeTasks() -> Endpoint {
-        .init(path: "/api/tasks/acknowledge")
+        Endpoint(path: "/api/tasks/acknowledge")
     }
 
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {

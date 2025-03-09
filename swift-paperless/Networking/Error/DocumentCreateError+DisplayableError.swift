@@ -4,6 +4,7 @@
 //
 //  Created by Paul Gessinger on 09.03.25.
 //
+import Networking
 
 extension DocumentCreateError: DisplayableError {
     var message: String {
