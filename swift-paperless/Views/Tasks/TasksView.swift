@@ -415,7 +415,7 @@ private struct PreviewHelperView<Content: View>: View {
         taskFileName: "2021-05-04--Letter_Vorläufiger Bescheid Promotion__DOCT.pdf",
         dateCreated: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
         dateDone: Calendar.current.date(from: DateComponents(year: 2023, month: 12, day: 4, hour: 9, minute: 10, second: 24))!,
-        type: .file,
+        type: "file",
         status: .SUCCESS,
         result: "Success. New document id 2232 created",
         acknowledged: false,
