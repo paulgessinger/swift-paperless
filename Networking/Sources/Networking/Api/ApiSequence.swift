@@ -10,7 +10,7 @@ import Foundation
 import os
 import Semaphore
 
-actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
+public actor ApiSequence<Element>: AsyncSequence, AsyncIteratorProtocol
     where Element: Model & Decodable & Sendable
 {
     private var nextPage: URL?
