@@ -8,8 +8,8 @@
 import Foundation
 import os
 
-enum Keychain {
-    enum KeychainError: Error {
+public enum Keychain {
+    public enum KeychainError: Error {
         case duplicateItem
         case itemNotFound
         case invalidItemFormat
@@ -19,7 +19,7 @@ enum Keychain {
         case identityReadFailed(OSStatus)
     }
 
-    static func save(service: String, account: String, value: Data) throws(KeychainError) {
+    public static func save(service: String, account: String, value: Data) throws(KeychainError) {
         let query: [String: Any] = [
             kSecValueData as String: value,
             kSecClass as String: kSecClassGenericPassword,
@@ -38,7 +38,7 @@ enum Keychain {
         }
     }
 
-    static func update(service: String, account: String, value: Data) throws(KeychainError) {
+    public static func update(service: String, account: String, value: Data) throws(KeychainError) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -57,7 +57,7 @@ enum Keychain {
         }
     }
 
-    static func saveOrUpdate(service: String, account: String, value: Data) throws(KeychainError) {
+    public static func saveOrUpdate(service: String, account: String, value: Data) throws(KeychainError) {
         do {
             try save(service: service, account: account,
                      value: value)
@@ -67,7 +67,7 @@ enum Keychain {
         }
     }
 
-    static func read(service: String, account: String) throws(KeychainError) -> Data? {
+    public static func read(service: String, account: String) throws(KeychainError) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
@@ -96,7 +96,7 @@ enum Keychain {
         return data
     }
 
-    static func delete(service: String, account: String) throws(KeychainError) {
+    public static func delete(service: String, account: String) throws(KeychainError) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -110,7 +110,7 @@ enum Keychain {
         }
     }
 
-    static func saveIdentity(identity: SecIdentity?, name: String) throws(KeychainError) {
+    public static func saveIdentity(identity: SecIdentity?, name: String) throws(KeychainError) {
         let attributes: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecValueRef as String: identity as Any,
@@ -118,14 +118,14 @@ enum Keychain {
         ]
         let res = SecItemAdd(attributes as CFDictionary, nil)
         if res == noErr {
-            Logger.shared.info("Identity saved successfully in the keychain")
+            Logger.common.info("Identity saved successfully in the keychain")
         } else {
-            Logger.shared.warning("Something went wrong trying to save the Identity in the keychain")
+            Logger.common.warning("Something went wrong trying to save the Identity in the keychain")
             throw .identitySaveFailed(res)
         }
     }
 
-    static func readAllIdentities() throws(KeychainError) -> [(SecIdentity, String)] {
+    public static func readAllIdentities() throws(KeychainError) -> [(SecIdentity, String)] {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecMatchLimit as String: kSecMatchLimitAll,
@@ -146,16 +146,16 @@ enum Keychain {
                 }
             }
         } else if res == errSecItemNotFound {
-            Logger.shared.info("No identities found in keychain")
+            Logger.common.info("No identities found in keychain")
         } else {
-            Logger.shared.warning("Error reading keychain identities: \(res)")
+            Logger.common.warning("Error reading keychain identities: \(res)")
             throw .identityReadFailed(res)
         }
 
         return ret
     }
 
-    static func readIdentity(name: String) -> SecIdentity? {
+    public static func readIdentity(name: String) -> SecIdentity? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecMatchLimit as String: kSecMatchLimitOne,
@@ -173,12 +173,12 @@ enum Keychain {
                 return identity
             }
         } else {
-            Logger.shared.warning("Something went wrong trying to find the identity in the keychain")
+            Logger.common.warning("Something went wrong trying to find the identity in the keychain")
         }
         return nil
     }
 
-    static func deleteIdentity(name: String) throws(KeychainError) {
+    public static func deleteIdentity(name: String) throws(KeychainError) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassIdentity,
             kSecAttrLabel as String: name,
@@ -186,9 +186,9 @@ enum Keychain {
 
         let res = SecItemDelete(query as CFDictionary)
         if res == noErr {
-            Logger.shared.info("Successfully deleted the identity")
+            Logger.common.info("Successfully deleted the identity")
         } else {
-            Logger.shared.warning("Error deleting the identity")
+            Logger.common.warning("Error deleting the identity")
             throw .identityDeleteFailed(res)
         }
     }

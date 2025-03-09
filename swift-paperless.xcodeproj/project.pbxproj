@@ -105,7 +105,6 @@
 				EquatableNoop.swift,
 				Gather.swift,
 				Haptics.swift,
-				Keychain.swift,
 				Logging.swift,
 				"View+alert.swift",
 			);
