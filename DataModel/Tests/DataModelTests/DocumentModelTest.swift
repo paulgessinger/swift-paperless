@@ -74,6 +74,13 @@ struct DocumentModelTest {
         #expect(document.userCanChange == true)
     }
 
+    @Test("Tests that the user_can_change field is correctly decoded, even if it is false")
+    func testUserCanChangeIsFalse() throws {
+        let data = try #require(testData("Data/Document/full_no_user_can_change_false.json"))
+        let document = try decoder.decode(Document.self, from: data)
+        #expect(document.userCanChange == false)
+    }
+
     @Test
     func testSetPermissionsKey() throws {
         var document = Document(id: 123, title: "hallo", created: .now, tags: [])
