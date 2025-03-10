@@ -255,7 +255,7 @@ struct CommonPickerEdit<Manager, D>: View
     where
     Manager: ManagerProtocol,
     Manager.Model.Element: Pickable,
-    D: DocumentProtocol
+    D: DocumentProtocol & Equatable
 {
     typealias Element = Manager.Model.Element
 
@@ -294,6 +294,32 @@ struct CommonPickerEdit<Manager, D>: View
         _document = document
         self.store = store
         model = .init(store: store)
+    }
+
+    private var isSelectedVisibleToUser: Bool {
+        let allDict = store[keyPath: Element.storePath]
+        if let setId = document[keyPath: Element.documentPath(D.self)] {
+            if allDict[setId] != nil {
+                // ID is in dict, so must be visible
+                return true
+            } else {
+                // ID is not in dict, selected ID is not visible
+                return false
+            }
+        }
+        // No ID is set, so whatever is visible is good enough
+        return true
+    }
+
+    private var notVisibleIsSelectedView: some View {
+        HStack {
+            Text(.permissions(.private))
+                .italic()
+                .foregroundColor(.primary)
+            Spacer()
+            Label(String(localized: .localizable(.elementIsSelected)), systemImage: "checkmark")
+                .labelStyle(.iconOnly)
+        }
     }
 
     private func row(_ label: String, value: UInt?) -> some View {
@@ -364,6 +390,9 @@ struct CommonPickerEdit<Manager, D>: View
                     row(Element.notAssignedPicker, value: nil)
                 }
                 Section {
+                    if !isSelectedVisibleToUser {
+                        notVisibleIsSelectedView
+                    }
                     ForEach(elements, id: \.0) { id, name in
                         row(name, value: id)
                     }
@@ -372,6 +401,7 @@ struct CommonPickerEdit<Manager, D>: View
         }
         .animation(.spring, value: searchDebounce.debouncedText)
         .animation(.spring, value: permissions)
+        .animation(.spring, value: document)
 
         .searchable(text: $searchDebounce.text)
 
