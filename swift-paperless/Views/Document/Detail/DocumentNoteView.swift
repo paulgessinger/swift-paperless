@@ -141,17 +141,16 @@ struct DocumentNoteView: View {
                     }
                 }
 
-                if store.permissions.test(.add, for: .note) {
-                    Section {
-                        Button {
-                            adding = true
-                        } label: {
-                            Label(.localizable(.add), systemImage: "plus.circle.fill")
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .bold()
-                        }
-                        .buttonStyle(.borderless)
+                Section {
+                    Button {
+                        adding = true
+                    } label: {
+                        Label(.localizable(.add), systemImage: "plus.circle.fill")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .bold()
                     }
+                    .buttonStyle(.borderless)
+                    .disabled(!store.permissions.test(.add, for: .note))
                 }
             }
             .animation(.spring, value: document)
@@ -164,14 +163,13 @@ struct DocumentNoteView: View {
                     CancelIconButton()
                 }
 
-                if store.permissions.test(.add, for: .note) {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            adding = true
-                        } label: {
-                            Label(.localizable(.add), systemImage: "plus")
-                        }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        adding = true
+                    } label: {
+                        Label(.localizable(.add), systemImage: "plus")
                     }
+                    .disabled(!store.permissions.test(.add, for: .note))
                 }
             }
 

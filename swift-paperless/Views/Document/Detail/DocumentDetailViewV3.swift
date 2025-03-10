@@ -18,7 +18,7 @@ private let dragThresholdDown = 40.0
 private let maxDragOffset = 100.0
 
 private struct Aspect: View {
-    var label: String
+    var label: String?
     var systemImage: String
 
     @ScaledMetric(relativeTo: .body) private var imageWidth = 20.0
@@ -29,13 +29,14 @@ private struct Aspect: View {
         self.systemImage = systemImage
     }
 
-    init(_ label: String, systemImage: String) {
+    init(_ label: String?, systemImage: String) {
         self.label = label
         self.systemImage = systemImage
     }
 
     var body: some View {
-        Label(label, systemImage: systemImage)
+        Label(label ?? String(localized: .permissions(.private)), systemImage: systemImage)
+            .italic(label == nil)
     }
 }
 
@@ -145,18 +146,18 @@ private struct DocumentPropertyView: View {
                             Aspect(localized: .localizable(.documentAsn(asn)), systemImage: "qrcode")
                         }
 
-                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                            Aspect(name, systemImage: "person")
+                        if let id = document.correspondent {
+                            Aspect(store.correspondents[id]?.name, systemImage: "person")
                         }
 
-                        if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                            Aspect(name, systemImage: "doc")
+                        if let id = document.documentType {
+                            Aspect(store.documentTypes[id]?.name, systemImage: "doc")
                         }
 
                         Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
-                        if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                            Aspect(name, systemImage: "archivebox")
+                        if let id = document.storagePath {
+                            Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
                         }
                     }
 
@@ -225,6 +226,11 @@ private struct DocumentPropertyView: View {
             .font(.title2)
     }
 
+    private var canEditDocument: Bool {
+        // @TODO: This fails, becasue we load the document with `full_perms` so we get users and groups, but `user_can_change` is missing
+        viewModel.store.permissions.test(.change, for: .document) && viewModel.document.userCanChange
+    }
+
     var body: some View {
         let document = viewModel.document
         VStack(alignment: .leading) {
@@ -250,20 +256,20 @@ private struct DocumentPropertyView: View {
                     }
                     .offset(y: secondaryOffset)
 
-                if viewModel.store.permissions.test(.change, for: .document) {
-                    Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
-                        .labelStyle(.iconOnly)
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.primary, .tertiary)
-                        .offset(y: secondaryOffset)
-                        .onTapGesture {
-                            Haptics.shared.impact(style: .medium)
-                            showEditSheet = true
-                        }
-                        .accessibilityIdentifier("documentEditButton")
-                }
+                Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.primary, .tertiary)
+                    .offset(y: secondaryOffset)
+                    .onTapGesture {
+                        Haptics.shared.impact(style: .medium)
+                        showEditSheet = true
+                    }
+                    .accessibilityIdentifier("documentEditButton")
+                    .disabled(!canEditDocument)
+                    .opacity(canEditDocument ? 1 : 0.3)
             }
 
             panel
@@ -357,7 +363,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     }
 
     private var canEditDocument: Bool {
-        viewModel.store.permissions.test(.change, for: .document)
+        // @TODO: This fails, becasue we load the document with `full_perms` so we get users and groups, but `user_can_change` is missing
+        viewModel.store.permissions.test(.change, for: .document) && viewModel.document.userCanChange
     }
 
     init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>?) {

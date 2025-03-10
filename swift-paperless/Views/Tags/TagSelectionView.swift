@@ -343,7 +343,6 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
                         }) {
                             HStack {
                                 TagView(tag: tag)
-                                    .if(tag == nil) { $0.redacted(reason: .placeholder) }
                                 Spacer()
                                 Label(String(localized: .localizable(.remove)), systemImage: "xmark.circle.fill")
                                     .labelStyle(.iconOnly)
