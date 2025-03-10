@@ -59,7 +59,7 @@ extension RequestError: DisplayableError {
 
         case let .certificate(detail):
             raw = String(localized: .localizable(.requestErrorCertificate)) + " " + detail
-            
+
         case let .other(detail):
             raw = detail
         }
@@ -96,4 +96,3 @@ extension RequestError: DisplayableError {
         return message.contains("SSL") || message.contains("certificate")
     }
 }
-
