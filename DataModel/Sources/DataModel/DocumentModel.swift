@@ -84,8 +84,8 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     // Presense of this depends on the endpoint
     // If we didn't get a value, we likely just modified
     @IgnoreEncoding
-    @Default(true)
-    var userCanChange: Bool?
+    @Default(ifMissing: true)
+    public private(set) var userCanChange: Bool
 
     // Presense of this depends on the endpoint
     @IgnoreEncoding
