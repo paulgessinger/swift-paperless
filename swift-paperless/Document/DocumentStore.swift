@@ -237,12 +237,10 @@ final class DocumentStore: ObservableObject, Sendable {
         }
 
         do {
-            let user = try await repository.currentUser()
-            await MainActor.run {
-                currentUser = user
-            }
+            currentUser = try await repository.currentUser()
         } catch let error where !error.isCancellationError {
             Logger.shared.error("Unable to get current user: \(error)")
+            throw error
         }
     }
 
