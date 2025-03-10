@@ -177,7 +177,7 @@ final class DocumentStore: ObservableObject, Sendable {
 
     func notes(for document: Document) async throws -> [Document.Note] {
         try checkPermission(.view, for: .note)
-        try await repository.notes(documentId: document.id)
+        return try await repository.notes(documentId: document.id)
     }
 
     func fetchTasks() async {
