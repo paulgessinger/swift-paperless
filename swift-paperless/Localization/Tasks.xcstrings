@@ -430,43 +430,43 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dokumentet med ID #%@, der er knyttet til denne opgave, findes ikke.\nMåske er det blevet slettet i mellemtiden."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Das Dokument mit der ID #%@, das mit dieser Aufgabe verbunden ist, existiert nicht.\nVielleicht wurde es in der Zwischenzeit gelöscht."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime."
+            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime, or you do not have permission to view it."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Le document avec ID #%@ associé à cette tâche n'existe pas.\nIl a peut-être été supprimé entre-temps."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Il documento con ID #%@ associato a questo task non esiste.\nForse nel frattempo è stato eliminato."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Het document met ID #%@ dat bij deze taak hoort, bestaat niet.\nMogelijk is het in de tussentijd verwijderd."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dokument o ID #%@ powiązany z tym zadaniem nie istnieje.\nByć może został w międzyczasie usunięty."
           }
         }
