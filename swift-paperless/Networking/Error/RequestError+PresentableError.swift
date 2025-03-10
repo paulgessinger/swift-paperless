@@ -60,7 +60,7 @@ extension RequestError: PresentableError {
                 .bold()
             Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
                 + (Text(detail).italic())
-            
+
         case let .other(detail):
             Text(detail)
                 .bold()
