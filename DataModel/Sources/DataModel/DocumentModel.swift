@@ -79,7 +79,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     }
 
     @IgnoreEncoding
-    public internal(set) var notes: NotesPayload = .init()
+    public private(set) var notes: NotesPayload = .init()
 
     // Presense of this depends on the endpoint
     // If we didn't get a value, we likely just modified
