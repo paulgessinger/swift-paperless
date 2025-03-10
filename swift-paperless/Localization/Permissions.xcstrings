@@ -288,6 +288,17 @@
         }
       }
     },
+    "noViewPermissionsTasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don’t have permission to view tasks."
+          }
+        }
+      }
+    },
     "noViewPermissionsUISettings" : {
       "extractionState" : "manual",
       "localizations" : {
