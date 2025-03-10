@@ -5,8 +5,8 @@
 //  Created by Paul Gessinger on 29.04.23.
 //
 
-import Networking
 import DataModel
+import Networking
 import os
 import SwiftUI
 
