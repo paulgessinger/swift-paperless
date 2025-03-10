@@ -103,7 +103,7 @@ class LoginViewModel {
 
     func onChangeUrl(immediate: Bool = false) {
         checkUrlTask?.cancel()
-        
+
         guard !url.isEmpty else {
             loginState = .empty
             return
@@ -123,7 +123,6 @@ class LoginViewModel {
                 await checkUrl(string: fullUrl)
             }
         }
-
 
         if url.starts(with: "https://") {
             scheme = .https
@@ -240,8 +239,7 @@ class LoginViewModel {
             if let error = RequestError(from: nsError) {
                 Logger.shared.error("Checking API converted NSError \(nsError) to known error: \(String(describing: error))")
                 loginState = .error(.request(error))
-            }
-            else {
+            } else {
                 Logger.shared.error("Checking API unknown NSError: \(nsError)")
                 loginState = .error(LoginError(other: nsError))
                 return
