@@ -106,7 +106,7 @@ struct SettingsView: View {
             } label: {
                 Label {
                     Text(.settings(.detailsSourceCode))
-                        .accentColor(.primary)
+                        .tint(.primary)
                 } icon: {
                     Image(systemName: "terminal.fill")
                 }
