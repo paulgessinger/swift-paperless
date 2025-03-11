@@ -231,11 +231,6 @@ final class DocumentStore: ObservableObject, Sendable {
     func fetchCurrentUser() async throws {
         // this should basically always be the case but let's be safe
         try checkPermission(.view, for: .uiSettings)
-        if currentUser != nil {
-            // We don't expect this to change
-            return
-        }
-
         do {
             currentUser = try await repository.currentUser()
         } catch let error where !error.isCancellationError {
@@ -318,7 +313,7 @@ final class DocumentStore: ObservableObject, Sendable {
             }
         }
 
-        Logger.shared.notice("Fetch all store complete")
+        Logger.shared.info("Fetch all store complete")
     }
 
     private func fetchAll<T>(elements: [T],
