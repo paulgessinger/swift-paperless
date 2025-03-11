@@ -102,4 +102,18 @@ class DocumentDetailModel {
     func loadSuggestions() async throws {
         suggestions = try await store.repository.suggestions(documentId: document.id)
     }
+
+    var userCanChange: Bool {
+        if !store.permissions.test(.change, for: .document) {
+            return false
+        }
+
+        guard let user = store.currentUser else {
+            // We should always have a user
+            Logger.shared.warning("No user found in store when checking document change permissions (weird)")
+            return false
+        }
+
+        return user.canChange(document)
+    }
 }
