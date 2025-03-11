@@ -16,6 +16,38 @@ public struct User: Model, Identifiable, Equatable, Sendable {
     @CodedAt("is_superuser")
     public var isSuperUser: Bool
     public var username: String
+
+    @Default([UInt]())
+    public var groups: [UInt]
+}
+
+public extension User {
+    func canChange(_ resource: some PermissionsModel) -> Bool {
+        if isSuperUser {
+            return true
+        }
+
+        // If resource has no owner, it's accessible to all
+        if resource.owner == nil || resource.owner == id {
+            return true
+        }
+
+        guard let permissions = resource.permissions else {
+            return false
+        }
+
+        if permissions.change.users.contains(id) {
+            return true
+        }
+
+        for group in groups {
+            if permissions.change.groups.contains(group) {
+                return true
+            }
+        }
+
+        return false
+    }
 }
 
 @Codable
