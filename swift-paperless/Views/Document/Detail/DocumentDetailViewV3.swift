@@ -226,11 +226,6 @@ private struct DocumentPropertyView: View {
             .font(.title2)
     }
 
-    private var canEditDocument: Bool {
-        // @TODO: This fails, becasue we load the document with `full_perms` so we get users and groups, but `user_can_change` is missing
-        viewModel.store.permissions.test(.change, for: .document) && viewModel.document.userCanChange
-    }
-
     var body: some View {
         let document = viewModel.document
         VStack(alignment: .leading) {
@@ -268,9 +263,10 @@ private struct DocumentPropertyView: View {
                         showEditSheet = true
                     }
                     .accessibilityIdentifier("documentEditButton")
-                    .disabled(!canEditDocument)
-                    .opacity(canEditDocument ? 1 : 0.3)
+                    .disabled(!viewModel.userCanChange)
+                    .opacity(viewModel.userCanChange ? 1 : 0.3)
             }
+            .animation(.default, value: viewModel.userCanChange)
 
             panel
         }
@@ -362,11 +358,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
     }
 
-    private var canEditDocument: Bool {
-        // @TODO: This fails, becasue we load the document with `full_perms` so we get users and groups, but `user_can_change` is missing
-        viewModel.store.permissions.test(.change, for: .document) && viewModel.document.userCanChange
-    }
-
     init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>?) {
         _viewModel = State(initialValue: DocumentDetailModel(store: store,
                                                              document: document))
@@ -427,7 +418,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                              dragOffset: $dragOffset)
             .padding(.bottom, bottomSpacing)
             .overlay(alignment: .bottom) {
-                if canEditDocument {
+                if viewModel.userCanChange {
                     Image(systemName: "chevron.compact.up")
                         .resizable()
                         .scaledToFit()
@@ -479,7 +470,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                     }
                 }
                 .onEnded { value in
-                    if value.translation.height < -dragThresholdUp, canEditDocument {
+                    if value.translation.height < -dragThresholdUp, viewModel.userCanChange {
                         showEditSheet = true
                     }
 
