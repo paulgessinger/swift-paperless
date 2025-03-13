@@ -1,9 +1,13 @@
-import XCTest
+import Common
+@testable import DataModel
+import Foundation
+import Testing
 
-import DataModel
+private let decoder = JSONDecoder()
 
-final class SavedViewTest: XCTestCase {
-    func testDecoding() throws {
+@Suite
+struct SavedViewTest {
+    @Test func testDecoding() throws {
         do {
             let input = """
             {
@@ -26,13 +30,13 @@ final class SavedViewTest: XCTestCase {
             }
             """.data(using: .utf8)!
 
-            let result = try JSONDecoder().decode(SavedView.self, from: input)
-            XCTAssertEqual(result.id, 5)
-            XCTAssertEqual(result.name, "Aktien Kauf")
-            XCTAssertEqual(result.showOnDashboard, false)
-            XCTAssertEqual(result.showInSidebar, false)
-            XCTAssertEqual(result.sortField, .created)
-            XCTAssertEqual(result.sortOrder, .descending)
+            let result = try decoder.decode(SavedView.self, from: input)
+            #expect(result.id == 5)
+            #expect(result.name == "Aktien Kauf")
+            #expect(result.showOnDashboard == false)
+            #expect(result.showInSidebar == false)
+            #expect(result.sortField == .created)
+            #expect(result.sortOrder == .descending)
         }
 
         do {
@@ -57,18 +61,18 @@ final class SavedViewTest: XCTestCase {
             }
             """.data(using: .utf8)!
 
-            let result = try JSONDecoder().decode(SavedView.self, from: input)
-            XCTAssertEqual(result.id, 5)
-            XCTAssertEqual(result.name, "Aktien Kauf")
-            XCTAssertEqual(result.showOnDashboard, false)
-            XCTAssertEqual(result.showInSidebar, false)
-            XCTAssertEqual(result.sortField, .created)
-            XCTAssertEqual(result.sortOrder, .ascending)
+            let result = try decoder.decode(SavedView.self, from: input)
+            #expect(result.id == 5)
+            #expect(result.name == "Aktien Kauf")
+            #expect(result.showOnDashboard == false)
+            #expect(result.showInSidebar == false)
+            #expect(result.sortField == .created)
+            #expect(result.sortOrder == .ascending)
         }
     }
 
     // See https://github.com/paulgessinger/swift-paperless/issues/108
-    func testDecodingNilSortField() throws {
+    @Test func testDecodingNilSortField() throws {
         let input = """
         {
           "id": 1,
@@ -91,17 +95,17 @@ final class SavedViewTest: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        let result = try JSONDecoder().decode(SavedView.self, from: input)
-        XCTAssertEqual(result.id, 1)
-        XCTAssertEqual(result.name, "Inbox")
-        XCTAssertEqual(result.showOnDashboard, true)
-        XCTAssertEqual(result.showInSidebar, true)
-        XCTAssertEqual(result.sortField, nil)
-        XCTAssertEqual(result.sortOrder, .ascending)
+        let result = try decoder.decode(SavedView.self, from: input)
+        #expect(result.id == 1)
+        #expect(result.name == "Inbox")
+        #expect(result.showOnDashboard == true)
+        #expect(result.showInSidebar == true)
+        #expect(result.sortField == nil)
+        #expect(result.sortOrder == .ascending)
     }
 
     // See https://github.com/paulgessinger/swift-paperless/issues/108
-    func testDecodingWithStringSortField() throws {
+    @Test func testDecodingWithStringSortField() throws {
         let input = """
         {
           "id": 1,
@@ -124,12 +128,12 @@ final class SavedViewTest: XCTestCase {
         }
         """.data(using: .utf8)!
 
-        let result = try JSONDecoder().decode(SavedView.self, from: input)
-        XCTAssertEqual(result.id, 1)
-        XCTAssertEqual(result.name, "inbox")
-        XCTAssertEqual(result.showOnDashboard, true)
-        XCTAssertEqual(result.showInSidebar, true)
-        XCTAssertEqual(result.sortField, .score)
-        XCTAssertEqual(result.sortOrder, .ascending)
+        let result = try decoder.decode(SavedView.self, from: input)
+        #expect(result.id == 1)
+        #expect(result.name == "inbox")
+        #expect(result.showOnDashboard == true)
+        #expect(result.showInSidebar == true)
+        #expect(result.sortField == .score)
+        #expect(result.sortOrder == .ascending)
     }
 }
