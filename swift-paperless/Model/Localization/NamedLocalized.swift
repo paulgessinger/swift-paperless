@@ -18,20 +18,21 @@ extension Document: NamedLocalized {
 
 extension SortField {
     var localizedName: String {
-        let res: LocalizedStringResource = switch self {
-        case .asn: .localizable(.asn)
-        case .correspondent: .localizable(.correspondent)
-        case .title: .localizable(.title)
-        case .documentType: .localizable(.documentType)
-        case .created: .localizable(.sortOrderCreated)
-        case .added: .localizable(.sortOrderAdded)
-        case .modified: .localizable(.sortOrderModified)
-        case .storagePath: .localizable(.sortOrderStoragePath)
-        case .owner: .localizable(.sortOrderOwner)
-        case .notes: .localizable(.sortOrderNotes)
-        case .score: .localizable(.sortOrderScore)
+        switch self {
+        case .asn: String(localized: .localizable(.asn))
+        case .correspondent: String(localized: .localizable(.correspondent))
+        case .title: String(localized: .localizable(.title))
+        case .documentType: String(localized: .localizable(.documentType))
+        case .created: String(localized: .localizable(.sortOrderCreated))
+        case .added: String(localized: .localizable(.sortOrderAdded))
+        case .modified: String(localized: .localizable(.sortOrderModified))
+        case .storagePath: String(localized: .localizable(.sortOrderStoragePath))
+        case .owner: String(localized: .localizable(.sortOrderOwner))
+        case .notes: String(localized: .localizable(.sortOrderNotes))
+        case .score: String(localized: .localizable(.sortOrderScore))
+        case .pageCount: String(localized: .localizable(.sortOrderPageCount))
+        case let .other(name): name
         }
-        return String(localized: res)
     }
 }
 

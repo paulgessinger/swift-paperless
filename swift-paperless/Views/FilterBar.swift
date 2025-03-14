@@ -624,6 +624,10 @@ struct FilterBar: View {
                         ForEach(eligibleSortFields, id: \.rawValue) { f in
                             Text(f.localizedName).tag(f)
                         }
+                        if case let .other(value) = filterState.sortField {
+                            Text(value)
+                                .tag(SortField.other(value))
+                        }
                     }
 
                     Picker(String(localized: .localizable(.sortOrder)), selection: $filterState.sortOrder) {
