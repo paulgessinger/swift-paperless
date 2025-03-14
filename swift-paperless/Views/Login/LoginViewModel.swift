@@ -337,7 +337,8 @@ class LoginViewModel {
         request.httpBody = json
         extraHeaders.apply(toRequest: &request)
 
-        Logger.shared.info("Sending login request with headers: \(request.allHTTPHeaderFields ?? [:])")
+        let headerStr = sanitize(headers: request.allHTTPHeaderFields)
+        Logger.shared.info("Sending login request with headers: \(headerStr, privacy: .public)")
 
         let session = URLSession(configuration: .default, delegate: PaperlessURLSessionDelegate(identity: selectedIdentity), delegateQueue: nil)
 

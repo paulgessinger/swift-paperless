@@ -57,11 +57,7 @@ public actor ApiRepository {
     public init(connection: Connection) async {
         self.connection = connection
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
-        #if DEBUG
-            let tokenStr = connection.token ?? "nil"
-        #else
-            let tokenStr = connection.token != nil ? "<token len: \(connection.token?.count ?? 0)>" : "nil"
-        #endif
+        let tokenStr = sanitize(token: connection.token)
         Logger.networking.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) and token \(tokenStr, privacy: .public)")
 
         let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
@@ -116,12 +112,11 @@ public actor ApiRepository {
     public func request(url: URL) -> URLRequest {
         let sanitizedUrl = Self.sanitizeUrlForLog(url)
         var request = URLRequest(url: url)
-        if let apiToken {
-            request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        }
+        addTokenTo(request: &request)
         request.setValue("application/json; version=\(effectiveApiVersion)", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
-        Logger.networking.trace("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(request.allHTTPHeaderFields ?? [:])")
+        let headerStr = sanitize(headers: request.allHTTPHeaderFields)
+        Logger.networking.info("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(headerStr)")
         return request
     }
 
@@ -619,15 +614,24 @@ extension ApiRepository: Repository {
         }
     }
 
+    private nonisolated
+    func addTokenTo(request: inout URLRequest) {
+        let tokenStr = sanitize(token: connection.token)
+        if let apiToken {
+            Logger.networking.info("Adding token to request: \(tokenStr, privacy: .public)")
+            request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+        } else {
+            Logger.networking.info("NOT adding token to request (token is nil)")
+        }
+    }
+
     public nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest {
         Logger.networking.debug("Get thumbnail for document \(document.id, privacy: .public)")
         let url = try url(Endpoint.thumbnail(documentId: document.id))
 
         var request = URLRequest(url: url)
-        if let apiToken {
-            request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
-        }
+        addTokenTo(request: &request)
         connection.extraHeaders.apply(toRequest: &request)
 
         return request
@@ -771,7 +775,7 @@ extension ApiRepository: Repository {
             self.apiVersion = apiVersion
             self.backendVersion = backendVersion
         } catch {
-            Logger.networking.error("Unable to get API and backend version, error: \(error)")
+            Logger.networking.error("Unable to get API and backend version, error: \(String(describing: error))")
             return
         }
     }

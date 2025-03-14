@@ -17,9 +17,10 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
             let pName = identityName,
             let identity = Keychain.readIdentity(name: pName)
         {
+            Logger.networking.info("URLSessoinDelegate initializing with identity: \(pName, privacy: .public)")
             credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
         } else {
-            Logger.networking.info("Did not get identities from keychain")
+            Logger.networking.info("URLSessoinDelegate initializing without identity")
             credential = nil
         }
     }
