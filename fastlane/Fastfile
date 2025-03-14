@@ -240,6 +240,7 @@ Redact screenshots to not include information that you do not wish to expose.
       scheme: "swift-paperless",
       destination: "platform=iOS Simulator,OS=#{ios},name=#{device}",
       xcargs: "-skipPackagePluginValidation -skipMacroValidation",
+      configuration: "Release",
     )
   end
 
