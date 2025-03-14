@@ -1,3 +1,0 @@
-- Fix after change to tasks API
-- Support sorting by page count
-- Fix error when sort field has unexpected value in saved view
