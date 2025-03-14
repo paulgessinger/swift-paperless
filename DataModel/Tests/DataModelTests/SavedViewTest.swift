@@ -105,7 +105,7 @@ struct SavedViewTest {
     }
 
     // See https://github.com/paulgessinger/swift-paperless/issues/108
-    @Test func testDecodingWithStringSortField() throws {
+    @Test func testDecodingWithScoreSortField() throws {
         let input = """
         {
           "id": 1,
@@ -134,6 +134,33 @@ struct SavedViewTest {
         #expect(result.showOnDashboard == true)
         #expect(result.showInSidebar == true)
         #expect(result.sortField == .score)
+        #expect(result.sortOrder == .ascending)
+    }
+
+    @Test func testDecodingWithInvalidSortField() throws {
+        let input = """
+        {
+          "id": 1,
+          "name": "inbox",
+          "show_on_dashboard": true,
+          "show_in_sidebar": true,
+          "sort_field": "invalid_field",
+          "sort_reverse": false,
+          "filter_rules": [
+            {
+              "rule_type": 20,
+              "value": "inbox"
+            }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        let result = try decoder.decode(SavedView.self, from: input)
+        #expect(result.id == 1)
+        #expect(result.name == "inbox")
+        #expect(result.showOnDashboard == true)
+        #expect(result.showInSidebar == true)
+        #expect(result.sortField == .other("invalid_field"))
         #expect(result.sortOrder == .ascending)
     }
 }

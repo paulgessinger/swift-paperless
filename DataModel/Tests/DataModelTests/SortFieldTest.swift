@@ -30,6 +30,8 @@ struct SortFieldTest {
             .init(rawValue: "owner", expected: .owner),
             .init(rawValue: "notes", expected: .notes),
             .init(rawValue: "score", expected: .score),
+            .init(rawValue: "page_count", expected: .pageCount),
+            .init(rawValue: "invalid", expected: .other("invalid")),
         ]
     }
 
@@ -50,7 +52,15 @@ struct SortFieldTest {
         #expect(field == decoded)
     }
 
-    @Test("Tests that invalid values throw decoding errors", arguments: [
+    @Test("Tests encoding and decoding roundtrip for other values")
+    func testEncodingOther() throws {
+        let field = SortField.other("custom_field")
+        let encoded = try JSONEncoder().encode(field)
+        let decoded = try decoder.decode(SortField.self, from: encoded)
+        #expect(field == decoded)
+    }
+
+    @Test("Tests that invalid values produce catch-all case", arguments: [
         "invalid_sort_field",
         "unknown",
         "test",
@@ -60,8 +70,7 @@ struct SortFieldTest {
         "\(invalidValue)"
         """.data(using: .utf8)!
 
-        #expect(throws: DecodingError.self) {
-            _ = try decoder.decode(SortField.self, from: invalidJson)
-        }
+        let field = try decoder.decode(SortField.self, from: invalidJson)
+        #expect(field == .other(invalidValue))
     }
 }
