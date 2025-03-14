@@ -26,6 +26,6 @@ public func sanitize(token: String?) -> String {
     #if DEBUG
         return token
     #else
-        return "<token len: \(token?.count ?? 0)>"
+        return "<token len: \(token.count)>"
     #endif
 }
