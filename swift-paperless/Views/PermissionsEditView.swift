@@ -5,57 +5,192 @@
 //  Created by Paul Gessinger on 28.07.2024.
 //
 
+import Common
 import DataModel
 import Flow
 import Networking
 import os
 import SwiftUI
 
-private struct ElementPicker<T: Identifiable>: View where T.ID == UInt {
+private struct ElementPicker<T>: View
+    where T: Identifiable & LocalizedResource, T.ID == UInt
+{
     @Binding var selected: [UInt]
     let storePath: KeyPath<DocumentStore, [UInt: T]>
     let name: KeyPath<T, String>
 
-    private var elements: [T] {
-        store[keyPath: storePath].values
+    @EnvironmentObject private var store: DocumentStore
+    private var displayElements: [T] {
+        store[keyPath: storePath]
+            .values
             .sorted(by: { $0[keyPath: name] < $1[keyPath: name] })
     }
 
-    @EnvironmentObject private var store: DocumentStore
+    private var resource: UserPermissions.Resource? {
+        UserPermissions.Resource(for: T.self)
+    }
+
+    private var permissions: UserPermissions.PermissionSet {
+        guard let resource else {
+            return .empty
+        }
+
+        return store.permissions[resource]
+    }
+
+    private struct NoPermissionsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                                   systemImage: "lock.fill",
+                                   description: Text(T.localizedNoViewPermissions))
+        }
+    }
 
     var body: some View {
         List {
-            ForEach(elements, id: \.id) { element in
-                Button {
-                    if selected.contains(element.id) {
-                        selected = selected.filter { $0 != element.id }
-                    } else {
-                        selected.append(element.id)
-                    }
-                } label: {
-                    HStack {
-                        Text(element[keyPath: name])
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundStyle(.primary)
-
+            if !permissions.test(.view) {
+                NoPermissionsView()
+            } else {
+                ForEach(displayElements, id: \.id) { element in
+                    Button {
                         if selected.contains(element.id) {
-                            Label(localized: .localizable(.elementIsSelected),
-                                  systemImage: "checkmark")
-                                .labelStyle(.iconOnly)
-                                .foregroundStyle(.accent)
+                            selected = selected.filter { $0 != element.id }
+                        } else {
+                            selected.append(element.id)
+                        }
+                    } label: {
+                        HStack {
+                            Text(element[keyPath: name])
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundStyle(.primary)
+
+                            if selected.contains(element.id) {
+                                Label(localized: .localizable(.elementIsSelected),
+                                      systemImage: "checkmark")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundStyle(.accent)
+                            }
                         }
                     }
+                    .tint(.primary)
                 }
-                .tint(.primary)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
+private struct OwnerPicker<Element>: View where Element: PermissionsModel {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: DocumentStore
+
+    @Binding var element: Element
+
+    private var users: [User] {
+        store.users.values.sorted { $0.username < $1.username }
+    }
+
+    private struct Row: View {
+        var isActive: Bool = false
+        var label: () -> Text
+        var action: (() -> Void)? = nil
+
+        private var _label: some View {
+            HStack {
+                label()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if isActive {
+                    Label(localized: .localizable(.elementIsSelected),
+                          systemImage: "checkmark")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.accent)
+                }
+            }
+        }
+
+        var body: some View {
+            if let action {
+                Button {
+                    action()
+                } label: {
+                    _label
+                }
+                .tint(.primary)
+            } else {
+                _label
+            }
+        }
+    }
+
+    var body: some View {
+        Form {
+            Row(isActive: element.owner == nil) {
+                Text(.permissions(.noOwner))
+            } action: {
+                element.owner = nil
+                dismiss()
+            }
+
+            if !store.permissions.test(.view, for: .user) {
+                if let currentUser = store.currentUser {
+                    Row(isActive: element.owner == currentUser.id) {
+                        Text(.permissions(.userYouLabel(currentUser.username)))
+                    } action: {
+                        element.owner = currentUser.id
+                        dismiss()
+                    }
+                }
+
+                if element.owner != nil, element.owner != store.currentUser?.id {
+                    Row(isActive: true) {
+                        Text(.permissions(.private))
+                    }
+                }
+
+            } else {
+                ForEach(users, id: \.id) { user in
+                    Row(isActive: user.id == element.owner) {
+                        if let currentUser = store.currentUser, currentUser.id == user.id {
+                            Text(.permissions(.userYouLabel(user.username)))
+                        } else {
+                            Text(user.username)
+                        }
+                    } action: {
+                        element.owner = user.id
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 @MainActor
 struct PermissionsEditView<Element>: View where Element: PermissionsModel {
     @Binding var element: Element
+
+    private func initialize() async {
+        do {
+            // update users and groups just in case
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await store.fetchAllUsers() }
+                group.addTask { try await store.fetchAllGroups() }
+
+                while !group.isEmpty {
+                    do {
+                        try await group.next()
+                    } catch is PermissionsError {
+                        Logger.shared.debug("Permissions error fetching users and groups for permissions edit, suppressing")
+                    } catch let error where error.isCancellationError {
+                        Logger.shared.debug("Cancellation error fetching users and groups for permissions edit, suppressing")
+                        continue
+                    }
+                }
+            }
+        } catch {
+            Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
+        }
+    }
 
     @EnvironmentObject private var store: DocumentStore
 
@@ -91,12 +226,6 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
         binding(kind: \.change, element: \.groups)
     }
 
-    private var users: [User] {
-        store.users
-            .values
-            .sorted(by: { $0.username < $1.username })
-    }
-
     private func nameList<T>(_ ids: [UInt],
                              storePath: KeyPath<DocumentStore, [UInt: T]>,
                              name: KeyPath<T, String>) -> Text
@@ -110,33 +239,70 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
             if let element = store[keyPath: storePath][id] {
                 result = result + Text(element[keyPath: name])
             } else {
-                result = result + Text(.permissions(.private))
-                    .italic()
+                if T.self == User.self, let currentUser = store.currentUser, id == currentUser.id {
+                    result = result + Text(.permissions(.userYouLabel(currentUser.username)))
+                        .italic()
+                } else {
+                    result = result + Text(.permissions(.private))
+                        .italic()
+                }
             }
         }
         return result
     }
 
-    private func userList(_ ids: [UInt]) -> Text {
-        nameList(ids, storePath: \.users, name: \.username)
+    private func userLabel(_ ids: [UInt]) -> some View {
+        LabeledContent {
+            nameList(ids, storePath: \.users, name: \.username)
+        } label: {
+            Text(.permissions(.users))
+        }
     }
 
-    private func groupList(_ ids: [UInt]) -> Text {
-        nameList(ids, storePath: \.groups, name: \.name)
+    private func groupLabel(_ ids: [UInt]) -> some View {
+        LabeledContent {
+            nameList(ids, storePath: \.groups, name: \.name)
+        } label: {
+            Text(.permissions(.groups))
+        }
     }
+
+    private var users: [User] {
+        store.users.values.sorted { $0.username < $1.username }
+    }
+
+    private var ownerLabel: some View {
+        LabeledContent {
+            if element.owner == nil {
+                return Text(.permissions(.noOwner))
+            }
+
+            if let currentUser = store.currentUser, element.owner == currentUser.id {
+                return Text(.permissions(.userYouLabel(currentUser.username)))
+            }
+
+            if let owner = element.owner, let user = store.users[owner] {
+                return Text(user.username)
+            }
+
+            return Text(.permissions(.private))
+                .italic()
+        } label: {
+            Text(.permissions(.owner))
+        }
+    }
+
+    // @TODO: Check edge cases for when logged in user can't see any users (we inject themselves)
+    // - can only set read write perms for themselves
+    // - can only set owner to themselves or nobody
 
     var body: some View {
         Form {
             Section {
-                HStack {
-                    Picker(.permissions(.owner), selection: $element.owner) {
-                        Text(.permissions(.noOwner))
-                            .tag(nil as UInt?)
-                        ForEach(users, id: \.id) { user in
-                            Text(user.username)
-                                .tag(user.id as UInt?)
-                        }
-                    }
+                NavigationLink {
+                    OwnerPicker(element: $element)
+                } label: {
+                    ownerLabel
                 }
             } footer: {
                 Text(.permissions(.unownedDescription))
@@ -150,11 +316,7 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                                   name: \.username)
                         .navigationTitle(.permissions(.users))
                 } label: {
-                    LabeledContent {
-                        userList(permissions.view.users)
-                    } label: {
-                        Text(.permissions(.users))
-                    }
+                    userLabel(permissions.view.users)
                 }
 
                 NavigationLink {
@@ -163,26 +325,18 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                                   name: \.name)
                         .navigationTitle(.permissions(.groups))
                 } label: {
-                    LabeledContent {
-                        groupList(permissions.view.groups)
-                    } label: {
-                        Text(.permissions(.groups))
-                    }
+                    groupLabel(permissions.view.groups)
                 }
             }
 
-            Section(.permissions(.change)) {
+            Section {
                 NavigationLink {
                     ElementPicker(selected: changeUsers,
                                   storePath: \.users,
                                   name: \.username)
                         .navigationTitle(.permissions(.users))
                 } label: {
-                    LabeledContent {
-                        userList(permissions.change.users)
-                    } label: {
-                        Text(.permissions(.users))
-                    }
+                    userLabel(permissions.change.users)
                 }
 
                 NavigationLink {
@@ -191,26 +345,17 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                                   name: \.name)
                         .navigationTitle(.permissions(.groups))
                 } label: {
-                    LabeledContent {
-                        groupList(permissions.change.groups)
-                    } label: {
-                        Text(.permissions(.groups))
-                    }
+                    groupLabel(permissions.change.groups)
+                }
+            } header: {
+                Text(.permissions(.change))
+            } footer: {
+                if !store.permissions.test(.view, for: .user) {
+                    Text(.permissions(.privateDescription))
                 }
             }
         }
-        .task {
-            do {
-                // update users and groups just in case
-                async let users: Void = try await store.fetchAllUsers()
-                async let groups: Void = try await store.fetchAllGroups()
-
-                _ = try await (users, groups)
-            } catch is CancellationError {}
-            catch {
-                Logger.shared.error("Error loading users for permissions editing: \(error)")
-            }
-        }
+        .task { await initialize() }
     }
 }
 
@@ -228,18 +373,38 @@ private struct PreviewHelper: View {
             }
         }
         .task {
-            document = try? await store.document(id: 1)
-            document?.permissions = .init(view: .init(users: [1]), change: .init(groups: [2]))
-            guard document != nil else {
-                fatalError()
-            }
+            do {
+                let repository = store.repository as! TransientRepository
+                await repository.addUser(User(id: 1, isSuperUser: false, username: "user"))
+                await repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
+                await repository.addGroup(UserGroup(id: 1, name: "group 1"))
+                try? await repository.login(userId: 1)
+                await repository.set(permissions: .full {
+                    $0.set(.view, to: false, for: .user)
+                    $0.set(.view, to: false, for: .group)
+                })
+                try await store.fetchAll()
+                print(store.users)
+                document = try? await store.repository.create(document: ProtoDocument(title: "blubb"),
+                                                              file: #URL("http://example.com"))
+
+                document?.owner = 2
+                document?.permissions = Permissions {
+                    $0.view.users = [1, 2]
+                    $0.view.groups = [1]
+
+                    $0.change.users = [1, 2]
+                    $0.change.groups = [1]
+                }
+                print(document!)
+            } catch { print(error) }
         }
     }
 }
 
 #Preview {
     @Previewable
-    @StateObject var store = DocumentStore(repository: PreviewRepository())
+    @StateObject var store = DocumentStore(repository: TransientRepository())
     @Previewable
     @StateObject var errorController = ErrorController()
 
