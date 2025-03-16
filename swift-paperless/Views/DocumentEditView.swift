@@ -253,7 +253,7 @@ struct DocumentEditView: View {
 
                 Section {
                     NavigationLink(.permissions(.title)) {
-                        PermissionsEditView(element: $document)
+                        PermissionsEditView(object: $document)
                     }
                 }
 
