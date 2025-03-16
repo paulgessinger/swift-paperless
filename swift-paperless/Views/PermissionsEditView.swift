@@ -194,6 +194,12 @@ private struct OwnerPicker<Object>: View where Object: PermissionsModel {
 @MainActor
 struct PermissionsEditView<Object>: View where Object: PermissionsModel {
     @Binding var object: Object
+    @State var original: Object
+
+    init(object: Binding<Object>) {
+        _object = object
+        _original = State(initialValue: object.wrappedValue)
+    }
 
     private func initialize() async {
         do {
@@ -290,8 +296,25 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
         }
     }
 
+    private func warning(_ message: LocalizedStringResource) -> some View {
+        Label(localized: message,
+              systemImage: "exclamationmark.triangle.fill")
+            .foregroundStyle(.red)
+            .bold()
+    }
+
     var body: some View {
         Form {
+            if let user = store.currentUser {
+                if user.canChange(original), !user.canChange(object) {
+                    warning(.permissions(.canNoLongerChange))
+                }
+
+                if user.canView(original), !user.canView(object) {
+                    warning(.permissions(.canNoLongerView))
+                }
+            }
+
             Section {
                 NavigationLink {
                     OwnerPicker(object: $object)
@@ -377,7 +400,7 @@ private struct PreviewHelper: View {
         .task {
             do {
                 let repository = store.repository as! TransientRepository
-                await repository.addUser(User(id: 1, isSuperUser: false, username: "user"))
+                await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: [1]))
                 await repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
                 await repository.addGroup(UserGroup(id: 1, name: "group 1"))
                 await repository.addGroup(UserGroup(id: 2, name: "group 2"))
