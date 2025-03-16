@@ -53,7 +53,7 @@ struct UserModelTest {
 
     @Test func testCanChange() throws {
         let user = User(id: 1, isSuperUser: false, username: "user", groups: [2, 3])
-        let superUser = User(id: 2, isSuperUser: true, username: "superuser", groups: [])
+        let superUser = User(id: 2, isSuperUser: true, username: "superuser")
 
         // Test superuser always has permission
         var dummyResource = Dummy(owner: nil, permissions: nil)
@@ -92,7 +92,7 @@ struct UserModelTest {
         #expect(superUser.canChange(dummyResource))
 
         // Test user without any permissions
-        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .init(), change: .init(users: [], groups: [])))
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .none, change: .none))
         #expect(!user.canChange(dummyResource))
         #expect(superUser.canChange(dummyResource))
 
@@ -100,5 +100,89 @@ struct UserModelTest {
         dummyResource = Dummy(owner: 5, permissions: nil)
         #expect(!user.canChange(dummyResource))
         #expect(superUser.canChange(dummyResource))
+    }
+
+    @Test func testCanView() throws {
+        let user = User(id: 1, isSuperUser: false, username: "user", groups: [2, 3])
+        let superUser = User(id: 2, isSuperUser: true, username: "superuser")
+
+        // Test superuser always has permission
+        var dummyResource = Dummy(owner: nil, permissions: nil)
+        #expect(superUser.canView(dummyResource))
+        // Resource without owner is accessible to all
+        #expect(user.canView(dummyResource))
+
+        // Test resource without owner is accessible to all
+        dummyResource = Dummy(owner: nil, permissions: Permissions(view: .none, change: .none))
+        #expect(superUser.canView(dummyResource))
+        #expect(user.canView(dummyResource))
+
+        // Test user with direct permission
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .init(users: [1], groups: []), change: .none))
+        #expect(user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test user is owner of resource
+        dummyResource = Dummy(owner: 1, permissions: Permissions(view: .init(), change: .none))
+        #expect(user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test user in group with permission
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .init(users: [], groups: [2]), change: .none))
+        #expect(user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test another user has explicit permission
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .init(users: [7], groups: []), change: .none))
+        #expect(!user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test another group has permission
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .init(users: [], groups: [7]), change: .none))
+        #expect(!user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test user without any permissions
+        dummyResource = Dummy(owner: 5, permissions: Permissions(view: .none, change: .none))
+        #expect(!user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+
+        // Test nil permissions returns false for normal user but true for superuser
+        dummyResource = Dummy(owner: 5, permissions: nil)
+        #expect(!user.canView(dummyResource))
+        #expect(superUser.canView(dummyResource))
+    }
+
+    @Test func testChangeImpliesView() throws {
+        let user = User(id: 1, isSuperUser: false, username: "user", groups: [2])
+
+        // Test user with only change permission can view
+        var dummyResource = Dummy(owner: 5, permissions: Permissions(
+            view: .init(users: [], groups: []),
+            change: .init(users: [1], groups: [])
+        ))
+        #expect(user.canView(dummyResource))
+
+        // Test user in group with only change permission can view
+        dummyResource = Dummy(owner: 5, permissions: Permissions(
+            view: .init(users: [], groups: []),
+            change: .init(users: [], groups: [2])
+        ))
+        #expect(user.canView(dummyResource))
+
+        // Verify that the reverse is not true (view doesn't imply change)
+        dummyResource = Dummy(owner: 5, permissions: Permissions(
+            view: .init(users: [1], groups: []),
+            change: .init(users: [], groups: [])
+        ))
+        #expect(user.canView(dummyResource))
+        #expect(!user.canChange(dummyResource))
+
+        dummyResource = Dummy(owner: 5, permissions: Permissions(
+            view: .init(users: [], groups: [2]),
+            change: .init(users: [], groups: [])
+        ))
+        #expect(user.canView(dummyResource))
+        #expect(!user.canChange(dummyResource))
     }
 }
