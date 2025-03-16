@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "canNoLongerChange" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of change permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to change this object!"
+          }
+        }
+      }
+    },
+    "canNoLongerView" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of view permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to view this object!"
+          }
+        }
+      }
+    },
     "change" : {
       "extractionState" : "manual",
       "localizations" : {
