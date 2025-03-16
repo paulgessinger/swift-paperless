@@ -12,10 +12,19 @@ import Networking
 import os
 import SwiftUI
 
-private struct ElementPicker<T>: View
-    where T: Identifiable & LocalizedResource, T.ID == UInt
+private struct ElementPicker<E, T>: View
+    where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel
 {
-    @Binding var selected: [UInt]
+    // E: Anything that HAS permissions
+    // T: User or Group
+
+    // This is the OBJECT that will receive changes to its permissions property
+    @Binding var object: E
+
+    // kind: read or write
+    let kind: WritableKeyPath<Permissions, Permissions.Set>
+    // type: user os group
+    let type: WritableKeyPath<Permissions.Set, [UInt]>
     let storePath: KeyPath<DocumentStore, [UInt: T]>
     let name: KeyPath<T, String>
 
@@ -46,33 +55,50 @@ private struct ElementPicker<T>: View
         }
     }
 
+    private var selected: [UInt] {
+        guard let perms = object.permissions else { return [] }
+        return perms[keyPath: kind][keyPath: type]
+    }
+
+    private func set(selected: [UInt]) {
+        var newPerms = object.permissions ?? Permissions()
+        newPerms[keyPath: kind][keyPath: type] = selected
+        object.permissions = newPerms
+    }
+
+    private func row(_ element: T) -> some View {
+        Button {
+            if selected.contains(element.id) {
+                set(selected: selected.filter { $0 != element.id })
+            } else {
+                var updated = selected
+                updated.append(element.id)
+                set(selected: updated)
+            }
+        } label: {
+            HStack {
+                Text(element[keyPath: name])
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(.primary)
+
+                if selected.contains(element.id) {
+                    Label(localized: .localizable(.elementIsSelected),
+                          systemImage: "checkmark")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.accent)
+                }
+            }
+        }
+        .tint(.primary)
+    }
+
     var body: some View {
         List {
             if !permissions.test(.view) {
                 NoPermissionsView()
             } else {
                 ForEach(displayElements, id: \.id) { element in
-                    Button {
-                        if selected.contains(element.id) {
-                            selected = selected.filter { $0 != element.id }
-                        } else {
-                            selected.append(element.id)
-                        }
-                    } label: {
-                        HStack {
-                            Text(element[keyPath: name])
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundStyle(.primary)
-
-                            if selected.contains(element.id) {
-                                Label(localized: .localizable(.elementIsSelected),
-                                      systemImage: "checkmark")
-                                    .labelStyle(.iconOnly)
-                                    .foregroundStyle(.accent)
-                            }
-                        }
-                    }
-                    .tint(.primary)
+                    row(element)
                 }
             }
         }
@@ -80,11 +106,11 @@ private struct ElementPicker<T>: View
     }
 }
 
-private struct OwnerPicker<Element>: View where Element: PermissionsModel {
+private struct OwnerPicker<Object>: View where Object: PermissionsModel {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DocumentStore
 
-    @Binding var element: Element
+    @Binding var object: Object
 
     private var users: [User] {
         store.users.values.sorted { $0.username < $1.username }
@@ -124,24 +150,24 @@ private struct OwnerPicker<Element>: View where Element: PermissionsModel {
 
     var body: some View {
         Form {
-            Row(isActive: element.owner == nil) {
+            Row(isActive: object.owner == nil) {
                 Text(.permissions(.noOwner))
             } action: {
-                element.owner = nil
+                object.owner = nil
                 dismiss()
             }
 
             if !store.permissions.test(.view, for: .user) {
                 if let currentUser = store.currentUser {
-                    Row(isActive: element.owner == currentUser.id) {
+                    Row(isActive: object.owner == currentUser.id) {
                         Text(.permissions(.userYouLabel(currentUser.username)))
                     } action: {
-                        element.owner = currentUser.id
+                        object.owner = currentUser.id
                         dismiss()
                     }
                 }
 
-                if element.owner != nil, element.owner != store.currentUser?.id {
+                if object.owner != nil, object.owner != store.currentUser?.id {
                     Row(isActive: true) {
                         Text(.permissions(.private))
                     }
@@ -149,14 +175,14 @@ private struct OwnerPicker<Element>: View where Element: PermissionsModel {
 
             } else {
                 ForEach(users, id: \.id) { user in
-                    Row(isActive: user.id == element.owner) {
+                    Row(isActive: user.id == object.owner) {
                         if let currentUser = store.currentUser, currentUser.id == user.id {
                             Text(.permissions(.userYouLabel(user.username)))
                         } else {
                             Text(user.username)
                         }
                     } action: {
-                        element.owner = user.id
+                        object.owner = user.id
                         dismiss()
                     }
                 }
@@ -166,8 +192,8 @@ private struct OwnerPicker<Element>: View where Element: PermissionsModel {
 }
 
 @MainActor
-struct PermissionsEditView<Element>: View where Element: PermissionsModel {
-    @Binding var element: Element
+struct PermissionsEditView<Object>: View where Object: PermissionsModel {
+    @Binding var object: Object
 
     private func initialize() async {
         do {
@@ -180,50 +206,22 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                     do {
                         try await group.next()
                     } catch is PermissionsError {
-                        Logger.shared.debug("Permissions error fetching users and groups for permissions edit, suppressing")
+//                        Logger.shared.debug("Permissions error fetching users and groups for permissions edit, suppressing")
                     } catch let error where error.isCancellationError {
-                        Logger.shared.debug("Cancellation error fetching users and groups for permissions edit, suppressing")
+//                        Logger.shared.debug("Cancellation error fetching users and groups for permissions edit, suppressing")
                         continue
                     }
                 }
             }
         } catch {
-            Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
+//            Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
         }
     }
 
     @EnvironmentObject private var store: DocumentStore
 
     private var permissions: Permissions {
-        element.permissions ?? .init()
-    }
-
-    private func binding(kind: WritableKeyPath<Permissions, Permissions.Set>,
-                         element: WritableKeyPath<Permissions.Set, [UInt]>) -> Binding<[UInt]>
-    {
-        Binding<[UInt]>(get: {
-            permissions[keyPath: kind][keyPath: element]
-        }, set: {
-            var permissions = permissions
-            permissions[keyPath: kind][keyPath: element] = $0
-            self.element.permissions = permissions
-        })
-    }
-
-    private var viewUsers: Binding<[UInt]> {
-        binding(kind: \.view, element: \.users)
-    }
-
-    private var viewGroups: Binding<[UInt]> {
-        binding(kind: \.view, element: \.groups)
-    }
-
-    private var changeUsers: Binding<[UInt]> {
-        binding(kind: \.change, element: \.users)
-    }
-
-    private var changeGroups: Binding<[UInt]> {
-        binding(kind: \.change, element: \.groups)
+        object.permissions ?? .init()
     }
 
     private func nameList<T>(_ ids: [UInt],
@@ -273,15 +271,15 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
 
     private var ownerLabel: some View {
         LabeledContent {
-            if element.owner == nil {
+            if object.owner == nil {
                 return Text(.permissions(.noOwner))
             }
 
-            if let currentUser = store.currentUser, element.owner == currentUser.id {
+            if let currentUser = store.currentUser, object.owner == currentUser.id {
                 return Text(.permissions(.userYouLabel(currentUser.username)))
             }
 
-            if let owner = element.owner, let user = store.users[owner] {
+            if let owner = object.owner, let user = store.users[owner] {
                 return Text(user.username)
             }
 
@@ -292,15 +290,11 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
         }
     }
 
-    // @TODO: Check edge cases for when logged in user can't see any users (we inject themselves)
-    // - can only set read write perms for themselves
-    // - can only set owner to themselves or nobody
-
     var body: some View {
         Form {
             Section {
                 NavigationLink {
-                    OwnerPicker(element: $element)
+                    OwnerPicker(object: $object)
                 } label: {
                     ownerLabel
                 }
@@ -311,7 +305,9 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
 
             Section(.permissions(.view)) {
                 NavigationLink {
-                    ElementPicker(selected: viewUsers,
+                    ElementPicker(object: $object,
+                                  kind: \.view,
+                                  type: \.users,
                                   storePath: \.users,
                                   name: \.username)
                         .navigationTitle(.permissions(.users))
@@ -320,7 +316,9 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                 }
 
                 NavigationLink {
-                    ElementPicker(selected: viewGroups,
+                    ElementPicker(object: $object,
+                                  kind: \.view,
+                                  type: \.groups,
                                   storePath: \.groups,
                                   name: \.name)
                         .navigationTitle(.permissions(.groups))
@@ -331,7 +329,9 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
 
             Section {
                 NavigationLink {
-                    ElementPicker(selected: changeUsers,
+                    ElementPicker(object: $object,
+                                  kind: \.change,
+                                  type: \.users,
                                   storePath: \.users,
                                   name: \.username)
                         .navigationTitle(.permissions(.users))
@@ -340,7 +340,9 @@ struct PermissionsEditView<Element>: View where Element: PermissionsModel {
                 }
 
                 NavigationLink {
-                    ElementPicker(selected: changeGroups,
+                    ElementPicker(object: $object,
+                                  kind: \.change,
+                                  type: \.groups,
                                   storePath: \.groups,
                                   name: \.name)
                         .navigationTitle(.permissions(.groups))
@@ -369,7 +371,7 @@ private struct PreviewHelper: View {
     var body: some View {
         NavigationStack {
             if document != nil {
-                PermissionsEditView(element: Binding($document)!)
+                PermissionsEditView(object: Binding($document)!)
             }
         }
         .task {
@@ -378,10 +380,11 @@ private struct PreviewHelper: View {
                 await repository.addUser(User(id: 1, isSuperUser: false, username: "user"))
                 await repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
                 await repository.addGroup(UserGroup(id: 1, name: "group 1"))
+                await repository.addGroup(UserGroup(id: 2, name: "group 2"))
                 try? await repository.login(userId: 1)
                 await repository.set(permissions: .full {
-                    $0.set(.view, to: false, for: .user)
-                    $0.set(.view, to: false, for: .group)
+                    $0.set(.view, to: true, for: .user)
+                    $0.set(.view, to: true, for: .group)
                 })
                 try await store.fetchAll()
                 print(store.users)
