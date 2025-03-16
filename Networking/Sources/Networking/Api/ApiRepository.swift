@@ -116,7 +116,7 @@ public actor ApiRepository {
         request.setValue("application/json; version=\(effectiveApiVersion)", forHTTPHeaderField: "Accept")
         connection.extraHeaders.apply(toRequest: &request)
         let headerStr = sanitize(headers: request.allHTTPHeaderFields)
-        Logger.networking.info("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(headerStr)")
+        Logger.networking.info("Creating API request for URL \(sanitizedUrl, privacy: .public), headers: \(headerStr, privacy: .public)")
         return request
     }
 
