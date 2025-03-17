@@ -679,7 +679,7 @@ struct FilterBar: View {
 
         .sheet(isPresented: $showDocumentType) {
             Modal(title: String(localized: .localizable(.documentType)), filterState: $filterState) {
-                CommonPicker(
+                CommonPickerFilterView(
                     selection: $filterState.documentType,
                     elements: store.documentTypes.sorted {
                         $0.value.name < $1.value.name
@@ -691,7 +691,7 @@ struct FilterBar: View {
 
         .sheet(isPresented: $showCorrespondent) {
             Modal(title: String(localized: .localizable(.correspondent)), filterState: $filterState) {
-                CommonPicker(
+                CommonPickerFilterView(
                     selection: $filterState.correspondent,
                     elements: store.correspondents.sorted {
                         $0.value.name < $1.value.name
@@ -703,7 +703,7 @@ struct FilterBar: View {
 
         .sheet(isPresented: $showStoragePath) {
             Modal(title: String(localized: .localizable(.storagePath)), filterState: $filterState) {
-                CommonPicker(
+                CommonPickerFilterView(
                     selection: $filterState.storagePath,
                     elements: store.storagePaths.sorted {
                         $0.value.name < $1.value.name
