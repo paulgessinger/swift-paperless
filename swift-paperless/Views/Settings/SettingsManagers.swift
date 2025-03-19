@@ -42,8 +42,10 @@ struct TagManager: ManagerProtocol {
 
         func load() -> [Element] {
             store.tags
-                .map(\.value)
-                .sorted(by: { $0.name < $1.name })
+                .values
+                .sorted(by: {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                })
         }
 
         func update(_ tag: Tag) async throws {
@@ -87,8 +89,10 @@ struct CorrespondentManager: ManagerProtocol {
 
         func load() -> [Element] {
             store.correspondents
-                .map(\.value)
-                .sorted(by: { $0.name < $1.name })
+                .values
+                .sorted(by: {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                })
         }
 
         func update(_ correspondent: Correspondent) async throws {
@@ -137,8 +141,10 @@ struct DocumentTypeManager: ManagerProtocol {
 
         func load() -> [Element] {
             store.documentTypes
-                .map(\.value)
-                .sorted(by: { $0.name < $1.name })
+                .values
+                .sorted(by: {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                })
         }
 
         func update(_ dt: DocumentType) async throws {
@@ -187,8 +193,10 @@ struct SavedViewManager: ManagerProtocol {
 
         func load() -> [SavedView] {
             store.savedViews
-                .map(\.value)
-                .sorted(by: { $0.name < $1.name })
+                .values
+                .sorted(by: {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                })
         }
 
         func update(_ view: SavedView) async throws {
@@ -235,11 +243,11 @@ struct StoragePathManager: ManagerProtocol {
             self.store = store
         }
 
-        @MainActor
         func load() -> [StoragePath] {
-            store.storagePaths
-                .map(\.value)
-                .sorted(by: { $0.name < $1.name })
+            store.storagePaths.values
+                .sorted(by: {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                })
         }
 
         func update(_ path: StoragePath) async throws {

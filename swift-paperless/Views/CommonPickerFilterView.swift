@@ -1,5 +1,5 @@
 //
-//  CommonPickerView.swift
+//  CommonPickerFilterView.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 12.03.23.
@@ -9,7 +9,7 @@ import DataModel
 import Networking
 import SwiftUI
 
-struct CommonPicker: View {
+struct CommonPickerFilterView: View {
     private enum Mode {
         case anyOf
         case noneOf
@@ -271,11 +271,8 @@ struct CommonPickerEdit<Manager, D>: View
     private var model: Manager.Model
 
     private func elements() -> [(UInt, String)] {
-        let allDict = store[keyPath: Element.storePath]
-
-        let all = allDict.sorted {
-            $0.value.name < $1.value.name
-        }.map { ($0.value.id, $0.value.name) }
+        let all = model.load()
+            .map { ($0.id, $0.name) }
 
         if searchDebounce.debouncedText.isEmpty { return all }
 
@@ -387,8 +384,8 @@ private struct FilterViewPreviewHelper<T: Pickable>: View {
 
     var body: some View {
         NavigationStack {
-            CommonPicker(selection: $filterState,
-                         elements: elements)
+            CommonPickerFilterView(selection: $filterState,
+                                   elements: elements)
         }
         .task {
             elements = store[keyPath: elementKeyPath]
