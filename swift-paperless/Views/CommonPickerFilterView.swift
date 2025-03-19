@@ -271,11 +271,8 @@ struct CommonPickerEdit<Manager, D>: View
     private var model: Manager.Model
 
     private func elements() -> [(UInt, String)] {
-        let allDict = store[keyPath: Element.storePath]
-
-        let all = allDict.sorted {
-            $0.value.name < $1.value.name
-        }.map { ($0.value.id, $0.value.name) }
+        let all = model.load()
+            .map { ($0.id, $0.name) }
 
         if searchDebounce.debouncedText.isEmpty { return all }
 

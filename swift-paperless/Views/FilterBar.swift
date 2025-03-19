@@ -682,7 +682,7 @@ struct FilterBar: View {
                 CommonPickerFilterView(
                     selection: $filterState.documentType,
                     elements: store.documentTypes.sorted {
-                        $0.value.name < $1.value.name
+                        $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
                     }.map { ($0.value.id, $0.value.name) },
                     notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
                 )
@@ -694,7 +694,7 @@ struct FilterBar: View {
                 CommonPickerFilterView(
                     selection: $filterState.correspondent,
                     elements: store.correspondents.sorted {
-                        $0.value.name < $1.value.name
+                        $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
                     }.map { ($0.value.id, $0.value.name) },
                     notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
                 )
@@ -706,7 +706,7 @@ struct FilterBar: View {
                 CommonPickerFilterView(
                     selection: $filterState.storagePath,
                     elements: store.storagePaths.sorted {
-                        $0.value.name < $1.value.name
+                        $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
                     }.map { ($0.value.id, $0.value.name) },
                     notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
                 )

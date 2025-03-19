@@ -115,6 +115,12 @@ struct TagFilterView: View {
         }
     }
 
+    private var sortedTags: [Tag] {
+        store.tags.values.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
+
     var body: some View {
         VStack {
             VStack {
@@ -123,9 +129,6 @@ struct TagFilterView: View {
             .transition(.opacity)
             .padding(.horizontal)
             .padding(.vertical, 2)
-
-            // Debug:
-//            Text(String(describing: selectedTags))
 
             Form {
                 Section {
@@ -144,10 +147,10 @@ struct TagFilterView: View {
 
                 Section {
                     ForEach(
-                        store.tags.sorted { $0.value.name < $1.value.name }
-                            .filter { tagFilter(tag: $0.value) },
-                        id: \.value.id
-                    ) { _, tag in
+                        sortedTags
+                            .filter { tagFilter(tag: $0) },
+                        id: \.id
+                    ) { tag in
                         HStack {
                             Button(action: { onPress(tag: tag) }) {
                                 TagView(tag: tag)
