@@ -60,7 +60,11 @@ jobs:
       - name: Run tests
         run: |
           xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
-          xcodebuild test -scheme swift-paperlessTests -destination "platform=macOS,name=My Mac" | xcbeautify
+          xcodebuild test \
+            -scheme swift-paperlessTests \
+            -destination "platform=macOS,name=My Mac"\
+            -skipPackagePluginValidation -skipMacroValidation \
+            | xcbeautify
 
 
   lint:
