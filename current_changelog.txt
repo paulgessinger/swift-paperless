@@ -1,0 +1,3 @@
+- Display objects (correspondents, document types etc) sorted by name case-insensitively
+- Additional debug output for decoding error debugging
+- Display loading screen also on initial app launch
