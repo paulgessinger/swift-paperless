@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Networking
 import SwiftUI
 
 extension Bundle {
@@ -38,6 +39,15 @@ extension Bundle {
 
 enum AppConfiguration: String {
     case Debug, TestFlight, AppStore, Simulator
+
+    var mode: ApiRepository.Mode {
+        switch self {
+        case .Debug: .debug
+        case .TestFlight: .debug
+        case .Simulator: .debug
+        case .AppStore: .release
+        }
+    }
 }
 
 extension Bundle {

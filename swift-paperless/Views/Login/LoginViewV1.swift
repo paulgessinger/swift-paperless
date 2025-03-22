@@ -136,7 +136,7 @@ struct LoginViewV1: LoginViewProtocol {
                                         extraHeaders: viewModel.extraHeaders,
                                         identityName: viewModel.selectedIdentity?.name)
 
-            let repository = await ApiRepository(connection: connection)
+            let repository = await ApiRepository(connection: connection, mode: Bundle.main.appConfiguration.mode)
 
             let currentUser = try await repository.currentUser()
 
@@ -190,7 +190,7 @@ struct LoginViewV1: LoginViewProtocol {
                                         extraHeaders: viewModel.extraHeaders,
                                         identityName: viewModel.selectedIdentity?.name)
 
-            let repository = await ApiRepository(connection: connection)
+            let repository = await ApiRepository(connection: connection, mode: Bundle.main.appConfiguration.mode)
 
             let currentUser = try await repository.currentUser()
 

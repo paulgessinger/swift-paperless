@@ -209,7 +209,7 @@ class ConnectionManager: ObservableObject {
                 return
             }
 
-            let repository = await ApiRepository(connection: connection)
+            let repository = await ApiRepository(connection: connection, mode: Bundle.main.appConfiguration.mode)
 
             // Migration runs asynchronously, this should be fine, since the active connection in memory
             // will stay valid while we're trying.

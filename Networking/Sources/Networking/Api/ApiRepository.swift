@@ -41,6 +41,13 @@ public actor ApiRepository {
     public nonisolated
     let connection: Connection
 
+    public enum Mode {
+        case release
+        case debug
+    }
+
+    let mode: Mode
+
     private let urlSession: URLSession
     private let urlSessionDelegate: PaperlessURLSessionDelegate
 
@@ -54,8 +61,9 @@ public actor ApiRepository {
         min(Self.maximumApiVersion, max(Self.minimumApiVersion, apiVersion ?? Self.minimumApiVersion))
     }
 
-    public init(connection: Connection) async {
+    public init(connection: Connection, mode: Mode) async {
         self.connection = connection
+        self.mode = mode
         let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
         let tokenStr = sanitize(token: connection.token)
         Logger.networking.notice("Initializing ApiRepository with connection \(sanitizedUrl, privacy: .public) and token \(tokenStr, privacy: .public)")
@@ -226,12 +234,12 @@ public actor ApiRepository {
         } catch let error as DecodingError {
             let url = request.url!
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            // @TODO: Figure out a way to get the app configuration
-            // if Bundle.main.appConfiguration == .AppStore {
-            Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
-            // } else {
-            //     Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error)")
-            // }
+            if mode == .release {
+                Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
+            } else {
+                let desc = error.errorDescription ?? "No error description"
+                Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error) \(desc, privacy: .public)")
+            }
             throw DecodingErrorWithRootType(type: T.self, error: error)
         }
     }

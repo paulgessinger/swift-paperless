@@ -152,7 +152,7 @@ struct ConnectionsView: View {
         .task {
             if let stored = connectionManager.storedConnection {
                 do {
-                    let repository = try await ApiRepository(connection: stored.connection)
+                    let repository = try await ApiRepository(connection: stored.connection, mode: Bundle.main.appConfiguration.mode)
                     backendVersion = await repository.backendVersion
                 } catch {
                     Logger.shared.error("Could not make ApiRepository for settings display: \(error)")

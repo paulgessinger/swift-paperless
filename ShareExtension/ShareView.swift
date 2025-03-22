@@ -45,7 +45,7 @@ struct ShareView: View {
             Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
             Task {
                 store.eventPublisher.send(.repositoryWillChange)
-                await store.set(repository: ApiRepository(connection: conn))
+                await store.set(repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
                 storeReady = true
                 try? await store.fetchAll()
             }

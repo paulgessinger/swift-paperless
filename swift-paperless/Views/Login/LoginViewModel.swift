@@ -438,7 +438,7 @@ class LoginViewModel {
         }
 
         Logger.shared.debug("Building repository instance with connection for testing")
-        let repository = await ApiRepository(connection: connection)
+        let repository = await ApiRepository(connection: connection, mode: Bundle.main.appConfiguration.mode)
 
         Logger.shared.info("Requesting current user")
         let currentUser: User

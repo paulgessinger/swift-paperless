@@ -55,7 +55,7 @@ struct MainView: View {
                     await sleep(.seconds(0.1))
                     store.eventPublisher.send(.repositoryWillChange)
                     await sleep(.seconds(0.3))
-                    await store.set(repository: ApiRepository(connection: conn))
+                    await store.set(repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
                     storeReady = true
                     try? await store.fetchAll()
                     store.startTaskPolling()
@@ -64,7 +64,7 @@ struct MainView: View {
                 }
             } else {
                 Task {
-                    store = await DocumentStore(repository: ApiRepository(connection: conn))
+                    store = await DocumentStore(repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
                     storeReady = true
                     try? await store!.fetchAll()
                     store!.startTaskPolling()
