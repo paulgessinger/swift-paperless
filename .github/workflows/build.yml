@@ -56,11 +56,24 @@ jobs:
         with:
           xcode-version: "16.1"
 
-      - name: Install dependencies
-        run: bundle install
 
-      - name: Run tests
-        run: bundle exec fastlane tests
+      - name: Run XCode tests
+        run: |
+          xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
+          xcodebuild test \
+            -scheme swift-paperlessTests \
+            -destination "platform=macOS,name=My Mac"\
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify
+
+      - name: Run Common tests
+        run: swift test --package-path Common
+      - name: Run DataModel tests
+        run: swift test --package-path DataModel
+      - name: Run Networking tests
+        run: swift test --package-path Networking
+
 
   lint:
     runs-on: ubuntu-latest
