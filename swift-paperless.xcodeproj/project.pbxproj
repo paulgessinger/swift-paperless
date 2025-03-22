@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A01307C2D8EAEEE00803E6B /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A01307B2D8EAEEE00803E6B /* Networking */; };
 		7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32BE2A5EAF1A00C18B44 /* Nuke */; };
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
@@ -263,6 +264,7 @@
 			files = (
 				7AAC43182CA06F8D003E6A3A /* AsyncAlgorithms in Frameworks */,
 				7AAC44582CA0A391003E6A3A /* Common in Frameworks */,
+				7A01307C2D8EAEEE00803E6B /* Networking in Frameworks */,
 				7A4D588B2D13569500FCB1F1 /* DataModel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1146,6 +1148,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7A01307B2D8EAEEE00803E6B /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Networking;
+		};
 		7A1C32BE2A5EAF1A00C18B44 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */;
