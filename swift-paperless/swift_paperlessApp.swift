@@ -15,6 +15,7 @@ struct MainView: View {
     @State private var storeReady = false
     @State private var showLoadingScreen = false
     @State private var store: DocumentStore?
+    @State private var initialDisplay = true
 
     @StateObject private var manager = ConnectionManager()
 
@@ -127,7 +128,8 @@ struct MainView: View {
             biometricLockManager.lockIfEnabled()
 
             Logger.shared.notice("Checking login status")
-            refreshConnection(animated: false)
+            refreshConnection(animated: initialDisplay)
+            initialDisplay = false
 
             // @TODO: Remove in a few versions
             Task {
