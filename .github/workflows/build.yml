@@ -45,6 +45,9 @@ jobs:
   test:
     runs-on: macos-15
 
+    env:
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
