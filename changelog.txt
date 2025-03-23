@@ -1,3 +1,7 @@
+1.7.0 (138)
+
+- Yet another round of decoding error debug outputs
+
 1.7.0 (137)
 
 - Display objects (correspondents, document types etc) sorted by name case-insensitively
