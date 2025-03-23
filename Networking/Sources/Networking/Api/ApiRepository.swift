@@ -237,8 +237,21 @@ public actor ApiRepository {
             if mode == .release {
                 Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)")
             } else {
-                let desc = error.errorDescription ?? "No error description"
+                let desc = "\(error.localizedDescription), \(error.errorDescription ?? "No error description")"
                 Logger.networking.error("Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error) \(desc, privacy: .public)")
+
+                switch error {
+                case let .typeMismatch(type, context):
+                    Logger.networking.error("-> Type mismatch: \(type.self, privacy: .public) \(context.debugDescription, privacy: .public)")
+                case let .valueNotFound(type, context):
+                    Logger.networking.error("-> Value not found: \(type.self, privacy: .public) \(context.debugDescription, privacy: .public)")
+                case let .keyNotFound(key, context):
+                    Logger.networking.error("-> Key not found: \(key.debugDescription, privacy: .public) \(context.debugDescription, privacy: .public)")
+                case let .dataCorrupted(context):
+                    Logger.networking.error("-> Data corrupted: \(type.self, privacy: .public) \(context.debugDescription, privacy: .public)")
+                default:
+                    Logger.networking.error("-> Unknown decoding error")
+                }
             }
             throw DecodingErrorWithRootType(type: T.self, error: error)
         }
