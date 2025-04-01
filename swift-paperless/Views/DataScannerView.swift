@@ -392,16 +392,18 @@ struct TypeAsnView: View {
         case error(error: any Error)
     }
 
-    @StateObject private var debounce = DebounceObject(delay: 0.1)
+    @State private var text = ""
     @EnvironmentObject private var store: DocumentStore
     @FocusState private var focused: Bool
     @State private var status = Status.none
 
+    @State private var searchTask: Task<Void, Never>?
+
     var action: (Document) -> Void
 
     private var asn: UInt? {
-        if let _ = try? /\d+/.wholeMatch(in: debounce.text) {
-            return UInt(debounce.text)
+        if let _ = try? /\d+/.wholeMatch(in: text) {
+            return UInt(text)
         }
         return nil
     }
@@ -439,7 +441,7 @@ struct TypeAsnView: View {
                 Text(.localizable(.asnPlaceholder))
                     .padding(.leading)
                     .padding(.vertical, 19)
-                TextField(String("1234"), text: $debounce.text)
+                TextField(String("1234"), text: $text)
                     .focused($focused)
                     .keyboardType(.numberPad)
                     .padding(.vertical, 19)
@@ -479,24 +481,33 @@ struct TypeAsnView: View {
         .padding()
         .onAppear { focused = true }
 
-        .onChange(of: debounce.debouncedText) {
-            guard !debounce.text.isEmpty else {
-                withAnimation { status = .none }
-                return
-            }
+        .onChange(of: text) {
+            searchTask?.cancel()
 
-            guard let asn else {
-                withAnimation {
-                    status = .notAnAsn(asn: debounce.text)
+            searchTask = Task {
+                do {
+                    try await Task.sleep(for: .seconds(0.1))
+                } catch {
+                    // should only be cancellation
+                    return
                 }
-                return
-            }
 
-            withAnimation {
-                status = .loading(asn: asn)
-            }
+                guard !text.isEmpty else {
+                    withAnimation { status = .none }
+                    return
+                }
 
-            Task {
+                guard let asn else {
+                    withAnimation {
+                        status = .notAnAsn(asn: text)
+                    }
+                    return
+                }
+
+                withAnimation {
+                    status = .loading(asn: asn)
+                }
+
                 do {
                     if let document = try await store.repository.document(asn: asn) {
                         withAnimation {
