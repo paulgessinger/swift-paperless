@@ -102,7 +102,7 @@ struct MainView: View {
                         MainLoadingView(url: manager.connection?.url.absoluteString,
                                         manager: manager)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(.white)
+                            .modifier(BackgroundColorModifier())
                     }
                 }
                 .animation(.default, value: showLoadingScreen)
