@@ -7557,8 +7557,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Seitenanzahl"
           }
         },
         "en" : {
