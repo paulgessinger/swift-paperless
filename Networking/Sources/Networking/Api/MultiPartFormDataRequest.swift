@@ -45,7 +45,7 @@ struct MultiPartFormDataRequest {
         body.append("\r\n")
     }
 
-    func add(name _: String, url: URL, mimeType: String? = nil) throws {
+    func add(name _: String, url: URL, mimeType: String? = nil, filename: String? = nil) throws {
         guard url.isFileURL else {
             throw Error.notAFile(url: url)
         }
@@ -56,8 +56,10 @@ struct MultiPartFormDataRequest {
 
         let data = try Data(contentsOf: url)
 
+        let filename = filename ?? url.lastPathComponent
+
         body.append("--\(boundary)\r\n")
-        body.append("Content-Disposition: form-data; name=\"document\"; filename=\"\(url.lastPathComponent)\"\r\n")
+        body.append("Content-Disposition: form-data; name=\"document\"; filename=\"\(filename)\"\r\n")
         body.append("Content-Type: \(mimeType)\r\n")
         body.append("\r\n")
         body.append(data)
