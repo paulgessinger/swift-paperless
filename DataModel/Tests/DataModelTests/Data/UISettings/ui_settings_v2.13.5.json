@@ -45,11 +45,11 @@
             "warn_on_unsaved_change": true
         },
         "permissions": {
-            "default_owner": null,
+            "default_owner": 123,
             "default_view_users": [],
-            "default_view_groups": [],
+            "default_view_groups": [1],
             "default_edit_users": [],
-            "default_edit_groups": []
+            "default_edit_groups": [6]
         },
         "app_title": null,
         "app_logo": null,
