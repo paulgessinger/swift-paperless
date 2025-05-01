@@ -25,6 +25,18 @@
         }
       }
     },
+    "canNoLongerViewOrChange" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of view and change permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to view or change this object!"
+          }
+        }
+      }
+    },
     "change" : {
       "extractionState" : "manual",
       "localizations" : {
