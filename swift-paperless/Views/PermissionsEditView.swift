@@ -303,14 +303,22 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
             .bold()
     }
 
+    private func canNoLongerChange(_ user: User) -> Bool {
+        user.canChange(original) && !user.canChange(object)
+    }
+
+    private func canNoLongerView(_ user: User) -> Bool {
+        user.canView(original) && !user.canView(object)
+    }
+
     var body: some View {
         Form {
             if let user = store.currentUser {
-                if user.canChange(original), !user.canChange(object) {
+                if canNoLongerView(user), canNoLongerChange(user) {
+                    warning(.permissions(.canNoLongerViewOrChange))
+                } else if canNoLongerChange(user) {
                     warning(.permissions(.canNoLongerChange))
-                }
-
-                if user.canView(original), !user.canView(object) {
+                } else if canNoLongerView(user) {
                     warning(.permissions(.canNoLongerView))
                 }
             }
