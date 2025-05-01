@@ -486,7 +486,7 @@ struct TypeAsnView: View {
 
             searchTask = Task {
                 do {
-                    try await Task.sleep(for: .seconds(0.1))
+                    try await Task.sleep(for: .seconds(0.5))
                 } catch {
                     // should only be cancellation
                     return
