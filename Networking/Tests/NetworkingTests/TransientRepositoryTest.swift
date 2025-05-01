@@ -17,7 +17,7 @@ import Testing
             created: .now,
             storagePath: nil
         )
-        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!)
+        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf")
 
         // Read - by ID
         let doc = try await repository.document(id: 1)
@@ -169,7 +169,7 @@ import Testing
 
         // Create a document first
         let protoDoc = ProtoDocument(title: "Test Document")
-        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!)
+        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf")
 
         // Add a note
         let note = ProtoDocument.Note(note: "Test Note")
