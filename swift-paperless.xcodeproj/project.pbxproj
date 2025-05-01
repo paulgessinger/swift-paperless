@@ -1102,7 +1102,7 @@
 			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				minimumVersion = 1.1.0;
 			};
 		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
