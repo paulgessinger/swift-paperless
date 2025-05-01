@@ -212,15 +212,15 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
                     do {
                         try await group.next()
                     } catch is PermissionsError {
-//                        Logger.shared.debug("Permissions error fetching users and groups for permissions edit, suppressing")
+                        Logger.shared.debug("Permissions error fetching users and groups for permissions edit, suppressing")
                     } catch let error where error.isCancellationError {
-//                        Logger.shared.debug("Cancellation error fetching users and groups for permissions edit, suppressing")
+                        Logger.shared.debug("Cancellation error fetching users and groups for permissions edit, suppressing")
                         continue
                     }
                 }
             }
         } catch {
-//            Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
+            Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
         }
     }
 
