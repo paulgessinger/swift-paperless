@@ -434,8 +434,8 @@ final class DocumentStore: ObservableObject, Sendable {
         return created
     }
 
-    func create(document: ProtoDocument, file: URL) async throws {
-        try await repository.create(document: document, file: file)
+    func create(document: ProtoDocument, file: URL, filename: String? = nil) async throws {
+        try await repository.create(document: document, file: file, filename: filename ?? file.lastPathComponent)
         startTaskPolling()
     }
 

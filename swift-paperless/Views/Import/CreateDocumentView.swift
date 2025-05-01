@@ -120,7 +120,8 @@ struct CreateDocumentView: View {
 
     @State private var document = ProtoDocument()
     @State private var status = Status.none
-    @State var isAsnValid = true
+    @State private var isAsnValid = true
+    @State private var useOriginalTitle = false
 
     private var isDocumentValid: Bool {
         isAsnValid && !document.title.isEmpty
@@ -143,7 +144,7 @@ struct CreateDocumentView: View {
 
     func upload() async {
         do {
-            try await store.create(document: document, file: sourceUrl)
+            try await store.create(document: document, file: sourceUrl, filename: filename)
         } catch {
             errorController.push(error: error)
             status = .error
@@ -176,6 +177,19 @@ struct CreateDocumentView: View {
         document.storagePath = nil
     }
 
+    private var filename: String {
+        if useOriginalTitle {
+            return sourceUrl.lastPathComponent
+        } else {
+            let ext = sourceUrl.pathExtension
+            let stem = document.title.slugify()
+
+            let filename = ext.isEmpty ? stem : "\(stem).\(ext)"
+
+            return filename
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -194,6 +208,10 @@ struct CreateDocumentView: View {
                             .font(.headline)
                         Text(.localizable(.pages(thumbnailView.pageCount)))
                             .font(.subheadline)
+
+                        Text(filename)
+                            .italic()
+                            .font(.footnote)
                     }
                     Spacer()
                 }
@@ -216,6 +234,8 @@ struct CreateDocumentView: View {
                             .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
                         DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)), selection: $document.created, displayedComponents: .date)
+
+                        Toggle(.localizable(.documentUploadUseOriginalFilename), isOn: $useOriginalTitle)
                     }
 
                     Section {

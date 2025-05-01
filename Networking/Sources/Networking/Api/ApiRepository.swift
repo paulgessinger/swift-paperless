@@ -349,7 +349,7 @@ extension ApiRepository: Repository {
                          endpoint: .document(id: document.id, fullPerms: false))
     }
 
-    public func create(document: ProtoDocument, file: URL) async throws {
+    public func create(document: ProtoDocument, file: URL, filename: String) async throws {
         Logger.networking.notice("Creating document")
         var request = try request(.createDocument())
 
@@ -376,7 +376,7 @@ extension ApiRepository: Repository {
             mp.add(name: "tags", string: String(tag))
         }
 
-        try mp.add(name: "document", url: file)
+        try mp.add(name: "document", url: file, filename: filename)
         mp.addTo(request: &request)
 
         do {

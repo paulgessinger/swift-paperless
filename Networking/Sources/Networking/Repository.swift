@@ -60,7 +60,7 @@ public enum DocumentDownloadEvent {
 public protocol Repository: Sendable, Actor {
     func update(document: Document) async throws -> Document
     func delete(document: Document) async throws
-    func create(document: ProtoDocument, file: URL) async throws
+    func create(document: ProtoDocument, file: URL, filename: String) async throws
 
     // MARK: Tags
 
