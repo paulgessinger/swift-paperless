@@ -16,14 +16,21 @@ public struct Permissions: Codable, Equatable, Hashable, Sendable {
             self.users = users
             self.groups = groups
         }
+
+        public static var none: Set { .init() }
     }
 
     public var view: Set
     public var change: Set
 
-    public init(view: Set = Set(), change: Set = Set()) {
+    public init(view: Set = .none, change: Set = .none) {
         self.view = view
         self.change = change
+    }
+
+    public init(_ factory: (inout Permissions) -> Void) {
+        self.init()
+        factory(&self)
     }
 }
 

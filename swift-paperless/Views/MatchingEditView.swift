@@ -12,14 +12,7 @@ import SwiftUI
 struct MatchEditView<Element>: View where Element: MatchingModel {
     @Binding var element: Element
 
-//    @State private var showTextField: Bool
-
-//    init(element: Binding<Element>) {
-//        self._element = element
-//        self._showTextField = State(initialValue: element.)
-//    }
-//
-//    static private func
+    @Environment(\.isEnabled) private var isEnabled
 
     var showTextField: Bool {
         switch element.matchingAlgorithm {
@@ -47,7 +40,9 @@ struct MatchEditView<Element>: View where Element: MatchingModel {
         Section {
             if showTextField {
                 TextField(String(localized: .matching(.pattern)), text: $element.match)
-                    .clearable($element.match)
+                    .if(isEnabled) {
+                        $0.clearable($element.match)
+                    }
                 Toggle(String(localized: .matching(.caseInsensitive)), isOn: $element.isInsensitive)
             }
         }

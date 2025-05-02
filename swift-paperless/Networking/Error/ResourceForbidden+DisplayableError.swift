@@ -9,7 +9,7 @@ import DataModel
 import Foundation
 import Networking
 
-extension ResourceForbidden: DisplayableError where Resource: Model & NamedLocalized {
+extension ResourceForbidden: DisplayableError where Resource: Model & LocalizedResource {
     var message: String {
         String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
     }

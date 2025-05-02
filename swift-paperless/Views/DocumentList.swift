@@ -167,13 +167,14 @@ struct DocumentList: View {
         }
     }
 
-    func refresh() {
-        Task {
-            if let documents = try? await viewModel.refresh() {
-                withAnimation {
-                    viewModel.replace(documents: documents)
-                }
+    func refresh() async {
+        do {
+            let documents = try await viewModel.refresh()
+            withAnimation {
+                viewModel.replace(documents: documents)
             }
+        } catch {
+            Logger.shared.error("Error refreshing documents: \(error)")
         }
     }
 
@@ -181,6 +182,14 @@ struct DocumentList: View {
         VStack {
             if !viewModel.ready {
                 LoadingDocumentList()
+            } else if viewModel.noPermissions {
+                NoPermissionsView(for: Document.self)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .refreshable {
+                        await Task {
+                            await refresh()
+                        }.value
+                    }
             } else {
                 let documents = viewModel.documents
                 if !documents.isEmpty {
@@ -205,14 +214,19 @@ struct DocumentList: View {
                     }
                     .listStyle(.plain)
                 } else {
-                    NoDocumentsView(filtering: filterModel.filterState.filtering,
-                                    onRefresh: { refresh() })
+                    NoDocumentsView(filtering: filterModel.filterState.filtering)
                         .equatable()
+                        .refreshable {
+                            await Task {
+                                await refresh()
+                            }.value
+                        }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }
             }
         }
         .animation(.default, value: viewModel.ready)
+        .animation(.default, value: viewModel.noPermissions)
 
         .onChange(of: filterModel.filterState) { _, filter in
             Task {
@@ -225,7 +239,11 @@ struct DocumentList: View {
         // @TODO: Re-evaluate if we want an animation here
         .animation(.default, value: viewModel.documents)
 
-        .refreshable { refresh() }
+        .refreshable {
+            await Task {
+                await refresh()
+            }.value
+        }
 
         .task {
             await viewModel.load()
@@ -258,8 +276,6 @@ struct DocumentList: View {
 private struct NoDocumentsView: View, Equatable {
     var filtering: Bool
 
-    var onRefresh: () -> Void
-
     // Workaround to make SwiftUI call the == func to skip rerendering this view
     @State private var dummy = 5
 
@@ -274,10 +290,6 @@ private struct NoDocumentsView: View, Equatable {
             }
 
             .padding(.top, 40)
-
-            .refreshable {
-                onRefresh()
-            }
         }
     }
 
@@ -287,8 +299,21 @@ private struct NoDocumentsView: View, Equatable {
     }
 }
 
+private struct NoPermissionsViewDocument: View {
+    var body: some View {
+        ScrollView(.vertical) {
+            ContentUnavailableView {
+                Label(String(localized: .localizable(.requestErrorForbidden)), systemImage: "lock.fill")
+            } description: {
+                Text(.localizable(.documentsNoPermissionsDescription))
+            }
+            .padding(.top, 40)
+        }
+    }
+}
+
 // - MARK: Previews
 
 #Preview("NoDocumentsView") {
-    NoDocumentsView(filtering: true, onRefresh: {})
+    NoDocumentsView(filtering: true)
 }
