@@ -2880,9 +2880,45 @@
     "documentUploadUseOriginalFilename" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use original filename"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ursprünglichen Dateinamen verwenden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Use original filename"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use original filename"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use original filename"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use original filename"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Use original filename"
           }
         }
@@ -7568,8 +7604,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Seitenanzahl"
           }
         },
         "en" : {
