@@ -1,3 +1,9 @@
+1.7.0 (140)
+
+- Fix background color of splash screen
+- Increase debounce delay in ASN type search to fix concurrency issue
+- Allow uploading documents with the title as their filename
+
 1.7.0 (138)
 
 - Yet another round of decoding error debug outputs

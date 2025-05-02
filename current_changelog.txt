@@ -1,3 +1,0 @@
-- Fix background color of splash screen
-- Increase debounce delay in ASN type search to fix concurrency issue
-- Allow uploading documents with the title as their filename
