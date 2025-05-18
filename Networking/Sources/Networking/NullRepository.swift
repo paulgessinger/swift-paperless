@@ -15,7 +15,7 @@ public actor NullRepository: Repository {
 
     public func update(document _: Document) async throws -> Document { throw NotImplemented() }
     public func delete(document _: Document) async throws { throw NotImplemented() }
-    public func create(document _: ProtoDocument, file _: URL, filename _: String) async throws ->Document { throw NotImplemented() }
+    public func create(document _: ProtoDocument, file _: URL, filename _: String) async throws -> Document { throw NotImplemented() }
 
     public func download(documentID _: UInt, progress _: (@Sendable (Double) -> Void)? = nil) async throws -> URL? { nil }
 
