@@ -116,7 +116,7 @@ extension TransientRepository: Repository {
         documents.removeValue(forKey: document.id)
     }
 
-    public func create(document: ProtoDocument, file _: URL, filename _:String) async throws -> Document {
+    public func create(document: ProtoDocument, file _: URL, filename _: String) async throws -> Document {
         let id = generateId()
         let newDoc = Document(
             id: id,
