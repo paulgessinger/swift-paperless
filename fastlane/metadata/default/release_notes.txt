@@ -1,38 +1,11 @@
-Features
-- All new login screen with a new design
-  - Improved error handling with more detailed error messages in many scenarios
-  - Added the ability to log in with a token or without credentials (auto-auth, mTLS, etc)
-- Added the ability to change servers when the currently active server is not responding
-- Added shortcut to create a bug report on GitHub from the settings
-- Add support for 2FA/MFA/OTP codes during login with credentials
-- Add option to log out or switch servers on the loading screen (shown after a short timeout)
-- Add ability to swipe down to hide the bottom bar in the document detail view with configurable default setting
-
-Bug Fixes
-- Fix a bug during migration from single-server (v1.1.1 and before) to multi-server: the login token was not correctly persisted
-- Fix an issue preventing the right document detail view to be shown
-- Fixed crash on macOS
-- Fixed display name of share extension on macOS
-- Fix an issue when sharing exported logs via share sheet
-- Fix layout issue on iPad that prevented display of the login menu on the home document screen
-- Fix bug that prevented returning to the start screen after deleting a document
-- Fix for storage path not being added to newly created documents
-- Fix for ASN not being added to newly created documents
-- Fix ASN not being saved when uploading documents with restricted user accounts
-- Recover from invalid filter rule contents (set manually in the admin backend) in certain cases
-
-Improvements
-- Explicit handling and detection of unsupported server API versions
-  - The server details in the settings now report if the server is running an unsupported version
-- Added warning when using the `Authorization` header as a custom header
-- Improved error output when API response parsing fails
-- Clarify what the top toolbar dropdown menu means if no saved views exist
-- Improve error handling of general HTTP errors with the same messages as during the login process
-- Improvements to the animation during server switching
-- Prepare for granular handling of user permissions
-- Improved layout of the document detail screen for larger dynamic text sizes
-- Reintroduce delay when typing search text
-- If configured, remove inbox tags from documents automatically when saving
-- Attempted fixes for a number of concurrency issues in the document edit screen and during photo import
-- Adapt to new API versions and recent Paperless-ngx releases
-- Fix acknowledgement of tasks after the API endpoint changed
+- Fix background color of splash screen
+- Increase debounce delay in ASN type search to fix concurrency issue
+- Allow uploading documents with the title as their filename
+- Yet another round of decoding error debug outputs
+- Display objects (correspondents, document types etc) sorted by name case-insensitively
+- Additional debug output for decoding error debugging
+- Display loading screen also on initial app launch
+- Fix after change to tasks API
+- Support sorting by page count
+- Fix error when sort field has unexpected value in saved view
+- Fix error logging out of the last server connection
