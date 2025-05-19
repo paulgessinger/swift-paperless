@@ -141,6 +141,7 @@ struct StoredConnection: Equatable, Codable, Identifiable {
 class ConnectionManager: ObservableObject {
     enum Event {
         case connectionChange(animated: Bool)
+        case logout
     }
 
     var eventPublisher =
@@ -352,9 +353,11 @@ class ConnectionManager: ObservableObject {
             } else {
                 Logger.api.info("Setting active connection to nil")
                 self.activeConnectionId = nil
+                eventPublisher.send(.logout)
             }
         } else {
             activeConnectionId = nil
+            eventPublisher.send(.logout)
         }
     }
 }

@@ -44,7 +44,7 @@ struct MainView: View {
                 showLoadingScreen = true
             }
 
-            let sleep = { (duration: Duration) async in
+            func sleep(_ duration: Duration) async {
                 if animated {
                     try? await Task.sleep(for: duration)
                 }
@@ -77,6 +77,7 @@ struct MainView: View {
             storeReady = false
             Logger.shared.trace("App does not have any active connection, show login screen")
             showLoginScreen = true
+            showLoadingScreen = false
         }
     }
 
@@ -98,7 +99,7 @@ struct MainView: View {
                 }
 
                 VStack {
-                    if manager.connection == nil || showLoadingScreen {
+                    if showLoadingScreen {
                         MainLoadingView(url: manager.connection?.url.absoluteString,
                                         manager: manager)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -142,6 +143,8 @@ struct MainView: View {
             switch event {
             case let .connectionChange(animated):
                 refreshConnection(animated: animated)
+            case .logout:
+                showLoginScreen = true
             }
         }
 
