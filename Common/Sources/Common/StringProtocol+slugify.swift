@@ -1,5 +1,5 @@
 // Adapted from
-// https://bootstragram.com/blog/slugify-in-swift/
+// https://www.mickf.net/tech/slugify-in-swift/
 
 import Foundation
 
