@@ -31,10 +31,16 @@ class DocumentImportModel: ObservableObject {
     }
 
     func pop() {
-        if !importUrls.isEmpty {
+        if importUrls.count > 1 {
             importUrls.removeFirst()
         }
+        if importUrls.count == 1 {
+            done = true
+        }
     }
+
+    @Published
+    private(set) var done: Bool = false
 
     // @TODO: Separate view model which does the copying on a background thread
     func importFile(result: [URL], isSecurityScoped: Bool, errorController: ErrorController) async {
