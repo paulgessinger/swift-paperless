@@ -1,0 +1,3 @@
+1.8.0 (142)
+
+- Adjust to updated API document data: created is date-only now
