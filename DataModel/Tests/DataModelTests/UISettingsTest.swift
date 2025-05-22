@@ -16,7 +16,6 @@ struct UISettingsTest {
         let data = try #require(testData("Data/UISettings/ui_settings_min_version.json"))
         let response = try JSONDecoder().decode(UISettings.self, from: data)
         #expect(response.user == User(id: 3, isSuperUser: true, username: "paperless"))
-        #expect(response.settings != nil)
         let settings = response.settings
         #expect(!settings.documentEditing.removeInboxTags)
 
@@ -37,7 +36,6 @@ struct UISettingsTest {
         let response = try JSONDecoder().decode(UISettings.self, from: data)
 
         #expect(response.user == User(id: 2, isSuperUser: true, username: "paperless"))
-        #expect(response.settings != nil)
         let settings = response.settings
         #expect(settings.documentEditing.removeInboxTags)
 

@@ -147,8 +147,8 @@ struct PermissionsTest {
         // Empty permissions
         let emptyDescription = permissions.matrix
         #expect(emptyDescription.contains("vacd"))
-        #expect(emptyDescription.matches(of: /document\\s+----/) != nil)
-        #expect(emptyDescription.matches(of: /tag\\s+----/) != nil)
+        #expect(emptyDescription.contains("document      ----"))
+        #expect(emptyDescription.contains("tag           ----"))
 
         // Add some permissions
         permissions.set(.view, to: true, for: .document)
@@ -157,9 +157,9 @@ struct PermissionsTest {
         permissions.set(.delete, to: true, for: .user)
 
         let description = permissions.matrix
-        #expect(description.matches(of: /document\\s+va--/) != nil)
-        #expect(description.matches(of: /tag\\s+--c-/) != nil)
-        #expect(description.matches(of: /user\\s+---d/) != nil)
+        #expect(description.contains("document      va--"))
+        #expect(description.contains("tag           --c-"))
+        #expect(description.contains("user          ---d"))
 
         // Verify format
         let lines = description.split(separator: "\n")
