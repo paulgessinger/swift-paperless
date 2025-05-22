@@ -157,4 +157,18 @@ struct DocumentModelTest {
         let match = try ex.firstMatch(in: json)
         #expect(match != nil)
     }
+
+    @Test("Encode document model")
+    func testEncodeDocument() throws {
+        let data = try #require(testData("Data/Document/full.json"))
+        let document = try decoder.decode(Document.self, from: data)
+
+        // mirror `ApiRepository`
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        let encoded = try encoder.encode(document)
+        let s = try #require(String(data: encoded, encoding: .utf8))
+        #expect(s.contains("\"created\":\"2024-12-21\""))
+    }
 }
