@@ -165,7 +165,14 @@ struct DocumentModelTest {
 
         // mirror `ApiRepository`
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            let formatter = ISO8601DateFormatter()
+            let tz = TimeZone(secondsFromGMT: 60 * 60)!
+            formatter.timeZone = tz
+            let dateString = formatter.string(from: date)
+            var container = encoder.singleValueContainer()
+            try container.encode(dateString)
+        }
 
         let encoded = try encoder.encode(document)
         let s = try #require(String(data: encoded, encoding: .utf8))
