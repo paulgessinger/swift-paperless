@@ -69,7 +69,7 @@ struct DocumentView: View {
 
     private func createCallback() {
         importModel.pop()
-        if importModel.importUrls.isEmpty {
+        if importModel.done {
             showCreateModal = false
             importModel.totalUrls = 0
         }
