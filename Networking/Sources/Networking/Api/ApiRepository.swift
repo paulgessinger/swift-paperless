@@ -360,6 +360,11 @@ extension ApiRepository: Repository {
             mp.add(name: "correspondent", string: String(corr))
         }
 
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let createdStr = formatter.string(from: document.created)
+        mp.add(name: "created", string: createdStr)
+
         if let dt = document.documentType {
             mp.add(name: "document_type", string: String(dt))
         }
