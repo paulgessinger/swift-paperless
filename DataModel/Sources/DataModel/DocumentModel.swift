@@ -49,7 +49,9 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     @CodedBy(NullCoder<UInt>())
     public var correspondent: UInt?
 
+    @CodedBy(DateOnlyCoder())
     public var created: Date
+
     public var tags: [UInt]
 
     @IgnoreEncoding

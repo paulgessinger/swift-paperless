@@ -26,7 +26,7 @@ struct DocumentModelTest {
         #expect(document.title == "Quittung")
         #expect(document.tags == [1, 2, 3])
 
-        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0, tz: tz)))
+        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0, tz: TimeZone(secondsFromGMT: 0)!)))
         #expect(try dateApprox(#require(document.modified), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 41, second: 49, tz: tz)))
         #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
 
@@ -156,5 +156,26 @@ struct DocumentModelTest {
 
         let match = try ex.firstMatch(in: json)
         #expect(match != nil)
+    }
+
+    @Test("Encode document model")
+    func testEncodeDocument() throws {
+        let data = try #require(testData("Data/Document/full.json"))
+        let document = try decoder.decode(Document.self, from: data)
+
+        // mirror `ApiRepository`
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            let formatter = ISO8601DateFormatter()
+            let tz = TimeZone(secondsFromGMT: 60 * 60)!
+            formatter.timeZone = tz
+            let dateString = formatter.string(from: date)
+            var container = encoder.singleValueContainer()
+            try container.encode(dateString)
+        }
+
+        let encoded = try encoder.encode(document)
+        let s = try #require(String(data: encoded, encoding: .utf8))
+        #expect(s.contains("\"created\":\"2024-12-21\""))
     }
 }
