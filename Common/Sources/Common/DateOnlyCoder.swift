@@ -18,6 +18,7 @@ public struct DateOnlyCoder: HelperCoder {
         let dateStr = try container.decode(String.self)
 
         let df = DateFormatter()
+        df.timeZone = TimeZone(secondsFromGMT: 0)
         df.dateFormat = "yyyy-MM-dd"
 
         if let res = df.date(from: dateStr) {
@@ -45,6 +46,7 @@ public struct DateOnlyCoder: HelperCoder {
         var container = encoder.singleValueContainer()
 
         let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
 
         try container.encode(formatter.string(from: value))
