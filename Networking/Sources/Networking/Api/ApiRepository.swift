@@ -298,7 +298,7 @@ public actor ApiRepository {
     private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type) async throws -> Element where Element: Decodable {
         var request = try request(endpoint)
 
-        let body = try JSONEncoder().encode(element)
+        let body = try encoder.encode(element)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
@@ -530,7 +530,7 @@ extension ApiRepository: Repository {
 
     public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
         var request = try request(.notes(documentId: documentId))
-        let body = try JSONEncoder().encode(note)
+        let body = try encoder.encode(note)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
@@ -743,7 +743,7 @@ extension ApiRepository: Repository {
 
         let payload: [String: [UInt]] = ["tasks": ids]
 
-        let body = try JSONEncoder().encode(payload)
+        let body = try encoder.encode(payload)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
