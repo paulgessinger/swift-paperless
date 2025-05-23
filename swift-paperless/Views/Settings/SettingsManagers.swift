@@ -20,12 +20,7 @@ extension TagView: RowViewProtocol {
     }
 }
 
-extension TagEditView: EditViewProtocol where Element == Tag {
-    @MainActor
-    init(element: Tag, onSave: @escaping (Element) throws -> Void) {
-        self.init(tag: element, onSave: onSave)
-    }
-}
+extension TagEditView: EditViewProtocol where Element == Tag {}
 
 extension TagEditView: CreateViewProtocol where Element == ProtoTag {}
 
@@ -58,6 +53,11 @@ struct TagManager: ManagerProtocol {
 
         func delete(_ tag: Tag) async throws {
             try await store.delete(tag: tag)
+        }
+
+        @MainActor
+        var permissions: UserPermissions.PermissionSet {
+            store.permissions[.tag]
         }
     }
 
@@ -105,6 +105,11 @@ struct CorrespondentManager: ManagerProtocol {
 
         func delete(_ correspondent: Correspondent) async throws {
             try await store.delete(correspondent: correspondent)
+        }
+
+        @MainActor
+        var permissions: UserPermissions.PermissionSet {
+            store.permissions[.correspondent]
         }
     }
 
@@ -158,6 +163,11 @@ struct DocumentTypeManager: ManagerProtocol {
         func delete(_ dt: DocumentType) async throws {
             try await store.delete(documentType: dt)
         }
+
+        @MainActor
+        var permissions: UserPermissions.PermissionSet {
+            store.permissions[.documentType]
+        }
     }
 
     typealias EditView = DocumentTypeEditView<DocumentType>
@@ -210,6 +220,11 @@ struct SavedViewManager: ManagerProtocol {
         func delete(_ view: SavedView) async throws {
             try await store.delete(savedView: view)
         }
+
+        @MainActor
+        var permissions: UserPermissions.PermissionSet {
+            store.permissions[.savedView]
+        }
     }
 
     typealias EditView = SavedViewEditView<SavedView>
@@ -260,6 +275,11 @@ struct StoragePathManager: ManagerProtocol {
 
         func delete(_ path: StoragePath) async throws {
             try await store.delete(storagePath: path)
+        }
+
+        @MainActor
+        var permissions: UserPermissions.PermissionSet {
+            store.permissions[.storagePath]
         }
     }
 
