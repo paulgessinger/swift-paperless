@@ -4,8 +4,13 @@ docs-serve:
 docs:
     uv run --with-requirements docs/requirements.txt mkdocs build
 
-bump version:
-  uv run bump.py swift-paperless.xcodeproj/project.pbxproj {{version}}
+alias sv := set_version
+set_version version:
+  uv run bump.py version swift-paperless.xcodeproj/project.pbxproj {{version}}
+
+alias sb := set_build
+set_build number:
+  uv run bump.py build swift-paperless.xcodeproj/project.pbxproj {{number}}
 
 beta:
   fastlane beta
