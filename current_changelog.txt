@@ -1,1 +1,0 @@
-- Fix timezone conversion in document created date: on versions below 2.16.0 of Paperless-ngx, the timezone was incorrectly set and resulted in the date shifting when saving.
