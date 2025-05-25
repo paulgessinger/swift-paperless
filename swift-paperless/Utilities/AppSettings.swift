@@ -152,6 +152,7 @@ class AppSettings: ObservableObject {
     func resetAppVersion() {
         Logger.shared.info("Resetting stored app version")
         currentAppVersion = nil
+        UserDefaults.standard.synchronize()
     }
 
     let settingsChanged = PassthroughSubject<Void, Never>()
