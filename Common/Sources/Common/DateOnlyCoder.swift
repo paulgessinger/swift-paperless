@@ -8,6 +8,8 @@
 import Foundation
 import MetaCodable
 
+import os
+
 public struct DateOnlyCoder: HelperCoder {
     public typealias Coded = Date
 
@@ -17,36 +19,26 @@ public struct DateOnlyCoder: HelperCoder {
         let container = try decoder.singleValueContainer()
         let dateStr = try container.decode(String.self)
 
+        let ex = /(\d{4}-\d{2}-\d{2}).*/
+
+        guard let match = try? ex.wholeMatch(in: dateStr) else {
+            throw DateDecodingError.invalidDate(string: dateStr)
+        }
+
         let df = DateFormatter()
-        df.timeZone = TimeZone(secondsFromGMT: 0)
         df.dateFormat = "yyyy-MM-dd"
 
-        if let res = df.date(from: dateStr) {
-            return res
+        guard let res = df.date(from: String(match.1)) else {
+            throw DateDecodingError.invalidDate(string: dateStr)
         }
 
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [
-            .withInternetDateTime,
-            .withFractionalSeconds,
-        ]
-        if let res = iso.date(from: dateStr) {
-            return res
-        }
-
-        iso.formatOptions = [.withInternetDateTime]
-        if let res = iso.date(from: dateStr) {
-            return res
-        }
-
-        throw DateDecodingError.invalidDate(string: dateStr)
+        return res
     }
 
     public func encode(_ value: Coded, to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
 
         let formatter = DateFormatter()
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
 
         try container.encode(formatter.string(from: value))

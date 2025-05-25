@@ -26,7 +26,7 @@ struct DocumentModelTest {
         #expect(document.title == "Quittung")
         #expect(document.tags == [1, 2, 3])
 
-        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0, tz: TimeZone(secondsFromGMT: 0)!)))
+        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0)))
         #expect(try dateApprox(#require(document.modified), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 41, second: 49, tz: tz)))
         #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
 
@@ -53,7 +53,7 @@ struct DocumentModelTest {
         #expect(document.title == "Quittung")
         #expect(document.tags == [1, 2, 3])
 
-        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0, tz: tz)))
+        #expect(dateApprox(document.created, datetime(year: 2024, month: 12, day: 21, hour: 0, minute: 0, second: 0)))
         #expect(try dateApprox(#require(document.modified), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 41, second: 49, tz: tz)))
         #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
 
