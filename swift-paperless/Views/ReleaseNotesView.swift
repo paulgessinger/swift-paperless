@@ -61,7 +61,7 @@ class ReleaseNotesViewModel: ObservableObject {
     private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
         let url = Self.baseUrl.appending(path: "md").appending(path: "v\(version.version).md")
         let request = URLRequest(url: url)
-//        Logger.shared.debug("Loading release notes for AppStore config from \(request.url!, privacy: .public)")
+        Logger.shared.debug("Loading release notes for AppStore config from \(request.url!, privacy: .public)")
 
         do {
             let (data, response) = try await URLSession.shared.getData(for: request)
@@ -81,7 +81,7 @@ class ReleaseNotesViewModel: ObservableObject {
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
-        //        Logger.shared.debug("Loading release notes for TestFlight config from \(request.url!, privacy: .public)")
+        Logger.shared.debug("Loading release notes for TestFlight config from \(request.url!, privacy: .public)")
         do {
             let (data, response) = try await URLSession.shared.getData(for: request)
             guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
@@ -129,7 +129,7 @@ class ReleaseNotesViewModel: ObservableObject {
         } catch is CancellationError {
             // noop
         } catch {
-//            Logger.shared.error("Error loading release notes: \(error)")
+            Logger.shared.error("Error loading release notes: \(error)")
             status = .error(error)
         }
     }
