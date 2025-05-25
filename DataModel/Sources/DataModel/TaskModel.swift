@@ -17,6 +17,15 @@ public enum TaskStatus: String, Codable, Sendable {
     case REVOKED
 }
 
+// See https://github.com/paperless-ngx/paperless-ngx/blob/4c6fdbb21fdcd3ecf81b9a0dd87487f146066e01/src/documents/models.py#L542C9-L545C65
+public enum TaskName: String, Sendable {
+    // There might be more added but this is not (currently) used for deserialization
+    case consumeFile = "consume_file"
+    case trainClassifier = "train_classifier"
+    case checkSanity = "check_sanity"
+    case indexOptimize = "index_optimize"
+}
+
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
