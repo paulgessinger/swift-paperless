@@ -122,7 +122,7 @@ struct MainView: View {
         }
 
         .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
-            ReleaseNotesView(releaseNotesModel: releaseNotesModel)
+            ReleaseNotesCoverView(releaseNotesModel: releaseNotesModel)
         }
 
         .task {

@@ -161,6 +161,13 @@ struct SettingsView: View {
             } label: {
                 Label(localized: .settings(.versionInfoLabel), systemImage: "info.bubble.fill")
             }
+
+            NavigationLink {
+                ReleaseNotesView()
+            }
+            label: {
+                Label(localized: .settings(.releaseNotesLabel), systemImage: "newspaper.fill")
+            }
         }
     }
 

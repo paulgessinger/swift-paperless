@@ -1980,6 +1980,17 @@
         }
       }
     },
+    "releaseNotesLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release notes"
+          }
+        }
+      }
+    },
     "reportBug" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -34,9 +34,9 @@ extension PublishedUserDefaultsBacked {
 class AppSettings: ObservableObject {
     private static let appVersionKey = "currentAppVersion"
     private init() {
-        let lastVersion: Version?
+        let lastVersion: AppVersion?
         do {
-            lastVersion = try UserDefaults.standard.load(Version.self, key: Self.appVersionKey)
+            lastVersion = try UserDefaults.standard.load(AppVersion.self, key: Self.appVersionKey)
         } catch {
             Logger.shared.error("Last app version could not be read: \(error)")
             lastVersion = nil
@@ -57,7 +57,7 @@ class AppSettings: ObservableObject {
             build = "1"
         }
 
-        guard let currentVersion = Version(release: release!, build: build!) else {
+        guard let currentVersion = AppVersion(version: release!, build: build!) else {
             return
         }
 
@@ -103,55 +103,14 @@ class AppSettings: ObservableObject {
     @PublishedUserDefaultsBacked(.showDocumentDetailPropertyBar)
     var showDocumentDetailPropertyBar: Bool = true
 
-    // @TODO: Refactor this with the new Common.Version
-    struct Version: CustomStringConvertible, Codable, Equatable {
-        private let releaseStored: [UInt]
-
-        let build: UInt
-
-        enum CodingKeys: String, CodingKey {
-            case releaseStored = "release"
-            case build
-        }
-
-        init?(release: String, build: String) {
-            releaseStored = release.split(separator: ".").compactMap { UInt($0) }
-            guard releaseStored.count == 3 else {
-                return nil
-            }
-            guard let build = UInt(build) else {
-                return nil
-            }
-            self.build = build
-        }
-
-        init(release: (UInt, UInt, UInt), build: UInt) {
-            releaseStored = [release.0, release.1, release.2]
-            self.build = build
-        }
-
-        var release: (UInt, UInt, UInt) {
-            precondition(releaseStored.count == 3)
-            return (releaseStored[0], releaseStored[1], releaseStored[2])
-        }
-
-        var releaseString: String {
-            precondition(releaseStored.count == 3)
-            return releaseStored.map { String($0) }.joined(separator: ".")
-        }
-
-        var description: String {
-            "\(releaseStored.map { String($0) }.joined(separator: ".")) (\(build))"
-        }
-    }
-
-    var lastAppVersion: Version?
+    var lastAppVersion: AppVersion?
     @UserDefaultsBacked(appVersionKey)
-    var currentAppVersion: Version? = nil
+    var currentAppVersion: AppVersion? = nil
 
     func resetAppVersion() {
         Logger.shared.info("Resetting stored app version")
         currentAppVersion = nil
+        UserDefaults.standard.synchronize()
     }
 
     let settingsChanged = PassthroughSubject<Void, Never>()
