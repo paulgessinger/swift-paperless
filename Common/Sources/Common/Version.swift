@@ -48,3 +48,57 @@ struct Version: LosslessStringConvertible, Equatable, Comparable, Sendable {
         lhs.tuple < rhs.tuple
     }
 }
+
+public
+struct AppVersion: CustomStringConvertible, Codable {
+    public let version: Version
+    public let build: UInt
+
+    private enum CodingKeys: String, CodingKey {
+        case release, build
+    }
+
+    public init(version: Version, build: UInt) {
+        self.version = version
+        self.build = build
+    }
+
+    public init?(version: String, build: String) {
+        guard let version = Version(version) else {
+            return nil
+        }
+
+        guard let build = UInt(build) else {
+            return nil
+        }
+
+        self.init(version: version, build: build)
+    }
+
+    public init?(release: [UInt], build: String) {
+        guard let build = UInt(build) else {
+            return nil
+        }
+        self.init(version: Version(major: release[0], minor: release[1], patch: release[2]), build: build)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let release = try container.decode([UInt].self, forKey: .release)
+        guard release.count == 3 else {
+            throw DecodingError.dataCorruptedError(forKey: .release, in: container, debugDescription: "Version must have exactly 3 components")
+        }
+        version = Version(major: release[0], minor: release[1], patch: release[2])
+        build = try container.decode(UInt.self, forKey: .build)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode([version.major, version.minor, version.patch], forKey: .release)
+        try container.encode(build, forKey: .build)
+    }
+
+    public var description: String {
+        "\(version) (\(build))"
+    }
+}

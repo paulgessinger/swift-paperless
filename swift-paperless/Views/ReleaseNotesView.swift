@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 18.05.2024.
 //
 
+import Common
 import Foundation
 import MarkdownUI
 import os
@@ -35,7 +36,7 @@ class ReleaseNotesViewModel: ObservableObject {
                 // Last is nil but have current, probably initial install
                 showReleaseNotes = true
             case let (.some(last), .some(current)):
-                if current.release != last.release {
+                if current.version != last.version {
                     showReleaseNotes = true
                 }
             }
@@ -45,8 +46,8 @@ class ReleaseNotesViewModel: ObservableObject {
     static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev/release_notes/")!
 
     func loadReleaseNotes() async {
-        guard let version = AppSettings.shared.currentAppVersion?.releaseString else {
-            Logger.shared.error("Did not get current app version")
+        Logger.shared.error("Did not get current app version")
+        guard let version = AppSettings.shared.currentAppVersion?.version.description else {
             return
         }
 

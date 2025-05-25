@@ -60,4 +60,56 @@ struct VersionTests {
         #expect(Version(1, 0, 0) <= Version(1, 0, 0))
         #expect(Version(1, 0, 0) >= Version(1, 0, 0))
     }
+
+    @Test
+    func appVersionCoding() throws {
+        let version = Version(1, 2, 3)
+        let appVersion = AppVersion(version: version, build: 42)
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(appVersion)
+
+        // Parse and compare the actual values instead of raw JSON
+        let jsonObject = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        #expect(jsonObject["release"] as! [Int] == [1, 2, 3])
+        #expect(jsonObject["build"] as! Int == 42)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(AppVersion.self, from: data)
+
+        #expect(decoded.version == version)
+        #expect(decoded.build == 42)
+    }
+
+    @Test
+    func appVersionInitializers() {
+        let version = Version(1, 2, 3)
+        let appVersion1 = AppVersion(version: version, build: 42)
+        #expect(appVersion1.version == version)
+        #expect(appVersion1.build == 42)
+
+        let appVersion2 = AppVersion(version: "1.2.3", build: "42")
+        #expect(appVersion2?.version == version)
+        #expect(appVersion2?.build == 42)
+
+        #expect(AppVersion(version: "1.2", build: "42") == nil)
+        #expect(AppVersion(version: "1.2.3.4", build: "42") == nil)
+        #expect(AppVersion(version: "a.b.c", build: "42") == nil)
+        #expect(AppVersion(version: "1.2.3", build: "abc") == nil)
+        #expect(AppVersion(version: "1.2.3", build: "-42") == nil)
+
+        let appVersion3 = AppVersion(version: "1.2.3", build: "42")
+        #expect(appVersion3?.version == version)
+        #expect(appVersion3?.build == 42)
+    }
+
+    @Test
+    func appVersionInvalidDecoding() throws {
+        let invalidJson = #"{"release":[1,2],"build":42}"#.data(using: .utf8)!
+        let decoder = JSONDecoder()
+
+        #expect(throws: DecodingError.self) {
+            try decoder.decode(AppVersion.self, from: invalidJson)
+        }
+    }
 }
