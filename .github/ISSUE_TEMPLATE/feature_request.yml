@@ -1,0 +1,11 @@
+name: Featrue request
+description: Request a new feature
+labels: ["feature request"]
+body:
+ - type: textarea
+   id: description
+   attributes:
+     label: Description
+     description: A description of what the desire feature is
+   validations:
+     required: true
