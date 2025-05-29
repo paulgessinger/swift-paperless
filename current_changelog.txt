@@ -1,0 +1,1 @@
+- Tasks: Only load tasks related to document consumption
