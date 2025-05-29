@@ -187,11 +187,12 @@ public extension Endpoint {
         Endpoint(path: "/api/ui_settings")
     }
 
-    static func tasks(name: TaskName? = nil) -> Endpoint {
+    static func tasks(name: TaskName? = nil, acknowledged: Bool = false) -> Endpoint {
         var queryItems: [URLQueryItem] = []
         if let name {
             queryItems.append(URLQueryItem(name: "task_name", value: name.rawValue))
         }
+        queryItems.append(URLQueryItem(name: "acknowledged", value: acknowledged ? "true" : "false"))
         return Endpoint(path: "/api/tasks", queryItems: queryItems)
     }
 

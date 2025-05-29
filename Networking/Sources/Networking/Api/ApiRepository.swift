@@ -721,7 +721,7 @@ extension ApiRepository: Repository {
     }
 
     public func tasks() async throws -> [PaperlessTask] {
-        let request = try request(.tasks(name: .consumeFile))
+        let request = try request(.tasks(name: .consumeFile, acknowledged: false))
 
         do {
             return try await fetchData(for: request, as: [PaperlessTask].self)
