@@ -28,6 +28,13 @@ struct UISettingsTest {
         // Test some negative cases
         #expect(!permissions.test(.delete, for: .appConfig))
         #expect(!permissions.test(.add, for: .workflow))
+
+        // Default permissions not present yet
+        #expect(settings.permissions.defaultOwner == nil)
+        #expect(settings.permissions.defaultViewUsers == [])
+        #expect(settings.permissions.defaultViewGroups == [])
+        #expect(settings.permissions.defaultEditUsers == [])
+        #expect(settings.permissions.defaultEditGroups == [])
     }
 
     @Test
@@ -52,5 +59,11 @@ struct UISettingsTest {
             #expect(permissions.test(.change, for: resource))
             #expect(permissions.test(.delete, for: resource))
         }
+
+        #expect(settings.permissions.defaultOwner == 123)
+        #expect(settings.permissions.defaultViewUsers == [])
+        #expect(settings.permissions.defaultViewGroups == [1])
+        #expect(settings.permissions.defaultEditUsers == [])
+        #expect(settings.permissions.defaultEditGroups == [6])
     }
 }
