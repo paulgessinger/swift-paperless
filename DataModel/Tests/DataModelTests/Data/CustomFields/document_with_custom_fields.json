@@ -1,0 +1,78 @@
+{
+    "id": 3,
+    "correspondent": null,
+    "document_type": null,
+    "storage_path": null,
+    "title": "demo yo xy",
+    "content": "Welcome to Smallpdf\nReady to take document management to the next level?\n\n\n\nDigital Documents—All In One Place\nWith the new Smallpdf experience, you can\nfreely upload, organize, and share digital\ndocuments. When you enable the ‘Storage’\noption, we’ll also store all processed files here.\n\n\n\n\nEnhance Documents in One Click\nWhen you right-click on a file, we’ll present\nyou with an array of options to convert,\ncompress, or modify it.\n\n\n\n\nAccess Files Anytime, Anywhere\nYou can access files stored on Smallpdf from\nyour computer, phone, or tablet. We’ll also\nsync files from the Smallpdf Mobile App to our\nonline portal\n\n\n\n\nCollaborate With Others\nForget mundane administrative tasks. With\nSmallpdf, you can request e-signatures, send\nlarge files, or even enable the Smallpdf G Suite\nApp for your entire organization.",
+    "tags": [],
+    "created": "2025-03-13",
+    "created_date": "2025-03-13",
+    "modified": "2025-06-08T18:18:11.120643Z",
+    "added": "2025-03-11T20:18:09.256047Z",
+    "deleted_at": null,
+    "archive_serial_number": null,
+    "original_file_name": "demo.pdf",
+    "archived_file_name": "2025-03-13 demo yo xy.pdf",
+    "owner": 4,
+    "permissions": {
+        "view": {
+            "users": [
+                6
+            ],
+            "groups": []
+        },
+        "change": {
+            "users": [],
+            "groups": []
+        }
+    },
+    "notes": [],
+    "custom_fields": [
+        {
+            "value": [
+                1,
+                6
+            ],
+            "field": 9
+        },
+        {
+            "value": "USD1000.00",
+            "field": 5
+        },
+        {
+            "value": "EUR1000.00",
+            "field": 6
+        },
+        {
+            "value": "nGAGi8292Tbzlwye",
+            "field": 10
+        },
+        {
+            "value": "https://paperless-ngx.com",
+            "field": 8
+        },
+        {
+            "value": 42,
+            "field": 4
+        },
+        {
+            "value": true,
+            "field": 2
+        },
+        {
+            "value": "Super duper text",
+            "field": 7
+        },
+        {
+            "value": "2025-06-25",
+            "field": 3
+        },
+        {
+            "value": 123.45,
+            "field": 1
+        }
+    ],
+    "page_count": 1,
+    "mime_type": "application/pdf"
+}
