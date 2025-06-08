@@ -430,14 +430,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dokumentet med ID #%@, der er knyttet til denne opgave, findes ikke.\nMåske er det blevet slettet i mellemtiden."
+            "state" : "translated",
+            "value" : "Dokumentet med ID #%@, der er knyttet til denne opgave, findes ikke.\nMåske er det blevet slettet i mellemtiden, eller også har du ikke tilladelse til at se det."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Das Dokument mit der ID #%@, das mit dieser Aufgabe verbunden ist, existiert nicht.\nVielleicht wurde es in der Zwischenzeit gelöscht."
+            "state" : "translated",
+            "value" : "Das Dokument mit der ID #%@, das mit dieser Aufgabe verbunden ist, existiert nicht.\nVielleicht wurde es in der Zwischenzeit gelöscht, oder Sie haben keine Berechtigung, es anzusehen."
           }
         },
         "en" : {
@@ -448,26 +448,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le document avec ID #%@ associé à cette tâche n'existe pas.\nIl a peut-être été supprimé entre-temps."
+            "state" : "translated",
+            "value" : "Le document avec ID #%@ associé à cette tâche n'existe pas.\nIl a peut-être été supprimé entre-temps ou vous n'avez pas l'autorisation de le consulter."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Il documento con ID #%@ associato a questo task non esiste.\nForse nel frattempo è stato eliminato."
+            "state" : "translated",
+            "value" : "Il documento con ID #%@ associato a questa attività non esiste.\nForse è stato cancellato nel frattempo, oppure non si ha l'autorizzazione a visualizzarlo."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Het document met ID #%@ dat bij deze taak hoort, bestaat niet.\nMogelijk is het in de tussentijd verwijderd."
+            "state" : "translated",
+            "value" : "Het document met ID #%@ dat bij deze taak hoort, bestaat niet.\nMisschien is het in de tussentijd verwijderd of heb je geen toestemming om het te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dokument o ID #%@ powiązany z tym zadaniem nie istnieje.\nByć może został w międzyczasie usunięty."
+            "state" : "translated",
+            "value" : "Dokument o ID #%@ powiązany z tym zadaniem nie istnieje.\nByć może został w międzyczasie usunięty lub nie masz uprawnień do jego wyświetlania."
           }
         }
       }
