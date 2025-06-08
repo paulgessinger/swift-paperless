@@ -6,9 +6,9 @@ title: "Error: Forbidden"
 
 !!! note
 
-    In versions up to and including `v1.5.0`, the app required at least
+    In versions up to and including `v1.7.2`, the app required at least
     read-access to most of the resources available in Paperless-ngx. Starting from
-    `v1.6.0`, only a minimal set of permissions is required to access the app. See
+    `v1.8.0`, only a minimal set of permissions is required to access the app. See
     [Minimum permissions](minimum-permissions.md) for more information.
 
 This error occurs when the user does not have the necessary permissions to access the requested resource. This is usually the result of a faulty configuation in Paperless-ngx itself.
