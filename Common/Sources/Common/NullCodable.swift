@@ -8,6 +8,9 @@
 import Foundation
 import MetaCodable
 
+/// A helper coder that handles optional values that may be encoded as `null` in JSON.
+/// This is useful when working with APIs that represent optional values as explicit `null`
+/// rather than omitting the field entirely.
 public struct NullCoder<T>: HelperCoder where T: Codable {
     public init() {}
 
