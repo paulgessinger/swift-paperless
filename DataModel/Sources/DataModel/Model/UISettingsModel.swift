@@ -1,5 +1,5 @@
 //
-//  UISettings.swift
+//  UISettingsModel.swift
 //  DataModel
 //
 //  Created by Paul Gessinger on 26.12.24.
