@@ -1,3 +1,0 @@
-- Tasks: Only load tasks related to document consumption
-- Tasks: Explicitly request only tasks which have not been acknowledged yet.
-- Limited permissions: the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown. If you encounter any issues with this, especially if you work with a user that has limited permissions, please report it!

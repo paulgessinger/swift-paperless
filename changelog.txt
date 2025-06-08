@@ -1,3 +1,9 @@
+1.8.0 (146)
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+- Limited permissions: the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown. If you encounter any issues with this, especially if you work with a user that has limited permissions, please report it!
+
 1.8.0 (144)
 
 - Fix timezone conversion in document created date: on versions below 2.16.0 of Paperless-ngx, the timezone was incorrectly set and resulted in the date shifting when saving.
