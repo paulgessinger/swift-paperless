@@ -4166,6 +4166,17 @@
         }
       }
     },
+    "no" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        }
+      }
+    },
     "noDocuments" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9530,6 +9541,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Users"
+          }
+        }
+      }
+    },
+    "yes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
           }
         }
       }

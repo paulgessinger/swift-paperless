@@ -160,11 +160,21 @@ public struct UserPermissions: Sendable {
         rules[resource] ?? PermissionSet()
     }
 
+    public func get(for resource: Resource) -> PermissionSet {
+        rules[resource] ?? PermissionSet()
+    }
+
     public mutating func set(_ operation: Operation, to value: Bool, for resource: Resource) {
         if rules[resource] == nil {
             rules[resource] = PermissionSet()
         }
         rules[resource]?.set(operation, to: value)
+    }
+
+    public func configure(_ fn: (inout Self) -> Void) -> Self {
+        var copy = self
+        fn(&copy)
+        return copy
     }
 
     public var matrix: String {
