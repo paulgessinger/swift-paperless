@@ -50,7 +50,7 @@ struct Version: LosslessStringConvertible, Equatable, Comparable, Sendable {
 }
 
 public
-struct AppVersion: CustomStringConvertible, Codable {
+struct AppVersion: CustomStringConvertible, Codable, Equatable {
     public let version: Version
     public let build: UInt
 

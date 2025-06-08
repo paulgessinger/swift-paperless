@@ -48,7 +48,7 @@ class ReleaseNotesViewModel: ObservableObject {
                 // Last is nil but have current, probably initial install
                 showReleaseNotes = true
             case let (.some(last), .some(current)):
-                if current.version != last.version {
+                if current != last {
                     showReleaseNotes = true
                 }
             }
