@@ -31,7 +31,7 @@ struct DocumentModelTest {
         #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
 
         #expect(document.asn == 666)
-        #expect(document.owner == 2)
+        #expect(document.owner == .user(2))
         #expect(document.notes.count == 1)
 
         #expect(document.userCanChange == true)
@@ -58,7 +58,7 @@ struct DocumentModelTest {
         #expect(try dateApprox(#require(document.added), datetime(year: 2024, month: 12, day: 21, hour: 21, minute: 26, second: 36, tz: tz)))
 
         #expect(document.asn == 666)
-        #expect(document.owner == 2)
+        #expect(document.owner == .user(2))
         #expect(document.notes.count == 1)
 
         #expect(document.userCanChange == true)
@@ -127,7 +127,6 @@ struct DocumentModelTest {
         case documentType = "document_type"
         case storagePath = "storage_path"
         case asn = "archive_serial_number"
-        case owner
 
         var keyPath: WritableKeyPath<Document, UInt?> {
             switch self {
@@ -135,7 +134,6 @@ struct DocumentModelTest {
             case .documentType: \.documentType
             case .storagePath: \.storagePath
             case .asn: \.asn
-            case .owner: \.owner
             }
         }
     }
@@ -163,6 +161,23 @@ struct DocumentModelTest {
 
         let match = try ex.firstMatch(in: json)
         #expect(match != nil)
+    }
+
+    @Test("Test owner encoding none")
+    func testOwnerEncoding() throws {
+        let document = Document(id: 123, title: "hallo", created: .now, tags: [], owner: .none)
+
+        let json = try JSONEncoder().encode(document)
+        let s = try #require(String(data: json, encoding: .utf8))
+        #expect(s.contains("\"owner\":null"))
+    }
+
+    @Test("Test owner encoding unset")
+    func testOwnerEncodingUnset() throws {
+        let document = Document(id: 123, title: "hallo", created: .now, tags: [], owner: .unset)
+        let json = try JSONEncoder().encode(document)
+        let s = try #require(String(data: json, encoding: .utf8))
+        #expect(s.contains("\"owner\":null"))
     }
 
     @Test("Encode document model")

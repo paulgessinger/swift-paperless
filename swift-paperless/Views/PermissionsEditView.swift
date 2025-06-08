@@ -150,24 +150,24 @@ private struct OwnerPicker<Object>: View where Object: PermissionsModel {
 
     var body: some View {
         Form {
-            Row(isActive: object.owner == nil) {
+            Row(isActive: object.owner == .none) {
                 Text(.permissions(.noOwner))
             } action: {
-                object.owner = nil
+                object.owner = .none
                 dismiss()
             }
 
             if !store.permissions.test(.view, for: .user) {
                 if let currentUser = store.currentUser {
-                    Row(isActive: object.owner == currentUser.id) {
+                    Row(isActive: object.owner == .user(currentUser.id)) {
                         Text(.permissions(.userYouLabel(currentUser.username)))
                     } action: {
-                        object.owner = currentUser.id
+                        object.owner = .user(currentUser.id)
                         dismiss()
                     }
                 }
 
-                if object.owner != nil, object.owner != store.currentUser?.id {
+                if case let .user(id) = object.owner, id != store.currentUser?.id {
                     Row(isActive: true) {
                         Text(.permissions(.private))
                     }
@@ -175,14 +175,14 @@ private struct OwnerPicker<Object>: View where Object: PermissionsModel {
 
             } else {
                 ForEach(users, id: \.id) { user in
-                    Row(isActive: user.id == object.owner) {
+                    Row(isActive: .user(user.id) == object.owner) {
                         if let currentUser = store.currentUser, currentUser.id == user.id {
                             Text(.permissions(.userYouLabel(user.username)))
                         } else {
                             Text(user.username)
                         }
                     } action: {
-                        object.owner = user.id
+                        object.owner = .user(user.id)
                         dismiss()
                     }
                 }
@@ -277,15 +277,15 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
 
     private var ownerLabel: some View {
         LabeledContent {
-            if object.owner == nil {
+            if object.owner == .none {
                 return Text(.permissions(.noOwner))
             }
 
-            if let currentUser = store.currentUser, object.owner == currentUser.id {
+            if let currentUser = store.currentUser, object.owner == .user(currentUser.id) {
                 return Text(.permissions(.userYouLabel(currentUser.username)))
             }
 
-            if let owner = object.owner, let user = store.users[owner] {
+            if case let .user(id) = object.owner, let user = store.users[id] {
                 return Text(user.username)
             }
 
@@ -423,8 +423,7 @@ private struct PreviewHelper: View {
                                                   file: #URL("http://example.com"), filename: "blubb.pdf")
                 document = try await store.repository.documents(filter: .default).fetch(limit: 100_000).first { $0.title == "blubb" }
 
-                document?.owner = 2
-
+                document?.owner = .user(2)
                 document?.permissions = Permissions {
                     $0.view.users = [1, 2]
                     $0.view.groups = [1]

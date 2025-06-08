@@ -39,6 +39,25 @@ public struct UISettingsPermissions: Sendable {
 
     @usableFromInline
     static var `default`: Self { .init() }
+
+    public func applyAsDefaults(to model: inout some PermissionsModel) {
+        if case .unset = model.owner {
+            model.owner = defaultOwner.map { .user($0) } ?? .none
+        }
+
+        var permissions = model.permissions ?? Permissions()
+        permissions.view.users = permissions.view.users.isEmpty ? defaultViewUsers : permissions.view.users
+        permissions.view.groups = permissions.view.groups.isEmpty ? defaultViewGroups : permissions.view.groups
+        permissions.change.users = permissions.change.users.isEmpty ? defaultEditUsers : permissions.change.users
+        permissions.change.groups = permissions.change.groups.isEmpty ? defaultEditGroups : permissions.change.groups
+        model.permissions = permissions
+    }
+
+    public func appliedAsDefaults<T: PermissionsModel>(to model: T) -> T {
+        var copy = model
+        applyAsDefaults(to: &copy)
+        return copy
+    }
 }
 
 @Codable

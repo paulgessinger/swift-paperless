@@ -427,10 +427,12 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-        try await create(Correspondent.self,
-                         from: correspondent,
-                         store: \.correspondents,
-                         method: repository.create(correspondent:))
+        let correspondent = settings.permissions.appliedAsDefaults(to: correspondent)
+
+        return try await create(Correspondent.self,
+                                from: correspondent,
+                                store: \.correspondents,
+                                method: repository.create(correspondent:))
     }
 
     func update(correspondent: Correspondent) async throws {
