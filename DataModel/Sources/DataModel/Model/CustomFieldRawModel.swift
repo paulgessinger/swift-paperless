@@ -1,25 +1,11 @@
 //
-//  CustomFieldValueModel.swift
+//  CustomFieldRawModel.swift
 //  DataModel
 //
 //  Created by AI Assistant on 26.03.2024.
 //
 
 import Foundation
-import MetaCodable
-
-public enum CustomFieldValueType: Codable, Sendable {
-    case string(String)
-    case number(Double)
-    case boolean(Bool)
-    case date(Date)
-    // @TODO: Select
-    case documentLink([UInt])
-    case url(URL)
-    case integer(Int)
-    case float(Float)
-    case monetary(currency: String, amount: Decimal)
-}
 
 public struct CustomFieldUnknownValue: Error {
     var debugDescription: String {
@@ -27,19 +13,19 @@ public struct CustomFieldUnknownValue: Error {
     }
 }
 
-public enum CustomFieldRawType: Codable, Sendable, Equatable {
+public enum CustomFieldRawValue: Codable, Sendable, Equatable {
     case string(String)
-    case number(Double)
+    case float(Double)
     case integer(Int)
     case boolean(Bool)
     case idList([UInt])
     case unknown
 
-    public static func == (lhs: CustomFieldRawType, rhs: CustomFieldRawType) -> Bool {
+    public static func == (lhs: CustomFieldRawValue, rhs: CustomFieldRawValue) -> Bool {
         switch (lhs, rhs) {
         case let (.string(lhs), .string(rhs)):
             lhs == rhs
-        case let (.number(lhs), .number(rhs)):
+        case let (.float(lhs), .float(rhs)):
             lhs == rhs
         case let (.integer(lhs), .integer(rhs)):
             lhs == rhs
@@ -61,7 +47,7 @@ public enum CustomFieldRawType: Codable, Sendable, Equatable {
         } else if let value = try? container.decode(Int.self) {
             self = .integer(value)
         } else if let value = try? container.decode(Double.self) {
-            self = .number(value)
+            self = .float(value)
         } else if let value = try? container.decode(Bool.self) {
             self = .boolean(value)
         } else if let value = try? container.decode([UInt].self) {
@@ -76,7 +62,7 @@ public enum CustomFieldRawType: Codable, Sendable, Equatable {
         switch self {
         case let .string(value):
             try container.encode(value)
-        case let .number(value):
+        case let .float(value):
             try container.encode(value)
         case let .integer(value):
             try container.encode(value)
@@ -90,7 +76,7 @@ public enum CustomFieldRawType: Codable, Sendable, Equatable {
     }
 }
 
-public struct CustomFieldRawValueList: Codable, Sendable {
+public struct CustomFieldRawEntryList: Codable, Sendable {
     public var values: [CustomFieldRawEntry]
     public var hasUnknown: Bool {
         values.contains { $0.value == .unknown }
@@ -109,5 +95,5 @@ public struct CustomFieldRawValueList: Codable, Sendable {
 
 public struct CustomFieldRawEntry: Codable, Sendable {
     public var field: UInt
-    public var value: CustomFieldRawType
+    public var value: CustomFieldRawValue
 }

@@ -17,7 +17,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     case integer
     case float
     case monetary
-    case documentlink
+    case documentLink
     case select
     case other(String)
 
@@ -30,7 +30,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
         case "integer": .integer
         case "float": .float
         case "monetary": .monetary
-        case "documentlink": .documentlink
+        case "documentlink": .documentLink
         case "select": .select
         default: .other(rawValue)
         }
@@ -45,7 +45,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
         case .integer: "integer"
         case .float: "float"
         case .monetary: "monetary"
-        case .documentlink: "documentlink"
+        case .documentLink: "documentlink"
         case .select: "select"
         case let .other(value): value
         }
