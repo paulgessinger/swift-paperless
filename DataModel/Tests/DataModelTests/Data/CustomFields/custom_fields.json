@@ -120,7 +120,7 @@
         },
         {
             "id": 1,
-            "name": "Rank",
+            "name": "Custom float",
             "data_type": "float",
             "extra_data": {
                 "select_options": [],

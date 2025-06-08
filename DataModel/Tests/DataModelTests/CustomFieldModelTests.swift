@@ -1,5 +1,5 @@
 //
-//  CustomFieldTests.swift
+//  CustomFieldModelTests.swift
 //  DataModelTests
 //
 //  Created by AI Assistant on 26.03.2024.
@@ -12,8 +12,8 @@ import Testing
 
 private let decoder = makeDecoder(tz: .current)
 
-@Suite
-struct CustomFieldTests {
+@Suite("CustomFieldModelTests")
+struct CustomFieldModelTests {
     @Test("Test decoding a select type custom field")
     func testDecodingSelectField() throws {
         let json = """

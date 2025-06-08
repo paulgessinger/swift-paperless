@@ -1,5 +1,5 @@
 //
-//  CustomFieldValueTests.swift
+//  CustomFieldRawModelTests.swift
 //  DataModelTests
 //
 //  Created by AI Assistant on 26.03.2024.
@@ -12,8 +12,8 @@ import Testing
 
 private let decoder = makeDecoder(tz: .current)
 
-@Suite
-struct CustomFieldValueTests {
+@Suite("CustomFieldRawModelTests")
+struct CustomFieldRawModelTests {
     @Test("Test decoding raw string value")
     func testDecodingRawStringValue() throws {
         let json = """
@@ -41,7 +41,7 @@ struct CustomFieldValueTests {
         let entry = try decoder.decode(CustomFieldRawEntry.self, from: json)
 
         #expect(entry.field == 1)
-        #expect(entry.value == .number(123.45))
+        #expect(entry.value == .float(123.45))
     }
 
     @Test("Test decoding raw integer value")
@@ -127,7 +127,7 @@ struct CustomFieldValueTests {
             let value: Double
         }
 
-        let entry = CustomFieldRawEntry(field: 2, value: .number(123.45))
+        let entry = CustomFieldRawEntry(field: 2, value: .float(123.45))
         let encoded = try JSONEncoder().encode(entry)
         let decoded = try JSONDecoder().decode(NumberTest.self, from: encoded)
 
@@ -247,7 +247,7 @@ struct CustomFieldValueTests {
         """.data(using: .utf8)!
 
         struct Decoded: Codable {
-            var custom_fields: CustomFieldRawValueList
+            var custom_fields: CustomFieldRawEntryList
         }
 
         let decoded = try decoder.decode(Decoded.self, from: json)
@@ -272,7 +272,7 @@ struct CustomFieldValueTests {
         #expect(values[7].field == 7)
         #expect(values[8].value == .string("2025-06-25"))
         #expect(values[8].field == 3)
-        #expect(values[9].value == .number(123.45))
+        #expect(values[9].value == .float(123.45))
         #expect(values[9].field == 1)
 
         #expect(decoded.custom_fields.hasUnknown == false)
@@ -301,7 +301,7 @@ struct CustomFieldValueTests {
         """.data(using: .utf8)!
 
         struct Decoded: Codable {
-            var custom_fields: CustomFieldRawValueList
+            var custom_fields: CustomFieldRawEntryList
         }
 
         let decoded = try decoder.decode(Decoded.self, from: json)
