@@ -22,17 +22,17 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     case other(String)
 
     public init?(rawValue: String) {
-        switch rawValue {
-        case "string": self = .string
-        case "url": self = .url
-        case "date": self = .date
-        case "boolean": self = .boolean
-        case "integer": self = .integer
-        case "float": self = .float
-        case "monetary": self = .monetary
-        case "documentlink": self = .documentlink
-        case "select": self = .select
-        default: self = .other(rawValue)
+        self = switch rawValue {
+        case "string": .string
+        case "url": .url
+        case "date": .date
+        case "boolean": .boolean
+        case "integer": .integer
+        case "float": .float
+        case "monetary": .monetary
+        case "documentlink": .documentlink
+        case "select": .select
+        default: .other(rawValue)
         }
     }
 
