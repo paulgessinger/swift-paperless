@@ -18,7 +18,7 @@ private let dragThresholdDown = 40.0
 private let maxDragOffset = 100.0
 
 private struct Aspect: View {
-    var label: String
+    var label: String?
     var systemImage: String
 
     @ScaledMetric(relativeTo: .body) private var imageWidth = 20.0
@@ -29,13 +29,14 @@ private struct Aspect: View {
         self.systemImage = systemImage
     }
 
-    init(_ label: String, systemImage: String) {
+    init(_ label: String?, systemImage: String) {
         self.label = label
         self.systemImage = systemImage
     }
 
     var body: some View {
-        Label(label, systemImage: systemImage)
+        Label(label ?? String(localized: .permissions(.private)), systemImage: systemImage)
+            .italic(label == nil)
     }
 }
 
@@ -145,18 +146,18 @@ private struct DocumentPropertyView: View {
                             Aspect(localized: .localizable(.documentAsn(asn)), systemImage: "qrcode")
                         }
 
-                        if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                            Aspect(name, systemImage: "person")
+                        if let id = document.correspondent {
+                            Aspect(store.correspondents[id]?.name, systemImage: "person")
                         }
 
-                        if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                            Aspect(name, systemImage: "doc")
+                        if let id = document.documentType {
+                            Aspect(store.documentTypes[id]?.name, systemImage: "doc")
                         }
 
                         Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
-                        if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                            Aspect(name, systemImage: "archivebox")
+                        if let id = document.storagePath {
+                            Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
                         }
                     }
 
@@ -172,11 +173,13 @@ private struct DocumentPropertyView: View {
                               systemImage: "info.circle")
                     }
 
-                    Button {
-                        showNotes = true
-                    } label: {
-                        Label(localized: .documentMetadata(.notes),
-                              systemImage: "note.text")
+                    if viewModel.store.permissions.test(.view, for: .note) {
+                        Button {
+                            showNotes = true
+                        } label: {
+                            Label(localized: .documentMetadata(.notes),
+                                  systemImage: "note.text")
+                        }
                     }
 
                 } label: {
@@ -260,7 +263,10 @@ private struct DocumentPropertyView: View {
                         showEditSheet = true
                     }
                     .accessibilityIdentifier("documentEditButton")
+                    .disabled(!viewModel.userCanChange)
+                    .opacity(viewModel.userCanChange ? 1 : 0.3)
             }
+            .animation(.default, value: viewModel.userCanChange)
 
             panel
         }
@@ -412,15 +418,17 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                              dragOffset: $dragOffset)
             .padding(.bottom, bottomSpacing)
             .overlay(alignment: .bottom) {
-                Image(systemName: "chevron.compact.up")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 12, height: 12)
-                    .opacity(chevronOpacity)
-                    .padding(15)
-                    .offset(y: -1)
-                    .scaleEffect(chevronSize, anchor: .center)
-                    .offset(y: -10 - chevronOffset)
+                if viewModel.userCanChange {
+                    Image(systemName: "chevron.compact.up")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                        .opacity(chevronOpacity)
+                        .padding(15)
+                        .offset(y: -1)
+                        .scaleEffect(chevronSize, anchor: .center)
+                        .offset(y: -10 - chevronOffset)
+                }
             }
 
 //        .frame(maxHeight: showPropertyBar ? .infinity : 20)
@@ -462,7 +470,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                     }
                 }
                 .onEnded { value in
-                    if value.translation.height < -dragThresholdUp {
+                    if value.translation.height < -dragThresholdUp, viewModel.userCanChange {
                         showEditSheet = true
                     }
 

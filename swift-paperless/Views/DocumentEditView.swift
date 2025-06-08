@@ -160,7 +160,7 @@ struct DocumentEditView: View {
                                 Spacer()
                                 Group {
                                     if let id = document.correspondent {
-                                        Text(store.correspondents[id]?.name ?? String(localized: .localizable(.error)))
+                                        Text(store.correspondents[id]?.name ?? String(localized: .permissions(.private)))
                                     } else {
                                         Text(.localizable(.correspondentNotAssignedFilter))
                                     }
@@ -190,7 +190,7 @@ struct DocumentEditView: View {
                                 Spacer()
                                 Group {
                                     if let id = document.documentType {
-                                        Text(store.documentTypes[id]?.name ?? String(localized: .localizable(.error)))
+                                        Text(store.documentTypes[id]?.name ?? String(localized: .permissions(.private)))
                                     } else {
                                         Text(.localizable(.documentTypeNotAssignedFilter))
                                     }
@@ -221,7 +221,7 @@ struct DocumentEditView: View {
                                 Spacer()
                                 Group {
                                     if let id = document.storagePath {
-                                        Text(store.storagePaths[id]?.name ?? String(localized: .localizable(.error)))
+                                        Text(store.storagePaths[id]?.name ?? String(localized: .permissions(.private)))
                                     } else {
                                         Text(.localizable(.storagePathNotAssignedFilter))
                                     }
@@ -253,7 +253,7 @@ struct DocumentEditView: View {
 
                 Section {
                     NavigationLink(.permissions(.title)) {
-                        PermissionsEditView(element: $document)
+                        PermissionsEditView(object: $document)
                     }
                 }
 
@@ -272,6 +272,7 @@ struct DocumentEditView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .foregroundColor(Color.red)
                     .bold()
+                    .disabled(!store.permissions.test(.delete, for: .document))
                 }
                 .animation(.default, value: deleted)
             }
@@ -327,6 +328,8 @@ struct DocumentEditView: View {
                 }
             }
         }
+        .presentationDragIndicator(.hidden)
+
         .errorOverlay(errorController: errorController)
     }
 }

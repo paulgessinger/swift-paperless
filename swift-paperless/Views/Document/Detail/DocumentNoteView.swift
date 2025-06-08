@@ -132,9 +132,11 @@ struct DocumentNoteView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                        .swipeActions(edge: .trailing) {
-                            Button(.localizable(.delete), role: .destructive,
-                                   action: { delete(note) })
+                        .if(store.permissions.test(.delete, for: .note)) {
+                            $0.swipeActions(edge: .trailing) {
+                                Button(.localizable(.delete), role: .destructive,
+                                       action: { delete(note) })
+                            }
                         }
                     }
                 }
@@ -148,6 +150,7 @@ struct DocumentNoteView: View {
                             .bold()
                     }
                     .buttonStyle(.borderless)
+                    .disabled(!store.permissions.test(.add, for: .note))
                 }
             }
             .animation(.spring, value: document)
@@ -166,6 +169,7 @@ struct DocumentNoteView: View {
                     } label: {
                         Label(.localizable(.add), systemImage: "plus")
                     }
+                    .disabled(!store.permissions.test(.add, for: .note))
                 }
             }
 

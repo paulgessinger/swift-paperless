@@ -13,40 +13,47 @@ import SwiftUI
 struct TagView: View {
     @Environment(\.redactionReasons) var redactionReasons
 
-    var tag: Tag?
+    var inputTag: Tag?
 
     init(tag: Tag? = nil) {
-        let dummy = Tag.placeholder(8)
+        inputTag = tag
+    }
 
-        self.tag = tag ?? dummy
+    private var tag: Tag {
+        if let inputTag {
+            return inputTag
+        } else if redactionReasons.contains(.placeholder) {
+            return Tag.placeholder(8)
+        } else {
+            var placeholder = Tag.placeholder(8)
+            placeholder.name = String(localized: .permissions(.private))
+            return placeholder
+        }
     }
 
     var body: some View {
         Group {
-            if let tag {
-                Text(tag.name)
-                    .lineLimit(1)
-                    .font(.body)
-                    .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
-                    .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                    .background(tag.color.color)
-                    .foregroundColor(tag.textColor.color)
-                    .clipShape(Capsule())
-                    .unredacted()
-            } else {
-                ProgressView()
-            }
+            Text(tag.name)
+                .lineLimit(1)
+                .font(.body)
+                .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
+                .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                .background(tag.color.color)
+                .foregroundColor(tag.textColor.color)
+                .clipShape(Capsule())
+                .italic(inputTag == nil)
+                .unredacted()
         }
     }
 }
 
 struct TagsView: View {
-    var tags: [Tag]
+    var tags: [Tag?]
     var action: ((Tag) -> Void)?
 
     @Environment(\.redactionReasons) var redactionReasons
 
-    init(tags: [Tag], action: ((Tag) -> Void)? = nil) {
+    init(tags: [Tag?], action: ((Tag) -> Void)? = nil) {
         self.tags = tags
         self.action = action
     }
@@ -63,11 +70,12 @@ struct TagsView: View {
                         TagView(tag: Tag.placeholder(v))
                     }
                 } else {
-                    ForEach(tags, id: \.id) { tag in
-                        if let action {
-                            TagView(tag: tag).onTapGesture {
-                                action(tag)
-                            }
+                    ForEach(Array(zip(tags.indices, tags)), id: \.0) { _, tag in
+                        if let action, let tag {
+                            TagView(tag: tag)
+                                .onTapGesture {
+                                    action(tag)
+                                }
                         } else {
                             TagView(tag: tag)
                         }

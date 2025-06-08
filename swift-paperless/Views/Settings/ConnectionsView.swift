@@ -67,6 +67,8 @@ struct ConnectionsView: View {
 
     @State private var backendVersion: Version?
 
+    @EnvironmentObject private var store: DocumentStore
+
     init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
         self.connectionManager = connectionManager
         _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
@@ -96,6 +98,13 @@ struct ConnectionsView: View {
 
                 LabeledContent(String(localized: .settings(.activeServerUsername)), value: stored.user.username)
                 LabeledContent(String(localized: .settings(.activeIdentity)), value: stored.identity ?? String(localized: .login(.noIdentity)))
+
+                NavigationLink {
+                    PermissionsView(userPermissions: store.permissions)
+                } label: {
+                    Label(localized: .permissions(.title), systemImage: "lock.fill")
+                }
+
                 NavigationLink {
                     ExtraHeadersView(headers: $extraHeaders)
                 } label: {

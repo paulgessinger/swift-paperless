@@ -5,12 +5,14 @@
 //  Created by Paul Gessinger on 22.09.2024.
 //
 
+import Common
+import DataModel
 import SwiftUI
 
 struct DebugMenuView: View {
     @ObservedObject private var appSettings = AppSettings.shared
 
-    @State private var show = false
+    @State private var showExperiments = false
 
     var body: some View {
         Form {
@@ -29,7 +31,7 @@ struct DebugMenuView: View {
                 Text(.settings(.resetAppVersionDescription))
             }
 
-            if show {
+            if showExperiments {
                 Section {
                     DocumentDetailViewVersionSelection()
 
@@ -45,11 +47,13 @@ struct DebugMenuView: View {
         .navigationBarTitleDisplayMode(.inline)
 
         .task {
-            show = Bundle.main.appConfiguration != .AppStore
+            showExperiments = Bundle.main.appConfiguration != .AppStore
         }
     }
 }
 
-#Preview {
-    DebugMenuView()
+#Preview("Debug menu") {
+    NavigationStack {
+        DebugMenuView()
+    }
 }

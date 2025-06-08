@@ -132,6 +132,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func updateDocument(_ document: Document) async throws -> Document {
+        try checkPermission(.change, for: .document)
         eventPublisher.send(.changed(document: document))
 
         var document = document
@@ -151,12 +152,14 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func deleteDocument(_ document: Document) async throws {
+        try checkPermission(.delete, for: .document)
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
         eventPublisher.send(.deleted(document: document))
     }
 
     func deleteNote(from document: Document, id: UInt) async throws {
+        try checkPermission(.delete, for: .note)
         eventPublisher.send(.changed(document: document))
         _ = try await repository.deleteNote(id: id, documentId: document.id)
 
@@ -164,6 +167,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func addNote(to document: Document, note: ProtoDocument.Note) async throws {
+        try checkPermission(.add, for: .note)
         eventPublisher.send(.changed(document: document))
 
         _ = try await repository.createNote(documentId: document.id, note: note)
@@ -172,10 +176,14 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func notes(for document: Document) async throws -> [Document.Note] {
-        try await repository.notes(documentId: document.id)
+        try checkPermission(.view, for: .note)
+        return try await repository.notes(documentId: document.id)
     }
 
     func fetchTasks() async {
+        guard (try? checkPermission(.view, for: .paperlessTask)) != nil else {
+            return
+        }
         guard let tasks = try? await repository.tasks() else {
             return
         }
@@ -188,52 +196,57 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func fetchAllCorrespondents() async throws {
+        // @TODO: For the `fetchAll` calls: centralize this to that method.
+        //        Use a property on the resource to map to the permissions resource.
+        //        Also: clear the associated resource if there's a permissions error
+        try checkPermission(.view, for: .correspondent)
         try await fetchAll(elements: repository.correspondents(),
                            collection: \.correspondents)
     }
 
     func fetchAllDocumentTypes() async throws {
+        try checkPermission(.view, for: .documentType)
         try await fetchAll(elements: repository.documentTypes(),
                            collection: \.documentTypes)
     }
 
     func fetchAllTags() async throws {
+        try checkPermission(.view, for: .tag)
         try await fetchAll(elements: repository.tags(),
                            collection: \.tags)
     }
 
     func fetchAllSavedViews() async throws {
+        try checkPermission(.view, for: .savedView)
         try await fetchAll(elements: repository.savedViews(),
                            collection: \.savedViews)
     }
 
     func fetchAllStoragePaths() async throws {
+        try checkPermission(.view, for: .storagePath)
         try await fetchAll(elements: repository.storagePaths(),
                            collection: \.storagePaths)
     }
 
     func fetchCurrentUser() async throws {
-        if currentUser != nil {
-            // We don't expect this to change
-            return
-        }
-
+        // this should basically always be the case but let's be safe
+        try checkPermission(.view, for: .uiSettings)
         do {
-            let user = try await repository.currentUser()
-            await MainActor.run {
-                currentUser = user
-            }
-        } catch {
+            currentUser = try await repository.currentUser()
+        } catch let error where !error.isCancellationError {
             Logger.shared.error("Unable to get current user: \(error)")
+            throw error
         }
     }
 
     func fetchAllUsers() async throws {
+        try checkPermission(.view, for: .user)
         try await fetchAll(elements: repository.users(),
                            collection: \.users)
     }
 
     func fetchAllGroups() async throws {
+        try checkPermission(.view, for: .group)
         try await fetchAll(elements: repository.groups(),
                            collection: \.groups)
     }
@@ -286,17 +299,21 @@ final class DocumentStore: ObservableObject, Sendable {
             while !group.isEmpty {
                 do {
                     try await group.next()
+                } catch is PermissionsError {
+                    Logger.shared.debug("Fetch all task returned permissions error, suppressing")
+                    continue
                 } catch let error where error.isCancellationError {
                     Logger.shared.debug("Fetch all task caught cancellation, suppressing")
                     continue
                 } catch {
                     Logger.shared.error("Fetch all task caught error: \(error)")
+                    // @TODO: This cancels the other tasks, maybe we want to continue
                     throw error
                 }
             }
         }
 
-        Logger.shared.notice("Fetch all store complete")
+        Logger.shared.info("Fetch all store complete")
     }
 
     private func fetchAll<T>(elements: [T],
@@ -328,25 +345,30 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func getCorrespondent(id: UInt) async throws -> (Bool, Correspondent)? {
-        try await getSingleCached(get: { try await repository.correspondent(id: $0) }, id: id,
-                                  cache: \.correspondents)
+        try checkPermission(.view, for: .correspondent)
+        return try await getSingleCached(get: { try await repository.correspondent(id: $0) }, id: id,
+                                         cache: \.correspondents)
     }
 
     func getDocumentType(id: UInt) async throws -> (Bool, DocumentType)? {
-        try await getSingleCached(get: { try await repository.documentType(id: $0) }, id: id,
-                                  cache: \.documentTypes)
+        try checkPermission(.view, for: .documentType)
+        return try await getSingleCached(get: { try await repository.documentType(id: $0) }, id: id,
+                                         cache: \.documentTypes)
     }
 
     func document(id: UInt) async throws -> Document? {
-        try await repository.document(id: id)
+        try checkPermission(.view, for: .document)
+        return try await repository.document(id: id)
     }
 
     func getTag(id: UInt) async throws -> (Bool, Tag)? {
-        try await getSingleCached(get: { try await repository.tag(id: $0) }, id: id,
-                                  cache: \.tags)
+        try checkPermission(.view, for: .tag)
+        return try await getSingleCached(get: { try await repository.tag(id: $0) }, id: id,
+                                         cache: \.tags)
     }
 
     func getTags(_ ids: [UInt]) async throws -> (Bool, [Tag]) {
+        try checkPermission(.view, for: .tag)
         var tags: [Tag] = []
         var allCached = true
         for id in ids {
@@ -473,5 +495,12 @@ final class DocumentStore: ObservableObject, Sendable {
         try await delete(storagePath,
                          store: \.storagePaths,
                          method: repository.delete(storagePath:))
+    }
+
+    private func checkPermission(_ operation: UserPermissions.Operation, for resource: UserPermissions.Resource) throws {
+        if !permissions.test(operation, for: resource) {
+            Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
+            throw PermissionsError(resource: resource, operation: operation)
+        }
     }
 }

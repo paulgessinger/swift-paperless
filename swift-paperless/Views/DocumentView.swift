@@ -205,6 +205,41 @@ struct DocumentView: View {
         }
     }
 
+    @ViewBuilder
+    private var titleMenu: some View {
+        if !store.savedViews.isEmpty {
+            Button {
+                withAnimation {
+                    filterModel.filterState.clear()
+                }
+            } label: {
+                Text(.localizable(.allDocuments))
+            }
+        }
+
+        Section(String(localized: .localizable(.savedViews))) {
+            if store.permissions.test(.view, for: .savedView) {
+                if !store.savedViews.isEmpty {
+                    ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
+                        Button {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                withAnimation {
+                                    filterModel.filterState = .init(savedView: savedView)
+                                }
+                            }
+                        } label: {
+                            Text(savedView.name)
+                        }
+                    }
+                } else {
+                    Text(.localizable(.noSavedViews))
+                }
+            } else {
+                Text(.permissions(.noViewPermissionsSavedViews))
+            }
+        }
+    }
+
     // MARK: Main View Body
 
     var body: some View {
@@ -251,33 +286,7 @@ struct DocumentView: View {
                 // MARK: Main toolbar
 
                 .toolbarTitleMenu {
-                    if !store.savedViews.isEmpty {
-                        Button {
-                            withAnimation {
-                                filterModel.filterState.clear()
-                            }
-                        } label: {
-                            Text(.localizable(.allDocuments))
-                        }
-                    }
-
-                    Section(String(localized: .localizable(.savedViews))) {
-                        if !store.savedViews.isEmpty {
-                            ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
-                                Button {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        withAnimation {
-                                            filterModel.filterState = .init(savedView: savedView)
-                                        }
-                                    }
-                                } label: {
-                                    Text(savedView.name)
-                                }
-                            }
-                        } else {
-                            Text(.localizable(.noSavedViews))
-                        }
-                    }
+                    titleMenu
                 }
 
                 .navigationTitle(savedViewNavigationTitle)

@@ -1,6 +1,53 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        }
+      }
+    },
+    "canNoLongerChange" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of change permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to change this object!"
+          }
+        }
+      }
+    },
+    "canNoLongerView" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of view permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to view this object!"
+          }
+        }
+      }
+    },
+    "canNoLongerViewOrChange" : {
+      "comment" : "Used in permissions editing if the new set of permissions will result in loss of view and change permissions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will no longer be able to view or change this object!"
+          }
+        }
+      }
+    },
     "change" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44,6 +91,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modyfikacja"
+          }
+        }
+      }
+    },
+    "copySummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy summary"
+          }
+        }
+      }
+    },
+    "delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
           }
         }
       }
@@ -189,6 +258,138 @@
         }
       }
     },
+    "noViewPermissionsCorrespondents" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view correspondents."
+          }
+        }
+      }
+    },
+    "noViewPermissionsDisplayTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient permissions"
+          }
+        }
+      }
+    },
+    "noViewPermissionsDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view documents."
+          }
+        }
+      }
+    },
+    "noViewPermissionsDocumentTypes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view document types."
+          }
+        }
+      }
+    },
+    "noViewPermissionsGroups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view groups."
+          }
+        }
+      }
+    },
+    "noViewPermissionsNotes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don’t have permission to view document notes."
+          }
+        }
+      }
+    },
+    "noViewPermissionsSavedViews" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view saved views."
+          }
+        }
+      }
+    },
+    "noViewPermissionsStoragePaths" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view storage paths."
+          }
+        }
+      }
+    },
+    "noViewPermissionsTags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view tags."
+          }
+        }
+      }
+    },
+    "noViewPermissionsTasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don’t have permission to view tasks."
+          }
+        }
+      }
+    },
+    "noViewPermissionsUISettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view UI settings."
+          }
+        }
+      }
+    },
+    "noViewPermissionsUsers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to view users."
+          }
+        }
+      }
+    },
     "owner" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -279,6 +480,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prywatny"
+          }
+        }
+      }
+    },
+    "privateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+          }
+        }
+      }
+    },
+    "resource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource"
+          }
+        }
+      }
+    },
+    "resourceAppConfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App config"
+          }
+        }
+      }
+    },
+    "resourceCustomField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom field"
+          }
+        }
+      }
+    },
+    "resourceHistory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        }
+      }
+    },
+    "resourceMailAccount" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mail account"
+          }
+        }
+      }
+    },
+    "resourceMailRule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mail rule"
+          }
+        }
+      }
+    },
+    "resourceShareLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share link"
+          }
+        }
+      }
+    },
+    "resourceWorkflow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workflow"
           }
         }
       }
@@ -420,6 +720,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Użytkownicy"
+          }
+        }
+      }
+    },
+    "userYouLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (you)"
           }
         }
       }

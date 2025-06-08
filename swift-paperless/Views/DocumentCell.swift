@@ -45,12 +45,12 @@ struct DocumentPreviewImage: View {
 }
 
 struct DocumentCellAspect: View {
-    var label: String
+    var label: String?
     var systemImage: String
 
     @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
 
-    init(_ label: String, systemImage: String) {
+    init(_ label: String?, systemImage: String) {
         self.label = label
         self.systemImage = systemImage
     }
@@ -59,7 +59,8 @@ struct DocumentCellAspect: View {
         HStack {
             Image(systemName: systemImage)
                 .frame(width: imageWidth)
-            Text(label)
+            Text(label ?? String(localized: .permissions(.private)))
+                .italic(label == nil)
         }
     }
 }
@@ -120,24 +121,24 @@ struct DocumentCell: View {
                     Aspect("#\(asn)", systemImage: "qrcode")
                 }
 
-                if let id = document.correspondent, let name = store.correspondents[id]?.name {
-                    Aspect(name, systemImage: "person")
+                if let id = document.correspondent {
+                    Aspect(store.correspondents[id]?.name, systemImage: "person")
                         .foregroundColor(.accentColor)
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
 
-                if let id = document.documentType, let name = store.documentTypes[id]?.name {
-                    Aspect(name, systemImage: "doc")
+                if let id = document.documentType {
+                    Aspect(store.documentTypes[id]?.name, systemImage: "doc")
                         .foregroundColor(Color.orange)
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
 
-                if let id = document.storagePath, let name = store.storagePaths[id]?.name {
-                    Aspect(name, systemImage: "archivebox")
+                if let id = document.storagePath {
+                    Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -145,7 +146,7 @@ struct DocumentCell: View {
 
                 Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
-                TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                TagsView(tags: document.tags.map { store.tags[$0] })
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 5)

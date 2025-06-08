@@ -6,22 +6,27 @@
 //
 
 import DataModel
+import os
 import SwiftUI
 
 struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     @State private var element: Element
-    var onSave: (Element) throws -> Void
+    var onSave: ((Element) throws -> Void)?
 
     private var saveLabel: String
 
-    init(element: Element, onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(element: Element, onSave: ((Element) throws -> Void)?) {
         _element = State(initialValue: element)
         self.onSave = onSave
         saveLabel = String(localized: .localizable(.save))
     }
 
+    private var editable: Bool {
+        onSave != nil
+    }
+
     private func valid() -> Bool {
-        !element.name.isEmpty
+        !element.name.isEmpty && editable
     }
 
     var body: some View {
@@ -29,17 +34,19 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
             Section {
                 TextField(String(localized: .localizable(.name)), text: $element.name)
                     .clearable($element.name)
+                    .disabled(!editable)
             }
 
             MatchEditView(element: $element)
+                .disabled(!editable)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(saveLabel) {
                     do {
-                        try onSave(element)
+                        try onSave?(element)
                     } catch {
-                        print("Save document type error: \(error)")
+                        Logger.shared.error("Save document type error: \(error)")
                     }
                 }
                 .disabled(!valid())
@@ -51,7 +58,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
 }
 
 extension DocumentTypeEditView where Element == ProtoDocumentType {
-    init(onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(onSave: @escaping (Element) throws -> Void) {
         self.init(element: ProtoDocumentType(), onSave: onSave)
         saveLabel = String(localized: .localizable(.save))
     }
@@ -61,7 +68,7 @@ struct DocumentTypeEditView_Previews: PreviewProvider {
     struct Container: View {
         var body: some View {
             NavigationStack {
-                DocumentTypeEditView<ProtoDocumentType>()
+                DocumentTypeEditView<ProtoDocumentType>(onSave: { _ in })
                     .navigationBarTitleDisplayMode(.inline)
                     .navigationTitle(Text(.localizable(.documentTypeEditTitle)))
             }

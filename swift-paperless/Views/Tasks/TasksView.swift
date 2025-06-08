@@ -218,6 +218,9 @@ struct TaskDetailView: View {
                 }
             } catch {
                 Logger.shared.error("Unable to get document for related document ID \(id, privacy: .public): \(error)")
+                withAnimation {
+                    document = .missing(id)
+                }
             }
         }
     }
@@ -279,50 +282,74 @@ private struct TaskList: View {
         return fmt
     }
 
-    var body: some View {
-        Group {
-            if !tasks.isEmpty {
-                List(tasks, selection: $selection) { task in
-                    NavigationLink(value: NavigationState.task(task)) {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(String(localized: .tasks(.task(String(task.id)))))
-                                if let created = task.dateCreated {
-                                    Text("\(fmt.string(from: created))")
-                                        .frame(maxWidth: .infinity, alignment: .trailing)
-                                }
-                            }
-                            .foregroundColor(.gray)
-
-                            let name = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
-                            HStack(alignment: .top) {
-                                task.status.label
-                                    .labelStyle(.iconOnly)
-                                Text("\(name)")
-                            }
-                            .bold()
-                            .font(.body)
-                        }
-
-                        .swipeActions(edge: .trailing) {
-                            Button {
-                                Task {
-                                    do {
-                                        try await store.acknowledge(tasks: [task.id])
-                                    } catch {
-                                        Logger.shared.error("Error acknowledging task \(task.id): \(error)")
-                                        errorController.push(error: error)
-                                    }
-                                }
-                            } label: {
-                                Label(localized: .tasks(.acknowledge), systemImage: "checkmark")
-                            }
+    private var mainList: some View {
+        List(tasks, selection: $selection) { task in
+            NavigationLink(value: NavigationState.task(task)) {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text(String(localized: .tasks(.task(String(task.id)))))
+                        if let created = task.dateCreated {
+                            Text("\(fmt.string(from: created))")
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
+                    .foregroundColor(.gray)
+
+                    let name = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
+                    HStack(alignment: .top) {
+                        task.status.label
+                            .labelStyle(.iconOnly)
+                        Text("\(name)")
+                    }
+                    .bold()
+                    .font(.body)
                 }
+
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        Task {
+                            do {
+                                try await store.acknowledge(tasks: [task.id])
+                            } catch {
+                                Logger.shared.error("Error acknowledging task \(task.id): \(error)")
+                                errorController.push(error: error)
+                            }
+                        }
+                    } label: {
+                        Label(localized: .tasks(.acknowledge), systemImage: "checkmark")
+                    }
+                }
+            }
+        }
+    }
+
+    private struct NoPermissionsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                                   systemImage: "lock.fill",
+                                   description: Text(.permissions(.noViewPermissionsTasks)))
+        }
+    }
+
+    private struct NoElementsView: View {
+        var body: some View {
+            ContentUnavailableView(String(localized: .localizable(.noElementsFound)),
+                                   systemImage: "list.bullet.circle.fill",
+                                   description: Text(.tasks(.title)))
+        }
+    }
+
+    var body: some View {
+        Group {
+            if !store.permissions.test(.view, for: .paperlessTask) {
+                Form {
+                    NoPermissionsView()
+                }
+            } else if !tasks.isEmpty {
+                mainList
             } else {
-                ScrollView(.vertical) {
-                    ContentUnavailableView(String(localized: .tasks(.noTasks)), systemImage: "list.bullet.circle")
+                Form {
+                    NoElementsView()
                         .padding(.top, 50)
                 }
             }
@@ -380,6 +407,7 @@ private struct TaskList: View {
                     Button(String(localized: .localizable(.select))) {
                         editMode = .active
                     }
+                    .disabled(tasks.isEmpty)
                 } else {
                     Button(String(localized: .localizable(.done))) {
                         editMode = .inactive

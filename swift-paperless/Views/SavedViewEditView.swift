@@ -6,16 +6,23 @@
 //
 
 import DataModel
+import os
 import SwiftUI
 
 struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     @State private var savedView: Element
-    var onSave: (Element) throws -> Void
+    var onSave: ((Element) throws -> Void)?
 
     private var saveLabel: String
 
+    private var editable: Bool { onSave != nil }
+
+    private var valid: Bool {
+        !savedView.name.isEmpty && editable
+    }
+
     init(element savedView: Element,
-         onSave: @escaping (Element) throws -> Void)
+         onSave: ((Element) throws -> Void)?)
     {
         _savedView = State(initialValue: savedView)
         self.onSave = onSave
@@ -32,6 +39,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 
                 Toggle(String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar)
             }
+            .disabled(!editable)
 
             Section(String(localized: .localizable(.sorting))) {
                 Picker(String(localized: .localizable(.sortBy)), selection: $savedView.sortField) {
@@ -47,18 +55,19 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
                         .tag(DataModel.SortOrder.descending)
                 }
             }
+            .disabled(!editable)
         }
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(String(localized: .localizable(.save))) {
                     do {
-                        try onSave(savedView)
+                        try onSave?(savedView)
                     } catch {
-                        print("Save saved view error: \(error)")
+                        Logger.shared.error("Save saved view error: \(error)")
                     }
                 }
-                .disabled(savedView.name.isEmpty)
+                .disabled(!valid)
                 .bold()
             }
         }
@@ -70,7 +79,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 }
 
 extension SavedViewEditView where Element == ProtoSavedView {
-    init(onSave: @escaping (Element) throws -> Void = { _ in }) {
+    init(onSave: @escaping (Element) throws -> Void) {
         self.init(element: ProtoSavedView(), onSave: onSave)
         saveLabel = String(localized: .localizable(.add))
     }

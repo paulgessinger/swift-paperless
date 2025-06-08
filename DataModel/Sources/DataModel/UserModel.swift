@@ -16,6 +16,70 @@ public struct User: Model, Identifiable, Equatable, Sendable {
     @CodedAt("is_superuser")
     public var isSuperUser: Bool
     public var username: String
+
+    @Default([UInt]())
+    public var groups: [UInt]
+}
+
+public extension User {
+    func canChange(_ resource: some PermissionsModel) -> Bool {
+        if isSuperUser {
+            return true
+        }
+
+        // If resource has no owner, it's accessible to all
+        if resource.owner == nil || resource.owner == id {
+            return true
+        }
+
+        guard let permissions = resource.permissions else {
+            return false
+        }
+
+        if permissions.change.users.contains(id) {
+            return true
+        }
+
+        for group in groups {
+            if permissions.change.groups.contains(group) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    func canView(_ resource: some PermissionsModel) -> Bool {
+        // Change permissions imply view permissions
+        if canChange(resource) {
+            return true
+        }
+
+        if isSuperUser {
+            return true
+        }
+
+        // If resource has no owner, it's accessible to all
+        if resource.owner == nil || resource.owner == id {
+            return true
+        }
+
+        guard let permissions = resource.permissions else {
+            return false
+        }
+
+        if permissions.view.users.contains(id) {
+            return true
+        }
+
+        for group in groups {
+            if permissions.view.groups.contains(group) {
+                return true
+            }
+        }
+
+        return false
+    }
 }
 
 @Codable
@@ -92,11 +156,25 @@ public struct UserPermissions: Sendable {
         return rule.test(operation)
     }
 
+    public subscript(resource: Resource) -> PermissionSet {
+        rules[resource] ?? PermissionSet()
+    }
+
+    public func get(for resource: Resource) -> PermissionSet {
+        rules[resource] ?? PermissionSet()
+    }
+
     public mutating func set(_ operation: Operation, to value: Bool, for resource: Resource) {
         if rules[resource] == nil {
             rules[resource] = PermissionSet()
         }
         rules[resource]?.set(operation, to: value)
+    }
+
+    public func configure(_ fn: (inout Self) -> Void) -> Self {
+        var copy = self
+        fn(&copy)
+        return copy
     }
 
     public var matrix: String {
