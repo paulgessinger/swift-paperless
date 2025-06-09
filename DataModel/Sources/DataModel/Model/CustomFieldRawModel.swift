@@ -13,7 +13,7 @@ public struct CustomFieldUnknownValue: Error {
     }
 }
 
-public enum CustomFieldRawValue: Codable, Sendable, Equatable {
+public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
     case string(String)
     case float(Double)
     case integer(Int)
@@ -76,11 +76,13 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable {
     }
 }
 
-public struct CustomFieldRawEntryList: Codable, Sendable {
-    public var values: [CustomFieldRawEntry]
+public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable {
+    public var values: [CustomFieldRawEntry] = []
     public var hasUnknown: Bool {
         values.contains { $0.value == .unknown }
     }
+
+    public init() {}
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -91,9 +93,17 @@ public struct CustomFieldRawEntryList: Codable, Sendable {
         var container = encoder.singleValueContainer()
         try container.encode(values)
     }
+
+    public var count: Int {
+        values.count
+    }
+
+    public subscript(_ index: Int) -> CustomFieldRawEntry {
+        values[index]
+    }
 }
 
-public struct CustomFieldRawEntry: Codable, Sendable {
+public struct CustomFieldRawEntry: Codable, Sendable, Equatable, Hashable {
     public var field: UInt
     public var value: CustomFieldRawValue
 }
