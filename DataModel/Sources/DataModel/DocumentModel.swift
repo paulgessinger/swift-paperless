@@ -63,7 +63,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     @CodedBy(NullCoder<UInt>())
     public var storagePath: UInt?
 
-    @Default(Owner.none)
+    @Default(Owner.unset)
     public var owner: Owner
 
     public struct Note: Identifiable, Equatable, Sendable, Codable, Hashable {

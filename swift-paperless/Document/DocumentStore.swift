@@ -380,12 +380,21 @@ final class DocumentStore: ObservableObject, Sendable {
         return (allCached, tags)
     }
 
-    private func create<E: Sendable, R: Sendable>(_: R.Type, from element: E,
-                                                  store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
-                                                  method: (E) async throws -> R) async throws -> R
-        where R: Identifiable
+    private func create<E, R>(_: R.Type, from element: E,
+                              store: ReferenceWritableKeyPath<DocumentStore, [R.ID: R]>,
+                              method: (E) async throws -> R) async throws -> R
+        where E: Sendable & PermissionsModel, R: Identifiable & Sendable
     {
-        let created = try await method(element)
+        let updated: E
+        do {
+            try await fetchUISettings() // ensure up to date permissions
+            updated = settings.permissions.appliedAsDefaults(to: element)
+        } catch {
+            Logger.shared.error("Error applying permissions defaults: \(error, privacy: .public). Not applying configured defaults permissions to element.")
+            updated = element
+        }
+
+        let created = try await method(updated)
         self[keyPath: store][created.id] = created
         return created
     }
@@ -427,12 +436,10 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-        let correspondent = settings.permissions.appliedAsDefaults(to: correspondent)
-
-        return try await create(Correspondent.self,
-                                from: correspondent,
-                                store: \.correspondents,
-                                method: repository.create(correspondent:))
+        try await create(Correspondent.self,
+                         from: correspondent,
+                         store: \.correspondents,
+                         method: repository.create(correspondent:))
     }
 
     func update(correspondent: Correspondent) async throws {
