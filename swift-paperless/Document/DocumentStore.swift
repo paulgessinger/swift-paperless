@@ -390,18 +390,24 @@ final class DocumentStore: ObservableObject, Sendable {
         return created
     }
 
-    private func update<E: Sendable>(_ element: E,
-                                     store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
-                                     method: (E) async throws -> E) async throws where E: Identifiable
+    private func update<E>(_ element: E,
+                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                           method: (E) async throws -> E) async throws where E: Identifiable & Sendable
     {
         self[keyPath: store][element.id] = try await method(element)
     }
 
-    private func delete<E: Sendable>(_ element: E,
-                                     store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
-                                     method: (E) async throws -> Void) async throws where E: Identifiable
+    private func delete<E>(_ element: E,
+                           store: ReferenceWritableKeyPath<DocumentStore, [E.ID: E]>,
+                           method: (E) async throws -> Void) async throws where E: Identifiable & Sendable
     {
-        try await method(element)
+        do {
+            try await method(element)
+        } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
+            let id = "\(element.id)"
+            Logger.api.debug("Element with ID \(id) found (probably already deleted), removing from store")
+        }
+
         self[keyPath: store].removeValue(forKey: element.id)
     }
 
