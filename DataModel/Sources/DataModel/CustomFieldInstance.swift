@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-public enum CustomFieldValue: Codable, Sendable, Equatable {
+public enum CustomFieldValue: Codable, Sendable, Equatable, Hashable {
     case string(String)
     case boolean(Bool)
     case date(Date)
@@ -13,9 +13,9 @@ public enum CustomFieldValue: Codable, Sendable, Equatable {
     case monetary(currency: String, amount: Decimal)
 }
 
-public struct CustomFieldInstance: Codable, Sendable {
+public struct CustomFieldInstance: Codable, Sendable, Hashable {
     public let field: CustomField
-    public let value: CustomFieldValue
+    public var value: CustomFieldValue
 
     public init?(field: CustomField, value: CustomFieldValue) {
         self.field = field
@@ -166,12 +166,14 @@ public extension CustomFieldInstance {
     }
 }
 
-extension [CustomFieldInstance] {
+public extension [CustomFieldInstance] {
     static func fromRawEntries(
         _ rawEntries: [CustomFieldRawEntry], customFields: [UInt: CustomField]
     ) -> [CustomFieldInstance] {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        // @TODO: Preserve somehow that this can be incomplete
 
         let result: [CustomFieldInstance] = rawEntries.compactMap {
             (entry: CustomFieldRawEntry) -> CustomFieldInstance? in
@@ -184,5 +186,9 @@ extension [CustomFieldInstance] {
         }
 
         return result
+    }
+
+    var rawEntries: CustomFieldRawEntryList {
+        .init(map(\.rawEntry))
     }
 }
