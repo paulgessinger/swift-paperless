@@ -419,10 +419,12 @@ private struct PreviewHelper: View {
                 })
                 try await store.fetchAll()
                 print(store.users)
-                document = try? await store.repository.create(document: ProtoDocument(title: "blubb"),
-                                                              file: #URL("http://example.com"), filename: "blubb.pdf")
+                try await store.repository.create(document: ProtoDocument(title: "blubb"),
+                                                  file: #URL("http://example.com"), filename: "blubb.pdf")
+                document = try await store.repository.documents(filter: .default).fetch(limit: 100_000).first { $0.title == "blubb" }
 
                 document?.owner = 2
+
                 document?.permissions = Permissions {
                     $0.view.users = [1, 2]
                     $0.view.groups = [1]
