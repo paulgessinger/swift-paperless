@@ -17,9 +17,28 @@ public struct CustomFieldInstance: Codable, Sendable {
     public let field: CustomField
     public let value: CustomFieldValue
 
-    public init(field: CustomField, value: CustomFieldValue) {
+    public init?(field: CustomField, value: CustomFieldValue) {
         self.field = field
         self.value = value
+
+        guard isValid else {
+            return nil
+        }
+    }
+
+    var isValid: Bool {
+        switch (field.dataType, value) {
+        case (.string, .string): true
+        case (.boolean, .boolean): true
+        case (.date, .date): true
+        case (.select, .select): true
+        case (.documentLink, .documentLink): true
+        case (.url, .url): true
+        case (.integer, .integer): true
+        case (.float, .float): true
+        case (.monetary, .monetary): true
+        default: false
+        }
     }
 
     static let dateFormatter = {

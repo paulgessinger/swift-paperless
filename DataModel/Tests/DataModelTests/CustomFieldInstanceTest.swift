@@ -152,6 +152,29 @@ struct CustomFieldInstanceTest {
         #expect(instance.field.dataType == .select)
         #expect(instance.value == .select(CustomField.SelectOption(id: "bb", label: "Option B")))
     }
+
+    @Test("Test nil initializer with type mismatch")
+    func testNilInitializerWithTypeMismatch() throws {
+        // String field with boolean value
+        let stringField = try #require(Self.customFields[7])
+        let stringInstance = CustomFieldInstance(field: stringField, value: .boolean(true))
+        #expect(stringInstance == nil)
+
+        // Boolean field with integer value
+        let boolField = try #require(Self.customFields[2])
+        let boolInstance = CustomFieldInstance(field: boolField, value: .integer(42))
+        #expect(boolInstance == nil)
+
+        // Date field with float value
+        let dateField = try #require(Self.customFields[3])
+        let dateInstance = CustomFieldInstance(field: dateField, value: .float(123.45))
+        #expect(dateInstance == nil)
+
+        // Select field with URL value
+        let selectField = try #require(Self.customFields[10])
+        let selectInstance = CustomFieldInstance(field: selectField, value: .url(#URL("https://example.com")))
+        #expect(selectInstance == nil)
+    }
 }
 
 @Suite
@@ -160,10 +183,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test float field conversion to raw entry")
     func testFloatFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[1]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[1]!,
             value: .float(123.45)
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 1)
@@ -172,10 +195,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test boolean field conversion to raw entry")
     func testBooleanFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[2]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[2]!,
             value: .boolean(true)
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 2)
@@ -193,10 +216,10 @@ struct CustomFieldInstanceToRawEntryTest {
             second: 0
         ))!
 
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[3]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[3]!,
             value: .date(date)
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 3)
@@ -205,10 +228,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test integer field conversion to raw entry")
     func testIntegerFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[4]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[4]!,
             value: .integer(42)
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 4)
@@ -217,14 +240,14 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test monetary field conversion to raw entry")
     func testMonetaryFieldToRawEntry() throws {
-        let usdInstance = try CustomFieldInstance(
-            field: #require(Self.customFields[5]),
+        let usdInstance = try #require(CustomFieldInstance(
+            field: Self.customFields[5]!,
             value: .monetary(currency: "USD", amount: Decimal(string: "1000.00")!)
-        )
-        let eurInstance = try CustomFieldInstance(
-            field: #require(Self.customFields[6]),
+        ))
+        let eurInstance = try #require(CustomFieldInstance(
+            field: Self.customFields[6]!,
             value: .monetary(currency: "EUR", amount: Decimal(string: "1000.00")!)
-        )
+        ))
 
         let usdRawEntry = usdInstance.rawEntry
         let eurRawEntry = eurInstance.rawEntry
@@ -237,10 +260,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test string field conversion to raw entry")
     func testStringFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[7]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[7]!,
             value: .string("Super duper text")
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 7)
@@ -249,10 +272,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test URL field conversion to raw entry")
     func testURLFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[8]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[8]!,
             value: .url(#URL("https://paperless-ngx.com"))
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 8)
@@ -261,10 +284,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test document link field conversion to raw entry")
     func testDocumentLinkFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[9]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[9]!,
             value: .documentLink([1, 6])
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 9)
@@ -273,10 +296,10 @@ struct CustomFieldInstanceToRawEntryTest {
 
     @Test("Test select field conversion to raw entry")
     func testSelectFieldToRawEntry() throws {
-        let instance = try CustomFieldInstance(
-            field: #require(Self.customFields[10]),
+        let instance = try #require(CustomFieldInstance(
+            field: Self.customFields[10]!,
             value: .select(CustomField.SelectOption(id: "bb", label: "Option B"))
-        )
+        ))
         let rawEntry = instance.rawEntry
 
         #expect(rawEntry.field == 10)
