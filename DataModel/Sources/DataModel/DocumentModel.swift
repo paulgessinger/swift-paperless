@@ -63,8 +63,8 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     @CodedBy(NullCoder<UInt>())
     public var storagePath: UInt?
 
-    @CodedBy(NullCoder<UInt>())
-    public var owner: UInt?
+    @Default(Owner.unset)
+    public var owner: Owner
 
     public struct Note: Identifiable, Equatable, Sendable, Codable, Hashable {
         public var id: UInt
@@ -87,7 +87,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     @Default(ifMissing: true)
     public private(set) var userCanChange: Bool
 
-    // Presense of this depends on the endpoint
+    // Presence of this depends on the endpoint
     @IgnoreEncoding
     public var permissions: Permissions? {
         didSet {

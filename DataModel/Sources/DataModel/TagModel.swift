@@ -73,7 +73,24 @@ public struct ProtoTag: TagProtocol, MatchingModel {
             color: placeholderColor.hex
         )
     }
+
+    // For PermissionsModel conformance
+    @Default(Owner.unset)
+    public var owner: Owner
+
+    // Presence of this depends on the endpoint
+    @IgnoreEncoding
+    public var permissions: Permissions? {
+        didSet {
+            setPermissions = permissions
+        }
+    }
+
+    // The API wants this extra key for writing perms
+    public var setPermissions: Permissions?
 }
+
+extension ProtoTag: PermissionsModel {}
 
 @Codable
 @CodingKeys(.snake_case)

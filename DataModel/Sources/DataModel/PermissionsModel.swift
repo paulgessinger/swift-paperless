@@ -34,8 +34,32 @@ public struct Permissions: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+public enum Owner: Codable, Equatable, Sendable, Hashable {
+    case unset
+    case none
+    case user(UInt)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(UInt?.self)
+        self = value.map { .user($0) } ?? .none
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .unset:
+            try container.encodeNil()
+        case .none:
+            try container.encodeNil()
+        case let .user(value):
+            try container.encode(value)
+        }
+    }
+}
+
 public protocol PermissionsModel {
-    var owner: UInt? { get set }
+    var owner: Owner { get set }
 
     var permissions: Permissions? { get set }
 

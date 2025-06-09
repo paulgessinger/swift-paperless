@@ -28,7 +28,7 @@ public extension User {
         }
 
         // If resource has no owner, it's accessible to all
-        if resource.owner == nil || resource.owner == id {
+        if resource.owner == .none || resource.owner == .unset || resource.owner == .user(id) {
             return true
         }
 
@@ -60,7 +60,7 @@ public extension User {
         }
 
         // If resource has no owner, it's accessible to all
-        if resource.owner == nil || resource.owner == id {
+        if resource.owner == .none || resource.owner == .unset || resource.owner == .user(id) {
             return true
         }
 
