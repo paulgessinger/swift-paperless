@@ -366,6 +366,8 @@ public actor PreviewRepository: Repository {
 
     public func acknowledge(tasks _: [UInt]) async throws {}
 
+    public func customFields() async -> [CustomField] { [] }
+
     public nonisolated
     var delegate: (any URLSessionDelegate)? { nil }
 

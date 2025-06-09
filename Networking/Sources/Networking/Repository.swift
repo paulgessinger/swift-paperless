@@ -128,6 +128,13 @@ public protocol Repository: Sendable, Actor {
     func update(storagePath: StoragePath) async throws -> StoragePath
     func delete(storagePath: StoragePath) async throws
 
+    // MARK: Custom fields
+
+    func customFields() async throws -> [CustomField]
+    // @TODO: Implement other methods eventually
+
+    // MARK: Others
+
     func currentUser() async throws -> User
     func users() async throws -> [User]
     func groups() async throws -> [UserGroup]

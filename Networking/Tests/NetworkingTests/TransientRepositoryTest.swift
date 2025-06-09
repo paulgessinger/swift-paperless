@@ -251,4 +251,40 @@ import Testing
             try await repository.login(username: "nonexistent")
         }
     }
+
+    @Test func testCustomFields() async throws {
+        let repository = TransientRepository()
+
+        // Initially should be empty
+        let initialFields = try await repository.customFields()
+        #expect(initialFields.isEmpty)
+
+        // Add some custom fields
+        _ = try await repository.add(customField: CustomField(
+            id: 1,
+            name: "Invoice Number",
+            dataType: .string,
+            extraData: .init()
+        ))
+
+        _ = try await repository.add(customField: CustomField(
+            id: 2,
+            name: "Amount",
+            dataType: .monetary,
+            extraData: .init(defaultCurrency: "USD")
+        ))
+
+        // Read all fields
+        let fields = try await repository.customFields()
+        #expect(fields.count == 2)
+
+        // Verify field contents
+        let sortedFields = fields.sorted(by: { $0.id < $1.id })
+        #expect(sortedFields[0].name == "Invoice Number")
+        #expect(sortedFields[0].dataType == .string)
+
+        #expect(sortedFields[1].name == "Amount")
+        #expect(sortedFields[1].dataType == .monetary)
+        #expect(sortedFields[1].extraData.defaultCurrency == "USD")
+    }
 }
