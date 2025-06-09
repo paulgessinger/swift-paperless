@@ -59,6 +59,7 @@ jobs:
 
       - name: Run XCode tests
         run: |
+          set -o pipefail
           xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
           xcodebuild test \
             -scheme swift-paperlessTests \
