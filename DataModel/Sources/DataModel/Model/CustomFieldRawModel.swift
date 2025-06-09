@@ -84,6 +84,10 @@ public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable {
 
     public init() {}
 
+    public init(_ values: [CustomFieldRawEntry]) {
+        self.values = values
+    }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         values = try container.decode([CustomFieldRawEntry].self)
