@@ -49,7 +49,6 @@ struct SearchBarView: View {
                         .labelStyle(.iconOnly)
                         .foregroundColor(.gray)
                         .onTapGesture {
-                            focused.toggle()
                             text = ""
                         }
                 }
