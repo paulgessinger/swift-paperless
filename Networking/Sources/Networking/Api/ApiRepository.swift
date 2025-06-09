@@ -349,7 +349,7 @@ extension ApiRepository: Repository {
                          endpoint: .document(id: document.id, fullPerms: false))
     }
 
-    public func create(document: ProtoDocument, file: URL, filename: String) async throws -> Document {
+    public func create(document: ProtoDocument, file: URL, filename: String) async throws {
         Logger.networking.notice("Creating document")
         var request = try request(.createDocument())
 
@@ -385,7 +385,7 @@ extension ApiRepository: Repository {
         mp.addTo(request: &request)
 
         do {
-            return try await fetchData(for: request, as: Document.self, code: .ok)
+            let _ = try await fetchData(for: request, code: .ok)
         } catch let RequestError.unexpectedStatusCode(code, _) where code == .contentTooLarge {
             throw DocumentCreateError.tooLarge
         } catch {
