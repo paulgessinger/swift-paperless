@@ -711,6 +711,14 @@ extension ApiRepository: Repository {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
 
+    // MARK: Custom fields
+
+    public func customFields() async throws -> [CustomField] {
+        try await all(CustomField.self)
+    }
+
+    // MARK: Others
+
     public func currentUser() async throws -> User {
         try await uiSettings().user
     }
