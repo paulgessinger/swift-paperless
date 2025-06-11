@@ -255,17 +255,23 @@ class LoginViewModel {
     nonisolated
     static func isLocalNetworkDenied(_ error: NSError) -> Bool {
         Logger.shared.debug("Checking API NSError: \(error)")
-        guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else {
-            return false
-        }
-        Logger.shared.debug("Checking API underlying NSError: \(underlying)")
 
-        guard let reason = (underlying.userInfo["_NSURLErrorNWPathKey"] as? NSObject)?.value(forKey: "reason") as? Int else {
+        if #available(iOS 19.0, *) {
+            // iOS 26 presents (apparently) as iOS 19 on the old SDK
             return false
-        }
+        } else {
+            guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else {
+                return false
+            }
+            Logger.shared.debug("Checking API underlying NSError: \(underlying)")
 
-        Logger.shared.debug("Unsatisfied reason code is: \(reason)")
-        return reason == 29
+            guard let reason = (underlying.userInfo["_NSURLErrorNWPathKey"] as? NSObject)?.value(forKey: "reason") as? Int else {
+                return false
+            }
+
+            Logger.shared.debug("Unsatisfied reason code is: \(reason)")
+            return reason == 29
+        }
     }
 
     var fullUrl: String {
