@@ -1,1 +1,0 @@
-- Skip local network denied detection on iOS 26. This leads to a crash during login

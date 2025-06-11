@@ -1,3 +1,7 @@
+1.8.0 (149)
+
+- Skip local network denied detection on iOS 26. This leads to a crash during login
+
 1.8.0 (146)
 
 - Tasks: Only load tasks related to document consumption
