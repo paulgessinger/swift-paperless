@@ -178,51 +178,48 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var body: some View {
         let displayElements = elements.filter { filter(element: $0) }
-        VStack {
+        List {
             if let model {
-                List {
-                    if !model.permissions.test(.view) {
-                        noPermissionsView
-                    } else if elements.isEmpty, searchText.isEmpty {
-                        noElementsView
-                    } else {
-                        if !displayElements.isEmpty {
-                            ForEach(displayElements, id: \.self) { element in
-                                NavigationLink {
-                                    Edit(model: model, element: element)
-                                } label: {
-                                    Manager.RowView(element: element)
-                                }
+                if !model.permissions.test(.view) {
+                    noPermissionsView
+                } else if elements.isEmpty, searchText.isEmpty {
+                    noElementsView
+                } else {
+                    if !displayElements.isEmpty {
+                        ForEach(displayElements, id: \.self) { element in
+                            NavigationLink {
+                                Edit(model: model, element: element)
+                            } label: {
+                                Manager.RowView(element: element)
                             }
-                            .if(test(.delete)) {
-                                $0.onDelete(perform: deleteRow)
-                            }
+                        }
+                        .if(test(.delete)) {
+                            $0.onDelete(perform: deleteRow)
                         }
                     }
                 }
-                .searchable(text: $searchText)
             }
         }
         .animation(.spring, value: displayElements)
         .animation(.spring, value: permissions)
+        .searchable(text: $searchText)
 
         .navigationBarTitleDisplayMode(.inline)
 
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    NavigationLink {
-                        if let model {
-                            Create(model: model)
-                        }
-                    } label: {
-                        Label(String(localized: .localizable(.add)), systemImage: "plus")
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                NavigationLink {
+                    if let model {
+                        Create(model: model)
                     }
-                    .disabled(!test(.add))
-
-                    EditButton()
-                        .disabled(!test(.change))
+                } label: {
+                    Image(systemName: "plus")
+                        .accessibilityLabel(String(localized: .localizable(.add)))
                 }
+                .disabled(!test(.add))
+
+                EditButton()
+                    .disabled(!test(.change))
             }
         }
 
@@ -231,8 +228,10 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
         .task {
-            model = Manager.Model(store: store)
-            elements = model!.load()
+            if model == nil {
+                model = Manager.Model(store: store)
+                elements = model!.load()
+            }
         }
     }
 }
