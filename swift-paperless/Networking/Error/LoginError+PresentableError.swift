@@ -55,6 +55,7 @@ extension LoginError: PresentableError {
     }
 
     @ViewBuilder
+    @MainActor
     private func augment(error: RequestError) -> some View {
         // This handles a few special cases where status code have special meaning in the login process.
         // In some cases: augment the generale request error message
