@@ -286,6 +286,8 @@ public actor ApiRepository {
             .users()
         case is UserGroup.Type:
             .groups()
+        case is CustomField.Type:
+            .customFields()
         default:
             fatalError("Invalid type")
         }
