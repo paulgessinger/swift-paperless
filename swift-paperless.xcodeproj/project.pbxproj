@@ -1095,7 +1095,7 @@
 			repositoryURL = "https://github.com/liamnichols/xcstrings-tool-plugin";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
+				minimumVersion = 1.2.0;
 			};
 		};
 		7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */ = {
@@ -1103,7 +1103,7 @@
 			repositoryURL = "https://github.com/groue/Semaphore";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.0.6;
+				minimumVersion = 0.1.0;
 			};
 		};
 		7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
@@ -1111,7 +1111,7 @@
 			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.2.0;
+				minimumVersion = 3.1.0;
 			};
 		};
 		7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {

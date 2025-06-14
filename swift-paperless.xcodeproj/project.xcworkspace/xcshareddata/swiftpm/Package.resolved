@@ -1,5 +1,5 @@
 {
-  "originHash" : "f89f9838477a48d3897fde62396cf69c458dbacc7784e9b0457d0421b11dce6a",
+  "originHash" : "8764ca1733acea1e9563e6af4c84a4dcc693fa4fcddf49565cd9099d1ae33f0f",
   "pins" : [
     {
       "identity" : "metacodable",
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tevelee/SwiftUI-Flow",
       "state" : {
-        "revision" : "b528bd06ae70fbd2936d9561a456fb6ea65bc7ff",
-        "version" : "2.5.0"
+        "revision" : "6dc1e0b452432976c27221d28de136fbb6cee56a",
+        "version" : "3.1.0"
       }
     },
     {
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/liamnichols/xcstrings-tool-plugin",
       "state" : {
-        "revision" : "5ef0451aa37aa4f9411167ff24cca4123a64c499",
-        "version" : "1.1.0"
+        "revision" : "bebb29f791e92f6ee5d9b6200f89c45249149957",
+        "version" : "1.2.0"
       }
     }
   ],
