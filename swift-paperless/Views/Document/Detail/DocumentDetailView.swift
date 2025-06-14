@@ -23,7 +23,7 @@ struct DocumentDetailViewVersionSelection: View {
                    selection: $appSettings.editingUserInterface)
             {
                 ForEach(available, id: \.self) { element in
-                    Text("\(element)")
+                    Text("\(element.rawValue)")
                         .tag(element)
                 }
             }

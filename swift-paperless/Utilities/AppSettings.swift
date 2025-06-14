@@ -87,7 +87,7 @@ class AppSettings: ObservableObject {
     @PublishedUserDefaultsBacked(.defaultSortOrder)
     var defaultSortOrder = DataModel.SortOrder.descending
 
-    enum EditingUserInterface: Codable, CaseIterable {
+    enum EditingUserInterface: String, Codable, CaseIterable {
         case automatic
         case v1
         case v2

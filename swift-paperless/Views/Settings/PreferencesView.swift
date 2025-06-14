@@ -3,18 +3,6 @@ import LocalAuthentication
 import os
 import SwiftUI
 
-struct TestView: View {
-    @ObservedObject var settings = AppSettings.shared
-
-    var body: some View {
-        LabeledContent {
-            Text("\(settings.documentDeleteConfirmation)")
-        } label: {
-            Text("ObservedObject")
-        }
-    }
-}
-
 struct PreferencesView: View {
     @ObservedObject private var appSettings = AppSettings.shared
 

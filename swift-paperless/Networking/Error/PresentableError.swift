@@ -10,5 +10,6 @@ import SwiftUI
 protocol PresentableError {
     associatedtype PresentationView: View
 
+    @MainActor
     var presentation: PresentationView { get }
 }
