@@ -1,5 +1,5 @@
 //
-//  Metadata.swift
+//  MetadataModel.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 22.07.2024.

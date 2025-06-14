@@ -286,6 +286,8 @@ public actor ApiRepository {
             .users()
         case is UserGroup.Type:
             .groups()
+        case is CustomField.Type:
+            .customFields()
         default:
             fatalError("Invalid type")
         }
@@ -710,6 +712,14 @@ extension ApiRepository: Repository {
     public func delete(storagePath: StoragePath) async throws {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
+
+    // MARK: Custom fields
+
+    public func customFields() async throws -> [CustomField] {
+        try await all(CustomField.self)
+    }
+
+    // MARK: Others
 
     public func currentUser() async throws -> User {
         try await uiSettings().user

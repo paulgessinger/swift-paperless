@@ -28,6 +28,8 @@ final class DocumentStore: ObservableObject, Sendable {
     @Published private(set) var groups: [UInt: UserGroup] = [:]
     @Published private(set) var currentUser: User?
 
+    @Published private(set) var customFields: [UInt: CustomField] = [:]
+
     @Published private(set) var tasks: [PaperlessTask] = []
 
     @Published
@@ -270,13 +272,18 @@ final class DocumentStore: ObservableObject, Sendable {
         }
     }
 
+    func fetchAllCustomFields() async throws {
+        try checkPermission(.view, for: .customField)
+        try await fetchAll(elements: repository.customFields(),
+                           collection: \.customFields)
+    }
+
     func fetchAll() async throws {
         // @TODO: This gets called concurrently during startup, maybe debounce
         Logger.shared.notice("Fetch all store request")
         await fetchAllSemaphore.wait()
         defer { fetchAllSemaphore.signal() }
         Logger.shared.notice("Fetch all store")
-        print("start fetch all")
 
         try? await fetchUISettings()
 
@@ -291,7 +298,8 @@ final class DocumentStore: ObservableObject, Sendable {
                          fetchAllStoragePaths,
                          fetchCurrentUser,
                          fetchAllUsers,
-                         fetchAllGroups]
+                         fetchAllGroups,
+                         fetchAllCustomFields]
             {
                 group.addTask { try await task() }
             }

@@ -16,6 +16,8 @@ public actor TransientRepository {
 
     private var notesByDocument: [UInt: [Document.Note]]
 
+    private var customFields: [UInt: CustomField]
+
     private var permissions: UserPermissions = .full
 
     private var nextId: UInt = 1
@@ -31,7 +33,7 @@ public actor TransientRepository {
         users = []
         groups = []
         savedViews = [:]
-
+        customFields = [:]
         notesByDocument = [:]
     }
 
@@ -329,6 +331,18 @@ extension TransientRepository: Repository {
                 tasks[index] = task
             }
         }
+    }
+
+    // MARK: - Custom fields
+
+    public func customFields() async throws -> [CustomField] {
+        customFields.map(\.value)
+    }
+
+    // This is not part of the `Repository` protocol, but it's useful for testing
+    public func add(customField: CustomField) async throws -> CustomField {
+        customFields[customField.id] = customField
+        return customField
     }
 
     // MARK: - Document Operations
