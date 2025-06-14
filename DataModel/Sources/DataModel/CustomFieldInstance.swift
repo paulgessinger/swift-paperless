@@ -11,6 +11,57 @@ public enum CustomFieldValue: Codable, Sendable, Equatable, Hashable {
     case integer(Int)
     case float(Double)
     case monetary(currency: String, amount: Decimal)
+
+    public static func formatMonetary(currency: String, amount: Decimal) -> String {
+        let formattedAmount = amount.formatted(
+            .number
+                .locale(Locale(identifier: "en_US"))
+                .grouping(.never)
+                .decimalSeparator(strategy: .always)
+                .precision(.fractionLength(2)))
+
+        return "\(currency)\(formattedAmount)"
+    }
+
+    var rawValue: CustomFieldRawValue {
+        switch self {
+        case let .string(value):
+            .string(value)
+
+        case let .boolean(value):
+            .boolean(value)
+
+        case let .date(value):
+            .string(CustomFieldInstance.dateFormatter.string(from: value))
+
+        case let .select(value):
+            .string(value.id)
+
+        case let .documentLink(value):
+            .idList(value)
+
+        case let .url(value):
+            .string(value.absoluteString)
+
+        case let .monetary(currency, amount):
+            .string(CustomFieldValue.formatMonetary(currency: currency, amount: amount))
+
+        case let .integer(value):
+            .integer(value)
+
+        case let .float(value):
+            .float(value)
+        }
+    }
+
+    var isValid: Bool {
+        switch self {
+        case let .monetary(currency, _):
+            let ex = /^[A-Z]{3}$/
+            return currency.wholeMatch(of: ex) != nil
+        default: return true
+        }
+    }
 }
 
 public struct CustomFieldInstance: Codable, Sendable, Hashable {
@@ -28,16 +79,19 @@ public struct CustomFieldInstance: Codable, Sendable, Hashable {
 
     var isValid: Bool {
         switch (field.dataType, value) {
-        case (.string, .string): true
-        case (.boolean, .boolean): true
-        case (.date, .date): true
-        case (.select, .select): true
-        case (.documentLink, .documentLink): true
-        case (.url, .url): true
-        case (.integer, .integer): true
-        case (.float, .float): true
-        case (.monetary, .monetary): true
-        default: false
+        case (.string, .string): return true
+        case (.boolean, .boolean): return true
+        case (.date, .date): return true
+        case let (.select, .select(option)):
+            return field.extraData.selectOptions.contains { $0.id == option.id }
+        case (.documentLink, .documentLink): return true
+        case (.url, .url): return true
+        case (.integer, .integer): return true
+        case (.float, .float): return true
+        case let (.monetary, .monetary(currency, _)):
+            let ex = /^[A-Z]{3}$/
+            return currency.wholeMatch(of: ex) != nil
+        default: return false
         }
     }
 
@@ -49,7 +103,7 @@ public struct CustomFieldInstance: Codable, Sendable, Hashable {
 }
 
 public extension CustomFieldInstance {
-    init?(field: CustomField, rawValue: CustomFieldRawValue) {
+    init?(field: CustomField, rawValue: CustomFieldRawValue, locale: Locale) {
         self.field = field
         switch (field.dataType, rawValue) {
         case let (.string, .string(value)):
@@ -83,7 +137,7 @@ public extension CustomFieldInstance {
             }
 
         case let (.monetary, .string(value)):
-            let regex = /^(?<currency>[A-Z]{3})(?<amount>\d+(?:\.\d{2})?)$/
+            let regex = /^(?<currency>[A-Z]{3})?(?<amount>\d+(?:\.\d{2})?)$/
 
             guard let match = value.wholeMatch(of: regex) else {
                 Logger.dataModel.error(
@@ -91,7 +145,16 @@ public extension CustomFieldInstance {
                 return nil
             }
 
-            let currency = String(match.currency)
+            let currency: String = if let cur = match.currency {
+                String(cur)
+            } else if let defaultCurrency = field.extraData.defaultCurrency {
+                defaultCurrency
+            } else if let localeCurrency = locale.currency {
+                localeCurrency.identifier
+            } else {
+                ""
+            }
+
             guard let amount = Decimal(string: String(match.amount)) else {
                 Logger.dataModel.error(
                     "Invalid monetary amount: \(value, privacy: .public) for field \(field.name, privacy: .public)"
@@ -123,52 +186,13 @@ public extension CustomFieldInstance {
     }
 
     var rawEntry: CustomFieldRawEntry {
-        func fmt(_ value: Decimal) -> String {
-            value.formatted(
-                .number
-                    .locale(Locale(identifier: "en_US"))
-                    .grouping(.never)
-                    .decimalSeparator(strategy: .always)
-                    .precision(.fractionLength(2)))
-        }
-
-        let rawValue: CustomFieldRawValue =
-            switch value {
-            case let .string(value):
-                .string(value)
-
-            case let .boolean(value):
-                .boolean(value)
-
-            case let .date(value):
-                .string(CustomFieldInstance.dateFormatter.string(from: value))
-
-            case let .select(value):
-                .string(value.id)
-
-            case let .documentLink(value):
-                .idList(value)
-
-            case let .url(value):
-                .string(value.absoluteString)
-
-            case let .monetary(currency, amount):
-                .string("\(currency)\(fmt(amount))")
-
-            case let .integer(value):
-                .integer(value)
-
-            case let .float(value):
-                .float(value)
-            }
-
-        return CustomFieldRawEntry(field: field.id, value: rawValue)
+        CustomFieldRawEntry(field: field.id, value: value.rawValue)
     }
 }
 
 public extension [CustomFieldInstance] {
     static func fromRawEntries(
-        _ rawEntries: [CustomFieldRawEntry], customFields: [UInt: CustomField]
+        _ rawEntries: [CustomFieldRawEntry], customFields: [UInt: CustomField], locale: Locale
     ) -> [CustomFieldInstance] {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -182,7 +206,7 @@ public extension [CustomFieldInstance] {
                 return nil
             }
 
-            return CustomFieldInstance(field: customField, rawValue: entry.value)
+            return CustomFieldInstance(field: customField, rawValue: entry.value, locale: locale)
         }
 
         return result
