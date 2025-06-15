@@ -3,14 +3,13 @@ import os
 
 public enum CustomFieldValue: Sendable, Equatable, Hashable {
     public enum InvalidReason: Sendable, Hashable, Equatable {
-        case invalidDate
-        case invalidURL
-        case invalidMonetaryFormat
-        case invalidMonetaryAmount
-        case invalidSelectOption
+        case invalidDate(String)
+        case invalidURL(String)
+        case invalidMonetary(String)
+        case invalidSelectOption(String)
         case unknownValue
-        case unknownDataType
-        case typeMismatch
+        case unknownDataType(String)
+        case typeMismatch(dataType: CustomField.DataType, value: CustomFieldRawValue)
     }
 
     case string(String)
@@ -35,7 +34,7 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
         return "\(currency)\(formattedAmount)"
     }
 
-    var rawValue: CustomFieldRawValue {
+    public var rawValue: CustomFieldRawValue {
         switch self {
         case let .string(value):
             .string(value)
@@ -69,7 +68,7 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
         }
     }
 
-    var isValid: Bool {
+    public var isValid: Bool {
         switch self {
         case let .monetary(currency, _):
             let ex = /^[A-Z]{3}$/
@@ -83,16 +82,12 @@ public struct CustomFieldInstance: Sendable, Hashable {
     public let field: CustomField
     public var value: CustomFieldValue
 
-    public init?(field: CustomField, value: CustomFieldValue) {
+    public init(field: CustomField, value: CustomFieldValue) {
         self.field = field
         self.value = value
-
-        guard isValid else {
-            return nil
-        }
     }
 
-    var isValid: Bool {
+    public var isValid: Bool {
         switch (field.dataType, value) {
         case (.string, .string): return true
 
@@ -147,7 +142,7 @@ public extension CustomFieldInstance {
             } else {
                 Logger.dataModel.error(
                     "Invalid date format: \(value) for field \(field.name, privacy: .public)")
-                self.value = .invalid(.invalidDate)
+                self.value = .invalid(.invalidDate(value))
             }
 
         case let (.documentLink, .idList(value)):
@@ -161,7 +156,7 @@ public extension CustomFieldInstance {
             } else {
                 Logger.dataModel.error(
                     "Invalid URL format: \(value) for field \(field.name, privacy: .private)")
-                self.value = .invalid(.invalidURL)
+                self.value = .invalid(.invalidURL(value))
             }
 
         case let (.monetary, .string(value)):
@@ -170,7 +165,7 @@ public extension CustomFieldInstance {
             guard let match = value.wholeMatch(of: regex) else {
                 Logger.dataModel.error(
                     "Invalid monetary format: \(value) for field \(field.name, privacy: .private)")
-                self.value = .invalid(.invalidMonetaryFormat)
+                self.value = .invalid(.invalidMonetary(value))
                 return
             }
 
@@ -189,7 +184,7 @@ public extension CustomFieldInstance {
                 Logger.dataModel.error(
                     "Invalid monetary amount: \(value, privacy: .public) for field \(field.name, privacy: .public)"
                 )
-                self.value = .invalid(.invalidMonetaryAmount)
+                self.value = .invalid(.invalidMonetary(value))
                 return
             }
 
@@ -204,7 +199,7 @@ public extension CustomFieldInstance {
                 Logger.dataModel.error(
                     "Invalid select option: \(value, privacy: .public) for field \(field.name, privacy: .public)"
                 )
-                self.value = .invalid(.invalidSelectOption)
+                self.value = .invalid(.invalidSelectOption(value))
             }
 
         case (.select, .none):
@@ -219,17 +214,17 @@ public extension CustomFieldInstance {
             )
             value = .invalid(.unknownValue)
 
-        case (.other, _):
+        case let (.other(dataType), _):
             Logger.dataModel.error(
                 "Unknown custom field data type: \(field.dataType.rawValue, privacy: .public) for field \(field.id, privacy: .public) with value \(String(describing: rawValue), privacy: .public)"
             )
-            value = .invalid(.unknownDataType)
+            value = .invalid(.unknownDataType(dataType))
 
         default:
             Logger.dataModel.error(
                 "Type mismatch for field \(field.id, privacy: .public) with value \(String(describing: rawValue), privacy: .public)"
             )
-            value = .invalid(.typeMismatch)
+            value = .invalid(.typeMismatch(dataType: field.dataType, value: rawValue))
         }
     }
 
@@ -262,5 +257,9 @@ public extension [CustomFieldInstance] {
 
     var rawEntries: CustomFieldRawEntryList {
         .init(map(\.rawEntry))
+    }
+
+    var hasInvalidValues: Bool {
+        contains { !$0.isValid }
     }
 }
