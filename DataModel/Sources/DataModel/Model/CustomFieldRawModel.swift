@@ -83,7 +83,13 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
     }
 }
 
-public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable {
+public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable,
+    RandomAccessCollection
+{
+    public typealias Element = CustomFieldRawEntry
+    public typealias Index = Int
+    public typealias SubSequence = ArraySlice<CustomFieldRawEntry>
+
     public var values: [CustomFieldRawEntry] = []
     public var hasUnknown: Bool {
         values.contains { $0.value == .unknown }
@@ -111,6 +117,18 @@ public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable {
 
     public subscript(_ index: Int) -> CustomFieldRawEntry {
         values[index]
+    }
+
+    public subscript(bounds: Range<Int>) -> SubSequence {
+        values[bounds]
+    }
+
+    public var startIndex: Int {
+        values.startIndex
+    }
+
+    public var endIndex: Int {
+        values.endIndex
     }
 }
 
