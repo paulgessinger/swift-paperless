@@ -18,13 +18,16 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
 
     var saveLabel: String
 
-    @StateObject private var tag: ThrottleObject<Element>
+    @State private var tag: Element
+
+    let editable: Bool
 
     init(element: Element,
          onSave: ((Element) throws -> Void)?)
     {
-        _tag = StateObject(wrappedValue: ThrottleObject(value: element, delay: 0.5))
+        _tag = State(initialValue: element)
         self.onSave = onSave
+        editable = onSave != nil
         saveLabel = String(localized: .localizable(.save))
     }
 
@@ -36,45 +39,41 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
               blue: Double.random(in: 0 ... 1))
     }
 
-    private var editable: Bool {
-        onSave != nil
-    }
-
     private func valid() -> Bool {
-        !tag.value.name.isEmpty && editable
+        !tag.name.isEmpty && editable
     }
 
     var body: some View {
         Form {
             Section {
-                TextField(String(localized: .localizable(.tagName)), text: $tag.value.name)
-                    .clearable($tag.value.name)
+                TextField(String(localized: .localizable(.tagName)), text: $tag.name)
+                    .clearable($tag.name)
                     .disabled(!editable)
 
-                Toggle(String(localized: .localizable(.tagIsInbox)), isOn: $tag.value.isInboxTag)
+                Toggle(String(localized: .localizable(.tagIsInbox)), isOn: $tag.isInboxTag)
                     .disabled(!editable)
             } header: {
-                Text(!tag.throttledValue.name.isEmpty ? tag.throttledValue.name : String(localized: .localizable(.tagName)))
+                Text(!tag.name.isEmpty ? tag.name : String(localized: .localizable(.tagName)))
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .font(.title3)
                     .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                    .background(tag.value.color.color)
-                    .foregroundColor(tag.value.textColor.color)
+                    .background(tag.color.color)
+                    .foregroundColor(tag.textColor.color)
                     .clipShape(Capsule())
                     .textCase(.none)
-                    .animation(.linear(duration: 0.2), value: tag.throttledValue.name)
+                    .animation(.linear(duration: 0.2), value: tag.name)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
 
             Section(String(localized: .localizable(.color))) {
                 ColorPicker(String(localized: .localizable(.color)),
-                            selection: $tag.value.color.color,
+                            selection: $tag.color.color,
                             supportsOpacity: false)
                     .disabled(!editable)
                 Button {
                     withAnimation {
-                        tag.value.color.color = Self.randomColor()
+                        tag.color.color = Self.randomColor()
                     }
                 } label: {
                     HStack {
@@ -86,15 +85,17 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
                 .disabled(!editable)
             }
 
-            MatchEditView(element: $tag.value)
+            MatchEditView(element: $tag)
                 .disabled(!editable)
+
+            Text(String(describing: valid()))
         }
 
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(saveLabel) {
                     do {
-                        try onSave?(tag.value)
+                        try onSave?(tag)
                     } catch {
                         Logger.shared.error("Save tag error: \(error)")
                     }

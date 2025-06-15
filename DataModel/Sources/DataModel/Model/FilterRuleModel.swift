@@ -1,5 +1,5 @@
 //
-//  FilterRule.swift
+//  FilterRuleModel.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 06.04.23.

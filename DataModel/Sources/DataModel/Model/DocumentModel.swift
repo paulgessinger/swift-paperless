@@ -81,6 +81,9 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     @IgnoreEncoding
     public private(set) var notes: NotesPayload = .init()
 
+    @Default(ifMissing: CustomFieldRawEntryList())
+    public var customFields: CustomFieldRawEntryList
+
     // Presense of this depends on the endpoint
     // If we didn't get a value, we likely just modified
     @IgnoreEncoding

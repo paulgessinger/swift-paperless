@@ -16,6 +16,8 @@ public actor TransientRepository {
 
     private var notesByDocument: [UInt: [Document.Note]]
 
+    private var customFields: [UInt: CustomField]
+
     private var permissions: UserPermissions = .full
 
     private var nextId: UInt = 1
@@ -31,7 +33,7 @@ public actor TransientRepository {
         users = []
         groups = []
         savedViews = [:]
-
+        customFields = [:]
         notesByDocument = [:]
     }
 
@@ -81,7 +83,10 @@ public actor TransientRepository {
         self.permissions = permissions
     }
 
-    public func set(permissionTo op: UserPermissions.Operation, for resource: UserPermissions.Resource, to value: Bool) {
+    public func set(
+        permissionTo op: UserPermissions.Operation, for resource: UserPermissions.Resource,
+        to value: Bool
+    ) {
         permissions.set(op, to: value, for: resource)
     }
 }
@@ -104,8 +109,14 @@ extension TransientRepository: Repository {
         documents.first(where: { $0.value.asn == asn })?.value
     }
 
-    public func documents(filter _: FilterState) throws -> any DocumentSource {
-        TransientDocumentSource(sequence: documents.map(\.value))
+    public func documents(filter: FilterState) throws -> any DocumentSource {
+        let filteredDocs = documents.values.filter { doc in
+            if !filter.searchText.isEmpty {
+                return doc.title.localizedCaseInsensitiveContains(filter.searchText)
+            }
+            return true
+        }
+        return TransientDocumentSource(sequence: filteredDocs)
     }
 
     public func nextAsn() async throws -> UInt {
@@ -331,6 +342,18 @@ extension TransientRepository: Repository {
         }
     }
 
+    // MARK: - Custom fields
+
+    public func customFields() async throws -> [CustomField] {
+        customFields.map(\.value)
+    }
+
+    // This is not part of the `Repository` protocol, but it's useful for testing
+    public func add(customField: CustomField) async throws -> CustomField {
+        customFields[customField.id] = customField
+        return customField
+    }
+
     // MARK: - Document Operations
 
     public func metadata(documentId _: UInt) async throws -> Metadata {
@@ -354,7 +377,9 @@ extension TransientRepository: Repository {
         notesByDocument[documentId, default: []]
     }
 
-    public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note] {
+    public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document
+        .Note]
+    {
         guard let document = documents[documentId] else {
             throw RepositoryError.documentNotFound
         }
@@ -384,7 +409,9 @@ extension TransientRepository: Repository {
         return notes
     }
 
-    public func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL? {
+    public func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil)
+        async throws -> URL?
+    {
         // Simulate download progress
         for i in 1 ... 10 {
             try await Task.sleep(for: .seconds(0.1))
@@ -415,7 +442,8 @@ extension TransientRepository: Repository {
     }
 
     public nonisolated
-    var delegate: (any URLSessionDelegate)? { nil }
+    var delegate: (any URLSessionDelegate)?
+    { nil }
 
     public func suggestions(documentId _: UInt) async throws -> Suggestions {
         Suggestions(correspondents: [], tags: [], documentTypes: [], storagePaths: [], dates: [])

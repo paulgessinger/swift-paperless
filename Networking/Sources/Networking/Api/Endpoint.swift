@@ -209,6 +209,10 @@ public extension Endpoint {
         Endpoint(path: "/api/tasks/acknowledge")
     }
 
+    static func customFields() -> Endpoint {
+        Endpoint(path: "/api/custom_fields", queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
+    }
+
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
         var segment = ""
         switch type {
