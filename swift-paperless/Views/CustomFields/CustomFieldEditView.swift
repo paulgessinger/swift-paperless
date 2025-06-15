@@ -22,41 +22,82 @@ struct CustomFieldEditView: View {
     }
 
     @ViewBuilder
-    private func fieldView(field: Binding<CustomFieldInstance>) throws -> some View {
-        switch field.wrappedValue.field.dataType {
-        case .string:
-            StringView(instance: field)
-        case .float:
-            FloatView(instance: field)
-        case .boolean:
-            BooleanView(instance: field)
-        case .integer:
-            IntegerView(instance: field)
-        case .date:
-            DateView(instance: field)
-        case .monetary:
-            MonetaryView(instance: field)
-        case .url:
-            UrlView(instance: field)
-        case .documentLink:
-            DocumentLinkView(instance: field)
-        case .select:
-            SelectView(instance: field)
-        default:
-            Section {
-                Text(String(describing: field.wrappedValue.field.dataType))
+    private func invalidFieldView(instance: CustomFieldInstance, reason: CustomFieldValue.InvalidReason) -> some View {
+        // @TODO: Add localized explanations
+        Group {
+            switch reason {
+            case let .invalidDate(date):
+                Text("\(instance.field.name) Invalid date: \(date)")
+            case let .invalidURL(url):
+                Text("\(instance.field.name) Invalid URL: \(url)")
+            case let .invalidMonetary(value):
+                Text("\(instance.field.name) Invalid monetary value: \(value)")
+            case let .invalidSelectOption(option):
+                Text("\(instance.field.name) Invalid select option: \(option)")
+            case .unknownValue:
+                Text("\(instance.field.name) Unknown value type")
+            case let .unknownDataType(dataType):
+                Text("\(instance.field.name) Unknown data type: \(dataType)")
+            case let .typeMismatch(dataType, rawValue):
+                Text("\(instance.field.name) Type mismatch: expected \(String(describing: dataType)) got: \(String(describing: rawValue))")
+            }
+        }
+        .foregroundStyle(.red)
+    }
+
+    @ViewBuilder
+    private func fieldView(index: Int, field: Binding<CustomFieldInstance>) throws -> some View {
+        if case let .invalid(reason) = field.wrappedValue.value {
+            // @TODO: Make pretty with icon and better text
+            Section(field.wrappedValue.field.name) {
+                invalidFieldView(instance: field.wrappedValue, reason: reason)
+            }
+        } else {
+            Group {
+                switch field.wrappedValue.field.dataType {
+                case .string:
+                    StringView(instance: field)
+                case .float:
+                    FloatView(instance: field)
+                case .boolean:
+                    BooleanView(instance: field)
+                case .integer:
+                    IntegerView(instance: field)
+                case .date:
+                    DateView(instance: field)
+                case .monetary:
+                    MonetaryView(instance: field)
+                case .url:
+                    UrlView(instance: field)
+                case .documentLink:
+                    DocumentLinkView(instance: field)
+                case .select:
+                    SelectView(instance: field)
+                case let .other(dataType):
+                    // Theoretically this should never happen because we catch this above if the value is invalid
+                    invalidFieldView(instance: field.wrappedValue, reason: .unknownDataType(dataType))
+                }
+            }
+            .swipeActions {
+                Button("Delete") {
+                    print("Delete: \(index)")
+                }
             }
         }
     }
 
     var body: some View {
         Form {
+            if customFields.hasInvalidValues {
+                Section {
+                    Text("Has some invalid custom fields, please fix them.")
+                        .foregroundStyle(.red)
+                }
+            }
+
             ForEach(0 ..< customFields.count, id: \.self) { index in
                 let field = $customFields[index]
-                try? fieldView(field: field)
-                    .swipeActions {
-                        Button("Delete") {}
-                    }
+                try? fieldView(index: index, field: field)
             }
 
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
@@ -70,7 +111,7 @@ struct CustomFieldEditView: View {
                 }
 
                 Section("raw") {
-                    ForEach(document.customFields.values, id: \.self) { entry in
+                    ForEach(document.customFields, id: \.self) { entry in
                         VStack(alignment: .leading) {
                             let field = customFields.first { $0.field.id == entry.field }?.field.name ?? "Unknown Field"
                             Text("#\(entry.field) (\(field))").bold()
@@ -126,27 +167,35 @@ private struct PreviewHelper: View {
                     .init(id: "cc", label: "Option C"),
                 ])
             ),
+            CustomField(id: 11, name: "Unknown field", dataType: .other("plumbus")),
         ]
 
         instances = [
-            CustomFieldInstance(field: customFields[8], value: .documentLink([]))!,
+            // Invalid because we don't understand the field data type
+            CustomFieldInstance(field: customFields[10], value: .float(123.45)),
+            // Invalid because we don't understand the value that came from the backend
+            CustomFieldInstance(field: customFields[3], value: .invalid(.unknownValue)),
+            // Invalid because the type we got from the backend is not what we expected
+            CustomFieldInstance(field: customFields[2], value: .float(123.45)),
+
+            CustomFieldInstance(field: customFields[8], value: .documentLink([])),
             CustomFieldInstance(
                 field: customFields[9], value: .select(.init(id: "bb", label: "Option B"))
-            )!,
-            CustomFieldInstance(field: customFields[0], value: .float(123.45))!,
-            CustomFieldInstance(field: customFields[1], value: .boolean(true))!,
-            CustomFieldInstance(field: customFields[2], value: .integer(123))!,
-            CustomFieldInstance(field: customFields[3], value: .string("Hello"))!,
-            CustomFieldInstance(field: customFields[4], value: .date(Date()))!,
+            ),
+            CustomFieldInstance(field: customFields[0], value: .float(123.45)),
+            CustomFieldInstance(field: customFields[1], value: .boolean(true)),
+            CustomFieldInstance(field: customFields[2], value: .integer(123)),
+            CustomFieldInstance(field: customFields[3], value: .string("Hello")),
+            CustomFieldInstance(field: customFields[4], value: .date(Date())),
             CustomFieldInstance(
                 field: customFields[5], value: .monetary(currency: "USD", amount: 1000.00)
-            )!,
+            ),
             CustomFieldInstance(
                 field: customFields[6], value: .monetary(currency: "CHF", amount: 1000.00)
-            )!,
+            ),
             CustomFieldInstance(
                 field: customFields[7], value: .url(#URL("https://www.google.com"))
-            )!,
+            ),
         ]
     }
 

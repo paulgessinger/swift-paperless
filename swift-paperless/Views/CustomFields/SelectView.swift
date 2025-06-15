@@ -53,7 +53,7 @@ private let field = CustomField(
 #Preview {
     @Previewable @State var instance = CustomFieldInstance(
         field: field, value: .select(.init(id: "bb", label: "Option B"))
-    )!
+    )
 
     return Form {
         SelectView(instance: $instance)
