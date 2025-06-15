@@ -287,4 +287,65 @@ import Testing
         #expect(sortedFields[1].dataType == .monetary)
         #expect(sortedFields[1].extraData.defaultCurrency == "USD")
     }
+
+    @Test func testDocumentSearch() async throws {
+        let repository = TransientRepository()
+
+        // Create test documents with different titles
+        let documents = [
+            ("Invoice #123", "file1.pdf"),
+            ("Receipt for groceries", "file2.pdf"),
+            ("Tax document 2024", "file3.pdf"),
+            ("Invoice #456", "file4.pdf"),
+            ("Meeting notes", "file5.pdf"),
+        ]
+
+        for (title, filename) in documents {
+            let protoDoc = ProtoDocument(
+                title: title,
+                asn: nil,
+                documentType: nil,
+                correspondent: nil,
+                tags: [],
+                created: .now,
+                storagePath: nil
+            )
+            try await repository.create(
+                document: protoDoc, file: URL(string: "file:///\(filename)")!, filename: filename
+            )
+        }
+
+        // Test searching for "Invoice"
+        var filter = FilterState(
+            correspondent: .any,
+            documentType: .any,
+            storagePath: .any,
+            owner: .any,
+            tags: .any,
+            sortField: .title,
+            sortOrder: .ascending,
+            remaining: [],
+            savedView: nil,
+            searchText: "Invoice",
+            searchMode: .title
+        )
+
+        let invoiceResults = try await repository.documents(filter: filter)
+        let invoiceDocs = try await invoiceResults.fetch(limit: 10)
+        #expect(invoiceDocs.count == 2)
+        #expect(invoiceDocs.map(\.title).sorted() == ["Invoice #123", "Invoice #456"].sorted())
+
+        // Test searching for "Tax"
+        filter.searchText = "Tax"
+        let taxResults = try await repository.documents(filter: filter)
+        let taxDocs = try await taxResults.fetch(limit: 10)
+        #expect(taxDocs.count == 1)
+        #expect(taxDocs.first?.title == "Tax document 2024")
+
+        // Test searching for non-existent term
+        filter.searchText = "Nonexistent"
+        let emptyResults = try await repository.documents(filter: filter)
+        let emptyDocs = try await emptyResults.fetch(limit: 10)
+        #expect(emptyDocs.isEmpty)
+    }
 }
