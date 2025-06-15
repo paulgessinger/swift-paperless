@@ -319,4 +319,70 @@ struct CustomFieldRawModelTests {
             _ = try JSONEncoder().encode(decoded)
         }
     }
+
+    @Test("Test decoding raw nil value")
+    func testDecodingRawNilValue() throws {
+        let json = """
+        {
+            "field": 10,
+            "value": null
+        }
+        """.data(using: .utf8)!
+
+        let entry = try decoder.decode(CustomFieldRawEntry.self, from: json)
+
+        #expect(entry.field == 10)
+        #expect(entry.value == .none)
+    }
+
+    @Test("Test encoding nil value")
+    func testEncodingNilValue() throws {
+        struct NilTest: Decodable {
+            let field: UInt
+            let value: String?
+        }
+
+        let entry = CustomFieldRawEntry(field: 1, value: .none)
+        let encoded = try JSONEncoder().encode(entry)
+        let decoded = try JSONDecoder().decode(NilTest.self, from: encoded)
+
+        #expect(decoded.field == 1)
+        #expect(decoded.value == nil)
+    }
+
+    @Test("Test decoding raw value list with nil value")
+    func testDecodingRawValueListWithNilValue() throws {
+        let json = """
+        {
+            "custom_fields": [
+                {
+                    "value": [
+                        1,
+                        6
+                    ],
+                    "field": 9
+                },
+                {
+                    "value": null,
+                    "field": 10
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        struct Decoded: Codable {
+            var custom_fields: CustomFieldRawEntryList
+        }
+
+        let decoded = try decoder.decode(Decoded.self, from: json)
+        let values = decoded.custom_fields.values
+
+        #expect(values.count == 2)
+        #expect(values[0].value == .idList([1, 6]))
+        #expect(values[0].field == 9)
+        #expect(values[1].value == .none)
+        #expect(values[1].field == 10)
+
+        #expect(decoded.custom_fields.hasUnknown == false)
+    }
 }

@@ -19,6 +19,7 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
     case integer(Int)
     case boolean(Bool)
     case idList([UInt])
+    case none
     case unknown
 
     public static func == (lhs: CustomFieldRawValue, rhs: CustomFieldRawValue) -> Bool {
@@ -33,6 +34,8 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
             lhs == rhs
         case let (.idList(lhs), .idList(rhs)):
             lhs == rhs
+        case (.none, .none):
+            true
         case (.unknown, .unknown):
             true
         default:
@@ -52,6 +55,8 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
             self = .boolean(value)
         } else if let value = try? container.decode([UInt].self) {
             self = .idList(value)
+        } else if container.decodeNil() {
+            self = .none
         } else {
             self = .unknown
         }
@@ -70,6 +75,8 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
             try container.encode(value)
         case let .idList(value):
             try container.encode(value)
+        case .none:
+            try container.encodeNil()
         case .unknown:
             throw CustomFieldUnknownValue()
         }
