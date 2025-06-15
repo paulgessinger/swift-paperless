@@ -185,7 +185,7 @@ struct DocumentLinkView: View {
 private let field = CustomField(id: 9, name: "Custom doc link", dataType: .documentLink)
 
 #Preview {
-    @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([]))!
+    @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([]))
     @Previewable
     @StateObject var store = DocumentStore(repository: TransientRepository())
 
