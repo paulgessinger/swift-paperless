@@ -129,11 +129,11 @@ struct CustomFieldInstanceTest {
 
     @Test("Test monetary field with invalid currency")
     func testMonetaryFieldWithInvalidCurrency() throws {
-        let rawEntries = [CustomFieldRawEntry(field: 5, value: .string("ABCD1000"))]
-        let instances = [CustomFieldInstance].fromRawEntries(
-            rawEntries, customFields: Self.customFields, locale: Self.locale
+        let rawEntry = CustomFieldRawEntry(field: 5, value: .string("ABCD1000"))
+        let instance = CustomFieldInstance(
+            field: Self.customFields[5]!, rawValue: rawEntry.value, locale: Self.locale
         )
-        #expect(instances.isEmpty)
+        #expect(instance.value == .invalid(.invalidMonetaryFormat))
     }
 
     @Test("Test monetary field without decimals")
@@ -397,7 +397,7 @@ struct CustomFieldInstanceTest {
             rawValue: .unknown,
             locale: Self.locale
         )
-        #expect(instance == nil)
+        #expect(instance.value == .invalid(.unknownValue))
     }
 
     @Test("Test initialization with other data type")
@@ -412,7 +412,83 @@ struct CustomFieldInstanceTest {
             rawValue: .string("test"),
             locale: Self.locale
         )
-        #expect(instance == nil)
+        #expect(instance.value == .invalid(.unknownDataType))
+    }
+
+    @Test("Test invalid field values")
+    func testInvalidFieldValues() throws {
+        // Test invalid date
+        let dateField = try #require(Self.customFields[3])
+        let invalidDate = CustomFieldInstance(
+            field: dateField,
+            rawValue: .string("not-a-date"),
+            locale: Self.locale
+        )
+        #expect(invalidDate.value == .invalid(.invalidDate))
+
+        // Test invalid URL
+        let urlField = try #require(Self.customFields[8])
+        let invalidURL = CustomFieldInstance(
+            field: urlField,
+            rawValue: .string("+blurp:/bla"),
+            locale: Self.locale
+        )
+        #expect(invalidURL.value == .invalid(.invalidURL))
+
+        // Test invalid monetary format
+        let monetaryField = try #require(Self.customFields[5])
+        let invalidMonetaryFormat = CustomFieldInstance(
+            field: monetaryField,
+            rawValue: .string("not-a-monetary"),
+            locale: Self.locale
+        )
+        #expect(invalidMonetaryFormat.value == .invalid(.invalidMonetaryFormat))
+
+        // Test invalid monetary amount
+        let invalidMonetaryAmount = CustomFieldInstance(
+            field: monetaryField,
+            rawValue: .string("USD1.1"),
+            locale: Self.locale
+        )
+        #expect(invalidMonetaryAmount.value == .invalid(.invalidMonetaryFormat))
+
+        // Test invalid select option
+        let selectField = try #require(Self.customFields[10])
+        let invalidSelect = CustomFieldInstance(
+            field: selectField,
+            rawValue: .string("invalid-option"),
+            locale: Self.locale
+        )
+        #expect(invalidSelect.value == .invalid(.invalidSelectOption))
+
+        // Test unknown value
+        let unknownValue = CustomFieldInstance(
+            field: dateField,
+            rawValue: .unknown,
+            locale: Self.locale
+        )
+        #expect(unknownValue.value == .invalid(.unknownValue))
+
+        // Test unknown data type
+        let otherField = CustomField(
+            id: 11,
+            name: "Other field",
+            dataType: .other("unknown")
+        )
+        let unknownDataType = CustomFieldInstance(
+            field: otherField,
+            rawValue: .string("test"),
+            locale: Self.locale
+        )
+        #expect(unknownDataType.value == .invalid(.unknownDataType))
+
+        // Test type mismatch
+        let typeMismatch = CustomFieldInstance(
+            field: dateField,
+            rawValue: .boolean(true),
+            locale: Self.locale
+        )
+        #expect(typeMismatch.value == .invalid(.typeMismatch))
     }
 }
 

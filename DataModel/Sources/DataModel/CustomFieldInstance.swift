@@ -1,7 +1,18 @@
 import Foundation
 import os
 
-public enum CustomFieldValue: Codable, Sendable, Equatable, Hashable {
+public enum CustomFieldValue: Sendable, Equatable, Hashable {
+    public enum InvalidReason: Sendable, Hashable, Equatable {
+        case invalidDate
+        case invalidURL
+        case invalidMonetaryFormat
+        case invalidMonetaryAmount
+        case invalidSelectOption
+        case unknownValue
+        case unknownDataType
+        case typeMismatch
+    }
+
     case string(String)
     case boolean(Bool)
     case date(Date)
@@ -11,6 +22,7 @@ public enum CustomFieldValue: Codable, Sendable, Equatable, Hashable {
     case integer(Int)
     case float(Double)
     case monetary(currency: String, amount: Decimal)
+    case invalid(InvalidReason)
 
     public static func formatMonetary(currency: String, amount: Decimal) -> String {
         let formattedAmount = amount.formatted(
@@ -51,6 +63,9 @@ public enum CustomFieldValue: Codable, Sendable, Equatable, Hashable {
 
         case let .float(value):
             .float(value)
+
+        case .invalid:
+            .unknown
         }
     }
 
@@ -114,7 +129,7 @@ public struct CustomFieldInstance: Sendable, Hashable {
 }
 
 public extension CustomFieldInstance {
-    init?(field: CustomField, rawValue: CustomFieldRawValue, locale: Locale) {
+    init(field: CustomField, rawValue: CustomFieldRawValue, locale: Locale) {
         self.field = field
         switch (field.dataType, rawValue) {
         case let (.string, .string(value)):
@@ -132,7 +147,7 @@ public extension CustomFieldInstance {
             } else {
                 Logger.dataModel.error(
                     "Invalid date format: \(value) for field \(field.name, privacy: .public)")
-                return nil
+                self.value = .invalid(.invalidDate)
             }
 
         case let (.documentLink, .idList(value)):
@@ -146,7 +161,7 @@ public extension CustomFieldInstance {
             } else {
                 Logger.dataModel.error(
                     "Invalid URL format: \(value) for field \(field.name, privacy: .private)")
-                return nil
+                self.value = .invalid(.invalidURL)
             }
 
         case let (.monetary, .string(value)):
@@ -155,7 +170,8 @@ public extension CustomFieldInstance {
             guard let match = value.wholeMatch(of: regex) else {
                 Logger.dataModel.error(
                     "Invalid monetary format: \(value) for field \(field.name, privacy: .private)")
-                return nil
+                self.value = .invalid(.invalidMonetaryFormat)
+                return
             }
 
             let currency: String =
@@ -173,7 +189,8 @@ public extension CustomFieldInstance {
                 Logger.dataModel.error(
                     "Invalid monetary amount: \(value, privacy: .public) for field \(field.name, privacy: .public)"
                 )
-                return nil
+                self.value = .invalid(.invalidMonetaryAmount)
+                return
             }
 
             self.value = .monetary(currency: currency, amount: amount)
@@ -181,12 +198,14 @@ public extension CustomFieldInstance {
         case let (.select, .string(value)):
             let option = field.extraData.selectOptions.first { $0.id == value }
 
-            guard let option else {
+            if let option {
+                self.value = .select(option)
+            } else {
                 Logger.dataModel.error(
-                    "Invalid select option: \(value) for field \(field.name, privacy: .private)")
-                return nil
+                    "Invalid select option: \(value, privacy: .public) for field \(field.name, privacy: .public)"
+                )
+                self.value = .invalid(.invalidSelectOption)
             }
-            self.value = .select(option)
 
         case (.select, .none):
             value = .select(nil)
@@ -194,19 +213,23 @@ public extension CustomFieldInstance {
         case let (.integer, .integer(value)):
             self.value = .integer(value)
 
-        case (_, .unknown), (.other, _):
+        case (_, .unknown):
             Logger.dataModel.error(
-                "Unknown custom field data type: \(field.dataType.rawValue, privacy: .public) for field \(field.id, privacy: .public) with value \(String(describing: rawValue))"
+                "Unknown custom field value: \(String(describing: rawValue), privacy: .public) for field \(field.id, privacy: .public)"
             )
-            // @TODO: Produce special marker instance that encodes that we're invalid
-            return nil
+            value = .invalid(.unknownValue)
+
+        case (.other, _):
+            Logger.dataModel.error(
+                "Unknown custom field data type: \(field.dataType.rawValue, privacy: .public) for field \(field.id, privacy: .public) with value \(String(describing: rawValue), privacy: .public)"
+            )
+            value = .invalid(.unknownDataType)
 
         default:
             Logger.dataModel.error(
-                "Unknown custom field data type: \(field.dataType.rawValue, privacy: .public) for field \(field.id, privacy: .public) with value \(String(describing: rawValue))"
+                "Type mismatch for field \(field.id, privacy: .public) with value \(String(describing: rawValue), privacy: .public)"
             )
-            // @TODO: This should be surfaced in the UI somehow
-            return nil
+            value = .invalid(.typeMismatch)
         }
     }
 
