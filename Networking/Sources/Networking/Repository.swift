@@ -37,7 +37,9 @@ public actor AnyAsyncSequence<Element>: AsyncSequence & Sendable where Element: 
         }
     }
 
-    public init<S: AsyncSequence & Sendable>(seq: S) where S.Element == Element, S.AsyncIterator: Sendable {
+    public init<S: AsyncSequence & Sendable>(seq: S)
+        where S.Element == Element, S.AsyncIterator: Sendable
+    {
         _makeAsyncIterator = { AnyAsyncIterator(itr: seq.makeAsyncIterator()) }
     }
 
@@ -146,12 +148,24 @@ public protocol Repository: Sendable, Actor {
     func acknowledge(tasks: [UInt]) async throws
 
     nonisolated
-    var delegate: (any URLSessionDelegate)? { get }
+    var delegate: (any URLSessionDelegate)?
+    { get }
 }
 
 public extension Repository {
     func download(documentID: UInt) async throws -> URL? {
         try await download(documentID: documentID, progress: nil)
+    }
+
+    // Helper method documents with a title search
+    func documents(containsTitle title: String, limit: UInt = 10) async throws -> [Document] {
+        let filter = FilterState(
+            correspondent: .any, documentType: .any, storagePath: .any, owner: .any, tags: .any,
+            sortField: .title, sortOrder: .ascending, remaining: [], savedView: nil,
+            searchText: title, searchMode: .title
+        )
+        let source = try documents(filter: filter)
+        return try await source.fetch(limit: limit)
     }
 }
 

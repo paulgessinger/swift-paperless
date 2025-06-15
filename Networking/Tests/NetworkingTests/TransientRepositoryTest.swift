@@ -348,4 +348,35 @@ import Testing
         let emptyDocs = try await emptyResults.fetch(limit: 10)
         #expect(emptyDocs.isEmpty)
     }
+
+    @Test func testDocumentSearchHelper() async throws {
+        let repository = TransientRepository()
+
+        // Create test documents
+        let documents = [
+            ("Project Alpha", "alpha.pdf"),
+            ("Project Beta", "beta.pdf"),
+            ("Alpha Protocol", "protocol.pdf"),
+        ]
+
+        for (title, filename) in documents {
+            let protoDoc = ProtoDocument(
+                title: title,
+                asn: nil,
+                documentType: nil,
+                correspondent: nil,
+                tags: [],
+                created: .now,
+                storagePath: nil
+            )
+            try await repository.create(
+                document: protoDoc, file: URL(string: "file:///\(filename)")!, filename: filename
+            )
+        }
+
+        // Test searching for "Alpha"
+        let alphaResults = try await repository.documents(containsTitle: "Alpha")
+        #expect(alphaResults.count == 2)
+        #expect(alphaResults.map(\.title).sorted() == ["Alpha Protocol", "Project Alpha"].sorted())
+    }
 }
