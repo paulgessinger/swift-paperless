@@ -45,6 +45,12 @@
             "state" : "translated",
             "value" : "Aktywna tożsamość"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Active Identity"
+          }
         }
       }
     },
@@ -93,6 +99,12 @@
             "state" : "translated",
             "value" : "Wybrany serwer"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Active server"
+          }
         }
       }
     },
@@ -139,6 +151,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "URL"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "URL"
           }
         }
@@ -189,6 +207,12 @@
             "state" : "translated",
             "value" : "Użytkownik"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "User"
+          }
         }
       }
     },
@@ -235,6 +259,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaawansowane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Advanced"
           }
         }
       }
@@ -283,6 +313,12 @@
             "state" : "translated",
             "value" : "Kompilacja"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Build"
+          }
         }
       }
     },
@@ -329,6 +365,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konfiguracja"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Configuration"
           }
         }
       }
@@ -377,6 +419,12 @@
             "state" : "translated",
             "value" : "Wersja"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version"
+          }
         }
       }
     },
@@ -423,6 +471,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zapisana wersja aplikacji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stored app version"
           }
         }
       }
@@ -472,6 +526,12 @@
             "state" : "translated",
             "value" : "%@ nie może zostać aktywowany"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ could not be enabled"
+          }
         }
       }
     },
@@ -520,6 +580,12 @@
             "state" : "translated",
             "value" : "Zaloguj się z TouchID, by użyć aplikacji"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Authenticate with TouchID to use the app"
+          }
         }
       }
     },
@@ -566,6 +632,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nie można załadować certyfikatu. Nieprawidłowe hasło?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't load certificate. Invalid password?"
           }
         }
       }
@@ -614,6 +686,12 @@
             "state" : "translated",
             "value" : "Nie wczytano certyfikatu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Certificate not loaded"
+          }
         }
       }
     },
@@ -660,6 +738,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certyfikaty"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Certificates"
           }
         }
       }
@@ -708,6 +792,12 @@
             "state" : "translated",
             "value" : "Wybierz serwer"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose server"
+          }
         }
       }
     },
@@ -754,6 +844,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Debugowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Debug"
           }
         }
       }
@@ -802,6 +898,12 @@
             "state" : "translated",
             "value" : "Resetowanie zapisanej wersji aplikacji"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset stored app version"
+          }
         }
       }
     },
@@ -848,6 +950,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Domyślny tryb wyszukiwania pełnotekstowego"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The default search mode for full-text search"
           }
         }
       }
@@ -896,6 +1004,12 @@
             "state" : "translated",
             "value" : "Domyślny tryb wyszukiwania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default search mode"
+          }
         }
       }
     },
@@ -942,6 +1056,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Domyślne pole sortowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default sort field"
           }
         }
       }
@@ -990,6 +1110,12 @@
             "state" : "translated",
             "value" : "Domyślny porządek sortowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default sort order"
+          }
         }
       }
     },
@@ -1036,6 +1162,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Przekaż opinię"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Feedback"
           }
         }
       }
@@ -1084,6 +1216,12 @@
             "state" : "translated",
             "value" : "Biblioteki"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Libraries"
+          }
         }
       }
     },
@@ -1130,6 +1268,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd wczytywania szczegółów wykorzystywanych bibliotek"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unable to load used library details"
           }
         }
       }
@@ -1178,6 +1322,12 @@
             "state" : "translated",
             "value" : "Prywatność"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Privacy"
+          }
         }
       }
     },
@@ -1224,6 +1374,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "# Prywatność\\\\nNie można załadować polityki prywatności. Przejdź [tutaj](%@), aby ją znaleźć."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
           }
         }
       }
@@ -1272,6 +1428,12 @@
             "state" : "translated",
             "value" : "Kod źródłowy"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Source code"
+          }
         }
       }
     },
@@ -1318,6 +1480,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Szczegóły"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
           }
         }
       }
@@ -1366,6 +1534,12 @@
             "state" : "translated",
             "value" : "Potwierdzenie usunięcia dokumentu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document delete confirmation"
+          }
         }
       }
     },
@@ -1412,6 +1586,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Poproś o potwierdzenie przed usunięciem dokumentu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ask for confirmation before deleting a document"
           }
         }
       }
@@ -1460,6 +1640,12 @@
             "state" : "translated",
             "value" : "Te ustawienia to nadchodzące warianty funkcji / eksperymenty, które można wyłączyć. \n\nZazwyczaj eksperyment albo zostanie wdrożony, a stary wariant zniknie, albo eksperyment zostanie porzucony, a nowy wariant zniknie."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+          }
         }
       }
     },
@@ -1506,6 +1692,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Funkcje eksperymentalne"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "UI Experiments"
           }
         }
       }
@@ -1554,6 +1746,12 @@
             "state" : "translated",
             "value" : "Dzięki!"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Thanks!"
+          }
         }
       }
     },
@@ -1600,6 +1798,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyślij e-mail"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Send mail"
           }
         }
       }
@@ -1648,6 +1852,12 @@
             "state" : "translated",
             "value" : "Tożsamości"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identities"
+          }
         }
       }
     },
@@ -1694,6 +1904,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tożsamości to certyfikaty wraz z kluczami prywatnymi, które mogą być używane do kryptograficznego uwierzytelniania użytkownika. Tożsamości są używane w konfiguracjach [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) w celu uzyskania dostępu do zabezpieczonych zasobów.\n\nJest to **zaawansowana funkcja**!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
           }
         }
       }
@@ -1742,6 +1958,12 @@
             "state" : "translated",
             "value" : "Dostosuj ikona"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Customize logo"
+          }
         }
       }
     },
@@ -1788,6 +2010,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wybrana ikona"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Selected icon"
           }
         }
       }
@@ -1836,6 +2064,12 @@
             "state" : "translated",
             "value" : "Ikona domyślna"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default icon"
+          }
         }
       }
     },
@@ -1882,6 +2116,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ikona #%llu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Icon #%llu"
           }
         }
       }
@@ -1930,6 +2170,12 @@
             "state" : "translated",
             "value" : "Organizacja"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Organization"
+          }
         }
       }
     },
@@ -1977,6 +2223,12 @@
             "state" : "translated",
             "value" : "Preferencje"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Preferences"
+          }
         }
       }
     },
@@ -1991,8 +2243,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Versionshinweise"
           }
         },
         "en" : {
@@ -2003,8 +2255,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Notes de mise à jour"
           }
         },
         "it" : {
@@ -2020,6 +2272,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Release notes"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Release notes"
@@ -2071,6 +2329,12 @@
             "state" : "translated",
             "value" : "Zgłoś błąd"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Report a bug"
+          }
         }
       }
     },
@@ -2117,6 +2381,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aplikacja wykonuje pewne czynności w zależności od zapisanej wersji aplikacji. Ta funkcja resetuje zapisaną wersję, dzięki czemu aplikacja działa tak, jakby była świeżo zainstalowania."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
           }
         }
       }
@@ -2165,6 +2435,12 @@
             "state" : "translated",
             "value" : "Wybierz certyfikat"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Select Certificate"
+          }
         }
       }
     },
@@ -2212,6 +2488,12 @@
             "state" : "translated",
             "value" : "Pokaż pasek właściwości dokumentu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document property bar"
+          }
         }
       }
     },
@@ -2258,6 +2540,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Domyślnie wyświetlaj właściwości dokumentu w dolnej części ekranu szczegółów dokumentu."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show the document properties in the bottom of the document detail screen by default."
           }
         }
       }
@@ -2307,6 +2595,12 @@
             "state" : "translated",
             "value" : "Ustawienia"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings"
+          }
         }
       }
     },
@@ -2353,6 +2647,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ten serwer ma wersję `%@`, która jest starsza niż wersja `%@` wymagana przez aplikację. Mogą wystąpić problemy!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
           }
         }
       }
@@ -2402,6 +2702,12 @@
             "state" : "translated",
             "value" : "Zablokuj aplikację z %@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Lock app with %@"
+          }
         }
       }
     },
@@ -2448,6 +2754,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Informacje o wersji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version info"
           }
         }
       }

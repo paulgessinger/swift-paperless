@@ -46,6 +46,12 @@
             "state" : "translated",
             "value" : "Dodaj serwer"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add server"
+          }
         }
       }
     },
@@ -92,6 +98,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nie dodawaj `/api` do adresu URL"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Do not include `/api` in the URL"
           }
         }
       }
@@ -140,6 +152,12 @@
             "state" : "translated",
             "value" : "Jeśli masz włączone *automatyczne logowanie* przy użyciu `PAPERLESS_AUTO_LOGIN_USERNAME`, spróbuj zalogować się bez poświadczeń."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+          }
         }
       }
     },
@@ -186,6 +204,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaloguj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Log in"
           }
         }
       }
@@ -234,6 +258,12 @@
             "state" : "translated",
             "value" : "Weryfikowanie"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Validating"
+          }
         }
       }
     },
@@ -280,6 +310,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Certyfikaty z podpisem własnym są obsługiwane przy użyciu magazynu certyfikatów systemu operacyjnego!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Self-signed certificates are supported using the operating system trust store!"
           }
         }
       }
@@ -328,6 +364,12 @@
             "state" : "translated",
             "value" : "Kontynuuj"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Continue"
+          }
         }
       }
     },
@@ -374,6 +416,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rodzaj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mode"
           }
         }
       }
@@ -422,6 +470,12 @@
             "state" : "translated",
             "value" : "Brak poświadczeń"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No credentials"
+          }
         }
       }
     },
@@ -469,6 +523,12 @@
             "state" : "translated",
             "value" : "Logowanie bez poświadczeń. Działa to w sytuacji, gdy logowanie odbywa się przez niestandardowe nagłówki, mTLS lub podobne."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+          }
         }
       }
     },
@@ -514,6 +574,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Token"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Token"
           }
         }
@@ -563,6 +629,12 @@
             "state" : "translated",
             "value" : "Logowanie za pomocą tokena API uzyskanego w panelu administracyjnym."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login with an API token that you obtained in the admin interface."
+          }
         }
       }
     },
@@ -609,6 +681,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nazwa użytkownika i hasło"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Username & Password"
           }
         }
       }
@@ -657,6 +735,12 @@
             "state" : "translated",
             "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OAuth2/OIDC."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+          }
         }
       }
     },
@@ -703,6 +787,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dane uwierzytelniające"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Credentials"
           }
         }
       }
@@ -751,6 +841,12 @@
             "state" : "translated",
             "value" : "Szczegóły"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
+          }
         }
       }
     },
@@ -797,6 +893,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Więcej informacji tutaj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More info here"
           }
         }
       }
@@ -845,6 +947,12 @@
             "state" : "translated",
             "value" : "Użytkownik powiązany z tymi poświadczeniami ma niewystarczające uprawnienia. Do korzystania z aplikacji wymagany jest minimalny zestaw uprawnień!"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The user associated with these credentials has insufficient permissions. A minimum set of permissions is required to be able to use the app!"
+          }
         }
       }
     },
@@ -891,6 +999,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieprawidłowe dane logowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid credentials"
           }
         }
       }
@@ -939,6 +1053,12 @@
             "state" : "translated",
             "value" : "**Podane nazwy użytkownika i hasło zostały odrzucone.**\nSprawdź, czy wpisałeś je poprawnie."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
+          }
         }
       }
     },
@@ -985,6 +1105,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd podczas logowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error while logging in"
           }
         }
       }
@@ -1033,6 +1159,12 @@
             "state" : "translated",
             "value" : "**Żądanie połączenia bez poświadczeń zostało odrzucone.**\nSprawdź swoją konfigurację."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
+          }
         }
       }
     },
@@ -1079,6 +1211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Token dostępu jest nieprawidłowy.**\nSprawdź, czy został wpisany poprawnie."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
           }
         }
       }
@@ -1127,6 +1265,12 @@
             "state" : "translated",
             "value" : "**Nazwa użytkownika i hasło zostały zaakceptowane, ale zwrócony token dostępu został odrzucony.** Prawdopodobnie jest to błąd wewnętrzny. Proszę wysłać raport o błędzie z logami."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
+          }
         }
       }
     },
@@ -1173,6 +1317,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Podany adres URL jest nieprawidłowy"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The entered URL is invalid"
           }
         }
       }
@@ -1221,6 +1371,12 @@
             "state" : "translated",
             "value" : "**Ostrzeżenie:** Nagłówek *Authorization* jest używany przez Paperless-ngx do autoryzacji API opartej na tokenach. Użycie tego nagłówka dla Basic auth prawdopodobnie doprowadzi do problemów. Możesz spróbować skonfigurować alternatywny nagłówek dla Basic auth w konfiguracji Reverse Proxy."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+          }
         }
       }
     },
@@ -1267,6 +1423,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dodatkowe nagłówki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extra headers"
           }
         }
       }
@@ -1315,6 +1477,12 @@
             "state" : "translated",
             "value" : "Dodatkowe nagłówki do uwzględnienia we wszystkich żądaniach API wysyłanych przez aplikację do twojego serwera."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+          }
         }
       }
     },
@@ -1361,6 +1529,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nagłówek"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Key"
           }
         }
       }
@@ -1409,6 +1583,12 @@
             "state" : "translated",
             "value" : "Wartość"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Value"
+          }
         }
       }
     },
@@ -1455,6 +1635,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeśli to możliwe, używaj HTTPS do łączenia się z API dla adresów nielokalnych."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If at all possible, use HTTPS to connect to the API for non-local addresses."
           }
         }
       }
@@ -1503,6 +1689,12 @@
             "state" : "translated",
             "value" : "Wybierz certyfikat klienta, który ma być używany podczas łączenia się z serwerem docelowym."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Select a client certificate to use when connecting to the target server."
+          }
         }
       }
     },
@@ -1549,6 +1741,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Poświadczenia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identity"
           }
         }
       }
@@ -1597,6 +1795,12 @@
             "state" : "translated",
             "value" : "Więcej"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More"
+          }
         }
       }
     },
@@ -1643,6 +1847,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brak"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
           }
         }
       }
@@ -1691,6 +1901,12 @@
             "state" : "translated",
             "value" : "Kod 2FA"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "2FA code"
+          }
         }
       }
     },
@@ -1737,6 +1953,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "2FA jest włączone, wymagany jest OTP."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "2FA is enabled, an OTP is required."
           }
         }
       }
@@ -1785,6 +2007,12 @@
             "state" : "translated",
             "value" : "Hasło"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Password"
+          }
         }
       }
     },
@@ -1831,6 +2059,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twoje hasło jest używane tylko do logowania, nie jest przechowywane!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your password is only used to log in, and not stored!"
           }
         }
       }
@@ -1879,6 +2113,12 @@
             "state" : "translated",
             "value" : "Wybierz protokół"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Select scheme"
+          }
         }
       }
     },
@@ -1925,6 +2165,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Połączenie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection"
           }
         }
       }
@@ -1973,6 +2219,12 @@
             "state" : "translated",
             "value" : "Poświadczenia"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Credentials"
+          }
         }
       }
     },
@@ -2020,6 +2272,12 @@
             "state" : "translated",
             "value" : "Logowanie udane"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Login successful"
+          }
         }
       }
     },
@@ -2065,6 +2323,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Token"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Token"
           }
         }
@@ -2114,6 +2378,12 @@
             "state" : "translated",
             "value" : "Nieprawidłowy adres URL"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL invalid"
+          }
         }
       }
     },
@@ -2159,6 +2429,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "paperless.example.com"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "paperless.example.com"
           }
         }
@@ -2208,6 +2484,12 @@
             "state" : "translated",
             "value" : "Prawidłowy adres URL"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL valid"
+          }
         }
       }
     },
@@ -2254,6 +2536,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Login"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Username"
           }
         }
       }
