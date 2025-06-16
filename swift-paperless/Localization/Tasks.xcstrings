@@ -45,6 +45,12 @@
             "state" : "translated",
             "value" : "Odrzuć"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dismiss"
+          }
         }
       }
     },
@@ -91,6 +97,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odrzuć wszystkie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dismiss all"
           }
         }
       }
@@ -139,6 +151,12 @@
             "state" : "translated",
             "value" : "Odrzuć %llu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dismiss %llu"
+          }
         }
       }
     },
@@ -186,6 +204,12 @@
             "state" : "translated",
             "value" : "Data utworzenia"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Created"
+          }
         }
       }
     },
@@ -232,6 +256,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zakończone"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Completed"
           }
         }
       }
@@ -281,6 +311,12 @@
             "state" : "translated",
             "value" : "Nie można zaimportować %@: to duplikat!"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not import %@: it is a duplicate!"
+          }
         }
       }
     },
@@ -327,6 +363,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd przetwarzania dokumentu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error processing document"
           }
         }
       }
@@ -375,6 +417,12 @@
             "state" : "translated",
             "value" : "Nazwa pliku"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File name"
+          }
         }
       }
     },
@@ -421,6 +469,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ID zadania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Task ID"
           }
         }
       }
@@ -469,6 +523,12 @@
             "state" : "translated",
             "value" : "Dokument o ID #%@ powiązany z tym zadaniem nie istnieje.\nByć może został w międzyczasie usunięty lub nie masz uprawnień do jego wyświetlania."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime, or you do not have permission to view it."
+          }
         }
       }
     },
@@ -515,6 +575,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brak zadań"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No tasks"
           }
         }
       }
@@ -563,6 +629,12 @@
             "state" : "translated",
             "value" : "Powiązany dokument"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Related document"
+          }
         }
       }
     },
@@ -609,6 +681,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wynik"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Result"
           }
         }
       }
@@ -657,6 +735,12 @@
             "state" : "translated",
             "value" : "Stan"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
         }
       }
     },
@@ -703,6 +787,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Niepowodzenie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failure"
           }
         }
       }
@@ -751,6 +841,12 @@
             "state" : "translated",
             "value" : "Oczekujący"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pending"
+          }
         }
       }
     },
@@ -797,6 +893,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ponawianie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Retry"
           }
         }
       }
@@ -845,6 +947,12 @@
             "state" : "translated",
             "value" : "Anulowany"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Revoked"
+          }
         }
       }
     },
@@ -891,6 +999,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rozpoczęty"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Started"
           }
         }
       }
@@ -939,6 +1053,12 @@
             "state" : "translated",
             "value" : "Powodzenie"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Success"
+          }
         }
       }
     },
@@ -986,6 +1106,12 @@
             "state" : "translated",
             "value" : "Zadanie #%@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Task #%@"
+          }
         }
       }
     },
@@ -1032,6 +1158,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wszystkie zadania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All tasks"
           }
         }
       }
@@ -1176,6 +1308,24 @@
               }
             }
           }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "1 more task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%llu more tasks"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1223,6 +1373,12 @@
             "state" : "translated",
             "value" : "Zadania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tasks"
+          }
         }
       }
     },
@@ -1237,8 +1393,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Aufgabe"
           }
         },
         "en" : {
@@ -1249,8 +1405,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Tâche"
           }
         },
         "it" : {
@@ -1266,6 +1422,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Task"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Task"
@@ -1316,6 +1478,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieznana"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
           }
         }
       }

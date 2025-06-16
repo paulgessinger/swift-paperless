@@ -12,8 +12,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Hinzufügen"
           }
         },
         "en" : {
@@ -24,8 +24,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Ajouter"
           }
         },
         "it" : {
@@ -41,6 +41,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Add"
@@ -60,8 +66,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Du wirst nicht mehr in der Lage sein, dieses Objekt zu bearbeiten!"
           }
         },
         "en" : {
@@ -72,8 +78,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Vous ne pourrez plus modifier cet objet !"
           }
         },
         "it" : {
@@ -89,6 +95,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You will no longer be able to change this object!"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You will no longer be able to change this object!"
@@ -108,8 +120,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Du wirst nicht mehr in der Lage sein, dieses Objekt anzusehen!"
           }
         },
         "en" : {
@@ -120,8 +132,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Vous ne pourrez plus voir cet objet !"
           }
         },
         "it" : {
@@ -137,6 +149,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You will no longer be able to view this object!"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You will no longer be able to view this object!"
@@ -156,8 +174,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Du wirst nicht mehr in der Lage sein, dieses Objekt anzusehen oder zu bearbeiten!"
           }
         },
         "en" : {
@@ -168,8 +186,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Vous ne pourrez plus consulter ou modifier cet objet !"
           }
         },
         "it" : {
@@ -185,6 +203,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You will no longer be able to view or change this object!"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You will no longer be able to view or change this object!"
@@ -236,6 +260,12 @@
             "state" : "translated",
             "value" : "Modyfikacja"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Change"
+          }
         }
       }
     },
@@ -250,8 +280,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Zusammenfassung kopieren"
           }
         },
         "en" : {
@@ -262,8 +292,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Copier le résumé"
           }
         },
         "it" : {
@@ -279,6 +309,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy summary"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Copy summary"
@@ -297,8 +333,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Löschen"
           }
         },
         "en" : {
@@ -309,8 +345,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Supprimer"
           }
         },
         "it" : {
@@ -326,6 +362,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Delete"
@@ -377,6 +419,12 @@
             "state" : "translated",
             "value" : "Grupy"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Groups"
+          }
         }
       }
     },
@@ -423,6 +471,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Udostępniony"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shared"
           }
         }
       }
@@ -471,6 +525,12 @@
             "state" : "translated",
             "value" : "Nikt"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nobody"
+          }
         }
       }
     },
@@ -485,8 +545,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung Korrespondenten anzuschauen."
           }
         },
         "en" : {
@@ -497,8 +557,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Vous n'avez pas l'autorisation de voir les correspondants."
           }
         },
         "it" : {
@@ -514,6 +574,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view correspondents."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view correspondents."
@@ -532,8 +598,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Unzureichende Berechtigungen"
           }
         },
         "en" : {
@@ -544,8 +610,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Permissions insuffisantes"
           }
         },
         "it" : {
@@ -561,6 +627,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Insufficient permissions"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Insufficient permissions"
@@ -579,8 +651,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Dokumenten."
           }
         },
         "en" : {
@@ -591,8 +663,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Vous n'avez pas l'autorisation de consulter les documents."
           }
         },
         "it" : {
@@ -608,6 +680,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view documents."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view documents."
@@ -626,8 +704,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Dokumenttypen."
           }
         },
         "en" : {
@@ -638,8 +716,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Vous n'avez pas le droit d'afficher les types de documents."
           }
         },
         "it" : {
@@ -655,6 +733,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view document types."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view document types."
@@ -673,8 +757,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Gruppen."
           }
         },
         "en" : {
@@ -685,8 +769,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Vous n'avez pas la permission de voir les groupes."
           }
         },
         "it" : {
@@ -702,6 +786,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view groups."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view groups."
@@ -720,8 +810,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Notizen."
           }
         },
         "en" : {
@@ -732,8 +822,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Vous n'avez pas la permission de voir les notes du document."
           }
         },
         "it" : {
@@ -749,6 +839,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don’t have permission to view document notes."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don’t have permission to view document notes."
@@ -767,8 +863,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von gespeicherten Ansichten."
           }
         },
         "en" : {
@@ -779,8 +875,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Vous n'avez pas l'autorisation de consulter les vues enregistrées."
           }
         },
         "it" : {
@@ -796,6 +892,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view saved views."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view saved views."
@@ -814,8 +916,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Speicherpläne."
           }
         },
         "en" : {
@@ -826,8 +928,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Vous n'avez pas le droit d'afficher les chemins de stockage."
           }
         },
         "it" : {
@@ -843,6 +945,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view storage paths."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view storage paths."
@@ -861,8 +969,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Tags."
           }
         },
         "en" : {
@@ -873,8 +981,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Vous n'avez pas l'autorisation de voir les tags."
           }
         },
         "it" : {
@@ -890,6 +998,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view tags."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view tags."
@@ -908,8 +1022,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Aufgaben."
           }
         },
         "en" : {
@@ -920,8 +1034,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Vous n'avez pas la permission de voir les tâches."
           }
         },
         "it" : {
@@ -937,6 +1051,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don’t have permission to view tasks."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don’t have permission to view tasks."
@@ -955,8 +1075,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von UI-Einstellungen."
           }
         },
         "en" : {
@@ -967,8 +1087,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Vous n'avez pas le droit d'afficher les paramètres de l'interface utilisateur."
           }
         },
         "it" : {
@@ -984,6 +1104,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view UI settings."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view UI settings."
@@ -1002,8 +1128,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Benutzern."
           }
         },
         "en" : {
@@ -1014,8 +1140,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Vous n'avez pas le droit de voir les utilisateurs."
           }
         },
         "it" : {
@@ -1031,6 +1157,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view users."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view users."
@@ -1082,6 +1214,12 @@
             "state" : "translated",
             "value" : "Właściciel"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Owner"
+          }
         }
       }
     },
@@ -1129,6 +1267,12 @@
             "state" : "translated",
             "value" : "Prywatny"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Private"
+          }
         }
       }
     },
@@ -1143,8 +1287,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Privat* weist auf einen Benutzer oder eine Gruppe hin, für die du keine Zugriffsrechte hast."
           }
         },
         "en" : {
@@ -1155,8 +1299,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Privé* indique un utilisateur ou un groupe que vous n'avez pas le droit de voir."
           }
         },
         "it" : {
@@ -1172,6 +1316,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "*Private* indicates a user or group that you do not have permissions to view."
@@ -1190,8 +1340,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Ressource"
           }
         },
         "en" : {
@@ -1202,8 +1352,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Ressources"
           }
         },
         "it" : {
@@ -1219,6 +1369,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Resource"
@@ -1237,8 +1393,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "App-Konfiguration"
           }
         },
         "en" : {
@@ -1249,8 +1405,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "Configuration de l'application"
           }
         },
         "it" : {
@@ -1266,6 +1422,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "App config"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "App config"
@@ -1284,8 +1446,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -1296,8 +1458,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Champ personnalisé"
           }
         },
         "it" : {
@@ -1313,6 +1475,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Custom field"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Custom field"
@@ -1331,8 +1499,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Verlauf"
           }
         },
         "en" : {
@@ -1343,8 +1511,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Historique"
           }
         },
         "it" : {
@@ -1360,6 +1528,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "History"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "History"
@@ -1378,8 +1552,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "Mail-Konto"
           }
         },
         "en" : {
@@ -1390,8 +1564,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "Compte de messagerie"
           }
         },
         "it" : {
@@ -1407,6 +1581,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mail account"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Mail account"
@@ -1425,8 +1605,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Mail-Regel"
           }
         },
         "en" : {
@@ -1437,8 +1617,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Règle de courriel"
           }
         },
         "it" : {
@@ -1454,6 +1634,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mail rule"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Mail rule"
@@ -1472,8 +1658,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Link teilen"
           }
         },
         "en" : {
@@ -1484,8 +1670,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Lien partagé"
           }
         },
         "it" : {
@@ -1501,6 +1687,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share link"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Share link"
@@ -1519,7 +1711,7 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Workflow"
           }
         },
@@ -1531,8 +1723,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "Flux de travail"
           }
         },
         "it" : {
@@ -1548,6 +1740,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Workflow"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Workflow"
@@ -1599,6 +1797,12 @@
             "state" : "translated",
             "value" : "Uprawnienia"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Permissions"
+          }
         }
       }
     },
@@ -1645,6 +1849,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokumenty bez właściciela mogą być przeglądane i edytowane przez wszystkich użytkowników"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Objects without an owner can be viewed and edited by all users"
           }
         }
       }
@@ -1693,6 +1903,12 @@
             "state" : "translated",
             "value" : "Użytkownicy"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Users"
+          }
         }
       }
     },
@@ -1707,8 +1923,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (du)"
           }
         },
         "en" : {
@@ -1719,8 +1935,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (vous)"
           }
         },
         "it" : {
@@ -1736,6 +1952,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ (you)"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%@ (you)"
@@ -1786,6 +2008,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyświetlanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View"
           }
         }
       }

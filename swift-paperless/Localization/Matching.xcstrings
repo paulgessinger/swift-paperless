@@ -45,6 +45,12 @@
             "state" : "translated",
             "value" : "Algorytm dopasowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Matching algorithm"
+          }
         }
       }
     },
@@ -91,6 +97,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wszystkie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All"
           }
         }
       }
@@ -139,6 +151,12 @@
             "state" : "translated",
             "value" : "Dowolny"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any"
+          }
         }
       }
     },
@@ -185,6 +203,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatyczny"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Auto"
           }
         }
       }
@@ -233,6 +257,12 @@
             "state" : "translated",
             "value" : "Dokładny"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exact"
+          }
         }
       }
     },
@@ -279,6 +309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rozmyte"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fuzzy"
           }
         }
       }
@@ -327,6 +363,12 @@
             "state" : "translated",
             "value" : "Brak"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
         }
       }
     },
@@ -373,6 +415,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyrażenie regularne"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RegEx"
           }
         }
       }
@@ -421,6 +469,12 @@
             "state" : "translated",
             "value" : "Nieuwzględniający wielkości liter"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Case insensitive"
+          }
         }
       }
     },
@@ -467,6 +521,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokument zawiera wszystkie poniższe słowa (oddzielone spacją)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains all of these words (space separated)"
           }
         }
       }
@@ -515,6 +575,12 @@
             "state" : "translated",
             "value" : "Dokument zawiera dowolne z tych słów (oddzielone spacją)"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains any of these words (space separated)"
+          }
         }
       }
     },
@@ -561,6 +627,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ucz się dopasowywać automatycznie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Learn matching automatically"
           }
         }
       }
@@ -609,6 +681,12 @@
             "state" : "translated",
             "value" : "Dokument zawiera ten ciąg znaków"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains this string"
+          }
         }
       }
     },
@@ -655,6 +733,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokument zawiera słowo podobne do tego słowa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document contains a word similar to this word"
           }
         }
       }
@@ -703,6 +787,12 @@
             "state" : "translated",
             "value" : "Brak automatycznego dopasowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No automatic matching"
+          }
         }
       }
     },
@@ -749,6 +839,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokument pasuje do tego wyrażenia regularnego"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document matches this regular expression"
           }
         }
       }
@@ -797,6 +893,12 @@
             "state" : "translated",
             "value" : "Wzorzec dopasowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pattern"
+          }
         }
       }
     },
@@ -843,6 +945,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dopasowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Matching"
           }
         }
       }

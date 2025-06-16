@@ -45,6 +45,12 @@
             "state" : "translated",
             "value" : "Dodaj"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add"
+          }
         }
       }
     },
@@ -93,6 +99,12 @@
             "state" : "translated",
             "value" : "Wszystkie dokumenty"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All documents"
+          }
         }
       }
     },
@@ -139,6 +151,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inny"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
           }
         }
       }
@@ -188,6 +206,12 @@
             "state" : "translated",
             "value" : "Żądany \"%@\" nie jest dostępny przy użyciu uwierzytelnionych poświadczeń. W wielu przypadkach jest to błąd uprawnień. "
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. "
+          }
         }
       }
     },
@@ -236,6 +260,12 @@
             "state" : "translated",
             "value" : "Brak dostępu: %@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No access: %@"
+          }
         }
       }
     },
@@ -281,6 +311,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Paperless"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Paperless"
           }
         }
@@ -330,6 +366,12 @@
             "state" : "translated",
             "value" : "Rosnąco"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ascending"
+          }
         }
       }
     },
@@ -375,6 +417,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "ASN"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "ASN"
           }
         }
@@ -424,6 +472,12 @@
             "state" : "translated",
             "value" : "ASN:"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ASN:"
+          }
         }
       }
     },
@@ -469,6 +523,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "ASN: %u"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "ASN: %u"
           }
         }
@@ -518,6 +578,12 @@
             "state" : "translated",
             "value" : "Wstecz"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Back"
+          }
         }
       }
     },
@@ -564,6 +630,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anuluj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cancel"
           }
         }
       }
@@ -612,6 +684,12 @@
             "state" : "translated",
             "value" : "Wyczyść filtry"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear filters"
+          }
         }
       }
     },
@@ -659,6 +737,12 @@
             "state" : "translated",
             "value" : "Wyczyść tekst"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear text"
+          }
         }
       }
     },
@@ -705,6 +789,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kolor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Color"
           }
         }
       }
@@ -754,6 +844,12 @@
             "state" : "translated",
             "value" : "Dowolny"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any"
+          }
         }
       }
     },
@@ -800,6 +896,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Na pewno?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Are you sure?"
           }
         }
       }
@@ -848,6 +950,12 @@
             "state" : "translated",
             "value" : "Skopiowane do schowka"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copied to clipboard"
+          }
         }
       }
     },
@@ -894,6 +1002,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kopiuj do schowka"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Copy to clipboard"
           }
         }
       }
@@ -942,6 +1056,12 @@
             "state" : "translated",
             "value" : "Korespondent"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Correspondent"
+          }
         }
       }
     },
@@ -988,6 +1108,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utwórz korespondenta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create correspondent"
           }
         }
       }
@@ -1036,6 +1162,12 @@
             "state" : "translated",
             "value" : "Edytuj korespondenta"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit correspondent"
+          }
         }
       }
     },
@@ -1082,6 +1214,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyklucz korespondenta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude correspondent"
           }
         }
       }
@@ -1131,6 +1269,12 @@
             "state" : "translated",
             "value" : "Żaden"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
         }
       }
     },
@@ -1179,6 +1323,12 @@
             "state" : "translated",
             "value" : "Nieprzypisany"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
+          }
         }
       }
     },
@@ -1225,6 +1375,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Korespondenci"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Correspondents"
           }
         }
       }
@@ -1274,6 +1430,12 @@
             "state" : "translated",
             "value" : "Brak tagów"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No tags"
+          }
         }
       }
     },
@@ -1320,6 +1482,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieprawidłowy ASN: %u"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid ASN: %u"
           }
         }
       }
@@ -1368,6 +1536,12 @@
             "state" : "translated",
             "value" : "Brak ASN: %@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No ASN: %@"
+          }
         }
       }
     },
@@ -1414,6 +1588,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wpisz ASN"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Type in ASN"
           }
         }
       }
@@ -1462,6 +1642,12 @@
             "state" : "translated",
             "value" : "Błąd przetwarzania odpowiedzi"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Response processing error"
+          }
         }
       }
     },
@@ -1508,6 +1694,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wystąpił błąd przetwarzania odpowiedzi serwera. Dekodowanie %@ nie powiodło się.\n\nMoże się to zdarzyć, jeśli wersja serwera nie jest obsługiwana lub połączenie jest modyfikowane w nieoczekiwany sposób."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
           }
         }
       }
@@ -1556,6 +1748,12 @@
             "state" : "translated",
             "value" : "Usuń"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete"
+          }
         }
       }
     },
@@ -1602,6 +1800,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usuń dokument \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete document \"%@\""
           }
         }
       }
@@ -1650,6 +1854,12 @@
             "state" : "translated",
             "value" : "Malejąco"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Descending"
+          }
         }
       }
     },
@@ -1696,6 +1906,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Szczegóły"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
           }
         }
       }
@@ -1745,6 +1961,12 @@
             "state" : "translated",
             "value" : "Pozostałe opcje"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Menu of more options"
+          }
         }
       }
     },
@@ -1791,6 +2013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odrzuć zmiany"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Discard changes"
           }
         }
       }
@@ -1839,6 +2067,12 @@
             "state" : "translated",
             "value" : "Dokument"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document"
+          }
         }
       }
     },
@@ -1885,6 +2119,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dodaj dokument"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add document"
           }
         }
       }
@@ -1934,6 +2174,12 @@
             "state" : "translated",
             "value" : "#%u"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "#%u"
+          }
         }
       }
     },
@@ -1980,6 +2226,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokument zbyt duży"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document too large"
           }
         }
       }
@@ -2028,6 +2280,12 @@
             "state" : "translated",
             "value" : "Dokument, który próbujesz przesłać, został odrzucony jako zbyt duży. Sprawdź ustawienia Paperless-ngx i/lub odwrotnego proxy."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The document you are trying to upload was rejected as being too large. Please check your Paperless-ngx and/or reverse proxy settings."
+          }
         }
       }
     },
@@ -2074,6 +2332,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usuń dokument"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete document"
           }
         }
       }
@@ -2122,6 +2386,12 @@
             "state" : "translated",
             "value" : "Usunięty"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deleted"
+          }
         }
       }
     },
@@ -2168,6 +2438,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Podgląd"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Preview"
           }
         }
       }
@@ -2216,6 +2492,12 @@
             "state" : "translated",
             "value" : "Już istnieje"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exists"
+          }
         }
       }
     },
@@ -2262,6 +2544,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Data utworzenia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Date created"
           }
         }
       }
@@ -2310,6 +2598,12 @@
             "state" : "translated",
             "value" : "Tytuł"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title"
+          }
         }
       }
     },
@@ -2356,6 +2650,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokumenty"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents"
           }
         }
       }
@@ -2404,6 +2704,12 @@
             "state" : "translated",
             "value" : "Nie można utworzyć strony w pliku PDF"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not create page in PDF"
+          }
         }
       }
     },
@@ -2451,6 +2757,12 @@
             "state" : "translated",
             "value" : "Nie można zapisać pliku PDF"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not save PDF"
+          }
         }
       }
     },
@@ -2465,8 +2777,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigung zum Anzeigen von Dokumenten. Wende dich an deinen Administrator."
           }
         },
         "en" : {
@@ -2477,8 +2789,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Vous n'avez pas l'autorisation de consulter les documents. Veuillez contacter votre administrateur."
           }
         },
         "it" : {
@@ -2494,6 +2806,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You don't have permission to view documents. Please contact your administrator."
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You don't have permission to view documents. Please contact your administrator."
@@ -2545,6 +2863,12 @@
             "state" : "translated",
             "value" : "Typ dokumentu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document type"
+          }
         }
       }
     },
@@ -2591,6 +2915,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utwórz typ dokumentu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create document type"
           }
         }
       }
@@ -2639,6 +2969,12 @@
             "state" : "translated",
             "value" : "Edytuj typ dokumentu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit document type"
+          }
         }
       }
     },
@@ -2685,6 +3021,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyklucz typ dokumentu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude document type"
           }
         }
       }
@@ -2733,6 +3075,12 @@
             "state" : "translated",
             "value" : "Żaden"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
         }
       }
     },
@@ -2779,6 +3127,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieprzypisany"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
           }
         }
       }
@@ -2827,6 +3181,12 @@
             "state" : "translated",
             "value" : "Typy dokumentów"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document types"
+          }
         }
       }
     },
@@ -2873,6 +3233,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Przesyłanie zakończone"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Upload complete"
           }
         }
       }
@@ -2921,6 +3287,12 @@
             "state" : "translated",
             "value" : "Błąd przesyłania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Upload error"
+          }
         }
       }
     },
@@ -2947,8 +3319,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Utiliser le nom de fichier original"
           }
         },
         "it" : {
@@ -2964,6 +3336,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use original filename"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Use original filename"
@@ -3015,6 +3393,12 @@
             "state" : "translated",
             "value" : "Zrobione"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Done"
+          }
         }
       }
     },
@@ -3062,6 +3446,12 @@
             "state" : "translated",
             "value" : "Edytuj"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit"
+          }
         }
       }
     },
@@ -3108,6 +3498,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Element jest zaznaczony"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element is selected"
           }
         }
       }
@@ -3157,6 +3553,12 @@
             "state" : "translated",
             "value" : "Tryb zaznaczania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Selection mode"
+          }
         }
       }
     },
@@ -3203,6 +3605,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error"
           }
         }
       }
@@ -3251,6 +3659,12 @@
             "state" : "translated",
             "value" : "Dotknij, aby zobaczyć szczegóły!"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tap for details!"
+          }
         }
       }
     },
@@ -3297,6 +3711,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wystąpił błąd"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "An unexpected error occurred"
           }
         }
       }
@@ -3346,6 +3766,12 @@
             "state" : "translated",
             "value" : "Dodatkowe informacje"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More info"
+          }
         }
       }
     },
@@ -3394,6 +3820,12 @@
             "state" : "translated",
             "value" : "Wyklucz elementy"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude element"
+          }
         }
       }
     },
@@ -3441,6 +3873,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filtrowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Filtering"
           }
         }
       }
@@ -3585,6 +4023,24 @@
               }
             }
           }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u filter applied"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u filters applied"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -3632,6 +4088,12 @@
             "state" : "translated",
             "value" : "Grupa"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Group"
+          }
         }
       }
     },
@@ -3646,8 +4108,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Gruppen"
           }
         },
         "en" : {
@@ -3658,8 +4120,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Groupes"
           }
         },
         "it" : {
@@ -3675,6 +4137,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Groups"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Groups"
@@ -3727,6 +4195,12 @@
             "state" : "translated",
             "value" : "Importuj dokument"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import document"
+          }
         }
       }
     },
@@ -3774,6 +4248,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importuj zdjęcia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import photos"
           }
         }
       }
@@ -3823,6 +4303,12 @@
             "state" : "translated",
             "value" : "Uwzględnij element"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Include element"
+          }
         }
       }
     },
@@ -3869,6 +4355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wczytywanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading"
           }
         }
       }
@@ -3917,6 +4409,12 @@
             "state" : "translated",
             "value" : "Wygląda na to, że aplikacja nie może połączyć się z %@. Możesz spróbować zmienić serwer lub wylogować się i zalogować ponownie:"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+          }
         }
       }
     },
@@ -3963,6 +4461,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyloguj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Log out"
           }
         }
       }
@@ -4011,6 +4515,12 @@
             "state" : "translated",
             "value" : "Eksportuj logi"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Export logs"
+          }
         }
       }
     },
@@ -4057,6 +4567,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zbieranie logów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collecting logs"
           }
         }
       }
@@ -4105,6 +4621,12 @@
             "state" : "translated",
             "value" : "Udostępnij logi"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share logs"
+          }
         }
       }
     },
@@ -4151,6 +4673,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Więcej"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More"
           }
         }
       }
@@ -4199,6 +4727,12 @@
             "state" : "translated",
             "value" : "Nazwa"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name"
+          }
         }
       }
     },
@@ -4213,8 +4747,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Nein"
           }
         },
         "en" : {
@@ -4225,8 +4759,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Non"
           }
         },
         "it" : {
@@ -4242,6 +4776,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No"
@@ -4293,6 +4833,12 @@
             "state" : "translated",
             "value" : "Brak dokumentów"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No documents"
+          }
         }
       }
     },
@@ -4339,6 +4885,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bieżący filtr nie pasuje do żadnych dokumentów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your current filter did not match any documents"
           }
         }
       }
@@ -4387,6 +4939,12 @@
             "state" : "translated",
             "value" : "Nie znaleziono żadnych elementów"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No elements found"
+          }
         }
       }
     },
@@ -4434,6 +4992,12 @@
             "state" : "translated",
             "value" : "Brak"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
         }
       }
     },
@@ -4480,6 +5044,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brak zapisanych widoków"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No saved views"
           }
         }
       }
@@ -4624,6 +5194,24 @@
               }
             }
           }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%d tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%d tags"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -4669,6 +5257,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "OK"
           }
         }
@@ -4718,6 +5312,12 @@
             "state" : "translated",
             "value" : "Otwórz"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open"
+          }
         }
       }
     },
@@ -4764,6 +5364,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wszyscy"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All"
           }
         }
       }
@@ -4813,6 +5419,12 @@
             "state" : "translated",
             "value" : "Filtrowanie według określonego użytkownika."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Owner filter is in explicit user mode."
+          }
         }
       }
     },
@@ -4859,6 +5471,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Użytkownicy"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Users"
           }
         }
       }
@@ -4907,6 +5525,12 @@
             "state" : "translated",
             "value" : "Moje dokumenty"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "My documents"
+          }
         }
       }
     },
@@ -4953,6 +5577,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Żaden"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
           }
         }
       }
@@ -5001,6 +5631,12 @@
             "state" : "translated",
             "value" : "Bez właściciela"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
+          }
         }
       }
     },
@@ -5048,6 +5684,12 @@
             "state" : "translated",
             "value" : "Udostępnione mi"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shared with me"
+          }
         }
       }
     },
@@ -5094,6 +5736,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bez właściciela"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unowned"
           }
         }
       }
@@ -5238,6 +5886,24 @@
               }
             }
           }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld pages"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -5284,6 +5950,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ścieżka"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Path"
           }
         }
       }
@@ -5332,6 +6004,12 @@
             "state" : "translated",
             "value" : "Uprawnienia"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Permissions"
+          }
         }
       }
     },
@@ -5378,6 +6056,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd podczas pobierania wybranych zdjęć"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error when receiving picked photos"
           }
         }
       }
@@ -5426,6 +6110,12 @@
             "state" : "translated",
             "value" : "Właściwości"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Properties"
+          }
         }
       }
     },
@@ -5472,6 +6162,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nie można załadować informacji o wersji dla wersji %@. Może się to zdarzyć, jeśli korzystasz z wersji beta."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
           }
         }
       }
@@ -5520,6 +6216,12 @@
             "state" : "translated",
             "value" : "Usuń"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove"
+          }
         }
       }
     },
@@ -5566,6 +6268,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Błąd certyfikatu podczas łączenia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Certificate error while connecting"
           }
         }
       }
@@ -5614,6 +6322,12 @@
             "state" : "translated",
             "value" : "Szczegóły"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Details"
+          }
         }
       }
     },
@@ -5660,6 +6374,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Żądanie zostało odrzucone z powodu niewystarczających uprawnień"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The request was denied due to missing permissions"
           }
         }
       }
@@ -5708,6 +6428,12 @@
             "state" : "translated",
             "value" : "Wystąpił problem ze skonfigurowanym adresem URL."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "There was an error with the configured URL."
+          }
         }
       }
     },
@@ -5754,6 +6480,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpowiedź na żądanie miała nieoczekiwany format"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected format"
           }
         }
       }
@@ -5802,6 +6534,12 @@
             "state" : "translated",
             "value" : "Aplikacja nie otrzymała dostępu do sieci lokalnej."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app has not been granted access to the local network."
+          }
         }
       }
     },
@@ -5848,6 +6586,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeśli używasz *mTLS*, może to oznaczać, że musisz dostarczyć certyfikat klienta lub certyfikat klienta nie został zaakceptowany."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
           }
         }
       }
@@ -5896,6 +6640,12 @@
             "state" : "translated",
             "value" : "Żądanie zostało odrzucone z powodu nieprawidłowych poświadczeń"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The request was rejected due to invalid credentials"
+          }
         }
       }
     },
@@ -5942,6 +6692,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpowiedź na żądanie miała nieoczekiwany status %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The response to a request had an unexpected status %@."
           }
         }
       }
@@ -5990,6 +6746,12 @@
             "state" : "translated",
             "value" : "Serwer nie obsługuje wersji API `%u`, której wymaga ta wersja aplikacji."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+          }
         }
       }
     },
@@ -6036,6 +6798,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zapisz"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Save"
           }
         }
       }
@@ -6084,6 +6852,12 @@
             "state" : "translated",
             "value" : "Zapisany widok"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Saved view"
+          }
         }
       }
     },
@@ -6130,6 +6904,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utwórz zapisany widok"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create saved view"
           }
         }
       }
@@ -6178,6 +6958,12 @@
             "state" : "translated",
             "value" : "Czy na pewno chcesz usunąć %@?"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Are you sure you want to delete %@?"
+          }
         }
       }
     },
@@ -6225,6 +7011,12 @@
             "state" : "translated",
             "value" : "Usuń zapisany widok"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete saved view"
+          }
         }
       }
     },
@@ -6271,6 +7063,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edytuj zapisany widok"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit saved view"
           }
         }
       }
@@ -6320,6 +7118,12 @@
             "state" : "translated",
             "value" : "%@*"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@*"
+          }
         }
       }
     },
@@ -6366,6 +7170,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zapisane widoki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Saved views"
           }
         }
       }
@@ -6415,6 +7225,12 @@
             "state" : "translated",
             "value" : "Edytuj zapisane widoki"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit saved views"
+          }
         }
       }
     },
@@ -6461,6 +7277,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pokaż w panelu bocznym"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show in sidebar"
           }
         }
       }
@@ -6509,6 +7331,12 @@
             "state" : "translated",
             "value" : "Pokaż w kokpicie"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show on dashboard"
+          }
         }
       }
     },
@@ -6555,6 +7383,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skanuj dokument"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan document"
           }
         }
       }
@@ -6603,6 +7437,12 @@
             "state" : "translated",
             "value" : "Wyszukaj"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search"
+          }
         }
       }
     },
@@ -6649,6 +7489,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaawansowane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Advanced"
           }
         }
       }
@@ -6697,6 +7543,12 @@
             "state" : "translated",
             "value" : "Wyczyść wyszukiwanie"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear search"
+          }
         }
       }
     },
@@ -6743,6 +7595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zawartość"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Content"
           }
         }
       }
@@ -6791,6 +7649,12 @@
             "state" : "translated",
             "value" : "Tytuł"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title"
+          }
         }
       }
     },
@@ -6837,6 +7701,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tytuł i treść"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title & Content"
           }
         }
       }
@@ -6885,6 +7755,12 @@
             "state" : "translated",
             "value" : "Wybierz"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Select"
+          }
         }
       }
     },
@@ -6931,6 +7807,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wybrane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Selected"
           }
         }
       }
@@ -6979,6 +7861,12 @@
             "state" : "translated",
             "value" : "Udostępnij"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share"
+          }
         }
       }
     },
@@ -7025,6 +7913,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Link do tej aplikacji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Link to this app"
           }
         }
       }
@@ -7073,6 +7967,12 @@
             "state" : "translated",
             "value" : "Udostępnij link"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share link"
+          }
         }
       }
     },
@@ -7119,6 +8019,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pozostałe aplikacje"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other apps"
           }
         }
       }
@@ -7167,6 +8073,12 @@
             "state" : "translated",
             "value" : "Wystąpił błąd podczas przetwarzania udostępnionego elementu.\n\nNajlepiej byłoby, gdyby tak się nie stało, ale tak się stało!\n\nJeśli chcesz pomóc rozwiązać ten problem, proszę podziel się logami poniżej:"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+          }
         }
       }
     },
@@ -7213,6 +8125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieprawidłowy załącznik"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid attachment"
           }
         }
       }
@@ -7261,6 +8179,12 @@
             "state" : "translated",
             "value" : "Proszę, najpierw zaloguj się w aplikacji!"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Please log in using the app first!"
+          }
         }
       }
     },
@@ -7307,6 +8231,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pokaż właściwości dokumentu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show document properties"
           }
         }
       }
@@ -7355,6 +8285,12 @@
             "state" : "translated",
             "value" : "Sortuj według"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort by"
+          }
         }
       }
     },
@@ -7401,6 +8337,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sortowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sorting"
           }
         }
       }
@@ -7449,6 +8391,12 @@
             "state" : "translated",
             "value" : "Menu sortowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort menu"
+          }
         }
       }
     },
@@ -7495,6 +8443,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kolejność sortowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort order"
           }
         }
       }
@@ -7543,6 +8497,12 @@
             "state" : "translated",
             "value" : "Data dodania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Added"
+          }
         }
       }
     },
@@ -7589,6 +8549,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Data utworzenia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Created"
           }
         }
       }
@@ -7637,6 +8603,12 @@
             "state" : "translated",
             "value" : "Data modyfikacji"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Modified"
+          }
         }
       }
     },
@@ -7683,6 +8655,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notatki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notes"
           }
         }
       }
@@ -7731,6 +8709,12 @@
             "state" : "translated",
             "value" : "Właściciel"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Owner"
+          }
         }
       }
     },
@@ -7757,8 +8741,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Nombre de pages"
           }
         },
         "it" : {
@@ -7774,6 +8758,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page count"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Page count"
@@ -7825,6 +8815,12 @@
             "state" : "translated",
             "value" : "Dopasowanie"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search score"
+          }
         }
       }
     },
@@ -7871,6 +8867,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ścieżka składowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Storage path"
           }
         }
       }
@@ -7919,6 +8921,12 @@
             "state" : "translated",
             "value" : "Ścieżka składowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Storage path"
+          }
         }
       }
     },
@@ -7965,6 +8973,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utwórz ścieżkę składowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create storage path"
           }
         }
       }
@@ -8013,6 +9027,12 @@
             "state" : "translated",
             "value" : "Edytuj ścieżkę składowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit storage path"
+          }
         }
       }
     },
@@ -8059,6 +9079,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyklucz ścieżkę składowania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude storage path"
           }
         }
       }
@@ -8107,6 +9133,12 @@
             "state" : "translated",
             "value" : "Zobacz [dokumentację](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "See [the documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
+          }
         }
       }
     },
@@ -8153,6 +9185,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Żadna"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
           }
         }
       }
@@ -8201,6 +9239,12 @@
             "state" : "translated",
             "value" : "Domyślna"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default"
+          }
         }
       }
     },
@@ -8248,6 +9292,12 @@
             "state" : "translated",
             "value" : "Ścieżki składowania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Storage paths"
+          }
         }
       }
     },
@@ -8293,6 +9343,12 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Tag"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Tag"
           }
         }
@@ -8342,6 +9398,12 @@
             "state" : "translated",
             "value" : "Dodaj tag"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add tag"
+          }
         }
       }
     },
@@ -8388,6 +9450,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Losowy kolor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Random color"
           }
         }
       }
@@ -8436,6 +9504,12 @@
             "state" : "translated",
             "value" : "Utwórz tag"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create tag"
+          }
         }
       }
     },
@@ -8482,6 +9556,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edytuj tag"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit tag"
           }
         }
       }
@@ -8530,6 +9610,12 @@
             "state" : "translated",
             "value" : "Wyklucz tag"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exclude tag"
+          }
         }
       }
     },
@@ -8576,6 +9662,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag wykluczony"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag excluded"
           }
         }
       }
@@ -8624,6 +9716,12 @@
             "state" : "translated",
             "value" : "Tag uwzględniony"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag included"
+          }
         }
       }
     },
@@ -8670,6 +9768,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag skrzynki odbiorczej"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Inbox tag"
           }
         }
       }
@@ -8718,6 +9822,12 @@
             "state" : "translated",
             "value" : "Tag nie został wybrany"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag is not selected"
+          }
         }
       }
     },
@@ -8764,6 +9874,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tag został wybrany"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag is selected"
           }
         }
       }
@@ -8812,6 +9928,12 @@
             "state" : "translated",
             "value" : "Nazwa tagu"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag name"
+          }
         }
       }
     },
@@ -8858,6 +9980,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tagi"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tags"
           }
         }
       }
@@ -8906,6 +10034,12 @@
             "state" : "translated",
             "value" : "Wszystkie tagi"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All tags"
+          }
         }
       }
     },
@@ -8952,6 +10086,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dowolny tag"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any tag"
           }
         }
       }
@@ -9001,6 +10141,12 @@
             "state" : "translated",
             "value" : "Dowolny"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Any"
+          }
         }
       }
     },
@@ -9047,6 +10193,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tryb filtrowania tagów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tag filter mode"
           }
         }
       }
@@ -9095,6 +10247,12 @@
             "state" : "translated",
             "value" : "Żaden"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
         }
       }
     },
@@ -9142,6 +10300,12 @@
             "state" : "translated",
             "value" : "Nieprzypisany"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not assigned"
+          }
         }
       }
     },
@@ -9188,6 +10352,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usuń tagi skrzynki odbiorczej"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove inbox tags"
           }
         }
       }
@@ -9332,6 +10502,24 @@
               }
             }
           }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u pending task"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%u pending tasks"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -9378,6 +10566,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Przetwarzanie \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Processing \"%@\""
           }
         }
       }
@@ -9426,6 +10620,12 @@
             "state" : "translated",
             "value" : "Tytuł"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title"
+          }
         }
       }
     },
@@ -9473,6 +10673,12 @@
             "state" : "translated",
             "value" : "ASN"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ASN"
+          }
         }
       }
     },
@@ -9487,8 +10693,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "UI-Einstellungen"
           }
         },
         "en" : {
@@ -9499,8 +10705,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "Paramètres de l'interface utilisateur"
           }
         },
         "it" : {
@@ -9516,6 +10722,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "UI Settings"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "UI Settings"
@@ -9567,6 +10779,12 @@
             "state" : "translated",
             "value" : "Użytkownik"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "User"
+          }
         }
       }
     },
@@ -9581,8 +10799,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Benutzer"
           }
         },
         "en" : {
@@ -9593,8 +10811,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Utilisateurs"
           }
         },
         "it" : {
@@ -9610,6 +10828,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Users"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Users"
@@ -9628,8 +10852,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Ja"
           }
         },
         "en" : {
@@ -9640,8 +10864,8 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Oui"
           }
         },
         "it" : {
@@ -9657,6 +10881,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Yes"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Yes"
