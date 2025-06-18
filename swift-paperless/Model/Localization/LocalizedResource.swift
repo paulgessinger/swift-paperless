@@ -90,3 +90,10 @@ extension UISettings: LocalizedResource {
 
     static var localizedNoViewPermissions: String { String(localized: .permissions(.noViewPermissionsUISettings)) }
 }
+
+extension CustomField: LocalizedResource {
+    static var localizedName: String { String(localized: .localizable(.customField)) }
+    static var localizedNamePlural: String { String(localized: .localizable(.customFields)) }
+
+    static var localizedNoViewPermissions: String { String(localized: .permissions(.noViewPermissionsCustomFields)) }
+}

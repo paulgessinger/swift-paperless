@@ -587,6 +587,17 @@
         }
       }
     },
+    "noViewPermissionsCustomFields" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don’t have permissions to view custom fields."
+          }
+        }
+      }
+    },
     "noViewPermissionsDisplayTitle" : {
       "extractionState" : "manual",
       "localizations" : {

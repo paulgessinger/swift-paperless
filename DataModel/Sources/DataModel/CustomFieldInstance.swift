@@ -14,12 +14,12 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
 
     case string(String)
     case boolean(Bool)
-    case date(Date)
+    case date(Date?)
     case select(CustomField.SelectOption?)
     case documentLink([UInt])
     case url(URL?)
-    case integer(Int)
-    case float(Double)
+    case integer(Int?)
+    case float(Double?)
     case monetary(currency: String, amount: Decimal)
     case invalid(InvalidReason)
 
@@ -43,7 +43,7 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
             .boolean(value)
 
         case let .date(value):
-            .string(CustomFieldInstance.dateFormatter.string(from: value))
+            value.map { .string(CustomFieldInstance.dateFormatter.string(from: $0)) } ?? .none
 
         case let .select(value):
             value.map { .string($0.id) } ?? .none
@@ -58,10 +58,10 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
             .string(CustomFieldValue.formatMonetary(currency: currency, amount: amount))
 
         case let .integer(value):
-            .integer(value)
+            value.map { .integer($0) } ?? .none
 
         case let .float(value):
-            .float(value)
+            value.map { .float($0) } ?? .none
 
         case .invalid:
             .unknown
@@ -85,6 +85,33 @@ public struct CustomFieldInstance: Sendable, Hashable {
     public init(field: CustomField, value: CustomFieldValue) {
         self.field = field
         self.value = value
+    }
+
+    public init(field: CustomField, locale: Locale) {
+        self.field = field
+        switch field.dataType {
+        case .string:
+            value = .string("")
+        case .boolean:
+            value = .boolean(false)
+        case .date:
+            value = .date(nil)
+        case .select:
+            value = .select(nil)
+        case .documentLink:
+            value = .documentLink([])
+        case .url:
+            value = .url(nil)
+        case .integer:
+            value = .integer(nil)
+        case .float:
+            value = .float(nil)
+        case .monetary:
+            let currency = field.extraData.defaultCurrency ?? locale.currency?.identifier ?? ""
+            value = .monetary(currency: currency, amount: 0)
+        case .other:
+            value = .invalid(.unknownDataType(field.dataType.rawValue))
+        }
     }
 
     public var isValid: Bool {

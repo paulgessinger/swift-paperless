@@ -42,14 +42,83 @@ private struct InvalidFieldView: View {
     }
 }
 
-struct CustomFieldEditView: View {
+private struct AddCustomFieldView: View {
+    @Binding var customFields: [CustomFieldInstance]
+    @EnvironmentObject var store: DocumentStore
+    @EnvironmentObject var errorController: ErrorController
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var searchText: String = ""
+
+    private var availableFields: [CustomField] {
+        store.customFields
+            .map(\.value)
+            .filter { field in
+                !customFields.contains(where: {
+                    $0.field.id == field.id
+                })
+            }
+            .filter { field in
+                searchText.isEmpty || field.name.localizedCaseInsensitiveContains(searchText)
+            }
+            .sorted(by: { $0.name < $1.name })
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                if !store.permissions.test(.view, for: .customField) {
+                    ContentUnavailableView(String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+                                           systemImage: "lock.fill",
+                                           description: Text(Tag.localizedNoViewPermissions))
+                } else if availableFields.isEmpty {
+                    if !searchText.isEmpty {
+                        ContentUnavailableView.search
+                    } else {
+                        ContentUnavailableView(String(localized: .customFields(.noCustomFields)),
+                                               systemImage: "tray.fill",
+                                               description: Text(.customFields(.noCustomFieldsDescription)))
+                    }
+                } else {
+                    List {
+                        ForEach(availableFields) { field in
+                            Button(field.name) {
+//                                let instance = CustomFieldInstance(field: field, value: .defaultValue(for: field))
+                            }
+                        }
+                    }
+                }
+            }
+            .animation(.spring, value: availableFields)
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always),
+                        prompt: .customFields(.searchPlaceholder))
+
+            .navigationTitle(.customFields(.addTitle))
+            .navigationBarTitleDisplayMode(.inline)
+        }
+
+        .task {
+            do {
+                try await store.fetchAllCustomFields()
+            } catch {
+//                Logger.shared.error("Error fetching custom fields: \(error, privacy: .public)")
+                errorController.push(error: error)
+            }
+        }
+    }
+}
+
+struct CustomFieldsEditView: View {
     @Binding var document: Document
     @State private var customFields: [CustomFieldInstance] = []
 
     @EnvironmentObject var store: DocumentStore
     @Environment(\.locale) private var locale
 
-    init(document: Binding<Document>, store _: DocumentStore) {
+    @State private var showAddSheet = false
+
+    init(document: Binding<Document>) {
         _document = document
     }
 
@@ -132,6 +201,26 @@ struct CustomFieldEditView: View {
                 }
             }
         }
+
+        .navigationTitle(.customFields(.title))
+        .navigationBarTitleDisplayMode(.inline)
+
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showAddSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .accessibilityLabel(.localizable(.add))
+                }
+                .accessibilityAddTraits(.isButton)
+            }
+        }
+
+        .sheet(isPresented: $showAddSheet) {
+            AddCustomFieldView(customFields: $customFields)
+        }
+
         .task {
             if customFields.isEmpty {
                 customFields = [CustomFieldInstance].fromRawEntries(
@@ -148,113 +237,138 @@ struct CustomFieldEditView: View {
 
 // - MARK: Previews
 
-private struct PreviewHelper: View {
-    @EnvironmentObject var store: DocumentStore
-    @State var document: Document?
-    @State var navPath = NavigationPath()
+private let customFields = [
+    CustomField(id: 1, name: "Custom float", dataType: .float),
+    CustomField(id: 2, name: "Custom bool", dataType: .boolean),
+    CustomField(id: 4, name: "Custom integer", dataType: .integer),
+    CustomField(id: 7, name: "Custom string", dataType: .string),
+    CustomField(id: 3, name: "Custom date", dataType: .date),
+    CustomField(id: 6, name: "Local currency", dataType: .monetary), // No default currency
+    CustomField(
+        id: 5, name: "Default USD", dataType: .monetary,
+        extraData: .init(defaultCurrency: "USD")
+    ), // Default currency
+    CustomField(id: 8, name: "Custom url", dataType: .url),
+    CustomField(id: 9, name: "Custom doc link", dataType: .documentLink),
+    CustomField(
+        id: 10, name: "Custom select", dataType: .select,
+        extraData: .init(selectOptions: [
+            .init(id: "aa", label: "Option A"),
+            .init(id: "bb", label: "Option B"),
+            .init(id: "cc", label: "Option C"),
+        ])
+    ),
+    CustomField(id: 11, name: "Unknown field", dataType: .other("plumbus")),
+]
 
-    let instances: [CustomFieldInstance]
-    let customFields: [CustomField]
+private let instances = [
+    // Invalid because we don't understand the field data type
+    CustomFieldInstance(field: customFields[10], value: .float(123.45)),
+    // Invalid because we don't understand the value that came from the backend
+    CustomFieldInstance(field: customFields[3], value: .invalid(.unknownValue)),
+    // Invalid because the type we got from the backend is not what we expected
+    CustomFieldInstance(field: customFields[2], value: .float(123.45)),
 
-    init() {
-        customFields = [
-            CustomField(id: 1, name: "Custom float", dataType: .float),
-            CustomField(id: 2, name: "Custom bool", dataType: .boolean),
-            CustomField(id: 4, name: "Custom integer", dataType: .integer),
-            CustomField(id: 7, name: "Custom string", dataType: .string),
-            CustomField(id: 3, name: "Custom date", dataType: .date),
-            CustomField(id: 6, name: "Local currency", dataType: .monetary), // No default currency
-            CustomField(
-                id: 5, name: "Default USD", dataType: .monetary,
-                extraData: .init(defaultCurrency: "USD")
-            ), // Default currency
-            CustomField(id: 8, name: "Custom url", dataType: .url),
-            CustomField(id: 9, name: "Custom doc link", dataType: .documentLink),
-            CustomField(
-                id: 10, name: "Custom select", dataType: .select,
-                extraData: .init(selectOptions: [
-                    .init(id: "aa", label: "Option A"),
-                    .init(id: "bb", label: "Option B"),
-                    .init(id: "cc", label: "Option C"),
-                ])
-            ),
-            CustomField(id: 11, name: "Unknown field", dataType: .other("plumbus")),
-        ]
+    CustomFieldInstance(field: customFields[8], value: .documentLink([])),
+    CustomFieldInstance(
+        field: customFields[9], value: .select(.init(id: "bb", label: "Option B"))
+    ),
+    CustomFieldInstance(field: customFields[0], value: .float(123.45)),
+    CustomFieldInstance(field: customFields[1], value: .boolean(true)),
+    CustomFieldInstance(field: customFields[2], value: .integer(123)),
+    CustomFieldInstance(field: customFields[3], value: .string("Hello")),
+    CustomFieldInstance(field: customFields[4], value: .date(Date())),
+    CustomFieldInstance(
+        field: customFields[5], value: .monetary(currency: "USD", amount: 1000.00)
+    ),
+    CustomFieldInstance(
+        field: customFields[6], value: .monetary(currency: "CHF", amount: 1000.00)
+    ),
+    CustomFieldInstance(
+        field: customFields[7], value: .url(#URL("https://www.google.com"))
+    ),
+]
 
-        instances = [
-            // Invalid because we don't understand the field data type
-            CustomFieldInstance(field: customFields[10], value: .float(123.45)),
-            // Invalid because we don't understand the value that came from the backend
-            CustomFieldInstance(field: customFields[3], value: .invalid(.unknownValue)),
-            // Invalid because the type we got from the backend is not what we expected
-            CustomFieldInstance(field: customFields[2], value: .float(123.45)),
-
-            CustomFieldInstance(field: customFields[8], value: .documentLink([])),
-            CustomFieldInstance(
-                field: customFields[9], value: .select(.init(id: "bb", label: "Option B"))
-            ),
-            CustomFieldInstance(field: customFields[0], value: .float(123.45)),
-            CustomFieldInstance(field: customFields[1], value: .boolean(true)),
-            CustomFieldInstance(field: customFields[2], value: .integer(123)),
-            CustomFieldInstance(field: customFields[3], value: .string("Hello")),
-            CustomFieldInstance(field: customFields[4], value: .date(Date())),
-            CustomFieldInstance(
-                field: customFields[5], value: .monetary(currency: "USD", amount: 1000.00)
-            ),
-            CustomFieldInstance(
-                field: customFields[6], value: .monetary(currency: "CHF", amount: 1000.00)
-            ),
-            CustomFieldInstance(
-                field: customFields[7], value: .url(#URL("https://www.google.com"))
-            ),
-        ]
+@MainActor
+private func getDocument(store: DocumentStore) async throws -> Document? {
+    let repository = store.repository as! TransientRepository
+    await repository.addUser(
+        User(id: 1, isSuperUser: false, username: "user", groups: [1]))
+    try? await repository.login(userId: 1)
+    for field in customFields {
+        _ = try await repository.add(customField: field)
     }
-
-    var body: some View {
-        NavigationStack {
-            // ScrollView {
-            if document != nil {
-                CustomFieldEditView(document: Binding($document)!, store: store)
-            }
-            // }
-        }
-        .task {
-            do {
-                let repository = store.repository as! TransientRepository
-                await repository.addUser(
-                    User(id: 1, isSuperUser: false, username: "user", groups: [1]))
-                try? await repository.login(userId: 1)
-                for field in customFields {
-                    _ = try await repository.add(customField: field)
-                }
-                try await store.fetchAll()
-                try await store.repository.create(
-                    document: ProtoDocument(title: "blubb"),
-                    file: #URL("http://example.com"), filename: "blubb.pdf"
-                )
-                var document = try await store.repository.documents(filter: .default).fetch(
-                    limit: 100_000
-                ).first { $0.title == "blubb" }
-
-                document?.customFields = instances.rawEntries
-
-                self.document = document
-                // print(document!)
-            } catch { print(error) }
-        }
-    }
+    try await store.fetchAll()
+    try await store.repository.create(
+        document: ProtoDocument(title: "blubb"),
+        file: #URL("http://example.com"), filename: "blubb.pdf"
+    )
+    return try await store.repository.documents(filter: .default).fetch(
+        limit: 100_000
+    ).first { $0.title == "blubb" }
 }
 
 #Preview("Fully equipped") {
     @Previewable
     @StateObject var store = DocumentStore(repository: TransientRepository())
+
     @Previewable
     @StateObject var errorController = ErrorController()
 
-    return PreviewHelper()
-        .environmentObject(store)
-        .environmentObject(errorController)
-        .environment(\.locale, .init(identifier: "en_US"))
+    @Previewable @State var document: Document?
+    @Previewable @State var navPath = NavigationPath()
+
+    NavigationStack {
+        if document != nil {
+            CustomFieldsEditView(document: Binding($document)!)
+                .environmentObject(store)
+                .environmentObject(errorController)
+                .environment(\.locale, .init(identifier: "en_US"))
+        }
+    }
+    .task {
+        do {
+            var thisDocument = try await getDocument(store: store)
+            thisDocument?.customFields = instances.rawEntries
+            document = thisDocument
+        } catch { print(error) }
+    }
+}
+
+#Preview("Empty") {
+    @Previewable
+    @StateObject var store = DocumentStore(repository: TransientRepository())
+
+    @Previewable
+    @StateObject var errorController = ErrorController()
+
+    @Previewable @State var document: Document?
+    @Previewable @State var navPath = NavigationPath()
+
+    NavigationStack {
+        if document != nil {
+            CustomFieldsEditView(document: Binding($document)!)
+                .environmentObject(store)
+                .environmentObject(errorController)
+                .environment(\.locale, .init(identifier: "en_US"))
+        }
+
+        Button("Toggle perms") {
+            Task {
+                let repository = store.repository as! TransientRepository
+                await repository.set(permissions: .full {
+                    $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
+                })
+                try await store.fetchAll()
+            }
+        }
+    }
+    .task {
+        do {
+            document = try await getDocument(store: store)
+
+        } catch { print(error) }
+    }
 }
 
 #Preview("Error display") {

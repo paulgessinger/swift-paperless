@@ -1439,6 +1439,28 @@
         }
       }
     },
+    "customField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom field"
+          }
+        }
+      }
+    },
+    "customFields" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom fields"
+          }
+        }
+      }
+    },
     "dataScannerInvalidAsn" : {
       "extractionState" : "manual",
       "localizations" : {

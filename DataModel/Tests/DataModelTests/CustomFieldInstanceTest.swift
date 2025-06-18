@@ -466,6 +466,64 @@ struct CustomFieldInstanceTest {
         #expect(
             typeMismatch.value == .invalid(.typeMismatch(dataType: .date, value: .boolean(true))))
     }
+
+    @Test("Test initialization with field and locale")
+    func testInitializationWithFieldAndLocale() throws {
+        // Test string field
+        let stringField = try #require(Self.customFields[7])
+        let stringInstance = CustomFieldInstance(field: stringField, locale: Self.locale)
+        #expect(stringInstance.value == .string(""))
+
+        // Test boolean field
+        let boolField = try #require(Self.customFields[2])
+        let boolInstance = CustomFieldInstance(field: boolField, locale: Self.locale)
+        #expect(boolInstance.value == .boolean(false))
+
+        // Test date field
+        let dateField = try #require(Self.customFields[3])
+        let dateInstance = CustomFieldInstance(field: dateField, locale: Self.locale)
+        #expect(dateInstance.value == .date(nil))
+
+        // Test select field
+        let selectField = try #require(Self.customFields[10])
+        let selectInstance = CustomFieldInstance(field: selectField, locale: Self.locale)
+        #expect(selectInstance.value == .select(nil))
+
+        // Test document link field
+        let docLinkField = try #require(Self.customFields[9])
+        let docLinkInstance = CustomFieldInstance(field: docLinkField, locale: Self.locale)
+        #expect(docLinkInstance.value == .documentLink([]))
+
+        // Test URL field
+        let urlField = try #require(Self.customFields[8])
+        let urlInstance = CustomFieldInstance(field: urlField, locale: Self.locale)
+        #expect(urlInstance.value == .url(nil))
+
+        // Test integer field
+        let intField = try #require(Self.customFields[4])
+        let intInstance = CustomFieldInstance(field: intField, locale: Self.locale)
+        #expect(intInstance.value == .integer(nil))
+
+        // Test float field
+        let floatField = try #require(Self.customFields[1])
+        let floatInstance = CustomFieldInstance(field: floatField, locale: Self.locale)
+        #expect(floatInstance.value == .float(nil))
+
+        // Test monetary field with default currency
+        let monetaryField = try #require(Self.customFields[6])
+        let monetaryInstance = CustomFieldInstance(field: monetaryField, locale: Self.locale)
+        #expect(monetaryInstance.value == .monetary(currency: "NOK", amount: 0))
+
+        // Test monetary field without default currency
+        let monetaryField2 = try #require(Self.customFields[5])
+        let monetaryInstance2 = CustomFieldInstance(field: monetaryField2, locale: Self.locale)
+        #expect(monetaryInstance2.value == .monetary(currency: "USD", amount: 0))
+
+        // Test other field type
+        let otherField = CustomField(id: 11, name: "Other field", dataType: .other("unknown"))
+        let otherInstance = CustomFieldInstance(field: otherField, locale: Self.locale)
+        #expect(otherInstance.value == .invalid(.unknownDataType("unknown")))
+    }
 }
 
 @Suite

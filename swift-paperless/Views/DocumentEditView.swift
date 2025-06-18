@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import Common
 import DataModel
 import Networking
 import os
@@ -89,7 +90,7 @@ struct DocumentEditView: View {
     func doDocumentDelete() {
         Task { @MainActor in
             do {
-                Logger.shared.notice("Deleted document from Edit view")
+//                Logger.shared.notice("Deleted document from Edit view")
                 try await store.deleteDocument(document)
                 deleted = true
                 let impact = UIImpactFeedbackGenerator(style: .rigid)
@@ -97,7 +98,7 @@ struct DocumentEditView: View {
                 try await Task.sleep(for: .seconds(0.2))
                 dismiss()
                 if let navPath {
-                    Logger.shared.notice("Pop navigation to root")
+//                    Logger.shared.notice("Pop navigation to root")
                     navPath.wrappedValue.popToRoot()
                 }
             } catch {
@@ -258,6 +259,12 @@ struct DocumentEditView: View {
                 }
 
                 Section {
+                    NavigationLink(.customFields(.title)) {
+                        CustomFieldsEditView(document: $document)
+                    }
+                }
+
+                Section {
                     Button(action: {
                         if appSettings.documentDeleteConfirmation {
                             showDeleteConfirmation = true
@@ -273,19 +280,19 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
                     .disabled(!store.permissions.test(.delete, for: .document))
+
+                    .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
+                                        isPresented: $showDeleteConfirmation,
+                                        titleVisibility: .visible)
+                    {
+                        Button(String(localized: .localizable(.delete)), role: .destructive) {
+                            // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
+                            doDocumentDelete()
+                        }
+                        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+                    }
                 }
                 .animation(.default, value: deleted)
-            }
-
-            .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
-                                isPresented: $showDeleteConfirmation,
-                                titleVisibility: .visible)
-            {
-                Button(String(localized: .localizable(.delete)), role: .destructive) {
-                    // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                    doDocumentDelete()
-                }
-                Button(String(localized: .localizable(.cancel)), role: .cancel) {}
             }
 
             .scrollBounceBehavior(.basedOnSize)
@@ -323,7 +330,7 @@ struct DocumentEditView: View {
                     }
                     try await all
                 } catch {
-                    Logger.shared.error("Error getting suggestions: \(error)")
+//                    Logger.shared.error("Error getting suggestions: \(error)")
                     errorController.push(error: error)
                 }
             }
@@ -334,33 +341,28 @@ struct DocumentEditView: View {
     }
 }
 
-private struct PreviewHelper: View {
-    @EnvironmentObject var store: DocumentStore
-    @State var document: Document?
-    @State var navPath = NavigationPath()
+#Preview {
+    @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+    @Previewable @StateObject var errorController = ErrorController()
+    @Previewable @State var document: Document?
+    @Previewable @State var navPath = NavigationPath()
 
-    var body: some View {
-        VStack {
-            if document != nil {
-                DocumentEditView(store: store, document: Binding($document)!, navPath: $navPath)
-            }
-        }
-        .task {
-            document = try? await store.document(id: 1)
-            guard document != nil else {
-                fatalError()
-            }
+    VStack {
+        if document != nil {
+            DocumentEditView(store: store, document: Binding($document)!, navPath: $navPath)
+                .environmentObject(errorController)
+                .environmentObject(store)
         }
     }
-}
-
-struct DocumentEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-    @StateObject static var errorController = ErrorController()
-
-    static var previews: some View {
-        PreviewHelper()
-            .environmentObject(store)
-            .environmentObject(errorController)
+    .task {
+        do {
+            let repository = store.repository as! TransientRepository
+            await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: []))
+            try? await repository.login(userId: 1)
+            try await store.fetchAll()
+            try await store.repository.create(document: ProtoDocument(title: "blubb"),
+                                              file: #URL("http://example.com"), filename: "blubb.pdf")
+            document = try await store.repository.documents(filter: .default).fetch(limit: 100_000).first { $0.title == "blubb" }
+        } catch { print(error) }
     }
 }

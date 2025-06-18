@@ -30,33 +30,6 @@ struct StringView: View {
     }
 }
 
-struct FloatView: View {
-    @Binding var instance: CustomFieldInstance
-
-    @State private var value: String = ""
-
-    init(instance: Binding<CustomFieldInstance>) {
-        _instance = instance
-        if case let .float(float) = instance.wrappedValue.value {
-            _value = State(initialValue: String(float))
-        }
-    }
-
-    var body: some View {
-        Section(instance.field.name) {
-            TextField(instance.field.name, text: $value)
-                .keyboardType(.decimalPad)
-        }
-        .onChange(of: value) { old, new in
-            guard let val = Double(String(new)) else {
-                value = old // Revert to old value if invalid
-                return
-            }
-            instance.value = .float(val)
-        }
-    }
-}
-
 struct BooleanView: View {
     @Binding var instance: CustomFieldInstance
 
@@ -87,7 +60,8 @@ struct IntegerView: View {
     init(instance: Binding<CustomFieldInstance>) {
         _instance = instance
         if case let .integer(integer) = instance.wrappedValue.value {
-            _value = State(initialValue: String(integer))
+            let val = integer.map { String($0) } ?? ""
+            _value = State(initialValue: val)
         }
     }
 
@@ -96,34 +70,18 @@ struct IntegerView: View {
             TextField(instance.field.name, text: $value)
                 .keyboardType(.numberPad)
         }
-        .onChange(of: value) { old, new in
-            guard let val = Int(String(new)) else {
-                value = old // Revert to old value if invalid
-                return
-            }
-            instance.value = .integer(val)
-        }
-    }
-}
-
-struct DateView: View {
-    @Binding var instance: CustomFieldInstance
-
-    @State private var value: Date = .init()
-
-    init(instance: Binding<CustomFieldInstance>) {
-        _instance = instance
-        if case let .date(date) = instance.wrappedValue.value {
-            _value = State(initialValue: date)
-        }
-    }
-
-    var body: some View {
-        DatePicker(selection: $value, displayedComponents: .date) {
-            Text(instance.field.name)
-        }
-        .onChange(of: value) { _, new in
-            instance.value = .date(new)
+        .onChange(of: value) { _, _ in
+//            guard let val = Int(String(new)) else {
+//                value = old // Revert to old value if invalid
+//                return
+//            }
+//
+//            if val.count == 0 {
+//                instance.value = .integer(nil)
+//            }
+//            else {
+//                instance.value = .integer(val)
+//            }
         }
     }
 }
