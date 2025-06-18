@@ -45,6 +45,12 @@
             "state" : "translated",
             "value" : "Data dodania"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Date added"
+          }
         }
       }
     },
@@ -91,6 +97,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suma kontrolna MD5 pliku archiwalnego"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Archive MD5 checksum"
           }
         }
       }
@@ -139,6 +151,12 @@
             "state" : "translated",
             "value" : "Rozmiar pliku archiwalnego"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Archive file size"
+          }
         }
       }
     },
@@ -185,6 +203,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nazwa pliku"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Media filename"
           }
         }
       }
@@ -233,6 +257,12 @@
             "state" : "translated",
             "value" : "Metadane"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Metadata"
+          }
         }
       }
     },
@@ -280,6 +310,12 @@
             "state" : "translated",
             "value" : "Data modyfikacji"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Date modified"
+          }
         }
       }
     },
@@ -294,8 +330,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Notiz"
           }
         },
         "en" : {
@@ -306,7 +342,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Note"
           }
         },
@@ -323,6 +359,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Note"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Note"
@@ -374,6 +416,12 @@
             "state" : "translated",
             "value" : "Utwórz notatkę"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create note"
+          }
         }
       }
     },
@@ -420,6 +468,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Treść notatki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Note text"
           }
         }
       }
@@ -468,6 +522,12 @@
             "state" : "translated",
             "value" : "Notatki"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notes"
+          }
         }
       }
     },
@@ -514,6 +574,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suma kontrolna MD5 oryginału"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Original MD5 checksum"
           }
         }
       }
@@ -562,6 +628,12 @@
             "state" : "translated",
             "value" : "Nazwa pliku oryginału"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Original filename"
+          }
         }
       }
     },
@@ -609,6 +681,12 @@
             "state" : "translated",
             "value" : "Rozmiar pliku oryginału"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Original file size"
+          }
         }
       }
     },
@@ -655,6 +733,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Typ mime oryginału"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Original mime type"
           }
         }
       }
