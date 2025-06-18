@@ -22,12 +22,6 @@ private struct SearchView: View {
     @State private var searchTask: Task<Void, Never>?
     @Namespace private var namespace
 
-//    init(instance: Binding<CustomFieldInstance>, selected: Binding<[Document]>) {
-//        _instance = instance
-//        _selectedDocuments = selected
-//    }
-//
-
     var body: some View {
         List {
             Section(.customFields(.documentLinkSelectedLabel)) {
@@ -67,7 +61,7 @@ private struct SearchView: View {
         .animation(.spring, value: selected)
         .navigationTitle(instance.field.name)
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: .customFields(.documentLinkSearchPlaceholder))
 
         .onChange(of: searchText) {
             guard searchText.count >= 3 else {
@@ -116,7 +110,7 @@ struct DocumentLinkView: View {
 
         if case let .documentLink(ids) = instance.value {
             Logger.shared.trace("Loading documents for \(ids.count) document links")
-            selected = await withTaskGroup(returning: [Document].self) { group in
+            selected = await withTaskGroup(of: Document?.self, returning: [Document].self) { group in
                 for id in ids {
                     group.addTask {
                         do {
@@ -129,6 +123,8 @@ struct DocumentLinkView: View {
                 }
 
                 var documents = [Document]()
+
+                await group.waitForAll()
 
                 for await document in group {
                     if let document {

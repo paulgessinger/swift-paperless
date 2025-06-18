@@ -12,6 +12,17 @@
         }
       }
     },
+    "documentLinkSearchPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search documents by title"
+          }
+        }
+      }
+    },
     "documentLinkSelectedLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19,6 +30,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selected"
+          }
+        }
+      }
+    },
+    "invalidDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+          }
+        }
+      }
+    },
+    "invalidMonetary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+          }
+        }
+      }
+    },
+    "invalidSelectOption" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The given option with id “%@” is not one of the available options (%@)"
+          }
+        }
+      }
+    },
+    "invalidStateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+          }
+        }
+      }
+    },
+    "invalidStateHeadline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid custom fields"
+          }
+        }
+      }
+    },
+    "invalidUrl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "`%@` is not a valid URL."
+          }
+        }
+      }
+    },
+    "typeMismatch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+          }
+        }
+      }
+    },
+    "unknownDataType" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+          }
+        }
+      }
+    },
+    "unknownValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The given value could not be decoded. This could be an incompatibility between the app and server version."
           }
         }
       }

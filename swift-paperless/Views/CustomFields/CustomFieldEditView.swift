@@ -10,6 +10,38 @@ import DataModel
 import Networking
 import SwiftUI
 
+private struct InvalidFieldView: View {
+    let instance: CustomFieldInstance
+    let reason: CustomFieldValue.InvalidReason
+
+    var body: some View {
+        Group {
+            let text: LocalizedStringResource = switch reason {
+            case let .invalidDate(date):
+                .customFields(.invalidDate(date))
+            case let .invalidURL(url):
+                .customFields(.invalidUrl(url))
+            case let .invalidMonetary(value):
+                .customFields(.invalidMonetary(value))
+            case let .invalidSelectOption(option):
+                .customFields(.invalidSelectOption(option, instance.field.extraData.selectOptions.map(\.label).joined(separator: ", ")))
+            case .unknownValue:
+                .customFields(.unknownValue)
+            case let .unknownDataType(dataType):
+                .customFields(.unknownDataType(dataType))
+            case let .typeMismatch(dataType, rawValue):
+                .customFields(.typeMismatch(dataType.rawValue, String(describing: rawValue)))
+            }
+
+            HStack(alignment: .top) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                Text(text)
+            }
+        }
+        .foregroundStyle(.red)
+    }
+}
+
 struct CustomFieldEditView: View {
     @Binding var document: Document
     @State private var customFields: [CustomFieldInstance] = []
@@ -22,35 +54,10 @@ struct CustomFieldEditView: View {
     }
 
     @ViewBuilder
-    private func invalidFieldView(instance: CustomFieldInstance, reason: CustomFieldValue.InvalidReason) -> some View {
-        // @TODO: Add localized explanations
-        Group {
-            switch reason {
-            case let .invalidDate(date):
-                Text("\(instance.field.name) Invalid date: \(date)")
-            case let .invalidURL(url):
-                Text("\(instance.field.name) Invalid URL: \(url)")
-            case let .invalidMonetary(value):
-                Text("\(instance.field.name) Invalid monetary value: \(value)")
-            case let .invalidSelectOption(option):
-                Text("\(instance.field.name) Invalid select option: \(option)")
-            case .unknownValue:
-                Text("\(instance.field.name) Unknown value type")
-            case let .unknownDataType(dataType):
-                Text("\(instance.field.name) Unknown data type: \(dataType)")
-            case let .typeMismatch(dataType, rawValue):
-                Text("\(instance.field.name) Type mismatch: expected \(String(describing: dataType)) got: \(String(describing: rawValue))")
-            }
-        }
-        .foregroundStyle(.red)
-    }
-
-    @ViewBuilder
     private func fieldView(index: Int, field: Binding<CustomFieldInstance>) throws -> some View {
         if case let .invalid(reason) = field.wrappedValue.value {
-            // @TODO: Make pretty with icon and better text
             Section(field.wrappedValue.field.name) {
-                invalidFieldView(instance: field.wrappedValue, reason: reason)
+                InvalidFieldView(instance: field.wrappedValue, reason: reason)
             }
         } else {
             Group {
@@ -75,7 +82,7 @@ struct CustomFieldEditView: View {
                     SelectView(instance: field)
                 case let .other(dataType):
                     // Theoretically this should never happen because we catch this above if the value is invalid
-                    invalidFieldView(instance: field.wrappedValue, reason: .unknownDataType(dataType))
+                    InvalidFieldView(instance: field.wrappedValue, reason: .unknownDataType(dataType))
                 }
             }
             .swipeActions {
@@ -90,8 +97,12 @@ struct CustomFieldEditView: View {
         Form {
             if customFields.hasInvalidValues {
                 Section {
-                    Text("Has some invalid custom fields, please fix them.")
-                        .foregroundStyle(.red)
+                    VStack {
+                        ContentUnavailableView(.customFields(.invalidStateHeadline),
+                                               systemImage: "exclamationmark.triangle.fill",
+                                               description: Text(.customFields(.invalidStateDescription)))
+                    }
+                    .foregroundStyle(.red)
                 }
             }
 
@@ -244,4 +255,26 @@ private struct PreviewHelper: View {
         .environmentObject(store)
         .environmentObject(errorController)
         .environment(\.locale, .init(identifier: "en_US"))
+}
+
+#Preview("Error display") {
+    let errors: [CustomFieldValue.InvalidReason] = [
+        .invalidDate("abc"),
+        .invalidURL("abc"),
+        .invalidMonetary("abc"),
+        .invalidSelectOption("blubb"),
+        .unknownValue,
+        .unknownDataType("nopetype"),
+        .typeMismatch(dataType: .other("no"), value: .string("yo")),
+    ]
+
+    let instance = CustomFieldInstance(field: CustomField(id: 1, name: "Test", dataType: .string), value: .invalid(.unknownValue))
+
+    Form {
+        ForEach(errors, id: \.self) { error in
+            Section {
+                InvalidFieldView(instance: instance, reason: error)
+            }
+        }
+    }
 }
