@@ -87,8 +87,8 @@ public struct CustomFieldInstance: Sendable, Hashable {
         self.value = value
     }
 
-    public init(field: CustomField, locale: Locale) {
-        self.field = field
+    public static func withDefaultValue(field: CustomField, locale: Locale) -> CustomFieldInstance {
+        let value: CustomFieldValue
         switch field.dataType {
         case .string:
             value = .string("")
@@ -112,6 +112,8 @@ public struct CustomFieldInstance: Sendable, Hashable {
         case .other:
             value = .invalid(.unknownDataType(field.dataType.rawValue))
         }
+
+        return CustomFieldInstance(field: field, value: value)
     }
 
     public var isValid: Bool {
