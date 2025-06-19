@@ -34,6 +34,17 @@
         }
       }
     },
+    "delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
     "documentLinkEmptyLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -129,6 +140,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "`%@` is not a valid URL."
+          }
+        }
+      }
+    },
+    "monetaryAmountPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount"
           }
         }
       }

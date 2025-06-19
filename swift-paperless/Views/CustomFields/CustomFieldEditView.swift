@@ -48,6 +48,7 @@ private struct AddCustomFieldView: View {
     @EnvironmentObject var errorController: ErrorController
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
 
     @State private var searchText: String = ""
 
@@ -84,7 +85,9 @@ private struct AddCustomFieldView: View {
                     List {
                         ForEach(availableFields) { field in
                             Button(field.name) {
-//                                let instance = CustomFieldInstance(field: field, value: .defaultValue(for: field))
+                                let instance = CustomFieldInstance.withDefaultValue(field: field, locale: locale)
+                                customFields.append(instance)
+                                dismiss()
                             }
                         }
                     }
@@ -155,10 +158,16 @@ struct CustomFieldsEditView: View {
                 }
             }
             .swipeActions {
-                Button("Delete") {
-                    print("Delete: \(index)")
+                Button(.customFields(.delete)) {
+                    deleteField(index: index)
                 }
             }
+        }
+    }
+
+    @MainActor private func deleteField(index: Int) {
+        withAnimation {
+            customFields.remove(at: index)
         }
     }
 
