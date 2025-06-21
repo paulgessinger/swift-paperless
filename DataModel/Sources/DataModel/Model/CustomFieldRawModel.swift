@@ -7,11 +7,7 @@
 
 import Foundation
 
-public struct CustomFieldUnknownValue: Error {
-    var debugDescription: String {
-        "Unknown value type, cannot encode because this can lead to data loss"
-    }
-}
+public struct CustomFieldUnknownValue: Error {}
 
 public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
     case string(String)

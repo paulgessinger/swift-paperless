@@ -216,7 +216,7 @@ struct CustomFieldInstanceTest {
         // Test conversion back to raw entries
         let rawEntries2 = instances.map(\.rawEntry)
         #expect(rawEntries2[0].value == .string("https://paperless-ngx.com"))
-        #expect(rawEntries2[1].value == .string(""))
+        #expect(rawEntries2[1].value == .none)
     }
 
     @Test("Test document link field conversion")
@@ -526,14 +526,14 @@ struct CustomFieldInstanceTest {
         let monetaryInstance = CustomFieldInstance.withDefaultValue(
             field: monetaryField, locale: Self.locale
         )
-        #expect(monetaryInstance.value == .monetary(currency: "NOK", amount: 0))
+        #expect(monetaryInstance.value == .monetary(currency: "NOK", amount: nil))
 
         // Test monetary field without default currency
         let monetaryField2 = try #require(Self.customFields[5])
         let monetaryInstance2 = CustomFieldInstance.withDefaultValue(
             field: monetaryField2, locale: Self.locale
         )
-        #expect(monetaryInstance2.value == .monetary(currency: "USD", amount: 0))
+        #expect(monetaryInstance2.value == .monetary(currency: "USD", amount: nil))
 
         // Test other field type
         let otherField = CustomField(id: 11, name: "Other field", dataType: .other("unknown"))
@@ -541,6 +541,190 @@ struct CustomFieldInstanceTest {
             field: otherField, locale: Self.locale
         )
         #expect(otherInstance.value == .invalid(.unknownDataType("unknown")))
+    }
+
+    @Test("Test decoding date field from none raw value")
+    func testDecodingDateFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 3, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 3)
+        #expect(instance.field.dataType == .date)
+        #expect(instance.value == .date(nil))
+    }
+
+    @Test("Test decoding integer field from none raw value")
+    func testDecodingIntegerFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 4, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 4)
+        #expect(instance.field.dataType == .integer)
+        #expect(instance.value == .integer(nil))
+    }
+
+    @Test("Test decoding float field from none raw value")
+    func testDecodingFloatFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 1, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 1)
+        #expect(instance.field.dataType == .float)
+        #expect(instance.value == .float(nil))
+    }
+
+    @Test("Test decoding boolean field from none raw value")
+    func testDecodingBooleanFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 2, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 2)
+        #expect(instance.field.dataType == .boolean)
+        #expect(instance.value == .boolean(false))
+    }
+
+    @Test("Test decoding document link field from none raw value")
+    func testDecodingDocumentLinkFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 9, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 9)
+        #expect(instance.field.dataType == .documentLink)
+        #expect(instance.value == .documentLink([]))
+    }
+
+    @Test("Test decoding string field from none raw value")
+    func testDecodingStringFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 7, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 7)
+        #expect(instance.field.dataType == .string)
+        #expect(instance.value == .string(""))
+    }
+
+    @Test("Test decoding monetary field from none raw value")
+    func testDecodingMonetaryFieldFromNoneRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 5, value: .none)]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 5)
+        #expect(instance.field.dataType == .monetary)
+        #expect(instance.value == .monetary(currency: "USD", amount: nil))
+    }
+
+    @Test("Test monetary field with nil amount conversion to raw entry")
+    func testMonetaryFieldWithNilAmountToRawEntry() throws {
+        let nilAmountInstance =
+            CustomFieldInstance(
+                field: Self.customFields[5]!,
+                value: .monetary(currency: "USD", amount: nil)
+            )
+
+        let rawEntry = nilAmountInstance.rawEntry
+
+        #expect(rawEntry.field == 5)
+        #expect(rawEntry.value == .none)
+    }
+
+    @Test("Test integer field with nil value conversion to raw entry")
+    func testIntegerFieldWithNilValueToRawEntry() throws {
+        let nilValueInstance =
+            CustomFieldInstance(
+                field: Self.customFields[4]!,
+                value: .integer(nil)
+            )
+
+        let rawEntry = nilValueInstance.rawEntry
+
+        #expect(rawEntry.field == 4)
+        #expect(rawEntry.value == .none)
+    }
+
+    @Test("Test float field with nil value conversion to raw entry")
+    func testFloatFieldWithNilValueToRawEntry() throws {
+        let nilValueInstance =
+            CustomFieldInstance(
+                field: Self.customFields[1]!,
+                value: .float(nil)
+            )
+
+        let rawEntry = nilValueInstance.rawEntry
+
+        #expect(rawEntry.field == 1)
+        #expect(rawEntry.value == .none)
+    }
+
+    @Test("Test date field with nil value conversion to raw entry")
+    func testDateFieldWithNilValueToRawEntry() throws {
+        let nilValueInstance =
+            CustomFieldInstance(
+                field: Self.customFields[3]!,
+                value: .date(nil)
+            )
+
+        let rawEntry = nilValueInstance.rawEntry
+
+        #expect(rawEntry.field == 3)
+        #expect(rawEntry.value == .none)
+    }
+
+    @Test("Test URL field with nil value conversion to raw entry")
+    func testURLFieldWithNilValueToRawEntry() throws {
+        let nilValueInstance =
+            CustomFieldInstance(
+                field: Self.customFields[8]!,
+                value: .url(nil)
+            )
+
+        let rawEntry = nilValueInstance.rawEntry
+
+        #expect(rawEntry.field == 8)
+        #expect(rawEntry.value == .none)
+    }
+
+    @Test
+    func testMonetaryEquality() {
+        #expect(
+            CustomFieldValue.monetary(currency: "USD", amount: 100)
+                == CustomFieldValue.monetary(currency: "USD", amount: 100))
+        #expect(
+            CustomFieldValue.monetary(currency: "USD", amount: 100)
+                != CustomFieldValue.monetary(currency: "USD", amount: 200))
+        #expect(
+            CustomFieldValue.monetary(currency: "USD", amount: 100)
+                != CustomFieldValue.monetary(currency: "EUR", amount: 100))
+        #expect(
+            CustomFieldValue.monetary(currency: "USD", amount: nil)
+                == CustomFieldValue.monetary(currency: "USD", amount: nil))
     }
 }
 
@@ -630,6 +814,20 @@ struct CustomFieldInstanceToRawEntryTest {
         #expect(usdRawEntry.value == .string("USD1000.00"))
         #expect(eurRawEntry.field == 6)
         #expect(eurRawEntry.value == .string("EUR1000.00"))
+    }
+
+    @Test("Test monetary field with nil amount conversion to raw entry")
+    func testMonetaryFieldWithNilAmountToRawEntry() throws {
+        let nilAmountInstance =
+            CustomFieldInstance(
+                field: Self.customFields[5]!,
+                value: .monetary(currency: "USD", amount: nil)
+            )
+
+        let rawEntry = nilAmountInstance.rawEntry
+
+        #expect(rawEntry.field == 5)
+        #expect(rawEntry.value == .none)
     }
 
     @Test("Test string field conversion to raw entry")

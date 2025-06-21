@@ -20,11 +20,11 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
     case url(URL?)
     case integer(Int?)
     case float(Double?)
-    case monetary(currency: String, amount: Decimal)
+    case monetary(currency: String, amount: Decimal?)
     case invalid(InvalidReason)
 
-    public static func formatMonetary(currency: String, amount: Decimal) -> String {
-        let formattedAmount = amount.formatted(
+    public static func formatMonetary(currency: String, amount: Decimal?) -> String {
+        let formattedAmount = (amount ?? 0).formatted(
             .number
                 .locale(Locale(identifier: "en_US"))
                 .grouping(.never)
@@ -52,10 +52,13 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
             .idList(value)
 
         case let .url(value):
-            .string(value?.absoluteString ?? "")
+            value.map {
+                .string($0.absoluteString)
+            } ?? .none
 
         case let .monetary(currency, amount):
-            .string(CustomFieldValue.formatMonetary(currency: currency, amount: amount))
+            amount.map { .string(CustomFieldValue.formatMonetary(currency: currency, amount: $0)) }
+                ?? .none
 
         case let .integer(value):
             value.map { .integer($0) } ?? .none
@@ -73,6 +76,13 @@ public enum CustomFieldValue: Sendable, Equatable, Hashable {
         case let .monetary(currency, _):
             let ex = /^[A-Z]{3}$/
             return currency.wholeMatch(of: ex) != nil
+
+        case let .url(url):
+            guard let url else {
+                return true
+            }
+            return url.scheme != nil && url.host != nil
+
         default: return true
         }
     }
@@ -108,7 +118,7 @@ public struct CustomFieldInstance: Sendable, Hashable {
             value = .float(nil)
         case .monetary:
             let currency = field.extraData.defaultCurrency ?? locale.currency?.identifier ?? ""
-            value = .monetary(currency: currency, amount: 0)
+            value = .monetary(currency: currency, amount: nil)
         case .other:
             value = .invalid(.unknownDataType(field.dataType.rawValue))
         }
@@ -131,7 +141,11 @@ public struct CustomFieldInstance: Sendable, Hashable {
 
         case (.documentLink, .documentLink): return true
 
-        case (.url, .url): return true
+        case let (.url, .url(url)):
+            guard let url else {
+                return true
+            }
+            return url.scheme != nil && url.host != nil
 
         case (.integer, .integer): return true
 
@@ -159,11 +173,20 @@ public extension CustomFieldInstance {
         case let (.string, .string(value)):
             self.value = .string(value)
 
+        case (.string, .none):
+            value = .string("")
+
         case let (.float, .float(value)):
             self.value = .float(value)
 
+        case (.float, .none):
+            value = .float(nil)
+
         case let (.boolean, .boolean(value)):
             self.value = .boolean(value)
+
+        case (.boolean, .none):
+            value = .boolean(false)
 
         case let (.date, .string(value)):
             if let date = CustomFieldInstance.dateFormatter.date(from: value) {
@@ -174,8 +197,14 @@ public extension CustomFieldInstance {
                 self.value = .invalid(.invalidDate(value))
             }
 
+        case (.date, .none):
+            value = .date(nil)
+
         case let (.documentLink, .idList(value)):
             self.value = .documentLink(value)
+
+        case (.documentLink, .none):
+            value = .documentLink([])
 
         case let (.url, .string(value)):
             if value.isEmpty {
@@ -187,6 +216,13 @@ public extension CustomFieldInstance {
                     "Invalid URL format: \(value) for field \(field.name, privacy: .private)")
                 self.value = .invalid(.invalidURL(value))
             }
+
+        case (.url, .none):
+            value = .url(nil)
+
+        case (.monetary, .none):
+            let currency = field.extraData.defaultCurrency ?? locale.currency?.identifier ?? ""
+            value = .monetary(currency: currency, amount: nil)
 
         case let (.monetary, .string(value)):
             let regex = /^(?<currency>[A-Z]{3})?(?<amount>\d+(?:\.\d{2})?)$/
@@ -236,6 +272,9 @@ public extension CustomFieldInstance {
 
         case let (.integer, .integer(value)):
             self.value = .integer(value)
+
+        case (.integer, .none):
+            value = .integer(nil)
 
         case (_, .unknown):
             Logger.dataModel.error(
