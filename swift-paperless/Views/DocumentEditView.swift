@@ -90,7 +90,7 @@ struct DocumentEditView: View {
     func doDocumentDelete() {
         Task { @MainActor in
             do {
-//                Logger.shared.notice("Deleted document from Edit view")
+                Logger.shared.notice("Deleted document from Edit view")
                 try await store.deleteDocument(document)
                 deleted = true
                 let impact = UIImpactFeedbackGenerator(style: .rigid)
@@ -98,7 +98,7 @@ struct DocumentEditView: View {
                 try await Task.sleep(for: .seconds(0.2))
                 dismiss()
                 if let navPath {
-//                    Logger.shared.notice("Pop navigation to root")
+                    Logger.shared.notice("Pop navigation to root")
                     navPath.wrappedValue.popToRoot()
                 }
             } catch {
@@ -330,7 +330,7 @@ struct DocumentEditView: View {
                     }
                     try await all
                 } catch {
-//                    Logger.shared.error("Error getting suggestions: \(error)")
+                    Logger.shared.error("Error getting suggestions: \(error)")
                     errorController.push(error: error)
                 }
             }
