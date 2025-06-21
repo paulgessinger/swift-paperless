@@ -30,12 +30,19 @@ struct DateView: View {
     }
 
     var body: some View {
-        Section {
-            if hasValue {
-                DatePicker(selection: $value, displayedComponents: .date) {
-                    HStack {
-                        Text(instance.field.name)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(instance.field.name)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if !hasValue {
+                        Text(.customFields(.noDateDescription))
+                            .font(.caption)
+                    }
+                }
+
+                if hasValue {
+                    DatePicker(selection: $value, displayedComponents: .date) {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                             .accessibilityLabel(String(localized: .customFields(.dateClear)))
@@ -44,12 +51,7 @@ struct DateView: View {
                                 clear()
                             }
                     }
-                }
-            } else {
-                HStack {
-                    Text(instance.field.name)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
+                } else {
                     HStack {
                         Image(systemName: "plus.circle.fill")
                         Text(.customFields(.dateAdd))
@@ -58,14 +60,10 @@ struct DateView: View {
                     .onTapGesture {
                         hasValue = true
                     }
-                    .contentShape(Rectangle())
                 }
             }
-        } footer: {
-            if !hasValue {
-                Text(.customFields(.noDateDescription))
-            }
         }
+        .animation(.spring, value: hasValue)
         .onChange(of: value) {
             if hasValue {
                 guard let val = Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: value) else {

@@ -11,12 +11,13 @@ import SwiftUI
 struct MonetaryView: View {
     @Binding var instance: CustomFieldInstance
 
-    @State private var amount: Decimal = 0.0
+    @State private var amount: Decimal? = nil
     @State private var amountString: String = ""
 
     @State private var currency: String = ""
 
     @Environment(\.locale) private var locale
+    @Environment(\.colorScheme) private var colorScheme
 
     init(instance: Binding<CustomFieldInstance>) {
         _instance = instance
@@ -27,10 +28,18 @@ struct MonetaryView: View {
     }
 
     var body: some View {
-        Section(instance.field.name) {
+        VStack(alignment: .leading) {
+            Text(instance.field.name)
+                .font(.footnote)
+                .bold()
+
             HStack {
                 if case let .monetary(currency, amount) = instance.value {
-                    Text(amount, format: .currency(code: currency))
+                    Text(amount ?? 0.00, format: .currency(code: currency))
+                        .padding(.vertical, 4)
+                        .padding(.horizontal)
+                        .background(RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(.pickerBackground))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .animation(.default, value: instance.value)
                         .contentTransition(.numericText())
@@ -47,8 +56,8 @@ struct MonetaryView: View {
         }
         .onChange(of: amountString) { old, new in
             guard amountString.count > 0 else {
-                amountString = "1"
-                instance.value = .monetary(currency: currency, amount: 1)
+                amount = nil
+                instance.value = .monetary(currency: currency, amount: nil)
                 return
             }
 
@@ -86,12 +95,14 @@ struct MonetaryView: View {
         .task {
             if case let .monetary(currency, amount) = instance.value {
                 self.amount = amount
-                amountString = amount.formatted(.number.locale(
-                    locale
-                )
-                .grouping(.never)
-                .decimalSeparator(strategy: .always)
-                .precision(.fractionLength(2)))
+                amountString = amount.map {
+                    $0.formatted(.number.locale(
+                        locale
+                    )
+                    .grouping(.never)
+                    .decimalSeparator(strategy: .always)
+                    .precision(.fractionLength(2)))
+                } ?? ""
                 self.currency = currency
             }
         }
@@ -102,12 +113,17 @@ private let field = CustomField(id: 1, name: "Custom monetary", dataType: .monet
 
 #Preview {
     @Previewable @State var instance = CustomFieldInstance(field: field, value: .monetary(currency: "EUR", amount: 1234.56))
+    @Previewable @State var instance2 = CustomFieldInstance(field: field, value: .monetary(currency: "EUR", amount: nil))
 
     return Form {
         MonetaryView(instance: $instance)
+        MonetaryView(instance: $instance2)
 
         Section("Instance") {
             Text(String(describing: instance))
+        }
+        Section("Instance 2") {
+            Text(String(describing: instance2))
         }
     }
 }

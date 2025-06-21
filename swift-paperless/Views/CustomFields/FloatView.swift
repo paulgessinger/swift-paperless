@@ -22,7 +22,10 @@ struct FloatView: View {
     }
 
     var body: some View {
-        Section(instance.field.name) {
+        HStack {
+            Text(instance.field.name)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             TextField(instance.field.name, text: $value)
                 .keyboardType(.decimalPad)
         }

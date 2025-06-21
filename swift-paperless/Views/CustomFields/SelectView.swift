@@ -25,14 +25,12 @@ struct SelectView: View {
     }
 
     var body: some View {
-        Section {
-            Picker(instance.field.name, selection: $selected) {
-                Text("none")
-                    .tag(nil as CustomField.SelectOption?)
-                ForEach(options) { option in
-                    Text(option.label)
-                        .tag(option as CustomField.SelectOption?)
-                }
+        Picker(instance.field.name, selection: $selected) {
+            Text(.localizable(.none))
+                .tag(nil as CustomField.SelectOption?)
+            ForEach(options) { option in
+                Text(option.label)
+                    .tag(option as CustomField.SelectOption?)
             }
         }
         .onChange(of: selected) {

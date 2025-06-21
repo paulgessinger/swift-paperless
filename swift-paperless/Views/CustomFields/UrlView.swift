@@ -23,33 +23,40 @@ struct UrlView: View {
         }
     }
 
-    private func valid(urlString: String) -> URL? {
-        guard let u = URL(string: urlString), u.scheme != nil, u.host != nil else {
-            return nil
+    private func valid(urlString: String) -> (URL?, Bool) {
+        guard urlString.count > 0 else {
+            return (nil, true)
         }
-        return u
+        guard let u = URL(string: urlString), u.scheme != nil, u.host != nil else {
+            return (nil, false)
+        }
+        return (u, true)
     }
 
     var body: some View {
-        Section(instance.field.name) {
+        VStack(alignment: .leading) {
+            Text(instance.field.name)
+                .font(.footnote)
+                .bold()
             HStack {
                 TextField(instance.field.name, text: $url)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .keyboardType(.URL)
 
-                let validUrl = valid(urlString: url)
-                let isValid = validUrl != nil
-                HStack {
-                    Text(isValid ? .customFields(.urlFieldOpenLabel) : .customFields(.urlFieldInvalidLabel))
-                    Image(systemName: isValid ? "arrow.up.right.circle.fill" : "xmark.circle.fill")
-                        .contentTransition(.symbolEffect(.replace))
-                }
-                .foregroundStyle(isValid ? Color.accentColor : Color.red)
-                .if(isValid) { view in
-                    view.onTapGesture {
-                        if let validUrl {
-                            openURL(validUrl)
+                let (url, isValid) = valid(urlString: url)
+                if self.url.count > 0 {
+                    HStack {
+                        Text(isValid ? .customFields(.urlFieldOpenLabel) : .customFields(.urlFieldInvalidLabel))
+                        Image(systemName: isValid ? "arrow.up.right.circle.fill" : "xmark.circle.fill")
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                    .foregroundStyle(isValid ? Color.accentColor : Color.red)
+                    .if(isValid) { view in
+                        view.onTapGesture {
+                            if let url {
+                                openURL(url)
+                            }
                         }
                     }
                 }
@@ -83,5 +90,7 @@ private let field = CustomField(id: 1, name: "Custom url", dataType: .url)
         Section("Instance") {
             Text(String(describing: instance))
         }
+
+        Text("VALID: \(instance.value.isValid ? "YES" : "NO")")
     }
 }

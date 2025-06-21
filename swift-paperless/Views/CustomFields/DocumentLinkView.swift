@@ -138,32 +138,34 @@ struct DocumentLinkView: View {
     }
 
     var body: some View {
-        Section(instance.field.name) {
-            NavigationLink {
-                SearchView(instance: $instance, selected: $selected)
-            } label: {
-                HStack {
-                    HFlow {
-                        ForEach(selected) { document in
-                            HStack {
-                                Image(systemName: "doc.text")
+        NavigationLink {
+            SearchView(instance: $instance, selected: $selected)
+        } label: {
+            HStack {
+                if selected.isEmpty {
+                    Text(instance.field.name)
+                }
 
-                                Text(document.title)
-                            }
-                            .lineLimit(1)
-                            .padding(5)
-                            .padding(.horizontal, 10)
-                            .background {
-                                RoundedRectangle(cornerRadius: 5)
-                                    .fill(backgroundColor)
-                            }
+                HFlow {
+                    ForEach(selected) { document in
+                        HStack {
+                            Image(systemName: "doc.text")
+
+                            Text(document.title)
+                        }
+                        .lineLimit(1)
+                        .padding(5)
+                        .padding(.horizontal, 10)
+                        .background {
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(backgroundColor)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                    if selected.isEmpty {
-                        Text(.customFields(.documentLinkEmptyLabel))
-                    }
+                if selected.isEmpty {
+                    Text(.customFields(.documentLinkEmptyLabel))
                 }
             }
         }

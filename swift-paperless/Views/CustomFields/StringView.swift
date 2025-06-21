@@ -21,7 +21,11 @@ struct StringView: View {
     }
 
     var body: some View {
-        Section(instance.field.name) {
+        VStack(alignment: .leading) {
+            Text(instance.field.name)
+                .font(.footnote)
+                .bold()
+
             TextField(instance.field.name, text: $text)
         }
         .onChange(of: text) {

@@ -8,37 +8,69 @@
 import Common
 import DataModel
 import Networking
+import os
 import SwiftUI
+
+extension CustomFieldUnknownValue: DisplayableError {
+    var message: String {
+        String(localized: .customFields(.unknownValueError))
+    }
+
+    var details: String? {
+        String(localized: .customFields(.unknownValueEncode))
+    }
+}
 
 private struct InvalidFieldView: View {
     let instance: CustomFieldInstance
     let reason: CustomFieldValue.InvalidReason
 
-    var body: some View {
-        Group {
-            let text: LocalizedStringResource = switch reason {
-            case let .invalidDate(date):
-                .customFields(.invalidDate(date))
-            case let .invalidURL(url):
-                .customFields(.invalidUrl(url))
-            case let .invalidMonetary(value):
-                .customFields(.invalidMonetary(value))
-            case let .invalidSelectOption(option):
-                .customFields(.invalidSelectOption(option, instance.field.extraData.selectOptions.map(\.label).joined(separator: ", ")))
-            case .unknownValue:
-                .customFields(.unknownValue)
-            case let .unknownDataType(dataType):
-                .customFields(.unknownDataType(dataType))
-            case let .typeMismatch(dataType, rawValue):
-                .customFields(.typeMismatch(dataType.rawValue, String(describing: rawValue)))
-            }
+    @State private var expanded = false
 
+    var body: some View {
+        let text: LocalizedStringResource = switch reason {
+        case let .invalidDate(date):
+            .customFields(.invalidDate(date))
+        case let .invalidURL(url):
+            .customFields(.invalidUrl(url))
+        case let .invalidMonetary(value):
+            .customFields(.invalidMonetary(value))
+        case let .invalidSelectOption(option):
+            .customFields(.invalidSelectOption(option, instance.field.extraData.selectOptions.map(\.label).joined(separator: ", ")))
+        case .unknownValue:
+            .customFields(.unknownValue)
+        case let .unknownDataType(dataType):
+            .customFields(.unknownDataType(dataType))
+        case let .typeMismatch(dataType, rawValue):
+            .customFields(.typeMismatch(dataType.rawValue, String(describing: rawValue)))
+        }
+
+        VStack {
             HStack(alignment: .top) {
                 Image(systemName: "exclamationmark.triangle.fill")
+                VStack(alignment: .leading) {
+                    Text(instance.field.name)
+                        .bold()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, 2)
+
+            if expanded {
                 Text(text)
+                    .transition(.opacity)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            Button {
+                expanded.toggle()
+            } label: {
+                Image(systemName: expanded ? "minus.circle" : "plus.circle")
+            }
+        }
+
         .foregroundStyle(.red)
+        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
     }
 }
 
@@ -120,6 +152,7 @@ struct CustomFieldsEditView: View {
     @Environment(\.locale) private var locale
 
     @State private var showAddSheet = false
+    @State private var showInvalidFields = false
 
     init(document: Binding<Document>) {
         _document = document
@@ -128,9 +161,7 @@ struct CustomFieldsEditView: View {
     @ViewBuilder
     private func fieldView(index: Int, field: Binding<CustomFieldInstance>) throws -> some View {
         if case let .invalid(reason) = field.wrappedValue.value {
-            Section(field.wrappedValue.field.name) {
-                InvalidFieldView(instance: field.wrappedValue, reason: reason)
-            }
+            InvalidFieldView(instance: field.wrappedValue, reason: reason)
         } else {
             Group {
                 switch field.wrappedValue.field.dataType {
@@ -158,7 +189,7 @@ struct CustomFieldsEditView: View {
                 }
             }
             .swipeActions {
-                Button(.customFields(.delete)) {
+                Button(.customFields(.delete), role: .destructive) {
                     deleteField(index: index)
                 }
             }
@@ -166,14 +197,15 @@ struct CustomFieldsEditView: View {
     }
 
     @MainActor private func deleteField(index: Int) {
-        withAnimation {
+        Task {
+            try? await Task.sleep(for: .seconds(0.5)) // Small delay to prevent jank
             customFields.remove(at: index)
         }
     }
 
     var body: some View {
         Form {
-            if customFields.hasInvalidValues {
+            if showInvalidFields {
                 Section {
                     VStack {
                         ContentUnavailableView(.customFields(.invalidStateHeadline),
@@ -184,9 +216,15 @@ struct CustomFieldsEditView: View {
                 }
             }
 
-            ForEach(0 ..< customFields.count, id: \.self) { index in
-                let field = $customFields[index]
-                try? fieldView(index: index, field: field)
+            if document.customFields.isEmpty {
+                ContentUnavailableView(.customFields(.noCustomFieldsInDocument),
+                                       systemImage: "plus.square.dashed",
+                                       description: Text(.customFields(.noCustomFieldsInDocumentDescription)))
+            } else {
+                ForEach(0 ..< customFields.count, id: \.self) { index in
+                    let field = $customFields[index]
+                    try? fieldView(index: index, field: field)
+                }
             }
 
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
@@ -210,6 +248,7 @@ struct CustomFieldsEditView: View {
                 }
             }
         }
+        .animation(.default, value: document.customFields)
 
         .navigationTitle(.customFields(.title))
         .navigationBarTitleDisplayMode(.inline)
@@ -236,6 +275,7 @@ struct CustomFieldsEditView: View {
                     document.customFields.values, customFields: store.customFields, locale: locale
                 )
             }
+            showInvalidFields = customFields.hasInvalidValues
         }
 
         .onChange(of: customFields) {

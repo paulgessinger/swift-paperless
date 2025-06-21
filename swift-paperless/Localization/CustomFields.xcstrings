@@ -177,6 +177,28 @@
         }
       }
     },
+    "noCustomFieldsInDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No custom fields attached"
+          }
+        }
+      }
+    },
+    "noCustomFieldsInDocumentDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+          }
+        }
+      }
+    },
     "noDateDescription" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -238,7 +260,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The given value could not be decoded. This could be an incompatibility between the app and server version."
+            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+          }
+        }
+      }
+    },
+    "unknownValueEncode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+          }
+        }
+      }
+    },
+    "unknownValueError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown custom field value"
           }
         }
       }
