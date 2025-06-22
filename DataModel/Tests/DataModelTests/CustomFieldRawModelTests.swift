@@ -6,9 +6,10 @@
 //
 
 import Common
-@testable import DataModel
 import Foundation
 import Testing
+
+@testable import DataModel
 
 private let decoder = makeDecoder(tz: .current)
 
@@ -57,6 +58,38 @@ struct CustomFieldRawModelTests {
 
         #expect(entry.field == 4)
         #expect(entry.value == .integer(42))
+    }
+
+    @Test("Test decoding raw float value")
+    func testDecodingRawFloatValue() throws {
+        let json = """
+        {
+            "field": 1,
+            "value": 123.45
+        }
+        """.data(using: .utf8)!
+
+        let entry = try decoder.decode(CustomFieldRawEntry.self, from: json)
+
+        #expect(entry.field == 1)
+        #expect(entry.value == .float(123.45))
+    }
+
+    @Test("Test decoding raw float value without decimals")
+    func testDecodingRawFloatValueWithoutDecimals() throws {
+        let json = """
+        {
+            "field": 1,
+            "value": 123.0
+        }
+        """.data(using: .utf8)!
+
+        let entry = try decoder.decode(CustomFieldRawEntry.self, from: json)
+
+        #expect(entry.field == 1)
+        // This is decoded as an integer because the JSON parser doesn't know the difference between
+        // an integer and a float without decimals. We can't change this at this point, but the field instance construction will accept integer raw values for float fields
+        #expect(entry.value == .integer(123))
     }
 
     @Test("Test decoding raw boolean value")

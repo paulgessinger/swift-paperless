@@ -585,6 +585,20 @@ struct CustomFieldInstanceTest {
         #expect(instance.value == .float(nil))
     }
 
+    @Test("Test decoding float field from integer raw value")
+    func testDecodingFloatFieldFromIntegerRawValue() throws {
+        let rawEntries = [CustomFieldRawEntry(field: 1, value: .integer(123))]
+        let instances = [CustomFieldInstance].fromRawEntries(
+            rawEntries, customFields: Self.customFields, locale: Self.locale
+        )
+
+        #expect(instances.count == 1)
+        let instance = try #require(instances.first)
+        #expect(instance.field.id == 1)
+        #expect(instance.field.dataType == .float)
+        #expect(instance.value == .float(123.0))
+    }
+
     @Test("Test decoding boolean field from none raw value")
     func testDecodingBooleanFieldFromNoneRawValue() throws {
         let rawEntries = [CustomFieldRawEntry(field: 2, value: .none)]

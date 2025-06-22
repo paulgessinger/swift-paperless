@@ -40,6 +40,7 @@ public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
+        // @FIXME: Float without decimals is decoded as an integer, which leads to a problem!
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(String.self) {
             self = .string(value)

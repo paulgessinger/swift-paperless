@@ -179,6 +179,9 @@ public extension CustomFieldInstance {
         case let (.float, .float(value)):
             self.value = .float(value)
 
+        case let (.float, .integer(value)):
+            self.value = .float(Double(value))
+
         case (.float, .none):
             value = .float(nil)
 
