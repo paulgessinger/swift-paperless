@@ -124,8 +124,6 @@ struct DocumentLinkView: View {
 
                 var documents = [Document]()
 
-                await group.waitForAll()
-
                 for await document in group {
                     if let document {
                         Logger.shared.trace("Loaded document: \(document.title, privacy: .public)")
