@@ -35,9 +35,13 @@ struct UrlView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(instance.field.name)
-                .font(.footnote)
-                .bold()
+            if !url.isEmpty {
+                Text(instance.field.name)
+                    .font(.footnote)
+                    .bold()
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+
             HStack {
                 TextField(instance.field.name, text: $url)
                     .autocorrectionDisabled()

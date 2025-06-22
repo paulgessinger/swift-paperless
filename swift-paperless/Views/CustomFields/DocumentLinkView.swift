@@ -139,31 +139,33 @@ struct DocumentLinkView: View {
         NavigationLink {
             SearchView(instance: $instance, selected: $selected)
         } label: {
-            HStack {
-                if selected.isEmpty {
-                    Text(instance.field.name)
-                }
+            VStack(alignment: .leading) {
+                Text(instance.field.name)
+                    .font(.footnote)
+                    .bold()
 
-                HFlow {
-                    ForEach(selected) { document in
-                        HStack {
-                            Image(systemName: "doc.text")
+                HStack {
+                    HFlow {
+                        ForEach(selected) { document in
+                            HStack {
+                                Image(systemName: "doc.text")
 
-                            Text(document.title)
-                        }
-                        .lineLimit(1)
-                        .padding(5)
-                        .padding(.horizontal, 10)
-                        .background {
-                            RoundedRectangle(cornerRadius: 5)
-                                .fill(backgroundColor)
+                                Text(document.title)
+                            }
+                            .lineLimit(1)
+                            .padding(5)
+                            .padding(.horizontal, 10)
+                            .background {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(backgroundColor)
+                            }
                         }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                if selected.isEmpty {
-                    Text(.customFields(.documentLinkEmptyLabel))
+                    if selected.isEmpty {
+                        Text(.customFields(.documentLinkEmptyLabel))
+                    }
                 }
             }
         }
@@ -181,7 +183,7 @@ struct DocumentLinkView: View {
 private let field = CustomField(id: 9, name: "Custom doc link", dataType: .documentLink)
 
 #Preview {
-    @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([]))
+    @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([2]))
     @Previewable
     @StateObject var store = DocumentStore(repository: TransientRepository())
 

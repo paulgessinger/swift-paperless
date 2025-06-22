@@ -22,12 +22,16 @@ struct StringView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(instance.field.name)
-                .font(.footnote)
-                .bold()
+            if !text.isEmpty {
+                Text(instance.field.name)
+                    .font(.footnote)
+                    .bold()
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
 
             TextField(instance.field.name, text: $text)
         }
+        .animation(.spring(), value: text)
         .onChange(of: text) {
             instance.value = .string(text)
         }
@@ -37,7 +41,7 @@ struct StringView: View {
 private let field = CustomField(id: 1, name: "Custom string", dataType: .string)
 
 #Preview {
-    @Previewable @State var instance = CustomFieldInstance(field: field, value: .string("Blubb"))
+    @Previewable @State var instance = CustomFieldInstance(field: field, value: .string(""))
 
     return Form {
         StringView(instance: $instance)
