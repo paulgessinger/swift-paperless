@@ -73,6 +73,8 @@ public actor NullRepository: Repository {
     public func update(storagePath: StoragePath) async throws -> StoragePath { storagePath }
     public func delete(storagePath _: StoragePath) async throws { throw NotImplemented() }
 
+    public func customFields() async -> [CustomField] { [] }
+
     public func currentUser() async throws -> User {
         throw NotImplemented()
     }

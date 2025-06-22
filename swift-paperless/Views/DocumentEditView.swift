@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import Common
 import DataModel
 import Networking
 import os
@@ -47,13 +48,26 @@ private struct SuggestionView<Element>: View
     }
 }
 
+private struct CustomFieldInvalidError: DisplayableError {
+    var message: String {
+        String(localized: .customFields(.invalidStateHeadline))
+    }
+
+    var details: String? {
+        String(localized: .customFields(.invalidStateDescription)).stripMarkdown()
+    }
+}
+
 struct DocumentEditView: View {
     @Environment(\.dismiss) var dismiss
 
     @ObservedObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.locale) private var locale
 
     var navPath: Binding<NavigationPath>? = nil
+
+    @State private var initial = true
 
     @Binding var documentOut: Document
     @State private var document: Document
@@ -75,6 +89,8 @@ struct DocumentEditView: View {
     private var isSaveDisabled: Bool {
         !modified || document.title.isEmpty || !isAsnValid
     }
+
+    @State private var saving = false
 
     init(
         store: DocumentStore,
@@ -103,6 +119,14 @@ struct DocumentEditView: View {
             } catch {
                 errorController.push(error: error)
             }
+        }
+    }
+
+    private func validateCustomFields() throws {
+        let instances = [CustomFieldInstance].fromRawEntries(document.customFields.values, customFields: store.customFields, locale: locale)
+
+        if instances.hasInvalidValues {
+            throw CustomFieldInvalidError()
         }
     }
 
@@ -258,6 +282,12 @@ struct DocumentEditView: View {
                 }
 
                 Section {
+                    NavigationLink(.customFields(.title)) {
+                        CustomFieldsEditView(document: $document)
+                    }
+                }
+
+                Section {
                     Button(action: {
                         if appSettings.documentDeleteConfirmation {
                             showDeleteConfirmation = true
@@ -273,19 +303,19 @@ struct DocumentEditView: View {
                     .foregroundColor(Color.red)
                     .bold()
                     .disabled(!store.permissions.test(.delete, for: .document))
+
+                    .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
+                                        isPresented: $showDeleteConfirmation,
+                                        titleVisibility: .visible)
+                    {
+                        Button(String(localized: .localizable(.delete)), role: .destructive) {
+                            // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
+                            doDocumentDelete()
+                        }
+                        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+                    }
                 }
                 .animation(.default, value: deleted)
-            }
-
-            .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
-                                isPresented: $showDeleteConfirmation,
-                                titleVisibility: .visible)
-            {
-                Button(String(localized: .localizable(.delete)), role: .destructive) {
-                    // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                    doDocumentDelete()
-                }
-                Button(String(localized: .localizable(.cancel)), role: .cancel) {}
             }
 
             .scrollBounceBehavior(.basedOnSize)
@@ -295,33 +325,57 @@ struct DocumentEditView: View {
                     CancelIconButton()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized: .localizable(.save))) {
+                    Button {
                         Task {
-                            let copy = document
-                            documentOut = document
                             do {
+                                saving = true
+                                try validateCustomFields()
                                 documentOut = try await store.updateDocument(document)
+                                saving = false
+                                dismiss()
                             } catch {
                                 errorController.push(error: error)
-                                documentOut = copy
+                                saving = false
                             }
                         }
-                        dismiss()
+                    } label: {
+                        if !saving {
+                            Text(.localizable(.save))
+                                .bold()
+                        } else {
+                            ProgressView()
+                        }
                     }
-                    .bold()
                     .disabled(isSaveDisabled)
                 }
             }
 
             .task {
                 do {
-                    let store = store
                     async let all: Void = store.fetchAll()
+
+                    let refreshDocument: Task<Void, any Error>?
+                    if initial {
+                        refreshDocument = Task {
+                            let doc: Document? = try await store.repository.document(id: document.id)
+                            if let doc {
+                                // Update both the document and the output binding
+                                document = doc
+                                documentOut = doc
+                            }
+                        }
+                        initial = false
+                    } else {
+                        refreshDocument = nil
+                    }
+
                     let suggestions = try await store.repository.suggestions(documentId: document.id)
                     withAnimation {
                         self.suggestions = suggestions
                     }
+
                     try await all
+                    try await refreshDocument?.value
                 } catch {
                     Logger.shared.error("Error getting suggestions: \(error)")
                     errorController.push(error: error)
@@ -330,37 +384,32 @@ struct DocumentEditView: View {
         }
         .presentationDragIndicator(.hidden)
 
-        .errorOverlay(errorController: errorController)
+        .errorOverlay(errorController: errorController, offset: 20)
     }
 }
 
-private struct PreviewHelper: View {
-    @EnvironmentObject var store: DocumentStore
-    @State var document: Document?
-    @State var navPath = NavigationPath()
+#Preview {
+    @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+    @Previewable @StateObject var errorController = ErrorController()
+    @Previewable @State var document: Document?
+    @Previewable @State var navPath = NavigationPath()
 
-    var body: some View {
-        VStack {
-            if document != nil {
-                DocumentEditView(store: store, document: Binding($document)!, navPath: $navPath)
-            }
-        }
-        .task {
-            document = try? await store.document(id: 1)
-            guard document != nil else {
-                fatalError()
-            }
+    VStack {
+        if document != nil {
+            DocumentEditView(store: store, document: Binding($document)!, navPath: $navPath)
+                .environmentObject(errorController)
+                .environmentObject(store)
         }
     }
-}
-
-struct DocumentEditView_Previews: PreviewProvider {
-    @StateObject static var store = DocumentStore(repository: PreviewRepository())
-    @StateObject static var errorController = ErrorController()
-
-    static var previews: some View {
-        PreviewHelper()
-            .environmentObject(store)
-            .environmentObject(errorController)
+    .task {
+        do {
+            let repository = store.repository as! TransientRepository
+            await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: []))
+            try? await repository.login(userId: 1)
+            try await store.fetchAll()
+            try await store.repository.create(document: ProtoDocument(title: "blubb"),
+                                              file: #URL("http://example.com"), filename: "blubb.pdf")
+            document = try await store.repository.documents(filter: .default).fetch(limit: 100_000).first { $0.title == "blubb" }
+        } catch { print(error) }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  FilterRule.swift
+//  FilterRuleModel.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 06.04.23.
@@ -125,6 +125,7 @@ public struct FilterRule: Equatable, Sendable {
     public var ruleType: FilterRuleType
     public var value: FilterRuleValue
 
+    // @TODO: Make this optional if the types are wrong
     public init(ruleType: FilterRuleType, value: FilterRuleValue) {
         self.ruleType = ruleType
         self.value = value

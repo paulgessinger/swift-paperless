@@ -160,19 +160,6 @@ public actor ApiRepository {
         #endif
     }
 
-    private func decodeDetail(_ data: Data) -> String {
-        struct Details: Decodable {
-            var detail: String
-        }
-
-        do {
-            let details = try decoder.decode(Details.self, from: data)
-            return details.detail
-        } catch {
-            return String(data: data, encoding: .utf8) ?? "[NO BODY]"
-        }
-    }
-
     private func fetchData(for request: URLRequest, code: HTTPStatusCode = .ok,
                            progress: (@Sendable (Double) -> Void)? = nil) async throws -> (Data, URLResponse)
     {
@@ -212,13 +199,13 @@ public actor ApiRepository {
 
             switch status {
             case .forbidden:
-                throw RequestError.forbidden(detail: decodeDetail(data))
+                throw RequestError.forbidden(body: data)
             case .unauthorized:
-                throw RequestError.unauthorized(detail: decodeDetail(data))
+                throw RequestError.unauthorized(body: data)
             case .notAcceptable:
                 throw RequestError.unsupportedVersion
             default:
-                throw RequestError.unexpectedStatusCode(code: status, detail: decodeDetail(data))
+                throw RequestError.unexpectedStatusCode(code: status, body: data)
             }
         }
 
@@ -286,6 +273,8 @@ public actor ApiRepository {
             .users()
         case is UserGroup.Type:
             .groups()
+        case is CustomField.Type:
+            .customFields()
         default:
             fatalError("Invalid type")
         }
@@ -710,6 +699,14 @@ extension ApiRepository: Repository {
     public func delete(storagePath: StoragePath) async throws {
         try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
     }
+
+    // MARK: Custom fields
+
+    public func customFields() async throws -> [CustomField] {
+        try await all(CustomField.self)
+    }
+
+    // MARK: Others
 
     public func currentUser() async throws -> User {
         try await uiSettings().user

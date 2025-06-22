@@ -34,6 +34,76 @@ public enum RequestError: Error, Equatable {
 
     // Can split this up into additional cases for customized error messages
     case other(_: String)
+
+    static func unexpectedStatusCode(code: HTTPStatusCode, body: Data) -> Self {
+        // Try to extract error messages from JSON response
+        if let extractedError = extractErrorMessage(from: body) {
+            return .unexpectedStatusCode(code: code, detail: extractedError)
+        }
+
+        let bodyString = String(data: body, encoding: .utf8) ?? "[NO BODY]"
+        return .unexpectedStatusCode(code: code, detail: bodyString)
+    }
+
+    static func forbidden(body: Data) -> Self {
+        // Try to extract error messages from JSON response
+        if let extractedError = extractErrorMessage(from: body) {
+            return .forbidden(detail: extractedError)
+        }
+
+        let bodyString = String(data: body, encoding: .utf8) ?? "[NO BODY]"
+        return .forbidden(detail: bodyString)
+    }
+
+    static func unauthorized(body: Data) -> Self {
+        // Try to extract error messages from JSON response
+        if let extractedError = extractErrorMessage(from: body) {
+            return .unauthorized(detail: extractedError)
+        }
+
+        let bodyString = String(data: body, encoding: .utf8) ?? "[NO BODY]"
+        return .unauthorized(detail: bodyString)
+    }
+
+    private static func extractErrorMessage(from data: Data) -> String? {
+        do {
+            let decoder = JSONDecoder()
+
+            // First try to decode as a simple detail response
+            if let detailResponse = try? decoder.decode([String: String].self, from: data),
+               let detail = detailResponse["detail"]
+            {
+                return detail
+            }
+
+            // Then try to decode as array response with non_field_errors
+            let response = try decoder.decode([String: [ErrorField]].self, from: data)
+
+            // Look for non_field_errors in any array within the JSON
+            for (_, fields) in response {
+                for field in fields {
+                    if let nonFieldErrors = field.non_field_errors, !nonFieldErrors.isEmpty {
+                        if nonFieldErrors.count == 1 {
+                            return nonFieldErrors[0]
+                        } else {
+                            return nonFieldErrors.enumerated()
+                                .map { "\($0 + 1). \($1)" }
+                                .joined(separator: "\n")
+                        }
+                    }
+                }
+            }
+        } catch {
+            // If decoding fails, return nil to fall back to using the body as-is
+            return nil
+        }
+
+        return nil
+    }
+
+    private struct ErrorField: Codable {
+        let non_field_errors: [String]?
+    }
 }
 
 private func string(for error: any Error) -> String {

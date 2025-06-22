@@ -200,4 +200,55 @@ struct DocumentModelTest {
         let s = try #require(String(data: encoded, encoding: .utf8))
         #expect(s.contains("\"created\":\"2024-12-21\""))
     }
+
+    @Test("Test decoding document with custom fields")
+    func testDecodeDocumentWithCustomFields() throws {
+        let data = try #require(testData("Data/CustomFields/document_with_custom_fields.json"))
+        let document = try decoder.decode(Document.self, from: data)
+
+        #expect(document.id == 3)
+        #expect(document.title == "demo yo xy")
+        #expect(document.owner == .user(4))
+
+        let customFields = document.customFields
+        #expect(customFields.count == 10)
+
+        // Document link field
+        #expect(customFields[0].field == 9)
+        #expect(customFields[0].value == .idList([1, 6]))
+
+        // Monetary fields
+        #expect(customFields[1].field == 5)
+        #expect(customFields[1].value == .string("USD1000.00"))
+        #expect(customFields[2].field == 6)
+        #expect(customFields[2].value == .string("EUR1000.00"))
+
+        // String field
+        #expect(customFields[3].field == 10)
+        #expect(customFields[3].value == .string("nGAGi8292Tbzlwye"))
+
+        // URL field
+        #expect(customFields[4].field == 8)
+        #expect(customFields[4].value == .string("https://paperless-ngx.com"))
+
+        // Integer field
+        #expect(customFields[5].field == 4)
+        #expect(customFields[5].value == .integer(42))
+
+        // Boolean field
+        #expect(customFields[6].field == 2)
+        #expect(customFields[6].value == .boolean(true))
+
+        // Text field
+        #expect(customFields[7].field == 7)
+        #expect(customFields[7].value == .string("Super duper text"))
+
+        // Date field
+        #expect(customFields[8].field == 3)
+        #expect(customFields[8].value == .string("2025-06-25"))
+
+        // Float field
+        #expect(customFields[9].field == 1)
+        #expect(customFields[9].value == .float(123.45))
+    }
 }
