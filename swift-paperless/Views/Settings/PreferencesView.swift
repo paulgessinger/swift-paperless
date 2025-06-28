@@ -8,6 +8,7 @@ struct PreferencesView: View {
 
     @EnvironmentObject private var errorController: ErrorController
     @EnvironmentObject private var biometricLockManager: BiometricLockManager
+    @EnvironmentObject private var store: DocumentStore
 
     var body: some View {
         Form {
@@ -35,7 +36,7 @@ struct PreferencesView: View {
             Section {
                 Picker(selection: $appSettings.defaultSortField) {
                     ForEach(SortField.allCases, id: \.self) { field in
-                        Text(field.localizedName).tag(field)
+                        Text(field.localizedName(customFields: store.customFields)).tag(field)
                     }
                 } label: {
                     Text(.settings(.defaultSortField))

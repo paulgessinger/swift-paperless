@@ -21,12 +21,18 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
         !savedView.name.isEmpty && editable
     }
 
+    @EnvironmentObject private var store: DocumentStore
+
     init(element savedView: Element,
          onSave: ((Element) throws -> Void)?)
     {
         _savedView = State(initialValue: savedView)
         self.onSave = onSave
         saveLabel = String(localized: .localizable(.save))
+    }
+
+    private func localizedName(for field: SortField) -> String {
+        field.localizedName(customFields: store.customFields)
     }
 
     var body: some View {
@@ -44,7 +50,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
             Section(String(localized: .localizable(.sorting))) {
                 Picker(String(localized: .localizable(.sortBy)), selection: $savedView.sortField) {
                     ForEach(SortField.allCases, id: \.rawValue) { v in
-                        Text(v.localizedName).tag(v)
+                        Text(localizedName(for: v)).tag(v)
                     }
                 }
 

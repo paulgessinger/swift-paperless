@@ -8665,6 +8665,17 @@
         }
       }
     },
+    "sortOrderCustomFieldUnknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown custom field %u"
+          }
+        }
+      }
+    },
     "sortOrderModified" : {
       "extractionState" : "manual",
       "localizations" : {

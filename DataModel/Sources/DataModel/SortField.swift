@@ -22,6 +22,7 @@ public enum SortField: RawRepresentable, Codable, Equatable, Hashable, Sendable 
     case notes
     case score
     case pageCount
+    case customField(UInt)
     case other(_: String)
 
     public static let allCases: [SortField] = [
@@ -53,7 +54,14 @@ public enum SortField: RawRepresentable, Codable, Equatable, Hashable, Sendable 
         case "notes": self = .notes
         case "score": self = .score
         case "page_count": self = .pageCount
-        default: self = .other(rawValue)
+        default:
+            if let match = rawValue.wholeMatch(of: /custom_field_(?<id>\d+)/)?.id,
+               let id = UInt(match)
+            {
+                self = .customField(id)
+                return
+            }
+            self = .other(rawValue)
         }
     }
 
@@ -71,6 +79,7 @@ public enum SortField: RawRepresentable, Codable, Equatable, Hashable, Sendable 
         case .notes: "notes"
         case .score: "score"
         case .pageCount: "page_count"
+        case let .customField(id): "custom_field_\(id)"
         case let .other(value): value
         }
     }
