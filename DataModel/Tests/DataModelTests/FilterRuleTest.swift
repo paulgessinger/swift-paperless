@@ -377,6 +377,27 @@ struct FilterRuleTest {
     }
 
     @Test
+    func testDecodingComplexCustomFieldQuery() throws {
+        let query = """
+        ["OR",[[11,"isnull","true"],[11,"exists","false"],["AND",[[10,"exists","true"],["OR",[[8,"exact","x"],[5,"gt","6"],[10,"in",["aaa","bbb"]],[9,"contains",[3]]]]]],[3,"gte","2024-12-12"]]]
+        """.trimmingCharacters(in: .whitespaces)
+
+        let direct = try #require(CustomFieldQuery(rawValue: query))
+
+        struct Data: Encodable {
+            var rule_type: Int
+            var value: String
+        }
+
+        let data = try JSONEncoder().encode(Data(rule_type: 42, value: query))
+
+        let result = try JSONDecoder().decode(FilterRule.self, from: data)
+
+        #expect(result.ruleType == .customFieldsQuery)
+        #expect(result.value == .customFieldQuery(direct))
+    }
+
+    @Test
     func testInitializerReturnsNilForTypeMismatch() throws {
         // Test cases where ruleType.dataType() doesn't match the FilterRuleValue case
         #expect(FilterRule(ruleType: .title, value: .number(value: 42)) == nil)
@@ -386,18 +407,81 @@ struct FilterRuleTest {
         #expect(FilterRule(ruleType: .documentType, value: .tag(id: 1)) == nil)
         #expect(FilterRule(ruleType: .storagePath, value: .number(value: 123)) == nil)
         #expect(FilterRule(ruleType: .owner, value: .string(value: "owner")) == nil)
+
+        // Test custom field query specific case
+        #expect(FilterRule(ruleType: .customFieldsQuery, value: .string(value: "not a custom field query")) == nil)
     }
 
     @Test
     func testInitializerReturnsValidForTypeMatch() throws {
         // Test cases where ruleType.dataType() matches the FilterRuleValue case
-        #expect(FilterRule(ruleType: .title, value: .string(value: "test")) != nil)
-        #expect(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 1)) != nil)
-        #expect(FilterRule(ruleType: .hasAnyTag, value: .boolean(value: true)) != nil)
-        #expect(FilterRule(ruleType: .addedAfter, value: .date(value: Date())) != nil)
-        #expect(FilterRule(ruleType: .correspondent, value: .correspondent(id: 1)) != nil)
-        #expect(FilterRule(ruleType: .documentType, value: .documentType(id: 1)) != nil)
-        #expect(FilterRule(ruleType: .storagePath, value: .storagePath(id: 1)) != nil)
-        #expect(FilterRule(ruleType: .owner, value: .owner(id: 1)) != nil)
+        let titleRule = try #require(FilterRule(ruleType: .title, value: .string(value: "test")))
+        #expect(titleRule.ruleType == .title)
+        #expect(titleRule.value == .string(value: "test"))
+
+        let tagRule = try #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 1)))
+        #expect(tagRule.ruleType == .hasTagsAll)
+        #expect(tagRule.value == .tag(id: 1))
+
+        let booleanRule = try #require(FilterRule(ruleType: .hasAnyTag, value: .boolean(value: true)))
+        #expect(booleanRule.ruleType == .hasAnyTag)
+        #expect(booleanRule.value == .boolean(value: true))
+
+        let date = Date()
+        let dateRule = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: date)))
+        #expect(dateRule.ruleType == .addedAfter)
+        #expect(dateRule.value == .date(value: date))
+
+        let correspondentRule = try #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: 1)))
+        #expect(correspondentRule.ruleType == .correspondent)
+        #expect(correspondentRule.value == .correspondent(id: 1))
+
+        let documentTypeRule = try #require(FilterRule(ruleType: .documentType, value: .documentType(id: 1)))
+        #expect(documentTypeRule.ruleType == .documentType)
+        #expect(documentTypeRule.value == .documentType(id: 1))
+
+        let storagePathRule = try #require(FilterRule(ruleType: .storagePath, value: .storagePath(id: 1)))
+        #expect(storagePathRule.ruleType == .storagePath)
+        #expect(storagePathRule.value == .storagePath(id: 1))
+
+        let ownerRule = try #require(FilterRule(ruleType: .owner, value: .owner(id: 1)))
+        #expect(ownerRule.ruleType == .owner)
+        #expect(ownerRule.value == .owner(id: 1))
+
+        // Test custom field query specific case
+        let query = CustomFieldQuery.expr(8, .exists, .string("true"))
+        let rule1 = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(query)))
+        #expect(rule1.ruleType == .customFieldsQuery)
+        #expect(rule1.value == .customFieldQuery(query))
+
+        let rule2 = try #require(FilterRule(ruleType: .customFieldsQuery, value: .string(value: query.rawValue)))
+        #expect(rule2.ruleType == .customFieldsQuery)
+        #expect(rule2.value == .customFieldQuery(query))
+    }
+
+    @Test
+    func testCustomFieldQueryFilterRuleWithComplexQuery() throws {
+        let complexQuery = CustomFieldQuery.op(
+            .or,
+            [
+                .expr(11, .isnull, .string("true")),
+                .expr(1, .gt, .number(1.2)),
+                .op(
+                    .and,
+                    [
+                        .expr(10, .exists, .string("true")),
+                        .expr(9, .contains, .array([.integer(3)])),
+                    ]
+                ),
+            ]
+        )
+
+        let filterRule = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(complexQuery)))
+
+        let queryItems = FilterRule.queryItems(for: [filterRule])
+
+        #expect(queryItems.count == 1)
+        #expect(queryItems[0].name == "custom_field_query")
+        #expect(queryItems[0].value == complexQuery.rawValue)
     }
 }
