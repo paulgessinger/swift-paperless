@@ -481,7 +481,9 @@ extension ApiRepository: Repository {
 
     public func document(asn: UInt) async throws -> Document? {
         Logger.networking.notice("Getting document by ASN")
-        let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
+
+        let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
+        let endpoint = Endpoint.documents(page: 1, rules: [rule])
 
         let request = try request(endpoint)
 

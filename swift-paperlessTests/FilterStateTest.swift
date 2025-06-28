@@ -38,12 +38,12 @@ struct FilterStateTest {
     }
 
     @Test
-    func testRuleToFilterStateTextSearch() {
+    func testRuleToFilterStateTextSearch() throws {
         for mode in [FilterRuleType](
             [.title, .content, .titleContent])
         {
-            let state = FilterState(rules: [
-                .init(ruleType: mode, value: .string(value: "hallo")),
+            let state = try FilterState(rules: [
+                #require(FilterRule(ruleType: mode, value: .string(value: "hallo"))),
             ])
             #expect(state == FilterState.default.with {
                 $0.searchText = "hallo"
@@ -55,129 +55,129 @@ struct FilterStateTest {
     }
 
     @Test
-    func testRuleToFilterStateCorrespondent() {
+    func testRuleToFilterStateCorrespondent() throws {
         // Old single rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .correspondent, value: .correspondent(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: 8))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .correspondent, value: .correspondent(id: nil)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .notAssigned }
         )
 
         // New anyOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
-                .init(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))),
+                #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .anyOf(ids: [8, 19]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .hasCorrespondentAny, value: .invalid(value: "11,12"))]).correspondent ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .hasCorrespondentAny, value: .invalid(value: "11,12")))]).correspondent ==
             .anyOf(ids: [11, 12]))
 
         // New noneOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .noneOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
-                .init(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))),
+                #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 19))),
             ]) ==
                 FilterState.default.with { $0.correspondent = .noneOf(ids: [8, 19]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .doesNotHaveCorrespondent, value: .invalid(value: "11,12"))]).correspondent ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .invalid(value: "11,12")))]).correspondent ==
             .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
 
     @Test
-    func testRuleToFilterStateDocumentType() {
+    func testRuleToFilterStateDocumentType() throws {
         // Old single rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .documentType, value: .documentType(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .documentType, value: .documentType(id: 8))),
             ]) ==
                 FilterState.default.with { $0.documentType = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .documentType, value: .documentType(id: nil)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .documentType, value: .documentType(id: nil))),
             ]) ==
                 FilterState.default.with { $0.documentType = .notAssigned }
         )
 
         // New anyOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))),
             ]) ==
                 FilterState.default.with { $0.documentType = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
-                .init(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))),
+                #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19))),
             ]) ==
                 FilterState.default.with { $0.documentType = .anyOf(ids: [8, 19]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .hasDocumentTypeAny, value: .invalid(value: "11,12"))]).documentType ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .hasDocumentTypeAny, value: .invalid(value: "11,12")))]).documentType ==
             .anyOf(ids: [11, 12]))
 
         // New noneOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8))),
             ]) ==
                 FilterState.default.with { $0.documentType = .noneOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
-                .init(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8))),
+                #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 19))),
             ]) ==
                 FilterState.default.with { $0.documentType = .noneOf(ids: [8, 19]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .doesNotHaveDocumentType, value: .invalid(value: "11,12"))]).documentType ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .invalid(value: "11,12")))]).documentType ==
             .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
 
     @Test
-    func testRuleToFilterStateRemaining() {
+    func testRuleToFilterStateRemaining() throws {
         // Unsupported rules go to "remaining":
-        let addedAfter = FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))
+        let addedAfter = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))))
         #expect(
             FilterState(rules: [addedAfter]).remaining ==
                 [addedAfter]
@@ -185,11 +185,11 @@ struct FilterStateTest {
     }
 
     @Test
-    func testRuleToFilterStateTags() {
-        let tagAll = [FilterRule]([
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
+    func testRuleToFilterStateTags() throws {
+        let tagAll = try [FilterRule]([
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))),
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))),
+            #require(FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))),
         ])
 
         // Single tag all rule
@@ -209,10 +209,10 @@ struct FilterStateTest {
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .hasTagsAll, value: .invalid(value: "11,12"))]).tags ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .hasTagsAll, value: .invalid(value: "11,12")))]).tags ==
             .allOf(include: [11, 12], exclude: []))
 
-        #expect(FilterState(rules: [FilterRule(ruleType: .doesNotHaveTag, value: .invalid(value: "11,12"))]).tags ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .doesNotHaveTag, value: .invalid(value: "11,12")))]).tags ==
             .allOf(include: [], exclude: [11, 12]))
 
         #expect(
@@ -225,9 +225,9 @@ struct FilterStateTest {
                 FilterState.default.with { $0.tags = .allOf(include: [71, 66], exclude: [75]) }
         )
 
-        let tagAny = [FilterRule]([
-            .init(ruleType: .hasTagsAny, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAny, value: .tag(id: 71)),
+        let tagAny = try [FilterRule]([
+            #require(FilterRule(ruleType: .hasTagsAny, value: .tag(id: 66))),
+            #require(FilterRule(ruleType: .hasTagsAny, value: .tag(id: 71))),
         ])
 
         #expect(
@@ -241,12 +241,12 @@ struct FilterStateTest {
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .hasTagsAny, value: .invalid(value: "11,12"))]).tags ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .hasTagsAny, value: .invalid(value: "11,12")))]).tags ==
             .anyOf(ids: [11, 12]))
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasAnyTag, value: .boolean(value: false)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasAnyTag, value: .boolean(value: false))),
             ]) ==
                 FilterState.default.with { $0.tags = .notAssigned }
         )
@@ -255,121 +255,122 @@ struct FilterStateTest {
     }
 
     @Test
-    func testRuleToFilterStateOwner() {
+    func testRuleToFilterStateOwner() throws {
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .owner, value: .number(value: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .owner, value: .number(value: 8))),
             ]) ==
                 FilterState.default.with { $0.owner = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerIsnull, value: .boolean(value: true)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true))),
             ]) ==
                 FilterState.default.with { $0.owner = .notAssigned }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerIsnull, value: .boolean(value: false)), // this is pretty odd
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerIsnull, value: .boolean(value: false))), // this is pretty odd
             ]) ==
                 FilterState.default.with { $0.owner = .any }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerAny, value: .number(value: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8))),
             ]) ==
                 FilterState.default.with { $0.owner = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerAny, value: .number(value: 8)),
-                .init(ruleType: .ownerAny, value: .number(value: 99)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8))),
+                #require(FilterRule(ruleType: .ownerAny, value: .number(value: 99))),
             ]) ==
                 FilterState.default.with { $0.owner = .anyOf(ids: [8, 99]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .ownerAny, value: .invalid(value: "11,12"))]).owner ==
+        let rule = try #require(FilterRule(ruleType: .ownerAny, value: .invalid(value: "11,12")))
+        #expect(FilterState(rules: [rule]).owner ==
             .anyOf(ids: [11, 12]))
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8))),
             ]) ==
                 FilterState.default.with { $0.owner = .noneOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
-                .init(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8))),
+                #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99))),
             ]) ==
                 FilterState.default.with { $0.owner = .noneOf(ids: [8, 99]) }
         )
 
         // Invalid multi-value recovery
-        #expect(FilterState(rules: [FilterRule(ruleType: .ownerDoesNotInclude, value: .invalid(value: "11,12"))]).owner ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .ownerDoesNotInclude, value: .invalid(value: "11,12")))]).owner ==
             .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
     }
 
-    func testRuleToFilterStateStoragePath() {
+    func testRuleToFilterStateStoragePath() throws {
         // Old single rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .storagePath, value: .storagePath(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .storagePath, value: .storagePath(id: 8))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .storagePath, value: .storagePath(id: nil)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .storagePath, value: .storagePath(id: nil))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .notAssigned }
         )
 
         // New anyOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .anyOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
-                .init(ruleType: .hasStoragePathAny, value: .storagePath(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
+                #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 19))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .anyOf(ids: [8, 19]) }
         )
 
-        #expect(FilterState(rules: [FilterRule(ruleType: .hasStoragePathAny, value: .invalid(value: "11,12"))]).storagePath ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .hasStoragePathAny, value: .invalid(value: "11,12")))]).storagePath ==
             .anyOf(ids: [11, 12]))
 
         // New noneOf rule
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .noneOf(ids: [8]) }
         )
 
         #expect(
-            FilterState(rules: [
-                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
-                .init(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 19)),
+            try FilterState(rules: [
+                #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
+                #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 19))),
             ]) ==
                 FilterState.default.with { $0.storagePath = .noneOf(ids: [8, 19]) }
         )
 
-        #expect(FilterState(rules: [FilterRule(ruleType: .doesNotHaveStoragePath, value: .invalid(value: "11,12"))]).storagePath ==
+        #expect(try FilterState(rules: [#require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .invalid(value: "11,12")))]).storagePath ==
             .noneOf(ids: [11, 12]))
 
         // @TODO: Test error states
@@ -378,7 +379,7 @@ struct FilterStateTest {
     // - MARK: FilterState to FilterRule
 
     @Test
-    func testFilterStateToRuleTextSearch() {
+    func testFilterStateToRuleTextSearch() throws {
         for mode in [FilterState.SearchMode](
             [.title, .content, .titleContent])
         {
@@ -386,8 +387,8 @@ struct FilterStateTest {
                 $0.searchMode = mode
             }
 
-            #expect(state.rules == [
-                FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo")),
+            #expect(try state.rules == [
+                #require(FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo"))),
             ])
         }
     }
@@ -465,9 +466,9 @@ struct FilterStateTest {
     }
 
     @Test
-    func testFilterStatetoRuleRemaining() {
+    func testFilterStatetoRuleRemaining() throws {
         // Unsupported rules go to "remaining" and are preserved
-        let addedAfter = FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))
+        let addedAfter = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))))
         #expect(
             FilterState(rules: [addedAfter]).rules ==
                 [addedAfter]
@@ -475,11 +476,11 @@ struct FilterStateTest {
     }
 
     @Test
-    func testFilterStateToRuleTags() {
-        let tagAll = [FilterRule]([
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
+    func testFilterStateToRuleTags() throws {
+        let tagAll = try [FilterRule]([
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))),
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))),
+            #require(FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))),
         ])
 
         #expect(
@@ -487,9 +488,9 @@ struct FilterStateTest {
                 FilterState.default.with { $0.tags = .allOf(include: [66, 71], exclude: [75]) }.rules
         )
 
-        let tagAny = [FilterRule]([
-            .init(ruleType: .hasTagsAny, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAny, value: .tag(id: 71)),
+        let tagAny = try [FilterRule]([
+            #require(FilterRule(ruleType: .hasTagsAny, value: .tag(id: 66))),
+            #require(FilterRule(ruleType: .hasTagsAny, value: .tag(id: 71))),
         ])
 
         #expect(
@@ -504,7 +505,7 @@ struct FilterStateTest {
     }
 
     @Test
-    func testFilterStateToRuleOwner() {
+    func testFilterStateToRuleOwner() throws {
         #expect([
             FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true)),
         ] == FilterState.default.with { $0.owner = .notAssigned }.rules)
@@ -514,55 +515,55 @@ struct FilterStateTest {
         // But this is redundant to just not having a rule, so let's not create one.
         #expect(FilterState.default.with { $0.owner = .any }.rules == []) // we could the
 
-        #expect([
-            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
+        #expect(try [
+            #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8))),
         ] == FilterState.default.with { $0.owner = .anyOf(ids: [8]) }.rules)
 
         // Technically, this could also be expressed as a rule .owner with value 8,
         // but that's equivalent
 
-        #expect([
-            FilterRule(ruleType: .ownerAny, value: .number(value: 8)),
-            FilterRule(ruleType: .ownerAny, value: .number(value: 99)),
+        #expect(try [
+            #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8))),
+            #require(FilterRule(ruleType: .ownerAny, value: .number(value: 99))),
         ] == FilterState.default.with { $0.owner = .anyOf(ids: [8, 99]) }.rules)
 
-        #expect([
-            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
+        #expect(try [
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8))),
         ] == FilterState.default.with { $0.owner = .noneOf(ids: [8]) }.rules)
 
-        #expect([
-            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)),
-            FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99)),
+        #expect(try [
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8))),
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99))),
         ] == FilterState.default.with { $0.owner = .noneOf(ids: [8, 99]) }.rules)
     }
 
     @Test
-    func testFilterStateToRuleStoragePath() {
+    func testFilterStateToRuleStoragePath() throws {
         // Old single rule
         #expect(
-            [FilterRule(ruleType: .storagePath, value: .storagePath(id: nil))] ==
+            try [#require(FilterRule(ruleType: .storagePath, value: .storagePath(id: nil)))] ==
                 FilterState.default.with { $0.storagePath = .notAssigned }.rules
         )
 
         // New anyOf rule
         #expect(
-            [FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))] ==
+            try [#require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)))] ==
                 FilterState.default.with { $0.storagePath = .anyOf(ids: [8]) }.rules
         )
 
-        #expect([
-            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
-            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 99)),
+        #expect(try [
+            #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
+            #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 99))),
         ] == FilterState.default.with { $0.storagePath = .anyOf(ids: [8, 99]) }.rules)
 
         // New noneOf rule
-        #expect([
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+        #expect(try [
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
         ] == FilterState.default.with { $0.storagePath = .noneOf(ids: [8]) }.rules)
 
-        #expect([
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 99)),
+        #expect(try [
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 99))),
         ] == FilterState.default.with { $0.storagePath = .noneOf(ids: [8, 99]) }.rules)
     }
 
@@ -570,13 +571,13 @@ struct FilterStateTest {
     func testRulesToFilterState() throws {
         // @TODO: Add owner and storage path filter
 
-        let input: [FilterRule] = [
-            .init(ruleType: .title, value: .string(value: "shantel")),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
-            .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))),
+        let input: [FilterRule] = try [
+            #require(FilterRule(ruleType: .title, value: .string(value: "shantel"))),
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))),
+            #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))),
+            #require(FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))),
+            #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))),
+            #require(FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))),
         ]
 
         // let state = FilterState.default.with {$0.rules = input}
@@ -622,7 +623,7 @@ struct FilterStateTest {
         #expect(queryItems == [URLQueryItem(name: "tags__id__in", value: "7,10,9")])
 
         // Multiple ones get properly concatenated "by accident"
-        let rule = FilterRule(ruleType: .hasTagsAny, value: .tag(id: 12))
+        let rule = try #require(FilterRule(ruleType: .hasTagsAny, value: .tag(id: 12)))
 
         let queryItems2 = FilterRule.queryItems(for: [result, rule])
         #expect(queryItems2 == [URLQueryItem(name: "tags__id__in", value: "12,7,10,9")])
