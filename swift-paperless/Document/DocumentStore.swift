@@ -96,7 +96,10 @@ final class DocumentStore: ObservableObject, Sendable {
                 }
             }
 
-            let duration: Duration = .seconds(activeTasks.isEmpty ? 60 : 2.5)
+            let emptyDuration = 60.0
+            let activeDuration: Double = ProcessInfo.processInfo.environment["TASK_POLLING_INTERVAL"].flatMap { Double($0) } ?? 2.5
+
+            let duration: Duration = .seconds(activeTasks.isEmpty ? emptyDuration : activeDuration)
             Logger.shared.debug("Task poller sleeping for \(duration)")
             try? await Task.sleep(for: duration)
         } while !Task.isCancelled
