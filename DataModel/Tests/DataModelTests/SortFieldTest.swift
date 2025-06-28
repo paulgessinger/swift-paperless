@@ -6,9 +6,10 @@
 //
 
 import Common
-@testable import DataModel
 import Foundation
 import Testing
+
+@testable import DataModel
 
 private let decoder = makeDecoder(tz: .current)
 
@@ -60,11 +61,14 @@ struct SortFieldTest {
         #expect(field == decoded)
     }
 
-    @Test("Tests that invalid values produce catch-all case", arguments: [
-        "invalid_sort_field",
-        "unknown",
-        "test",
-    ])
+    @Test(
+        "Tests that invalid values produce catch-all case",
+        arguments: [
+            "invalid_sort_field",
+            "unknown",
+            "test",
+        ]
+    )
     func testInvalidDecoding(invalidValue: String) throws {
         let invalidJson = """
         "\(invalidValue)"
@@ -72,5 +76,18 @@ struct SortFieldTest {
 
         let field = try decoder.decode(SortField.self, from: invalidJson)
         #expect(field == .other(invalidValue))
+    }
+
+    @Test("Tests encoding and decoding of custom fields")
+    func testEncodingCustomField() throws {
+        let field = SortField.customField(123)
+        let encoded = try JSONEncoder().encode(field)
+        let json = String(data: encoded, encoding: .utf8)!
+        #expect(
+            json == """
+            "custom_field_123"
+            """)
+        let decoded = try decoder.decode(SortField.self, from: encoded)
+        #expect(field == decoded)
     }
 }

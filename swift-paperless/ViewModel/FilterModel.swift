@@ -21,7 +21,7 @@ class FilterModel: ObservableObject {
 
     @Published var filterState: FilterState = {
         Logger.shared.trace("Loading FilterState")
-        guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.object(forKey: "GlobalFilterState") as? Data else {
+        guard let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.object(forKey: "GlobalFilterState") as? Data else {
             Logger.shared.trace("No default")
             return .default
         }
@@ -44,7 +44,7 @@ class FilterModel: ObservableObject {
                 Logger.shared.warning("Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
                 return
             }
-            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!.set(s, forKey: "GlobalFilterState")
+            UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(s, forKey: "GlobalFilterState")
 
             Logger.shared.trace("Encoded filter state to UserDefaults: \(String(describing: self.filterState)) -> \(String(decoding: s, as: UTF8.self))")
         }

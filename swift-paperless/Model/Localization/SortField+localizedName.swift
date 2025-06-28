@@ -9,7 +9,7 @@ import DataModel
 import Foundation
 
 extension SortField {
-    var localizedName: String {
+    func localizedName(customFields: [UInt: CustomField]) -> String {
         switch self {
         case .asn: String(localized: .localizable(.asn))
         case .correspondent: String(localized: .localizable(.correspondent))
@@ -23,6 +23,12 @@ extension SortField {
         case .notes: String(localized: .localizable(.sortOrderNotes))
         case .score: String(localized: .localizable(.sortOrderScore))
         case .pageCount: String(localized: .localizable(.sortOrderPageCount))
+        case let .customField(id):
+            if let field = customFields[id] {
+                field.name
+            } else {
+                String(localized: .localizable(.sortOrderCustomFieldUnknown(id)))
+            }
         case let .other(name): name
         }
     }

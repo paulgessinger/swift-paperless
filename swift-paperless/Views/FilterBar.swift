@@ -6,8 +6,10 @@
 //
 
 import Combine
+import Common
 import DataModel
 import Foundation
+import Networking
 import os
 import SwiftUI
 
@@ -34,7 +36,7 @@ private struct FilterMenu<Content: View>: View {
     @ViewBuilder var label: () -> Content
 
     private func saveSavedView() {
-        Logger.shared.info("Saving active saved view")
+        Logger.shared.info("Saving active saved view\("")")
         guard let id = filterModel.filterState.savedView, var updated = store.savedViews[id] else {
             errorController.push(message: "Unable to save active saved view")
             return
@@ -272,6 +274,56 @@ private struct Pill<Label: View>: View {
         }
         .foregroundColor(active ? Color(.accent) : Color.primary)
         .if(active) { view in view.bold() }
+    }
+}
+
+private struct SortMenu: View {
+    @Binding var filterState: FilterState
+    @EnvironmentObject private var store: DocumentStore
+
+    private var eligibleSortFields: [SortField] {
+        let isAdvancedSearch = !filterState.searchText.isEmpty && filterState.searchMode == .advanced
+
+        let inclusive = SortField.allCases + store.customFields
+            .map(\.value)
+            .sorted { $0.name < $1.name }
+            .map { SortField.customField($0.id) }
+
+        if isAdvancedSearch || filterState.sortField == .score {
+            return inclusive
+        } else {
+            return inclusive.filter { $0 != .score }
+        }
+    }
+
+    var body: some View {
+        Menu {
+            Picker(String(localized: .localizable(.sortOrder)), selection: $filterState.sortOrder) {
+                Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
+                    .tag(SortOrder.ascending)
+                Label(SortOrder.descending.localizedName, systemImage: "arrow.down")
+                    .tag(SortOrder.descending)
+            }
+
+            Picker(String(localized: .localizable(.sortBy)), selection: $filterState.sortField) {
+                ForEach(eligibleSortFields, id: \.rawValue) { f in
+                    Text(f.localizedName(customFields: store.customFields)).tag(f)
+                }
+                if case let .other(value) = filterState.sortField {
+                    Text(value)
+                        .tag(SortField.other(value))
+                }
+            }
+        }
+        label: {
+            Element(label: {
+                Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
+                    .labelStyle(.iconOnly)
+            }, active: !filterState.defaultSorting, action: {})
+        }
+        .onTapGesture {
+            Haptics.shared.impact(style: .light)
+        }
     }
 }
 
@@ -595,35 +647,7 @@ struct FilterBar: View {
 
                 Divider()
 
-                Menu {
-                    let isAdvancedSearch = !filterState.searchText.isEmpty && filterState.searchMode == .advanced
-                    let eligibleSortFields = (isAdvancedSearch || filterState.sortField == .score) ? SortField.allCases : SortField.allCases.filter { $0 != .score }
-                    Picker(String(localized: .localizable(.sortBy)), selection: $filterState.sortField) {
-                        ForEach(eligibleSortFields, id: \.rawValue) { f in
-                            Text(f.localizedName).tag(f)
-                        }
-                        if case let .other(value) = filterState.sortField {
-                            Text(value)
-                                .tag(SortField.other(value))
-                        }
-                    }
-
-                    Picker(String(localized: .localizable(.sortOrder)), selection: $filterState.sortOrder) {
-                        Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
-                            .tag(SortOrder.ascending)
-                        Label(SortOrder.descending.localizedName, systemImage: "arrow.down")
-                            .tag(SortOrder.descending)
-                    }
-                }
-                label: {
-                    Element(label: {
-                        Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
-                            .labelStyle(.iconOnly)
-                    }, active: !filterState.defaultSorting, action: {})
-                }
-                .onTapGesture {
-                    Haptics.shared.impact(style: .light)
-                }
+                SortMenu(filterState: $filterState)
             }
             .padding(.horizontal)
             .foregroundColor(.primary)
@@ -702,5 +726,52 @@ struct FilterBar: View {
                 }
             }
         }
+    }
+}
+
+private let customFields = [
+    CustomField(id: 1, name: "Custom float", dataType: .float),
+    CustomField(id: 2, name: "Custom bool", dataType: .boolean),
+    CustomField(id: 4, name: "Custom integer", dataType: .integer),
+]
+
+#Preview {
+    @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+    @Previewable @StateObject var filterModel = FilterModel()
+    @Previewable @StateObject var errorController = ErrorController()
+
+    NavigationStack {
+        Form {
+            FilterBar()
+                .environmentObject(store)
+                .environmentObject(filterModel)
+                .environmentObject(errorController)
+
+            Section {
+                Text(String(describing: filterModel.filterState))
+            }
+        }
+    }
+    .task {
+        do {
+            let repository = store.repository as! TransientRepository
+            await repository.addUser(
+                User(id: 1, isSuperUser: false, username: "user", groups: [1]))
+            try? await repository.login(userId: 1)
+            for field in customFields {
+                _ = try await repository.add(customField: field)
+            }
+
+            _ = try await store.create(tag: ProtoTag(name: "Inbox"))
+            _ = try await store.create(correspondent: ProtoCorrespondent(name: "Test Correspondent"))
+            _ = try await store.create(documentType: ProtoDocumentType(name: "Test Document Type"))
+            _ = try await store.create(storagePath: ProtoStoragePath(name: "Test Storage Path"))
+
+            try await store.fetchAll()
+            try await store.repository.create(
+                document: ProtoDocument(title: "blubb"),
+                file: #URL("http://example.com"), filename: "blubb.pdf"
+            )
+        } catch {}
     }
 }
