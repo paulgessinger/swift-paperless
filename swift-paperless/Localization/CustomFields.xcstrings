@@ -12,8 +12,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Benutzerdefiniertes Feld hinzufügen"
           }
         },
         "en" : {
@@ -65,8 +65,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Datum setzen"
           }
         },
         "en" : {
@@ -118,8 +118,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Datumswert löschen"
           }
         },
         "en" : {
@@ -171,8 +171,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Löschen"
           }
         },
         "en" : {
@@ -224,8 +224,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Auswählen"
           }
         },
         "en" : {
@@ -277,8 +277,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Dokumentensuche via Titel"
           }
         },
         "en" : {
@@ -330,8 +330,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Ausgewählt"
           }
         },
         "en" : {
@@ -383,8 +383,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**ˋ%@ˋ** ist kein gültiges Datum. Es wird das Format \"2025-06-15\" erwartet."
           }
         },
         "en" : {
@@ -595,8 +595,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Ungültiges benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -648,8 +648,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "'%@' ist keine gültige URL."
           }
         },
         "en" : {
@@ -701,8 +701,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Betrag"
           }
         },
         "en" : {
@@ -754,8 +754,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Es existieren keine benutzerdefinierte Felder"
           }
         },
         "en" : {
@@ -807,8 +807,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Keine benutzerdefinierte Felder zum Hinzufügen vorhanden."
           }
         },
         "en" : {
@@ -860,8 +860,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Keine benutzerdefinierte Felder hinzugefügt"
           }
         },
         "en" : {
@@ -966,8 +966,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Aktuell kein Datum gesetzt"
           }
         },
         "en" : {
@@ -1019,8 +1019,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Felder suchen"
           }
         },
         "en" : {
@@ -1072,8 +1072,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Felder"
           }
         },
         "en" : {
@@ -1337,8 +1337,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Unbekannter Wert für benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -1390,8 +1390,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Ungültig"
           }
         },
         "en" : {
@@ -1443,8 +1443,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Öffnen"
           }
         },
         "en" : {
