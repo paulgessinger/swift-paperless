@@ -1,7 +1,8 @@
 import DataModel
 import Foundation
-@testable import Networking
 import Testing
+
+@testable import Networking
 
 @Suite struct TransientRepositoryTest {
     @Test func testDocumentCRUD() async throws {
@@ -17,7 +18,9 @@ import Testing
             created: .now,
             storagePath: nil
         )
-        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf")
+        try await repository.create(
+            document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf"
+        )
 
         // Read - by ID
         let doc = try await repository.document(id: 1)
@@ -169,7 +172,9 @@ import Testing
 
         // Create a document first
         let protoDoc = ProtoDocument(title: "Test Document")
-        try await repository.create(document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf")
+        try await repository.create(
+            document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf"
+        )
 
         // Add a note
         let note = ProtoDocument.Note(note: "Test Note")
@@ -206,7 +211,9 @@ import Testing
 
         // Try to access a non-existent document's notes
         await #expect(throws: RepositoryError.documentNotFound) {
-            _ = try await repository.createNote(documentId: 999, note: ProtoDocument.Note(note: "Test"))
+            _ = try await repository.createNote(
+                documentId: 999, note: ProtoDocument.Note(note: "Test")
+            )
         }
     }
 
@@ -260,19 +267,21 @@ import Testing
         #expect(initialFields.isEmpty)
 
         // Add some custom fields
-        _ = try await repository.add(customField: CustomField(
-            id: 1,
-            name: "Invoice Number",
-            dataType: .string,
-            extraData: .init()
-        ))
+        _ = try await repository.add(
+            customField: CustomField(
+                id: 1,
+                name: "Invoice Number",
+                dataType: .string,
+                extraData: .init()
+            ))
 
-        _ = try await repository.add(customField: CustomField(
-            id: 2,
-            name: "Amount",
-            dataType: .monetary,
-            extraData: .init(defaultCurrency: "USD")
-        ))
+        _ = try await repository.add(
+            customField: CustomField(
+                id: 2,
+                name: "Amount",
+                dataType: .monetary,
+                extraData: .init(defaultCurrency: "USD")
+            ))
 
         // Read all fields
         let fields = try await repository.customFields()
@@ -316,19 +325,8 @@ import Testing
         }
 
         // Test searching for "Invoice"
-        var filter = FilterState(
-            correspondent: .any,
-            documentType: .any,
-            storagePath: .any,
-            owner: .any,
-            tags: .any,
-            sortField: .title,
-            sortOrder: .ascending,
-            remaining: [],
-            savedView: nil,
-            searchText: "Invoice",
-            searchMode: .title
-        )
+        var filter = FilterState.empty
+        filter.searchText = "Invoice"
 
         let invoiceResults = try await repository.documents(filter: filter)
         let invoiceDocs = try await invoiceResults.fetch(limit: 10)
