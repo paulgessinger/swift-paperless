@@ -40,6 +40,7 @@ extension FilterState {
             savedView: nil,
             searchText: nil,
             searchMode: defaultSearchMode,
+            customField: .any
         )
     }
 
