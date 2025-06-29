@@ -125,34 +125,19 @@ public struct FilterRule: Equatable, Sendable {
     public var ruleType: FilterRuleType
     public var value: FilterRuleValue
 
-    // @TODO: Make this optional if the types are wrong
-    public init(ruleType: FilterRuleType, value: FilterRuleValue) {
+    public init?(ruleType: FilterRuleType, value: FilterRuleValue) {
         self.ruleType = ruleType
-        self.value = value
+        switch (ruleType, ruleType.dataType(), value) {
+        case (_, .date, .date), (_, .number, .number), (_, .tag, .tag), (_, .boolean, .boolean),
+             (_, .documentType, .documentType), (_, .storagePath, .storagePath),
+             (_, .correspondent, .correspondent), (_, .number, .owner), (_, .string, .string):
+            self.value = value
 
-        let dt = self.ruleType.dataType()
+        case let (_, _, .invalid(str)):
+            self.value = .invalid(value: str)
 
-        switch value {
-        case .date:
-            precondition(dt == .date, "Invalid data type")
-        case .number:
-            precondition(dt == .number, "Invalid data type")
-        case .tag:
-            precondition(dt == .tag, "Invalid data type")
-        case .boolean:
-            precondition(dt == .boolean, "Invalid data type")
-        case .documentType:
-            precondition(dt == .documentType, "Invalid data type")
-        case .storagePath:
-            precondition(dt == .storagePath, "Invalid data type")
-        case .correspondent:
-            precondition(dt == .correspondent, "Invalid data type")
-        case .owner:
-            precondition(dt == .number, "Invalid data type")
-        case .string:
-            precondition(dt == .string, "Invalid data type")
-        case .invalid:
-            break
+        default:
+            return nil
         }
     }
 
