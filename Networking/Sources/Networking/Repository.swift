@@ -159,11 +159,9 @@ public extension Repository {
 
     // Helper method documents with a title search
     func documents(containsTitle title: String, limit: UInt = 10) async throws -> [Document] {
-        let filter = FilterState(
-            correspondent: .any, documentType: .any, storagePath: .any, owner: .any, tags: .any,
-            sortField: .title, sortOrder: .ascending, remaining: [], savedView: nil,
-            searchText: title, searchMode: .title
-        )
+        var filter = FilterState.empty
+        filter.searchText = title
+
         let source = try documents(filter: filter)
         return try await source.fetch(limit: limit)
     }
