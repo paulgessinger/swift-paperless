@@ -1450,8 +1450,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -1503,8 +1503,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Felder"
           }
         },
         "en" : {
@@ -4883,8 +4883,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Nie"
           }
         },
         "tr" : {
@@ -8668,9 +8668,51 @@
     "sortOrderCustomFieldUnknown" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekanntes benutzerdefiniertes Feld %u"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown custom field %u"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Unknown custom field %u"
           }
         }
@@ -10999,8 +11041,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Tak"
           }
         },
         "tr" : {
