@@ -114,6 +114,26 @@ public struct FilterState: Equatable, Codable, Sendable {
         self.searchMode = searchMode
     }
 
+    public static var empty: FilterState {
+        FilterState(correspondent: .any,
+                    documentType: .any,
+                    storagePath: .any,
+                    owner: .any,
+                    tags: .any,
+                    sortField: .asn,
+                    sortOrder: .descending,
+                    remaining: [],
+                    savedView: nil,
+                    searchText: nil,
+                    searchMode: .title)
+    }
+
+    func with(_ factory: (inout Self) -> Void) -> Self {
+        var copy = self
+        factory(&copy)
+        return copy
+    }
+
     // MARK: Methods
 
     public mutating func handleElementAny(ids: [UInt]?, filter: Filter,
@@ -289,5 +309,264 @@ public struct FilterState: Equatable, Codable, Sendable {
         }
 
         return result
+    }
+
+    public static func create(using factory: KeyPath<Self.Type, Self>, withRules rules: [FilterRule]) -> Self {
+        var state = Self.self[keyPath: factory]
+        state.populateWith(rules: rules)
+        return state
+    }
+
+    private mutating func populateWith(rules: [FilterRule]) {
+        let getTagIds = { (rule: FilterRule) -> [UInt]? in
+            switch rule.value {
+            case let .tag(id):
+                return [id]
+            case let .invalid(value):
+                Logger.dataModel.warning("Recovering multi-value rule \(String(describing: rule.ruleType), privacy: .public) from value \(String(describing: value), privacy: .public)")
+                return value.components(separatedBy: ",").compactMap { UInt($0) }
+            default:
+                return nil
+            }
+        }
+
+        let getOwnerIds = { (rule: FilterRule) -> [UInt]? in
+            switch rule.value {
+            case let .number(id):
+                return [UInt(id)]
+            case let .invalid(value):
+                Logger.dataModel.warning("Recovering multi-value rule \(String(describing: rule.ruleType), privacy: .public) from value \(String(describing: value), privacy: .public)")
+                return value.components(separatedBy: ",").compactMap { UInt($0) }
+            default:
+                return nil
+            }
+        }
+
+        for rule in rules {
+            switch rule.ruleType {
+            case .title, .content, .titleContent, .fulltextQuery:
+                guard let mode = SearchMode(ruleType: rule.ruleType) else {
+                    fatalError("Could not convert rule type to search mode (this should not occur)")
+                }
+                searchMode = mode
+                guard case let .string(v) = rule.value else {
+                    Logger.dataModel.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+                searchText = v
+
+            case .correspondent:
+                guard case let .correspondent(id) = rule.value else {
+                    Logger.dataModel.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                correspondent = id == nil ? .notAssigned : .anyOf(ids: [id!])
+
+            case .hasCorrespondentAny:
+                correspondent = handleElementAny(ids: rule.value.correspondentId,
+                                                 filter: correspondent,
+                                                 rule: rule)
+
+            case .doesNotHaveCorrespondent:
+                correspondent = handleElementNone(ids: rule.value.correspondentId,
+                                                  filter: correspondent,
+                                                  rule: rule)
+
+            case .documentType:
+                guard case let .documentType(id) = rule.value else {
+                    Logger.dataModel.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                documentType = id == nil ? .notAssigned : .anyOf(ids: [id!])
+
+            case .hasDocumentTypeAny:
+                documentType = handleElementAny(ids: rule.value.documentTypeId,
+                                                filter: documentType,
+                                                rule: rule)
+
+            case .doesNotHaveDocumentType:
+                documentType = handleElementNone(ids: rule.value.documentTypeId,
+                                                 filter: documentType,
+                                                 rule: rule)
+
+            case .storagePath:
+                guard case let .storagePath(id) = rule.value else {
+                    Logger.dataModel.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+                storagePath = id == nil ? .notAssigned : .anyOf(ids: [id!])
+
+            case .hasStoragePathAny:
+                storagePath = handleElementAny(ids: rule.value.storagePathId,
+                                               filter: storagePath,
+                                               rule: rule)
+
+            case .doesNotHaveStoragePath:
+                storagePath = handleElementNone(ids: rule.value.storagePathId,
+                                                filter: storagePath,
+                                                rule: rule)
+
+            case .hasTagsAll:
+                guard let ids = getTagIds(rule) else {
+                    Logger.dataModel.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                if case let .allOf(include, exclude) = tags {
+                    // have allOf already
+                    tags = .allOf(include: include + ids, exclude: exclude)
+                } else if case .any = tags {
+                    tags = .allOf(include: ids, exclude: [])
+                } else {
+                    Logger.dataModel.error("Already found .anyOf tag rule, inconsistent rule set?")
+                    remaining.append(rule)
+                }
+
+            case .doesNotHaveTag:
+                guard let ids = getTagIds(rule) else {
+                    Logger.dataModel.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                if case let .allOf(include, exclude) = tags {
+                    // have allOf already
+                    tags = .allOf(include: include, exclude: exclude + ids)
+                } else if case .any = tags {
+                    tags = .allOf(include: [], exclude: ids)
+                } else {
+                    Logger.dataModel.error("Already found .anyOf tag rule, inconsistent rule set?")
+                    remaining.append(rule)
+                    break
+                }
+
+            case .hasTagsAny:
+                guard let ruleIds = getTagIds(rule) else {
+                    Logger.dataModel.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                if case let .anyOf(ids) = tags {
+                    tags = .anyOf(ids: ids + ruleIds)
+                } else if case .any = tags {
+                    tags = .anyOf(ids: ruleIds)
+                } else {
+                    Logger.dataModel.error("Already found .anyOf tag rule, inconsistent rule set?")
+                    remaining.append(rule)
+                    break
+                }
+
+            case .hasAnyTag:
+                guard case let .boolean(value) = rule.value, value == false else {
+                    Logger.dataModel.error("Invalid value for rule type")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch tags {
+                case .anyOf:
+                    fallthrough
+                case .allOf:
+                    Logger.dataModel.error("Have filter state .allOf or .anyOf, but found is-not-tagged rule")
+                    remaining.append(rule)
+                case .any:
+                    tags = .notAssigned
+                case .notAssigned:
+                    // nothing to do, redundant rule probably
+                    break
+                }
+
+            case .owner:
+                guard case let .number(id) = rule.value, id >= 0 else {
+                    Logger.dataModel.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case let .anyOf(ids):
+                    if !(ids.count == 1 && ids[0] == id) {
+                        Logger.dataModel.error("Owner is already set to .anyOf, but got other owner")
+                    }
+                    fallthrough // reset anyway
+                case .noneOf:
+                    Logger.dataModel.error("Owner is already set to .noneOf, but got explicit owner")
+                    fallthrough // reset anyway
+                case .notAssigned:
+                    Logger.dataModel.error("Already have ownerIsnull rule, but got explicit owner")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .anyOf(ids: [UInt(id)])
+                }
+
+            case .ownerIsnull:
+                guard case let .boolean(value) = rule.value else {
+                    Logger.dataModel.error("Invalid value for rule type \(String(describing: rule.ruleType))")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case .anyOf:
+                    Logger.dataModel.error("Owner is already set to .anyOf, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .noneOf:
+                    Logger.dataModel.error("Owner is already set to .noneOf, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .notAssigned:
+                    Logger.dataModel.error("Already have ownerIsnull rule, but got ownerIsnull=\(value)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = value ? .notAssigned : .any
+                }
+
+            case .ownerAny:
+                guard let ids = getOwnerIds(rule) else {
+                    Logger.dataModel.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case let .anyOf(existing):
+                    owner = .anyOf(ids: existing + ids)
+                case .noneOf, .notAssigned:
+                    let ownerCopy = owner
+                    Logger.dataModel.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerAny=\(ids)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .anyOf(ids: ids)
+                }
+
+            case .ownerDoesNotInclude:
+                guard let ids = getOwnerIds(rule) else {
+                    Logger.dataModel.error("Cannot handle value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                switch owner {
+                case let .noneOf(existing):
+                    owner = .noneOf(ids: existing + ids)
+                case .anyOf, .notAssigned:
+                    let ownerCopy = owner
+                    Logger.dataModel.error("Owner is already set to \(String(describing: ownerCopy)), but got rule ownerDoesNotInclude=\(ids)")
+                    fallthrough // reset anyway
+                case .any:
+                    owner = .noneOf(ids: ids)
+                }
+
+            default:
+                remaining.append(rule)
+            }
+        }
     }
 }
