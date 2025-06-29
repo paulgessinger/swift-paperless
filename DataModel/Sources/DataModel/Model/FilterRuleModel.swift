@@ -126,12 +126,8 @@ public struct FilterRule: Equatable, Sendable {
     public var value: FilterRuleValue
 
     public init?(ruleType: FilterRuleType, value: FilterRuleValue) {
-        switch (ruleType.dataType(), value) {
-        case (.date, .date), (.number, .number), (.tag, .tag), (.boolean, .boolean), (.documentType, .documentType), (.storagePath, .storagePath), (.correspondent, .correspondent), (.number, .owner), (.string, .string):
-            self.ruleType = ruleType
-            self.value = value
-
-        // For all other cases, we can just use the value as is, IF it matches the rule type
+        self.ruleType = ruleType
+        switch (ruleType, ruleType.dataType(), value) {
         case (_, .date, .date), (_, .number, .number), (_, .tag, .tag), (_, .boolean, .boolean),
              (_, .documentType, .documentType), (_, .storagePath, .storagePath),
              (_, .correspondent, .correspondent), (_, .number, .owner), (_, .string, .string):
