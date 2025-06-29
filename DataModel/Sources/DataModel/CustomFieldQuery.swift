@@ -28,10 +28,18 @@ public indirect enum CustomFieldQuery: Equatable, Sendable {
 
     case op(LogicalOperator, [Self])
     case expr(UInt, FieldOperator, Argument)
+    case any
 }
 
 extension CustomFieldQuery: Codable {
     public init(from decoder: Decoder) throws {
+        // Check if the JSON is null
+        if let container = try? decoder.singleValueContainer(), container.decodeNil() {
+            self = .any
+            return
+        }
+
+        // Otherwise decode as an array
         var container = try decoder.unkeyedContainer()
 
         if container.count == 2 {
@@ -54,16 +62,19 @@ extension CustomFieldQuery: Codable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.unkeyedContainer()
-
         switch self {
         case let .op(op, args):
+            var container = encoder.unkeyedContainer()
             try container.encode(op)
             try container.encode(args)
         case let .expr(id, op, arg):
+            var container = encoder.unkeyedContainer()
             try container.encode(id)
             try container.encode(op)
             try container.encode(arg)
+        case .any:
+            var container = encoder.singleValueContainer()
+            try container.encodeNil()
         }
     }
 }
