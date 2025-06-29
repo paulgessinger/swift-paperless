@@ -32,7 +32,7 @@ private extension FilterState {
 struct FilterStateTest {
     // - MARK: FilterRule to FilterState
 
-    @Test
+    @Test("Search mode conversion between FilterRuleType and FilterState.SearchMode")
     func testSearchModeConversion() {
         #expect(FilterRuleType.title == FilterState.SearchMode.title.ruleType)
         #expect(FilterRuleType.content == FilterState.SearchMode.content.ruleType)
@@ -43,7 +43,7 @@ struct FilterStateTest {
         #expect(FilterState.SearchMode(ruleType: .titleContent) == FilterState.SearchMode.titleContent)
     }
 
-    @Test
+    @Test("Convert text search rules to FilterState")
     func testRuleToFilterStateTextSearch() throws {
         for mode in [FilterRuleType](
             [.title, .content, .titleContent])
@@ -60,7 +60,7 @@ struct FilterStateTest {
         }
     }
 
-    @Test
+    @Test("Convert correspondent rules to FilterState")
     func testRuleToFilterStateCorrespondent() throws {
         // Old single rule
         #expect(
@@ -120,7 +120,7 @@ struct FilterStateTest {
         // @TODO: Test error states
     }
 
-    @Test
+    @Test("Convert document type rules to FilterState")
     func testRuleToFilterStateDocumentType() throws {
         // Old single rule
         #expect(
@@ -180,7 +180,7 @@ struct FilterStateTest {
         // @TODO: Test error states
     }
 
-    @Test
+    @Test("Unsupported rules go to remaining array")
     func testRuleToFilterStateRemaining() throws {
         // Unsupported rules go to "remaining":
         let addedAfter = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))))
@@ -190,7 +190,7 @@ struct FilterStateTest {
         )
     }
 
-    @Test
+    @Test("Convert tag rules to FilterState")
     func testRuleToFilterStateTags() throws {
         let tagAll = try [FilterRule]([
             #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))),
@@ -260,7 +260,7 @@ struct FilterStateTest {
         // @TODO: Test error states
     }
 
-    @Test
+    @Test("Convert owner rules to FilterState")
     func testRuleToFilterStateOwner() throws {
         #expect(
             try FilterState(rules: [
@@ -325,6 +325,7 @@ struct FilterStateTest {
         // @TODO: Test error states
     }
 
+    @Test("Convert storage path rules to FilterState")
     func testRuleToFilterStateStoragePath() throws {
         // Old single rule
         #expect(
@@ -373,7 +374,7 @@ struct FilterStateTest {
                 #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
                 #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 19))),
             ]) ==
-                FilterState.empty
+                FilterState.empty.with { $0.storagePath = .noneOf(ids: [8, 19]) }
         )
 
         #expect(try FilterState(rules: [#require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .invalid(value: "11,12")))]).storagePath ==
@@ -384,7 +385,7 @@ struct FilterStateTest {
 
     // - MARK: FilterState to FilterRule
 
-    @Test
+    @Test("Convert FilterState text search to rules")
     func testFilterStateToRuleTextSearch() throws {
         for mode in [FilterState.SearchMode](
             [.title, .content, .titleContent])
@@ -399,12 +400,12 @@ struct FilterStateTest {
         }
     }
 
-    @Test
+    @Test("Empty FilterState produces no rules")
     func testFilterStateToRuleEmpty() {
         #expect(FilterState.empty.rules == [])
     }
 
-    @Test
+    @Test("Convert FilterState correspondent to rules")
     func testFilterStateToRuleCorrespondent() {
         // Old single rule
         #expect(
@@ -441,7 +442,7 @@ struct FilterStateTest {
         )
     }
 
-    @Test
+    @Test("Convert FilterState document type to rules")
     func testFilterStateToRuleDocumentType() {
         // Old single rule
         #expect(
@@ -471,7 +472,7 @@ struct FilterStateTest {
         ] == FilterState.empty.with { $0.documentType = .noneOf(ids: [8, 99]) }.rules)
     }
 
-    @Test
+    @Test("Remaining rules are preserved in round-trip conversion")
     func testFilterStatetoRuleRemaining() throws {
         // Unsupported rules go to "remaining" and are preserved
         let addedAfter = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1))))
@@ -481,7 +482,7 @@ struct FilterStateTest {
         )
     }
 
-    @Test
+    @Test("Convert FilterState tags to rules")
     func testFilterStateToRuleTags() throws {
         let tagAll = try [FilterRule]([
             #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))),
@@ -510,7 +511,7 @@ struct FilterStateTest {
         )
     }
 
-    @Test
+    @Test("Convert FilterState owner to rules")
     func testFilterStateToRuleOwner() throws {
         #expect([
             FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true)),
@@ -543,7 +544,7 @@ struct FilterStateTest {
         ] == FilterState.empty.with { $0.owner = .noneOf(ids: [8, 99]) }.rules)
     }
 
-    @Test
+    @Test("Convert FilterState storage path to rules")
     func testFilterStateToRuleStoragePath() throws {
         // Old single rule
         #expect(
@@ -573,39 +574,39 @@ struct FilterStateTest {
         ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8, 99]) }.rules)
     }
 
-    @Test
+    @Test("FilterState with custom field query")
     func testFilterStateWithCustomFieldQuery() throws {
         // Test creating a FilterState with a custom field query
         let customQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
-        
+
         let state = FilterState.empty.with { $0.customField = customQuery }
         #expect(state.customField == customQuery)
-        
+
         // Test that the custom field query is preserved when creating from rules
         let rule = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(customQuery)))
         let stateFromRule = FilterState(rules: [rule])
-        
+
         #expect(stateFromRule.customField == customQuery)
         #expect(stateFromRule.remaining.isEmpty)
     }
 
-    @Test
+    @Test("Convert FilterState custom field query to rule")
     func testFilterStateToRuleCustomFieldQuery() throws {
         // Test that custom field query gets converted to rule
         let customQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
         let state = FilterState.empty.with { $0.customField = customQuery }
-        
+
         let rules = state.rules
         #expect(rules.count == 1)
         #expect(rules[0].ruleType == .customFieldsQuery)
         #expect(rules[0].value == .customFieldQuery(customQuery))
-        
+
         // Test round-trip: FilterState -> Rules -> FilterState
         let roundTripState = FilterState(rules: rules)
         #expect(roundTripState.customField == customQuery)
     }
 
-    @Test
+    @Test("Complex rules to FilterState conversion")
     func testRulesToFilterState() throws {
         // @TODO: Add owner and storage path filter
 
@@ -633,7 +634,7 @@ struct FilterStateTest {
         )
     }
 
-    @Test
+    @Test("Load invalid type preserving functionality")
     func testLoadInvalidTypePreserving() throws {
         // This is a known rule with an invalid value
         let input = """
