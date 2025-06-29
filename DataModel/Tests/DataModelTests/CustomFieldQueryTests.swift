@@ -134,6 +134,26 @@ struct CustomFieldQueryTests {
         #expect(containsDecoded == .expr(9, .contains, .array([.integer(3)])))
     }
 
+    @Test("Test .any case encoding and decoding")
+    func testAnyCase() throws {
+        let anyQuery = CustomFieldQuery.any
+
+        // Test encoding
+        let encoded = try JSONEncoder().encode(anyQuery)
+        let encodedString = String(data: encoded, encoding: .utf8)!
+        #expect(encodedString == "null")
+
+        // Test decoding
+        let nullJson = "null".data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(CustomFieldQuery.self, from: nullJson)
+        #expect(decoded == .any)
+
+        // Test round-trip
+        let roundTripEncoded = try JSONEncoder().encode(decoded)
+        let roundTripDecoded = try JSONDecoder().decode(CustomFieldQuery.self, from: roundTripEncoded)
+        #expect(roundTripDecoded == .any)
+    }
+
     @Test("Test encoding individual field expressions")
     func testEncodingIndividualExpressions() throws {
         let existsQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
