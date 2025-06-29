@@ -128,6 +128,16 @@ public struct FilterRule: Equatable, Sendable {
     public init?(ruleType: FilterRuleType, value: FilterRuleValue) {
         self.ruleType = ruleType
         switch (ruleType, ruleType.dataType(), value) {
+
+        // If we get a string, we need to parse it into a custom field query, this might fail however
+        case let (.customFieldsQuery, .string, .string(value)):
+            if let query = CustomFieldQuery(rawValue: value) {
+                self.value = .customFieldQuery(query)
+            } else {
+                return nil
+            }
+
+        // For all other cases, we can just use the value as is, IF it matches the rule type
         case (_, .date, .date), (_, .number, .number), (_, .tag, .tag), (_, .boolean, .boolean),
              (_, .documentType, .documentType), (_, .storagePath, .storagePath),
              (_, .correspondent, .correspondent), (_, .number, .owner), (_, .string, .string):
