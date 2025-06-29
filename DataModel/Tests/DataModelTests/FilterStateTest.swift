@@ -574,6 +574,38 @@ struct FilterStateTest {
     }
 
     @Test
+    func testFilterStateWithCustomFieldQuery() throws {
+        // Test creating a FilterState with a custom field query
+        let customQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
+        
+        let state = FilterState.empty.with { $0.customField = customQuery }
+        #expect(state.customField == customQuery)
+        
+        // Test that the custom field query is preserved when creating from rules
+        let rule = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(customQuery)))
+        let stateFromRule = FilterState(rules: [rule])
+        
+        #expect(stateFromRule.customField == customQuery)
+        #expect(stateFromRule.remaining.isEmpty)
+    }
+
+    @Test
+    func testFilterStateToRuleCustomFieldQuery() throws {
+        // Test that custom field query gets converted to rule
+        let customQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
+        let state = FilterState.empty.with { $0.customField = customQuery }
+        
+        let rules = state.rules
+        #expect(rules.count == 1)
+        #expect(rules[0].ruleType == .customFieldsQuery)
+        #expect(rules[0].value == .customFieldQuery(customQuery))
+        
+        // Test round-trip: FilterState -> Rules -> FilterState
+        let roundTripState = FilterState(rules: rules)
+        #expect(roundTripState.customField == customQuery)
+    }
+
+    @Test
     func testRulesToFilterState() throws {
         // @TODO: Add owner and storage path filter
 
