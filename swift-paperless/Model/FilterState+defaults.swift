@@ -39,7 +39,7 @@ extension FilterState {
             remaining: [],
             savedView: nil,
             searchText: nil,
-            searchMode: defaultSearchMode,
+            searchMode: defaultSearchMode
         )
     }
 
