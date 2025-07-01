@@ -167,11 +167,11 @@ struct FilterRuleTest {
         let result = try makeDecoder(tz: .current).decode([FilterRule].self, from: input)
 
         let expected: [FilterRule] = [
-            .init(ruleType: .title, value: .string(value: "shantel")),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
-            .init(ruleType: .correspondent, value: .correspondent(id: nil)),
+            FilterRule(ruleType: .title, value: .string(value: "shantel"))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))!,
+            FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))!,
+            FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))!,
         ]
 
         try #require(result.count == expected.count + 1)
@@ -209,12 +209,12 @@ struct FilterRuleTest {
     @Test
     func testEncodingMultiple() throws {
         let input: [FilterRule] = [
-            .init(ruleType: .title, value: .string(value: "shantel")),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
-            .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt))),
+            FilterRule(ruleType: .title, value: .string(value: "shantel"))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))!,
+            FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))!,
+            FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))!,
+            FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt)))!,
         ]
 
         let encoder = JSONEncoder()
@@ -235,14 +235,14 @@ struct FilterRuleTest {
     @Test
     func testQueryItems() throws {
         let input: [FilterRule] = [
-            .init(ruleType: .title, value: .string(value: "shantel")),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 66)),
-            .init(ruleType: .hasTagsAll, value: .tag(id: 71)),
-            .init(ruleType: .doesNotHaveTag, value: .tag(id: 75)),
-            .init(ruleType: .correspondent, value: .correspondent(id: nil)),
-            .init(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt))),
-            .init(ruleType: .storagePath, value: .storagePath(id: 8)),
-            .init(ruleType: .storagePath, value: .storagePath(id: nil)),
+            FilterRule(ruleType: .title, value: .string(value: "shantel"))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))!,
+            FilterRule(ruleType: .hasTagsAll, value: .tag(id: 71))!,
+            FilterRule(ruleType: .doesNotHaveTag, value: .tag(id: 75))!,
+            FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))!,
+            FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .gmt)))!,
+            FilterRule(ruleType: .storagePath, value: .storagePath(id: 8))!,
+            FilterRule(ruleType: .storagePath, value: .storagePath(id: nil))!,
         ]
 
         let sort = { (a: URLQueryItem, b: URLQueryItem) -> Bool in a.name < b.name }
@@ -267,112 +267,221 @@ struct FilterRuleTest {
         }
 
         #expect(
-            [URLQueryItem(name: "is_tagged", value: "0")] ==
-                FilterRule.queryItems(for: [.init(ruleType: .hasAnyTag, value: .boolean(value: false))])
+            try [URLQueryItem(name: "is_tagged", value: "0")] ==
+                FilterRule.queryItems(for: [#require(FilterRule(ruleType: .hasAnyTag, value: .boolean(value: false)))])
         )
     }
 
     @Test
     func testFilterOwner() throws {
-        let input1 = FilterRule(ruleType: .owner, value: .owner(id: 8))
+        let input1 = try #require(FilterRule(ruleType: .owner, value: .owner(id: 8)))
         let items = FilterRule.queryItems(for: [input1])
         #expect(items == [URLQueryItem(name: "owner__id", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .ownerAny, value: .owner(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .ownerAny, value: .owner(id: 8))),
         ]) == [URLQueryItem(name: "owner__id__in", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .ownerAny, value: .owner(id: 8)),
-            FilterRule(ruleType: .ownerAny, value: .owner(id: 19)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .ownerAny, value: .owner(id: 8))),
+            #require(FilterRule(ruleType: .ownerAny, value: .owner(id: 19))),
         ]) == [URLQueryItem(name: "owner__id__in", value: "19,8")])
 
-        #expect(FilterRule.queryItems(for: [
-            .init(ruleType: .ownerIsnull, value: .boolean(value: true)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true))),
         ]) == [URLQueryItem(name: "owner__isnull", value: "1")])
 
-        #expect(FilterRule.queryItems(for: [
-            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 25)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .owner(id: 25))),
         ]) == [URLQueryItem(name: "owner__id__none", value: "25")])
 
-        #expect(FilterRule.queryItems(for: [
-            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 25)),
-            .init(ruleType: .ownerDoesNotInclude, value: .owner(id: 99)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .owner(id: 25))),
+            #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .owner(id: 99))),
         ]) == [URLQueryItem(name: "owner__id__none", value: "25,99")])
     }
 
     @Test
     func testFilterDocumentType() throws {
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .documentType, value: .documentType(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .documentType, value: .documentType(id: 8))),
         ]) == [URLQueryItem(name: "document_type__id", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))),
         ]) == [URLQueryItem(name: "document_type__id__in", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
-            FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))),
+            #require(FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 19))),
         ]) == [URLQueryItem(name: "document_type__id__in", value: "19,8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8))),
         ]) == [URLQueryItem(name: "document_type__id__none", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
-            FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 87)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8))),
+            #require(FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 87))),
         ]) == [URLQueryItem(name: "document_type__id__none", value: "8,87")])
     }
 
     @Test
     func testCorrespondent() throws {
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .correspondent, value: .correspondent(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: 8))),
         ]) == [URLQueryItem(name: "correspondent__id", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))),
         ]) == [URLQueryItem(name: "correspondent__id__in", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
-            FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))),
+            #require(FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 19))),
         ]) == [URLQueryItem(name: "correspondent__id__in", value: "19,8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))),
         ]) == [URLQueryItem(name: "correspondent__id__none", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
-            FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 87)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))),
+            #require(FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 87))),
         ]) == [URLQueryItem(name: "correspondent__id__none", value: "8,87")])
     }
 
     @Test
     func testStoragePath() throws {
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .storagePath, value: .storagePath(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .storagePath, value: .storagePath(id: 8))),
         ]) == [URLQueryItem(name: "storage_path__id", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
         ]) == [URLQueryItem(name: "storage_path__id__in", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)),
-            FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 19)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
+            #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 19))),
         ]) == [URLQueryItem(name: "storage_path__id__in", value: "19,8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
         ]) == [URLQueryItem(name: "storage_path__id__none", value: "8")])
 
-        #expect(FilterRule.queryItems(for: [
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)),
-            FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 87)),
+        #expect(try FilterRule.queryItems(for: [
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
+            #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 87))),
         ]) == [URLQueryItem(name: "storage_path__id__none", value: "8,87")])
+    }
+
+    @Test
+    func testDecodingComplexCustomFieldQuery() throws {
+        let query = """
+        ["OR",[[11,"isnull","true"],[11,"exists","false"],["AND",[[10,"exists","true"],["OR",[[8,"exact","x"],[5,"gt","6"],[10,"in",["aaa","bbb"]],[9,"contains",[3]]]]]],[3,"gte","2024-12-12"]]]
+        """.trimmingCharacters(in: .whitespaces)
+
+        let direct = try #require(CustomFieldQuery(rawValue: query))
+
+        struct Data: Encodable {
+            var rule_type: Int
+            var value: String
+        }
+
+        let data = try JSONEncoder().encode(Data(rule_type: 42, value: query))
+
+        let result = try JSONDecoder().decode(FilterRule.self, from: data)
+
+        #expect(result.ruleType == .customFieldsQuery)
+        #expect(result.value == .customFieldQuery(direct))
+    }
+
+    @Test
+    func testInitializerReturnsNilForTypeMismatch() throws {
+        // Test cases where ruleType.dataType() doesn't match the FilterRuleValue case
+        #expect(FilterRule(ruleType: .title, value: .number(value: 42)) == nil)
+        #expect(FilterRule(ruleType: .hasTagsAll, value: .string(value: "invalid")) == nil)
+        #expect(FilterRule(ruleType: .addedAfter, value: .boolean(value: true)) == nil)
+        #expect(FilterRule(ruleType: .correspondent, value: .date(value: Date())) == nil)
+        #expect(FilterRule(ruleType: .documentType, value: .tag(id: 1)) == nil)
+        #expect(FilterRule(ruleType: .storagePath, value: .number(value: 123)) == nil)
+        #expect(FilterRule(ruleType: .owner, value: .string(value: "owner")) == nil)
+
+        // Test custom field query specific case
+        #expect(FilterRule(ruleType: .customFieldsQuery, value: .string(value: "not a custom field query")) == nil)
+    }
+
+    @Test
+    func testInitializerReturnsValidForTypeMatch() throws {
+        // Test cases where ruleType.dataType() matches the FilterRuleValue case
+        let titleRule = try #require(FilterRule(ruleType: .title, value: .string(value: "test")))
+        #expect(titleRule.ruleType == .title)
+        #expect(titleRule.value == .string(value: "test"))
+
+        let tagRule = try #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 1)))
+        #expect(tagRule.ruleType == .hasTagsAll)
+        #expect(tagRule.value == .tag(id: 1))
+
+        let booleanRule = try #require(FilterRule(ruleType: .hasAnyTag, value: .boolean(value: true)))
+        #expect(booleanRule.ruleType == .hasAnyTag)
+        #expect(booleanRule.value == .boolean(value: true))
+
+        let date = Date()
+        let dateRule = try #require(FilterRule(ruleType: .addedAfter, value: .date(value: date)))
+        #expect(dateRule.ruleType == .addedAfter)
+        #expect(dateRule.value == .date(value: date))
+
+        let correspondentRule = try #require(FilterRule(ruleType: .correspondent, value: .correspondent(id: 1)))
+        #expect(correspondentRule.ruleType == .correspondent)
+        #expect(correspondentRule.value == .correspondent(id: 1))
+
+        let documentTypeRule = try #require(FilterRule(ruleType: .documentType, value: .documentType(id: 1)))
+        #expect(documentTypeRule.ruleType == .documentType)
+        #expect(documentTypeRule.value == .documentType(id: 1))
+
+        let storagePathRule = try #require(FilterRule(ruleType: .storagePath, value: .storagePath(id: 1)))
+        #expect(storagePathRule.ruleType == .storagePath)
+        #expect(storagePathRule.value == .storagePath(id: 1))
+
+        let ownerRule = try #require(FilterRule(ruleType: .owner, value: .owner(id: 1)))
+        #expect(ownerRule.ruleType == .owner)
+        #expect(ownerRule.value == .owner(id: 1))
+
+        // Test custom field query specific case
+        let query = CustomFieldQuery.expr(8, .exists, .string("true"))
+        let rule1 = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(query)))
+        #expect(rule1.ruleType == .customFieldsQuery)
+        #expect(rule1.value == .customFieldQuery(query))
+
+        let rule2 = try #require(FilterRule(ruleType: .customFieldsQuery, value: .string(value: query.rawValue)))
+        #expect(rule2.ruleType == .customFieldsQuery)
+        #expect(rule2.value == .customFieldQuery(query))
+    }
+
+    @Test
+    func testCustomFieldQueryFilterRuleWithComplexQuery() throws {
+        let complexQuery = CustomFieldQuery.op(
+            .or,
+            [
+                .expr(11, .isnull, .string("true")),
+                .expr(1, .gt, .number(1.2)),
+                .op(
+                    .and,
+                    [
+                        .expr(10, .exists, .string("true")),
+                        .expr(9, .contains, .array([.integer(3)])),
+                    ]
+                ),
+            ]
+        )
+
+        let filterRule = try #require(FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(complexQuery)))
+
+        let queryItems = FilterRule.queryItems(for: [filterRule])
+
+        #expect(queryItems.count == 1)
+        #expect(queryItems[0].name == "custom_field_query")
+        #expect(queryItems[0].value == complexQuery.rawValue)
     }
 }
