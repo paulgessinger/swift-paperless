@@ -22,8 +22,11 @@ jobs:
         device:
           - "iPhone 16 Pro"
           - "iPad Pro 13-inch (M4)"
-        ios:
-          - "18.5"
+        include:
+          - ios: "18.5"
+            xcode: "16.4"
+          - ios: "26.0"
+            xcode: "26.0"
       fail-fast: false
     env:
       GYM_SKIP_CODESIGNING: true
@@ -34,7 +37,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "${{ matrix.xcode }}"
 
       - name: Install dependencies
         run: bundle install
