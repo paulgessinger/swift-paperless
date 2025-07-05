@@ -481,7 +481,9 @@ extension ApiRepository: Repository {
 
     public func document(asn: UInt) async throws -> Document? {
         Logger.networking.notice("Getting document by ASN")
-        let endpoint = Endpoint.documents(page: 1, rules: [FilterRule(ruleType: .asn, value: .number(value: Int(asn)))])
+
+        let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
+        let endpoint = Endpoint.documents(page: 1, rules: [rule])
 
         let request = try request(endpoint)
 
@@ -551,19 +553,8 @@ extension ApiRepository: Repository {
 
     private func nextAsnCompatibility() async throws -> UInt {
         Logger.networking.notice("Getting next ASN with legacy compatibility method")
-        let fs = FilterState(correspondent: .any,
-                             documentType: .any,
-                             storagePath: .any,
-                             owner: .any,
-                             tags: .any,
-                             sortField: .asn,
-                             sortOrder: .descending,
-                             remaining: [],
-                             savedView: nil,
-                             searchText: nil,
-                             searchMode: .title)
 
-        let endpoint = Endpoint.documents(page: 1, filter: fs, pageSize: 1)
+        let endpoint = Endpoint.documents(page: 1, filter: .empty, pageSize: 1)
         let url = try url(endpoint)
         Logger.networking.notice("\(url)")
 
