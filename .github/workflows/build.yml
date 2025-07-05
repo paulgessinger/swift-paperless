@@ -24,10 +24,11 @@ jobs:
           - "iPad Pro 13-inch (M4)"
         include:
           - ios: "18.5"
-            xcode: "16.4"
+            xcode: "16.4.0"
           - ios: "26.0"
-            xcode: "26.0"
+            xcode: "26.0.0"
       fail-fast: false
+    name: "Build ${{ matrix.device }} iOS ${{ matrix.ios }} Xcode ${{ matrix.xcode }}"
     env:
       GYM_SKIP_CODESIGNING: true
       GYM_SKIP_ARCHIVE: true
