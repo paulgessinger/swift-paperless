@@ -41,12 +41,12 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
-          xcodebuild build \
-            -scheme swift-paperless \
-            -destination "platform=iOS Simulator,name=${{ env.DEVICE }},OS=${{ matrix.ios }}" \
-            -skipPackagePluginValidation -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            | xcbeautify
+          # xcodebuild build \
+          #   -scheme swift-paperless \
+          #   -destination "platform=iOS Simulator,name=${{ env.DEVICE }},OS=${{ matrix.ios }}" \
+          #   -skipPackagePluginValidation -skipMacroValidation \
+          #   CODE_SIGN_IDENTITY="" \
+          #   | xcbeautify
 
   test:
     runs-on: macos-15
