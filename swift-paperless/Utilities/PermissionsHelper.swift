@@ -6,5 +6,5 @@
 //
 
 func stringOrPrivate(_ value: String?) -> String {
-    value ?? String(localized: .permissions(.private))
+  value ?? String(localized: .permissions(.private))
 }

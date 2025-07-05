@@ -6,76 +6,78 @@
 //
 
 import DataModel
-import os
 import SwiftUI
+import os
 
 struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
-    @State private var element: Element
-    var onSave: ((Element) throws -> Void)?
+  @State private var element: Element
+  var onSave: ((Element) throws -> Void)?
 
-    private var saveLabel: String
+  private var saveLabel: String
 
-    init(element: Element, onSave: ((Element) throws -> Void)?) {
-        _element = State(initialValue: element)
-        self.onSave = onSave
-        saveLabel = String(localized: .localizable(.save))
+  init(element: Element, onSave: ((Element) throws -> Void)?) {
+    _element = State(initialValue: element)
+    self.onSave = onSave
+    saveLabel = String(localized: .localizable(.save))
+  }
+
+  private var editable: Bool {
+    onSave != nil
+  }
+
+  private func valid() -> Bool {
+    !element.name.isEmpty && editable
+  }
+
+  var body: some View {
+    Form {
+      Section {
+        TextField(String(localized: .localizable(.name)), text: $element.name)
+          .clearable($element.name)
+          .disabled(!editable)
+      }
+
+      MatchEditView(element: $element)
+        .disabled(!editable)
     }
-
-    private var editable: Bool {
-        onSave != nil
-    }
-
-    private func valid() -> Bool {
-        !element.name.isEmpty && editable
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                TextField(String(localized: .localizable(.name)), text: $element.name)
-                    .clearable($element.name)
-                    .disabled(!editable)
-            }
-
-            MatchEditView(element: $element)
-                .disabled(!editable)
+    .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(saveLabel) {
+          do {
+            try onSave?(element)
+          } catch {
+            Logger.shared.error("Save document type error: \(error)")
+          }
         }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(saveLabel) {
-                    do {
-                        try onSave?(element)
-                    } catch {
-                        Logger.shared.error("Save document type error: \(error)")
-                    }
-                }
-                .disabled(!valid())
-            }
-        }
-
-        .navigationTitle(Element.self is DocumentType.Type ? Text(.localizable(.documentTypeEditTitle)) : Text(.localizable(.documentTypeCreateTitle)))
+        .disabled(!valid())
+      }
     }
+
+    .navigationTitle(
+      Element.self is DocumentType.Type
+        ? Text(.localizable(.documentTypeEditTitle)) : Text(.localizable(.documentTypeCreateTitle)))
+  }
 }
 
 extension DocumentTypeEditView where Element == ProtoDocumentType {
-    init(onSave: @escaping (Element) throws -> Void) {
-        self.init(element: ProtoDocumentType(), onSave: onSave)
-        saveLabel = String(localized: .localizable(.save))
-    }
+  init(onSave: @escaping (Element) throws -> Void) {
+    self.init(element: ProtoDocumentType(), onSave: onSave)
+    saveLabel = String(localized: .localizable(.save))
+  }
 }
 
 struct DocumentTypeEditView_Previews: PreviewProvider {
-    struct Container: View {
-        var body: some View {
-            NavigationStack {
-                DocumentTypeEditView<ProtoDocumentType>(onSave: { _ in })
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationTitle(Text(.localizable(.documentTypeEditTitle)))
-            }
-        }
+  struct Container: View {
+    var body: some View {
+      NavigationStack {
+        DocumentTypeEditView<ProtoDocumentType>(onSave: { _ in })
+          .navigationBarTitleDisplayMode(.inline)
+          .navigationTitle(Text(.localizable(.documentTypeEditTitle)))
+      }
     }
+  }
 
-    static var previews: some View {
-        Container()
-    }
+  static var previews: some View {
+    Container()
+  }
 }

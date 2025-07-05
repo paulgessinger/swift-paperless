@@ -8,40 +8,40 @@
 import SwiftUI
 
 #if os(macOS)
-    import Cocoa
+  import Cocoa
 
-    typealias UIImage = NSImage
+  typealias UIImage = NSImage
 #endif
 
 struct AuthAsyncImage<Content: View, Placeholder: View>: View {
-    @State var image: Image?
+  @State var image: Image?
 
-    let getImage: () async -> Image?
-    let content: (Image) -> Content
-    let placeholder: () -> Placeholder
+  let getImage: () async -> Image?
+  let content: (Image) -> Content
+  let placeholder: () -> Placeholder
 
-    init(
-        image: @escaping () async -> Image?,
-        @ViewBuilder content: @escaping (Image) -> Content,
-        @ViewBuilder placeholder: @escaping () -> Placeholder
-    ) {
-        getImage = image
-        self.content = content
-        self.placeholder = placeholder
-    }
+  init(
+    image: @escaping () async -> Image?,
+    @ViewBuilder content: @escaping (Image) -> Content,
+    @ViewBuilder placeholder: @escaping () -> Placeholder
+  ) {
+    getImage = image
+    self.content = content
+    self.placeholder = placeholder
+  }
 
-    var body: some View {
-        if let image {
-            content(image)
-        } else {
-            placeholder().task {
-                let image = await getImage()
-                withAnimation {
-                    self.image = image
-                }
-            }
+  var body: some View {
+    if let image {
+      content(image)
+    } else {
+      placeholder().task {
+        let image = await getImage()
+        withAnimation {
+          self.image = image
         }
+      }
     }
+  }
 }
 
 // struct AuthAsyncImage_Previews: PreviewProvider {

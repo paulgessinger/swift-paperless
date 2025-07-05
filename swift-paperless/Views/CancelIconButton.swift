@@ -8,27 +8,27 @@
 import SwiftUI
 
 struct CancelIconButton: View {
-    @Environment(\.dismiss) private var dismiss
+  @Environment(\.dismiss) private var dismiss
 
-    var action: (() -> Void)? = nil
+  var action: (() -> Void)? = nil
 
-    var body: some View {
-        Label(.localizable(.back), systemImage: "xmark.circle.fill")
-            .labelStyle(.iconOnly)
-            .symbolRenderingMode(.palette)
-            .foregroundStyle(.primary, .tertiary)
-            .font(.title2)
+  var body: some View {
+    Label(.localizable(.back), systemImage: "xmark.circle.fill")
+      .labelStyle(.iconOnly)
+      .symbolRenderingMode(.palette)
+      .foregroundStyle(.primary, .tertiary)
+      .font(.title2)
 
-            .onTapGesture {
-                if let action {
-                    action()
-                } else {
-                    dismiss()
-                }
-            }
-    }
+      .onTapGesture {
+        if let action {
+          action()
+        } else {
+          dismiss()
+        }
+      }
+  }
 }
 
 #Preview {
-    CancelIconButton()
+  CancelIconButton()
 }

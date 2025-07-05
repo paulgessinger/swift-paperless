@@ -9,17 +9,17 @@ import Foundation
 import SwiftUI
 
 enum AttachmentError {
-    case invalidAttachment
-    case noAttachments
+  case invalidAttachment
+  case noAttachments
 }
 
 @MainActor
 class AttachmentManager: ObservableObject {
-    @Published var isLoading = true
-    @Published var error: AttachmentError? = nil
-    @Published private(set) var previewImage: Image?
-    @Published var documentUrl: URL?
+  @Published var isLoading = true
+  @Published var error: AttachmentError? = nil
+  @Published private(set) var previewImage: Image?
+  @Published var documentUrl: URL?
 
-    @Published var importUrls: [URL] = []
-    @Published var totalInputs: Int = 0
+  @Published var importUrls: [URL] = []
+  @Published var totalInputs: Int = 0
 }

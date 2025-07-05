@@ -7,4 +7,5 @@
 import Foundation
 
 @freestanding(expression)
-public macro URL<S: ExpressibleByStringLiteral>(_: S) -> URL = #externalMacro(module: "CommonMacros", type: "URLMacro")
+public macro URL<S: ExpressibleByStringLiteral>(_: S) -> URL =
+  #externalMacro(module: "CommonMacros", type: "URLMacro")

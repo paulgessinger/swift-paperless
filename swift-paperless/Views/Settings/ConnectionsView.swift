@@ -7,180 +7,201 @@
 
 import Common
 import Networking
-import os
 import SwiftUI
+import os
 
 private struct ConnectionSelectionViews: View {
-    @ObservedObject var connectionManager: ConnectionManager
-    let animated: Bool
+  @ObservedObject var connectionManager: ConnectionManager
+  let animated: Bool
 
-    var body: some View {
-        ForEach(connectionManager.connections.values.sorted(by: { $0.url.absoluteString < $1.url.absoluteString })) { conn in
-            Button {
-                connectionManager.setActiveConnection(id: conn.id,
-                                                      animated: animated)
-            } label: {
-                // Bit of a hack to have by-character line breaks
-                let label = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
-                Text(label.map { String($0) }.joined(separator: "\u{200B}"))
-            }
-            .disabled(conn.id == connectionManager.activeConnectionId)
-        }
+  var body: some View {
+    ForEach(
+      connectionManager.connections.values.sorted(by: {
+        $0.url.absoluteString < $1.url.absoluteString
+      })
+    ) { conn in
+      Button {
+        connectionManager.setActiveConnection(
+          id: conn.id,
+          animated: animated)
+      } label: {
+        // Bit of a hack to have by-character line breaks
+        let label = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
+        Text(label.map { String($0) }.joined(separator: "\u{200B}"))
+      }
+      .disabled(conn.id == connectionManager.activeConnectionId)
     }
+  }
 }
 
 struct ConnectionSelectionMenu: View {
-    @ObservedObject var connectionManager: ConnectionManager
-    let animated: Bool
+  @ObservedObject var connectionManager: ConnectionManager
+  let animated: Bool
 
-    var body: some View {
-        if let stored = connectionManager.storedConnection {
-            Menu {
-                ConnectionSelectionViews(connectionManager: connectionManager, animated: animated)
-            } label: {
-                HStack {
-                    let label = connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
-                    Text(label)
-                        .font(.body)
-                        .foregroundStyle(.gray)
-                        .multilineTextAlignment(.leading)
-                    Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
-                          systemImage: "chevron.up.chevron.down")
-                        .labelStyle(.iconOnly)
-                        .foregroundStyle(.gray)
-                }
-//            .frame(maxWidth: .infinity)
-            }
+  var body: some View {
+    if let stored = connectionManager.storedConnection {
+      Menu {
+        ConnectionSelectionViews(connectionManager: connectionManager, animated: animated)
+      } label: {
+        HStack {
+          let label =
+            connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
+          Text(label)
+            .font(.body)
+            .foregroundStyle(.gray)
+            .multilineTextAlignment(.leading)
+          Label(
+            String(localized: .settings(.chooseServerAccessibilityLabel)),
+            systemImage: "chevron.up.chevron.down"
+          )
+          .labelStyle(.iconOnly)
+          .foregroundStyle(.gray)
         }
+        //            .frame(maxWidth: .infinity)
+      }
     }
+  }
 }
 
 struct ConnectionsView: View {
-    @ObservedObject private var connectionManager: ConnectionManager
-    @Binding var showLoginSheet: Bool
+  @ObservedObject private var connectionManager: ConnectionManager
+  @Binding var showLoginSheet: Bool
 
-    @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
+  @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
 
-    @State private var extraHeaders: [Connection.HeaderValue] = []
+  @State private var extraHeaders: [Connection.HeaderValue] = []
 
-    @State private var logoutRequested = false
+  @State private var logoutRequested = false
 
-    @State private var backendVersion: Version?
+  @State private var backendVersion: Version?
 
-    @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var store: DocumentStore
 
-    init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
-        self.connectionManager = connectionManager
-        _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
-        _showLoginSheet = showLoginSheet
+  init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
+    self.connectionManager = connectionManager
+    _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
+    _showLoginSheet = showLoginSheet
+  }
+
+  var body: some View {
+    Section {
+      if let stored = connectionManager.storedConnection {
+        HStack {
+          Text(.settings(.activeServerUrl))
+          Menu {
+            ConnectionSelectionViews(
+              connectionManager: connectionManager,
+              animated: false)
+          } label: {
+            Text(stored.url.absoluteString)
+              .font(.body)
+              .foregroundStyle(.gray)
+              .frame(maxWidth: .infinity, alignment: .trailing)
+
+            Label(
+              String(localized: .settings(.chooseServerAccessibilityLabel)),
+              systemImage: "chevron.up.chevron.down"
+            )
+            .labelStyle(.iconOnly)
+            .foregroundStyle(.gray)
+          }
+        }
+
+        LabeledContent(
+          String(localized: .settings(.activeServerUsername)), value: stored.user.username)
+        LabeledContent(
+          String(localized: .settings(.activeIdentity)),
+          value: stored.identity ?? String(localized: .login(.noIdentity)))
+
+        NavigationLink {
+          PermissionsView(userPermissions: store.permissions)
+        } label: {
+          Label(localized: .permissions(.title), systemImage: "lock.fill")
+        }
+
+        NavigationLink {
+          ExtraHeadersView(headers: $extraHeaders)
+        } label: {
+          Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+        }
+
+        Button(role: .destructive) {
+          logoutRequested = true
+        } label: {
+          Label(
+            String(localized: .localizable(.logout)),
+            systemImage: "rectangle.portrait.and.arrow.right")
+        }
+        .foregroundColor(Color.red)
+        .bold()
+
+        .confirmationDialog(
+          String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested,
+          titleVisibility: .visible
+        ) {
+          Button(String(localized: .localizable(.logout)), role: .destructive) {
+            connectionManager.logout(animated: false)
+          }
+          Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+        }
+
+        .onChange(of: extraHeaders) {
+          Logger.shared.trace("Extra header manipulated in ConnectionsView")
+          connectionManager.setExtraHeaders(extraHeaders)
+        }
+
+      } else if let compat = connectionManager.connection {
+        // @TODO: (multi-server) remove in a few versions
+        Text(compat.url.absoluteString)
+      }
+    } header: {
+      HStack {
+        Text(.settings(.activeServer))
+        Spacer()
+        Button {
+          showLoginSheet = true
+        } label: {
+          Image(systemName: "plus.circle").resizable()
+            .frame(width: plusIconSize, height: plusIconSize)
+            .accessibilityLabel(Text(.localizable(.add)))
+        }
+        .buttonStyle(BorderlessButtonStyle())
+      }
+    } footer: {
+      if let backendVersion, backendVersion < ApiRepository.minimumVersion {
+        Text(
+          .settings(
+            .unsupportedVersion(
+              backendVersion.description, ApiRepository.minimumVersion.description)))
+      }
     }
 
-    var body: some View {
-        Section {
-            if let stored = connectionManager.storedConnection {
-                HStack {
-                    Text(.settings(.activeServerUrl))
-                    Menu {
-                        ConnectionSelectionViews(connectionManager: connectionManager,
-                                                 animated: false)
-                    } label: {
-                        Text(stored.url.absoluteString)
-                            .font(.body)
-                            .foregroundStyle(.gray)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+    .navigationBarTitleDisplayMode(.inline)
 
-                        Label(String(localized: .settings(.chooseServerAccessibilityLabel)),
-                              systemImage: "chevron.up.chevron.down")
-                            .labelStyle(.iconOnly)
-                            .foregroundStyle(.gray)
-                    }
-                }
-
-                LabeledContent(String(localized: .settings(.activeServerUsername)), value: stored.user.username)
-                LabeledContent(String(localized: .settings(.activeIdentity)), value: stored.identity ?? String(localized: .login(.noIdentity)))
-
-                NavigationLink {
-                    PermissionsView(userPermissions: store.permissions)
-                } label: {
-                    Label(localized: .permissions(.title), systemImage: "lock.fill")
-                }
-
-                NavigationLink {
-                    ExtraHeadersView(headers: $extraHeaders)
-                } label: {
-                    Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
-                }
-
-                Button(role: .destructive) {
-                    logoutRequested = true
-                } label: {
-                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .foregroundColor(Color.red)
-                .bold()
-
-                .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested, titleVisibility: .visible) {
-                    Button(String(localized: .localizable(.logout)), role: .destructive) {
-                        connectionManager.logout(animated: false)
-                    }
-                    Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-                }
-
-                .onChange(of: extraHeaders) {
-                    Logger.shared.trace("Extra header manipulated in ConnectionsView")
-                    connectionManager.setExtraHeaders(extraHeaders)
-                }
-
-            } else if let compat = connectionManager.connection {
-                // @TODO: (multi-server) remove in a few versions
-                Text(compat.url.absoluteString)
-            }
+    .task {
+      if let stored = connectionManager.storedConnection {
+        do {
+          let repository = try await ApiRepository(
+            connection: stored.connection, mode: Bundle.main.appConfiguration.mode)
+          backendVersion = await repository.backendVersion
+        } catch {
+          Logger.shared.error("Could not make ApiRepository for settings display: \(error)")
         }
-        header: {
-            HStack {
-                Text(.settings(.activeServer))
-                Spacer()
-                Button {
-                    showLoginSheet = true
-                } label: {
-                    Image(systemName: "plus.circle").resizable()
-                        .frame(width: plusIconSize, height: plusIconSize)
-                        .accessibilityLabel(Text(.localizable(.add)))
-                }
-                .buttonStyle(BorderlessButtonStyle())
-            }
-        }
-        footer: {
-            if let backendVersion, backendVersion < ApiRepository.minimumVersion {
-                Text(.settings(.unsupportedVersion(backendVersion.description, ApiRepository.minimumVersion.description)))
-            }
-        }
-
-        .navigationBarTitleDisplayMode(.inline)
-
-        .task {
-            if let stored = connectionManager.storedConnection {
-                do {
-                    let repository = try await ApiRepository(connection: stored.connection, mode: Bundle.main.appConfiguration.mode)
-                    backendVersion = await repository.backendVersion
-                } catch {
-                    Logger.shared.error("Could not make ApiRepository for settings display: \(error)")
-                }
-            }
-        }
+      }
     }
+  }
 }
 
 struct ConnectionQuickChangeMenu: View {
-    @EnvironmentObject private var connectionManager: ConnectionManager
+  @EnvironmentObject private var connectionManager: ConnectionManager
 
-    var body: some View {
-        if connectionManager.connections.count > 1 {
-            Menu {
-                ConnectionSelectionViews(connectionManager: connectionManager, animated: true)
-            } label: {
-                Text(.settings(.activeServer))
-            }
-        }
+  var body: some View {
+    if connectionManager.connections.count > 1 {
+      Menu {
+        ConnectionSelectionViews(connectionManager: connectionManager, animated: true)
+      } label: {
+        Text(.settings(.activeServer))
+      }
     }
+  }
 }

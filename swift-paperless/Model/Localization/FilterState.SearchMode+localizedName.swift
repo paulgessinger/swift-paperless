@@ -8,16 +8,16 @@
 import DataModel
 
 extension FilterState.SearchMode {
-    var localizedName: String {
-        switch self {
-        case .title:
-            String(localized: .localizable(.searchTitle))
-        case .content:
-            String(localized: .localizable(.searchContent))
-        case .titleContent:
-            String(localized: .localizable(.searchTitleContent))
-        case .advanced:
-            String(localized: .localizable(.searchAdvanced))
-        }
+  var localizedName: String {
+    switch self {
+    case .title:
+      String(localized: .localizable(.searchTitle))
+    case .content:
+      String(localized: .localizable(.searchContent))
+    case .titleContent:
+      String(localized: .localizable(.searchTitleContent))
+    case .advanced:
+      String(localized: .localizable(.searchAdvanced))
     }
+  }
 }

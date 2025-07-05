@@ -6,7 +6,7 @@
 //
 
 public protocol MatchingModel {
-    var match: String { get set }
-    var matchingAlgorithm: MatchingAlgorithm { get set }
-    var isInsensitive: Bool { get set }
+  var match: String { get set }
+  var matchingAlgorithm: MatchingAlgorithm { get set }
+  var isInsensitive: Bool { get set }
 }

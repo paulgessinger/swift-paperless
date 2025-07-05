@@ -9,8 +9,8 @@ import Foundation
 import os
 
 extension Logger {
-    static let shared = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "General")
-    static let api = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "API")
-    static let migration = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Migration")
-    static let biometric = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Biometric")
+  static let shared = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "General")
+  static let api = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "API")
+  static let migration = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Migration")
+  static let biometric = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Biometric")
 }

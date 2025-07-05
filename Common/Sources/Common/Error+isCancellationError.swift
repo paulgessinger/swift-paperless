@@ -7,13 +7,14 @@
 
 import Foundation
 
-public extension Error {
-    var isCancellationError: Bool {
-        if self is CancellationError {
-            return true
-        }
-
-        let nsError = self as NSError
-        return nsError.domain == NSURLErrorDomain && NSURLError(rawValue: nsError.code) == NSURLError.cancelled
+extension Error {
+  public var isCancellationError: Bool {
+    if self is CancellationError {
+      return true
     }
+
+    let nsError = self as NSError
+    return nsError.domain == NSURLErrorDomain
+      && NSURLError(rawValue: nsError.code) == NSURLError.cancelled
+  }
 }
