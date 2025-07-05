@@ -228,10 +228,6 @@ Redact screenshots to not include information that you do not wish to expose.
   end
 
   lane :build do |options|
-    xcodes(
-      select_for_current_build_only: true
-    )
-
     device = options.fetch(:device, "iPhone 16 Pro")
     ios = options.fetch(:ios, "18.2")
 
