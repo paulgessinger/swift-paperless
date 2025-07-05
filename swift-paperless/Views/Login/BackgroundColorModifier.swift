@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct BackgroundColorModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.colorScheme) private var colorScheme
 
-    func body(content: Content) -> some View {
-        #if canImport(UIKit)
-            content
-                .background(Color(uiColor: .systemGroupedBackground))
-        #else
-            content
-        #endif
-    }
+  func body(content: Content) -> some View {
+    #if canImport(UIKit)
+      content
+        .background(Color(uiColor: .systemGroupedBackground))
+    #else
+      content
+    #endif
+  }
 }

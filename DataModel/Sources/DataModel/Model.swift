@@ -9,9 +9,9 @@ import Foundation
 import SwiftUI
 
 public protocol Model: Identifiable {
-    var id: UInt { get }
+  var id: UInt { get }
 }
 
 public protocol Named {
-    var name: String { get }
+  var name: String { get }
 }
