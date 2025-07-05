@@ -19,7 +19,7 @@ import Testing
 }
 
 @Test func testPathAssembly() throws {
-    let file = URL("file:///some/path/to/a/file/This Has Some not ök ø chars.pdf")!
+    let file = URL(filePath: "file:///some/path/to/a/file/This Has Some not ök ø chars.pdf")!
 
     let ext = file.pathExtension
     let stem = file.deletingPathExtension().lastPathComponent
