@@ -12,8 +12,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Benutzerdefiniertes Feld hinzufügen"
           }
         },
         "en" : {
@@ -65,8 +65,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Datum setzen"
           }
         },
         "en" : {
@@ -118,8 +118,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Datumswert löschen"
           }
         },
         "en" : {
@@ -171,8 +171,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Löschen"
           }
         },
         "en" : {
@@ -224,8 +224,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Auswählen"
           }
         },
         "en" : {
@@ -277,8 +277,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Dokumentensuche via Titel"
           }
         },
         "en" : {
@@ -330,8 +330,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Ausgewählt"
           }
         },
         "en" : {
@@ -383,8 +383,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**ˋ%@ˋ** ist kein gültiges Datum. Es wird das Format \"2025-06-15\" erwartet."
           }
         },
         "en" : {
@@ -436,8 +436,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** konnte nicht als Geldwert geparst werden. Das erwartete Format ist \"USD1000.00\"."
           }
         },
         "en" : {
@@ -489,8 +489,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "Die Option \"%@\" ist keine der möglichen Optionen (%@)"
           }
         },
         "en" : {
@@ -542,8 +542,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Einige der benutzerdefinierten Felder in diesem Dokument haben eine **ungültige Konfiguration**. Weitere Informationen findest du in den Fehlermeldungen zu den benutzerdefinierten Feldern.\n\nDu kannst das Dokument in diesem Zustand **nicht speichern**, um **Datenverlust zu vermeiden**."
           }
         },
         "en" : {
@@ -595,8 +595,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Ungültiges benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -648,8 +648,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "'%@' ist keine gültige URL."
           }
         },
         "en" : {
@@ -701,8 +701,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Betrag"
           }
         },
         "en" : {
@@ -754,8 +754,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Es existieren keine benutzerdefinierte Felder"
           }
         },
         "en" : {
@@ -807,8 +807,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Keine benutzerdefinierte Felder zum Hinzufügen vorhanden."
           }
         },
         "en" : {
@@ -860,8 +860,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Keine benutzerdefinierte Felder hinzugefügt"
           }
         },
         "en" : {
@@ -913,8 +913,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Das Dokument hat keine benutzerdefinierten Felder zugeordnet. Du kannst welche über die Toolbar ergänzen."
           }
         },
         "en" : {
@@ -966,8 +966,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Aktuell kein Datum gesetzt"
           }
         },
         "en" : {
@@ -1019,8 +1019,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Felder suchen"
           }
         },
         "en" : {
@@ -1072,8 +1072,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Benutzerdefinierte Felder"
           }
         },
         "en" : {
@@ -1125,8 +1125,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "Der Wert **`%@`**, der vom Server zurückgegeben wurde, konnte nicht mit dem Datentyp **`%@`** dieses benutzerdefinierten Feldes interpretiert werden. Es könnte sich um eine interne Dateninkonsistenz handeln. "
           }
         },
         "en" : {
@@ -1178,8 +1178,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Der Datentyp **%@** dieses benutzerdefinierten Feldes ist in der App nicht implementiert. Dies ist wahrscheinlich eine Inkompatibilität zwischen der App und der Serverversion."
           }
         },
         "en" : {
@@ -1231,8 +1231,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Der angegebene Wert des benutzerdefinierten Feldes konnte nicht dekodiert werden. Dies könnte eine Inkompatibilität zwischen der App und der Serverversion sein."
           }
         },
         "en" : {
@@ -1284,8 +1284,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Der Wert eines benutzerdefinierten Feldes konnte nicht kodiert werden, da er ursprünglich nicht dekodiert werden konnte. Dies könnte eine Inkompatibilität zwischen der App und der Serverversion sein."
           }
         },
         "en" : {
@@ -1337,8 +1337,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Unbekannter Wert für benutzerdefiniertes Feld"
           }
         },
         "en" : {
@@ -1390,8 +1390,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Ungültig"
           }
         },
         "en" : {
@@ -1443,8 +1443,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Öffnen"
           }
         },
         "en" : {

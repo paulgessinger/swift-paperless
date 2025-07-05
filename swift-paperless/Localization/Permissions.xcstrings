@@ -598,8 +598,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Du hast keine Berechtigungen für die benutzerdefinierten Felder."
           }
         },
         "en" : {
