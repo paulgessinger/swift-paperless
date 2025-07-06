@@ -504,6 +504,7 @@
 				7AAC44522CA0A37D003E6A3A /* XCLocalSwiftPackageReference "Common" */,
 				7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */,
 				7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */,
+				7AA32EF02E196FB400481BA5 /* XCRemoteSwiftPackageReference "swift-case-paths" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1128,6 +1129,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
+			};
+		};
+		7AA32EF02E196FB400481BA5 /* XCRemoteSwiftPackageReference "swift-case-paths" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-case-paths";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.1;
 			};
 		};
 		7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
