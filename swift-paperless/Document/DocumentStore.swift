@@ -137,6 +137,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func updateDocument(_ document: Document) async throws -> Document {
+        Logger.shared.info("Updating document with ID \(document.id, privacy: .public)")
         try checkPermission(.change, for: .document)
         eventPublisher.send(.changed(document: document))
 
@@ -157,6 +158,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func deleteDocument(_ document: Document) async throws {
+        Logger.shared.info("Deleting document with ID \(document.id, privacy: .public)")
         try checkPermission(.delete, for: .document)
         try await repository.delete(document: document)
         documents.removeValue(forKey: document.id)
@@ -164,6 +166,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func deleteNote(from document: Document, id: UInt) async throws {
+        Logger.shared.info("Deleting note with ID \(id, privacy: .public)")
         try checkPermission(.delete, for: .note)
         eventPublisher.send(.changed(document: document))
         _ = try await repository.deleteNote(id: id, documentId: document.id)
@@ -172,6 +175,7 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func addNote(to document: Document, note: ProtoDocument.Note) async throws {
+        Logger.shared.info("Adding note to document \(document.id, privacy: .public)")
         try checkPermission(.add, for: .note)
         eventPublisher.send(.changed(document: document))
 
@@ -398,7 +402,7 @@ final class DocumentStore: ObservableObject, Sendable {
     {
         let updated: E
         do {
-            Logger.shared.info("Rereshing default permissions so we can apply them no new element \(R.self)")
+            Logger.shared.info("Refreshing default permissions so we can apply them no new element \(R.self)")
             try await fetchUISettings() // ensure up to date permissions
             updated = settings.permissions.appliedAsDefaults(to: element)
             Logger.shared.info("Applied permissions defaults to \(R.self). before owner=\(element.owner, privacy: .public) perms=\(String(describing: element.permissions), privacy: .public), after owner=\(updated.owner, privacy: .public) perms=\(String(describing: updated.permissions), privacy: .public)")
@@ -434,98 +438,115 @@ final class DocumentStore: ObservableObject, Sendable {
     }
 
     func create(tag: ProtoTag) async throws -> Tag {
-        try await create(Tag.self,
-                         from: tag,
-                         store: \.tags,
-                         method: repository.create(tag:))
+        Logger.api.info("Creating tag with name \(tag.name)")
+        return try await create(Tag.self,
+                                from: tag,
+                                store: \.tags,
+                                method: repository.create(tag:))
     }
 
     func update(tag: Tag) async throws {
-        try await update(tag, store: \.tags, method: repository.update(tag:))
+        Logger.api.info("Updating tag with ID \(tag.id)")
+        return try await update(tag, store: \.tags, method: repository.update(tag:))
     }
 
     func delete(tag: Tag) async throws {
-        try await delete(tag, store: \.tags, method: repository.delete(tag:))
+        Logger.api.info("Deleting tag with ID \(tag.id)")
+        return try await delete(tag, store: \.tags, method: repository.delete(tag:))
     }
 
     func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-        try await create(Correspondent.self,
-                         from: correspondent,
-                         store: \.correspondents,
-                         method: repository.create(correspondent:))
+        Logger.api.info("Creating correspondent with name \(correspondent.name)")
+        return try await create(Correspondent.self,
+                                from: correspondent,
+                                store: \.correspondents,
+                                method: repository.create(correspondent:))
     }
 
     func update(correspondent: Correspondent) async throws {
-        try await update(correspondent,
-                         store: \.correspondents,
-                         method: repository.update(correspondent:))
+        Logger.api.info("Updating correspondent with ID \(correspondent.id)")
+        return try await update(correspondent,
+                                store: \.correspondents,
+                                method: repository.update(correspondent:))
     }
 
     func delete(correspondent: Correspondent) async throws {
-        try await delete(correspondent,
-                         store: \.correspondents,
-                         method: repository.delete(correspondent:))
+        Logger.api.info("Deleting correspondent with ID \(correspondent.id)")
+        return try await delete(correspondent,
+                                store: \.correspondents,
+                                method: repository.delete(correspondent:))
     }
 
     func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-        try await create(DocumentType.self,
-                         from: documentType,
-                         store: \.documentTypes,
-                         method: repository.create(documentType:))
+        Logger.api.info("Creating document type with name \(documentType.name)")
+        return try await create(DocumentType.self,
+                                from: documentType,
+                                store: \.documentTypes,
+                                method: repository.create(documentType:))
     }
 
     func update(documentType: DocumentType) async throws {
-        try await update(documentType,
-                         store: \.documentTypes,
-                         method: repository.update(documentType:))
+        Logger.api.info("Updating document type with ID \(documentType.id)")
+        return try await update(documentType,
+                                store: \.documentTypes,
+                                method: repository.update(documentType:))
     }
 
     func delete(documentType: DocumentType) async throws {
-        try await delete(documentType,
-                         store: \.documentTypes,
-                         method: repository.delete(documentType:))
+        Logger.api.info("Deleting document type with ID \(documentType.id)")
+        return try await delete(documentType,
+                                store: \.documentTypes,
+                                method: repository.delete(documentType:))
     }
 
     func create(savedView: ProtoSavedView) async throws -> SavedView {
+        Logger.api.info("Creating saved view with name \(savedView.name)")
         let created = try await repository.create(savedView: savedView)
         savedViews[created.id] = created
         return created
     }
 
     func create(document: ProtoDocument, file: URL, filename: String? = nil) async throws {
+        Logger.api.info("Creating document with name \(document.title)")
         _ = try await repository.create(document: document, file: file, filename: filename ?? file.lastPathComponent)
         startTaskPolling()
     }
 
     func update(savedView: SavedView) async throws {
+        Logger.api.info("Updating saved view with ID \(savedView.id)")
         savedViews[savedView.id] = try await repository.update(savedView: savedView)
     }
 
     func delete(savedView: SavedView) async throws {
+        Logger.api.info("Deleting saved view with ID \(savedView.id)")
         try await repository.delete(savedView: savedView)
         savedViews.removeValue(forKey: savedView.id)
     }
 
     func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-        try await create(StoragePath.self,
-                         from: storagePath,
-                         store: \.storagePaths,
-                         method: repository.create(storagePath:))
+        Logger.api.info("Creating storage path with name \(storagePath.name)")
+        return try await create(StoragePath.self,
+                                from: storagePath,
+                                store: \.storagePaths,
+                                method: repository.create(storagePath:))
     }
 
     func update(storagePath: StoragePath) async throws {
+        Logger.api.info("Updating storage path with ID \(storagePath.id)")
         try await update(storagePath,
                          store: \.storagePaths,
                          method: repository.update(storagePath:))
     }
 
     func delete(storagePath: StoragePath) async throws {
+        Logger.api.info("Deleting storage path with ID \(storagePath.id)")
         try await delete(storagePath,
                          store: \.storagePaths,
                          method: repository.delete(storagePath:))
     }
 
     private func checkPermission(_ operation: UserPermissions.Operation, for resource: UserPermissions.Resource) throws {
+        Logger.api.info("Checking permission for \(operation.description, privacy: .public) on \(resource.rawValue, privacy: .public)")
         if !permissions.test(operation, for: resource) {
             Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
             throw PermissionsError(resource: resource, operation: operation)

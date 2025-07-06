@@ -645,7 +645,7 @@ extension ApiRepository: Repository {
     func addTokenTo(request: inout URLRequest) {
         let tokenStr = sanitize(token: connection.token)
         if let apiToken {
-            Logger.networking.info("Adding token to request: \(tokenStr, privacy: .public)")
+            Logger.networking.debug("Adding token to request: \(tokenStr, privacy: .public)")
             request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
         } else {
             Logger.networking.info("NOT adding token to request (token is nil)")
