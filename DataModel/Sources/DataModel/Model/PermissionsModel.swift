@@ -34,7 +34,7 @@ public struct Permissions: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-public enum Owner: Codable, Equatable, Sendable, Hashable {
+public enum Owner: Codable, Equatable, Sendable, Hashable, CustomStringConvertible {
     case unset
     case none
     case user(UInt)
@@ -54,6 +54,17 @@ public enum Owner: Codable, Equatable, Sendable, Hashable {
             try container.encodeNil()
         case let .user(value):
             try container.encode(value)
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case .unset:
+            "unset"
+        case .none:
+            "none"
+        case let .user(id):
+            "user(\(id))"
         }
     }
 }

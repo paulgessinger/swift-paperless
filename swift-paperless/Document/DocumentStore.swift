@@ -398,8 +398,10 @@ final class DocumentStore: ObservableObject, Sendable {
     {
         let updated: E
         do {
+            Logger.shared.info("Rereshing default permissions so we can apply them no new element \(R.self)")
             try await fetchUISettings() // ensure up to date permissions
             updated = settings.permissions.appliedAsDefaults(to: element)
+            Logger.shared.info("Applied permissions defaults to \(R.self). before owner=\(element.owner, privacy: .public) perms=\(String(describing: element.permissions), privacy: .public), after owner=\(updated.owner, privacy: .public) perms=\(String(describing: updated.permissions), privacy: .public)")
         } catch {
             Logger.shared.error("Error applying permissions defaults: \(error, privacy: .public). Not applying configured defaults permissions to element.")
             updated = element
