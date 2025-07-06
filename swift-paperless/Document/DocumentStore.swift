@@ -295,7 +295,7 @@ final class DocumentStore: ObservableObject, Sendable {
         try? await fetchUISettings()
 
         let permissions = permissions
-        Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix)")
+        Logger.shared.info("Permissions returned from backend:\n\(permissions.matrix, privacy: .public)")
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             for task in [fetchAllCorrespondents,

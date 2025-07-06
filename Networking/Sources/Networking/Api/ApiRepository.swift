@@ -171,7 +171,7 @@ public actor ApiRepository {
         }
 
         let sanitizedUrl = Self.sanitizeUrlForLog(url)
-        Logger.networking.trace("Fetching request data for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public)")
+        Logger.networking.info("Fetching request data for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public)")
 
         let cachePolicyName = switch cachePolicy { case .useProtocolCachePolicy:
             "useProtocolCachePolicy"
