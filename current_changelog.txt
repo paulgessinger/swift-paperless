@@ -1,1 +1,2 @@
 - Allow opening document edit view even without edit permissions. Editing is disabled inside of the view instead.
+- Show owner in document list and detail view
