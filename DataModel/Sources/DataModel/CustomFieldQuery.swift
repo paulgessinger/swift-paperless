@@ -1,6 +1,30 @@
+import CasePaths
 import Foundation
 import os
 
+public struct OpContent: Sendable, Equatable {
+    let op: CustomFieldQuery.LogicalOperator
+    let args: [CustomFieldQuery]
+
+    public init(op: CustomFieldQuery.LogicalOperator, args: [CustomFieldQuery]) {
+        self.op = op
+        self.args = args
+    }
+}
+
+public struct ExprContent: Sendable, Equatable {
+    let id: UInt
+    let op: CustomFieldQuery.FieldOperator
+    let arg: CustomFieldQuery.Argument
+
+    public init(id: UInt, op: CustomFieldQuery.FieldOperator, arg: CustomFieldQuery.Argument) {
+        self.id = id
+        self.op = op
+        self.arg = arg
+    }
+}
+
+@CasePathable
 public indirect enum CustomFieldQuery: Equatable, Sendable {
     public enum LogicalOperator: String, Codable, Sendable {
         case or = "OR"
@@ -26,8 +50,16 @@ public indirect enum CustomFieldQuery: Equatable, Sendable {
         indirect case array([Argument])
     }
 
-    case op(LogicalOperator, [Self])
-    case expr(UInt, FieldOperator, Argument)
+    public static func op(_ op: LogicalOperator, _ args: [CustomFieldQuery]) -> CustomFieldQuery {
+        .op(OpContent(op: op, args: args))
+    }
+
+    public static func expr(_ id: UInt, _ op: FieldOperator, _ arg: Argument) -> CustomFieldQuery {
+        .expr(ExprContent(id: id, op: op, arg: arg))
+    }
+
+    case op(OpContent)
+    case expr(ExprContent)
     case any
 }
 
@@ -42,17 +74,18 @@ extension CustomFieldQuery: Codable {
         // Otherwise decode as an array
         var container = try decoder.unkeyedContainer()
 
+        // @TODO: Maybe push this to decoder of the content structs?
         if container.count == 2 {
             let op = try container.decode(LogicalOperator.self)
             let args = try container.decode([CustomFieldQuery].self)
 
-            self = .op(op, args)
+            self = .op(OpContent(op: op, args: args))
         } else if container.count == 3 {
             let id = try container.decode(UInt.self)
             let op = try container.decode(FieldOperator.self)
             let arg = try container.decode(Argument.self)
 
-            self = .expr(id, op, arg)
+            self = .expr(ExprContent(id: id, op: op, arg: arg))
         } else {
             throw DecodingError.dataCorruptedError(
                 in: container,
@@ -62,16 +95,17 @@ extension CustomFieldQuery: Codable {
     }
 
     public func encode(to encoder: Encoder) throws {
+        // @TODO: Maybe push this to encoder of the content structs?
         switch self {
-        case let .op(op, args):
+        case let .op(opContent):
             var container = encoder.unkeyedContainer()
-            try container.encode(op)
-            try container.encode(args)
-        case let .expr(id, op, arg):
+            try container.encode(opContent.op)
+            try container.encode(opContent.args)
+        case let .expr(exprContent):
             var container = encoder.unkeyedContainer()
-            try container.encode(id)
-            try container.encode(op)
-            try container.encode(arg)
+            try container.encode(exprContent.id)
+            try container.encode(exprContent.op)
+            try container.encode(exprContent.arg)
         case .any:
             var container = encoder.singleValueContainer()
             try container.encodeNil()
