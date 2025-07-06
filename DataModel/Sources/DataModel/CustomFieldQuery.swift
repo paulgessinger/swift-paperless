@@ -2,9 +2,9 @@ import CasePaths
 import Foundation
 import os
 
-public struct OpContent: Sendable, Equatable {
-    let op: CustomFieldQuery.LogicalOperator
-    let args: [CustomFieldQuery]
+public struct OpContent: Sendable, Equatable, Hashable {
+    public var op: CustomFieldQuery.LogicalOperator
+    public var args: [CustomFieldQuery]
 
     public init(op: CustomFieldQuery.LogicalOperator, args: [CustomFieldQuery]) {
         self.op = op
@@ -12,10 +12,10 @@ public struct OpContent: Sendable, Equatable {
     }
 }
 
-public struct ExprContent: Sendable, Equatable {
-    let id: UInt
-    let op: CustomFieldQuery.FieldOperator
-    let arg: CustomFieldQuery.Argument
+public struct ExprContent: Sendable, Equatable, Hashable {
+    public var id: UInt
+    public var op: CustomFieldQuery.FieldOperator
+    public var arg: CustomFieldQuery.Argument
 
     public init(id: UInt, op: CustomFieldQuery.FieldOperator, arg: CustomFieldQuery.Argument) {
         self.id = id
@@ -25,13 +25,14 @@ public struct ExprContent: Sendable, Equatable {
 }
 
 @CasePathable
-public indirect enum CustomFieldQuery: Equatable, Sendable {
-    public enum LogicalOperator: String, Codable, Sendable {
+@dynamicMemberLookup
+public indirect enum CustomFieldQuery: Equatable, Sendable, Hashable {
+    public enum LogicalOperator: String, Codable, Sendable, Hashable {
         case or = "OR"
         case and = "AND"
     }
 
-    public enum FieldOperator: String, Codable, Sendable {
+    public enum FieldOperator: String, Codable, Sendable, Hashable {
         case exists
         case isnull
         case exact
@@ -43,7 +44,7 @@ public indirect enum CustomFieldQuery: Equatable, Sendable {
         case contains
     }
 
-    public enum Argument: Equatable, Sendable {
+    public enum Argument: Equatable, Sendable, Hashable {
         case string(String)
         case number(Double)
         case integer(Int)

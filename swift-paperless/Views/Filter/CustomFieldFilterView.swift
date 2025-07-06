@@ -5,127 +5,141 @@
 //  Created by Paul Gessinger on 28.06.25.
 //
 
+import CasePaths
 import DataModel
 import Networking
 import SwiftUI
 
-private struct QueryView: View {
-    var query: Query
+private struct OpView: View {
+    @Binding var op: OpContent
 
-    var body: some View {
-        Form {
-            Text(String(describing: query))
-        }
+    @EnvironmentObject private var store: DocumentStore
+
+    private var defaultField: CustomField? {
+        store.customFields.values
+            .sorted(by: {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }).first
     }
-}
-
-private struct ExpressionView: View {
-    var expression: Expression
 
     var body: some View {
         Form {
             Section {
-                Text(String(describing: expression))
-            }
-
-            Section {
-                ForEach(expression.elements.indices, id: \.self) { index in
-                    let value = expression.elements[index]
-                    if value is Query {
-                        QueryView(query: value as! Query)
+                ForEach(op.args.indices, id: \.self) { index in
+                    Group {
+                        let arg = $op.args[index]
+                        if let op = arg.op {
+                            NavigationLink {
+                                OpView(op: op)
+                            } label: {
+                                Text(arg.wrappedValue.rawValue)
+                            }
+                        }
+                        if let expr = arg.expr {
+                            NavigationLink {
+                                ExprView(expr: expr)
+                            } label: {
+                                Text(arg.wrappedValue.rawValue)
+                            }
+                        }
                     }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            op.args.remove(at: index)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+
+                Picker("Operator", selection: $op.op) {
+                    Text("And").tag(CustomFieldQuery.LogicalOperator.and)
+                    Text("Or").tag(CustomFieldQuery.LogicalOperator.or)
                 }
             }
 
-            Button("Add query") {
-                expression.elements.append(
-                    Query(
-                        customField: CustomField(id: 1, name: "Custom field", dataType: .string),
-                        op: .exists,
-                        argument: .string("example")
-                    )
-                )
+            Section {
+                // If we don't have one, what's the point of adding an expr?
+                if let defaultField {
+                    Button("Add expr") {
+                        op.args.append(.expr(defaultField.id, .exists, .string("true")))
+                    }
+                }
+
+                Button("Add op") {
+                    op.args.append(.op(.or, []))
+                }
             }
 
-            Button("Add expression") {
-                expression.elements.append(
-                    Expression(logicalOperator: .or, elements: [])
-                )
+            Section {
+                Text(CustomFieldQuery.op(op).rawValue)
             }
         }
     }
 }
 
-protocol QueryElement {
-    func view() -> AnyView
-}
+private struct ExprView: View {
+    @Binding var expr: ExprContent
 
-struct Expression: QueryElement {
-    var logicalOperator: CustomFieldQuery.LogicalOperator
-    var elements: [any QueryElement]
+    @State private var field: CustomField?
 
-    init(logicalOperator: CustomFieldQuery.LogicalOperator, elements: [any QueryElement]) {
-        self.logicalOperator = logicalOperator
-        self.elements = elements
+    @EnvironmentObject private var store: DocumentStore
+
+    private var fields: [CustomField] {
+        Array(store.customFields.values
+            .sorted(by: {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            })
+        )
     }
 
-    func view() -> AnyView {
-        AnyView(Text("I am expression"))
-    }
-}
+    var body: some View {
+        Form {
+            Text("Field: \(field?.name ?? "Unknown")")
+            Text(CustomFieldQuery.expr(expr).rawValue)
 
-struct Query: QueryElement {
-    var customField: CustomField
-    var op: CustomFieldQuery.FieldOperator
-    var argument: CustomFieldQuery.Argument
+            Picker("Operator", selection: $expr.id) {
+                ForEach(fields, id: \.id) { field in
+                    Text(field.name).tag(field.id)
+                }
+            }
+        }
+        .task {
+            field = store.customFields[expr.id]
+        }
 
-    init(customField: CustomField, op: CustomFieldQuery.FieldOperator, argument: CustomFieldQuery.Argument) {
-        self.customField = customField
-        self.op = op
-        self.argument = argument
-    }
-
-    func view() -> AnyView {
-        AnyView(Text("I am query"))
+        .onChange(of: expr.id) {
+            field = store.customFields[expr.id]
+        }
     }
 }
 
 struct CustomFieldFilterView: View {
     @Binding var query: CustomFieldQuery
 
-//    @State private var query: Expression?
-
     var body: some View {
         Form {
             Section {
-                switch query {
-                case .op:
+                if let op = $query.op {
                     NavigationLink {
-                        ExpressionView(expression: Binding(get: { query }))
+                        OpView(op: op)
                     } label: {
-                        Text("Edit expression")
+                        Text(query.rawValue)
                     }
                 }
             }
 
-            if query == nil {
+            if query == .any {
                 Button {
-                    query = Expression(logicalOperator: .or, elements: [])
+                    query = .op(.or, [])
                 } label: {
-                    Text("Add expression")
+                    Text("Add op")
                 }
             }
 
             Section {
-                Text(String(describing: query))
+                Text(query.rawValue)
             }
-        }
-
-        .task {
-//            switch query {
-//            case .none:
-//                // if it's none, we need to create
-//            }
         }
     }
 }
@@ -161,7 +175,7 @@ private let customFields = [
     @Previewable @State var filterState = FilterState.default
 
     NavigationStack {
-        CustomFieldFilterView()
+        CustomFieldFilterView(query: $filterState.customField)
     }
     .task {
         do {
