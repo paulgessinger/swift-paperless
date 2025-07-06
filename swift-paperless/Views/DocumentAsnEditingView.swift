@@ -18,6 +18,7 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
 
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.isEnabled) private var isEnabled: Bool
 
     @State private var asn = ""
     @State private var changed = false
@@ -64,8 +65,9 @@ struct DocumentAsnEditingView<DocumentType>: View where DocumentType: DocumentPr
         HStack {
             TextField(String(localized: .localizable(.asn)), text: $asn)
                 .keyboardType(.numberPad)
+                .disabled(!isEnabled)
 
-            if asn.isEmpty {
+            if isEnabled, asn.isEmpty {
                 Button(String("+1")) { Task { await asnPlusOne() }}
                     .padding(.vertical, 2)
                     .padding(.horizontal, 10)

@@ -150,6 +150,7 @@ struct CustomFieldsEditView: View {
 
     @EnvironmentObject var store: DocumentStore
     @Environment(\.locale) private var locale
+    @Environment(\.isEnabled) private var isEnabled
 
     @State private var showAddSheet = false
     @State private var showInvalidFields = false
@@ -192,6 +193,7 @@ struct CustomFieldsEditView: View {
                 Button(.customFields(.delete), role: .destructive) {
                     deleteField(index: index)
                 }
+                .disabled(!isEnabled)
             }
         }
     }
@@ -217,9 +219,10 @@ struct CustomFieldsEditView: View {
             }
 
             if document.customFields.isEmpty {
+                let msg = isEnabled ? Text(.customFields(.noCustomFieldsInDocumentDescription)) : Text(.customFields(.noCustomFieldsInDocumentDescriptionNoPerms))
                 ContentUnavailableView(.customFields(.noCustomFieldsInDocument),
                                        systemImage: "plus.square.dashed",
-                                       description: Text(.customFields(.noCustomFieldsInDocumentDescription)))
+                                       description: msg)
             } else {
                 ForEach(0 ..< customFields.count, id: \.self) { index in
                     let field = $customFields[index]

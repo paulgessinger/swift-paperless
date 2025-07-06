@@ -90,6 +90,10 @@ struct DocumentEditView: View {
         !modified || document.title.isEmpty || !isAsnValid
     }
 
+    private var canEdit: Bool {
+        store.permissions.test(.change, for: .document)
+    }
+
     @State private var saving = false
 
     init(
@@ -105,7 +109,7 @@ struct DocumentEditView: View {
     func doDocumentDelete() {
         Task { @MainActor in
             do {
-                Logger.shared.notice("Deleted document from Edit view")
+                Logger.shared.notice("Deleted document from Edit view\("")")
                 try await store.deleteDocument(document)
                 deleted = true
                 let impact = UIImpactFeedbackGenerator(style: .rigid)
@@ -113,7 +117,7 @@ struct DocumentEditView: View {
                 try await Task.sleep(for: .seconds(0.2))
                 dismiss()
                 if let navPath {
-                    Logger.shared.notice("Pop navigation to root")
+                    Logger.shared.notice("Pop navigation to root\("")")
                     navPath.wrappedValue.popToRoot()
                 }
             } catch {
@@ -136,15 +140,18 @@ struct DocumentEditView: View {
                 Section {
                     TextField(String(localized: .localizable(.title)), text: $document.title) {}
                         .clearable($document.title)
+                        .disabled(!canEdit)
 
                     DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                        .disabled(!canEdit)
 
                     DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)),
                                selection: $document.created.animation(.default),
                                displayedComponents: .date)
+                        .disabled(!canEdit)
 
-                    if let suggestions, !suggestions.dates.isEmpty {
+                    if canEdit, let suggestions, !suggestions.dates.isEmpty {
                         let valid = suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }
                         if !valid.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -192,11 +199,14 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
+                        .disabled(!canEdit)
                     }
-                    SuggestionView(document: $document,
-                                   property: \.correspondent,
-                                   elements: store.correspondents,
-                                   suggestions: suggestions?.correspondents)
+                    if canEdit {
+                        SuggestionView(document: $document,
+                                       property: \.correspondent,
+                                       elements: store.correspondents,
+                                       suggestions: suggestions?.correspondents)
+                    }
                 }
 
                 Section {
@@ -222,12 +232,15 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
+                        .disabled(!canEdit)
                     }
 
-                    SuggestionView(document: $document,
-                                   property: \.documentType,
-                                   elements: store.documentTypes,
-                                   suggestions: suggestions?.documentTypes)
+                    if canEdit {
+                        SuggestionView(document: $document,
+                                       property: \.documentType,
+                                       elements: store.documentTypes,
+                                       suggestions: suggestions?.documentTypes)
+                    }
                 }
 
                 Section {
@@ -253,12 +266,15 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
+                        .disabled(!canEdit)
                     }
 
-                    SuggestionView(document: $document,
-                                   property: \.storagePath,
-                                   elements: store.storagePaths,
-                                   suggestions: suggestions?.storagePaths)
+                    if canEdit {
+                        SuggestionView(document: $document,
+                                       property: \.storagePath,
+                                       elements: store.storagePaths,
+                                       suggestions: suggestions?.storagePaths)
+                    }
                 }
 
                 Section {
@@ -273,17 +289,20 @@ struct DocumentEditView: View {
                         }
                     }
                     .contentShape(Rectangle())
+                    .disabled(!canEdit)
                 }
 
                 Section {
                     NavigationLink(.permissions(.title)) {
                         PermissionsEditView(object: $document)
+                            .disabled(!canEdit)
                     }
                 }
 
                 Section {
                     NavigationLink(.customFields(.title)) {
                         CustomFieldsEditView(document: $document)
+                            .disabled(!canEdit)
                     }
                 }
 
@@ -346,7 +365,7 @@ struct DocumentEditView: View {
                             ProgressView()
                         }
                     }
-                    .disabled(isSaveDisabled)
+                    .disabled(isSaveDisabled || !canEdit)
                 }
             }
 
@@ -405,6 +424,7 @@ struct DocumentEditView: View {
         do {
             let repository = store.repository as! TransientRepository
             await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: []))
+            await repository.set(permissionTo: .change, for: .document, to: false)
             try? await repository.login(userId: 1)
             try await store.fetchAll()
             try await store.repository.create(document: ProtoDocument(title: "blubb"),

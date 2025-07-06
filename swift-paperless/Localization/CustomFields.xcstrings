@@ -955,6 +955,17 @@
         }
       }
     },
+    "noCustomFieldsInDocumentDescriptionNoPerms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This document does not have any custom fields attached."
+          }
+        }
+      }
+    },
     "noDateDescription" : {
       "extractionState" : "manual",
       "localizations" : {

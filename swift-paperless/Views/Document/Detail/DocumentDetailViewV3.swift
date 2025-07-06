@@ -263,8 +263,8 @@ private struct DocumentPropertyView: View {
                         showEditSheet = true
                     }
                     .accessibilityIdentifier("documentEditButton")
-                    .disabled(!viewModel.userCanChange)
-                    .opacity(viewModel.userCanChange ? 1 : 0.3)
+//                    .disabled(!viewModel.userCanChange)
+//                    .opacity(viewModel.userCanChange ? 1 : 0.3)
             }
             .animation(.default, value: viewModel.userCanChange)
 

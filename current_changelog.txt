@@ -1,0 +1,1 @@
+- Allow opening document edit view even without edit permissions. Editing is disabled inside of the view instead.
