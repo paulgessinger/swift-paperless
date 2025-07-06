@@ -103,11 +103,14 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         @EnvironmentObject var errorController: ErrorController
         var model: Manager.Model
 
+        var onSave: () -> Void
+
         var body: some View {
             Manager.CreateView(onSave: { newElement in
                 Task {
                     do {
                         _ = try await model.create(newElement)
+                        onSave()
                         dismiss()
                     } catch {
                         errorController.push(error: error)
@@ -210,7 +213,11 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 NavigationLink {
                     if let model {
-                        Create(model: model)
+                        Create(model: model) {
+                            Task {
+                                await refresh()
+                            }
+                        }
                     }
                 } label: {
                     Image(systemName: "plus")
