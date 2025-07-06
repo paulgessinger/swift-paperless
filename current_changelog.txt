@@ -1,1 +1,2 @@
 - Add more logging to default permissions to help with debugging
+- Explicitly ignore caches for data fetches (keep for thumbnail requests)

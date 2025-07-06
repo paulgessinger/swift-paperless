@@ -161,8 +161,10 @@ public actor ApiRepository {
     }
 
     private func fetchData(for request: URLRequest, code: HTTPStatusCode = .ok,
-                           progress: (@Sendable (Double) -> Void)? = nil) async throws -> (Data, URLResponse)
+                           progress: (@Sendable (Double) -> Void)? = nil, cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData) async throws -> (Data, URLResponse)
     {
+        var request = request
+
         guard let url = request.url else {
             Logger.networking.error("Request URL is nil")
             throw RequestError.invalidRequest
@@ -170,6 +172,25 @@ public actor ApiRepository {
 
         let sanitizedUrl = Self.sanitizeUrlForLog(url)
         Logger.networking.trace("Fetching request data for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public)")
+
+        let cachePolicyName = switch cachePolicy { case .useProtocolCachePolicy:
+            "useProtocolCachePolicy"
+        case .reloadIgnoringLocalCacheData:
+            "reloadIgnoringLocalCacheData"
+        case .reloadIgnoringLocalAndRemoteCacheData:
+            "reloadIgnoringLocalAndRemoteCacheData"
+        case .returnCacheDataElseLoad:
+            "returnCacheDataElseLoad"
+        case .returnCacheDataDontLoad:
+            "returnCacheDataDontLoad"
+        case .reloadRevalidatingCacheData:
+            "reloadRevalidatingCacheData"
+        @unknown default:
+            "unknown"
+        }
+
+        Logger.networking.debug("Using cache policy \(cachePolicyName, privacy: .public) for request \(sanitizedUrl, privacy: .public)")
+        request.cachePolicy = cachePolicy
 
         let result: (Data, URLResponse)
         do {
@@ -609,7 +630,7 @@ extension ApiRepository: Repository {
     public func thumbnailData(document: Document) async throws -> Data {
         let request = try thumbnailRequest(document: document)
         do {
-            let (data, _) = try await fetchData(for: request)
+            let (data, _) = try await fetchData(for: request, cachePolicy: .returnCacheDataElseLoad)
             return data
         } catch is CancellationError {
             Logger.networking.trace("Thumbnail data request task was cancelled")
