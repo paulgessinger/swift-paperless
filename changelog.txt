@@ -1,3 +1,9 @@
+1.8.0 (151)
+
+- Add more logging to default permissions to help with debugging
+- Explicitly ignore caches for data fetches (keep for thumbnail requests)
+- Fix new elements not being shown immediately in manage view
+
 1.8.0 (149)
 
 - Skip local network denied detection on iOS 26. This leads to a crash during login
