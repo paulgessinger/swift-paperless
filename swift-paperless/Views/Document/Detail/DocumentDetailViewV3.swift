@@ -159,6 +159,10 @@ private struct DocumentPropertyView: View {
                         if let id = document.storagePath {
                             Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
                         }
+
+                        if case let .user(id) = document.owner {
+                            Aspect(store.users[id]?.username, systemImage: "person.badge.key")
+                        }
                     }
 
                     TagsView(tags: document.tags.compactMap { store.tags[$0] })
@@ -744,10 +748,17 @@ private struct PreviewHelper: View {
             VStack {
                 if let document {
                     DocumentDetailViewV3(store: store, document: document, navPath: $navPath)
+                } else {
+                    Text("No document")
                 }
             }
             .task {
-                document = try? await store.document(id: documentId)
+                do {
+                    let documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
+                    document = documents.first(where: { $0.id == documentId })
+                } catch {
+                    print(error)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -764,7 +775,7 @@ private struct PreviewHelper: View {
 }
 
 #Preview("DocumentDetailsView") {
-    PreviewHelper(id: 1)
+    PreviewHelper(id: 2)
 }
 
 #Preview("Long title") {

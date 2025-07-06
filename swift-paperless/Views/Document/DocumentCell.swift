@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import Common
 import DataModel
 import Networking
 import Nuke
@@ -144,6 +145,13 @@ struct DocumentCell: View {
                         .truncationMode(.tail)
                 }
 
+                if case let .user(id) = document.owner {
+                    Aspect(store.users[id]?.username, systemImage: "person.badge.key")
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+
                 Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
                 TagsView(tags: document.tags.map { store.tags[$0] })
@@ -154,45 +162,44 @@ struct DocumentCell: View {
     }
 }
 
-private struct HelperView: View {
-    @EnvironmentObject var store: DocumentStore
-    @State var documents = [Document]()
+#Preview {
+    @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+    @Previewable @State var documents = [Document]()
 
-    var body: some View {
-        ScrollView(.vertical) {
-            VStack {
-                ForEach(documents.prefix(5), id: \.id) { document in
-                    DocumentCell(document: document, store: store)
-                }
-
-                if let doc = documents.first {
-                    DocumentCell(document: doc, store: store)
-                        .redacted(reason: .placeholder)
-                }
-                Spacer()
-            }
-            .padding()
-        }
-        .task {
-            // @TODO: Fix this preview
-            if let documents = try? await store.repository.documents(filter: .default).fetch(limit: 3) {
-                self.documents = documents
-            }
+    List {
+        ForEach(documents, id: \.id) { document in
+            DocumentCell(document: document, store: store)
         }
     }
-}
+    .task {
+        do {
+            let repository = store.repository as! TransientRepository
+            await repository.addUser(User(id: 1, isSuperUser: false, username: "user1", groups: []))
+            try? await repository.login(userId: 1)
 
-#Preview("DocumentCell") {
-    let store = DocumentStore(repository: PreviewRepository())
+            let correspondent = try await store.repository.create(correspondent: ProtoCorrespondent(name: "Test Correspondent"))
+            let documentType = try await store.repository.create(documentType: ProtoDocumentType(name: "Test Document Type"))
+            let storagePath = try await store.repository.create(storagePath: ProtoStoragePath(name: "Test Storage Path"))
+            let tag = try await store.repository.create(tag: ProtoTag(name: "Test Tag"))
 
-    return HelperView()
-        .environmentObject(store)
-}
+            try await store.repository.create(document: ProtoDocument(title: "blubb", asn: 123, documentType: documentType.id, correspondent: correspondent.id, tags: [tag.id], storagePath: storagePath.id),
+                                              file: #URL("http://example.com"), filename: "blubb.pdf")
 
-#Preview("DocumentCellRedacted") {
-    let store = DocumentStore(repository: PreviewRepository())
+            guard var document = await repository.allDocuments().first else {
+                print("DID NOT GET DOCUMENT")
+                return
+            }
+            document.owner = .user(1)
+            _ = try await repository.update(document: document)
 
-    return HelperView()
-        .redacted(reason: .placeholder)
-        .environmentObject(store)
+            try await store.repository.create(document: ProtoDocument(title: "another", correspondent: correspondent.id),
+                                              file: #URL("http://example.com"), filename: "blubb.pdf")
+            try await store.repository.create(document: ProtoDocument(title: "A third", correspondent: correspondent.id),
+                                              file: #URL("http://example.com"), filename: "blubb.pdf")
+
+            documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
+
+            try await store.fetchAll()
+        } catch { print(error) }
+    }
 }
