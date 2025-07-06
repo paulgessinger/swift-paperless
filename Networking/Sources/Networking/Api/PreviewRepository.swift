@@ -58,12 +58,12 @@ public actor PreviewRepository: Repository {
     public init(downloadDelay: Double = 0.0) {
         self.downloadDelay = downloadDelay
 
-        users = [
+        let users = [
             User(id: 1, isSuperUser: true, username: "superperson"),
             User(id: 2, isSuperUser: false, username: "joeschmoe"),
         ]
 
-        groups = [
+        let groups = [
             UserGroup(id: 1, name: "Crew"),
             UserGroup(id: 2, name: "Staff"),
         ]
@@ -141,6 +141,14 @@ public actor PreviewRepository: Repository {
             return storagePaths.map(\.value.id).sorted().randomElement(using: &generator)
         }
 
+        let o = { () -> Owner in
+            if Float.random(in: 0 ..< 1.0, using: &generator) < 0.5 {
+                return .none
+            }
+            let user = users.map(\.id).sorted().randomElement(using: &generator)
+            return user.map { .user($0) } ?? .none
+        }
+
         var maxAsn: UInt = 0
         let asn = { () -> UInt? in
             if Float.random(in: 0 ..< 1.0, using: &generator) < 0.5 {
@@ -160,7 +168,8 @@ public actor PreviewRepository: Repository {
                                        tags: t(),
                                        added: .now,
                                        modified: .now,
-                                       storagePath: p())
+                                       storagePath: p(),
+                                       owner: o())
         }
 
         documents[2]?.title = "I am a very long document title that will not."
@@ -170,6 +179,8 @@ public actor PreviewRepository: Repository {
         self.tags = tags
         self.documentTypes = documentTypes
         self.storagePaths = storagePaths
+        self.users = users
+        self.groups = groups
 
         tasks = [
             PaperlessTask(

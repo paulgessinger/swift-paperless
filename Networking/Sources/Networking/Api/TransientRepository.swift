@@ -115,8 +115,12 @@ extension TransientRepository: Repository {
                 return doc.title.localizedCaseInsensitiveContains(filter.searchText)
             }
             return true
-        }
+        }.sorted { $0.id < $1.id }
         return TransientDocumentSource(sequence: filteredDocs)
+    }
+
+    public func allDocuments() -> [Document] {
+        documents.values.sorted { $0.id < $1.id }
     }
 
     public func nextAsn() async throws -> UInt {
@@ -420,17 +424,28 @@ extension TransientRepository: Repository {
         return nil
     }
 
-    public func thumbnail(document _: Document) async throws -> Image? {
-        nil
+    public func thumbnail(document: Document) async throws -> Image? {
+        let data = try await thumbnailData(document: document)
+        let image = Image(data: data)
+        return image
     }
 
-    public func thumbnailData(document _: Document) async throws -> Data {
-        Data()
+    public func thumbnailData(document: Document) async throws -> Data {
+        let request = URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
+
+        do {
+            let (data, _) = try await URLSession.shared.getData(for: request)
+
+            return data
+        } catch {
+            Logger.networking.error("Unable to get preview document thumbnail (somehow): \(error)")
+            throw error
+        }
     }
 
     public nonisolated
-    func thumbnailRequest(document _: Document) throws -> URLRequest {
-        URLRequest(url: URL(string: "about:blank")!)
+    func thumbnailRequest(document: Document) throws -> URLRequest {
+        URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
     }
 
     public func uiSettings() async throws -> UISettings {
