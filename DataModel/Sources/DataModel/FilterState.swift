@@ -74,6 +74,10 @@ public struct FilterState: Equatable, Codable, Sendable {
         didSet { modified = modified || sortOrder != oldValue }
     }
 
+    public var customField: CustomFieldQuery = .any {
+        didSet { modified = modified || customField != oldValue }
+    }
+
     public var savedView: UInt? = nil
 
     @EquatableNoop
@@ -99,7 +103,8 @@ public struct FilterState: Equatable, Codable, Sendable {
                 remaining: [FilterRule],
                 savedView: UInt?,
                 searchText: String?,
-                searchMode: SearchMode)
+                searchMode: SearchMode,
+                customField: CustomFieldQuery)
     {
         self.correspondent = correspondent
         self.documentType = documentType
@@ -112,6 +117,7 @@ public struct FilterState: Equatable, Codable, Sendable {
         self.savedView = savedView
         self.searchText = searchText ?? ""
         self.searchMode = searchMode
+        self.customField = customField
     }
 
     public static var empty: FilterState {
@@ -125,7 +131,8 @@ public struct FilterState: Equatable, Codable, Sendable {
                     remaining: [],
                     savedView: nil,
                     searchText: nil,
-                    searchMode: .title)
+                    searchMode: .title,
+                    customField: .any)
     }
 
     func with(_ factory: (inout Self) -> Void) -> Self {
@@ -284,6 +291,12 @@ public struct FilterState: Equatable, Codable, Sendable {
             }
         }
 
+        if customField != .any {
+            result.append(
+                FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(customField))!
+            )
+        }
+
         return result
     }
 
@@ -305,6 +318,9 @@ public struct FilterState: Equatable, Codable, Sendable {
             result += 1
         }
         if !searchText.isEmpty {
+            result += 1
+        }
+        if customField != .any {
             result += 1
         }
 
@@ -563,6 +579,15 @@ public struct FilterState: Equatable, Codable, Sendable {
                 case .any:
                     owner = .noneOf(ids: ids)
                 }
+
+            case .customFieldsQuery:
+                guard case let .customFieldQuery(query) = rule.value else {
+                    Logger.dataModel.error("Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)")
+                    remaining.append(rule)
+                    break
+                }
+
+                customField = query
 
             default:
                 remaining.append(rule)
