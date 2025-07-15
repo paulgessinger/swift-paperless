@@ -32,7 +32,7 @@ public indirect enum CustomFieldQuery: Equatable, Sendable, Hashable {
         case and = "AND"
     }
 
-    public enum FieldOperator: String, Codable, Sendable, Hashable {
+    public enum FieldOperator: String, Codable, Sendable, Hashable, CaseIterable {
         case exists
         case isnull
         case exact
