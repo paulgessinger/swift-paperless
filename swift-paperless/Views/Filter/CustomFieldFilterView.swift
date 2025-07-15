@@ -51,12 +51,13 @@ private struct OpView: View {
                         }
                     }
                 }
-
+            } header: {
                 Picker("Operator", selection: $op.op) {
                     Text("And").tag(CustomFieldQuery.LogicalOperator.and)
                     Text("Or").tag(CustomFieldQuery.LogicalOperator.or)
                 }
-            }
+                .pickerStyle(.segmented)
+            } footer: {}
 
             Section {
                 // If we don't have one, what's the point of adding an expr?
@@ -93,16 +94,36 @@ private struct ExprView: View {
         )
     }
 
+    private typealias FieldOperator = CustomFieldQuery.FieldOperator
+
+    private var eligibleOperators: [FieldOperator] {
+        var result: [FieldOperator] = [.exists, .isnull]
+
+        switch field?.dataType {
+        case .select:
+            result.append(contentsOf: [.exact, .in])
+        default: break
+        }
+
+        return result
+    }
+
     var body: some View {
         Form {
-            Text("Field: \(field?.name ?? "Unknown")")
-            Text(CustomFieldQuery.expr(expr).rawValue)
-
-            Picker("Operator", selection: $expr.id) {
+            Picker("Field", selection: $expr.id) {
                 ForEach(fields, id: \.id) { field in
                     Text(field.name).tag(field.id)
                 }
             }
+
+            Picker("Operator", selection: $expr.op) {
+                ForEach(eligibleOperators, id: \.self) { op in
+                    Text(op.localizedName).tag(op)
+                }
+            }
+
+//            Text("Field: \(field?.name ?? "Unknown")")
+            Text(CustomFieldQuery.expr(expr).rawValue)
         }
         .task {
             field = store.customFields[expr.id]
@@ -168,26 +189,48 @@ private let customFields = [
     CustomField(id: 11, name: "Unknown field", dataType: .other("plumbus")),
 ]
 
-#Preview {
-    @Previewable
+private struct PreviewHelper<C: View>: View {
     @StateObject var store = DocumentStore(repository: TransientRepository())
 
+    @State var show = false
+
+    var content: () -> C
+
+    var body: some View {
+        NavigationStack {
+            if show {
+                content()
+            }
+        }
+        .task {
+            do {
+                let repository = store.repository as! TransientRepository
+                await repository.addUser(
+                    User(id: 1, isSuperUser: false, username: "user", groups: [1]))
+                try? await repository.login(userId: 1)
+                for field in customFields {
+                    _ = try await repository.add(customField: field)
+                }
+                try await store.fetchAll()
+                show = true
+            } catch {}
+        }
+        .environmentObject(store)
+    }
+}
+
+#Preview("Combined") {
     @Previewable @State var filterState = FilterState.default
 
-    NavigationStack {
+    PreviewHelper {
         CustomFieldFilterView(query: $filterState.customField)
     }
-    .task {
-        do {
-            let repository = store.repository as! TransientRepository
-            await repository.addUser(
-                User(id: 1, isSuperUser: false, username: "user", groups: [1]))
-            try? await repository.login(userId: 1)
-            for field in customFields {
-                _ = try await repository.add(customField: field)
-            }
-            try await store.fetchAll()
-        } catch {}
+}
+
+#Preview("String") {
+    @Previewable @State var expr = ExprContent(id: 7, op: .exists, arg: .string("test"))
+
+    PreviewHelper {
+        ExprView(expr: $expr)
     }
-    .environmentObject(store)
 }
