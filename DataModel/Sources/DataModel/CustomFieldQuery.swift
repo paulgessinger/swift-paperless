@@ -42,6 +42,7 @@ public indirect enum CustomFieldQuery: Equatable, Sendable, Hashable {
         case lte
         case `in`
         case contains
+        case icontains
     }
 
     public enum Argument: Equatable, Sendable, Hashable {
