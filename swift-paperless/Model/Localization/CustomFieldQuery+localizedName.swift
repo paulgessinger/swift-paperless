@@ -12,6 +12,7 @@ extension CustomFieldQuery.FieldOperator {
         case .lte: String(localized: .customFields(.queryLessThanOrEqual))
         case .in: String(localized: .customFields(.queryIn))
         case .contains: String(localized: .customFields(.queryContains))
+        case .icontains: String(localized: .customFields(.queryContainsCaseInsensitive))
         }
     }
 }

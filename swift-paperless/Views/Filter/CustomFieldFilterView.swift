@@ -8,6 +8,7 @@
 import CasePaths
 import DataModel
 import Networking
+import os
 import SwiftUI
 
 private struct OpView: View {
@@ -22,26 +23,31 @@ private struct OpView: View {
             }).first
     }
 
+    @ViewBuilder
+    private func rowView(for arg: Binding<CustomFieldQuery>) -> some View {
+        if let op = arg.op {
+            NavigationLink {
+                OpView(op: op)
+            } label: {
+                Text(arg.wrappedValue.rawValue)
+            }
+        }
+        if let expr = arg.expr, let field = store.customFields[expr.wrappedValue.id] {
+            NavigationLink {
+                ExprView(field: field, expr: expr)
+            } label: {
+                Text(arg.wrappedValue.rawValue)
+            }
+        }
+    }
+
     var body: some View {
         Form {
             Section {
                 ForEach(op.args.indices, id: \.self) { index in
                     Group {
                         let arg = $op.args[index]
-                        if let op = arg.op {
-                            NavigationLink {
-                                OpView(op: op)
-                            } label: {
-                                Text(arg.wrappedValue.rawValue)
-                            }
-                        }
-                        if let expr = arg.expr {
-                            NavigationLink {
-                                ExprView(expr: expr)
-                            } label: {
-                                Text(arg.wrappedValue.rawValue)
-                            }
-                        }
+                        rowView(for: arg)
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
@@ -52,9 +58,9 @@ private struct OpView: View {
                     }
                 }
             } header: {
-                Picker("Operator", selection: $op.op) {
-                    Text("And").tag(CustomFieldQuery.LogicalOperator.and)
-                    Text("Or").tag(CustomFieldQuery.LogicalOperator.or)
+                Picker(String(localized: .customFields(.queryOperatorLabel)), selection: $op.op) {
+                    Text(.customFields(.queryAnd)).tag(CustomFieldQuery.LogicalOperator.and)
+                    Text(.customFields(.queryOr)).tag(CustomFieldQuery.LogicalOperator.or)
                 }
                 .pickerStyle(.segmented)
             } footer: {}
@@ -79,10 +85,112 @@ private struct OpView: View {
     }
 }
 
-private struct ExprView: View {
-    @Binding var expr: ExprContent
+extension CustomFieldQuery.FieldOperator {
+    static func eligibleOperators(for dataType: CustomField.DataType) -> [Self] {
+        var result: [Self] = [.exists, .isnull]
 
-    @State private var field: CustomField?
+        switch dataType {
+        case .select:
+            result.append(contentsOf: [.exact, .in])
+        case .boolean:
+            result.append(contentsOf: [.exact])
+        case .string, .url:
+            result.append(contentsOf: [.exact, .icontains])
+        case .monetary:
+            result.append(contentsOf: [.exact, .icontains, .gt, .gte, .lt, .lte])
+        default: break
+        }
+
+        return result
+    }
+}
+
+private struct ToggleArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+    @State private var toggleValue: Bool = false
+
+    init(value: Binding<CustomFieldQuery.Argument>) {
+        _value = value
+        if case let .string(val) = self.value {
+            _toggleValue = State(initialValue: val != "false")
+        } else {
+            _toggleValue = State(initialValue: false)
+        }
+    }
+
+    var body: some View {
+        Toggle(isOn: $toggleValue) {
+            Text(.customFields(.queryArgumentLabel))
+        }
+
+        .task {
+            // To ensure the view matches the actual value, we need to reset the value here
+            value = .string(toggleValue ? "true" : "false")
+        }
+
+        .onChange(of: toggleValue) {
+            value = .string(toggleValue ? "true" : "false")
+        }
+    }
+}
+
+private struct StringArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var stringValue: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(.customFields(.queryArgumentLabel))
+                .font(.caption)
+
+            TextField(String(localized: .customFields(.queryArgumentLabel)),
+                      text: $stringValue)
+        }
+
+        .task {
+            if case let .string(val) = value {
+                stringValue = val
+            }
+        }
+
+        .onChange(of: stringValue) {
+            value = .string(stringValue)
+        }
+    }
+}
+
+private struct ExprArgView: View {
+    @Binding var op: CustomFieldQuery.FieldOperator
+    @Binding var field: CustomField
+    @Binding var value: CustomFieldQuery.Argument
+
+    var body: some View {
+        switch op {
+        case .exists, .isnull:
+            ToggleArgView(value: $value)
+        case .exact:
+            switch field.dataType {
+            case .boolean:
+                ToggleArgView(value: $value)
+            case .string, .date, .url, .monetary:
+                StringArgView(value: $value)
+            default:
+                Text("Unknown EXACT")
+            }
+        case .icontains:
+            StringArgView(value: $value)
+        default:
+            Text("Unknown")
+        }
+
+        Text(String(describing: value))
+    }
+}
+
+private struct ExprView: View {
+    @State var field: CustomField
+    @Binding var expr: ExprContent
 
     @EnvironmentObject private var store: DocumentStore
 
@@ -96,42 +204,39 @@ private struct ExprView: View {
 
     private typealias FieldOperator = CustomFieldQuery.FieldOperator
 
-    private var eligibleOperators: [FieldOperator] {
-        var result: [FieldOperator] = [.exists, .isnull]
-
-        switch field?.dataType {
-        case .select:
-            result.append(contentsOf: [.exact, .in])
-        default: break
+    private func updateField(_: UInt) {
+        guard let field = store.customFields[expr.id] else {
+            Logger.shared.error("Expression set to field with id \(expr.id, privacy: .public) which was not found")
+            return
         }
 
-        return result
+        self.field = field
     }
 
     var body: some View {
         Form {
-            Picker("Field", selection: $expr.id) {
-                ForEach(fields, id: \.id) { field in
-                    Text(field.name).tag(field.id)
+            Section {
+                Picker(.customFields(.queryFieldLabel), selection: $expr.id) {
+                    ForEach(fields, id: \.id) { field in
+                        Text(field.name).tag(field.id)
+                    }
                 }
+
+                Picker(.customFields(.queryOperatorLabel), selection: $expr.op) {
+                    ForEach(FieldOperator.eligibleOperators(for: field.dataType), id: \.self) { op in
+                        Text(op.localizedName).tag(op)
+                    }
+                }
+                ExprArgView(op: $expr.op, field: $field, value: $expr.arg)
             }
 
-            Picker("Operator", selection: $expr.op) {
-                ForEach(eligibleOperators, id: \.self) { op in
-                    Text(op.localizedName).tag(op)
-                }
+            // @TODO: Remove this!
+            Section {
+                Text(CustomFieldQuery.expr(expr).rawValue)
             }
-
-//            Text("Field: \(field?.name ?? "Unknown")")
-            Text(CustomFieldQuery.expr(expr).rawValue)
-        }
-        .task {
-            field = store.customFields[expr.id]
         }
 
-        .onChange(of: expr.id) {
-            field = store.customFields[expr.id]
-        }
+        .onChange(of: expr.id) { updateField(expr.id) }
     }
 }
 
@@ -194,6 +299,7 @@ private struct PreviewHelper<C: View>: View {
 
     @State var show = false
 
+    @ViewBuilder
     var content: () -> C
 
     var body: some View {
@@ -231,6 +337,10 @@ private struct PreviewHelper<C: View>: View {
     @Previewable @State var expr = ExprContent(id: 7, op: .exists, arg: .string("test"))
 
     PreviewHelper {
-        ExprView(expr: $expr)
+        if let field = customFields.first(where: { $0.id == 7 }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
     }
 }
