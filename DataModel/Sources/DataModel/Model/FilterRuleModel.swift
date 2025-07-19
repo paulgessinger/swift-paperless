@@ -21,6 +21,7 @@ public enum FilterRuleValue: Equatable, Sendable {
     case correspondent(id: UInt?)
     case owner(id: UInt?)
     case string(value: String)
+    case customFieldQuery(CustomFieldQuery)
     case invalid(value: String)
 
     fileprivate func string() -> String? {
@@ -47,6 +48,8 @@ public enum FilterRuleValue: Equatable, Sendable {
             s = id == nil ? nil : String(id!)
         case let .string(value):
             s = value
+        case let .customFieldQuery(query):
+            return query.rawValue
         case let .invalid(value):
             s = value
         }
@@ -100,7 +103,9 @@ public enum FilterRuleValue: Equatable, Sendable {
 }
 
 private extension KeyedDecodingContainerProtocol {
-    func decodeOrConvertOptional<T>(_ type: T.Type, forKey key: Self.Key) throws -> T? where T: Decodable, T: LosslessStringConvertible {
+    func decodeOrConvertOptional<T>(_ type: T.Type, forKey key: Self.Key) throws -> T?
+        where T: Decodable, T: LosslessStringConvertible
+    {
         if let value = try? decode(type, forKey: key) {
             return value
         }
@@ -108,14 +113,24 @@ private extension KeyedDecodingContainerProtocol {
             return nil
         }
         guard let value = T(s) else {
-            throw DecodingError.typeMismatch(type, .init(codingPath: [key], debugDescription: "Could not be converted from string"))
+            throw DecodingError.typeMismatch(
+                type,
+                .init(codingPath: [key], debugDescription: "Could not be converted from string")
+            )
         }
         return value
     }
 
-    func decodeOrConvert<T>(_ type: T.Type, forKey key: Self.Key) throws -> T where T: Decodable, T: LosslessStringConvertible {
+    func decodeOrConvert<T>(_ type: T.Type, forKey key: Self.Key) throws -> T
+        where T: Decodable, T: LosslessStringConvertible
+    {
         guard let value = try decodeOrConvertOptional(type, forKey: key) else {
-            throw DecodingError.typeMismatch(type, .init(codingPath: [key], debugDescription: "Nil value but no nullable value expected"))
+            throw DecodingError.typeMismatch(
+                type,
+                .init(
+                    codingPath: [key], debugDescription: "Nil value but no nullable value expected"
+                )
+            )
         }
         return value
     }
@@ -128,6 +143,19 @@ public struct FilterRule: Equatable, Sendable {
     public init?(ruleType: FilterRuleType, value: FilterRuleValue) {
         self.ruleType = ruleType
         switch (ruleType, ruleType.dataType(), value) {
+        // If we get an already parsed custom field query, we can just use it
+        case (.customFieldsQuery, .string, .customFieldQuery):
+            self.value = value
+
+        // If we get a string, we need to parse it into a custom field query, this might fail however
+        case let (.customFieldsQuery, .string, .string(value)):
+            if let query = CustomFieldQuery(rawValue: value) {
+                self.value = .customFieldQuery(query)
+            } else {
+                return nil
+            }
+
+        // For all other cases, we can just use the value as is, IF it matches the rule type
         case (_, .date, .date), (_, .number, .number), (_, .tag, .tag), (_, .boolean, .boolean),
              (_, .documentType, .documentType), (_, .storagePath, .storagePath),
              (_, .correspondent, .correspondent), (_, .number, .owner), (_, .string, .string):
@@ -154,13 +182,16 @@ public struct FilterRule: Equatable, Sendable {
             if let filterVar = type.filterVar() {
                 result.append(.init(name: filterVar, value: values.joined(separator: ",")))
             } else {
-//                Logger.shared.warning("Unable to add query item for \(String(reflecting: type), privacy: .public)")
+                Logger.dataModel.warning(
+                    "Unable to add query item for \(String(describing: type), privacy: .public)")
             }
         }
 
         for rule in rules.filter({ !$0.ruleType.multiple() }) {
             guard let filterVar = rule.ruleType.filterVar() else {
-//                Logger.shared.warning("Unable to add query item for \(String(reflecting: rule.ruleType), privacy: .public)")
+                Logger.dataModel.warning(
+                    "Unable to add query item for \(String(describing: rule.ruleType), privacy: .public)"
+                )
                 continue
             }
 
@@ -198,7 +229,7 @@ extension FilterRule: Codable {
                 dateFormatter.dateFormat = "yyyy-MM-dd"
                 dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                 guard let date = dateFormatter.date(from: dateStr) else {
-//                    Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
+                    //                    Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
                     throw DateDecodingError.invalidDate(string: dateStr)
                 }
                 value = .date(value: date)
@@ -209,13 +240,27 @@ extension FilterRule: Codable {
             case .boolean:
                 value = try .boolean(value: container.decodeOrConvert(Bool.self, forKey: .value))
             case .documentType:
-                value = try .documentType(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+                value = try .documentType(
+                    id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
             case .storagePath:
-                value = try .storagePath(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+                value = try .storagePath(
+                    id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
             case .correspondent:
-                value = try .correspondent(id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
+                value = try .correspondent(
+                    id: container.decodeOrConvertOptional(UInt.self, forKey: .value))
             case .string:
-                value = try .string(value: container.decodeOrConvert(String.self, forKey: .value))
+                let str = try container.decodeOrConvert(String.self, forKey: .value)
+                if ruleType == .customFieldsQuery {
+                    if let query = CustomFieldQuery(rawValue: str) {
+                        value = .customFieldQuery(query)
+                    } else {
+                        Logger.dataModel.error(
+                            "Invalid custom field query: \(str, privacy: .public)")
+                        value = .invalid(value: str)
+                    }
+                } else {
+                    value = .string(value: str)
+                }
             }
         } catch DecodingError.typeMismatch {
             value = try .invalid(value: container.decodeOrConvert(String.self, forKey: .value))
