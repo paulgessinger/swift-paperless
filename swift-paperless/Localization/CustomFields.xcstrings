@@ -1061,6 +1061,28 @@
         }
       }
     },
+    "queryAnd" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        }
+      }
+    },
+    "queryArgumentLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argument"
+          }
+        }
+      }
+    },
     "queryContains" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1068,6 +1090,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contains"
+          }
+        }
+      }
+    },
+    "queryContainsCaseInsensitive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contains (case-insensitive)"
           }
         }
       }
@@ -1090,6 +1123,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exists"
+          }
+        }
+      }
+    },
+    "queryFieldLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Field"
           }
         }
       }
@@ -1156,6 +1200,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Less than or equal"
+          }
+        }
+      }
+    },
+    "queryOperatorLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator"
+          }
+        }
+      }
+    },
+    "queryOr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any"
           }
         }
       }
