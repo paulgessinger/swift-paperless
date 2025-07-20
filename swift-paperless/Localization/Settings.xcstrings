@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active Identity"
+            "state" : "translated",
+            "value" : "Aktif Kimlik"
           }
         }
       }
@@ -102,8 +102,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Active server"
+            "state" : "translated",
+            "value" : "Aktif sunucu"
           }
         }
       }
@@ -156,7 +156,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "URL"
           }
         }
@@ -210,8 +210,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "User"
+            "state" : "translated",
+            "value" : "Kullanıcı"
           }
         }
       }
@@ -263,8 +263,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Gelişmiş"
           }
         }
       }
@@ -316,8 +316,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Build"
+            "state" : "translated",
+            "value" : "Derleme"
           }
         }
       }
@@ -369,8 +369,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Configuration"
+            "state" : "translated",
+            "value" : "Yapılandırma"
           }
         }
       }
@@ -422,8 +422,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Version"
+            "state" : "translated",
+            "value" : "Sürüm"
           }
         }
       }
@@ -475,8 +475,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored app version"
+            "state" : "translated",
+            "value" : "Kayıtlı uygulama sürümü"
           }
         }
       }
@@ -529,8 +529,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ could not be enabled"
+            "state" : "translated",
+            "value" : "%@ etkinleştirilemedi"
           }
         }
       }
@@ -583,8 +583,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Authenticate with TouchID to use the app"
+            "state" : "translated",
+            "value" : "Uygulamayı kullanmak için TouchID ile kimlik doğrula"
           }
         }
       }
@@ -636,8 +636,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't load certificate. Invalid password?"
+            "state" : "translated",
+            "value" : "Sertifika yüklenemiyor. Geçersiz parola?"
           }
         }
       }
@@ -689,8 +689,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate not loaded"
+            "state" : "translated",
+            "value" : "Sertifika yüklenmedi"
           }
         }
       }
@@ -742,8 +742,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificates"
+            "state" : "translated",
+            "value" : "Sertifikalar"
           }
         }
       }
@@ -795,8 +795,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose server"
+            "state" : "translated",
+            "value" : "Sunucu seç"
           }
         }
       }
@@ -848,8 +848,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Debug"
+            "state" : "translated",
+            "value" : "Hata ayıklama"
           }
         }
       }
@@ -901,8 +901,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Reset stored app version"
+            "state" : "translated",
+            "value" : "Kayıtlı uygulama sürümünü sıfırla"
           }
         }
       }
@@ -954,8 +954,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The default search mode for full-text search"
+            "state" : "translated",
+            "value" : "Tam metin arama için varsayılan arama modu"
           }
         }
       }
@@ -1007,8 +1007,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default search mode"
+            "state" : "translated",
+            "value" : "Varsayılan arama modu"
           }
         }
       }
@@ -1060,8 +1060,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort field"
+            "state" : "translated",
+            "value" : "Varsayılan sıralama alanı"
           }
         }
       }
@@ -1113,8 +1113,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default sort order"
+            "state" : "translated",
+            "value" : "Varsayılan sıralama yönü"
           }
         }
       }
@@ -1166,8 +1166,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Feedback"
+            "state" : "translated",
+            "value" : "Geri bildirim"
           }
         }
       }
@@ -1219,8 +1219,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Libraries"
+            "state" : "translated",
+            "value" : "Kütüphaneler"
           }
         }
       }
@@ -1272,8 +1272,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load used library details"
+            "state" : "translated",
+            "value" : "Kullanılan kütüphane ayrıntıları yüklenemedi"
           }
         }
       }
@@ -1325,8 +1325,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Privacy"
+            "state" : "translated",
+            "value" : "Gizlilik"
           }
         }
       }
@@ -1378,8 +1378,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "# Privacy\\\\nUnable to load privacy URL. Please navigate [here](%@) to find it."
+            "state" : "translated",
+            "value" : "# Gizlilik\\\\nGizlilik URL'si yüklenemedi. Lütfen görüntülemek için [buraya](%@) gidin."
           }
         }
       }
@@ -1431,8 +1431,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Source code"
+            "state" : "translated",
+            "value" : "Kaynak kodu"
           }
         }
       }
@@ -1484,8 +1484,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Detaylar"
           }
         }
       }
@@ -1537,8 +1537,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document delete confirmation"
+            "state" : "translated",
+            "value" : "Doküman silme onayı"
           }
         }
       }
@@ -1590,8 +1590,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Ask for confirmation before deleting a document"
+            "state" : "translated",
+            "value" : "Bir dokümanı silmeden önce onay iste"
           }
         }
       }
@@ -1643,8 +1643,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings here are upcoming feature variations / experiments that you can toggle off. \n\nUsually, the an experiment will either be implemented, and the old variant will go away, or the experiment will be abandoned, and the new variant will go away."
+            "state" : "translated",
+            "value" : "Buradaki ayarlar, kapatabileceğiniz gelecek özellik varyasyonları veya denemeleridir. \n\nGenellikle, bir deneme ya uygulanacak ve eski varyant ortadan kalkacak ya da denemeden vazgeçilecek ve yeni varyant ortadan kalkacaktır."
           }
         }
       }
@@ -1696,8 +1696,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Experiments"
+            "state" : "translated",
+            "value" : "Kullanıcı Arayüzü Deneyleri"
           }
         }
       }
@@ -1749,8 +1749,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thanks!"
+            "state" : "translated",
+            "value" : "Teşekkürler!"
           }
         }
       }
@@ -1802,8 +1802,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Send mail"
+            "state" : "translated",
+            "value" : "E-posta gönder"
           }
         }
       }
@@ -1855,8 +1855,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities"
+            "state" : "translated",
+            "value" : "Kimlikler"
           }
         }
       }
@@ -1908,8 +1908,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identities are certificates along with private keys that can be used to cryptographically authenticate you. Identities are used in [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) configurations to access secured resources.\n\nThis is an **advanced feature**!"
+            "state" : "translated",
+            "value" : "Kimlikler, sizi kriptografik olarak doğrulamak için kullanılabilecek sertifika ve özel anahtarlar çiftleridir. Kimlikler, korunan kaynaklara erişmek için [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) yapılandırmalarında kullanılır.\n\nBu **gelişmiş bir özelliktir**!"
           }
         }
       }
@@ -1961,8 +1961,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Customize logo"
+            "state" : "translated",
+            "value" : "Logoyu özelleştir"
           }
         }
       }
@@ -2014,8 +2014,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected icon"
+            "state" : "translated",
+            "value" : "Seçili simge"
           }
         }
       }
@@ -2067,8 +2067,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default icon"
+            "state" : "translated",
+            "value" : "Varsayılan simge"
           }
         }
       }
@@ -2120,8 +2120,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Icon #%llu"
+            "state" : "translated",
+            "value" : "Simge #%llu"
           }
         }
       }
@@ -2173,8 +2173,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Organization"
+            "state" : "translated",
+            "value" : "Organizasyon"
           }
         }
       }
@@ -2226,8 +2226,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preferences"
+            "state" : "translated",
+            "value" : "Ayarlar"
           }
         }
       }
@@ -2279,8 +2279,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Sürüm notları"
           }
         }
       }
@@ -2332,8 +2332,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Report a bug"
+            "state" : "translated",
+            "value" : "Hata bildir"
           }
         }
       }
@@ -2385,8 +2385,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app does certain bookkeeping based on the app version. This resets the app version, making the app perform as if it was a clean install."
+            "state" : "translated",
+            "value" : "Uygulama, sürümüne bağlı olarak belirli kayıtlar tutar. Bu, uygulama sürümünü sıfırlar ve uygulamanın temiz bir yükleme gibi çalışmasını sağlar."
           }
         }
       }
@@ -2438,8 +2438,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select Certificate"
+            "state" : "translated",
+            "value" : "Sertifika seç"
           }
         }
       }
@@ -2491,8 +2491,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document property bar"
+            "state" : "translated",
+            "value" : "Doküman özellik çubuğunu göster"
           }
         }
       }
@@ -2544,8 +2544,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
+            "state" : "translated",
+            "value" : "Doküman özelliklerini varsayılan olarak doküman ayrıntı ekranının alt kısmında gösterin."
           }
         }
       }
@@ -2598,8 +2598,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings"
+            "state" : "translated",
+            "value" : "Ayarlar"
           }
         }
       }
@@ -2651,8 +2651,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This server has version `%@` which is lower than version `%@` that the app requires. You might experience issues!"
+            "state" : "translated",
+            "value" : "Bu sunucunun sürümü `%@` uygulamanın gerektirdiği `%@` sürümünden daha düşüktür. Çeşitli sorunlarla karşılaşabilirsiniz!"
           }
         }
       }
@@ -2705,8 +2705,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Lock app with %@"
+            "state" : "translated",
+            "value" : "Uygulamayı %@ ile kilitleyin"
           }
         }
       }
@@ -2758,8 +2758,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Version info"
+            "state" : "translated",
+            "value" : "Sürüm bilgisi"
           }
         }
       }

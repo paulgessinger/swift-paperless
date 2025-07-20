@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss"
+            "state" : "translated",
+            "value" : "Yoksay"
           }
         }
       }
@@ -101,8 +101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss all"
+            "state" : "translated",
+            "value" : "Tümünü yoksay"
           }
         }
       }
@@ -154,8 +154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dismiss %llu"
+            "state" : "translated",
+            "value" : "%llu taneyi yoksay"
           }
         }
       }
@@ -207,8 +207,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Oluşturuldu"
           }
         }
       }
@@ -260,8 +260,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Completed"
+            "state" : "translated",
+            "value" : "Tamamlandı"
           }
         }
       }
@@ -314,8 +314,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not import %@: it is a duplicate!"
+            "state" : "translated",
+            "value" : "%@ varolan bir dokümanın kopyası olduğu için içe aktarılamadı."
           }
         }
       }
@@ -367,8 +367,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error processing document"
+            "state" : "translated",
+            "value" : "Doküman işlenirken hata oluştu"
           }
         }
       }
@@ -420,8 +420,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "File name"
+            "state" : "translated",
+            "value" : "Dosya adı"
           }
         }
       }
@@ -473,8 +473,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task ID"
+            "state" : "translated",
+            "value" : "Görev numarası"
           }
         }
       }
@@ -526,8 +526,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document with ID #%@ associated with this task does not exist.\nMaybe it was deleted in the meantime, or you do not have permission to view it."
+            "state" : "translated",
+            "value" : "Bu görevle ilişkili %@ numaralı doküman mevcut değil.\nBu esnada silinmiş olabilir, veya görüntülemeye yetkiniz olmayabilir."
           }
         }
       }
@@ -579,8 +579,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No tasks"
+            "state" : "translated",
+            "value" : "Görev yok"
           }
         }
       }
@@ -632,8 +632,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Related document"
+            "state" : "translated",
+            "value" : "İlgili doküman"
           }
         }
       }
@@ -685,8 +685,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Result"
+            "state" : "translated",
+            "value" : "Sonuç"
           }
         }
       }
@@ -738,8 +738,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Status"
+            "state" : "translated",
+            "value" : "Durum"
           }
         }
       }
@@ -791,8 +791,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failure"
+            "state" : "translated",
+            "value" : "Hata"
           }
         }
       }
@@ -844,8 +844,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pending"
+            "state" : "translated",
+            "value" : "Bekliyor"
           }
         }
       }
@@ -897,8 +897,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Yeniden dene"
           }
         }
       }
@@ -950,8 +950,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revoked"
+            "state" : "translated",
+            "value" : "İptal edildi"
           }
         }
       }
@@ -1003,8 +1003,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Started"
+            "state" : "translated",
+            "value" : "Başlandı"
           }
         }
       }
@@ -1056,8 +1056,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Success"
+            "state" : "translated",
+            "value" : "Başarılı"
           }
         }
       }
@@ -1109,8 +1109,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task #%@"
+            "state" : "translated",
+            "value" : "Görev %@"
           }
         }
       }
@@ -1162,8 +1162,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tasks"
+            "state" : "translated",
+            "value" : "Tüm görevler"
           }
         }
       }
@@ -1314,14 +1314,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "1 more task"
+                  "state" : "translated",
+                  "value" : "Bir tane daha görev"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%llu more tasks"
+                  "state" : "translated",
+                  "value" : "%llu tane daha görev"
                 }
               }
             }
@@ -1376,8 +1376,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tasks"
+            "state" : "translated",
+            "value" : "Görevler"
           }
         }
       }
@@ -1429,8 +1429,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Görev"
           }
         }
       }
@@ -1482,8 +1482,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Bilinmiyor"
           }
         }
       }

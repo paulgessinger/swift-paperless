@@ -49,8 +49,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add server"
+            "state" : "translated",
+            "value" : "Sunucu ekle"
           }
         }
       }
@@ -102,8 +102,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Do not include `/api` in the URL"
+            "state" : "translated",
+            "value" : "URL'ye `/api` eklemeyin"
           }
         }
       }
@@ -155,8 +155,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In case you have *autologin* using `PAPERLESS_AUTO_LOGIN_USERNAME` enabled, try logging in without credentials."
+            "state" : "translated",
+            "value" : "Eğer `PAPERLESS_AUTO_LOGIN_USERNAME` kullanarak *autologin* özelliğini etkinleştirdiyseniz, kimlik bilgileri olmadan oturum açmayı deneyin."
           }
         }
       }
@@ -208,8 +208,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Log in"
+            "state" : "translated",
+            "value" : "Oturum aç"
           }
         }
       }
@@ -261,8 +261,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Validating"
+            "state" : "translated",
+            "value" : "Doğrulanıyor"
           }
         }
       }
@@ -314,8 +314,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Self-signed certificates are supported using the operating system trust store!"
+            "state" : "translated",
+            "value" : "Öz imzalı sertifikalar işletim sisteminin güven deposu aracılığıyla desteklenir!"
           }
         }
       }
@@ -367,8 +367,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue"
+            "state" : "translated",
+            "value" : "Devam et"
           }
         }
       }
@@ -420,8 +420,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mode"
+            "state" : "translated",
+            "value" : "Mod"
           }
         }
       }
@@ -473,8 +473,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No credentials"
+            "state" : "translated",
+            "value" : "Kimlik bilgisi yok"
           }
         }
       }
@@ -526,8 +526,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login without any explicit credentials. This works in forward authentication scenarios with custom headers, or when using mTLS with trusted forwarding."
+            "state" : "translated",
+            "value" : "Herhangi bir açık kimlik bilgisi olmadan oturum açın. Bu, özel başlıklara sahip ileri kimlik doğrulama senaryolarında veya güvenilir yönlendirme ile mTLS kullanıldığında çalışır."
           }
         }
       }
@@ -579,8 +579,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Token"
+            "state" : "translated",
+            "value" : "Erişim anahtarı"
           }
         }
       }
@@ -632,8 +632,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with an API token that you obtained in the admin interface."
+            "state" : "translated",
+            "value" : "Yönetici arayüzünden edindiğiniz bir API erişim anahtarı ile giriş yapın."
           }
         }
       }
@@ -685,8 +685,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username & Password"
+            "state" : "translated",
+            "value" : "Kullanıcı adı & Şifre"
           }
         }
       }
@@ -738,8 +738,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+            "state" : "translated",
+            "value" : "Bir kullanıcı adı ve parola ile giriş yapın. Bu yalnızca yerel hesaplarla çalışır ve OAuth2/OIDC aracılığıyla kimliği doğrulanan hesaplarla çalışmaz."
           }
         }
       }
@@ -791,8 +791,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Credentials"
+            "state" : "translated",
+            "value" : "Kimlik bilgileri"
           }
         }
       }
@@ -844,8 +844,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Detaylar"
           }
         }
       }
@@ -897,8 +897,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info here"
+            "state" : "translated",
+            "value" : "Daha fazla bilgi"
           }
         }
       }
@@ -950,8 +950,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The user associated with these credentials has insufficient permissions. A minimum set of permissions is required to be able to use the app!"
+            "state" : "translated",
+            "value" : "Bu kimlik bilgilerine sahip kullanıcının izinleri yetersiz. Uygulamayı kullanabilmek için minimum bir izin grubu gereklidir!"
           }
         }
       }
@@ -1003,8 +1003,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid credentials"
+            "state" : "translated",
+            "value" : "Geçersiz kimlik bilgileri"
           }
         }
       }
@@ -1056,8 +1056,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The username and password combination was rejected.**\nPlease check you typed them in correctly."
+            "state" : "translated",
+            "value" : "**Kullanıcı adı ve parola kombinasyonu reddedildi.**\nLütfen doğru yazılmış olduklarını kontrol edin."
           }
         }
       }
@@ -1109,8 +1109,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error while logging in"
+            "state" : "translated",
+            "value" : "Oturum açarken hata oluştu"
           }
         }
       }
@@ -1162,8 +1162,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The connection request without credentials was rejected.**\nPlease check your configuration."
+            "state" : "translated",
+            "value" : "**Kimlik bilgileri olmadan bağlantı isteği reddedildi.**\nLütfen yapılandırmanızı kontrol edin."
           }
         }
       }
@@ -1215,8 +1215,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**The access token is invalid.**\nPlease check you typed it in correctly."
+            "state" : "translated",
+            "value" : "**Erişim anahtarı geçersiz.**\nLütfen doğru yazdığınızı kontrol edin."
           }
         }
       }
@@ -1268,8 +1268,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Username and password were accepted, but the returned access token was rejected.**\nThis is likely an internal error. Please send a bug report with logs."
+            "state" : "translated",
+            "value" : "**Kullanıcı adı ve parola kabul edildi, ancak döndürülen erişim anahtarı reddedildi.**\nBu muhtemelen bir uygulama hatasıdır. Lütfen uygulama günlükleriyle birlikte bir hata raporu gönderin."
           }
         }
       }
@@ -1321,8 +1321,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The entered URL is invalid"
+            "state" : "translated",
+            "value" : "Girilen URL geçersiz"
           }
         }
       }
@@ -1374,8 +1374,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**Warning:** the *Authorization* header is used by Paperless-ngx for token-based API authorization. Using this header for Basic auth will likely lead to issues. You can try configuring an alternative header for Basic auth in your Reverse Proxy configuration."
+            "state" : "translated",
+            "value" : "**Uyarı:** *Authorization* başlığı Paperless-ngx tarafından erişim anahtarı bazlı API yetkilendirmesi için kullanılır. Temel yetkilendirme için bu başlığı kullanmak büyük olasılıkla sorunlara yol açacaktır. Ters vekil sunucu yapılandırmanızda temel yetkilendirme için alternatif bir başlık yapılandırmayı deneyebilirsiniz."
           }
         }
       }
@@ -1427,8 +1427,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Extra headers"
+            "state" : "translated",
+            "value" : "Ekstra başlıklar"
           }
         }
       }
@@ -1480,8 +1480,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Extra headers to include in all API requests that the app makes to your installation."
+            "state" : "translated",
+            "value" : "Uygulamanın kurulumunuza yaptığı tüm API isteklerine eklenecek ekstra başlıklar."
           }
         }
       }
@@ -1533,8 +1533,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Key"
+            "state" : "translated",
+            "value" : "Anahtar"
           }
         }
       }
@@ -1586,8 +1586,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Value"
+            "state" : "translated",
+            "value" : "Değer"
           }
         }
       }
@@ -1639,8 +1639,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If at all possible, use HTTPS to connect to the API for non-local addresses."
+            "state" : "translated",
+            "value" : "Mümkünse, yerel olmayan adreslerde API'ye bağlanmak için HTTPS kullanın."
           }
         }
       }
@@ -1692,8 +1692,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select a client certificate to use when connecting to the target server."
+            "state" : "translated",
+            "value" : "Hedef sunucuya bağlanırken kullanılacak bir istemci sertifikası seçin."
           }
         }
       }
@@ -1745,8 +1745,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Identity"
+            "state" : "translated",
+            "value" : "Kimlik"
           }
         }
       }
@@ -1798,8 +1798,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Daha fazla"
           }
         }
       }
@@ -1851,8 +1851,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -1904,8 +1904,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "2FA code"
+            "state" : "translated",
+            "value" : "İki adımlı doğrulama kodu"
           }
         }
       }
@@ -1957,8 +1957,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "2FA is enabled, an OTP is required."
+            "state" : "translated",
+            "value" : "İki adımlı doğrulama etkin, bir tek seferlik kod gereklidir."
           }
         }
       }
@@ -2010,8 +2010,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Password"
+            "state" : "translated",
+            "value" : "Parola"
           }
         }
       }
@@ -2063,8 +2063,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your password is only used to log in, and not stored!"
+            "state" : "translated",
+            "value" : "Parolanız yalnızca oturum açmak için kullanılır ve saklanmaz!"
           }
         }
       }
@@ -2116,8 +2116,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select scheme"
+            "state" : "translated",
+            "value" : "Protokol seç"
           }
         }
       }
@@ -2169,8 +2169,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection"
+            "state" : "translated",
+            "value" : "Bağlantı"
           }
         }
       }
@@ -2222,8 +2222,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Credentials"
+            "state" : "translated",
+            "value" : "Kimlik bilgileri"
           }
         }
       }
@@ -2275,8 +2275,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Login successful"
+            "state" : "translated",
+            "value" : "Oturum açma başarılı"
           }
         }
       }
@@ -2328,8 +2328,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Token"
+            "state" : "translated",
+            "value" : "Erişim anahtarı"
           }
         }
       }
@@ -2381,8 +2381,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "URL invalid"
+            "state" : "translated",
+            "value" : "URL geçersiz"
           }
         }
       }
@@ -2434,7 +2434,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "paperless.example.com"
           }
         }
@@ -2487,8 +2487,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "URL valid"
+            "state" : "translated",
+            "value" : "URL geçerli"
           }
         }
       }
@@ -2540,8 +2540,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Username"
+            "state" : "translated",
+            "value" : "Kullanıcı adı"
           }
         }
       }
