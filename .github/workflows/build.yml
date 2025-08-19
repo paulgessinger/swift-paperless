@@ -19,34 +19,37 @@ jobs:
     runs-on: macos-15
     strategy:
       matrix:
-        device:
-          - "iPhone 16 Pro"
-          - "iPad Pro 13-inch (M4)"
-        ios:
-          - "18.4"
+        include:
+          - ios: "18.6"
+            xcode: "16.4"
+
+          - ios: "26.0"
+            xcode: "26.0-beta"
       fail-fast: false
     env:
-      GYM_SKIP_CODESIGNING: true
-      GYM_SKIP_ARCHIVE: true
+      DEVICE: iPhone 16 Pro
+    name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "${{ matrix.xcode }}"
 
-      - name: Install dependencies
-        run: bundle install
-
-      - name: Compile the main application
-        run: 'bundle exec fastlane build device:"${{ matrix.device }}" ios:"${{ matrix.ios }}"'
+      - name: Build application
+        run: |
+          set -o pipefail
+          xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
+          xcodebuild build \
+            -scheme swift-paperless \
+            -destination "platform=iOS Simulator,name=${{ env.DEVICE }},OS=${{ matrix.ios }}" \
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify
 
   test:
     runs-on: macos-15
-
-    env:
-      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
 
     steps:
       - name: Checkout
