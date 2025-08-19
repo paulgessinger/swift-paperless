@@ -98,6 +98,8 @@ extension CustomFieldQuery.FieldOperator {
             result.append(contentsOf: [.exact, .icontains])
         case .monetary:
             result.append(contentsOf: [.exact, .icontains, .gt, .gte, .lt, .lte])
+        case .float, .integer:
+            result.append(contentsOf: [.exact, .gt, .gte, .lt, .lte])
         default: break
         }
 
@@ -160,6 +162,53 @@ private struct StringArgView: View {
     }
 }
 
+private struct FloatArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var stringValue: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(.customFields(.queryArgumentLabel))
+                .font(.caption)
+
+            TextField(String(localized: .customFields(.queryArgumentLabel)),
+                      text: $stringValue)
+                .keyboardType(.decimalPad)
+        }
+
+        .task {
+            if case let .number(val) = value {
+                stringValue = String(val)
+            } else {
+                stringValue = "0"
+                value = .number(0.0) // Ensure we have a valid number
+            }
+        }
+
+        .onChange(of: stringValue) { old, new in
+            guard let val = Double(String(new)) else {
+                stringValue = old // Revert to old value if invalid
+                return
+            }
+
+            value = .number(val)
+        }
+    }
+}
+
+#Preview("Float") {
+    @Previewable @State var expr = ExprContent(id: 1, op: .gte, arg: .number(1.2))
+
+    PreviewHelper {
+        if let field = customFields.first(where: { $0.id == 1 }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
+    }
+}
+
 private struct ExprArgView: View {
     @Binding var op: CustomFieldQuery.FieldOperator
     @Binding var field: CustomField
@@ -175,13 +224,23 @@ private struct ExprArgView: View {
                 ToggleArgView(value: $value)
             case .string, .date, .url, .monetary:
                 StringArgView(value: $value)
+            case .float:
+                FloatArgView(value: $value)
             default:
                 Text("Unknown EXACT")
             }
         case .icontains:
             StringArgView(value: $value)
+        case .gt, .gte, .lt, .lte:
+            switch field.dataType {
+            case .monetary, .float:
+                FloatArgView(value: $value)
+            case .integer:
+                Text("Number int VIEW!")
+            default: Text("Unknown gt/gte/lt/lte")
+            }
         default:
-            Text("Unknown")
+            Text("Unknown operator")
         }
 
         Text(String(describing: value))
