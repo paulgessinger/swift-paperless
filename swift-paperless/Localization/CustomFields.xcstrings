@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Özel alan ekle"
           }
         }
       }
@@ -101,8 +101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Tarih ayarla"
           }
         }
       }
@@ -154,8 +154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Tarih değerini temizle"
           }
         }
       }
@@ -207,8 +207,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Sil"
           }
         }
       }
@@ -260,8 +260,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Seç"
           }
         }
       }
@@ -313,8 +313,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Başlığa göre doküman ara"
           }
         }
       }
@@ -366,8 +366,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Seçili"
           }
         }
       }
@@ -419,8 +419,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** geçerli bir tarih değil. Beklenen biçim \"2025-06-15\" şeklindedir."
           }
         }
       }
@@ -472,8 +472,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** parasal bir değer olarak işlenemedi. Beklenen biçim \"USD1000.00\" şeklindedir."
           }
         }
       }
@@ -525,8 +525,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "\"%@\" numarası ile verilen seçenek mevcut seçeneklerden biri değildir (%@)"
           }
         }
       }
@@ -578,8 +578,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Bu dokümanda bazı özel alanların **yapılandırması geçersizdir**. Daha fazla bilgi için hata mesajları gösteren özel alana bakın.\n\n**Veri kaybını** önlemek için dokümanı bu durumda **kaydedemezsiniz**."
           }
         }
       }
@@ -631,8 +631,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Geçersiz özel alanlar"
           }
         }
       }
@@ -684,8 +684,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` geçerli bir URL değildir."
           }
         }
       }
@@ -737,8 +737,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Tutar"
           }
         }
       }
@@ -790,8 +790,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Özel alan yok"
           }
         }
       }
@@ -843,8 +843,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Eklenebilecek özel alan bulunmamaktadır."
           }
         }
       }
@@ -896,8 +896,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Ekli özel alan yok"
           }
         }
       }
@@ -949,8 +949,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Bu dokümana henüz herhangi bir özel alan eklenmemiştir. Araç çubuğundan bir tane ekleyebilirsiniz."
           }
         }
       }
@@ -1002,8 +1002,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "Bu dokümana eklenmiş herhangi bir özel alan yoktur."
           }
         }
       }
@@ -1055,8 +1055,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Şu anda ayarlanmış bir tarih yok"
           }
         }
       }
@@ -1108,8 +1108,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Özel alanları ara"
           }
         }
       }
@@ -1161,8 +1161,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Özel alanlar"
           }
         }
       }
@@ -1214,8 +1214,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "Sunucu tarafından döndürülen **`%@`** değeri, bu özel alanın veri türü olan **`%@`** ile çözümlenemedi. Bu, dahili bir veri tutarsızlığı olabilir. "
           }
         }
       }
@@ -1267,8 +1267,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Bu özel alanın veri türü **%@** uygulamada kullanılamıyor. Bu muhtemelen uygulama ile sunucu sürümü arasındaki bir uyumsuzluktur."
           }
         }
       }
@@ -1320,8 +1320,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Verilen özel alan değeri çözümlenemedi. Bu, uygulama ve sunucu sürümü arasında bir uyumsuzluk olabilir."
           }
         }
       }
@@ -1373,8 +1373,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Başlangıçta çözümlenemeyen bir özel alan değeri işlenemedi. Bu, uygulama ve sunucu sürümü arasında bir uyumsuzluk olabilir."
           }
         }
       }
@@ -1426,8 +1426,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Bilinmeyen özel alan değeri"
           }
         }
       }
@@ -1479,8 +1479,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Geçersiz"
           }
         }
       }
@@ -1532,8 +1532,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Aç"
           }
         }
       }

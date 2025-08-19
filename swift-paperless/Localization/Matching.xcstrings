@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Matching algorithm"
+            "state" : "translated",
+            "value" : "Eşleştirme algoritması"
           }
         }
       }
@@ -101,8 +101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tümü"
           }
         }
       }
@@ -154,8 +154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Herhangi bir"
           }
         }
       }
@@ -207,8 +207,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Auto"
+            "state" : "translated",
+            "value" : "Otomatik"
           }
         }
       }
@@ -260,8 +260,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exact"
+            "state" : "translated",
+            "value" : "Tam"
           }
         }
       }
@@ -313,8 +313,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Fuzzy"
+            "state" : "translated",
+            "value" : "Bulanık"
           }
         }
       }
@@ -366,8 +366,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -419,7 +419,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "RegEx"
           }
         }
@@ -472,8 +472,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Case insensitive"
+            "state" : "translated",
+            "value" : "Büyük/küçük harf duyarsız"
           }
         }
       }
@@ -525,8 +525,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains all of these words (space separated)"
+            "state" : "translated",
+            "value" : "Doküman bu kelimelerin tümünü içerir (boşluk bırakarak girin)"
           }
         }
       }
@@ -578,8 +578,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains any of these words (space separated)"
+            "state" : "translated",
+            "value" : "Doküman aşağıdaki kelimelerden herhangi birini içerir (boşluk bırakarak girin)"
           }
         }
       }
@@ -631,8 +631,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn matching automatically"
+            "state" : "translated",
+            "value" : "Eşleştirmeyi otomatik olarak öğren"
           }
         }
       }
@@ -684,8 +684,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains this string"
+            "state" : "translated",
+            "value" : "Doküman bu metni içerir"
           }
         }
       }
@@ -737,8 +737,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document contains a word similar to this word"
+            "state" : "translated",
+            "value" : "Doküman bu kelimeye benzer bir kelime içerir"
           }
         }
       }
@@ -790,8 +790,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No automatic matching"
+            "state" : "translated",
+            "value" : "Otomatik eşleştirme yok"
           }
         }
       }
@@ -843,8 +843,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document matches this regular expression"
+            "state" : "translated",
+            "value" : "Doküman bu düzenli ifadeyle (RegEx) eşleşir"
           }
         }
       }
@@ -896,8 +896,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pattern"
+            "state" : "translated",
+            "value" : "Şablon"
           }
         }
       }
@@ -949,8 +949,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Matching"
+            "state" : "translated",
+            "value" : "Eşleştirme"
           }
         }
       }

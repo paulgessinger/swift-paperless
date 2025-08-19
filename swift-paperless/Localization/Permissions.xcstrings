@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Ekle"
           }
         }
       }
@@ -102,8 +102,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Artık bu nesneyi değiştiremeyeceksiniz!"
           }
         }
       }
@@ -156,8 +156,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Artık bu nesneyi görüntüleyemeyeceksiniz!"
           }
         }
       }
@@ -210,8 +210,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Artık bu nesneyi görüntüleyemeyecek veya değiştiremeyeceksiniz!"
           }
         }
       }
@@ -263,8 +263,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Change"
+            "state" : "translated",
+            "value" : "Değiştir"
           }
         }
       }
@@ -316,8 +316,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Kopya özeti"
           }
         }
       }
@@ -369,8 +369,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Sil"
           }
         }
       }
@@ -422,8 +422,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Gruplar"
           }
         }
       }
@@ -475,8 +475,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared"
+            "state" : "translated",
+            "value" : "Paylaşılan"
           }
         }
       }
@@ -528,8 +528,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Nobody"
+            "state" : "translated",
+            "value" : "Hiç kimse"
           }
         }
       }
@@ -581,8 +581,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Muhatapları görüntüleme izniniz yok."
           }
         }
       }
@@ -634,8 +634,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Özel alanları görüntüleme izniniz yok."
           }
         }
       }
@@ -687,8 +687,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Yetersiz izinler"
           }
         }
       }
@@ -740,8 +740,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Dokümanları görüntüleme izniniz yok."
           }
         }
       }
@@ -793,8 +793,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Doküman türlerini görüntüleme izniniz yok."
           }
         }
       }
@@ -846,8 +846,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Grupları görüntüleme izniniz yok."
           }
         }
       }
@@ -899,8 +899,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Doküman notlarını görüntüleme izniniz yok."
           }
         }
       }
@@ -952,8 +952,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Kayıtlı görünümleri görüntüleme izniniz yok."
           }
         }
       }
@@ -1005,8 +1005,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Depolama dizinlerini görüntüleme izniniz yok."
           }
         }
       }
@@ -1058,8 +1058,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Etiketleri görüntüleme izniniz yok."
           }
         }
       }
@@ -1111,8 +1111,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Görevleri görüntüleme izniniz yok."
           }
         }
       }
@@ -1164,8 +1164,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Arayüz ayarlarını görüntüleme izniniz yok."
           }
         }
       }
@@ -1217,8 +1217,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Kullanıcıları görüntüleme izniniz yok."
           }
         }
       }
@@ -1270,8 +1270,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Sahibi"
           }
         }
       }
@@ -1323,8 +1323,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Private"
+            "state" : "translated",
+            "value" : "Özel"
           }
         }
       }
@@ -1376,8 +1376,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Özel*, görüntüleme izniniz olmayan bir kullanıcı veya grubu belirtir."
           }
         }
       }
@@ -1429,8 +1429,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Kaynak"
           }
         }
       }
@@ -1482,8 +1482,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "Uygulama yapılandırması"
           }
         }
       }
@@ -1535,8 +1535,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Özel alan"
           }
         }
       }
@@ -1588,8 +1588,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Geçmiş"
           }
         }
       }
@@ -1641,8 +1641,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "E-posta hesabı"
           }
         }
       }
@@ -1694,8 +1694,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "E-posta kuralı"
           }
         }
       }
@@ -1747,8 +1747,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Bağlantıyı paylaş"
           }
         }
       }
@@ -1800,8 +1800,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "İş akışı"
           }
         }
       }
@@ -1853,8 +1853,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "İzinler"
           }
         }
       }
@@ -1906,8 +1906,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Objects without an owner can be viewed and edited by all users"
+            "state" : "translated",
+            "value" : "Sahibi olmayan nesneler tüm kullanıcılar tarafından görüntülenebilir ve düzenlenebilir"
           }
         }
       }
@@ -1959,8 +1959,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Kullanıcılar"
           }
         }
       }
@@ -2012,8 +2012,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (siz)"
           }
         }
       }
@@ -2065,8 +2065,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View"
+            "state" : "translated",
+            "value" : "Görüntüle"
           }
         }
       }

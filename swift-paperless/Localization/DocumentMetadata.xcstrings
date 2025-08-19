@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date added"
+            "state" : "translated",
+            "value" : "Eklenme tarihi"
           }
         }
       }
@@ -101,8 +101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive MD5 checksum"
+            "state" : "translated",
+            "value" : "Arşiv MD5 sağlama toplamı"
           }
         }
       }
@@ -154,8 +154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Archive file size"
+            "state" : "translated",
+            "value" : "Arşiv dosya boyutu"
           }
         }
       }
@@ -207,8 +207,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Media filename"
+            "state" : "translated",
+            "value" : "Medya dosya adı"
           }
         }
       }
@@ -260,8 +260,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Metadata"
+            "state" : "translated",
+            "value" : "Metaveri"
           }
         }
       }
@@ -313,8 +313,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date modified"
+            "state" : "translated",
+            "value" : "Değiştirilme tarihi"
           }
         }
       }
@@ -366,8 +366,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Not"
           }
         }
       }
@@ -419,8 +419,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create note"
+            "state" : "translated",
+            "value" : "Not oluştur"
           }
         }
       }
@@ -472,8 +472,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note text"
+            "state" : "translated",
+            "value" : "Not metni"
           }
         }
       }
@@ -525,8 +525,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notlar"
           }
         }
       }
@@ -578,8 +578,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original MD5 checksum"
+            "state" : "translated",
+            "value" : "Orijinal MD5 sağlama toplamı"
           }
         }
       }
@@ -631,8 +631,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original filename"
+            "state" : "translated",
+            "value" : "Orjinal dosya adı"
           }
         }
       }
@@ -684,8 +684,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original file size"
+            "state" : "translated",
+            "value" : "Orijinal dosya boyutu"
           }
         }
       }
@@ -737,8 +737,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Original mime type"
+            "state" : "translated",
+            "value" : "Orijinal MIME türü"
           }
         }
       }

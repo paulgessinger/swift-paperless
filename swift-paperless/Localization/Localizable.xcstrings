@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Ekle"
           }
         }
       }
@@ -102,8 +102,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All documents"
+            "state" : "translated",
+            "value" : "Tüm dokümanlar"
           }
         }
       }
@@ -155,8 +155,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other"
+            "state" : "translated",
+            "value" : "Diğer"
           }
         }
       }
@@ -209,8 +209,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The resource \"%@\" is not accessible using the authenticated credentials. In many cases, this is a permissions error. "
+            "state" : "translated",
+            "value" : "\"%@\" kaynağına doğrulanmış kimlik bilgileri kullanılarak erişilemiyor. Bu çoğunlukla bir izin hatasıdır. "
           }
         }
       }
@@ -263,8 +263,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No access: %@"
+            "state" : "translated",
+            "value" : "Erişim yok: %@"
           }
         }
       }
@@ -316,7 +316,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Paperless"
           }
         }
@@ -369,8 +369,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Ascending"
+            "state" : "translated",
+            "value" : "Artan"
           }
         }
       }
@@ -422,7 +422,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN"
           }
         }
@@ -475,7 +475,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN:"
           }
         }
@@ -528,7 +528,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN: %u"
           }
         }
@@ -581,8 +581,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Back"
+            "state" : "translated",
+            "value" : "Geri"
           }
         }
       }
@@ -634,8 +634,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cancel"
+            "state" : "translated",
+            "value" : "İptal"
           }
         }
       }
@@ -687,8 +687,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear filters"
+            "state" : "translated",
+            "value" : "Filtreleri temizle"
           }
         }
       }
@@ -740,8 +740,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear text"
+            "state" : "translated",
+            "value" : "Metni temizle"
           }
         }
       }
@@ -793,8 +793,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Color"
+            "state" : "translated",
+            "value" : "Renk"
           }
         }
       }
@@ -847,8 +847,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Herhangi"
           }
         }
       }
@@ -900,8 +900,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Are you sure?"
+            "state" : "translated",
+            "value" : "Emin misiniz?"
           }
         }
       }
@@ -953,8 +953,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copied to clipboard"
+            "state" : "translated",
+            "value" : "Panoya kopyalandı"
           }
         }
       }
@@ -1006,8 +1006,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy to clipboard"
+            "state" : "translated",
+            "value" : "Panoya kopyala"
           }
         }
       }
@@ -1059,8 +1059,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Muhatap"
           }
         }
       }
@@ -1112,8 +1112,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create correspondent"
+            "state" : "translated",
+            "value" : "Muhatap oluştur"
           }
         }
       }
@@ -1165,8 +1165,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit correspondent"
+            "state" : "translated",
+            "value" : "Muhatap düzenle"
           }
         }
       }
@@ -1218,8 +1218,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude correspondent"
+            "state" : "translated",
+            "value" : "Muhatabı hariç tut"
           }
         }
       }
@@ -1272,8 +1272,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -1326,8 +1326,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Atanmamış"
           }
         }
       }
@@ -1379,8 +1379,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondents"
+            "state" : "translated",
+            "value" : "Muhataplar"
           }
         }
       }
@@ -1433,8 +1433,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No tags"
+            "state" : "translated",
+            "value" : "Etiketsiz"
           }
         }
       }
@@ -1486,8 +1486,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Özel alan"
           }
         }
       }
@@ -1539,8 +1539,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Özel alanlar"
           }
         }
       }
@@ -1592,8 +1592,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid ASN: %u"
+            "state" : "translated",
+            "value" : "Geçersiz ASN: %u"
           }
         }
       }
@@ -1645,8 +1645,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No ASN: %@"
+            "state" : "translated",
+            "value" : "ASN yok: %@"
           }
         }
       }
@@ -1698,8 +1698,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Type in ASN"
+            "state" : "translated",
+            "value" : "ASN'yi girin"
           }
         }
       }
@@ -1751,8 +1751,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Response processing error"
+            "state" : "translated",
+            "value" : "Yanıt işleme hatası"
           }
         }
       }
@@ -1804,8 +1804,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error processing a server response occurred. Decoding %@ failed.\n\nThis can happen if the server version is unsupported, or the connection is being modified in an unexpected way."
+            "state" : "translated",
+            "value" : "Sunucu yanıtı işlenirken bir hata oluştu. %@ dönütünün çözülmesi başarısız oldu.\n\nBu, sunucu sürümü desteklenmiyorsa veya bağlantı beklenmedik bir şekilde değiştiriliyorsa meydana gelebilir."
           }
         }
       }
@@ -1857,8 +1857,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Sil"
           }
         }
       }
@@ -1910,8 +1910,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete document \"%@\""
+            "state" : "translated",
+            "value" : "\"%@\" dokümanını sil"
           }
         }
       }
@@ -1963,8 +1963,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Descending"
+            "state" : "translated",
+            "value" : "Azalan"
           }
         }
       }
@@ -2016,8 +2016,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Ayrıntılar"
           }
         }
       }
@@ -2070,8 +2070,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Menu of more options"
+            "state" : "translated",
+            "value" : "Diğer seçenekler menüsü"
           }
         }
       }
@@ -2123,8 +2123,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Discard changes"
+            "state" : "translated",
+            "value" : "Değişiklikleri iptal et"
           }
         }
       }
@@ -2176,8 +2176,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Doküman"
           }
         }
       }
@@ -2229,8 +2229,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add document"
+            "state" : "translated",
+            "value" : "Doküman ekle"
           }
         }
       }
@@ -2283,7 +2283,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "#%u"
           }
         }
@@ -2336,8 +2336,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document too large"
+            "state" : "translated",
+            "value" : "Doküman çok büyük"
           }
         }
       }
@@ -2389,8 +2389,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document you are trying to upload was rejected as being too large. Please check your Paperless-ngx and/or reverse proxy settings."
+            "state" : "translated",
+            "value" : "Yüklemeye çalıştığınız doküman çok büyük olduğu için reddedildi. Lütfen Paperless-ngx ve/veya ters vekil sunucu ayarlarınızı kontrol edin."
           }
         }
       }
@@ -2442,8 +2442,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete document"
+            "state" : "translated",
+            "value" : "Dokümanı sil"
           }
         }
       }
@@ -2495,8 +2495,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deleted"
+            "state" : "translated",
+            "value" : "Silindi"
           }
         }
       }
@@ -2548,8 +2548,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preview"
+            "state" : "translated",
+            "value" : "Ön izleme"
           }
         }
       }
@@ -2601,8 +2601,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Mevcut"
           }
         }
       }
@@ -2654,8 +2654,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Date created"
+            "state" : "translated",
+            "value" : "Oluşturma tarihi"
           }
         }
       }
@@ -2707,8 +2707,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Başlık"
           }
         }
       }
@@ -2760,8 +2760,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents"
+            "state" : "translated",
+            "value" : "Dokümanlar"
           }
         }
       }
@@ -2813,8 +2813,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not create page in PDF"
+            "state" : "translated",
+            "value" : "PDF'de sayfa oluşturulamadı"
           }
         }
       }
@@ -2866,8 +2866,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not save PDF"
+            "state" : "translated",
+            "value" : "PDF kaydedilemedi"
           }
         }
       }
@@ -2919,8 +2919,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Doküman görüntülemek için izniniz yok. Lütfen yöneticinizle iletişime geçin."
           }
         }
       }
@@ -2972,8 +2972,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document type"
+            "state" : "translated",
+            "value" : "Doküman türü"
           }
         }
       }
@@ -3025,8 +3025,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create document type"
+            "state" : "translated",
+            "value" : "Doküman türü oluştur"
           }
         }
       }
@@ -3078,8 +3078,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit document type"
+            "state" : "translated",
+            "value" : "Doküman türü düzenle"
           }
         }
       }
@@ -3131,8 +3131,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude document type"
+            "state" : "translated",
+            "value" : "Doküman türünü hariç tut"
           }
         }
       }
@@ -3184,8 +3184,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -3237,8 +3237,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Atanmamış"
           }
         }
       }
@@ -3290,8 +3290,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document types"
+            "state" : "translated",
+            "value" : "Doküman türleri"
           }
         }
       }
@@ -3343,8 +3343,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload complete"
+            "state" : "translated",
+            "value" : "Yükleme tamamlandı"
           }
         }
       }
@@ -3396,8 +3396,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload error"
+            "state" : "translated",
+            "value" : "Yükleme hatası"
           }
         }
       }
@@ -3449,8 +3449,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Orijinal dosya adını kullan"
           }
         }
       }
@@ -3502,8 +3502,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Done"
+            "state" : "translated",
+            "value" : "Bitti"
           }
         }
       }
@@ -3555,8 +3555,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit"
+            "state" : "translated",
+            "value" : "Düzenle"
           }
         }
       }
@@ -3608,8 +3608,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Element is selected"
+            "state" : "translated",
+            "value" : "Öğe seçildi"
           }
         }
       }
@@ -3662,8 +3662,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selection mode"
+            "state" : "translated",
+            "value" : "Seçim modu"
           }
         }
       }
@@ -3715,8 +3715,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error"
+            "state" : "translated",
+            "value" : "Hata"
           }
         }
       }
@@ -3768,8 +3768,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tap for details!"
+            "state" : "translated",
+            "value" : "Detaylar için dokun!"
           }
         }
       }
@@ -3821,8 +3821,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An unexpected error occurred"
+            "state" : "translated",
+            "value" : "Beklenmedik bir hata oluştu"
           }
         }
       }
@@ -3875,8 +3875,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More info"
+            "state" : "translated",
+            "value" : "Daha fazla bilgi"
           }
         }
       }
@@ -3929,8 +3929,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude element"
+            "state" : "translated",
+            "value" : "Öğeyi hariç tut"
           }
         }
       }
@@ -3983,8 +3983,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filtering"
+            "state" : "translated",
+            "value" : "Filtreleme"
           }
         }
       }
@@ -4135,14 +4135,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u filter applied"
+                  "state" : "translated",
+                  "value" : "%u filtre uygulandı"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u filters applied"
+                  "state" : "translated",
+                  "value" : "%u filtre uygulandı"
                 }
               }
             }
@@ -4197,8 +4197,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Group"
+            "state" : "translated",
+            "value" : "Grup"
           }
         }
       }
@@ -4250,8 +4250,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Gruplar"
           }
         }
       }
@@ -4304,8 +4304,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import document"
+            "state" : "translated",
+            "value" : "Doküman içe aktar"
           }
         }
       }
@@ -4358,8 +4358,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import photos"
+            "state" : "translated",
+            "value" : "Fotoğraf içe aktar"
           }
         }
       }
@@ -4412,8 +4412,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Include element"
+            "state" : "translated",
+            "value" : "Öğeyi dahil et"
           }
         }
       }
@@ -4465,8 +4465,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading"
+            "state" : "translated",
+            "value" : "Yükleniyor"
           }
         }
       }
@@ -4518,8 +4518,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "state" : "translated",
+            "value" : "Görünüşe göre uygulama %@ adresine bağlanamıyor. Sunucuyu değiştirmeyi veya oturumu kapatıp tekrar açmayı deneyebilirsiniz:"
           }
         }
       }
@@ -4571,8 +4571,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Log out"
+            "state" : "translated",
+            "value" : "Çıkış yap"
           }
         }
       }
@@ -4624,8 +4624,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Export logs"
+            "state" : "translated",
+            "value" : "Uygulama günlüklerini dışa aktar"
           }
         }
       }
@@ -4677,8 +4677,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting logs"
+            "state" : "translated",
+            "value" : "Uygulama günlükleri toplanıyor"
           }
         }
       }
@@ -4730,8 +4730,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share logs"
+            "state" : "translated",
+            "value" : "Uygulama günlüklerini paylaş"
           }
         }
       }
@@ -4783,8 +4783,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "Daha fazla"
           }
         }
       }
@@ -4836,8 +4836,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name"
+            "state" : "translated",
+            "value" : "İsim"
           }
         }
       }
@@ -4889,8 +4889,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Hayır"
           }
         }
       }
@@ -4942,8 +4942,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents"
+            "state" : "translated",
+            "value" : "Doküman yok"
           }
         }
       }
@@ -4995,8 +4995,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your current filter did not match any documents"
+            "state" : "translated",
+            "value" : "Mevcut filtreniz hiçbir dokümanla eşleşmedi"
           }
         }
       }
@@ -5048,8 +5048,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No elements found"
+            "state" : "translated",
+            "value" : "Hiçbir öğe bulunamadı"
           }
         }
       }
@@ -5101,8 +5101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -5154,8 +5154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No saved views"
+            "state" : "translated",
+            "value" : "Kayıtlı görünüm yok"
           }
         }
       }
@@ -5306,14 +5306,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d tag"
+                  "state" : "translated",
+                  "value" : "%d etiket"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d tags"
+                  "state" : "translated",
+                  "value" : "%d etiket"
                 }
               }
             }
@@ -5368,8 +5368,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "OK"
+            "state" : "translated",
+            "value" : "Tamam"
           }
         }
       }
@@ -5421,8 +5421,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Aç"
           }
         }
       }
@@ -5474,8 +5474,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tümü"
           }
         }
       }
@@ -5528,8 +5528,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner filter is in explicit user mode."
+            "state" : "translated",
+            "value" : "Sahiplik filtresi sadece kullanıcı modunda."
           }
         }
       }
@@ -5581,8 +5581,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Kullanıcılar"
           }
         }
       }
@@ -5634,8 +5634,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "My documents"
+            "state" : "translated",
+            "value" : "Dokümanlarım"
           }
         }
       }
@@ -5687,8 +5687,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -5740,8 +5740,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Atanmamış"
           }
         }
       }
@@ -5793,8 +5793,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Shared with me"
+            "state" : "translated",
+            "value" : "Benimle paylaşılan"
           }
         }
       }
@@ -5846,8 +5846,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unowned"
+            "state" : "translated",
+            "value" : "Sahipsiz"
           }
         }
       }
@@ -5998,14 +5998,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld page"
+                  "state" : "translated",
+                  "value" : "%lld sayfa"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld pages"
+                  "state" : "translated",
+                  "value" : "%lld sayfa"
                 }
               }
             }
@@ -6060,8 +6060,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Path"
+            "state" : "translated",
+            "value" : "Dizin"
           }
         }
       }
@@ -6113,8 +6113,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions"
+            "state" : "translated",
+            "value" : "İzinler"
           }
         }
       }
@@ -6166,8 +6166,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error when receiving picked photos"
+            "state" : "translated",
+            "value" : "Seçilen fotoğraflar alınırken hata oluştu"
           }
         }
       }
@@ -6219,8 +6219,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Properties"
+            "state" : "translated",
+            "value" : "Özellikler"
           }
         }
       }
@@ -6272,8 +6272,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unable to load release notes for version %@. This can happen if you are on a beta build."
+            "state" : "translated",
+            "value" : "%@ sürümü için sürüm notları yüklenemiyor. Bu durum, bir beta sürümündeyseniz meydana gelebilir."
           }
         }
       }
@@ -6325,8 +6325,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
+            "state" : "translated",
+            "value" : "Kaldır"
           }
         }
       }
@@ -6378,8 +6378,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Certificate error while connecting"
+            "state" : "translated",
+            "value" : "Bağlanırken sertifika hatası"
           }
         }
       }
@@ -6431,8 +6431,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details"
+            "state" : "translated",
+            "value" : "Ayrıntılar"
           }
         }
       }
@@ -6484,8 +6484,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was denied due to missing permissions"
+            "state" : "translated",
+            "value" : "İstek eksik izinler nedeniyle reddedildi"
           }
         }
       }
@@ -6537,8 +6537,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "There was an error with the configured URL."
+            "state" : "translated",
+            "value" : "Ayarlanmış URL ile ilgili bir hata oluştu."
           }
         }
       }
@@ -6590,8 +6590,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected format"
+            "state" : "translated",
+            "value" : "İstek yanıtı beklenmedik bir formatta"
           }
         }
       }
@@ -6643,8 +6643,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The app has not been granted access to the local network."
+            "state" : "translated",
+            "value" : "Uygulamaya yerel ağa erişim izni verilmemiş."
           }
         }
       }
@@ -6696,8 +6696,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "If you’re using *mTLS*, this could indicate you need to supply a client certificate, or the client certificate was not accepted."
+            "state" : "translated",
+            "value" : "Eğer *mTLS* kullanıyorsanız bu bir istemci sertifikası sağlamanız gerektiği veya sağladığınız sertifikanın kabul edilmediği anlamına gelir."
           }
         }
       }
@@ -6749,8 +6749,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The request was rejected due to invalid credentials"
+            "state" : "translated",
+            "value" : "İstek, geçersiz kimlik bilgileri nedeniyle reddedildi"
           }
         }
       }
@@ -6802,8 +6802,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The response to a request had an unexpected status %@."
+            "state" : "translated",
+            "value" : "İstek yanıtı beklenmedik bir \"%@\" durumuna sahip."
           }
         }
       }
@@ -6855,8 +6855,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "state" : "translated",
+            "value" : "Arka yüz, uygulamanın bu sürümünün gerektirdiği minimum API sürümünü (`%u`) desteklemiyor."
           }
         }
       }
@@ -6908,8 +6908,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Save"
+            "state" : "translated",
+            "value" : "Kaydet"
           }
         }
       }
@@ -6961,8 +6961,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved view"
+            "state" : "translated",
+            "value" : "Kayıtlı görünüm"
           }
         }
       }
@@ -7014,8 +7014,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create saved view"
+            "state" : "translated",
+            "value" : "Kayıtlı görünüm oluştur"
           }
         }
       }
@@ -7067,8 +7067,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Are you sure you want to delete %@?"
+            "state" : "translated",
+            "value" : "%@ kayıtlı görünümünü silmek istediğinize emin misiniz?"
           }
         }
       }
@@ -7120,8 +7120,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete saved view"
+            "state" : "translated",
+            "value" : "Kayıtlı görünümü sil"
           }
         }
       }
@@ -7173,8 +7173,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved view"
+            "state" : "translated",
+            "value" : "Kayıtlı görünümü düzenle"
           }
         }
       }
@@ -7227,7 +7227,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%@*"
           }
         }
@@ -7280,8 +7280,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Saved views"
+            "state" : "translated",
+            "value" : "Kayıtlı görünümler"
           }
         }
       }
@@ -7334,8 +7334,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit saved views"
+            "state" : "translated",
+            "value" : "Kayıtlı görünümleri düzenle"
           }
         }
       }
@@ -7387,8 +7387,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show in sidebar"
+            "state" : "translated",
+            "value" : "Kenar çubuğunda göster"
           }
         }
       }
@@ -7440,8 +7440,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show on dashboard"
+            "state" : "translated",
+            "value" : "Kontrol panelinde göster"
           }
         }
       }
@@ -7493,8 +7493,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan document"
+            "state" : "translated",
+            "value" : "Dokümanı tara"
           }
         }
       }
@@ -7546,8 +7546,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search"
+            "state" : "translated",
+            "value" : "Arama"
           }
         }
       }
@@ -7599,8 +7599,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "Gelişmiş"
           }
         }
       }
@@ -7652,8 +7652,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear search"
+            "state" : "translated",
+            "value" : "Aramayı temizle"
           }
         }
       }
@@ -7705,8 +7705,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "İçerik"
           }
         }
       }
@@ -7758,8 +7758,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Başlık"
           }
         }
       }
@@ -7811,8 +7811,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title & Content"
+            "state" : "translated",
+            "value" : "Başlık & İçerik"
           }
         }
       }
@@ -7864,8 +7864,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Seç"
           }
         }
       }
@@ -7917,8 +7917,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Seçili"
           }
         }
       }
@@ -7970,8 +7970,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share"
+            "state" : "translated",
+            "value" : "Paylaş"
           }
         }
       }
@@ -8023,8 +8023,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Link to this app"
+            "state" : "translated",
+            "value" : "Bu uygulamaya bağlantı"
           }
         }
       }
@@ -8076,8 +8076,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Bağlantıyı paylaş"
           }
         }
       }
@@ -8129,8 +8129,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Other apps"
+            "state" : "translated",
+            "value" : "Diğer uygulamalar"
           }
         }
       }
@@ -8182,8 +8182,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred when processing the shared element.\n\nIdeally, this should not happen, but it did!\n\nIf you want to help fixing this issue, please share the logs below:"
+            "state" : "translated",
+            "value" : "Paylaşılan öğe işlenirken bir hata oluştu.\n\nNormalde bunun olmaması gerekir, ama oldu!\n\nEğer bu sorunu çözmeye destek olmak isterseniz lütfen aşağıdaki uygulama günlüklerini paylaşın:"
           }
         }
       }
@@ -8235,8 +8235,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid attachment"
+            "state" : "translated",
+            "value" : "Geçersiz ek"
           }
         }
       }
@@ -8288,8 +8288,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Please log in using the app first!"
+            "state" : "translated",
+            "value" : "Lütfen önce uygulamayı kullanarak giriş yapın!"
           }
         }
       }
@@ -8341,8 +8341,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show document properties"
+            "state" : "translated",
+            "value" : "Doküman özelliklerini göster"
           }
         }
       }
@@ -8394,8 +8394,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort by"
+            "state" : "translated",
+            "value" : "Sıralama ölçütü"
           }
         }
       }
@@ -8447,8 +8447,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sorting"
+            "state" : "translated",
+            "value" : "Sıralama"
           }
         }
       }
@@ -8500,8 +8500,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort menu"
+            "state" : "translated",
+            "value" : "Sıralama menüsü"
           }
         }
       }
@@ -8553,8 +8553,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sort order"
+            "state" : "translated",
+            "value" : "Sıralama yönü"
           }
         }
       }
@@ -8606,8 +8606,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Added"
+            "state" : "translated",
+            "value" : "Eklendi"
           }
         }
       }
@@ -8659,8 +8659,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created"
+            "state" : "translated",
+            "value" : "Oluşturuldu"
           }
         }
       }
@@ -8712,8 +8712,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Bilinmeyen özel alan %u"
           }
         }
       }
@@ -8765,8 +8765,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Modified"
+            "state" : "translated",
+            "value" : "Düzenlendi"
           }
         }
       }
@@ -8818,8 +8818,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Notes"
+            "state" : "translated",
+            "value" : "Notlar"
           }
         }
       }
@@ -8871,8 +8871,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Owner"
+            "state" : "translated",
+            "value" : "Sahibi"
           }
         }
       }
@@ -8924,8 +8924,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Sayfa sayısı"
           }
         }
       }
@@ -8977,8 +8977,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search score"
+            "state" : "translated",
+            "value" : "Arama skoru"
           }
         }
       }
@@ -9030,8 +9030,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage path"
+            "state" : "translated",
+            "value" : "Depolama dizini"
           }
         }
       }
@@ -9083,8 +9083,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage path"
+            "state" : "translated",
+            "value" : "Depolama dizini"
           }
         }
       }
@@ -9136,8 +9136,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create storage path"
+            "state" : "translated",
+            "value" : "Depolama dizini oluştur"
           }
         }
       }
@@ -9189,8 +9189,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit storage path"
+            "state" : "translated",
+            "value" : "Depolama dizini düzenle"
           }
         }
       }
@@ -9242,8 +9242,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude storage path"
+            "state" : "translated",
+            "value" : "Depolama dizinini hariç tut"
           }
         }
       }
@@ -9295,8 +9295,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "See [the documentation](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling)."
+            "state" : "translated",
+            "value" : "[Dokümantasyonu](https://docs.paperless-ngx.com/advanced_usage/#file-name-handling) inceleyin."
           }
         }
       }
@@ -9348,8 +9348,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -9401,8 +9401,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default"
+            "state" : "translated",
+            "value" : "Varsayılan"
           }
         }
       }
@@ -9454,8 +9454,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage paths"
+            "state" : "translated",
+            "value" : "Depolama dizinleri"
           }
         }
       }
@@ -9507,8 +9507,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Etiket"
           }
         }
       }
@@ -9560,8 +9560,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add tag"
+            "state" : "translated",
+            "value" : "Etiket ekle"
           }
         }
       }
@@ -9613,8 +9613,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Random color"
+            "state" : "translated",
+            "value" : "Rastgele renk"
           }
         }
       }
@@ -9666,8 +9666,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create tag"
+            "state" : "translated",
+            "value" : "Etiket oluştur"
           }
         }
       }
@@ -9719,8 +9719,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit tag"
+            "state" : "translated",
+            "value" : "Etiketi düzenle"
           }
         }
       }
@@ -9772,8 +9772,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude tag"
+            "state" : "translated",
+            "value" : "Etiketi hariç tut"
           }
         }
       }
@@ -9825,8 +9825,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag excluded"
+            "state" : "translated",
+            "value" : "Etiket hariç"
           }
         }
       }
@@ -9878,8 +9878,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag included"
+            "state" : "translated",
+            "value" : "Etiket dahil"
           }
         }
       }
@@ -9931,8 +9931,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Inbox tag"
+            "state" : "translated",
+            "value" : "Gelen kutusu etiketi"
           }
         }
       }
@@ -9984,8 +9984,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag is not selected"
+            "state" : "translated",
+            "value" : "Etiket seçili değil"
           }
         }
       }
@@ -10037,8 +10037,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag is selected"
+            "state" : "translated",
+            "value" : "Etiket seçildi"
           }
         }
       }
@@ -10090,8 +10090,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag name"
+            "state" : "translated",
+            "value" : "Etiket adı"
           }
         }
       }
@@ -10143,8 +10143,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etiketler"
           }
         }
       }
@@ -10196,8 +10196,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All tags"
+            "state" : "translated",
+            "value" : "Tüm etiketler"
           }
         }
       }
@@ -10249,8 +10249,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any tag"
+            "state" : "translated",
+            "value" : "Herhangi bir etiket"
           }
         }
       }
@@ -10303,8 +10303,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Herhangi bir"
           }
         }
       }
@@ -10356,8 +10356,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag filter mode"
+            "state" : "translated",
+            "value" : "Etiket filtresi modu"
           }
         }
       }
@@ -10409,8 +10409,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "None"
+            "state" : "translated",
+            "value" : "Hiçbiri"
           }
         }
       }
@@ -10462,8 +10462,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not assigned"
+            "state" : "translated",
+            "value" : "Atanmamış"
           }
         }
       }
@@ -10515,8 +10515,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove inbox tags"
+            "state" : "translated",
+            "value" : "Gelen kutusu etiketlerini kaldır"
           }
         }
       }
@@ -10667,14 +10667,14 @@
             "plural" : {
               "one" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending task"
+                  "state" : "translated",
+                  "value" : "%u bekleyen görev"
                 }
               },
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%u pending tasks"
+                  "state" : "translated",
+                  "value" : "%u bekleyen görev"
                 }
               }
             }
@@ -10729,8 +10729,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Processing \"%@\""
+            "state" : "translated",
+            "value" : "\"%@\" işleniyor"
           }
         }
       }
@@ -10782,8 +10782,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Başlık"
           }
         }
       }
@@ -10835,7 +10835,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ASN"
           }
         }
@@ -10888,8 +10888,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "Arayüz ayarları"
           }
         }
       }
@@ -10941,8 +10941,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "User"
+            "state" : "translated",
+            "value" : "Kullanıcı"
           }
         }
       }
@@ -10994,8 +10994,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Kullanıcılar"
           }
         }
       }
@@ -11047,8 +11047,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Evet"
           }
         }
       }
