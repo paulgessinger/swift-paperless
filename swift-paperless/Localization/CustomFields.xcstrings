@@ -478,6 +478,17 @@
         }
       }
     },
+    "invalidOperatorForField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid operator for this custom field type."
+          }
+        }
+      }
+    },
     "invalidSelectOption" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -87,21 +87,19 @@ private struct OpView: View {
 
 extension CustomFieldQuery.FieldOperator {
     static func eligibleOperators(for dataType: CustomField.DataType) -> [Self] {
-        var result: [Self] = [.exists, .isnull]
-
-        switch dataType {
-        case .select:
-            result.append(contentsOf: [.exact, .in])
-        case .boolean:
-            result.append(contentsOf: [.exact])
-        case .string, .url:
-            result.append(contentsOf: [.exact, .icontains])
-        case .monetary:
-            result.append(contentsOf: [.exact, .icontains, .gt, .gte, .lt, .lte])
-        case .float, .integer:
-            result.append(contentsOf: [.exact, .gt, .gte, .lt, .lte])
-        default: break
+        let extra: [Self] = switch dataType {
+        case .select: [.exact, .in]
+        case .boolean: [.exact]
+        case .string, .url: [.exact, .icontains]
+        case .monetary: [.exact, .icontains, .gt, .gte, .lt, .lte]
+        case .float, .integer: [.exact, .gt, .gte, .lt, .lte]
+        case .date: [.exact, .gte, .lte]
+        case .documentLink: [.contains]
+        default: []
         }
+
+        var result: [Self] = [.exists, .isnull]
+        result.append(contentsOf: extra)
 
         return result
     }
@@ -151,8 +149,19 @@ private struct StringArgView: View {
         }
 
         .task {
-            if case let .string(val) = value {
+            switch value {
+            case let .string(val):
                 stringValue = val
+            case let .number(val):
+                stringValue = String(val)
+                value = .string(stringValue)
+            case let .integer(val):
+                stringValue = String(val)
+                value = .string(stringValue)
+            case .array:
+                // nothing we can do here
+                stringValue = ""
+                value = .string("")
             }
         }
 
@@ -180,6 +189,9 @@ private struct FloatArgView: View {
         .task {
             if case let .number(val) = value {
                 stringValue = String(val)
+            } else if case let .string(val) = value, let doubleVal = Double(val) {
+                stringValue = String(doubleVal)
+                value = .number(doubleVal) // Convert to number
             } else {
                 stringValue = "0"
                 value = .number(0.0) // Ensure we have a valid number
@@ -201,7 +213,149 @@ private struct FloatArgView: View {
     @Previewable @State var expr = ExprContent(id: 1, op: .gte, arg: .number(1.2))
 
     PreviewHelper {
-        if let field = customFields.first(where: { $0.id == 1 }) {
+        if let field = customFields.first(where: { $0.id == expr.id }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
+    }
+}
+
+private struct IntegerArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var stringValue: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(.customFields(.queryArgumentLabel))
+                .font(.caption)
+
+            TextField(String(localized: .customFields(.queryArgumentLabel)),
+                      text: $stringValue)
+                .keyboardType(.decimalPad)
+        }
+
+        .task {
+            if case let .integer(val) = value {
+                stringValue = String(val)
+            } else if case let .string(val) = value, let intVal = Int(val) {
+                stringValue = String(intVal)
+                value = .integer(intVal) // Convert to integer
+            } else {
+                stringValue = "0"
+                value = .integer(0) // Ensure we have a valid number
+            }
+        }
+
+        .onChange(of: stringValue) { old, new in
+            guard let val = Int(String(new)) else {
+                stringValue = old // Revert to old value if invalid
+                return
+            }
+
+            value = .integer(val)
+        }
+    }
+}
+
+#Preview("Integer") {
+    @Previewable @State var expr = ExprContent(id: 4, op: .gte, arg: .integer(2))
+
+    PreviewHelper {
+        if let field = customFields.first(where: { $0.id == expr.id }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
+    }
+}
+
+private struct DocumentArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var ids: [UInt] = []
+
+    private func updateValue() {
+        value = .array(ids.map { .integer(Int($0)) })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            DocumentSelectionView(title: String(localized: .customFields(.queryArgumentLabel)),
+                                  documentIds: $ids)
+        }
+
+        .task {
+            if case let .array(arr) = value {
+                ids = arr.compactMap {
+                    if case let .integer(id) = $0 {
+                        return UInt(id)
+                    }
+                    return nil
+                }
+                // Rewrite the value so it's value once we switch to this data type
+                updateValue()
+            } else {
+                value = .array([])
+                ids = []
+            }
+        }
+
+        .onChange(of: ids) {
+            updateValue()
+        }
+    }
+}
+
+#Preview("Doc link") {
+    @Previewable @State var expr = ExprContent(id: 9, op: .contains, arg: .array([.integer(1), .string("NOPE"), .integer(2)]))
+
+    PreviewHelper {
+        if let field = customFields.first(where: { $0.id == expr.id }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
+    }
+}
+
+private struct DateArgView: View {
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State var date = Date.now
+
+    private func updateValue() {
+        value = .string(CustomFieldInstance.dateFormatter.string(from: date))
+    }
+
+    var body: some View {
+        DatePicker(selection: $date, displayedComponents: .date) {
+            Text(.customFields(.queryArgumentLabel))
+        }
+
+        .task {
+            if case let .string(val) = value {
+                if let date = CustomFieldInstance.dateFormatter.date(from: val) {
+                    self.date = date
+                } else {
+                    date = .now
+                }
+            }
+            updateValue()
+        }
+
+        .onChange(of: date) {
+            updateValue()
+        }
+    }
+}
+
+#Preview("Date") {
+    @Previewable @State var expr = ExprContent(id: 3, op: .exact, arg: .string("2025-10-09"))
+
+    PreviewHelper {
+        if let field = customFields.first(where: { $0.id == expr.id }) {
             ExprView(field: field, expr: $expr)
         } else {
             Text("Field not found")
@@ -222,10 +376,14 @@ private struct ExprArgView: View {
             switch field.dataType {
             case .boolean:
                 ToggleArgView(value: $value)
-            case .string, .date, .url, .monetary:
+            case .string, .url, .monetary:
                 StringArgView(value: $value)
             case .float:
                 FloatArgView(value: $value)
+            case .integer:
+                IntegerArgView(value: $value)
+            case .date:
+                DateArgView(value: $value)
             default:
                 Text("Unknown EXACT")
             }
@@ -236,8 +394,16 @@ private struct ExprArgView: View {
             case .monetary, .float:
                 FloatArgView(value: $value)
             case .integer:
-                Text("Number int VIEW!")
+                IntegerArgView(value: $value)
+            case .date:
+                DateArgView(value: $value)
             default: Text("Unknown gt/gte/lt/lte")
+            }
+        case .contains:
+            switch field.dataType {
+            case .documentLink:
+                DocumentArgView(value: $value)
+            default: Text("Unknown CONTAINS")
             }
         default:
             Text("Unknown operator")
@@ -281,12 +447,25 @@ private struct ExprView: View {
                     }
                 }
 
+                let eligible = FieldOperator.eligibleOperators(for: field.dataType)
                 Picker(.customFields(.queryOperatorLabel), selection: $expr.op) {
-                    ForEach(FieldOperator.eligibleOperators(for: field.dataType), id: \.self) { op in
-                        Text(op.localizedName).tag(op)
+                    ForEach(FieldOperator.allCases, id: \.self) { op in
+                        Text(op.localizedName)
+                            .tag(op)
+                            .selectionDisabled(!eligible.contains(op))
                     }
                 }
-                ExprArgView(op: $expr.op, field: $field, value: $expr.arg)
+                if FieldOperator.eligibleOperators(for: field.dataType).contains(expr.op) {
+                    ExprArgView(op: $expr.op, field: $field, value: $expr.arg)
+                } else {
+                    HStack(alignment: .top) {
+                        Image(systemName: "exclamationmark.triangle")
+
+                        Text(.customFields(.invalidOperatorForField))
+                    }
+                    .foregroundStyle(.yellow)
+                    .bold()
+                }
             }
 
             // @TODO: Remove this!
@@ -361,6 +540,31 @@ private struct PreviewHelper<C: View>: View {
     @ViewBuilder
     var content: () -> C
 
+    func addDocuments() async {
+        let documents: [(String, String)] = [
+            ("Invoice #123", "file1.pdf"),
+            ("Receipt for groceries", "file2.pdf"),
+            ("Tax document 2024", "file3.pdf"),
+            ("Invoice #456", "file4.pdf"),
+            ("Meeting notes", "file5.pdf"),
+        ]
+
+        for (title, filename) in documents {
+            let protoDoc = ProtoDocument(
+                title: title,
+                asn: nil,
+                documentType: nil,
+                correspondent: nil,
+                tags: [],
+                created: .now,
+                storagePath: nil
+            )
+            try? await store.repository.create(
+                document: protoDoc, file: URL(string: "file:///\(filename)")!, filename: filename
+            )
+        }
+    }
+
     var body: some View {
         NavigationStack {
             if show {
@@ -377,6 +581,8 @@ private struct PreviewHelper<C: View>: View {
                     _ = try await repository.add(customField: field)
                 }
                 try await store.fetchAll()
+                await addDocuments()
+
                 show = true
             } catch {}
         }
@@ -403,3 +609,5 @@ private struct PreviewHelper<C: View>: View {
         }
     }
 }
+
+// @TODO: Add check by sending this to the server and see if it accepts it! Show big error if not!
