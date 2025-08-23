@@ -159,7 +159,7 @@ public struct CustomFieldInstance: Sendable, Hashable {
         }
     }
 
-    static let dateFormatter = {
+    public static let dateFormatter = {
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
         return df
