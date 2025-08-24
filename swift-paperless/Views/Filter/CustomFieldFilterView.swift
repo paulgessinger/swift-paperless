@@ -30,14 +30,16 @@ private struct OpView: View {
             NavigationLink {
                 OpView(op: op)
             } label: {
-                Text(arg.wrappedValue.rawValue)
+                CustomFieldQueryDisplayView(op: op.wrappedValue)
+                    .listRowInsets(EdgeInsets())
             }
         }
         if let expr = arg.expr, let field = store.customFields[expr.wrappedValue.id] {
             NavigationLink {
                 ExprView(field: field, expr: expr)
             } label: {
-                Text(arg.wrappedValue.rawValue)
+                CustomFieldQueryDisplayView(expr: expr.wrappedValue)
+                    .listRowInsets(EdgeInsets())
             }
         }
     }
@@ -54,7 +56,7 @@ private struct OpView: View {
                         Button(role: .destructive) {
                             op.args.remove(at: index)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label(.localizable(.delete), systemImage: "trash")
                         }
                     }
                 }
@@ -69,20 +71,22 @@ private struct OpView: View {
             Section {
                 // If we don't have one, what's the point of adding an expr?
                 if let defaultField {
-                    Button("Add expr") {
+                    Button {
                         op.args.append(.expr(defaultField.id, .exists, .string("true")))
+                    } label: {
+                        Label(localized: .customFields(.addExprButtonLabel), systemImage: "plus.square.fill")
                     }
                 }
 
-                Button("Add op") {
+                Button {
                     op.args.append(.op(.or, []))
+                } label: {
+                    Label(localized: .customFields(.addOpButtonLabel), systemImage: "curlybraces.square.fill")
                 }
             }
-
-            Section {
-                Text(CustomFieldQuery.op(op).rawValue)
-            }
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
         }
+        .animation(.spring, value: op)
     }
 }
 
@@ -705,28 +709,43 @@ struct CustomFieldFilterView: View {
 
     var body: some View {
         Form {
-            Section {
-                if let op = $query.op {
-                    NavigationLink {
-                        OpView(op: op)
-                    } label: {
-                        Text(query.rawValue)
+            if query != .any {
+                Section {
+                    if let op = $query.op {
+                        NavigationLink {
+                            OpView(op: op)
+                        } label: {
+                            CustomFieldQueryDisplayView(query: query)
+                                .listRowInsets(EdgeInsets())
+                        }
                     }
                 }
-            }
 
-            if query == .any {
-                Button {
-                    query = .op(.or, [])
-                } label: {
-                    Text("Add op")
+                Section {
+                    Button {
+                        query = .any
+                    } label: {
+                        Label(localized: .customFields(.clearCustomFieldFilterButtonLabel), systemImage: "xmark.circle.fill")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .foregroundColor(.red)
+                }
+            } else {
+                Section {
+                    ContentUnavailableView(.customFields(.anyCustomFieldQuery), systemImage: "line.3.horizontal.decrease.circle.fill")
+                }
+
+                Section {
+                    Button {
+                        query = .op(.or, [])
+                    } label: {
+                        Label(localized: .customFields(.addCustomFieldFilterButtonLabel), systemImage: "plus.circle.fill")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-
-            Section {
-                Text(query.rawValue)
-            }
         }
+        .animation(.spring, value: query)
     }
 }
 
@@ -817,6 +836,9 @@ private struct PreviewHelper<C: View>: View {
 
     PreviewHelper {
         CustomFieldFilterView(query: $filterState.customField)
+        Button("Print!") {
+            print(filterState.customField.rawValue)
+        }
     }
 }
 

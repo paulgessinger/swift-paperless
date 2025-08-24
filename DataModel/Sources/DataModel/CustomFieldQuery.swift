@@ -139,6 +139,20 @@ extension CustomFieldQuery: RawRepresentable {
     }
 }
 
+public extension CustomFieldQuery.Argument {
+    var display: String {
+        guard let data = try? JSONEncoder().encode(self) else {
+            Logger.dataModel.error("Failed to encode CustomFieldQuery, this is a bug!")
+            return ""
+        }
+        guard let string = String(data: data, encoding: .utf8) else {
+            Logger.dataModel.error("Failed to encode CustomFieldQuery, this is a bug!")
+            return ""
+        }
+        return string
+    }
+}
+
 extension CustomFieldQuery.Argument: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
