@@ -6,6 +6,7 @@
 //
 
 import CasePaths
+import Common
 import DataModel
 import Networking
 import os
@@ -309,7 +310,9 @@ private struct DocumentArgView: View {
 }
 
 #Preview("Doc link") {
-    @Previewable @State var expr = ExprContent(id: 9, op: .contains, arg: .array([.integer(1), .string("NOPE"), .integer(2)]))
+    @Previewable @State var expr = ExprContent(id: 9, op: .contains, arg: .array([
+        .integer(1), .string("NOPE"), .integer(2),
+    ]))
 
     PreviewHelper {
         if let field = customFields.first(where: { $0.id == expr.id }) {
@@ -363,10 +366,208 @@ private struct DateArgView: View {
     }
 }
 
+private struct SelectExactArgView: View {
+    var field: CustomField
+
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var selected: String = ""
+
+    var body: some View {
+        Picker(String(localized: .customFields(.queryArgumentLabel)), selection: $selected) {
+            ForEach(field.extraData.selectOptions) { option in
+                Text(option.label)
+                    .tag(option.id)
+            }
+        }
+
+        .task {
+            if case let .string(val) = value, field.extraData.selectOptions.contains(where: { $0.id == val }) {
+                selected = val
+            } else {
+                selected = field.extraData.selectOptions.first?.id ?? ""
+                value = .string(selected)
+            }
+        }
+
+        .onChange(of: selected) {
+            value = .string(selected)
+        }
+    }
+}
+
+private struct MultiPicker<T, Content, Label>: View
+    where Content: View, Label: View, T: CustomStringConvertible & Hashable
+{
+    var content: (T) -> Content
+    var label: () -> Label
+
+    let options: [T]
+    @Binding var selection: [T]
+
+    init(options: [T], selection: Binding<[T]>, @ViewBuilder content: @escaping (T) -> Content, @ViewBuilder label: @escaping () -> Label) {
+        self.options = options
+        _selection = selection
+        self.content = content
+        self.label = label
+    }
+
+    private struct OptionPickerView: View {
+        let options: [T]
+        @Binding var selection: [T]
+        var content: (T) -> Content
+
+        private func toggle(_ option: T) {
+            if selection.contains(option) {
+                selection.removeAll(where: { $0 == option })
+            } else {
+                selection.append(option)
+            }
+        }
+
+        var body: some View {
+            List {
+                ForEach(options, id: \.self) { option in
+                    Button {
+                        toggle(option)
+                    }
+                    label: {
+                        HStack {
+                            content(option)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if selection.contains(option) {
+                                SwiftUI.Label(localized: .localizable(.selected),
+                                              systemImage: "checkmark")
+                                    .labelStyle(.iconOnly)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        NavigationLink {
+            OptionPickerView(options: options,
+                             selection: $selection,
+                             content: content)
+        } label: {
+            LabeledContent {
+                Text(selection.map(\.description).joined(separator: ", "))
+            } label: {
+                label()
+            }
+        }
+    }
+}
+
+extension MultiPicker where Label == EmptyView {
+    init(options: [T], selection: Binding<[T]>, @ViewBuilder content: @escaping (T) -> Content) {
+        self.init(options: options, selection: selection, content: content, label: { EmptyView() })
+    }
+}
+
+private struct SelectInArgView: View {
+    var field: CustomField
+
+    @Binding var value: CustomFieldQuery.Argument
+
+    @State private var selected: [String] = []
+
+    private func optionView(_ id: String) -> some View {
+        let name = field.extraData.selectOptions.first(where: { $0.id == id })?.label ?? "???"
+        return Text(name)
+    }
+
+    var body: some View {
+        MultiPicker(options: field.extraData.selectOptions.map(\.id),
+                    selection: $selected,
+                    content: { option in optionView(option) },
+                    label: {
+                        Text(String(localized: .customFields(.queryArgumentLabel)))
+                    })
+
+                    .task {
+                        switch value {
+                        case let .string(val) where field.extraData.selectOptions.contains(where: { $0.id == val }):
+                            selected = [val]
+
+                        case let .array(arr):
+                            selected = arr.compactMap {
+                                if case let .string(id) = $0, field.extraData.selectOptions.contains(where: { $0.id == id }) {
+                                    return id
+                                }
+                                return nil
+                            }
+                            value = .array(selected.map { .string($0) })
+
+                        default:
+                            selected = []
+                            value = .array([])
+                        }
+                    }
+
+                    .onChange(of: selected) {
+                        value = .array(selected.map { .string($0) })
+                    }
+    }
+}
+
+#Preview("Select") {
+    @Previewable @State var expr = ExprContent(id: 10, op: .in, arg: .array([.string("bb")]))
+
+    PreviewHelper {
+        if let field = customFields.first(where: { $0.id == expr.id }) {
+            ExprView(field: field, expr: $expr)
+        } else {
+            Text("Field not found")
+        }
+    }
+}
+
 private struct ExprArgView: View {
     @Binding var op: CustomFieldQuery.FieldOperator
     @Binding var field: CustomField
     @Binding var value: CustomFieldQuery.Argument
+
+    private func unknownView() -> some View {
+        let debugStr = CustomFieldQuery.expr(field.id, op, value).rawValue
+
+        return VStack {
+            WarningView {
+                if Bundle.main.appConfiguration == .AppStore {
+                    // On AppStore version, just show basic info
+                    Text(.customFields(.invalidOperatorForField))
+                } else {
+                    // In TestFlight, encourage users to help
+                }
+
+                VStack(alignment: .leading) {
+                    Text("Operation *\(op.localizedName)* is not covered by UI")
+                    Text("Expression is: `\(debugStr)`")
+                    Text("Custom field type: `\(String(describing: field.dataType))`")
+                }
+            }
+
+            Divider()
+
+            Text("This should be covered by the UI. **You're on TestFlight**: please send me feedback with the details:")
+
+            Button("Copy details to clipboard!") {
+                let detailStr = """
+                Uncovered custom field query construct:
+                OP: \(String(describing: op))
+                Field: \(String(describing: field))
+                Argument: \(String(describing: value))
+                """
+                Pasteboard.general.string = detailStr
+                Logger.shared.warning("\(detailStr)")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.yellow)
+        }
+    }
 
     var body: some View {
         switch op {
@@ -384,8 +585,10 @@ private struct ExprArgView: View {
                 IntegerArgView(value: $value)
             case .date:
                 DateArgView(value: $value)
-            default:
-                Text("Unknown EXACT")
+            case .select:
+                SelectExactArgView(field: field,
+                                   value: $value)
+            default: unknownView()
             }
         case .icontains:
             StringArgView(value: $value)
@@ -397,19 +600,41 @@ private struct ExprArgView: View {
                 IntegerArgView(value: $value)
             case .date:
                 DateArgView(value: $value)
-            default: Text("Unknown gt/gte/lt/lte")
+            default: unknownView()
             }
         case .contains:
             switch field.dataType {
             case .documentLink:
                 DocumentArgView(value: $value)
-            default: Text("Unknown CONTAINS")
+            default: unknownView()
             }
-        default:
-            Text("Unknown operator")
+        case .in:
+            switch field.dataType {
+            case .select:
+                SelectInArgView(field: field,
+                                value: $value)
+
+            default: unknownView()
+            }
         }
 
-        Text(String(describing: value))
+        // DEBUG:
+        // Text(String(describing: value))
+    }
+}
+
+private struct WarningView<Content: View>: View {
+    @ViewBuilder
+    var content: () -> Content
+
+    var body: some View {
+        HStack(alignment: .top) {
+            Image(systemName: "exclamationmark.triangle")
+
+            content()
+        }
+        .foregroundStyle(.yellow)
+        .bold()
     }
 }
 
@@ -458,20 +683,17 @@ private struct ExprView: View {
                 if FieldOperator.eligibleOperators(for: field.dataType).contains(expr.op) {
                     ExprArgView(op: $expr.op, field: $field, value: $expr.arg)
                 } else {
-                    HStack(alignment: .top) {
-                        Image(systemName: "exclamationmark.triangle")
-
+                    WarningView {
                         Text(.customFields(.invalidOperatorForField))
                     }
-                    .foregroundStyle(.yellow)
-                    .bold()
                 }
             }
 
             // @TODO: Remove this!
-            Section {
-                Text(CustomFieldQuery.expr(expr).rawValue)
-            }
+            // DEBUG:
+//            Section {
+//                Text(CustomFieldQuery.expr(expr).rawValue)
+//            }
         }
 
         .onChange(of: expr.id) { updateField(expr.id) }
