@@ -135,12 +135,12 @@ struct DocumentSelectionView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationTitle(title)
         } label: {
-            VStack(alignment: .leading) {
-                Text(title)
-                    .font(.footnote)
-                    .bold()
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .font(.footnote)
+                        .bold()
 
-                HStack {
                     HFlow {
                         ForEach(selected) { document in
                             HStack {
@@ -158,10 +158,10 @@ struct DocumentSelectionView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
-                    if selected.isEmpty {
-                        Text(.customFields(.documentLinkEmptyLabel))
-                    }
+                if selected.isEmpty {
+                    Text(.customFields(.documentLinkEmptyLabel))
                 }
             }
         }
