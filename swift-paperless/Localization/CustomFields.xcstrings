@@ -1,6 +1,39 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "addCustomFieldFilterButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set custom field filter"
+          }
+        }
+      }
+    },
+    "addExprButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add expression"
+          }
+        }
+      }
+    },
+    "addOpButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add logical operation"
+          }
+        }
+      }
+    },
     "addTitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -50,6 +83,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Özel alan ekle"
+          }
+        }
+      }
+    },
+    "anyCustomFieldQuery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No custom field filter set"
+          }
+        }
+      }
+    },
+    "clearCustomFieldFilterButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear custom field filter"
           }
         }
       }
@@ -1392,6 +1447,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sunucu tarafından döndürülen **`%@`** değeri, bu özel alanın veri türü olan **`%@`** ile çözümlenemedi. Bu, dahili bir veri tutarsızlığı olabilir. "
+          }
+        }
+      }
+    },
+    "unknownCustomField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown field #%u"
           }
         }
       }

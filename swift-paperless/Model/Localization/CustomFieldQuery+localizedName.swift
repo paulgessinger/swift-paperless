@@ -15,4 +15,24 @@ extension CustomFieldQuery.FieldOperator {
         case .icontains: String(localized: .customFields(.queryContainsCaseInsensitive))
         }
     }
+
+    var shortDisplay: String {
+        switch self {
+        case .exact: "="
+        case .gt: ">"
+        case .gte: "≥"
+        case .lt: "<"
+        case .lte: "≤"
+        default: localizedName
+        }
+    }
+}
+
+extension CustomFieldQuery.LogicalOperator {
+    var localizedName: String {
+        switch self {
+        case .and: String(localized: .customFields(.queryAnd))
+        case .or: String(localized: .customFields(.queryOr))
+        }
+    }
 }
