@@ -12,7 +12,6 @@ import os
 import SwiftUI
 
 private struct SearchView: View {
-    @Binding var instance: CustomFieldInstance
     @Binding var selected: [Document]
 
     @EnvironmentObject private var store: DocumentStore
@@ -59,8 +58,6 @@ private struct SearchView: View {
         }
         .animation(.spring, value: matchingDocuments)
         .animation(.spring, value: selected)
-        .navigationTitle(instance.field.name)
-        .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: .customFields(.documentLinkSearchPlaceholder))
 
         .onChange(of: searchText) {
@@ -83,18 +80,15 @@ private struct SearchView: View {
     }
 }
 
-struct DocumentLinkView: View {
-    @Binding var instance: CustomFieldInstance
+struct DocumentSelectionView: View {
+    var title: String
+    @Binding var documentIds: [UInt]
 
     @EnvironmentObject private var store: DocumentStore
 
     @State private var selected: [Document] = []
 
     @State private var initial = true
-
-    init(instance: Binding<CustomFieldInstance>) {
-        _instance = instance
-    }
 
     private var backgroundColor: Color {
         if #available(iOS 18.0, *) {
@@ -105,46 +99,48 @@ struct DocumentLinkView: View {
     }
 
     private func loadSelected() async {
-        guard initial else { return }
-        initial = false
+        // @FIXME: Maybe these are needed?
 
-        if case let .documentLink(ids) = instance.value {
-            Logger.shared.trace("Loading documents for \(ids.count) document links")
-            selected = await withTaskGroup(of: Document?.self, returning: [Document].self) { group in
-                for id in ids {
-                    group.addTask {
-                        do {
-                            return try await store.repository.document(id: id)
-                        } catch {
-                            Logger.shared.error("Error loading document with ID \(id): \(error, privacy: .public)")
-                            return nil
-                        }
+//        guard initial else { return }
+//        initial = false
+
+        Logger.shared.trace("Loading documents for \(documentIds.count) document links")
+        selected = await withTaskGroup(of: Document?.self, returning: [Document].self) { group in
+            for id in documentIds {
+                group.addTask {
+                    do {
+                        return try await store.repository.document(id: id)
+                    } catch {
+                        Logger.shared.error("Error loading document with ID \(id): \(error, privacy: .public)")
+                        return nil
                     }
                 }
-
-                var documents = [Document]()
-
-                for await document in group {
-                    if let document {
-                        Logger.shared.trace("Loaded document: \(document.title, privacy: .public)")
-                        documents.append(document)
-                    }
-                }
-                return documents
             }
+
+            var documents = [Document]()
+
+            for await document in group {
+                if let document {
+                    Logger.shared.trace("Loaded document: \(document.title, privacy: .public)")
+                    documents.append(document)
+                }
+            }
+            return documents
         }
     }
 
     var body: some View {
         NavigationLink {
-            SearchView(instance: $instance, selected: $selected)
+            SearchView(selected: $selected)
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle(title)
         } label: {
-            VStack(alignment: .leading) {
-                Text(instance.field.name)
-                    .font(.footnote)
-                    .bold()
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(title)
+                        .font(.footnote)
+                        .bold()
 
-                HStack {
                     HFlow {
                         ForEach(selected) { document in
                             HStack {
@@ -162,20 +158,51 @@ struct DocumentLinkView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
-                    if selected.isEmpty {
-                        Text(.customFields(.documentLinkEmptyLabel))
-                    }
+                if selected.isEmpty {
+                    Text(.customFields(.documentLinkEmptyLabel))
                 }
             }
         }
+
         .task {
             await loadSelected()
         }
 
         .onChange(of: selected) {
             Logger.shared.trace("Selected documents changed: \(selected.count) selected")
-            instance.value = .documentLink(selected.map(\.id))
+            documentIds = selected.map(\.id)
+        }
+    }
+}
+
+struct DocumentLinkView: View {
+    @Binding var instance: CustomFieldInstance
+
+    @State private var documentIds = [UInt]()
+    @State private var initial = true
+
+    var body: some View {
+        // This is here because the `task` modifier triggers too late
+        VStack {
+            DocumentSelectionView(title: instance.field.name,
+                                  documentIds: $documentIds)
+        }
+
+        .task {
+            guard initial else { return }
+            initial = false
+
+            if case let .documentLink(ids) = instance.value {
+                documentIds = ids
+            } else {
+                instance.value = .documentLink([])
+            }
+        }
+
+        .onChange(of: documentIds) {
+            instance.value = .documentLink(documentIds)
         }
     }
 }
