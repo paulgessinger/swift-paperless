@@ -135,7 +135,7 @@ public struct FilterState: Equatable, Codable, Sendable {
                     customField: .any)
     }
 
-    func with(_ factory: (inout Self) -> Void) -> Self {
+    public func with(_ factory: (inout Self) -> Void) -> Self {
         var copy = self
         factory(&copy)
         return copy
