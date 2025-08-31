@@ -427,6 +427,17 @@
         }
       }
     },
+    "filterAbandonButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revert"
+          }
+        }
+      }
+    },
     "invalidDate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1233,6 +1244,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In"
+          }
+        }
+      }
+    },
+    "queryInvalidFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
           }
         }
       }

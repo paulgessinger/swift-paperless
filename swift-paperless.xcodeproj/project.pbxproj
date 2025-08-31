@@ -146,6 +146,7 @@
 				Document/DocumentView.swift,
 				Filter/CustomFieldFilterView.swift,
 				Filter/CustomFieldQueryDisplayView.swift,
+				Filter/FilterBar.swift,
 				InactiveView.swift,
 				Login/BackgroundColorModifier.swift,
 				Login/ConnectionStageView.swift,

@@ -704,11 +704,20 @@ private struct ExprView: View {
     }
 }
 
-struct CustomFieldFilterView: View {
+struct CustomFieldQueryEditView<Content: View>: View {
     @Binding var query: CustomFieldQuery
+
+    let content: () -> Content
+
+    init(query: Binding<CustomFieldQuery>, @ViewBuilder content: @escaping () -> Content) {
+        _query = query
+        self.content = content
+    }
 
     var body: some View {
         Form {
+            content()
+
             if query != .any {
                 Section {
                     if let op = $query.op {
@@ -746,6 +755,122 @@ struct CustomFieldFilterView: View {
             }
         }
         .animation(.spring, value: query)
+    }
+}
+
+extension CustomFieldQueryEditView where Content == EmptyView {
+    init(query: Binding<CustomFieldQuery>) {
+        self.init(query: query, content: { EmptyView() })
+    }
+}
+
+struct CustomFieldFilterView: View {
+    @Binding private var outputQuery: CustomFieldQuery
+
+    @State private var query: CustomFieldQuery
+
+    private enum QueryState {
+        case checking
+        case error
+        case valid
+    }
+
+    @State private var state = QueryState.valid
+
+    @EnvironmentObject private var store: DocumentStore
+    @Environment(\.dismiss) private var dismiss
+
+    init(query: Binding<CustomFieldQuery>) {
+        _outputQuery = query
+        _query = State(initialValue: query.wrappedValue)
+    }
+
+    private func validate() async {
+        Logger.shared.info("Validating custom field query: \(query.rawValue, privacy: .public)")
+
+        guard query != .any else {
+            Logger.shared.info("Query is .any, nothing to validate")
+            outputQuery = query
+            state = .valid
+            return
+        }
+
+        let emptyDefaultQuery = CustomFieldQuery.op(.or, [])
+        guard query != emptyDefaultQuery else {
+            Logger.shared.info("Query is \(query.rawValue, privacy: .public), which is equivalent to .any, we'll apply that")
+            outputQuery = .any
+            state = .valid
+            return
+        }
+
+        state = .checking
+        try? await Task.sleep(for: .seconds(2))
+
+        let filterState = FilterState.empty.with {
+            $0.customField = query
+        }
+
+        guard store.permissions.test(.view, for: .document) else {
+            Logger.shared.info("User does not have permission to view documents. Let them set filter without validation")
+            outputQuery = query
+            state = .valid
+            return
+        }
+
+        do {
+            Logger.shared.info("Requesting documents to validate custom field query")
+            state = .checking
+            _ = try await store.repository.documents(filter: filterState).fetch(limit: 1)
+            Logger.shared.info("Documents received, setting filter")
+            outputQuery = query
+            state = .valid
+        } catch {
+            Logger.shared.error("Received error loading documents with filter, presenting error and not modifying actual filter state: \(error)")
+            state = .error
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            CustomFieldQueryEditView(query: $query) {
+                if state == .error {
+                    HStack(alignment: .top) {
+                        Image(systemName: "xmark.circle.fill")
+                        Text(.customFields(.queryInvalidFilter))
+                    }
+                    .foregroundStyle(.red)
+                }
+            }
+            .animation(.spring, value: state)
+
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(.customFields(.title))
+
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    switch state {
+                    case .valid:
+                        Button(.localizable(.done)) {
+                            dismiss()
+                        }
+                    case .error:
+                        Button(.customFields(.filterAbandonButtonLabel), role: .destructive) { dismiss()
+                        }
+                        .tint(.red)
+                    case .checking:
+                        ProgressView()
+                    }
+                }
+            }
+        }
+
+        .interactiveDismissDisabled(state != .valid)
+
+        .onChange(of: query) {
+            Task {
+                await validate()
+            }
+        }
     }
 }
 
@@ -835,10 +960,18 @@ private struct PreviewHelper<C: View>: View {
     @Previewable @State var filterState = FilterState.default
 
     PreviewHelper {
-        CustomFieldFilterView(query: $filterState.customField)
+        CustomFieldQueryEditView(query: $filterState.customField)
         Button("Print!") {
             print(filterState.customField.rawValue)
         }
+    }
+}
+
+#Preview("FilterView") {
+    @Previewable @State var filterState = FilterState.default
+
+    PreviewHelper {
+        CustomFieldFilterView(query: $filterState.customField)
     }
 }
 
