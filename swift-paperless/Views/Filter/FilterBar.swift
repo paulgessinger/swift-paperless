@@ -336,12 +336,14 @@ struct FilterBar: View {
     @State private var showDocumentType = false
     @State private var showCorrespondent = false
     @State private var showStoragePath = false
+    @State private var showCustomFields = false
 
     private enum ModalMode {
         case tags
         case correspondent
         case documentType
         case storagePath
+        case customFields
     }
 
     @State private var filterState = FilterState.default
@@ -399,6 +401,8 @@ struct FilterBar: View {
                 showDocumentType = true
             case .storagePath:
                 showStoragePath = true
+            case .customFields:
+                showCustomFields = true
             }
         }
     }
@@ -645,6 +649,10 @@ struct FilterBar: View {
                     }
                 }
 
+                Element(label: {
+                    Text(.customFields(.title))
+                }, active: filterModel.filterState.customField != .any) { present(.customFields) }
+
                 Divider()
 
                 SortMenu(filterState: $filterState)
@@ -715,10 +723,15 @@ struct FilterBar: View {
             }
         }
 
+        .sheet(isPresented: $showCustomFields) {
+            CustomFieldFilterView(query: $filterModel.filterState.customField)
+        }
+
         .sheet(item: $savedView) { view in
             AddSavedViewSheet(savedView: view)
         }
 
+        // @TODO: Revisit if this is needed still, if not simplify
         .onReceive(filterModel.filterStatePublisher) { value in
             DispatchQueue.main.async {
                 withAnimation {

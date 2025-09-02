@@ -205,8 +205,9 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
         do {
             // update users and groups just in case
             try await withThrowingTaskGroup(of: Void.self) { group in
-                group.addTask { try await store.fetchAllUsers() }
-                group.addTask { try await store.fetchAllGroups() }
+                // Weird workaround for compiler warning
+                group.addTask { Task { @MainActor in try await store.fetchAllUsers() }}
+                group.addTask { Task { @MainActor in try await store.fetchAllGroups() }}
 
                 while !group.isEmpty {
                     do {
