@@ -23,8 +23,9 @@ jobs:
           - ios: "18.6"
             xcode: "16.4"
 
-          - ios: "26.0"
-            xcode: "26.0-beta"
+          # Still not consistently available
+          # - ios: "26.0"
+          #   xcode: "26.0-beta"
       fail-fast: false
     env:
       DEVICE: iPhone 16 Pro
