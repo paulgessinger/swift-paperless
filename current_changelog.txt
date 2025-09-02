@@ -1,1 +1,2 @@
 - Add ability to filter by custom fields. This also includes creating / editing saved views that use custom fields.
+- Enable Turkish language support
