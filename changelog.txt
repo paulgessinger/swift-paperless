@@ -1,3 +1,8 @@
+1.8.0 (153)
+
+- Add ability to filter by custom fields. This also includes creating / editing saved views that use custom fields.
+- Enable Turkish language support
+
 1.8.0 (152)
 
 - Allow opening document edit view even without edit permissions. Editing is disabled inside of the view instead.
