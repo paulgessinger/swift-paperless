@@ -67,12 +67,19 @@ struct DocumentList: View {
         @Binding var documentToDelete: Document?
         var viewModel: DocumentListViewModel
 
+        @EnvironmentObject private var errorController: ErrorController
+
         private func onDeleteButtonPressed() {
             if documentDeleteConfirmation {
                 documentToDelete = document
             } else {
                 Task { [store = self.store, document = self.document] in
-                    try? await store.deleteDocument(document)
+                    do {
+                        try await store.deleteDocument(document)
+                    } catch {
+                        Logger.shared.error("Error deleting document: \(error)")
+                        errorController.push(error: error)
+                    }
                 }
             }
         }
@@ -97,12 +104,14 @@ struct DocumentList: View {
                 }
 
                 .swipeActions(edge: .trailing) {
-                    Button(role: documentDeleteConfirmation ? .none : .destructive) {
-                        onDeleteButtonPressed()
-                    } label: {
-                        Label(String(localized: .localizable(.delete)), systemImage: "trash")
+                    if store.permissions.test(.delete, for: .document) {
+                        Button(role: documentDeleteConfirmation ? .none : .destructive) {
+                            onDeleteButtonPressed()
+                        } label: {
+                            Label(String(localized: .localizable(.delete)), systemImage: "trash")
+                        }
+                        .tint(.red)
                     }
-                    .tint(.red)
                 }
 
                 .contextMenu {
@@ -259,7 +268,12 @@ struct DocumentList: View {
                                 let document = item
                                 Button(role: .destructive) {
                                     Task {
-                                        try? await store.deleteDocument(document)
+                                        do {
+                                            try await store.deleteDocument(document)
+                                        } catch {
+                                            Logger.shared.error("Error deleting document: \(error)")
+                                            errorController.push(error: error)
+                                        }
                                     }
                                 } label: { Text(.localizable(.documentDelete)) }
                                 Button(role: .cancel) {
