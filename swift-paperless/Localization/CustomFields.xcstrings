@@ -48,8 +48,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Özel alan filtresi ayarla"
           }
         }
       }
@@ -101,8 +101,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "İfade ekle"
           }
         }
       }
@@ -154,8 +154,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Mantıksal işlem ekle"
           }
         }
       }
@@ -260,8 +260,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Özel alan filtresi ayarlanmamış"
           }
         }
       }
@@ -313,8 +313,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Özel alan filtresini temizle"
           }
         }
       }
@@ -684,8 +684,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Geri al"
           }
         }
       }
@@ -843,8 +843,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Bu özel alan türü için geçersiz operatör."
           }
         }
       }
@@ -1479,8 +1479,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tümü"
           }
         }
       }
@@ -1532,8 +1532,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Argument"
+            "state" : "translated",
+            "value" : "Argüman"
           }
         }
       }
@@ -1585,8 +1585,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "İçerir"
           }
         }
       }
@@ -1638,8 +1638,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "İçerir (büyük/küçük harf duyarsız)"
           }
         }
       }
@@ -1691,8 +1691,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Eşittir"
           }
         }
       }
@@ -1744,8 +1744,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Mevcut"
           }
         }
       }
@@ -1797,8 +1797,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Alan"
           }
         }
       }
@@ -1850,8 +1850,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Daha büyük"
           }
         }
       }
@@ -1903,8 +1903,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Daha büyük veya eşit"
           }
         }
       }
@@ -1956,8 +1956,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In"
+            "state" : "translated",
+            "value" : "İçinde"
           }
         }
       }
@@ -2009,8 +2009,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Özel alan sorgusunun sunucu tarafından geçersiz olduğu bildirildi. Devam etmek için lütfen sorgunuzu düzeltin!"
           }
         }
       }
@@ -2062,8 +2062,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "Boştur"
           }
         }
       }
@@ -2115,8 +2115,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Daha küçük"
           }
         }
       }
@@ -2168,8 +2168,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Daha küçük veya eşit"
           }
         }
       }
@@ -2221,8 +2221,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Operator"
+            "state" : "translated",
+            "value" : "Operatör"
           }
         }
       }
@@ -2274,8 +2274,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Herhangi biri"
           }
         }
       }
@@ -2486,8 +2486,8 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Bilinmeyen alan #%u"
           }
         }
       }
