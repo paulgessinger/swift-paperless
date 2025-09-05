@@ -216,7 +216,7 @@ public actor ApiRepository {
 
         if status != code {
             let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
-            Logger.networking.error("URLResponse to \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
+            Logger.networking.error("URLResponse to \(request.httpMethod ?? "???", privacy: .public) \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)")
 
             switch status {
             case .forbidden:
