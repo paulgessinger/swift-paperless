@@ -126,8 +126,14 @@ struct DocumentNoteView: View {
                 Section {
                     ForEach(notes) { note in
                         VStack(alignment: .leading) {
-                            Text(note.created, style: .date)
-                                .font(.caption)
+                            HStack {
+                                Text(note.created, style: .date)
+                                if let user = note.user, !user.username.isEmpty {
+                                    Spacer()
+                                    Text(user.username)
+                                }
+                            }
+                            .font(.caption)
                             Text(note.note)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -54,7 +54,7 @@ public actor ApiRepository {
     private var apiVersion: UInt?
     public static let minimumApiVersion: UInt = 3
     public static let minimumVersion = Version(1, 14, 1)
-    public static let maximumApiVersion: UInt = 7
+    public static let maximumApiVersion: UInt = 9
     public private(set) var backendVersion: Version?
 
     public var effectiveApiVersion: UInt {
