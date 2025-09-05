@@ -545,31 +545,33 @@ private struct ExprArgView: View {
                     Text(.customFields(.invalidOperatorForField))
                 } else {
                     // In TestFlight, encourage users to help
-                }
 
-                VStack(alignment: .leading) {
-                    Text("Operation *\(op.localizedName)* is not covered by UI")
-                    Text("Expression is: `\(debugStr)`")
-                    Text("Custom field type: `\(String(describing: field.dataType))`")
+                    VStack(alignment: .leading) {
+                        Text("Operation *\(op.localizedName)* is not covered by UI")
+                        Text("Expression is: `\(debugStr)`")
+                        Text("Custom field type: `\(String(describing: field.dataType))`")
+                    }
                 }
             }
 
-            Divider()
+            if Bundle.main.appConfiguration != .AppStore {
+                Divider()
 
-            Text("This should be covered by the UI. **You're on TestFlight**: please send me feedback with the details:")
+                Text("This should be covered by the UI. **You're on TestFlight**: please send me feedback with the details:")
 
-            Button("Copy details to clipboard!") {
-                let detailStr = """
-                Uncovered custom field query construct:
-                OP: \(String(describing: op))
-                Field: \(String(describing: field))
-                Argument: \(String(describing: value))
-                """
-                Pasteboard.general.string = detailStr
-                Logger.shared.warning("\(detailStr)")
+                Button("Copy details to clipboard!") {
+                    let detailStr = """
+                    Uncovered custom field query construct:
+                    OP: \(String(describing: op))
+                    Field: \(String(describing: field))
+                    Argument: \(String(describing: value))
+                    """
+                    Pasteboard.general.string = detailStr
+                    Logger.shared.warning("\(detailStr)")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.yellow)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.yellow)
         }
     }
 
