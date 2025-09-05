@@ -478,6 +478,17 @@
         }
       }
     },
+    "descriptionUnavailableOnCreate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        }
+      }
+    },
     "documentLinkEmptyLabel" : {
       "extractionState" : "manual",
       "localizations" : {

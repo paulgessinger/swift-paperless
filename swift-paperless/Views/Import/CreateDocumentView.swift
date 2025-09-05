@@ -316,6 +316,9 @@ struct CreateDocumentView: View {
                             }
                         }
                         .contentShape(Rectangle())
+
+                    } footer: {
+                        Text(.customFields(.descriptionUnavailableOnCreate))
                     }
                 }
             }

@@ -1,0 +1,1 @@
+- Add information on why you can't add custom fields when creating a new document
