@@ -481,10 +481,52 @@
     "descriptionUnavailableOnCreate" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucu yazılımındaki bir sınırlama nedeniyle **özel alanlar** bu aşamada eklenemez. Belgenin işlenmesi tamamlandıktan sonra belge üzerindeki özel alanları düzenleyebilirsiniz."
           }
         }
       }
@@ -2461,8 +2503,8 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Unbekanntes Feld #%u"
           }
         },
         "en" : {
