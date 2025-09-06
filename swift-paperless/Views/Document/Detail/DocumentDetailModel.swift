@@ -37,6 +37,7 @@ class DocumentDetailModel {
 
     var document: Document
 
+    // Not fully used by the edit model yet (I think we're loading suggestions twice right now)
     var suggestions: Suggestions?
 
     var metadata: Metadata?
@@ -103,6 +104,7 @@ class DocumentDetailModel {
         suggestions = try await store.repository.suggestions(documentId: document.id)
     }
 
+    // @TODO: There are separate implementations of this and canDelete in the document list and the document edit view: HARMONIZE!
     var userCanChange: Bool {
         if !store.permissions.test(.change, for: .document) {
             return false

@@ -90,8 +90,42 @@ struct DocumentEditView: View {
         !modified || document.title.isEmpty || !isAsnValid
     }
 
+    // @TODO: Unify this with the detail view model
     private var canEdit: Bool {
-        store.permissions.test(.change, for: .document)
+        if !store.permissions.test(.change, for: .document) {
+            return false
+        }
+
+        guard let user = store.currentUser else {
+            // We should always have a user
+            Logger.shared.warning("No user found in store when checking document change permissions (weird)")
+            return false
+        }
+
+        return user.canChange(documentOut)
+    }
+
+    // @TODO: Centralize this with detail view model
+    private var canDelete: Bool {
+        if !store.permissions.test(.change, for: .document) {
+            return false
+        }
+
+        if document.owner == .none {
+            return true
+        }
+
+        guard let user = store.currentUser else {
+            // We should always have a user
+            Logger.shared.warning("No user found in store when checking document delete permissions (weird)")
+            return false
+        }
+
+        if document.owner == .user(user.id) {
+            return true
+        }
+
+        return false
     }
 
     @State private var saving = false
@@ -307,31 +341,33 @@ struct DocumentEditView: View {
                 }
 
                 Section {
-                    Button(action: {
-                        if appSettings.documentDeleteConfirmation {
-                            showDeleteConfirmation = true
-                        } else {
-                            doDocumentDelete()
+                    if store.permissions.test(.delete, for: .document) {
+                        Button(action: {
+                            if appSettings.documentDeleteConfirmation {
+                                showDeleteConfirmation = true
+                            } else {
+                                doDocumentDelete()
+                            }
+                        }) {
+                            Label(localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+                                  systemImage: deleted ? "checkmark.circle.fill" : "trash")
+                                .contentTransition(.symbolEffect)
                         }
-                    }) {
-                        Label(localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
-                              systemImage: deleted ? "checkmark.circle.fill" : "trash")
-                            .contentTransition(.symbolEffect)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .foregroundColor(Color.red)
-                    .bold()
-                    .disabled(!store.permissions.test(.delete, for: .document))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .foregroundColor(Color.red)
+                        .bold()
+                        .disabled(!canDelete)
 
-                    .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
-                                        isPresented: $showDeleteConfirmation,
-                                        titleVisibility: .visible)
-                    {
-                        Button(String(localized: .localizable(.delete)), role: .destructive) {
-                            // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
-                            doDocumentDelete()
+                        .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
+                                            isPresented: $showDeleteConfirmation,
+                                            titleVisibility: .visible)
+                        {
+                            Button(String(localized: .localizable(.delete)), role: .destructive) {
+                                // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
+                                doDocumentDelete()
+                            }
+                            Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                         }
-                        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
                     }
                 }
                 .animation(.default, value: deleted)
