@@ -718,6 +718,20 @@ extension ApiRepository: Repository {
         try await all(CustomField.self)
     }
 
+    // MARK: Server configuration
+
+    public func serverConfiguration() async throws -> ServerConfiguration {
+        let request = try request(.appConfiguration())
+        let configurations = try await fetchData(for: request, as: [ServerConfiguration].self)
+
+        guard let firstConfig = configurations.first else {
+            Logger.networking.error("No server configuration found")
+            throw RequestError.invalidResponse
+        }
+
+        return firstConfig
+    }
+
     // MARK: Others
 
     public func currentUser() async throws -> User {

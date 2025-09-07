@@ -30,6 +30,8 @@ final class DocumentStore: ObservableObject, Sendable {
 
     @Published private(set) var customFields: [UInt: CustomField] = [:]
 
+    @Published private(set) var serverConfiguration: ServerConfiguration?
+
     @Published private(set) var tasks: [PaperlessTask] = []
 
     @Published
@@ -125,6 +127,7 @@ final class DocumentStore: ObservableObject, Sendable {
         users = [:]
         groups = [:]
         currentUser = nil
+        serverConfiguration = nil
         tasks = []
         permissions = .empty
         settings = UISettingsSettings()
@@ -285,6 +288,17 @@ final class DocumentStore: ObservableObject, Sendable {
                            collection: \.customFields)
     }
 
+    func fetchServerConfiguration() async throws {
+        do {
+            serverConfiguration = try await repository.serverConfiguration()
+        } catch let error where error.isCancellationError {
+            Logger.shared.debug("Cancelled fetch server configuration")
+        } catch {
+            Logger.shared.error("Unable to get server configuration: \(error)")
+            throw error
+        }
+    }
+
     func fetchAll() async throws {
         // @TODO: This gets called concurrently during startup, maybe debounce
         Logger.shared.notice("Fetch all store request")
@@ -306,7 +320,8 @@ final class DocumentStore: ObservableObject, Sendable {
                          fetchCurrentUser,
                          fetchAllUsers,
                          fetchAllGroups,
-                         fetchAllCustomFields]
+                         fetchAllCustomFields,
+                         fetchServerConfiguration]
             {
                 group.addTask { try await task() }
             }

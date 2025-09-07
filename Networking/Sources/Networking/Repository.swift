@@ -135,6 +135,10 @@ public protocol Repository: Sendable, Actor {
     func customFields() async throws -> [CustomField]
     // @TODO: Implement other methods eventually
 
+    // MARK: Server configuration
+
+    func serverConfiguration() async throws -> ServerConfiguration
+
     // MARK: Others
 
     func currentUser() async throws -> User

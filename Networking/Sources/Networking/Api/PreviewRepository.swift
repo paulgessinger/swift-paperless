@@ -379,6 +379,10 @@ public actor PreviewRepository: Repository {
 
     public func customFields() async -> [CustomField] { [] }
 
+    public func serverConfiguration() async throws -> ServerConfiguration {
+        ServerConfiguration(id: 1, barcodeAsnPrefix: "ASN")
+    }
+
     public nonisolated
     var delegate: (any URLSessionDelegate)? { nil }
 
