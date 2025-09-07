@@ -593,6 +593,12 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
         .sheet(isPresented: $showEditSheet) {
             editDetent = defaultEditDetent
+            if !viewModel.userCanView {
+                navPath?.wrappedValue.removeLast()
+                // This should notify the document list that it needs to refresh
+                viewModel.store.eventPublisher.send(.changeReceived(document: viewModel.document))
+            }
+
         } content: {
             DocumentEditView(store: viewModel.store,
                              document: $viewModel.document,

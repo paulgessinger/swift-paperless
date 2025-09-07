@@ -168,6 +168,63 @@ struct DocumentEditView: View {
         }
     }
 
+    private func saveDocument() {
+        // Figure out if we're expecting the visibility of the document to change
+        var expectedVisibilityChange = false
+        var expectedEditabilityChange = false
+
+        if let user = store.currentUser {
+            let oldVisibility = user.canView(documentOut)
+            let newVisibility = user.canView(document)
+            expectedVisibilityChange = oldVisibility != newVisibility
+
+            let oldEditability = user.canChange(documentOut)
+            let newEditability = user.canChange(document)
+            expectedEditabilityChange = oldEditability != newEditability
+        }
+
+        Task {
+            do {
+                saving = true
+                try validateCustomFields()
+                documentOut = try await store.updateDocument(document)
+                saving = false
+                dismiss()
+            } catch let RequestError.unexpectedStatusCode(code, detail) where code == .notFound {
+                if expectedVisibilityChange {
+                    // We're expecting this document to become invisible to us, so this is not a problem
+                    Logger.shared.info("Document update resulted in \(code.rawValue, privacy: .public) as expected due to permission")
+                    // Save this version so that the view hierarchy can see that we no longer have view access
+                    documentOut = document
+                    dismiss()
+                } else {
+                    let error = RequestError.unexpectedStatusCode(code: code, detail: detail)
+                    Logger.shared.error("Error updating document: \(error)")
+                    errorController.push(error: error)
+                }
+
+                saving = false
+            } catch let RequestError.forbidden(body) {
+                if expectedEditabilityChange {
+                    // We're expecting this document to become non-editable to us, so this is not a problem
+                    Logger.shared.info("Document update resulted in forbidden as expected due to permission")
+                    // Save this version so that the view hierarchy can see that we no longer have edit access
+                    documentOut = document
+                } else {
+                    let error = RequestError.forbidden(detail: body)
+                    Logger.shared.error("Error updating document: \(error)")
+                    errorController.push(error: error)
+                }
+
+                saving = false
+            } catch {
+                Logger.shared.error("Error updating document: \(error)")
+                errorController.push(error: error)
+                saving = false
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -381,18 +438,7 @@ struct DocumentEditView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        Task {
-                            do {
-                                saving = true
-                                try validateCustomFields()
-                                documentOut = try await store.updateDocument(document)
-                                saving = false
-                                dismiss()
-                            } catch {
-                                errorController.push(error: error)
-                                saving = false
-                            }
-                        }
+                        saveDocument()
                     } label: {
                         if !saving {
                             Text(.localizable(.save))

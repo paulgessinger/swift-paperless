@@ -1,0 +1,2 @@
+- Added a view for showing and exporting logs. This should hopefully circumvent issues with log file export
+- Correctly handle view and edit permissions going away while editing a document

@@ -118,4 +118,18 @@ class DocumentDetailModel {
 
         return user.canChange(document)
     }
+
+    var userCanView: Bool {
+        if !store.permissions.test(.view, for: .document) {
+            return false
+        }
+
+        guard let user = store.currentUser else {
+            // We should always have a user
+            Logger.shared.warning("No user found in store when checking document view permissions (weird)")
+            return false
+        }
+
+        return user.canView(document)
+    }
 }
