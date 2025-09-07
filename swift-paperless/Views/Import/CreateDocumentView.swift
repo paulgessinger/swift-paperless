@@ -121,7 +121,9 @@ struct CreateDocumentView: View {
     @State private var document = ProtoDocument()
     @State private var status = Status.none
     @State private var isAsnValid = true
-    @State private var useOriginalTitle = false
+
+    @AppStorage("CreateDocumentUseOriginalTitle", store: .group,)
+    private var useOriginalTitle = false
 
     private var isDocumentValid: Bool {
         isAsnValid && !document.title.isEmpty
