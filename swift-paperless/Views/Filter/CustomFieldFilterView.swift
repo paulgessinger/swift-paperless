@@ -69,21 +69,27 @@ private struct OpView: View {
             } footer: {}
 
             Section {
-                // If we don't have one, what's the point of adding an expr?
-                if let defaultField {
-                    Button {
-                        op.args.append(.expr(defaultField.id, .exists, .string("true")))
-                    } label: {
-                        Label(localized: .customFields(.addExprButtonLabel), systemImage: "plus.square.fill")
-                    }
-                }
-
                 Button {
                     op.args.append(.op(.or, []))
                 } label: {
                     Label(localized: .customFields(.addOpButtonLabel), systemImage: "curlybraces.square.fill")
                 }
+
+                Button {
+                    if let defaultField {
+                        op.args.append(.expr(defaultField.id, .exists, .string("true")))
+                    }
+                } label: {
+                    Label(localized: .customFields(.addExprButtonLabel), systemImage: "plus.square.fill")
+                }
+                .disabled(defaultField == nil)
+
+            } footer: {
+                if defaultField == nil {
+                    Text(.customFields(.noCustomFields))
+                }
             }
+
             .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
         }
         .animation(.spring, value: op)
