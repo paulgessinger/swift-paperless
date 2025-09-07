@@ -6,14 +6,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Indstil brugerdefineret feltfilter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Benutzerdefinierten Feldfilter einstellen"
           }
         },
         "en" : {
@@ -24,26 +24,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Définir un filtre pour les champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Impostare il filtro del campo personalizzato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Aangepaste veldfilter instellen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set custom field filter"
+            "state" : "translated",
+            "value" : "Ustaw niestandardowy filtr pól"
           }
         },
         "tr" : {
@@ -59,14 +59,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Tilføj udtryk"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Ausdruck hinzufügen"
           }
         },
         "en" : {
@@ -77,26 +77,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Ajouter une expression"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Aggiungi espressione"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Uitdrukking toevoegen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add expression"
+            "state" : "translated",
+            "value" : "Dodaj wyrażenie"
           }
         },
         "tr" : {
@@ -112,14 +112,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Tilføj logisk operation"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Logische Operation hinzufügen"
           }
         },
         "en" : {
@@ -130,26 +130,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Ajouter une opération logique"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Aggiungere un'operazione logica"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Logische bewerking toevoegen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add logical operation"
+            "state" : "translated",
+            "value" : "Dodaj operację logiczną"
           }
         },
         "tr" : {
@@ -165,8 +165,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Tilføj brugerdefineret felt"
           }
         },
         "de" : {
@@ -183,26 +183,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Ajouter un champ personnalisé"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Aggiungere un campo personalizzato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Aangepast veld toevoegen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add custom field"
+            "state" : "translated",
+            "value" : "Dodaj pole niestandardowe"
           }
         },
         "tr" : {
@@ -218,14 +218,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Intet brugerdefineret feltfilter indstillet"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Kein benutzerdefinierter Feldfilter gesetzt"
           }
         },
         "en" : {
@@ -236,26 +236,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Aucun filtre de champ personnalisé n'a été défini"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Nessun filtro di campo personalizzato impostato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Geen aangepast veld filter ingesteld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom field filter set"
+            "state" : "translated",
+            "value" : "Brak ustawionego filtra pól niestandardowych"
           }
         },
         "tr" : {
@@ -271,14 +271,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Ryd brugerdefineret feltfilter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Benutzerdefinierten Feldfilter löschen"
           }
         },
         "en" : {
@@ -289,26 +289,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Effacer le filtre des champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Cancella il filtro del campo personalizzato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Filter voor aangepaste velden wissen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear custom field filter"
+            "state" : "translated",
+            "value" : "Wyczyść filtr pól niestandardowych"
           }
         },
         "tr" : {
@@ -324,8 +324,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Sæt dato"
           }
         },
         "de" : {
@@ -342,26 +342,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Fixer la date"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Data stabilita"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Datum instellen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Set date"
+            "state" : "translated",
+            "value" : "Ustalona data"
           }
         },
         "tr" : {
@@ -377,8 +377,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Slet datoværdien"
           }
         },
         "de" : {
@@ -395,26 +395,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Effacer la valeur de la date"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Cancella il valore della data"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "De datumwaarde wissen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear the date value"
+            "state" : "translated",
+            "value" : "Wyczyść wartość daty"
           }
         },
         "tr" : {
@@ -430,8 +430,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Sletning"
           }
         },
         "de" : {
@@ -448,26 +448,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Supprimer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Cancellare"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Verwijder"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Usuń"
           }
         },
         "tr" : {
@@ -481,10 +481,52 @@
     "descriptionUnavailableOnCreate" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Brugerdefinerede felter** kan ikke tilføjes på dette tidspunkt på grund af en begrænsning i serversoftwaren. Du kan redigere brugerdefinerede felter i dokumentet, når det er færdigbehandlet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Benutzerdefinierte Felder** können in diesem Stadium aufgrund einer Einschränkung in der Serversoftware nicht hinzugefügt werden. Du kannst benutzerdefinierte Felder im Dokument bearbeiten, sobald die Verarbeitung abgeschlossen ist."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Les champs personnalisés** ne peuvent pas être ajoutés à ce stade, en raison d'une limitation du logiciel du serveur. Vous pouvez modifier les champs personnalisés sur le document une fois qu'il a été traité."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I **campi personalizzati** non possono essere aggiunti in questa fase, a causa di una limitazione del software del server. È possibile modificare i campi personalizzati sul documento una volta terminata l'elaborazione."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Aangepaste velden** kunnen in dit stadium niet worden toegevoegd vanwege een beperking in de serversoftware. Je kunt aangepaste velden in het document bewerken zodra het verwerkt is."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Pola niestandardowe** nie mogą być dodawane na tym etapie ze względu na ograniczenia w oprogramowaniu serwera. Pola niestandardowe można edytować w dokumencie po zakończeniu jego przetwarzania."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucu yazılımındaki bir sınırlama nedeniyle **özel alanlar** bu aşamada eklenemez. Belgenin işlenmesi tamamlandıktan sonra belge üzerindeki özel alanları düzenleyebilirsiniz."
           }
         }
       }
@@ -494,8 +536,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Vælg"
           }
         },
         "de" : {
@@ -512,26 +554,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Sélectionner"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Selezionare"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Selecteer"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "Wybierz"
           }
         },
         "tr" : {
@@ -547,8 +589,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Søg i dokumenter efter titel"
           }
         },
         "de" : {
@@ -565,26 +607,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Recherche de documents par titre"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Ricerca di documenti per titolo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Documenten zoeken op titel"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search documents by title"
+            "state" : "translated",
+            "value" : "Wyszukiwanie dokumentów według tytułu"
           }
         },
         "tr" : {
@@ -600,8 +642,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Udvalgt"
           }
         },
         "de" : {
@@ -618,26 +660,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Sélectionné"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Selezionato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Geselecteerd"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Selected"
+            "state" : "translated",
+            "value" : "Wybrane"
           }
         },
         "tr" : {
@@ -653,14 +695,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Gentag"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Wiederherstellen"
           }
         },
         "en" : {
@@ -671,25 +713,25 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Revenir en arrière"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Inversione di marcia"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Revert"
+            "state" : "translated",
+            "value" : "Terugkeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Revert"
           }
         },
@@ -706,8 +748,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** er ikke en gyldig dato. Det forventede format er \"2025-06-15\"."
           }
         },
         "de" : {
@@ -724,26 +766,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** n'est pas une date valide. Le format attendu est \"2025-06-15\"."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** non è una data valida. Il formato previsto è \"2025-06-15\"."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** is geen geldige datum. Het verwachte formaat is \"2025-06-15\"."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** is not a valid date. The expected format is “2025-06-15”."
+            "state" : "translated",
+            "value" : "**`%@`** nie jest prawidłową datą. Oczekiwany format to \"2025-06-15\"."
           }
         },
         "tr" : {
@@ -759,8 +801,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** kunne ikke analyseres som en monetær værdi. Det forventede format er \"USD1000.00\"."
           }
         },
         "de" : {
@@ -777,26 +819,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** n'a pas pu être analysé comme une valeur monétaire. Le format attendu est \"USD1000.00\"."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** non può essere analizzato come valore monetario. Il formato previsto è \"USD1000.00\"."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** kon niet worden geparseerd als een monetaire waarde. Het verwachte formaat is \"USD1000.00\"."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "**`%@`** could not be parsed as a monetary value. The expected format is “USD1000.00”."
+            "state" : "translated",
+            "value" : "**`%@`** nie mógł zostać przetworzony jako wartość pieniężna. Oczekiwany format to \"USD1000.00\"."
           }
         },
         "tr" : {
@@ -812,14 +854,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Ugyldig operator for denne brugerdefinerede felttype."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Ungültiger Operator für diesen benutzerdefinierten Feldtyp."
           }
         },
         "en" : {
@@ -830,26 +872,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Opérateur non valide pour ce type de champ personnalisé."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Operatore non valido per questo tipo di campo personalizzato."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Ongeldige operator voor dit aangepaste veldtype."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid operator for this custom field type."
+            "state" : "translated",
+            "value" : "Nieprawidłowy operator dla tego niestandardowego typu pola."
           }
         },
         "tr" : {
@@ -865,8 +907,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "Den givne mulighed med id \"%@\" er ikke en af de tilgængelige muligheder (%@)"
           }
         },
         "de" : {
@@ -883,26 +925,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "L'option donnée avec l'identifiant \"%@\" ne fait pas partie des options disponibles (%@)"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "L'opzione indicata con l'id \"%@\" non è una delle opzioni disponibili (%@)"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "De gegeven optie met id \"%@\" is niet een van de beschikbare opties (%@)"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given option with id “%@” is not one of the available options (%@)"
+            "state" : "translated",
+            "value" : "Podana opcja o id \"%@\" nie jest jedną z dostępnych opcji (%@)"
           }
         },
         "tr" : {
@@ -918,8 +960,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Nogle af de brugerdefinerede felter i dette dokument har en **ugyldig konfiguration**. Se de brugerdefinerede felter, der viser fejlmeddelelser, for flere detaljer.\n\nDu **kan ikke gemme** dokumentet i denne tilstand for at **forhindre tab af data**."
           }
         },
         "de" : {
@@ -936,26 +978,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Certains champs personnalisés de ce document ont une **configuration invalide**. Consultez les champs personnalisés affichant des messages d'erreur pour plus de détails.\n\nVous **ne pouvez pas enregistrer** le document dans cet état pour **éviter la perte de données**."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Alcuni dei campi personalizzati di questo documento presentano una **configurazione non valida**. Per maggiori dettagli, consultare i messaggi di errore dei campi personalizzati.\n\nNon è possibile salvare** il documento in questo stato per **evitare la perdita di dati**."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Sommige aangepaste velden in dit document hebben een **ongeldige configuratie**. Raadpleeg de aangepaste velden met foutmeldingen voor meer informatie.\n\nJe **kunt** het document niet opslaan** in deze status om **gegevensverlies** te voorkomen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Some of the custom fields in this document have an **invalid configuration**. Consult the custom field showing error messages for more details.\n\nYou **cannot save** the document in this state to **prevent data loss**."
+            "state" : "translated",
+            "value" : "Niektóre pola niestandardowe w tym dokumencie mają **nieprawidłową konfigurację**. Więcej informacji można znaleźć w polu niestandardowym wyświetlającym komunikaty o błędach.\n\nNie można **zapisać** dokumentu w tym stanie, aby **zapobiec utracie danych**."
           }
         },
         "tr" : {
@@ -971,8 +1013,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Ugyldige brugerdefinerede felter"
           }
         },
         "de" : {
@@ -989,26 +1031,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Champs personnalisés non valides"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Campi personalizzati non validi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Ongeldige aangepaste velden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid custom fields"
+            "state" : "translated",
+            "value" : "Nieprawidłowe pola niestandardowe"
           }
         },
         "tr" : {
@@ -1024,8 +1066,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` er ikke en gyldig URL."
           }
         },
         "de" : {
@@ -1042,26 +1084,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` n'est pas une URL valide."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` non è un URL valido."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` is geen geldige URL."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "`%@` is not a valid URL."
+            "state" : "translated",
+            "value" : "`%@` nie jest prawidłowym adresem URL."
           }
         },
         "tr" : {
@@ -1077,8 +1119,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Beløb"
           }
         },
         "de" : {
@@ -1095,26 +1137,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Montant"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Importo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Bedrag"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Amount"
+            "state" : "translated",
+            "value" : "Kwota"
           }
         },
         "tr" : {
@@ -1130,8 +1172,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Der findes ingen brugerdefinerede felter"
           }
         },
         "de" : {
@@ -1148,26 +1190,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Aucun champ personnalisé n'existe"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Non esistono campi personalizzati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Er bestaan geen aangepaste velden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields exist"
+            "state" : "translated",
+            "value" : "Nie istnieją pola niestandardowe"
           }
         },
         "tr" : {
@@ -1183,8 +1225,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Der kan ikke tilføjes nogen brugerdefinerede felter."
           }
         },
         "de" : {
@@ -1201,26 +1243,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Aucun champ personnalisé ne peut être ajouté."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Non è possibile aggiungere campi personalizzati."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Er kunnen geen aangepaste velden worden toegevoegd."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields are available to be added."
+            "state" : "translated",
+            "value" : "Nie ma możliwości dodania pól niestandardowych."
           }
         },
         "tr" : {
@@ -1236,8 +1278,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Ingen brugerdefinerede felter tilknyttet"
           }
         },
         "de" : {
@@ -1254,26 +1296,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Pas de champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Nessun campo personalizzato allegato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Geen aangepaste velden toegevoegd"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No custom fields attached"
+            "state" : "translated",
+            "value" : "Brak dołączonych pól niestandardowych"
           }
         },
         "tr" : {
@@ -1289,8 +1331,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Dette dokument har endnu ikke tilknyttet nogen brugerdefinerede felter. Du kan tilføje et fra værktøjslinjen."
           }
         },
         "de" : {
@@ -1307,26 +1349,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Ce document n'a pas encore de champs personnalisés. Vous pouvez en ajouter un à partir de la barre d'outils."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "A questo documento non sono ancora stati aggiunti campi personalizzati. È possibile aggiungerne uno dalla barra degli strumenti."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Aan dit document zijn nog geen aangepaste velden gekoppeld. Je kunt er een toevoegen via de werkbalk."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached yet. You can add one from the toolbar."
+            "state" : "translated",
+            "value" : "Ten dokument nie ma jeszcze dołączonych żadnych pól niestandardowych. Można je dodać za pomocą paska narzędzi."
           }
         },
         "tr" : {
@@ -1342,8 +1384,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "Dette dokument har ikke nogen brugerdefinerede felter tilknyttet."
           }
         },
         "de" : {
@@ -1360,26 +1402,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "Ce document ne comporte pas de champs personnalisés."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "A questo documento non sono allegati campi personalizzati."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "Aan dit document zijn geen aangepaste velden gekoppeld."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This document does not have any custom fields attached."
+            "state" : "translated",
+            "value" : "Ten dokument nie zawiera żadnych pól niestandardowych."
           }
         },
         "tr" : {
@@ -1395,8 +1437,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Ingen dato er fastsat i øjeblikket"
           }
         },
         "de" : {
@@ -1413,26 +1455,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Aucune date n'est actuellement fixée"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Al momento non è stata fissata alcuna data"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Er is momenteel geen datum vastgesteld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No date is currently set"
+            "state" : "translated",
+            "value" : "Obecnie nie ustalono żadnej daty"
           }
         },
         "tr" : {
@@ -1448,14 +1490,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "en" : {
@@ -1466,26 +1508,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tous"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Tutti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Alle"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All"
+            "state" : "translated",
+            "value" : "Wszystkie"
           }
         },
         "tr" : {
@@ -1501,13 +1543,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Argument"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Argument"
           }
         },
@@ -1519,25 +1561,25 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Argument"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Argument"
+            "state" : "translated",
+            "value" : "Argomento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Argument"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Argument"
           }
         },
@@ -1554,14 +1596,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Indeholder"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Enthält"
           }
         },
         "en" : {
@@ -1572,26 +1614,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Contient"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Contiene"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Bevat"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains"
+            "state" : "translated",
+            "value" : "Zawiera"
           }
         },
         "tr" : {
@@ -1607,14 +1649,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Indeholder (skelner ikke mellem store og små bogstaver)"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Enthält (Groß- und Kleinschreibung wird nicht berücksichtigt)"
           }
         },
         "en" : {
@@ -1625,26 +1667,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Contient (insensible à la casse)"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Contiene (senza distinzione tra maiuscole e minuscole)"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Bevat (hoofdlettergevoelig)"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Contains (case-insensitive)"
+            "state" : "translated",
+            "value" : "Zawiera (wielkość liter nie ma znaczenia)"
           }
         },
         "tr" : {
@@ -1660,14 +1702,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Lig med"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Ist gleich"
           }
         },
         "en" : {
@@ -1678,26 +1720,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Egale à"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Pari a"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Gelijk aan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Equal to"
+            "state" : "translated",
+            "value" : "Równy"
           }
         },
         "tr" : {
@@ -1713,14 +1755,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Eksisterer"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Existiert"
           }
         },
         "en" : {
@@ -1731,26 +1773,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Existe"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Esiste"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Bestaat"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exists"
+            "state" : "translated",
+            "value" : "Istnieje"
           }
         },
         "tr" : {
@@ -1766,14 +1808,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Felt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Feld"
           }
         },
         "en" : {
@@ -1784,26 +1826,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Champ"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Campo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Veld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Field"
+            "state" : "translated",
+            "value" : "Pole"
           }
         },
         "tr" : {
@@ -1819,14 +1861,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Større end"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Größer als"
           }
         },
         "en" : {
@@ -1837,26 +1879,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Supérieure à"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Maggiore di"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Groter dan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than"
+            "state" : "translated",
+            "value" : "Większy niż"
           }
         },
         "tr" : {
@@ -1872,14 +1914,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Større end eller lig med"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Größer als oder gleich"
           }
         },
         "en" : {
@@ -1890,26 +1932,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Supérieur ou égal"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Maggiore o uguale"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Groter dan of gelijk aan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Greater than or equal"
+            "state" : "translated",
+            "value" : "Większy lub równy"
           }
         },
         "tr" : {
@@ -1925,14 +1967,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In"
+            "state" : "translated",
+            "value" : "I"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In"
+            "state" : "translated",
+            "value" : "Enthält"
           }
         },
         "en" : {
@@ -1943,26 +1985,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In"
+            "state" : "translated",
+            "value" : "Dans"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "In"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "In"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In"
+            "state" : "translated",
+            "value" : "W"
           }
         },
         "tr" : {
@@ -1978,14 +2020,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Forespørgsel om brugerdefineret felt rapporteres at være ugyldig af serveren. Ret venligst din forespørgsel for at fortsætte!"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Die Abfrage des benutzerdefinierten Feldes wird vom Server als ungültig gemeldet. Bitte korrigiere die Abfrage, um fortzufahren!"
           }
         },
         "en" : {
@@ -1996,26 +2038,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Le serveur a signalé que la requête du champ personnalisé n'était pas valide. Veuillez corriger votre requête pour continuer !"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "La query del campo personalizzato non è stata ritenuta valida dal server. Correggere la query per procedere!"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Aangepaste veldquery is ongeldig gemeld door de server. Corrigeer uw query om verder te gaan!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field query is reported to be invalid by the server. Please correct your query to proceed!"
+            "state" : "translated",
+            "value" : "Serwer zgłosił, że zapytanie o pole niestandardowe jest nieprawidłowe. Popraw zapytanie, aby kontynuować!"
           }
         },
         "tr" : {
@@ -2031,14 +2073,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "Er null"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "Ist null"
           }
         },
         "en" : {
@@ -2049,25 +2091,25 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "Est nul"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "È nullo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Is null"
+            "state" : "translated",
+            "value" : "Is nietig"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Is null"
           }
         },
@@ -2084,14 +2126,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Mindre end"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Kleiner als"
           }
         },
         "en" : {
@@ -2102,26 +2144,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Inférieur à"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Meno di"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Minder dan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than"
+            "state" : "translated",
+            "value" : "Mniej niż"
           }
         },
         "tr" : {
@@ -2137,14 +2179,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Mindre end eller lig med"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Kleiner als oder gleich"
           }
         },
         "en" : {
@@ -2155,26 +2197,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Inférieur ou égal"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Minore o uguale"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Minder dan of gelijk aan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less than or equal"
+            "state" : "translated",
+            "value" : "Mniejszy lub równy"
           }
         },
         "tr" : {
@@ -2190,13 +2232,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Operator"
+            "state" : "translated",
+            "value" : "Operatør"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Operator"
           }
         },
@@ -2208,25 +2250,25 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Operator"
+            "state" : "translated",
+            "value" : "Opérateur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Operator"
+            "state" : "translated",
+            "value" : "Operatore"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Operator"
+            "state" : "translated",
+            "value" : "Exploitant"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Operator"
           }
         },
@@ -2243,14 +2285,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Enhver"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Beliebig"
           }
         },
         "en" : {
@@ -2261,26 +2303,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "N'importe lequel"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Qualsiasi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Elke"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Any"
+            "state" : "translated",
+            "value" : "Dowolny"
           }
         },
         "tr" : {
@@ -2296,8 +2338,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Søg i brugerdefinerede felter"
           }
         },
         "de" : {
@@ -2314,26 +2356,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Recherche dans les champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Ricerca campi personalizzati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Aangepaste velden zoeken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Search custom fields"
+            "state" : "translated",
+            "value" : "Wyszukiwanie pól niestandardowych"
           }
         },
         "tr" : {
@@ -2349,8 +2391,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Brugerdefinerede felter"
           }
         },
         "de" : {
@@ -2367,26 +2409,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Campi personalizzati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Aangepaste velden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Pola niestandardowe"
           }
         },
         "tr" : {
@@ -2402,8 +2444,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "Værdien **`%@`**, der blev returneret af serveren, kunne ikke fortolkes med datatypen **`%@`** for dette brugerdefinerede felt. Dette kan være en intern data-inkonsistens. "
           }
         },
         "de" : {
@@ -2420,26 +2462,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "La valeur **`%@`** renvoyée par le serveur n'a pas pu être interprétée avec le type de données **`%@`** de ce champ personnalisé. Il peut s'agir d'une incohérence interne des données. "
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "Il valore **`%@`** restituito dal server non può essere interpretato con il tipo di dati **`%@`** di questo campo personalizzato. Potrebbe trattarsi di un'incoerenza interna dei dati. "
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "De waarde **`%@`** die is teruggestuurd door de server kan niet worden geïnterpreteerd met het gegevenstype **`%@`** van dit aangepaste veld. Dit kan een interne gegevensinconsistentie zijn. "
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The value **`%@`** that was returned by the server could not be interpreted with the data type **`%@`** of this custom field. This could be an internal data inconsistency. "
+            "state" : "translated",
+            "value" : "Wartość **`%@`** zwrócona przez serwer nie mogła zostać zinterpretowana z typem danych **`%@`** tego pola niestandardowego. Może to być wewnętrzna niespójność danych. "
           }
         },
         "tr" : {
@@ -2455,14 +2497,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Ukendt felt #%u"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Unbekanntes Feld #%u"
           }
         },
         "en" : {
@@ -2473,26 +2515,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Champ inconnu #%u"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Campo sconosciuto #%u"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Onbekend veld #%u"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown field #%u"
+            "state" : "translated",
+            "value" : "Nieznane pole #%u"
           }
         },
         "tr" : {
@@ -2508,8 +2550,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Datatypen **%@** for dette brugerdefinerede felt er ikke implementeret i appen. Dette er sandsynligvis en inkompatibilitet mellem appen og serverversionen."
           }
         },
         "de" : {
@@ -2526,26 +2568,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Le type de données **%@** de ce champ personnalisé n'est pas implémenté dans l'application. Il s'agit probablement d'une incompatibilité entre l'application et la version du serveur."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Il tipo di dati **%@** di questo campo personalizzato non è implementato nell'applicazione. Si tratta probabilmente di un'incompatibilità tra l'applicazione e la versione del server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Het gegevenstype **%@** van dit aangepaste veld is niet geïmplementeerd in de app. Dit is waarschijnlijk een incompatibiliteit tussen de app en de serverversie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The data type **%@** of this custom field is not implemented in the app. This is likely an incompatibility between the app and the server version."
+            "state" : "translated",
+            "value" : "Typ danych **%@** tego pola niestandardowego nie jest zaimplementowany w aplikacji. Jest to prawdopodobnie niezgodność między aplikacją a wersją serwera."
           }
         },
         "tr" : {
@@ -2561,8 +2603,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Den givne brugerdefinerede feltværdi kunne ikke afkodes. Dette kan være en inkompatibilitet mellem app- og serverversionen."
           }
         },
         "de" : {
@@ -2579,26 +2621,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "La valeur du champ personnalisé n'a pas pu être décodée. Il peut s'agir d'une incompatibilité entre la version de l'application et celle du serveur."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Non è stato possibile decodificare il valore del campo personalizzato indicato. Potrebbe trattarsi di un'incompatibilità tra la versione dell'applicazione e quella del server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "De opgegeven aangepaste veldwaarde kon niet worden gedecodeerd. Dit kan een incompatibiliteit zijn tussen de app en de serverversie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The given custom field value could not be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Nie można zdekodować podanej wartości pola niestandardowego. Może to być niezgodność między wersją aplikacji i serwera."
           }
         },
         "tr" : {
@@ -2614,8 +2656,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Kunne ikke kode en brugerdefineret feltværdi, som oprindeligt ikke kunne afkodes. Dette kan være en inkompatibilitet mellem app- og serverversionen."
           }
         },
         "de" : {
@@ -2632,26 +2674,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Impossible d'encoder une valeur de champ personnalisé qui ne pouvait pas être décodée à l'origine. Il peut s'agir d'une incompatibilité entre la version de l'application et celle du serveur."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Impossibile codificare il valore di un campo personalizzato che in origine non poteva essere decodificato. Potrebbe trattarsi di un'incompatibilità tra la versione dell'applicazione e quella del server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Een aangepaste veldwaarde die oorspronkelijk niet kon worden gedecodeerd, kon niet worden gecodeerd. Dit kan een incompatibiliteit zijn tussen de app en de serverversie."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not encode a custom field value that could not originally be decoded. This could be an incompatibility between the app and server version."
+            "state" : "translated",
+            "value" : "Nie można zakodować wartości pola niestandardowego, której pierwotnie nie można było zdekodować. Może to być niezgodność między wersją aplikacji i serwera."
           }
         },
         "tr" : {
@@ -2667,8 +2709,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Ukendt værdi for brugerdefineret felt"
           }
         },
         "de" : {
@@ -2685,26 +2727,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Valeur inconnue du champ personnalisé"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Valore del campo personalizzato sconosciuto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Onbekende aangepaste veldwaarde"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field value"
+            "state" : "translated",
+            "value" : "Nieznana wartość pola niestandardowego"
           }
         },
         "tr" : {
@@ -2720,8 +2762,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Ugyldig"
           }
         },
         "de" : {
@@ -2738,26 +2780,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Invalide"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Non valido"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Ongeldig"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid"
+            "state" : "translated",
+            "value" : "Nieprawidłowy"
           }
         },
         "tr" : {
@@ -2773,8 +2815,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Åben"
           }
         },
         "de" : {
@@ -2791,26 +2833,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Ouvrir"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Aperto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Open"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Open"
+            "state" : "translated",
+            "value" : "Otwarty"
           }
         },
         "tr" : {

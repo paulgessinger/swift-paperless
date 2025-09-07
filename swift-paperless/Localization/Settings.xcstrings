@@ -2129,10 +2129,52 @@
     "logs" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logfiler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Logs"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Journaux"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registri"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logboeken"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzienniki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükler"
           }
         }
       }
@@ -2248,8 +2290,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Noter til udgivelsen"
           }
         },
         "de" : {
@@ -2272,20 +2314,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Note di rilascio"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Release-opmerkingen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Release notes"
+            "state" : "translated",
+            "value" : "Informacje o wersji"
           }
         },
         "tr" : {
