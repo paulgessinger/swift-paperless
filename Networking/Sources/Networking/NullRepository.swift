@@ -75,6 +75,10 @@ public actor NullRepository: Repository {
 
     public func customFields() async -> [CustomField] { [] }
 
+    public func serverConfiguration() async throws -> ServerConfiguration {
+        ServerConfiguration(id: 0, barcodeAsnPrefix: nil)
+    }
+
     public func currentUser() async throws -> User {
         throw NotImplemented()
     }

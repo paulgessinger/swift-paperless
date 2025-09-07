@@ -49,6 +49,24 @@ private func makeAsnUrlPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
     return nil
 }
 
+@MainActor
+private func makeBarcodeAsnPrefixPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
+    guard let prefix = store.serverConfiguration?.barcodeAsnPrefix, !prefix.isEmpty else {
+        return nil
+    }
+    Logger.shared.info("Making barcode ASN prefix pattern \(prefix, privacy: .public)")
+
+    let escapedPrefix = NSRegularExpression.escapedPattern(for: prefix)
+
+    do {
+        return try Regex("^\(escapedPrefix)(\\d+)$")
+    } catch {
+        Logger.shared.error("Error making barcode ASN prefix expression: \(error, privacy: .public)")
+    }
+
+    return nil
+}
+
 struct HighlightView: View {
     var text: String
 
@@ -68,10 +86,17 @@ struct HighlightView: View {
 
     var asnUrlPattern: [Regex<AnyRegexOutput>] {
         // @TODO: Can I cache this somehow?
-        if let pattern = makeAsnUrlPattern(store: store) {
-            return [pattern]
+        var patterns: [Regex<AnyRegexOutput>] = []
+
+        if let urlPattern = makeAsnUrlPattern(store: store) {
+            patterns.append(urlPattern)
         }
-        return []
+
+        if let barcodePattern = makeBarcodeAsnPrefixPattern(store: store) {
+            patterns.append(barcodePattern)
+        }
+
+        return patterns
     }
 
     private var asn: UInt? { extractAsn(text, patterns: asnUrlPattern) }
@@ -225,8 +250,11 @@ struct HighlightView: View {
                 }
 
                 var patterns: [Regex<AnyRegexOutput>] = []
-                if let pattern = makeAsnUrlPattern(store: parent.store) {
-                    patterns.append(pattern)
+                if let urlPattern = makeAsnUrlPattern(store: parent.store) {
+                    patterns.append(urlPattern)
+                }
+                if let barcodePattern = makeBarcodeAsnPrefixPattern(store: parent.store) {
+                    patterns.append(barcodePattern)
                 }
 
                 guard let asn = extractAsn(payload, patterns: patterns) else {

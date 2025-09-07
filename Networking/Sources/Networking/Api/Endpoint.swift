@@ -213,6 +213,10 @@ public extension Endpoint {
         Endpoint(path: "/api/custom_fields", queryItems: [URLQueryItem(name: "page_size", value: String(100_000))])
     }
 
+    static func appConfiguration() -> Endpoint {
+        Endpoint(path: "/api/config")
+    }
+
     static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
         var segment = ""
         switch type {

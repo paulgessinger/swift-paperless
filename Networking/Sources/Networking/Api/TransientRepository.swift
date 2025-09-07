@@ -352,6 +352,12 @@ extension TransientRepository: Repository {
         customFields.map(\.value)
     }
 
+    // MARK: - Server Configuration
+
+    public func serverConfiguration() async throws -> ServerConfiguration {
+        ServerConfiguration(id: 1, barcodeAsnPrefix: nil)
+    }
+
     // This is not part of the `Repository` protocol, but it's useful for testing
     public func add(customField: CustomField) async throws -> CustomField {
         customFields[customField.id] = customField
