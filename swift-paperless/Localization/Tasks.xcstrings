@@ -1387,8 +1387,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Opgave"
           }
         },
         "de" : {
@@ -1411,20 +1411,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Compito"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Taak"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Task"
+            "state" : "translated",
+            "value" : "Zadanie"
           }
         },
         "tr" : {

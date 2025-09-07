@@ -324,8 +324,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Bemærk"
           }
         },
         "de" : {
@@ -348,20 +348,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Nota"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Opmerking"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Note"
+            "state" : "translated",
+            "value" : "Uwaga"
           }
         },
         "tr" : {

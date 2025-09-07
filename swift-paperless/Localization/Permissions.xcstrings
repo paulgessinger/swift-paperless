@@ -6,8 +6,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Tilføj"
           }
         },
         "de" : {
@@ -30,20 +30,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Aggiungi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Voeg toe"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "Dodaj"
           }
         },
         "tr" : {
@@ -60,8 +60,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Du vil ikke længere kunne ændre dette objekt!"
           }
         },
         "de" : {
@@ -84,20 +84,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Non sarà più possibile modificare questo oggetto!"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Je zult dit object niet langer kunnen wijzigen!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to change this object!"
+            "state" : "translated",
+            "value" : "Nie będzie już można zmienić tego obiektu!"
           }
         },
         "tr" : {
@@ -114,8 +114,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Du vil ikke længere kunne se dette objekt!"
           }
         },
         "de" : {
@@ -138,20 +138,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Non sarà più possibile visualizzare questo oggetto!"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Je zult dit object niet langer kunnen bekijken!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view this object!"
+            "state" : "translated",
+            "value" : "Nie będziesz już mógł oglądać tego obiektu!"
           }
         },
         "tr" : {
@@ -168,8 +168,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Du vil ikke længere kunne se eller ændre dette objekt!"
           }
         },
         "de" : {
@@ -192,20 +192,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Non sarà più possibile visualizzare o modificare questo oggetto!"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Je zult dit object niet langer kunnen bekijken of wijzigen!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You will no longer be able to view or change this object!"
+            "state" : "translated",
+            "value" : "Nie będzie już można wyświetlić ani zmienić tego obiektu!"
           }
         },
         "tr" : {
@@ -274,8 +274,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Kopi af resumé"
           }
         },
         "de" : {
@@ -298,20 +298,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Riassunto della copia"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Samenvatting kopiëren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy summary"
+            "state" : "translated",
+            "value" : "Podsumowanie kopii"
           }
         },
         "tr" : {
@@ -327,8 +327,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Sletning"
           }
         },
         "de" : {
@@ -351,20 +351,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Cancellare"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Verwijder"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "Usuń"
           }
         },
         "tr" : {
@@ -539,8 +539,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se korrespondenter."
           }
         },
         "de" : {
@@ -563,20 +563,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Non hai il permesso di visualizzare i corrispondenti."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om correspondenten te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view correspondents."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania korespondentów."
           }
         },
         "tr" : {
@@ -592,8 +592,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se brugerdefinerede felter."
           }
         },
         "de" : {
@@ -610,26 +610,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Vous n'avez pas le droit d'afficher les champs personnalisés."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Non si dispone dei permessi per visualizzare i campi personalizzati."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Je hebt geen rechten om aangepaste velden te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permissions to view custom fields."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania pól niestandardowych."
           }
         },
         "tr" : {
@@ -645,8 +645,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Utilstrækkelige tilladelser"
           }
         },
         "de" : {
@@ -669,20 +669,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Autorizzazioni insufficienti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Onvoldoende machtigingen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Insufficient permissions"
+            "state" : "translated",
+            "value" : "Niewystarczające uprawnienia"
           }
         },
         "tr" : {
@@ -698,8 +698,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se dokumenter."
           }
         },
         "de" : {
@@ -722,20 +722,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare i documenti."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om documenten te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania dokumentów."
           }
         },
         "tr" : {
@@ -751,8 +751,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se dokumenttyper."
           }
         },
         "de" : {
@@ -775,20 +775,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare i tipi di documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om documenttypes te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view document types."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania typów dokumentów."
           }
         },
         "tr" : {
@@ -804,8 +804,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se grupper."
           }
         },
         "de" : {
@@ -828,20 +828,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare i gruppi."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om groepen te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view groups."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania grup."
           }
         },
         "tr" : {
@@ -857,8 +857,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se dokumentnoter."
           }
         },
         "de" : {
@@ -881,20 +881,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare le note del documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om documentnotities te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view document notes."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania notatek do dokumentów."
           }
         },
         "tr" : {
@@ -910,8 +910,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se gemte visninger."
           }
         },
         "de" : {
@@ -934,20 +934,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare le viste salvate."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om opgeslagen weergaven te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view saved views."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania zapisanych widoków."
           }
         },
         "tr" : {
@@ -963,8 +963,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se lagerstier."
           }
         },
         "de" : {
@@ -987,20 +987,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare i percorsi di archiviazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om opslagpaden te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view storage paths."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania ścieżek magazynu."
           }
         },
         "tr" : {
@@ -1016,8 +1016,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se tags."
           }
         },
         "de" : {
@@ -1040,20 +1040,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Non hai i permessi per visualizzare i tag."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om tags te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view tags."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania tagów."
           }
         },
         "tr" : {
@@ -1069,8 +1069,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se opgaver."
           }
         },
         "de" : {
@@ -1093,20 +1093,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare le attività."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om taken te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don’t have permission to view tasks."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania zadań."
           }
         },
         "tr" : {
@@ -1122,8 +1122,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se UI-indstillinger."
           }
         },
         "de" : {
@@ -1146,20 +1146,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare le impostazioni dell'interfaccia utente."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om UI-instellingen te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view UI settings."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania ustawień interfejsu użytkownika."
           }
         },
         "tr" : {
@@ -1175,8 +1175,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se brugere."
           }
         },
         "de" : {
@@ -1199,20 +1199,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare gli utenti."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om gebruikers te bekijken."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view users."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania użytkowników."
           }
         },
         "tr" : {
@@ -1334,8 +1334,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Privat* angiver en bruger eller gruppe, som du ikke har tilladelse til at se."
           }
         },
         "de" : {
@@ -1358,20 +1358,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Privato* indica un utente o un gruppo che non si ha il permesso di visualizzare."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Private* geeft een gebruiker of groep aan waar je geen rechten voor hebt."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "*Private* indicates a user or group that you do not have permissions to view."
+            "state" : "translated",
+            "value" : "*Private* oznacza użytkownika lub grupę, do której przeglądania nie masz uprawnień."
           }
         },
         "tr" : {
@@ -1387,8 +1387,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Ressource"
           }
         },
         "de" : {
@@ -1411,20 +1411,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Risorse"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Bron"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource"
+            "state" : "translated",
+            "value" : "Zasoby"
           }
         },
         "tr" : {
@@ -1440,8 +1440,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "App-konfiguration"
           }
         },
         "de" : {
@@ -1464,20 +1464,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "Configurazione dell'app"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "App configureren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "App config"
+            "state" : "translated",
+            "value" : "Konfiguracje aplikacji"
           }
         },
         "tr" : {
@@ -1493,8 +1493,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Brugerdefineret felt"
           }
         },
         "de" : {
@@ -1517,20 +1517,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Campo personalizzato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Aangepast veld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Pole niestandardowe"
           }
         },
         "tr" : {
@@ -1546,8 +1546,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Historie"
           }
         },
         "de" : {
@@ -1570,20 +1570,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Storia"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Geschiedenis"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "History"
+            "state" : "translated",
+            "value" : "Historia"
           }
         },
         "tr" : {
@@ -1599,8 +1599,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "Mail-konto"
           }
         },
         "de" : {
@@ -1623,20 +1623,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "Account di posta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Mail account"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail account"
+            "state" : "translated",
+            "value" : "Konto pocztowe"
           }
         },
         "tr" : {
@@ -1652,8 +1652,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Mail-regel"
           }
         },
         "de" : {
@@ -1676,20 +1676,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Regola della posta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Mail regel"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rule"
+            "state" : "translated",
+            "value" : "Reguła poczty"
           }
         },
         "tr" : {
@@ -1705,8 +1705,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Del link"
           }
         },
         "de" : {
@@ -1729,20 +1729,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Condividi il link"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Link delen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share link"
+            "state" : "translated",
+            "value" : "Udostępnij link"
           }
         },
         "tr" : {
@@ -1758,8 +1758,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "Arbejdsgang"
           }
         },
         "de" : {
@@ -1782,20 +1782,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "Flusso di lavoro"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "Werkstroom"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflow"
+            "state" : "translated",
+            "value" : "Przepływ pracy"
           }
         },
         "tr" : {
@@ -1970,8 +1970,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (dig)"
           }
         },
         "de" : {
@@ -1994,20 +1994,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (voi)"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (u)"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ (you)"
+            "state" : "translated",
+            "value" : "%@ (ty)"
           }
         },
         "tr" : {

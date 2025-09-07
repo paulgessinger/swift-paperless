@@ -1444,8 +1444,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Brugerdefineret felt"
           }
         },
         "de" : {
@@ -1462,26 +1462,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Champ personnalisé"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Campo personalizzato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Aangepast veld"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom field"
+            "state" : "translated",
+            "value" : "Pole niestandardowe"
           }
         },
         "tr" : {
@@ -1497,8 +1497,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Brugerdefinerede felter"
           }
         },
         "de" : {
@@ -1515,26 +1515,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Champs personnalisés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Campi personalizzati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Aangepaste velden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Custom fields"
+            "state" : "translated",
+            "value" : "Pola niestandardowe"
           }
         },
         "tr" : {
@@ -2877,8 +2877,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Du har ikke tilladelse til at se dokumenter. Kontakt venligst din administrator."
           }
         },
         "de" : {
@@ -2901,20 +2901,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Non si ha l'autorizzazione a visualizzare i documenti. Si prega di contattare il proprio amministratore."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Je hebt geen toestemming om documenten te bekijken. Neem contact op met uw beheerder."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You don't have permission to view documents. Please contact your administrator."
+            "state" : "translated",
+            "value" : "Nie masz uprawnień do wyświetlania dokumentów. Skontaktuj się z administratorem."
           }
         },
         "tr" : {
@@ -3407,8 +3407,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Brug det originale filnavn"
           }
         },
         "de" : {
@@ -3431,20 +3431,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Usa il nome del file originale"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Gebruik originele bestandsnaam"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use original filename"
+            "state" : "translated",
+            "value" : "Użyj oryginalnej nazwy pliku"
           }
         },
         "tr" : {
@@ -4208,8 +4208,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Grupper"
           }
         },
         "de" : {
@@ -4232,20 +4232,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Gruppi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Groepen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
+            "state" : "translated",
+            "value" : "Grupy"
           }
         },
         "tr" : {
@@ -4642,7 +4642,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Protokolle werden gesammelt"
+            "value" : "Logs werden gesammelt"
           }
         },
         "en" : {
@@ -4686,10 +4686,52 @@
     "logsExportNoFile" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksporterede logfiler kunne ikke skrives til en fil. Du kan stadig kopiere de logfiler, der vises på skærmen, ved hjælp af knappen på værktøjslinjen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die exportierten Logs konnten nicht in eine Datei geschrieben werden. Sie können die aktuell auf dem Bildschirm angezeigten Logs dennoch über die Schaltfläche in der Symbolleiste kopieren."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exported logs could not be written to a file. You can still copy the logs currently on screen using the toolbar button."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les journaux exportés n'ont pas pu être enregistrés dans un fichier. Vous pouvez toujours copier les journaux actuellement à l'écran en utilisant le bouton de la barre d'outils."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile scrivere i registri esportati su un file. È comunque possibile copiare i registri attualmente sullo schermo utilizzando il pulsante della barra degli strumenti."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geëxporteerde logboeken konden niet naar een bestand worden geschreven. Je kunt de logs die momenteel op het scherm staan nog steeds kopiëren met de knop op de werkbalk."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można zapisać wyeksportowanych dzienników do pliku. Nadal można kopiować dzienniki wyświetlane na ekranie za pomocą przycisku na pasku narzędzi."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarılan günlükler bir dosyaya yazılamadı. Araç çubuğundaki düğmeyi kullanarak ekrandaki günlükleri kopyalamaya devam edebilirsiniz."
           }
         }
       }
@@ -4858,8 +4900,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Nej"
           }
         },
         "de" : {
@@ -4882,14 +4924,14 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "No"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No"
+            "state" : "translated",
+            "value" : "Geen"
           }
         },
         "pl" : {
@@ -7513,10 +7555,52 @@
     "scrollToBottom" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rul til bunden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach unten scrollen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scroll to bottom"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défiler vers le bas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorri in fondo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll naar beneden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przewiń do dołu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aşağıya kaydırın"
           }
         }
       }
@@ -8692,8 +8776,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Ukendt brugerdefineret felt %u"
           }
         },
         "de" : {
@@ -8710,26 +8794,26 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Champ personnalisé inconnu %u"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Campo personalizzato sconosciuto %u"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Onbekend aangepast veld %u"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown custom field %u"
+            "state" : "translated",
+            "value" : "Nieznane pole niestandardowe %u"
           }
         },
         "tr" : {
@@ -8904,8 +8988,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Antal sider"
           }
         },
         "de" : {
@@ -8928,20 +9012,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Numero di pagine"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Aantal pagina's"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Page count"
+            "state" : "translated",
+            "value" : "Liczba stron"
           }
         },
         "tr" : {
@@ -10868,8 +10952,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "UI-indstillinger"
           }
         },
         "de" : {
@@ -10892,20 +10976,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "Impostazioni dell'interfaccia utente"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "UI-instellingen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "UI Settings"
+            "state" : "translated",
+            "value" : "Ustawienia interfejsu użytkownika"
           }
         },
         "tr" : {
@@ -10974,8 +11058,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Brugere"
           }
         },
         "de" : {
@@ -10998,20 +11082,20 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Utenti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Gebruikers"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Users"
+            "state" : "translated",
+            "value" : "Użytkownicy"
           }
         },
         "tr" : {
@@ -11027,8 +11111,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Ja"
           }
         },
         "de" : {
@@ -11051,14 +11135,14 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Sì"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Yes"
+            "state" : "translated",
+            "value" : "Ja"
           }
         },
         "pl" : {
