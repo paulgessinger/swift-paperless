@@ -161,16 +161,20 @@ struct DocumentList: View {
                         Label(String(localized: .localizable(.edit)), systemImage: "pencil")
                     }
 
-                    Button {
-                        Task { await viewModel.removeInboxTags(document: document) }
-                    } label: {
-                        Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
+                    if userCanChange {
+                        Button {
+                            Task { await viewModel.removeInboxTags(document: document) }
+                        } label: {
+                            Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
+                        }
                     }
 
-                    Button(role: .destructive) {
-                        onDeleteButtonPressed()
-                    } label: {
-                        Label(String(localized: .localizable(.delete)), systemImage: "trash")
+                    if userCanDelete {
+                        Button(role: .destructive) {
+                            onDeleteButtonPressed()
+                        } label: {
+                            Label(String(localized: .localizable(.delete)), systemImage: "trash")
+                        }
                     }
 
                 } preview: {
