@@ -1,5 +1,5 @@
 //
-//  AppConfigurationModelTest.swift
+//  ServerConfigurationModelTest.swift
 //  DataModel
 //
 //  Created by Claude on 09.07.25.
@@ -13,10 +13,10 @@ import Testing
 private let decoder = makeDecoder(tz: .current)
 
 @Suite
-struct AppConfigurationModelTest {
+struct ServerConfigurationModelTest {
     @Test func testFullConfigurationDecoding() throws {
         let data = try #require(testData("Data/AppConfiguration/app_config_full.json"))
-        let configs = try decoder.decode([AppConfiguration].self, from: data)
+        let configs = try decoder.decode([ServerConfiguration].self, from: data)
 
         #expect(configs.count == 1)
         let config = configs[0]
@@ -28,7 +28,7 @@ struct AppConfigurationModelTest {
 
     @Test func testMinimalConfigurationDecoding() throws {
         let data = try #require(testData("Data/AppConfiguration/app_config_minimal.json"))
-        let configs = try decoder.decode([AppConfiguration].self, from: data)
+        let configs = try decoder.decode([ServerConfiguration].self, from: data)
 
         #expect(configs.count == 1)
         let config = configs[0]
@@ -40,7 +40,7 @@ struct AppConfigurationModelTest {
 
     @Test func testPartialConfigurationDecoding() throws {
         let data = try #require(testData("Data/AppConfiguration/app_config_partial.json"))
-        let configs = try decoder.decode([AppConfiguration].self, from: data)
+        let configs = try decoder.decode([ServerConfiguration].self, from: data)
 
         #expect(configs.count == 1)
         let config = configs[0]
@@ -53,7 +53,7 @@ struct AppConfigurationModelTest {
 
     @Test func testNullValueHandling() throws {
         let data = try #require(testData("Data/AppConfiguration/app_config_null_values.json"))
-        let configs = try decoder.decode([AppConfiguration].self, from: data)
+        let configs = try decoder.decode([ServerConfiguration].self, from: data)
 
         #expect(configs.count == 1)
         let config = configs[0]
@@ -74,7 +74,7 @@ struct AppConfigurationModelTest {
         }
         """
         let data = jsonString.data(using: .utf8)!
-        let config = try decoder.decode(AppConfiguration.self, from: data)
+        let config = try decoder.decode(ServerConfiguration.self, from: data)
 
         #expect(config.id == 5)
         #expect(config.barcodeAsnPrefix == nil) // missing field is nil
@@ -90,14 +90,14 @@ struct AppConfigurationModelTest {
 
         // This should throw because id is required
         #expect(throws: (any Error).self) {
-            try decoder.decode(AppConfiguration.self, from: data)
+            try decoder.decode(ServerConfiguration.self, from: data)
         }
     }
 
     @Test func testEmptyArrayDecoding() throws {
         let jsonString = "[]"
         let data = jsonString.data(using: .utf8)!
-        let configs = try decoder.decode([AppConfiguration].self, from: data)
+        let configs = try decoder.decode([ServerConfiguration].self, from: data)
 
         #expect(configs.isEmpty)
     }
@@ -112,7 +112,7 @@ struct AppConfigurationModelTest {
         }
         """
         let data = jsonString.data(using: .utf8)!
-        let config = try decoder.decode(AppConfiguration.self, from: data)
+        let config = try decoder.decode(ServerConfiguration.self, from: data)
 
         #expect(config.id == 6)
         #expect(config.barcodeAsnPrefix == nil) // This field is not present in large numbers test
