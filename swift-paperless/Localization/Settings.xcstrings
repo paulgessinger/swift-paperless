@@ -2126,6 +2126,17 @@
         }
       }
     },
+    "logs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs"
+          }
+        }
+      }
+    },
     "organization" : {
       "extractionState" : "manual",
       "localizations" : {

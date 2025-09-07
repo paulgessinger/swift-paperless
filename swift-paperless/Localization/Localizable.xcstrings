@@ -4683,6 +4683,17 @@
         }
       }
     },
+    "logsExportNoFile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exported logs could not be written to a file. You can still copy the logs currently on screen using the toolbar button."
+          }
+        }
+      }
+    },
     "logsExportReady" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7495,6 +7506,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dokümanı tara"
+          }
+        }
+      }
+    },
+    "scrollToBottom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll to bottom"
           }
         }
       }

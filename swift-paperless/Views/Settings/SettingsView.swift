@@ -173,7 +173,16 @@ struct SettingsView: View {
 
     var advancedSection: some View {
         Section(String(localized: .settings(.advanced))) {
-            LogRecordExportButton()
+            NavigationLink {
+                LogView()
+            } label: {
+                Label {
+                    Text(.settings(.logs))
+                        .accentColor(.primary)
+                } icon: {
+                    Image(systemName: "text.word.spacing")
+                }
+            }
 
             NavigationLink {
                 LogoChangeView()
