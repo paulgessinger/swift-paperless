@@ -1,11 +1,14 @@
 {
+  "color-space-for-untagged-svg-colors" : "display-p3",
   "fill-specializations" : [
     {
       "value" : "automatic"
     },
     {
       "appearance" : "dark",
-      "value" : "automatic"
+      "value" : {
+        "automatic-gradient" : "srgb:0.14530,0.14530,0.14530,1.00000"
+      }
     }
   ],
   "groups" : [
@@ -19,7 +22,7 @@
           "image-name" : "liquid_glass_1.svg",
           "name" : "liquid_glass_1",
           "position" : {
-            "scale" : 0.86,
+            "scale" : 0.8,
             "translation-in-points" : [
               0,
               0
@@ -32,7 +35,7 @@
           "image-name" : "liquid_glass_2.svg",
           "name" : "liquid_glass_2",
           "position" : {
-            "scale" : 0.86,
+            "scale" : 0.8,
             "translation-in-points" : [
               0,
               0
@@ -41,6 +44,12 @@
         }
       ],
       "lighting" : "combined",
+      "opacity-specializations" : [
+        {
+          "appearance" : "dark",
+          "value" : 1
+        }
+      ],
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
