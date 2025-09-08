@@ -291,6 +291,8 @@ final class DocumentStore: ObservableObject, Sendable {
     func fetchServerConfiguration() async throws {
         do {
             serverConfiguration = try await repository.serverConfiguration()
+            let debug = String(describing: serverConfiguration)
+            Logger.shared.info("Fetched server configuration: \(debug, privacy: .public)")
         } catch let error where error.isCancellationError {
             Logger.shared.debug("Cancelled fetch server configuration")
         } catch {

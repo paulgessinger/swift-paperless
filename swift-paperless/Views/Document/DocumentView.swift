@@ -339,7 +339,7 @@ struct DocumentView: View {
                 }
 
                 .sheet(isPresented: $showDataScanner, onDismiss: {}) {
-                    DataScannerView()
+                    DataScannerView(store: store)
                 }
 
                 .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)

@@ -29,44 +29,6 @@ private func extractAsn(_ value: String, patterns: [Regex<AnyRegexOutput>] = [])
     return nil
 }
 
-@MainActor
-private func makeAsnUrlPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
-    guard let fullHost = (store.repository as? ApiRepository)?.connection.url else {
-        return nil
-    }
-
-    let components = URLComponents(url: fullHost, resolvingAgainstBaseURL: false)
-
-    guard let host = components?.host else { return nil }
-    let escapedHost = NSRegularExpression.escapedPattern(for: host)
-
-    do {
-        return try Regex("^(?:https?:\\/\\/)?\(escapedHost)\\/asn\\/(\\d+)\\/?$")
-    } catch {
-        Logger.shared.error("Error making expression: \(error)")
-    }
-
-    return nil
-}
-
-@MainActor
-private func makeBarcodeAsnPrefixPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
-    guard let prefix = store.serverConfiguration?.barcodeAsnPrefix, !prefix.isEmpty else {
-        return nil
-    }
-    Logger.shared.info("Making barcode ASN prefix pattern \(prefix, privacy: .public)")
-
-    let escapedPrefix = NSRegularExpression.escapedPattern(for: prefix)
-
-    do {
-        return try Regex("^\(escapedPrefix)(\\d+)$")
-    } catch {
-        Logger.shared.error("Error making barcode ASN prefix expression: \(error, privacy: .public)")
-    }
-
-    return nil
-}
-
 struct HighlightView: View {
     var text: String
 
@@ -84,22 +46,9 @@ struct HighlightView: View {
 
     @EnvironmentObject private var store: DocumentStore
 
-    var asnUrlPattern: [Regex<AnyRegexOutput>] {
-        // @TODO: Can I cache this somehow?
-        var patterns: [Regex<AnyRegexOutput>] = []
+    var patterns: [Regex<AnyRegexOutput>]
 
-        if let urlPattern = makeAsnUrlPattern(store: store) {
-            patterns.append(urlPattern)
-        }
-
-        if let barcodePattern = makeBarcodeAsnPrefixPattern(store: store) {
-            patterns.append(barcodePattern)
-        }
-
-        return patterns
-    }
-
-    private var asn: UInt? { extractAsn(text, patterns: asnUrlPattern) }
+    private var asn: UInt? { extractAsn(text, patterns: patterns) }
 
     var document: Document? {
         switch status {
@@ -228,6 +177,7 @@ struct HighlightView: View {
     private struct DataScannerViewInternal: UIViewControllerRepresentable {
         var store: DocumentStore
         var isScanning: Binding<Bool>
+        var patterns: [Regex<AnyRegexOutput>]
         var action: ((Document) -> Void)?
 
         class Coordinator: NSObject, DataScannerViewControllerDelegate {
@@ -249,15 +199,7 @@ struct HighlightView: View {
                     return
                 }
 
-                var patterns: [Regex<AnyRegexOutput>] = []
-                if let urlPattern = makeAsnUrlPattern(store: parent.store) {
-                    patterns.append(urlPattern)
-                }
-                if let barcodePattern = makeBarcodeAsnPrefixPattern(store: parent.store) {
-                    patterns.append(barcodePattern)
-                }
-
-                guard let asn = extractAsn(payload, patterns: patterns) else {
+                guard let asn = extractAsn(payload, patterns: parent.patterns) else {
                     Logger.shared.notice("Tapped on element but failed to extract ASN")
                     return
                 }
@@ -281,7 +223,7 @@ struct HighlightView: View {
             }
 
             private func addHighlightView(id: UUID, text: String, center: CGPoint, dataScanner: DataScannerViewController) {
-                let vc = UIHostingController(rootView: HighlightView(text: text))
+                let vc = UIHostingController(rootView: HighlightView(text: text, patterns: parent.patterns))
 //            vc.view.sizeToFit()
                 vc.view.anchorPoint = CGPoint(x: 0.5, y: 1)
                 vc.view.center = center
@@ -557,15 +499,76 @@ struct TypeAsnView: View {
 
 struct DataScannerView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var store: DocumentStore
+    @ObservedObject var store: DocumentStore
 
     @State private var document: Document?
     @State private var showTypeAsn = false
     @State private var isScanning = true
 
+    let asnPatterns: [Regex<AnyRegexOutput>]
+
+    init(store: DocumentStore) {
+        self.store = store
+
+        Logger.shared.debug("DataScannerView presenting: making ASN URL patterns")
+        var patterns: [Regex<AnyRegexOutput>] = []
+
+        if let urlPattern = Self.makeAsnUrlPattern(store: store) {
+            patterns.append(urlPattern)
+        }
+
+        if let barcodePattern = Self.makeBarcodeAsnPrefixPattern(store: store) {
+            patterns.append(barcodePattern)
+        }
+
+        asnPatterns = patterns
+    }
+
+    @MainActor
+    private static func makeAsnUrlPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
+        guard let fullHost = (store.repository as? ApiRepository)?.connection.url else {
+            return nil
+        }
+
+        let components = URLComponents(url: fullHost, resolvingAgainstBaseURL: false)
+
+        guard let host = components?.host else { return nil }
+        let escapedHost = NSRegularExpression.escapedPattern(for: host)
+        Logger.shared.info("Making barcode URL ASN pattern for host \(host)")
+
+        do {
+            return try Regex("^(?:https?:\\/\\/)?\(escapedHost)\\/asn\\/(\\d+)\\/?$")
+        } catch {
+            Logger.shared.error("Error making expression: \(error)")
+        }
+
+        return nil
+    }
+
+    @MainActor
+    private static func makeBarcodeAsnPrefixPattern(store: DocumentStore) -> Regex<AnyRegexOutput>? {
+        guard let prefix = store.serverConfiguration?.barcodeAsnPrefix, !prefix.isEmpty else {
+            return nil
+        }
+        Logger.shared.info("Making barcode ASN prefix pattern '\(prefix, privacy: .public)'")
+
+        let escapedPrefix = NSRegularExpression.escapedPattern(for: prefix)
+
+        do {
+            return try Regex("^\(escapedPrefix)(\\d+)$")
+        } catch {
+            Logger.shared.error("Error making barcode ASN prefix expression: \(error, privacy: .public)")
+        }
+
+        return nil
+    }
+
     #if !targetEnvironment(macCatalyst)
         var body: some View {
-            DataScannerViewInternal(store: store, isScanning: $isScanning) { document in
+            DataScannerViewInternal(store: store,
+                                    isScanning: $isScanning,
+                                    patterns: asnPatterns)
+            { document in
                 self.document = document
             }
             .transaction { t in
@@ -647,8 +650,8 @@ struct DataScannerView: View {
     }
 }
 
-struct DataScannerView_Previews: PreviewProvider {
-    static var previews: some View {
-        DataScannerView()
-    }
-}
+// struct DataScannerView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        DataScannerView()
+//    }
+// }
