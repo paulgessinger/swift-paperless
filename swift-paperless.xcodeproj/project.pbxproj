@@ -30,6 +30,8 @@
 		7AAC44582CA0A391003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44572CA0A391003E6A3A /* Common */; };
 		7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */; };
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
+		7ABA3B882E6F3F53006BB39B /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7ABA3B872E6F3F53006BB39B /* AppIcon.icon */; };
+		7ABA3B892E6F3F53006BB39B /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7ABA3B872E6F3F53006BB39B /* AppIcon.icon */; };
 		7AC40CB62D134ED1003F68B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */; };
 		7AC40CB82D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */; };
 		7AC40D402D134ED1003F68B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */; };
@@ -77,6 +79,7 @@
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7A6DA7212D7DD42100B3B185 /* Networking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Networking; sourceTree = "<group>"; };
 		7AAC44512CA0A31E003E6A3A /* Common */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Common; sourceTree = "<group>"; };
+		7ABA3B872E6F3F53006BB39B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AC40CA42D134ED1003F68B1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -321,6 +324,7 @@
 				7AC40E672D134EDE003F68B1 /* Utilities */,
 				7AC40EDE2D134EDE003F68B1 /* Views */,
 				7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */,
+				7ABA3B872E6F3F53006BB39B /* AppIcon.icon */,
 				7AC40CA42D134ED1003F68B1 /* Info.plist */,
 				7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */,
 				7AC40CA82D134ED1003F68B1 /* swift_paperless.entitlements */,
@@ -527,6 +531,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AC40CB62D134ED1003F68B1 /* Assets.xcassets in Resources */,
+				7ABA3B892E6F3F53006BB39B /* AppIcon.icon in Resources */,
 				7AC40CB82D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -538,6 +543,7 @@
 				7AC40D402D134ED1003F68B1 /* Assets.xcassets in Resources */,
 				7AC40D422D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */,
 				7A64771C2BDD50D200217C18 /* libraries.md in Resources */,
+				7ABA3B882E6F3F53006BB39B /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
