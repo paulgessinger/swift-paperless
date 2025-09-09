@@ -20,4 +20,4 @@ The app automatically detects the backend version and API version by checking th
 - `X-Version` or `x-version`: Backend version
 - `X-Api-Version`: API version
 
-If the backend API version is outside the supported range (3-7), a warning will be logged but the app will still attempt to function by using the closest supported version.
+If the backend API version is outside the supported range (3-9), a warning will be logged but the app will still attempt to function by using the closest supported version.
