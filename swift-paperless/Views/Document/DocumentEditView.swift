@@ -90,42 +90,12 @@ struct DocumentEditView: View {
         !modified || document.title.isEmpty || !isAsnValid
     }
 
-    // @TODO: Unify this with the detail view model
-    private var canEdit: Bool {
-        if !store.permissions.test(.change, for: .document) {
-            return false
-        }
-
-        guard let user = store.currentUser else {
-            // We should always have a user
-            Logger.shared.warning("No user found in store when checking document change permissions (weird)")
-            return false
-        }
-
-        return user.canChange(documentOut)
+    private var userCanChange: Bool {
+        store.userCanChange(document: document)
     }
 
-    // @TODO: Centralize this with detail view model
-    private var canDelete: Bool {
-        if !store.permissions.test(.change, for: .document) {
-            return false
-        }
-
-        if document.owner == .none {
-            return true
-        }
-
-        guard let user = store.currentUser else {
-            // We should always have a user
-            Logger.shared.warning("No user found in store when checking document delete permissions (weird)")
-            return false
-        }
-
-        if document.owner == .user(user.id) {
-            return true
-        }
-
-        return false
+    private var userCanDelete: Bool {
+        store.userCanDelete(document: document)
     }
 
     @State private var saving = false
@@ -231,18 +201,18 @@ struct DocumentEditView: View {
                 Section {
                     TextField(String(localized: .localizable(.title)), text: $document.title) {}
                         .clearable($document.title)
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
 
                     DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
 
                     DatePicker(String(localized: .localizable(.documentEditCreatedDateLabel)),
                                selection: $document.created.animation(.default),
                                displayedComponents: .date)
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
 
-                    if canEdit, let suggestions, !suggestions.dates.isEmpty {
+                    if userCanChange, let suggestions, !suggestions.dates.isEmpty {
                         let valid = suggestions.dates.filter { $0.formatted(date: .abbreviated, time: .omitted) != document.created.formatted(date: .abbreviated, time: .omitted) }
                         if !valid.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -290,9 +260,9 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
                     }
-                    if canEdit {
+                    if userCanChange {
                         SuggestionView(document: $document,
                                        property: \.correspondent,
                                        elements: store.correspondents,
@@ -323,10 +293,10 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
                     }
 
-                    if canEdit {
+                    if userCanChange {
                         SuggestionView(document: $document,
                                        property: \.documentType,
                                        elements: store.documentTypes,
@@ -357,10 +327,10 @@ struct DocumentEditView: View {
                                 .foregroundColor(.gray)
                             }
                         }
-                        .disabled(!canEdit)
+                        .disabled(!userCanChange)
                     }
 
-                    if canEdit {
+                    if userCanChange {
                         SuggestionView(document: $document,
                                        property: \.storagePath,
                                        elements: store.storagePaths,
@@ -380,20 +350,20 @@ struct DocumentEditView: View {
                         }
                     }
                     .contentShape(Rectangle())
-                    .disabled(!canEdit)
+                    .disabled(!userCanChange)
                 }
 
                 Section {
                     NavigationLink(.permissions(.title)) {
                         PermissionsEditView(object: $document)
-                            .disabled(!canEdit)
+                            .disabled(!userCanChange)
                     }
                 }
 
                 Section {
                     NavigationLink(.customFields(.title)) {
                         CustomFieldsEditView(document: $document)
-                            .disabled(!canEdit)
+                            .disabled(!userCanChange)
                     }
                 }
 
@@ -413,7 +383,7 @@ struct DocumentEditView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .foregroundColor(Color.red)
                         .bold()
-                        .disabled(!canDelete)
+                        .disabled(!userCanDelete)
 
                         .confirmationDialog(String(localized: .localizable(.confirmationPromptTitle)),
                                             isPresented: $showDeleteConfirmation,
@@ -447,7 +417,7 @@ struct DocumentEditView: View {
                             ProgressView()
                         }
                     }
-                    .disabled(isSaveDisabled || !canEdit)
+                    .disabled(isSaveDisabled || !userCanChange)
                 }
             }
 

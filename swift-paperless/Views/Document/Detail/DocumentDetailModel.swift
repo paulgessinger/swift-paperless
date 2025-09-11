@@ -104,32 +104,11 @@ class DocumentDetailModel {
         suggestions = try await store.repository.suggestions(documentId: document.id)
     }
 
-    // @TODO: There are separate implementations of this and canDelete in the document list and the document edit view: HARMONIZE!
     var userCanChange: Bool {
-        if !store.permissions.test(.change, for: .document) {
-            return false
-        }
-
-        guard let user = store.currentUser else {
-            // We should always have a user
-            Logger.shared.warning("No user found in store when checking document change permissions (weird)")
-            return false
-        }
-
-        return user.canChange(document)
+        store.userCanChange(document: document)
     }
 
     var userCanView: Bool {
-        if !store.permissions.test(.view, for: .document) {
-            return false
-        }
-
-        guard let user = store.currentUser else {
-            // We should always have a user
-            Logger.shared.warning("No user found in store when checking document view permissions (weird)")
-            return false
-        }
-
-        return user.canView(document)
+        store.userCanView(document: document)
     }
 }
