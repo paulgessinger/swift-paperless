@@ -69,42 +69,12 @@ struct DocumentList: View {
 
         @EnvironmentObject private var errorController: ErrorController
 
-        // @TODO: Harmonize these with detail view model
         private var userCanChange: Bool {
-            if !store.permissions.test(.change, for: .document) {
-                return false
-            }
-
-            guard let user = store.currentUser else {
-                // We should always have a user
-                Logger.shared.warning("No user found in store when checking document change permissions (weird)")
-                return false
-            }
-
-            return user.canChange(document)
+            store.userCanChange(document: document)
         }
 
-        // @TODO: Harmonize these with detail view model
         private var userCanDelete: Bool {
-            if !store.permissions.test(.change, for: .document) {
-                return false
-            }
-
-            if document.owner == .none {
-                return true
-            }
-
-            guard let user = store.currentUser else {
-                // We should always have a user
-                Logger.shared.warning("No user found in store when checking document delete permissions (weird)")
-                return false
-            }
-
-            if document.owner == .user(user.id) {
-                return true
-            }
-
-            return false
+            store.userCanDelete(document: document)
         }
 
         private func onDeleteButtonPressed() {

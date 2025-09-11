@@ -80,6 +80,14 @@ public extension User {
 
         return false
     }
+
+    func canDelete(_ resource: some PermissionsModel) -> Bool {
+        if isSuperUser {
+            return true
+        }
+
+        return resource.owner == .none || resource.owner == .unset || resource.owner == .user(id)
+    }
 }
 
 @Codable

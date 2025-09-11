@@ -570,3 +570,30 @@ final class DocumentStore: ObservableObject, Sendable {
         }
     }
 }
+
+//// Permissions checking for resources
+extension DocumentStore {
+    func userCanView(document: Document) -> Bool {
+        if !permissions.test(.view, for: .document) {
+            return false
+        }
+
+        return currentUser?.canView(document) ?? false
+    }
+
+    func userCanChange(document: Document) -> Bool {
+        if !permissions.test(.change, for: .document) {
+            return false
+        }
+
+        return currentUser?.canChange(document) ?? false
+    }
+
+    func userCanDelete(document: Document) -> Bool {
+        if !permissions.test(.delete, for: .document) {
+            return false
+        }
+
+        return currentUser?.canDelete(document) ?? false
+    }
+}
