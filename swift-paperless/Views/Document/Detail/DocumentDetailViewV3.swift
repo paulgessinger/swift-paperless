@@ -267,10 +267,7 @@ private struct DocumentPropertyView: View {
                         showEditSheet = true
                     }
                     .accessibilityIdentifier("documentEditButton")
-//                    .disabled(!viewModel.userCanChange)
-//                    .opacity(viewModel.userCanChange ? 1 : 0.3)
             }
-            .animation(.default, value: viewModel.userCanChange)
 
             panel
         }
@@ -422,17 +419,15 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                              dragOffset: $dragOffset)
             .padding(.bottom, bottomSpacing)
             .overlay(alignment: .bottom) {
-                if viewModel.userCanChange {
-                    Image(systemName: "chevron.compact.up")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 12)
-                        .opacity(chevronOpacity)
-                        .padding(15)
-                        .offset(y: -1)
-                        .scaleEffect(chevronSize, anchor: .center)
-                        .offset(y: -10 - chevronOffset)
-                }
+                Image(systemName: "chevron.compact.up")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 12, height: 12)
+                    .opacity(chevronOpacity)
+                    .padding(15)
+                    .offset(y: -1)
+                    .scaleEffect(chevronSize, anchor: .center)
+                    .offset(y: -10 - chevronOffset)
             }
 
 //        .frame(maxHeight: showPropertyBar ? .infinity : 20)
@@ -474,7 +469,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                     }
                 }
                 .onEnded { value in
-                    if value.translation.height < -dragThresholdUp, viewModel.userCanChange {
+                    if value.translation.height < -dragThresholdUp {
                         showEditSheet = true
                     }
 
