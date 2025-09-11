@@ -13,7 +13,6 @@ struct DocumentDetailViewVersionSelection: View {
 
     let available: [AppSettings.EditingUserInterface] = [
         .automatic,
-        .v1,
         .v3,
     ]
 
@@ -40,9 +39,8 @@ private var editingInterface: AppSettings.EditingUserInterface {
         case .AppStore: .v3
         case .TestFlight: .v3
         }
-    case .v1: .v1
-    case .v2: .automatic
     case .v3: .v3
+    default: .automatic
     }
 }
 
@@ -69,10 +67,6 @@ struct DocumentDetailView: View {
 
     var body: some View {
         switch editingInterface {
-        case .v1:
-            DocumentDetailViewV1(store: store,
-                                 document: document,
-                                 navPath: navPath)
         case .v3:
             DocumentDetailViewV3(store: store,
                                  document: document,

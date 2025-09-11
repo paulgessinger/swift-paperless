@@ -88,9 +88,10 @@ class AppSettings: ObservableObject {
 
     enum EditingUserInterface: String, Codable, CaseIterable {
         case automatic
-        case v1
-        case v2
         case v3
+
+        // deprecated, kept here so decoding works
+        case v1, v2
     }
 
     @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
