@@ -141,7 +141,6 @@
 				DataScannerView.swift,
 				Document/Detail/DocumentDetailModel.swift,
 				Document/Detail/DocumentDetailView.swift,
-				Document/Detail/DocumentDetailViewV1.swift,
 				Document/Detail/DocumentDetailViewV3.swift,
 				Document/Detail/DocumentMetadataView.swift,
 				Document/DocumentEditView.swift,
