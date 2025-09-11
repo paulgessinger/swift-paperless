@@ -38,8 +38,6 @@ private struct DetailsView: View {
 
                     LogRecordExportButton()
                 }
-
-                LoginViewSwitchView()
             }
             .navigationTitle(Text(.login(.detailsTitle)))
             .navigationBarTitleDisplayMode(.inline)

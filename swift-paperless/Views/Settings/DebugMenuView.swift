@@ -34,8 +34,6 @@ struct DebugMenuView: View {
             if showExperiments {
                 Section {
                     DocumentDetailViewVersionSelection()
-
-                    LoginViewSwitchView()
                 } header: {
                     Text(.settings(.experimentsTitle))
                 } footer: {

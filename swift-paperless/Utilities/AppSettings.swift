@@ -19,7 +19,6 @@ enum SettingsKeys: String {
     case defaultSortOrder
 
     case editingUserInterfaceExperiment
-    case loginScreenV2
 
     case showDocumentDetailPropertyBar
 }
@@ -96,9 +95,6 @@ class AppSettings: ObservableObject {
 
     @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
     var editingUserInterface: EditingUserInterface = .automatic
-
-    @PublishedUserDefaultsBacked(.loginScreenV2)
-    var loginScreenV2: Bool = true
 
     @PublishedUserDefaultsBacked(.showDocumentDetailPropertyBar)
     var showDocumentDetailPropertyBar: Bool = true
