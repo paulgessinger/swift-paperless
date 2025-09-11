@@ -87,8 +87,6 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
 
             MatchEditView(element: $tag)
                 .disabled(!editable)
-
-            Text(String(describing: valid()))
         }
 
         .toolbar {
