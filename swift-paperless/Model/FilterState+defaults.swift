@@ -51,6 +51,7 @@ extension FilterState {
             self.sortField = sortField
         }
         sortOrder = savedView.sortOrder
+        modified = false // if we initialize from saved view, it's not modified by definition
     }
 
     var defaultSorting: Bool {
