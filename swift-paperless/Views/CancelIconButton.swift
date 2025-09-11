@@ -13,19 +13,32 @@ struct CancelIconButton: View {
   var action: (() -> Void)? = nil
 
   var body: some View {
-    Label(.localizable(.back), systemImage: "xmark.circle.fill")
-      .labelStyle(.iconOnly)
-      .symbolRenderingMode(.palette)
-      .foregroundStyle(.primary, .tertiary)
-      .font(.title2)
-
-      .onTapGesture {
+    if #available(iOS 26, *) {
+      Button {
         if let action {
           action()
         } else {
           dismiss()
         }
+      } label: {
+        Image(systemName: "xmark")
+          .accessibilityLabel(Text(.localizable(.back)))
       }
+    } else {
+      Label(.localizable(.back), systemImage: "xmark.circle.fill")
+        .labelStyle(.iconOnly)
+        .symbolRenderingMode(.palette)
+        .foregroundStyle(.primary, .tertiary)
+        .font(.title2)
+
+        .onTapGesture {
+          if let action {
+            action()
+          } else {
+            dismiss()
+          }
+        }
+    }
   }
 }
 
