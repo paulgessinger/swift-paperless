@@ -20,14 +20,14 @@ jobs:
     strategy:
       matrix:
         include:
-          # - ios: "18.6"
-          #   xcode: "16.4"
+          - ios: "18.6"
+            xcode: "26.0"
+            device: "iPhone 16 Pro"
 
           - ios: "26.0"
             xcode: "26.0"
+            device: "iPhone 17 Pro"
       fail-fast: false
-    env:
-      DEVICE: iPhone 17 Pro
     name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
     steps:
       - name: Checkout
@@ -43,13 +43,13 @@ jobs:
           xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
           xcodebuild build \
             -scheme swift-paperless \
-            -destination "platform=iOS Simulator,name=${{ env.DEVICE }},OS=${{ matrix.ios }}" \
+            -destination "platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.ios }}" \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
             | xcbeautify
 
   test:
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout
