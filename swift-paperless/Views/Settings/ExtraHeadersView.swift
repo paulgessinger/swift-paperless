@@ -64,17 +64,15 @@ struct ExtraHeadersView: View {
     }
 
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        HStack {
-          Button {
-            withAnimation {
-              headers.append(.init(key: "Header", value: "Value"))
-            }
-          } label: {
-            Label(String(localized: .localizable(.add)), systemImage: "plus")
+      ToolbarItemGroup(placement: .navigationBarTrailing) {
+        Button {
+          withAnimation {
+            headers.append(.init(key: "Header", value: "Value"))
           }
-          EditButton()
+        } label: {
+          Label(String(localized: .localizable(.add)), systemImage: "plus")
         }
+        EditButton()
       }
     }
 
