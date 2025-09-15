@@ -23,12 +23,11 @@ jobs:
           - ios: "18.6"
             xcode: "16.4"
 
-          # Still not consistently available
-          # - ios: "26.0"
-          #   xcode: "26.0-beta"
+          - ios: "26.0"
+            xcode: "26.0"
       fail-fast: false
     env:
-      DEVICE: iPhone 16 Pro
+      DEVICE: iPhone 17 Pro
     name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
     steps:
       - name: Checkout
@@ -58,7 +57,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.0"
 
 
       - name: Run XCode tests
