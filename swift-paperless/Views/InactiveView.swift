@@ -8,15 +8,17 @@
 import SwiftUI
 
 struct InactiveView: View {
-    var body: some View {
-        VStack {}
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                LinearGradient(gradient: Gradient(colors: [.accentColor, Color(.accentColorDarkened)]), startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-    }
+  var body: some View {
+    VStack {}
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(
+        LinearGradient(
+          gradient: Gradient(colors: [.accentColor, Color(.accentColorDarkened)]),
+          startPoint: .topLeading, endPoint: .bottomTrailing)
+      )
+  }
 }
 
 #Preview {
-    InactiveView()
+  InactiveView()
 }

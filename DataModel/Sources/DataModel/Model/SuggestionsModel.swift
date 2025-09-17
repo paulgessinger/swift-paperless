@@ -12,18 +12,18 @@ import MetaCodable
 @CodingKeys(.snake_case)
 @MemberInit
 public struct Suggestions: Sendable {
-    @Default([UInt]())
-    public var correspondents: [UInt]
+  @Default([UInt]())
+  public var correspondents: [UInt]
 
-    @Default([UInt]())
-    public var tags: [UInt]
+  @Default([UInt]())
+  public var tags: [UInt]
 
-    @Default([UInt]())
-    public var documentTypes: [UInt]
+  @Default([UInt]())
+  public var documentTypes: [UInt]
 
-    @Default([UInt]())
-    public var storagePaths: [UInt]
+  @Default([UInt]())
+  public var storagePaths: [UInt]
 
-    @Default([Date]())
-    public var dates: [Date]
+  @Default([Date]())
+  public var dates: [Date]
 }

@@ -9,55 +9,55 @@ import DataModel
 import SwiftUI
 
 struct SelectView: View {
-    @Binding var instance: CustomFieldInstance
+  @Binding var instance: CustomFieldInstance
 
-    private let options: [CustomField.SelectOption]
-    @State private var selected: CustomField.SelectOption? = nil
+  private let options: [CustomField.SelectOption]
+  @State private var selected: CustomField.SelectOption? = nil
 
-    init(instance: Binding<CustomFieldInstance>) {
-        _instance = instance
-        if case let .select(value) = instance.wrappedValue.value {
-            options = instance.wrappedValue.field.extraData.selectOptions
-            _selected = State(initialValue: value)
-        } else {
-            options = []
-        }
+  init(instance: Binding<CustomFieldInstance>) {
+    _instance = instance
+    if case .select(let value) = instance.wrappedValue.value {
+      options = instance.wrappedValue.field.extraData.selectOptions
+      _selected = State(initialValue: value)
+    } else {
+      options = []
     }
+  }
 
-    var body: some View {
-        Picker(instance.field.name, selection: $selected) {
-            Text(.localizable(.none))
-                .tag(nil as CustomField.SelectOption?)
-            ForEach(options) { option in
-                Text(option.label)
-                    .tag(option as CustomField.SelectOption?)
-            }
-        }
-        .onChange(of: selected) {
-            instance.value = .select(selected)
-        }
+  var body: some View {
+    Picker(instance.field.name, selection: $selected) {
+      Text(.localizable(.none))
+        .tag(nil as CustomField.SelectOption?)
+      ForEach(options) { option in
+        Text(option.label)
+          .tag(option as CustomField.SelectOption?)
+      }
     }
+    .onChange(of: selected) {
+      instance.value = .select(selected)
+    }
+  }
 }
 
 private let field = CustomField(
-    id: 10, name: "Custom select", dataType: .select,
-    extraData: .init(selectOptions: [
-        .init(id: "aa", label: "Option A"),
-        .init(id: "bb", label: "Option B"),
-        .init(id: "cc", label: "Option C"),
-    ])
+  id: 10, name: "Custom select", dataType: .select,
+  extraData: .init(selectOptions: [
+    .init(id: "aa", label: "Option A"),
+    .init(id: "bb", label: "Option B"),
+    .init(id: "cc", label: "Option C"),
+  ])
 )
 
 #Preview {
-    @Previewable @State var instance = CustomFieldInstance(
-        field: field, value: .select(.init(id: "bb", label: "Option B"))
-    )
+  @Previewable @State var instance = CustomFieldInstance(
+    field: field, value: .select(.init(id: "bb", label: "Option B"))
+  )
 
-    return Form {
-        SelectView(instance: $instance)
+  return Form {
+    SelectView(instance: $instance)
 
-        Section("Instance") {
-            Text(String(describing: instance))
-        }
+    Section("Instance") {
+      Text(String(describing: instance))
     }
+  }
 }

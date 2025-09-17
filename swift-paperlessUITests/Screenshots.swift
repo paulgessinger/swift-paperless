@@ -8,33 +8,33 @@
 import XCTest
 
 final class Screenshots: XCTestCase {
-    @MainActor
-    func testFlow() throws {
-        let app = XCUIApplication()
-        setupSnapshot(app)
-        app.launch()
+  @MainActor
+  func testFlow() throws {
+    let app = XCUIApplication()
+    setupSnapshot(app)
+    app.launch()
 
-        sleep(3)
-        snapshot("01DocumentView")
+    sleep(3)
+    snapshot("01DocumentView")
 
-        app.staticTexts["filterBarTagsFilterButton"].tap()
+    app.staticTexts["filterBarTagsFilterButton"].tap()
 
-        snapshot("02TagsFilter")
+    snapshot("02TagsFilter")
 
-        app.navigationBars.element(boundBy: 1)
-            .buttons["dismissButton"].tap()
+    app.navigationBars.element(boundBy: 1)
+      .buttons["dismissButton"].tap()
 
-        app.collectionViews.children(matching: .cell).element(boundBy: 1).tap()
+    app.collectionViews.children(matching: .cell).element(boundBy: 1).tap()
 
-        sleep(3)
+    sleep(3)
 
-        snapshot("03DocumentDetailView")
+    snapshot("03DocumentDetailView")
 
-        app.images["documentEditButton"].tap()
+    app.images["documentEditButton"].tap()
 
-        snapshot("04DocumentEditing")
+    snapshot("04DocumentEditing")
 
-        // Run this in debugger for help
-        // po print(XCUIApplication().debugDescription)
-    }
+    // Run this in debugger for help
+    // po print(XCUIApplication().debugDescription)
+  }
 }

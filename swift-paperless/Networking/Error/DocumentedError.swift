@@ -8,5 +8,5 @@
 import Foundation
 
 protocol DocumentedError {
-    var documentationLink: URL? { get }
+  var documentationLink: URL? { get }
 }

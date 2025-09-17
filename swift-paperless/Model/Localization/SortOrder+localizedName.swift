@@ -8,12 +8,12 @@
 import DataModel
 
 extension DataModel.SortOrder {
-    var localizedName: String {
-        switch self {
-        case .ascending:
-            String(localized: .localizable(.ascending))
-        case .descending:
-            String(localized: .localizable(.descending))
-        }
+  var localizedName: String {
+    switch self {
+    case .ascending:
+      String(localized: .localizable(.ascending))
+    case .descending:
+      String(localized: .localizable(.descending))
     }
+  }
 }
