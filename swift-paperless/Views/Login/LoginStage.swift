@@ -8,15 +8,15 @@
 import SwiftUI
 
 enum LoginStage: CaseIterable, Comparable {
-    case connection
-    case credentials
+  case connection
+  case credentials
 
-    var label: Text {
-        switch self {
-        case .connection:
-            Text("1. ") + Text(.login(.stageConnection))
-        case .credentials:
-            Text("2. ") + Text(.login(.stageCredentials))
-        }
+  var label: Text {
+    switch self {
+    case .connection:
+      Text("1. ") + Text(.login(.stageConnection))
+    case .credentials:
+      Text("2. ") + Text(.login(.stageCredentials))
     }
+  }
 }

@@ -8,18 +8,18 @@
 import Foundation
 
 enum UrlError: LocalizedError, Equatable {
-    case invalidScheme(_: String)
-    case other
-    case cannotSplit
-    case emptyHost
+  case invalidScheme(_: String)
+  case other
+  case cannotSplit
+  case emptyHost
 
-    var errorDescription: String? {
-        switch self {
-        case let .invalidScheme(scheme):
-            "Invalid scheme: \(scheme)"
-        case .other: "other"
-        case .cannotSplit: "cannot split"
-        case .emptyHost: "empty host"
-        }
+  var errorDescription: String? {
+    switch self {
+    case .invalidScheme(let scheme):
+      "Invalid scheme: \(scheme)"
+    case .other: "other"
+    case .cannotSplit: "cannot split"
+    case .emptyHost: "empty host"
     }
+  }
 }
