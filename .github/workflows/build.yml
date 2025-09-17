@@ -57,7 +57,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.0"
+          xcode-version: "16.4"
 
 
       # - name: Run XCode tests
