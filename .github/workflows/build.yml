@@ -15,38 +15,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # build:
-  #   runs-on: macos-26
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - ios: "18.6"
-  #           xcode: "26.0"
-  #           device: "iPhone 16 Pro"
-  #
-  #         - ios: "26.0"
-  #           xcode: "26.0"
-  #           device: "iPhone 17 Pro"
-  #     fail-fast: false
-  #   name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: maxim-lobanov/setup-xcode@v1
-  #       with:
-  #         xcode-version: "${{ matrix.xcode }}"
-  #
-  #     - name: Build application
-  #       run: |
-  #         set -o pipefail
-  #         xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
-  #         xcodebuild build \
-  #           -scheme swift-paperless \
-  #           -destination "platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.ios }}" \
-  #           -skipPackagePluginValidation -skipMacroValidation \
-  #           CODE_SIGN_IDENTITY="" \
-  #           | xcbeautify
+  build:
+    runs-on: macos-26
+    strategy:
+      matrix:
+        include:
+          - ios: "18.6"
+            xcode: "26.0"
+            device: "iPhone 16 Pro"
+
+          - ios: "26.0"
+            xcode: "26.0"
+            device: "iPhone 17 Pro"
+      fail-fast: false
+    name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "${{ matrix.xcode }}"
+
+      - name: Build application
+        run: |
+          set -o pipefail
+          xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
+          xcodebuild build \
+            -scheme swift-paperless \
+            -destination "platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.ios }}" \
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify
 
   test:
     runs-on: macos-26
@@ -61,46 +61,46 @@ jobs:
           xcode-version: "16.4"
 
 
-      # - name: Run XCode tests
-      #   run: |
-      #     set -o pipefail
-      #     xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
-      #     xcodebuild test \
-      #       -scheme swift-paperlessTests \
-      #       -destination "platform=macOS,name=My Mac"\
-      #       -skipPackagePluginValidation -skipMacroValidation \
-      #       CODE_SIGN_IDENTITY="" \
-      #       | xcbeautify
-      #
-      # - name: Run Common tests
-      #   run: swift test --package-path Common
-      # - name: Run DataModel tests
-      #   run: swift test --package-path DataModel
+      - name: Run XCode tests
+        run: |
+          set -o pipefail
+          xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
+          xcodebuild test \
+            -scheme swift-paperlessTests \
+            -destination "platform=macOS,name=My Mac"\
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify
+
+      - name: Run Common tests
+        run: swift test --package-path Common
+      - name: Run DataModel tests
+        run: swift test --package-path DataModel
       - name: Run Networking tests
         run: swift test --package-path Networking
 
 
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     PRE_COMMIT_HOME: '/tmp/pre-commit'
-  #
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.12'
-  #
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: |
-  #           ${{ env.PRE_COMMIT_HOME }}
-  #         key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-  #
-  #     - name: Install pre-commit
-  #       run: pip install pre-commit
-  #
-  #     - name: Run pre-commit
-  #       run: pre-commit run --all-files --show-diff-on-failure
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      PRE_COMMIT_HOME: '/tmp/pre-commit'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PRE_COMMIT_HOME }}
+          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
