@@ -19,7 +19,7 @@ let package = Package(
     dependencies: [
         .package(path: "../Common"),
         .package(path: "../DataModel"),
-        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
         .package(url: "https://github.com/groue/Semaphore", from: "0.1.0"),
     ],
     targets: [

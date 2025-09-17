@@ -17,9 +17,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-syntax", from: "600.0.1"),
-        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.5.2"),
-        .package(url: "https://github.com/SwiftyLab/MetaCodable", from: "1.4.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax", from: "601.0.1"),
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.6.3"),
+        .package(url: "https://github.com/SwiftyLab/MetaCodable", from: "1.5.0"),
 
     ],
     targets: [
@@ -27,6 +27,11 @@ let package = Package(
             name: "CommonMacros",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftBasicFormat", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
         ),
