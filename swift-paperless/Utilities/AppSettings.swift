@@ -87,10 +87,15 @@ class AppSettings: ObservableObject {
     var defaultSortOrder = DataModel.SortOrder.descending
 
     enum EditingUserInterface: String, Codable, CaseIterable {
+        static var allCases: [AppSettings.EditingUserInterface] {
+            [.automatic, .v3]
+        }
+
         case automatic
         case v3
 
         // deprecated, kept here so decoding works
+        @available(*, deprecated)
         case v1, v2
     }
 
