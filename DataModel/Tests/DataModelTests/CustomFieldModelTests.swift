@@ -224,4 +224,31 @@ struct CustomFieldModelTests {
 
     #expect(field.dataType == .other("future_type"))
   }
+
+  @Test("Test decoding string field with null select options")
+  func testDecodingStringFieldWithNullSelectOptions() throws {
+    let json = """
+      {
+        "id": 3,
+        "name": "Reference number",
+        "data_type": "string",
+        "extra_data": {
+          "select_options": [
+            null
+          ],
+          "default_currency": null
+        },
+        "document_count": 2
+      }
+      """.data(using: .utf8)!
+
+    let field = try decoder.decode(CustomField.self, from: json)
+
+    #expect(field.id == 3)
+    #expect(field.name == "Reference number")
+    #expect(field.dataType == .string)
+    #expect(field.documentCount == 2)
+    #expect(field.extraData.defaultCurrency == nil)
+    #expect(field.extraData.selectOptions.isEmpty)
+  }
 }
