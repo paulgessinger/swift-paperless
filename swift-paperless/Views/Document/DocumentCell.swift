@@ -52,10 +52,10 @@ struct DocumentCellAspect: View {
     @ScaledMetric(relativeTo: .body) var imageWidth = 20.0
 
     init(localized: LocalizedStringResource, systemImage: String) {
-        self.label = String(localized: localized)
+        label = String(localized: localized)
         self.systemImage = systemImage
     }
-    
+
     init(_ label: String?, systemImage: String) {
         self.label = label
         self.systemImage = systemImage
@@ -142,7 +142,7 @@ struct DocumentCell: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
-                
+
                 if let pageCount = document.pageCount {
                     Aspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
                         .fixedSize(horizontal: false, vertical: true)

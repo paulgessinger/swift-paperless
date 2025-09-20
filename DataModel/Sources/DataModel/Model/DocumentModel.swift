@@ -126,7 +126,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 
     @Default(Owner.unset)
     public var owner: Owner
-    
+
     @CodedBy(NullCoder<Int>())
     public var pageCount: Int?
 

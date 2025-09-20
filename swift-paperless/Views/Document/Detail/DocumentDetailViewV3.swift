@@ -159,7 +159,7 @@ private struct DocumentPropertyView: View {
                         if let pageCount = document.pageCount {
                             Aspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
                         }
-                        
+
                         if let id = document.storagePath {
                             Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
                         }
