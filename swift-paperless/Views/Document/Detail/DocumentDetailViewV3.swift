@@ -157,6 +157,10 @@ private struct DocumentPropertyView: View {
               Aspect(store.correspondents[id]?.name, systemImage: "person")
             }
 
+            if let pageCount = document.pageCount {
+              Aspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
+            }
+
             if let id = document.documentType {
               Aspect(store.documentTypes[id]?.name, systemImage: "doc")
             }
