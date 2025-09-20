@@ -8,71 +8,71 @@
 import Foundation
 
 public struct Permissions: Codable, Equatable, Hashable, Sendable {
-    public struct Set: Codable, Equatable, Hashable, Sendable {
-        public var users: [UInt]
-        public var groups: [UInt]
+  public struct Set: Codable, Equatable, Hashable, Sendable {
+    public var users: [UInt]
+    public var groups: [UInt]
 
-        public init(users: [UInt] = [], groups: [UInt] = []) {
-            self.users = users
-            self.groups = groups
-        }
-
-        public static var none: Set { .init() }
+    public init(users: [UInt] = [], groups: [UInt] = []) {
+      self.users = users
+      self.groups = groups
     }
 
-    public var view: Set
-    public var change: Set
+    public static var none: Set { .init() }
+  }
 
-    public init(view: Set = .none, change: Set = .none) {
-        self.view = view
-        self.change = change
-    }
+  public var view: Set
+  public var change: Set
 
-    public init(_ factory: (inout Permissions) -> Void) {
-        self.init()
-        factory(&self)
-    }
+  public init(view: Set = .none, change: Set = .none) {
+    self.view = view
+    self.change = change
+  }
+
+  public init(_ factory: (inout Permissions) -> Void) {
+    self.init()
+    factory(&self)
+  }
 }
 
 public enum Owner: Codable, Equatable, Sendable, Hashable, CustomStringConvertible {
-    case unset
-    case none
-    case user(UInt)
+  case unset
+  case none
+  case user(UInt)
 
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let value = try container.decode(UInt?.self)
-        self = value.map { .user($0) } ?? .none
-    }
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    let value = try container.decode(UInt?.self)
+    self = value.map { .user($0) } ?? .none
+  }
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .unset:
-            try container.encodeNil()
-        case .none:
-            try container.encodeNil()
-        case let .user(value):
-            try container.encode(value)
-        }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    switch self {
+    case .unset:
+      try container.encodeNil()
+    case .none:
+      try container.encodeNil()
+    case .user(let value):
+      try container.encode(value)
     }
+  }
 
-    public var description: String {
-        switch self {
-        case .unset:
-            "unset"
-        case .none:
-            "none"
-        case let .user(id):
-            "user(\(id))"
-        }
+  public var description: String {
+    switch self {
+    case .unset:
+      "unset"
+    case .none:
+      "none"
+    case .user(let id):
+      "user(\(id))"
     }
+  }
 }
 
 public protocol PermissionsModel {
-    var owner: Owner { get set }
+  var owner: Owner { get set }
 
-    var permissions: Permissions? { get set }
+  var permissions: Permissions? { get set }
 
-//    var setPermissions: Permissions? { get set }
+  //    var setPermissions: Permissions? { get set }
 }

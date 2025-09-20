@@ -10,28 +10,16 @@ import SwiftUI
 
 @MainActor
 protocol LoginViewProtocol: View {
-    init(connectionManager: ConnectionManager, initial: Bool)
+  init(connectionManager: ConnectionManager, initial: Bool)
 }
 
 struct LoginView: LoginViewProtocol {
-    @ObservedObject var connectionManager: ConnectionManager
-    var initial = true
+  @ObservedObject var connectionManager: ConnectionManager
+  var initial = true
 
-    @ObservedObject private var appSettings = AppSettings.shared
+  @ObservedObject private var appSettings = AppSettings.shared
 
-    var body: some View {
-        if appSettings.loginScreenV2 {
-            LoginViewV2(connectionManager: connectionManager, initial: initial)
-        } else {
-            LoginViewV1(connectionManager: connectionManager, initial: initial)
-        }
-    }
-}
-
-struct LoginViewSwitchView: View {
-    @ObservedObject private var appSettings = AppSettings.shared
-
-    var body: some View {
-        Toggle("Login screen v2", isOn: $appSettings.loginScreenV2)
-    }
+  var body: some View {
+    LoginViewV2(connectionManager: connectionManager, initial: initial)
+  }
 }

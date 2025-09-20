@@ -8,8 +8,8 @@
 import SwiftUI
 
 protocol PresentableError {
-    associatedtype PresentationView: View
+  associatedtype PresentationView: View
 
-    @MainActor
-    var presentation: PresentationView { get }
+  @MainActor
+  var presentation: PresentationView { get }
 }

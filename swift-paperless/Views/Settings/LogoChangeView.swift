@@ -6,104 +6,106 @@
 //
 
 import Foundation
-import os
 import SwiftUI
+import os
 
 enum AppIcon: String, CaseIterable {
-    case primary = "AppIcon"
-    case var0 = "AppIconVar0"
-    case var1 = "AppIconVar1"
-    case var2 = "AppIconVar2"
+  case primary = "AppIcon"
+  case var0 = "AppIconVar0"
+  case var1 = "AppIconVar1"
+  case var2 = "AppIconVar2"
 
-    var image: Image {
-        Image(uiImage: UIImage(named: "\(rawValue)-Preview")!)
-    }
+  var image: Image {
+    Image(uiImage: UIImage(named: "\(rawValue)-Preview")!)
+  }
 
-    var name: String {
-        switch self {
-        case .primary: String(localized: .settings(.logoPrimary))
-        case .var0: String(localized: .settings(.logoVariation(1)))
-        case .var1: String(localized: .settings(.logoVariation(2)))
-        case .var2: String(localized: .settings(.logoVariation(3)))
-        }
+  var name: String {
+    switch self {
+    case .primary: String(localized: .settings(.logoPrimary))
+    case .var0: String(localized: .settings(.logoVariation(1)))
+    case .var1: String(localized: .settings(.logoVariation(2)))
+    case .var2: String(localized: .settings(.logoVariation(3)))
     }
+  }
 
-    @MainActor
-    var isActive: Bool {
-        if let iconName = UIApplication.shared.alternateIconName {
-            iconName == rawValue
-        } else {
-            self == .primary
-        }
+  @MainActor
+  var isActive: Bool {
+    if let iconName = UIApplication.shared.alternateIconName {
+      iconName == rawValue
+    } else {
+      self == .primary
     }
+  }
 
-    @MainActor
-    static var active: AppIcon {
-        if let iconName = UIApplication.shared.alternateIconName {
-            .init(rawValue: iconName) ?? .primary
-        } else {
-            .primary
-        }
+  @MainActor
+  static var active: AppIcon {
+    if let iconName = UIApplication.shared.alternateIconName {
+      .init(rawValue: iconName) ?? .primary
+    } else {
+      .primary
     }
+  }
 }
 
 struct LogoChangeView: View {
-    @State private var selectedIcon: AppIcon? = nil
+  @State private var selectedIcon: AppIcon? = nil
 
-    var body: some View {
-        ScrollView(.vertical) {
-            VStack {
-                ForEach(AppIcon.allCases, id: \.self) { icon in
-                    Button {
-                        guard !icon.isActive else { return }
-                        Task { @MainActor in
-                            let previous = selectedIcon
-                            do {
-                                let value = icon == .primary ? nil : icon.rawValue
-                                selectedIcon = icon
-                                try await UIApplication.shared.setAlternateIconName(value)
-                            } catch {
-                                Logger.shared.error("Error changing icon: \(error)")
-                                selectedIcon = previous
-                            }
-                        }
-                    } label: {
-                        HStack {
-                            icon.image
-                                .resizable()
-                                .aspectRatio(1, contentMode: .fit)
-                                .frame(width: 60, height: 60)
-                                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                            Text(icon.name)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            if icon == selectedIcon {
-                                Label(localized: .settings(.logoIsSelected), systemImage: "checkmark.circle.fill")
-                                    .labelStyle(.iconOnly)
-                                    .font(.title)
-                                    .foregroundStyle(.accent)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(icon == selectedIcon ? .accent : .gray, lineWidth: icon == selectedIcon ? 2 : 0.33)
-                        }
-                    }
-                }
+  var body: some View {
+    ScrollView(.vertical) {
+      VStack {
+        ForEach(AppIcon.allCases, id: \.self) { icon in
+          Button {
+            guard !icon.isActive else { return }
+            Task { @MainActor in
+              let previous = selectedIcon
+              do {
+                let value = icon == .primary ? nil : icon.rawValue
+                selectedIcon = icon
+                try await UIApplication.shared.setAlternateIconName(value)
+              } catch {
+                Logger.shared.error("Error changing icon: \(error)")
+                selectedIcon = previous
+              }
             }
+          } label: {
+            HStack {
+              icon.image
+                .resizable()
+                .aspectRatio(1, contentMode: .fit)
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+              Text(icon.name)
+                .frame(maxWidth: .infinity, alignment: .leading)
+              if icon == selectedIcon {
+                Label(localized: .settings(.logoIsSelected), systemImage: "checkmark.circle.fill")
+                  .labelStyle(.iconOnly)
+                  .font(.title)
+                  .foregroundStyle(.accent)
+              }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
-            .animation(.default, value: selectedIcon)
+            .overlay {
+              RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(
+                  icon == selectedIcon ? .accent : .gray, lineWidth: icon == selectedIcon ? 2 : 0.33
+                )
+            }
+          }
         }
-        .task {
-            selectedIcon = .active
-        }
-        .navigationTitle(String(localized: .settings(.logoChangeTitle)))
+      }
+      .padding()
+      .animation(.default, value: selectedIcon)
     }
+    .task {
+      selectedIcon = .active
+    }
+    .navigationTitle(String(localized: .settings(.logoChangeTitle)))
+  }
 }
 
 #Preview {
-    NavigationStack {
-        LogoChangeView()
-    }
+  NavigationStack {
+    LogoChangeView()
+  }
 }

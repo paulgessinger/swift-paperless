@@ -8,11 +8,11 @@
 import Networking
 
 extension DecodingErrorWithRootType: DisplayableError {
-    var message: String {
-        error.message
-    }
+  var message: String {
+    error.message
+  }
 
-    var details: String? {
-        error.makeDetails("\(type)")
-    }
+  var details: String? {
+    error.makeDetails("\(type)")
+  }
 }

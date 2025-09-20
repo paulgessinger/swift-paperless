@@ -10,7 +10,7 @@ import SwiftSyntaxMacros
 
 @main
 struct CommonMacrosPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        URLMacro.self,
-    ]
+  let providingMacros: [Macro.Type] = [
+    URLMacro.self
+  ]
 }

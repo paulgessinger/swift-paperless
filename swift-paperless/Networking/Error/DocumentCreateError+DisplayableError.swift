@@ -7,17 +7,17 @@
 import Networking
 
 extension DocumentCreateError: DisplayableError {
-    var message: String {
-        switch self {
-        case .tooLarge:
-            String(localized: .localizable(.documentCreateFailedTooLarge))
-        }
+  var message: String {
+    switch self {
+    case .tooLarge:
+      String(localized: .localizable(.documentCreateFailedTooLarge))
     }
+  }
 
-    var details: String? {
-        switch self {
-        case .tooLarge:
-            String(localized: .localizable(.documentCreateFailedTooLargeDetails))
-        }
+  var details: String? {
+    switch self {
+    case .tooLarge:
+      String(localized: .localizable(.documentCreateFailedTooLargeDetails))
     }
+  }
 }

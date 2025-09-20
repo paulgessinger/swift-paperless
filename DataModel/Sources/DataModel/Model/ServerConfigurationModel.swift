@@ -12,6 +12,6 @@ import MetaCodable
 @CodingKeys(.snake_case)
 @MemberInit
 public struct ServerConfiguration: Sendable, Identifiable {
-    public var id: UInt
-    public var barcodeAsnPrefix: String?
+  public var id: UInt
+  public var barcodeAsnPrefix: String?
 }

@@ -9,501 +9,531 @@ import AsyncAlgorithms
 import Combine
 import DataModel
 import Networking
-import os
 import PhotosUI
 import QuickLook
 import SwiftUI
+import os
 
 enum NavigationState: Equatable, Hashable, Identifiable {
-    case root
-    case detail(document: Document)
-    case settings
-    case tasks
-    case task(_: PaperlessTask)
+  case root
+  case detail(document: Document)
+  case settings
+  case tasks
+  case task(_: PaperlessTask)
 
-    var id: UInt {
-        switch self {
-        case .root: 1
-        case .detail: 2
-        case .settings: 3
-        case .tasks: 4
-        case .task: 5
-        }
+  var id: UInt {
+    switch self {
+    case .root: 1
+    case .detail: 2
+    case .settings: 3
+    case .tasks: 4
+    case .task: 5
     }
+  }
 }
 
 extension NavigationPath {
-    mutating func popToRoot() {
-        removeLast(count)
-    }
+  mutating func popToRoot() {
+    removeLast(count)
+  }
 }
 
 @MainActor
 struct DocumentView: View {
-    @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var connectionManager: ConnectionManager
-    @EnvironmentObject private var errorController: ErrorController
+  @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var connectionManager: ConnectionManager
+  @EnvironmentObject private var errorController: ErrorController
 
-    @StateObject private var filterModel = FilterModel()
+  @StateObject private var filterModel = FilterModel()
 
-    // MARK: State
+  // MARK: State
 
-    @State private var navPath = NavigationPath()
+  @State private var navPath = NavigationPath()
 
-    @State private var showFileImporter = false
-    @State private var isDocumentScannerAvailable = false
-    @State private var isDataScannerAvailable = false
-    @State private var showDocumentScanner = false
-    @State private var showCreateModal = false
+  @State private var showFileImporter = false
+  @State private var isDocumentScannerAvailable = false
+  @State private var isDataScannerAvailable = false
+  @State private var showDocumentScanner = false
+  @State private var showCreateModal = false
 
-    @StateObject private var importModel = DocumentImportModel()
+  @StateObject private var importModel = DocumentImportModel()
 
-    @State private var logoutRequested = false
+  @State private var logoutRequested = false
 
-    @State private var showPhotosPicker = false
-    @State private var selectedPhotos: [PhotosPickerItem] = []
+  @State private var showPhotosPicker = false
+  @State private var selectedPhotos: [PhotosPickerItem] = []
 
-    @State private var showDataScanner = false
-    @State private var showTypeAsn = false
-    @State private var taskViewNavState: NavigationState? = nil
+  @State private var showDataScanner = false
+  @State private var showTypeAsn = false
+  @State private var taskViewNavState: NavigationState? = nil
 
-    private func createCallback() {
-        importModel.pop()
-        if importModel.done {
-            showCreateModal = false
-            importModel.totalUrls = 0
-        }
+  private func createCallback() {
+    importModel.pop()
+    if importModel.done {
+      showCreateModal = false
+      importModel.totalUrls = 0
     }
+  }
 
-    @ViewBuilder
-    func navigationDestinations(nav: NavigationState) -> some View {
-        switch nav {
-        case let .detail(doc):
-            DocumentDetailView(store: store, document: doc, navPath: $navPath)
-        case .settings:
-            SettingsView()
-        default:
-            fatalError()
-        }
+  @ViewBuilder
+  func navigationDestinations(nav: NavigationState) -> some View {
+    switch nav {
+    case .detail(let doc):
+      DocumentDetailView(store: store, document: doc, navPath: $navPath)
+    case .settings:
+      SettingsView()
+    default:
+      fatalError()
     }
+  }
 
-    private var savedViewNavigationTitle: String {
-        guard let id = filterModel.filterState.savedView else {
-            // No saved view active
-            return String(localized: .localizable(.documents))
-        }
-        guard let savedView = store.savedViews[id] else {
-            // Not necessarily an error, might be still loading
-            return String(localized: .localizable(.documents))
-        }
-        if filterModel.filterState.modified {
-            return String(localized: .localizable(.savedViewModified(savedView.name)))
-        } else {
-            return savedView.name
-        }
+  private var savedViewNavigationTitle: String {
+    guard let id = filterModel.filterState.savedView else {
+      // No saved view active
+      return String(localized: .localizable(.documents))
     }
-
-    private var createDocumentTitle: String {
-        if importModel.totalUrls > 1 {
-            "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
-        } else {
-            String(localized: .localizable(.documentAdd))
-        }
+    guard let savedView = store.savedViews[id] else {
+      // Not necessarily an error, might be still loading
+      return String(localized: .localizable(.documents))
     }
+    if filterModel.filterState.modified {
+      return String(localized: .localizable(.savedViewModified(savedView.name)))
+    } else {
+      return savedView.name
+    }
+  }
 
-    @ToolbarContentBuilder
-    private var toolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigationBarTrailing) {
-            TaskActivityToolbar(navState: $taskViewNavState)
+  private var createDocumentTitle: String {
+    if importModel.totalUrls > 1 {
+      "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
+    } else {
+      String(localized: .localizable(.documentAdd))
+    }
+  }
 
-            Label(String(localized: .localizable(.add)), systemImage: "plus")
-                .tint(.accent)
-                .overlay {
-                    Menu {
-                        if isDocumentScannerAvailable {
-                            Button {
-                                showDocumentScanner = true
-                            } label: {
-                                Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
-                            }
-                        }
+  @ToolbarContentBuilder
+  private var toolbar: some ToolbarContent {
+    ToolbarItemGroup(placement: .navigationBarTrailing) {
+      TaskActivityToolbar(navState: $taskViewNavState)
 
-                        Button {
-                            showFileImporter = true
-                        } label: {
-                            Label(String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
-                        }
-
-                        Button {
-                            showPhotosPicker = true
-                        } label: {
-                            Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
-                        }
-                    } label: {}
-                }
-        }
-
-        ToolbarItemGroup(placement: .navigationBarLeading) {
-            Menu {
-                NavigationLink(value: NavigationState.settings) {
-                    Label(String(localized: .settings(.title)), systemImage: "gear")
-                }
-
-                ConnectionQuickChangeMenu()
-
-                #if DEBUG
-                    Section("Debug") {
-                        Button("Trigger error without details") {
-                            errorController.push(message: "An error")
-                        }
-                        Button("Trigger error with details") {
-                            errorController.push(message: "An error", details: "Some details")
-                        }
-
-                        Button("Trigger many errors") {
-                            for i in 0 ..< 10 {
-                                errorController.push(message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
-                            }
-                        }
-                    }
-                #endif
-
-                Divider()
-
-                Button(role: .destructive) {
-                    logoutRequested = true
-                } label: {
-                    Label(String(localized: .localizable(.logout)), systemImage: "rectangle.portrait.and.arrow.right")
-                }
-
-            } label: {
-                Label(String(localized: .localizable(.detailsMenuLabel)), systemImage: "ellipsis.circle")
-                    .labelStyle(.iconOnly)
+      Label(String(localized: .localizable(.add)), systemImage: "plus")
+        .tint(.accent)
+        .overlay {
+          Menu {
+            if isDocumentScannerAvailable {
+              Button {
+                showDocumentScanner = true
+              } label: {
+                Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
+              }
             }
-            .tint(.accent)
 
-            if isDataScannerAvailable {
-                Button {
-                    Task {
-                        try? await Task.sleep(for: .seconds(0.1))
-                        showDataScanner = true
-                    }
-                } label: {
-                    Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
-                }
-                .tint(.accent)
-            } else {
-                Button {
-                    withAnimation(.spring(response: 0.5)) {
-                        showTypeAsn.toggle()
-                    }
-                } label: {
-                    Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
-                }
-                .tint(.accent)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var titleMenu: some View {
-        if !store.savedViews.isEmpty {
             Button {
-                withAnimation {
-                    filterModel.filterState.clear()
-                }
+              showFileImporter = true
             } label: {
-                Text(.localizable(.allDocuments))
+              Label(
+                String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
             }
-        }
 
-        Section(String(localized: .localizable(.savedViews))) {
-            if store.permissions.test(.view, for: .savedView) {
-                if !store.savedViews.isEmpty {
-                    ForEach(store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter { $0.id != filterModel.filterState.savedView }, id: \.id) { savedView in
-                        Button {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                withAnimation {
-                                    filterModel.filterState = .init(savedView: savedView)
-                                }
-                            }
-                        } label: {
-                            Text(savedView.name)
-                        }
-                    }
-                } else {
-                    Text(.localizable(.noSavedViews))
-                }
-            } else {
-                Text(.permissions(.noViewPermissionsSavedViews))
+            Button {
+              showPhotosPicker = true
+            } label: {
+              Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
             }
+          } label: {
+          }
         }
     }
 
-    // MARK: Main View Body
-
-    var body: some View {
-        NavigationStack(path: $navPath) {
-            DocumentList(store: store, navPath: $navPath,
-                         filterModel: filterModel,
-                         errorController: errorController)
-
-                .safeAreaInset(edge: .top) {
-                    FilterAssembly(filterModel: filterModel)
-
-                        .background(
-                            Rectangle()
-                                .fill(
-                                    Material.bar
-                                )
-                                .ignoresSafeArea(.container, edges: .top)
-                        )
-
-                        .overlay(alignment: .bottom) {
-                            Rectangle()
-                                .fill(.gray)
-                                .frame(height: 1, alignment: .bottom)
-                        }
-                }
-
-                .safeAreaInset(edge: .bottom) {
-                    if showTypeAsn {
-                        TypeAsnView { document in
-                            navPath.append(NavigationState.detail(document: document))
-                            withAnimation {
-                                showTypeAsn = false
-                            }
-                        }
-                        .transition(.move(edge: .bottom))
-                    }
-                }
-
-                .toolbarBackground(.hidden, for: .navigationBar)
-
-                .navigationDestination(for: NavigationState.self,
-                                       destination: navigationDestinations)
-
-                // MARK: Main toolbar
-
-                .toolbarTitleMenu {
-                    titleMenu
-                }
-
-                .navigationTitle(savedViewNavigationTitle)
-                .navigationBarTitleDisplayMode(.inline)
-
-                .toolbar {
-                    toolbar
-                }
-
-                .fileImporter(isPresented: $showFileImporter,
-                              allowedContentTypes: [.pdf, .image],
-                              allowsMultipleSelection: true,
-                              onCompletion: { result in
-                                  Task { @MainActor in
-                                      switch result {
-                                      case let .success(urls):
-                                          showFileImporter = false
-                                          await importModel.importFile(result: urls, isSecurityScoped: true, errorController: errorController)
-                                          showCreateModal = true
-                                      case let .failure(failure):
-                                          errorController.push(error: failure)
-                                      }
-                                  }
-                              })
-
-                .fullScreenCover(isPresented: $showDocumentScanner) {
-                    DocumentScannerView(isPresented: $showDocumentScanner, onCompletion: { result in
-                        Task { @MainActor in
-                            switch result {
-                            case let .success(urls):
-                                showDocumentScanner = false
-                                await importModel.importFile(result: urls, isSecurityScoped: false, errorController: errorController)
-                                showCreateModal = true
-                            case let .failure(failure):
-                                errorController.push(error: failure)
-                            }
-                        }
-                    })
-                    .ignoresSafeArea()
-                }
-
-                .sheet(isPresented: $showCreateModal, onDismiss: {
-                    importModel.reset()
-                }) {
-                    DocumentModelWrapper(importModel: importModel,
-                                         callback: createCallback,
-                                         title: createDocumentTitle)
-                        .environmentObject(store)
-                        .environmentObject(errorController)
-                }
-
-                .sheet(isPresented: $showDataScanner, onDismiss: {}) {
-                    DataScannerView(store: store)
-                }
-
-                .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)
-
-                .onChange(of: selectedPhotos) {
-                    Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
-                    guard !selectedPhotos.isEmpty else {
-                        Logger.shared.debug("No photos, nothing to do")
-                        return
-                    }
-
-                    Task { @MainActor in
-                        do {
-                            let url = try await createPDFFrom(photos: selectedPhotos)
-                            Logger.shared.debug("Have PDF at \(url)")
-                            await importModel.importFile(result: [url], isSecurityScoped: false, errorController: errorController)
-                            selectedPhotos = []
-                            showCreateModal = true
-                        } catch {
-                            Logger.shared.error("Got error when creating PDF from photos: \(error)")
-                            errorController.push(error: error)
-                        }
-                    }
-                }
-
-                .sheet(item: $taskViewNavState, content: tasksSheet)
-
-                .fullScreenConfirmationDialog(String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested) {
-                    Button(String(localized: .localizable(.logout)), role: .destructive) {
-                        connectionManager.logout(animated: true)
-                    }
-                    Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-                }
-
-                .task {
-                    do {
-                        async let fetch: Void = store.fetchAll()
-
-                        (isDataScannerAvailable, isDocumentScannerAvailable) = await (DataScannerView.isAvailable, DocumentScannerView.isAvailable)
-
-                        try await fetch
-                    } catch {
-                        errorController.push(error: error)
-                    }
-                }
+    ToolbarItemGroup(placement: .navigationBarLeading) {
+      Menu {
+        NavigationLink(value: NavigationState.settings) {
+          Label(String(localized: .settings(.title)), systemImage: "gear")
         }
 
-        .environmentObject(filterModel)
+        ConnectionQuickChangeMenu()
+
+        #if DEBUG
+          Section("Debug") {
+            Button("Trigger error without details") {
+              errorController.push(message: "An error")
+            }
+            Button("Trigger error with details") {
+              errorController.push(message: "An error", details: "Some details")
+            }
+
+            Button("Trigger many errors") {
+              for i in 0..<10 {
+                errorController.push(
+                  message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
+              }
+            }
+          }
+        #endif
+
+        Divider()
+
+        Button(role: .destructive) {
+          logoutRequested = true
+        } label: {
+          Label(
+            String(localized: .localizable(.logout)),
+            systemImage: "rectangle.portrait.and.arrow.right")
+        }
+
+      } label: {
+        Label(String(localized: .localizable(.detailsMenuLabel)), systemImage: "ellipsis.circle")
+          .labelStyle(.iconOnly)
+      }
+      .tint(.accent)
+
+      if isDataScannerAvailable {
+        Button {
+          Task {
+            try? await Task.sleep(for: .seconds(0.1))
+            showDataScanner = true
+          }
+        } label: {
+          Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
+        }
+        .tint(.accent)
+      } else {
+        Button {
+          withAnimation(.spring(response: 0.5)) {
+            showTypeAsn.toggle()
+          }
+        } label: {
+          Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
+        }
+        .tint(.accent)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var titleMenu: some View {
+    if !store.savedViews.isEmpty {
+      Button {
+        withAnimation {
+          filterModel.filterState.clear()
+        }
+      } label: {
+        Text(.localizable(.allDocuments))
+      }
     }
 
-    private func tasksSheet(state: NavigationState) -> some View {
-        var navPath = NavigationPath()
-        switch state {
-        case .task:
-            navPath.append(state)
-        case .tasks:
-            break
-        default:
-            fatalError("Invalid task view navigation state pushed")
+    Section(String(localized: .localizable(.savedViews))) {
+      if store.permissions.test(.view, for: .savedView) {
+        if !store.savedViews.isEmpty {
+          ForEach(
+            store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter {
+              $0.id != filterModel.filterState.savedView
+            }, id: \.id
+          ) { savedView in
+            Button {
+              DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation {
+                  filterModel.filterState = .init(savedView: savedView)
+                }
+              }
+            } label: {
+              Text(savedView.name)
+            }
+          }
+        } else {
+          Text(.localizable(.noSavedViews))
         }
-        return TasksView(navPath: navPath)
-            .environmentObject(store)
-            .environmentObject(errorController)
-            .errorOverlay(errorController: errorController, offset: 15)
+      } else {
+        Text(.permissions(.noViewPermissionsSavedViews))
+      }
     }
+  }
+
+  // MARK: Main View Body
+
+  var body: some View {
+    NavigationStack(path: $navPath) {
+      DocumentList(
+        store: store, navPath: $navPath,
+        filterModel: filterModel,
+        errorController: errorController
+      )
+
+      .safeAreaInset(edge: .top) {
+        FilterAssembly(filterModel: filterModel)
+
+          .background(
+            Rectangle()
+              .fill(
+                Material.bar
+              )
+              .ignoresSafeArea(.container, edges: .top)
+          )
+
+          .overlay(alignment: .bottom) {
+            Rectangle()
+              .fill(.gray)
+              .frame(height: 1, alignment: .bottom)
+          }
+      }
+
+      .safeAreaInset(edge: .bottom) {
+        if showTypeAsn {
+          TypeAsnView { document in
+            navPath.append(NavigationState.detail(document: document))
+            withAnimation {
+              showTypeAsn = false
+            }
+          }
+          .transition(.move(edge: .bottom))
+        }
+      }
+
+      .toolbarBackground(.hidden, for: .navigationBar)
+
+      .navigationDestination(
+        for: NavigationState.self,
+        destination: navigationDestinations
+      )
+
+      // MARK: Main toolbar
+
+      .toolbarTitleMenu {
+        titleMenu
+      }
+
+      .navigationTitle(savedViewNavigationTitle)
+      .navigationBarTitleDisplayMode(.inline)
+
+      .toolbar {
+        toolbar
+      }
+
+      .fileImporter(
+        isPresented: $showFileImporter,
+        allowedContentTypes: [.pdf, .image],
+        allowsMultipleSelection: true,
+        onCompletion: { result in
+          Task { @MainActor in
+            switch result {
+            case .success(let urls):
+              showFileImporter = false
+              await importModel.importFile(
+                result: urls, isSecurityScoped: true, errorController: errorController)
+              showCreateModal = true
+            case .failure(let failure):
+              errorController.push(error: failure)
+            }
+          }
+        }
+      )
+
+      .fullScreenCover(isPresented: $showDocumentScanner) {
+        DocumentScannerView(
+          isPresented: $showDocumentScanner,
+          onCompletion: { result in
+            Task { @MainActor in
+              switch result {
+              case .success(let urls):
+                showDocumentScanner = false
+                await importModel.importFile(
+                  result: urls, isSecurityScoped: false, errorController: errorController)
+                showCreateModal = true
+              case .failure(let failure):
+                errorController.push(error: failure)
+              }
+            }
+          }
+        )
+        .ignoresSafeArea()
+      }
+
+      .sheet(
+        isPresented: $showCreateModal,
+        onDismiss: {
+          importModel.reset()
+        }
+      ) {
+        DocumentModelWrapper(
+          importModel: importModel,
+          callback: createCallback,
+          title: createDocumentTitle
+        )
+        .environmentObject(store)
+        .environmentObject(errorController)
+      }
+
+      .sheet(isPresented: $showDataScanner, onDismiss: {}) {
+        DataScannerView(store: store)
+      }
+
+      .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)
+
+      .onChange(of: selectedPhotos) {
+        Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
+        guard !selectedPhotos.isEmpty else {
+          Logger.shared.debug("No photos, nothing to do")
+          return
+        }
+
+        Task { @MainActor in
+          do {
+            let url = try await createPDFFrom(photos: selectedPhotos)
+            Logger.shared.debug("Have PDF at \(url)")
+            await importModel.importFile(
+              result: [url], isSecurityScoped: false, errorController: errorController)
+            selectedPhotos = []
+            showCreateModal = true
+          } catch {
+            Logger.shared.error("Got error when creating PDF from photos: \(error)")
+            errorController.push(error: error)
+          }
+        }
+      }
+
+      .sheet(item: $taskViewNavState, content: tasksSheet)
+
+      .fullScreenConfirmationDialog(
+        String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested
+      ) {
+        Button(String(localized: .localizable(.logout)), role: .destructive) {
+          connectionManager.logout(animated: true)
+        }
+        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+      }
+
+      .task {
+        do {
+          async let fetch: Void = store.fetchAll()
+
+          (isDataScannerAvailable, isDocumentScannerAvailable) = await (
+            DataScannerView.isAvailable, DocumentScannerView.isAvailable
+          )
+
+          try await fetch
+        } catch {
+          errorController.push(error: error)
+        }
+      }
+    }
+
+    .environmentObject(filterModel)
+  }
+
+  private func tasksSheet(state: NavigationState) -> some View {
+    var navPath = NavigationPath()
+    switch state {
+    case .task:
+      navPath.append(state)
+    case .tasks:
+      break
+    default:
+      fatalError("Invalid task view navigation state pushed")
+    }
+    return TasksView(navPath: navPath)
+      .environmentObject(store)
+      .environmentObject(errorController)
+      .errorOverlay(errorController: errorController, offset: 15)
+  }
 }
 
 struct FilterAssembly: View {
-    @ObservedObject var filterModel: FilterModel
+  @ObservedObject var filterModel: FilterModel
 
-    @State private var searchText: String = ""
-    @State private var searchTask: Task<Void, Never>?
-    private let searchTaskDelay: Duration = .seconds(0.5)
+  @State private var searchText: String = ""
+  @State private var searchTask: Task<Void, Never>?
+  private let searchTaskDelay: Duration = .seconds(0.5)
 
-    var body: some View {
-        VStack {
-            HStack {
-                SearchBarView(text: $searchText, cancelEnabled: false) {}
+  var body: some View {
+    VStack {
+      HStack {
+        SearchBarView(text: $searchText, cancelEnabled: false) {}
 
-                Menu {
-                    ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
-                        if filterModel.filterState.searchMode == searchMode {
-                            Label(searchMode.localizedName, systemImage: "checkmark")
-                        } else {
-                            Button(searchMode.localizedName) {
-                                filterModel.filterState.searchMode = searchMode
-                            }
-                        }
-                    }
-
-                } label: {
-                    Label("X", systemImage: "ellipsis.circle")
-                        .labelStyle(.iconOnly)
-                }
+        Menu {
+          ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
+            if filterModel.filterState.searchMode == searchMode {
+              Label(searchMode.localizedName, systemImage: "checkmark")
+            } else {
+              Button(searchMode.localizedName) {
+                filterModel.filterState.searchMode = searchMode
+              }
             }
-            .padding(.horizontal)
+          }
 
-            FilterBar()
-                .padding(.bottom, 3)
+        } label: {
+          Label("X", systemImage: "ellipsis.circle")
+            .labelStyle(.iconOnly)
         }
-        .opacity(filterModel.ready ? 1.0 : 0.0)
-        .animation(.default, value: filterModel.ready)
+      }
+      .padding(.horizontal)
 
-        .onChange(of: searchText) {
-            searchTask?.cancel()
-
-            guard searchText != filterModel.filterState.searchText else { return }
-
-            searchTask = Task {
-                do {
-                    try await Task.sleep(for: searchTaskDelay)
-                    filterModel.filterState.searchText = searchText
-                } catch {}
-            }
-        }
-
-        .task {
-            searchText = filterModel.filterState.searchText
-        }
+      FilterBar()
+        .padding(.bottom, 3)
     }
+    .opacity(filterModel.ready ? 1.0 : 0.0)
+    .animation(.default, value: filterModel.ready)
+
+    .onChange(of: searchText) {
+      searchTask?.cancel()
+
+      guard searchText != filterModel.filterState.searchText else { return }
+
+      searchTask = Task {
+        do {
+          try await Task.sleep(for: searchTaskDelay)
+          filterModel.filterState.searchText = searchText
+        } catch {}
+      }
+    }
+
+    .task {
+      searchText = filterModel.filterState.searchText
+    }
+  }
 }
 
 // - MARK: Previews
 
 private struct StoreHelper<Content>: View where Content: View {
-    @ViewBuilder var content: () -> Content
+  @ViewBuilder var content: () -> Content
 
-    @StateObject var store = DocumentStore(repository: PreviewRepository())
-    @StateObject var errorController = ErrorController()
-    @StateObject var connectionManager = ConnectionManager()
+  @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @StateObject var errorController = ErrorController()
+  @StateObject var connectionManager = ConnectionManager()
 
-    var body: some View {
-        content()
-            .environmentObject(store)
-            .environmentObject(errorController)
-            .environmentObject(connectionManager)
-    }
+  var body: some View {
+    content()
+      .environmentObject(store)
+      .environmentObject(errorController)
+      .environmentObject(connectionManager)
+  }
 }
 
 private struct FilterModelHelper<Content>: View where Content: View {
-    @ViewBuilder var content: (FilterModel) -> Content
+  @ViewBuilder var content: (FilterModel) -> Content
 
-    @StateObject var filterModel = FilterModel()
+  @StateObject var filterModel = FilterModel()
 
-    var body: some View {
-        content(filterModel)
-            .environmentObject(filterModel)
-    }
+  var body: some View {
+    content(filterModel)
+      .environmentObject(filterModel)
+  }
 }
 
 #Preview("DocumentView") {
-    StoreHelper {
-        DocumentView()
-    }
+  StoreHelper {
+    DocumentView()
+  }
 }
 
 #Preview("FilterBar") {
-    StoreHelper {
-        FilterModelHelper { filterModel in
-            NavigationStack {
-                ScrollView(.vertical) {
-                    FilterAssembly(filterModel: filterModel)
-                }
-            }
+  StoreHelper {
+    FilterModelHelper { filterModel in
+      NavigationStack {
+        ScrollView(.vertical) {
+          FilterAssembly(filterModel: filterModel)
         }
+      }
     }
+  }
 }
