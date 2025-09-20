@@ -7,10 +7,10 @@
 
 import Foundation
 
-public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable, Sendable {
+
+public enum FilterRuleType : RawRepresentable, Equatable, CaseIterable, Hashable, Sendable {
   public init?(rawValue: Int) {
-    self =
-      switch rawValue {
+    self = switch rawValue {
       case 0: .title
       case 1: .content
       case 2: .asn
@@ -59,126 +59,127 @@ public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable,
       case 45: .addedTo
       case 46: .addedFrom
       case 47: .mimeType
+
       default: .other(rawValue)
-      }
+    }
   }
 
   public var rawValue: Int {
     switch self {
-    case .title: 0
-    case .content: 1
-    case .asn: 2
-    case .correspondent: 3
-    case .hasCorrespondentAny: 26
-    case .doesNotHaveCorrespondent: 27
-    case .storagePath: 25
-    case .hasStoragePathAny: 30
-    case .doesNotHaveStoragePath: 31
-    case .documentType: 4
-    case .hasDocumentTypeAny: 28
-    case .doesNotHaveDocumentType: 29
-    case .isInInbox: 5
-    case .hasTagsAll: 6
-    case .hasTagsAny: 22
-    case .doesNotHaveTag: 17
-    case .hasAnyTag: 7
-    case .createdBefore: 8
-    case .createdAfter: 9
-    case .createdTo: 43
-    case .createdFrom: 44
-    case .createdYear: 10
-    case .createdMonth: 11
-    case .createdDay: 12
-    case .addedBefore: 13
-    case .addedAfter: 14
-    case .addedTo: 45
-    case .addedFrom: 46
-    case .modifiedBefore: 15
-    case .modifiedAfter: 16
-    case .asnIsnull: 18
-    case .asnGt: 23
-    case .asnLt: 24
-    case .titleContent: 19
-    case .fulltextQuery: 20
-    case .fulltextMorelike: 21
-    case .owner: 32
-    case .ownerAny: 33
-    case .ownerIsnull: 34
-    case .ownerDoesNotInclude: 35
-    case .sharedByUser: 37
-    case .customFieldsText: 36
-    case .hasCustomFieldsAll: 38
-    case .hasCustomFieldsAny: 39
-    case .doesNotHaveCustomFields: 40
-    case .hasAnyCustomFields: 41
-    case .customFieldsQuery: 42
-    case .mimeType: 47
-    case .other(let value): value
+      case .title: 0
+      case .content: 1
+      case .asn: 2
+      case .correspondent: 3
+      case .hasCorrespondentAny: 26
+      case .doesNotHaveCorrespondent: 27
+      case .storagePath: 25
+      case .hasStoragePathAny: 30
+      case .doesNotHaveStoragePath: 31
+      case .documentType: 4
+      case .hasDocumentTypeAny: 28
+      case .doesNotHaveDocumentType: 29
+      case .isInInbox: 5
+      case .hasTagsAll: 6
+      case .hasTagsAny: 22
+      case .doesNotHaveTag: 17
+      case .hasAnyTag: 7
+      case .createdBefore: 8
+      case .createdAfter: 9
+      case .createdTo: 43
+      case .createdFrom: 44
+      case .createdYear: 10
+      case .createdMonth: 11
+      case .createdDay: 12
+      case .addedBefore: 13
+      case .addedAfter: 14
+      case .addedTo: 45
+      case .addedFrom: 46
+      case .modifiedBefore: 15
+      case .modifiedAfter: 16
+      case .asnIsnull: 18
+      case .asnGt: 23
+      case .asnLt: 24
+      case .titleContent: 19
+      case .fulltextQuery: 20
+      case .fulltextMorelike: 21
+      case .owner: 32
+      case .ownerAny: 33
+      case .ownerIsnull: 34
+      case .ownerDoesNotInclude: 35
+      case .sharedByUser: 37
+      case .customFieldsText: 36
+      case .hasCustomFieldsAll: 38
+      case .hasCustomFieldsAny: 39
+      case .doesNotHaveCustomFields: 40
+      case .hasAnyCustomFields: 41
+      case .customFieldsQuery: 42
+      case .mimeType: 47
+
+      case .other(let value): value
     }
   }
 
   public static let allCases: [FilterRuleType] = [
-    .title,
-    .content,
-    .asn,
-    .correspondent,
-    .documentType,
-    .isInInbox,
-    .hasTagsAll,
-    .hasAnyTag,
-    .createdBefore,
-    .createdAfter,
-    .createdYear,
-    .createdMonth,
-    .createdDay,
-    .addedBefore,
-    .addedAfter,
-    .modifiedBefore,
-    .modifiedAfter,
-    .doesNotHaveTag,
-    .asnIsnull,
-    .titleContent,
-    .fulltextQuery,
-    .fulltextMorelike,
-    .hasTagsAny,
-    .asnGt,
-    .asnLt,
-    .storagePath,
-    .hasCorrespondentAny,
-    .doesNotHaveCorrespondent,
-    .hasDocumentTypeAny,
-    .doesNotHaveDocumentType,
-    .hasStoragePathAny,
-    .doesNotHaveStoragePath,
-    .owner,
-    .ownerAny,
-    .ownerIsnull,
-    .ownerDoesNotInclude,
-    .customFieldsText,
-    .sharedByUser,
-    .hasCustomFieldsAll,
-    .hasCustomFieldsAny,
-    .doesNotHaveCustomFields,
-    .hasAnyCustomFields,
-    .customFieldsQuery,
-    .createdTo,
-    .createdFrom,
-    .addedTo,
-    .addedFrom,
-    .mimeType,
+      .title,
+      .content,
+      .asn,
+      .correspondent,
+      .documentType,
+      .isInInbox,
+      .hasTagsAll,
+      .hasAnyTag,
+      .createdBefore,
+      .createdAfter,
+      .createdYear,
+      .createdMonth,
+      .createdDay,
+      .addedBefore,
+      .addedAfter,
+      .modifiedBefore,
+      .modifiedAfter,
+      .doesNotHaveTag,
+      .asnIsnull,
+      .titleContent,
+      .fulltextQuery,
+      .fulltextMorelike,
+      .hasTagsAny,
+      .asnGt,
+      .asnLt,
+      .storagePath,
+      .hasCorrespondentAny,
+      .doesNotHaveCorrespondent,
+      .hasDocumentTypeAny,
+      .doesNotHaveDocumentType,
+      .hasStoragePathAny,
+      .doesNotHaveStoragePath,
+      .owner,
+      .ownerAny,
+      .ownerIsnull,
+      .ownerDoesNotInclude,
+      .customFieldsText,
+      .sharedByUser,
+      .hasCustomFieldsAll,
+      .hasCustomFieldsAny,
+      .doesNotHaveCustomFields,
+      .hasAnyCustomFields,
+      .customFieldsQuery,
+      .createdTo,
+      .createdFrom,
+      .addedTo,
+      .addedFrom,
+      .mimeType,
   ]
 
   public enum DataType {
-    case boolean
-    case correspondent
-    case date
-    case documentType
-    case number
-    case storagePath
-    case string
-    case tag
+      case boolean
+      case correspondent
+      case date
+      case documentType
+      case number
+      case storagePath
+      case string
+      case tag
   }
-
   case title
   case content
   case asn
@@ -231,139 +232,143 @@ public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable,
 
   public func filterVar() -> String? {
     switch self {
-    case .title: "title__icontains"
-    case .content: "content__icontains"
-    case .asn: "archive_serial_number"
-    case .correspondent: "correspondent__id"
-    case .hasCorrespondentAny: "correspondent__id__in"
-    case .doesNotHaveCorrespondent: "correspondent__id__none"
-    case .storagePath: "storage_path__id"
-    case .hasStoragePathAny: "storage_path__id__in"
-    case .doesNotHaveStoragePath: "storage_path__id__none"
-    case .documentType: "document_type__id"
-    case .hasDocumentTypeAny: "document_type__id__in"
-    case .doesNotHaveDocumentType: "document_type__id__none"
-    case .isInInbox: "is_in_inbox"
-    case .hasTagsAll: "tags__id__all"
-    case .hasTagsAny: "tags__id__in"
-    case .doesNotHaveTag: "tags__id__none"
-    case .hasAnyTag: "is_tagged"
-    case .createdBefore: "created__date__lt"
-    case .createdAfter: "created__date__gt"
-    case .createdTo: "created__date__lte"
-    case .createdFrom: "created__date__gte"
-    case .createdYear: "created__year"
-    case .createdMonth: "created__month"
-    case .createdDay: "created__day"
-    case .addedBefore: "added__date__lt"
-    case .addedAfter: "added__date__gt"
-    case .addedTo: "added__date__lte"
-    case .addedFrom: "added__date__gte"
-    case .modifiedBefore: "modified__date__lt"
-    case .modifiedAfter: "modified__date__gt"
-    case .asnIsnull: "archive_serial_number__isnull"
-    case .asnGt: "archive_serial_number__gt"
-    case .asnLt: "archive_serial_number__lt"
-    case .titleContent: "title_content"
-    case .fulltextQuery: "query"
-    case .fulltextMorelike: "more_like_id"
-    case .owner: "owner__id"
-    case .ownerAny: "owner__id__in"
-    case .ownerIsnull: "owner__isnull"
-    case .ownerDoesNotInclude: "owner__id__none"
-    case .sharedByUser: "shared_by__id"
-    case .customFieldsText: "custom_fields__icontains"
-    case .hasCustomFieldsAll: "custom_fields__id__all"
-    case .hasCustomFieldsAny: "custom_fields__id__in"
-    case .doesNotHaveCustomFields: "custom_fields__id__none"
-    case .hasAnyCustomFields: "has_custom_fields"
-    case .customFieldsQuery: "custom_field_query"
-    case .mimeType: "mime_type"
-    default: nil
+      case .title: "title__icontains"
+      case .content: "content__icontains"
+      case .asn: "archive_serial_number"
+      case .correspondent: "correspondent__id"
+      case .hasCorrespondentAny: "correspondent__id__in"
+      case .doesNotHaveCorrespondent: "correspondent__id__none"
+      case .storagePath: "storage_path__id"
+      case .hasStoragePathAny: "storage_path__id__in"
+      case .doesNotHaveStoragePath: "storage_path__id__none"
+      case .documentType: "document_type__id"
+      case .hasDocumentTypeAny: "document_type__id__in"
+      case .doesNotHaveDocumentType: "document_type__id__none"
+      case .isInInbox: "is_in_inbox"
+      case .hasTagsAll: "tags__id__all"
+      case .hasTagsAny: "tags__id__in"
+      case .doesNotHaveTag: "tags__id__none"
+      case .hasAnyTag: "is_tagged"
+      case .createdBefore: "created__date__lt"
+      case .createdAfter: "created__date__gt"
+      case .createdTo: "created__date__lte"
+      case .createdFrom: "created__date__gte"
+      case .createdYear: "created__year"
+      case .createdMonth: "created__month"
+      case .createdDay: "created__day"
+      case .addedBefore: "added__date__lt"
+      case .addedAfter: "added__date__gt"
+      case .addedTo: "added__date__lte"
+      case .addedFrom: "added__date__gte"
+      case .modifiedBefore: "modified__date__lt"
+      case .modifiedAfter: "modified__date__gt"
+      case .asnIsnull: "archive_serial_number__isnull"
+      case .asnGt: "archive_serial_number__gt"
+      case .asnLt: "archive_serial_number__lt"
+      case .titleContent: "title_content"
+      case .fulltextQuery: "query"
+      case .fulltextMorelike: "more_like_id"
+      case .owner: "owner__id"
+      case .ownerAny: "owner__id__in"
+      case .ownerIsnull: "owner__isnull"
+      case .ownerDoesNotInclude: "owner__id__none"
+      case .sharedByUser: "shared_by__id"
+      case .customFieldsText: "custom_fields__icontains"
+      case .hasCustomFieldsAll: "custom_fields__id__all"
+      case .hasCustomFieldsAny: "custom_fields__id__in"
+      case .doesNotHaveCustomFields: "custom_fields__id__none"
+      case .hasAnyCustomFields: "has_custom_fields"
+      case .customFieldsQuery: "custom_field_query"
+      case .mimeType: "mime_type"
+
+      default: nil
     }
   }
 
-  public func dataType() -> DataType {
+ public func dataType() -> DataType {
     switch self {
-    case .title: .string
-    case .content: .string
-    case .asn: .number
-    case .correspondent: .correspondent
-    case .hasCorrespondentAny: .correspondent
-    case .doesNotHaveCorrespondent: .correspondent
-    case .storagePath: .storagePath
-    case .hasStoragePathAny: .storagePath
-    case .doesNotHaveStoragePath: .storagePath
-    case .documentType: .documentType
-    case .hasDocumentTypeAny: .documentType
-    case .doesNotHaveDocumentType: .documentType
-    case .isInInbox: .boolean
-    case .hasTagsAll: .tag
-    case .hasTagsAny: .tag
-    case .doesNotHaveTag: .tag
-    case .hasAnyTag: .boolean
-    case .createdBefore: .date
-    case .createdAfter: .date
-    case .createdTo: .date
-    case .createdFrom: .date
-    case .createdYear: .number
-    case .createdMonth: .number
-    case .createdDay: .number
-    case .addedBefore: .date
-    case .addedAfter: .date
-    case .addedTo: .date
-    case .addedFrom: .date
-    case .modifiedBefore: .date
-    case .modifiedAfter: .date
-    case .asnIsnull: .boolean
-    case .asnGt: .number
-    case .asnLt: .number
-    case .titleContent: .string
-    case .fulltextQuery: .string
-    case .fulltextMorelike: .number
-    case .owner: .number
-    case .ownerAny: .number
-    case .ownerIsnull: .boolean
-    case .ownerDoesNotInclude: .number
-    case .sharedByUser: .number
-    case .customFieldsText: .string
-    case .hasCustomFieldsAll: .number
-    case .hasCustomFieldsAny: .number
-    case .doesNotHaveCustomFields: .number
-    case .hasAnyCustomFields: .boolean
-    case .customFieldsQuery: .string
-    case .mimeType: .string
-    default: .string
+      case .title: .string
+      case .content: .string
+      case .asn: .number
+      case .correspondent: .correspondent
+      case .hasCorrespondentAny: .correspondent
+      case .doesNotHaveCorrespondent: .correspondent
+      case .storagePath: .storagePath
+      case .hasStoragePathAny: .storagePath
+      case .doesNotHaveStoragePath: .storagePath
+      case .documentType: .documentType
+      case .hasDocumentTypeAny: .documentType
+      case .doesNotHaveDocumentType: .documentType
+      case .isInInbox: .boolean
+      case .hasTagsAll: .tag
+      case .hasTagsAny: .tag
+      case .doesNotHaveTag: .tag
+      case .hasAnyTag: .boolean
+      case .createdBefore: .date
+      case .createdAfter: .date
+      case .createdTo: .date
+      case .createdFrom: .date
+      case .createdYear: .number
+      case .createdMonth: .number
+      case .createdDay: .number
+      case .addedBefore: .date
+      case .addedAfter: .date
+      case .addedTo: .date
+      case .addedFrom: .date
+      case .modifiedBefore: .date
+      case .modifiedAfter: .date
+      case .asnIsnull: .boolean
+      case .asnGt: .number
+      case .asnLt: .number
+      case .titleContent: .string
+      case .fulltextQuery: .string
+      case .fulltextMorelike: .number
+      case .owner: .number
+      case .ownerAny: .number
+      case .ownerIsnull: .boolean
+      case .ownerDoesNotInclude: .number
+      case .sharedByUser: .number
+      case .customFieldsText: .string
+      case .hasCustomFieldsAll: .number
+      case .hasCustomFieldsAny: .number
+      case .doesNotHaveCustomFields: .number
+      case .hasAnyCustomFields: .boolean
+      case .customFieldsQuery: .string
+      case .mimeType: .string
+
+      default: .string
     }
   }
 
   public func defaultValue() -> Bool {
     switch self {
-    case .isInInbox: true
-    case .hasAnyTag: true
-    case .hasAnyCustomFields: true
-    default: false
+      case .isInInbox: true
+      case .hasAnyTag: true
+      case .hasAnyCustomFields: true
+
+      default: false
     }
   }
 
   public func multiple() -> Bool {
     switch self {
-    case .hasCorrespondentAny: true
-    case .doesNotHaveCorrespondent: true
-    case .hasStoragePathAny: true
-    case .doesNotHaveStoragePath: true
-    case .hasDocumentTypeAny: true
-    case .doesNotHaveDocumentType: true
-    case .hasTagsAll: true
-    case .hasTagsAny: true
-    case .doesNotHaveTag: true
-    case .ownerAny: true
-    case .ownerDoesNotInclude: true
-    case .sharedByUser: true
-    case .hasCustomFieldsAll: true
-    case .hasCustomFieldsAny: true
-    case .doesNotHaveCustomFields: true
-    default: false
+      case .hasCorrespondentAny: true
+      case .doesNotHaveCorrespondent: true
+      case .hasStoragePathAny: true
+      case .doesNotHaveStoragePath: true
+      case .hasDocumentTypeAny: true
+      case .doesNotHaveDocumentType: true
+      case .hasTagsAll: true
+      case .hasTagsAny: true
+      case .doesNotHaveTag: true
+      case .ownerAny: true
+      case .ownerDoesNotInclude: true
+      case .sharedByUser: true
+      case .hasCustomFieldsAll: true
+      case .hasCustomFieldsAny: true
+      case .doesNotHaveCustomFields: true
+
+      default: false
     }
   }
 
@@ -389,10 +394,11 @@ public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable,
 
   public func isNullFilterVar() -> String? {
     switch self {
-    case .correspondent: "correspondent__isnull"
-    case .storagePath: "storage_path__isnull"
-    case .documentType: "document_type__isnull"
-    default: nil
+      case .correspondent: "correspondent__isnull"
+      case .storagePath: "storage_path__isnull"
+      case .documentType: "document_type__isnull"
+
+      default: nil
     }
   }
 }
