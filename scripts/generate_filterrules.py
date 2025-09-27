@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "dirtyjson",
+#     "jinja2",
+# ]
+# ///
+
 import sys
 import urllib.request
 import re

@@ -19,16 +19,10 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install -r scripts/requirements.txt
-          pip install pre-commit
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
 
       - uses: actions/cache@v4
         with:
@@ -38,8 +32,8 @@ jobs:
 
       - name: Generate filter rules
         run: |
-          scripts/generate_filterrules.py --output DataModel/Sources/DataModel/FilterRuleType.swift
-          pre-commit run swift-format --files DataModel/Sources/DataModel/FilterRuleType.swift || true
+          uv run scripts/generate_filterrules.py --output DataModel/Sources/DataModel/FilterRuleType.swift
+          uvx pre-commit run swift-format --files DataModel/Sources/DataModel/FilterRuleType.swift || true
 
       - run: git diff
 
