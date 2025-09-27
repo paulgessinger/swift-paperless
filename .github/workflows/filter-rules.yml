@@ -39,7 +39,7 @@ jobs:
       - name: Generate filter rules
         run: |
           scripts/generate_filterrules.py --output DataModel/Sources/DataModel/FilterRuleType.swift
-          pre-commit run swiftformat --files DataModel/Sources/DataModel/FilterRuleType.swift || true
+          pre-commit run swift-format --files DataModel/Sources/DataModel/FilterRuleType.swift || true
 
       - run: git diff
 
