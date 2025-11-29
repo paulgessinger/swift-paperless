@@ -264,21 +264,8 @@ struct DocumentView: View {
       )
 
       .safeAreaInset(edge: .top) {
-        FilterAssembly(filterModel: filterModel)
+        FilterAssemblyiOS18(filterModel: filterModel)
 
-          .background(
-            Rectangle()
-              .fill(
-                Material.bar
-              )
-              .ignoresSafeArea(.container, edges: .top)
-          )
-
-          .overlay(alignment: .bottom) {
-            Rectangle()
-              .fill(.gray)
-              .frame(height: 1, alignment: .bottom)
-          }
       }
 
       .safeAreaInset(edge: .bottom) {
@@ -445,103 +432,15 @@ struct DocumentView: View {
   }
 }
 
-struct FilterAssembly: View {
-  @ObservedObject var filterModel: FilterModel
-
-  @State private var searchText: String = ""
-  @State private var searchTask: Task<Void, Never>?
-  private let searchTaskDelay: Duration = .seconds(0.5)
-
-  var body: some View {
-    VStack {
-      HStack {
-        SearchBarView(text: $searchText, cancelEnabled: false) {}
-
-        Menu {
-          ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
-            if filterModel.filterState.searchMode == searchMode {
-              Label(searchMode.localizedName, systemImage: "checkmark")
-            } else {
-              Button(searchMode.localizedName) {
-                filterModel.filterState.searchMode = searchMode
-              }
-            }
-          }
-
-        } label: {
-          Label("X", systemImage: "ellipsis.circle")
-            .labelStyle(.iconOnly)
-        }
-      }
-      .padding(.horizontal)
-
-      FilterBar()
-        .padding(.bottom, 3)
-    }
-    .opacity(filterModel.ready ? 1.0 : 0.0)
-    .animation(.default, value: filterModel.ready)
-
-    .onChange(of: searchText) {
-      searchTask?.cancel()
-
-      guard searchText != filterModel.filterState.searchText else { return }
-
-      searchTask = Task {
-        do {
-          try await Task.sleep(for: searchTaskDelay)
-          filterModel.filterState.searchText = searchText
-        } catch {}
-      }
-    }
-
-    .task {
-      searchText = filterModel.filterState.searchText
-    }
-  }
-}
-
 // - MARK: Previews
 
-private struct StoreHelper<Content>: View where Content: View {
-  @ViewBuilder var content: () -> Content
-
-  @StateObject var store = DocumentStore(repository: PreviewRepository())
-  @StateObject var errorController = ErrorController()
-  @StateObject var connectionManager = ConnectionManager()
-
-  var body: some View {
-    content()
-      .environmentObject(store)
-      .environmentObject(errorController)
-      .environmentObject(connectionManager)
-  }
-}
-
-private struct FilterModelHelper<Content>: View where Content: View {
-  @ViewBuilder var content: (FilterModel) -> Content
-
-  @StateObject var filterModel = FilterModel()
-
-  var body: some View {
-    content(filterModel)
-      .environmentObject(filterModel)
-  }
-}
-
 #Preview("DocumentView") {
-  StoreHelper {
-    DocumentView()
-  }
-}
+  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @StateObject var errorController = ErrorController()
+  @Previewable @StateObject var connectionManager = ConnectionManager()
 
-#Preview("FilterBar") {
-  StoreHelper {
-    FilterModelHelper { filterModel in
-      NavigationStack {
-        ScrollView(.vertical) {
-          FilterAssembly(filterModel: filterModel)
-        }
-      }
-    }
-  }
+  DocumentView()
+    .environmentObject(store)
+    .environmentObject(errorController)
+    .environmentObject(connectionManager)
 }
