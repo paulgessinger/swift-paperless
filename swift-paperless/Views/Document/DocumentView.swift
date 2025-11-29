@@ -66,6 +66,7 @@ struct DocumentView: View {
   @State private var showDataScanner = false
   @State private var showTypeAsn = false
   @State private var taskViewNavState: NavigationState? = nil
+  @State private var showSettings = false
 
   private func createCallback() {
     importModel.pop()
@@ -147,7 +148,10 @@ struct DocumentView: View {
 
     ToolbarItemGroup(placement: .navigationBarLeading) {
       Menu {
-        NavigationLink(value: NavigationState.settings) {
+
+        Button {
+          showSettings = true
+        } label: {
           Label(String(localized: .settings(.title)), systemImage: "gear")
         }
 
@@ -400,6 +404,10 @@ struct DocumentView: View {
           connectionManager.logout(animated: true)
         }
         Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+      }
+
+      .sheet(isPresented: $showSettings) {
+        SettingsView()
       }
 
       .task {
