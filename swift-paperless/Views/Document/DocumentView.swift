@@ -264,8 +264,11 @@ struct DocumentView: View {
       )
 
       .safeAreaInset(edge: .top) {
-        FilterAssemblyiOS18(filterModel: filterModel)
-
+        if #available(iOS 26.0, *) {
+          FilterAssembly(filterModel: filterModel)
+        } else {
+          FilterAssemblyiOS18(filterModel: filterModel)
+        }
       }
 
       .safeAreaInset(edge: .bottom) {

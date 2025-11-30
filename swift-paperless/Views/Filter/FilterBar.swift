@@ -135,10 +135,8 @@ private struct FilterMenu<Content: View>: View {
           Divider()
           Button(role: .destructive) {
             Haptics.shared.notification(.success)
-            withAnimation {
-              filterModel.filterState.clear()
-              filterState.clear()
-            }
+            filterModel.filterState.clear()
+            filterState.clear()
           } label: {
             Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
           }
@@ -160,7 +158,7 @@ private struct CircleCounter: View {
   var value: Int
   var mode = Mode.include
 
-  private var color: Color {
+  private var bg: Color {
     switch mode {
     case .include:
       Color.accentColor
@@ -169,13 +167,17 @@ private struct CircleCounter: View {
     }
   }
 
+  private var fg: Color {
+    .white
+  }
+
   var body: some View {
     Text(String("\(value)"))
-      .foregroundColor(.white)
+      .foregroundColor(fg)
       .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
       .if(value > 1) { view in view.padding(5) }
       .frame(minWidth: 20, minHeight: 20)
-      .background(Circle().fill(color))
+      .background(Circle().fill(bg))
   }
 }
 
@@ -236,24 +238,72 @@ private struct Element<Label: View>: View {
 
   @State private var pressed = false
 
-  var body: some View {
-    Pill(active: active, chevron: chevron, label: label)
-      .onTapGesture {
-        Haptics.shared.impact(style: .light)
-        action()
-        Task {
-          pressed = true
-          try? await Task.sleep(for: .seconds(0.3))
-          withAnimation {
-            pressed = false
-          }
-        }
+  private func onTap() {
+    Haptics.shared.impact(style: .light)
+    action()
+    Task {
+      pressed = true
+      try? await Task.sleep(for: .seconds(0.3))
+      withAnimation {
+        pressed = false
       }
-      .opacity(pressed ? 0.7 : 1.0)
+    }
+  }
+
+  var body: some View {
+    if #available(iOS 26.0, *) {
+      Button {
+        action()
+      } label: {
+        Pill(active: active, chevron: chevron, label: label)
+      }
+    } else {
+      Pill(active: active, chevron: chevron, label: label)
+        .onTapGesture {
+          action()
+        }
+        .opacity(pressed ? 0.7 : 1.0)
+    }
   }
 }
 
 private struct Pill<Label: View>: View {
+  var active: Bool
+  var chevron = true
+  @ViewBuilder var label: () -> Label
+
+  var body: some View {
+    if #available(iOS 26.0, *) {
+      PillLiquidGlass(active: active, chevron: chevron, label: label)
+    } else {
+      PilliOS18(active: active, chevron: chevron, label: label)
+    }
+  }
+}
+
+@available(iOS 26.0, *)
+private struct PillLiquidGlass<Label: View>: View {
+  var active: Bool
+  var chevron = true
+  @ViewBuilder var label: () -> Label
+
+  var body: some View {
+    HStack {
+      label()
+      if chevron {
+        Image(systemName: "chevron.down")
+      }
+    }
+    .frame(minHeight: 35)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 4)
+    .foregroundColor(active ? Color.accent : Color.primary)
+    .fontWeight(active ? .bold : .regular)
+    .glassEffect(.regular.interactive())
+  }
+}
+
+private struct PilliOS18<Label: View>: View {
   var active: Bool
   var chevron = true
   @ViewBuilder var label: () -> Label
@@ -360,10 +410,6 @@ struct FilterBar: View {
 
   @State private var filterState = FilterState.default
 
-  @State var offset = CGSize()
-  @State var menuWidth = 0.0
-  @State var filterMenuHit = false
-
   @State private var savedView: ProtoSavedView? = nil
 
   private struct Modal<Content: View>: View {
@@ -450,7 +496,158 @@ struct FilterBar: View {
     }
   }
 
-  var body: some View {
+  private var tagElement: some View {
+
+    Element(
+      label: {
+        switch filterState.tags {
+        case .any:
+          Text(.localizable(.tags))
+        case .notAssigned:
+          Text(.localizable(.tagsNotAssignedFilter))
+        case .allOf(let include, let exclude):
+          let count = include.count + exclude.count
+          if count == 1 {
+            if let i = include.first, let name = store.tags[i]?.name {
+              Text(name)
+            } else if let i = exclude.first, let name = store.tags[i]?.name {
+              Label(String(localized: .localizable(.tagExclude)), systemImage: "xmark")
+                .labelStyle(.iconOnly)
+              Text(name)
+            } else {
+              Text(.localizable(.numberOfTags(1)))
+                .redacted(reason: .placeholder)
+            }
+          } else {
+            if !include.isEmpty, !exclude.isEmpty {
+              CircleCounter(value: include.count, mode: .include)
+              Text(String("/"))
+              CircleCounter(value: exclude.count, mode: .exclude)
+            } else if !include.isEmpty {
+              CircleCounter(value: count, mode: .include)
+            } else {
+              CircleCounter(value: count, mode: .exclude)
+            }
+            Text(.localizable(.tags))
+          }
+        case .anyOf(let ids):
+          if ids.count == 1 {
+            if let name = store.tags[ids.first!]?.name {
+              Text(name)
+            } else {
+              Text(.localizable(.numberOfTags(1)))
+                .redacted(reason: .placeholder)
+            }
+          } else {
+            CircleCounter(value: ids.count)
+            Text(.localizable(.tags))
+          }
+        }
+      }, active: filterState.tags != .any
+    ) {
+      present(.tags)
+    }
+    .accessibilityIdentifier("filterBarTagsFilterButton")
+  }
+
+  private func ownerMenu<B: View>(@ViewBuilder content: () -> B) -> some View {
+    Menu {
+      Button {
+        filterModel.filterState.owner = .any
+      } label: {
+        let text = String(localized: .localizable(.ownerAll))
+        if filterState.owner == .any {
+          Label(text, systemImage: "checkmark")
+        } else {
+          Text(text)
+        }
+      }
+
+      if let user = store.currentUser {
+        Button {
+          filterModel.filterState.owner = .anyOf(ids: [user.id])
+        } label: {
+          let text = String(localized: .localizable(.ownerMyDocuments))
+          switch filterState.owner {
+          case .anyOf(let ids):
+            if ids.count == 1, ids[0] == store.currentUser?.id {
+              Label(text, systemImage: "checkmark")
+            } else {
+              Text(text)
+            }
+          default:
+            Text(text)
+          }
+        }
+        Button {
+          filterModel.filterState.owner = .noneOf(ids: [user.id])
+        } label: {
+          let text = String(localized: .localizable(.ownerSharedWithMe))
+          switch filterState.owner {
+          case .noneOf(let ids):
+            if ids.count == 1, ids[0] == store.currentUser?.id {
+              Label(text, systemImage: "checkmark")
+            } else {
+              Text(text)
+            }
+          default:
+            Text(text)
+          }
+        }
+      }
+      Button {
+        filterModel.filterState.owner = .notAssigned
+      } label: {
+        let text = String(localized: .localizable(.ownerUnowned))
+        if filterState.owner == .notAssigned {
+          Label(text, systemImage: "checkmark")
+        } else {
+          Text(text)
+        }
+      }
+
+      switch filterState.owner {
+      case .anyOf(let ids), .noneOf(let ids):
+        if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
+          Divider()
+          Text(String(localized: .localizable(.ownerFilterExplicitUnsupported)))
+        } else {
+          EmptyView()
+        }
+      case .notAssigned, .any:
+        EmptyView()
+      }
+    } label: {
+      content()
+    }
+  }
+
+  private var ownerElement: some View {
+    Pill(active: filterState.owner != .any) {
+      switch filterState.owner {
+      case .any:
+        Text(.localizable(.permissions))
+      case .anyOf(let ids):
+        if ids.count == 1, ids[0] == store.currentUser?.id {
+          Text(.localizable(.ownerMyDocuments))
+        } else {
+          CircleCounter(value: ids.count, mode: .include)
+          Text(.localizable(.ownerMultipleUsers))
+        }
+      case .noneOf(let ids):
+        if ids.count == 1, ids[0] == store.currentUser?.id {
+          Text(.localizable(.ownerSharedWithMe))
+        } else {
+          CircleCounter(value: ids.count, mode: .exclude)
+          Text(.localizable(.ownerMultipleUsers))
+        }
+      case .notAssigned:
+        Text(.localizable(.ownerUnowned))
+      }
+    }
+  }
+
+  private var barContentiOS18: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
         Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
@@ -462,7 +659,6 @@ struct FilterBar: View {
             CircleCounter(value: filterModel.filterState.ruleCount)
           }
         }
-        .opacity(filterMenuHit ? 0.5 : 1.0)
         .overlay {
           GeometryReader { geo in
             FilterMenu(filterState: $filterState, savedView: $savedView) {
@@ -470,75 +666,9 @@ struct FilterBar: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
           }
-          .onTapGesture {
-            Task {
-              Haptics.shared.prepare()
-              Haptics.shared.impact(style: .light)
-              filterMenuHit = true
-              try? await Task.sleep(for: .seconds(0.3))
-              withAnimation { filterMenuHit = false }
-            }
-          }
         }
 
-        .onChange(of: offset) {
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation {
-              menuWidth = offset.width
-            }
-          }
-        }
-
-        Element(
-          label: {
-            switch filterState.tags {
-            case .any:
-              Text(.localizable(.tags))
-            case .notAssigned:
-              Text(.localizable(.tagsNotAssignedFilter))
-            case .allOf(let include, let exclude):
-              let count = include.count + exclude.count
-              if count == 1 {
-                if let i = include.first, let name = store.tags[i]?.name {
-                  Text(name)
-                } else if let i = exclude.first, let name = store.tags[i]?.name {
-                  Label(String(localized: .localizable(.tagExclude)), systemImage: "xmark")
-                    .labelStyle(.iconOnly)
-                  Text(name)
-                } else {
-                  Text(.localizable(.numberOfTags(1)))
-                    .redacted(reason: .placeholder)
-                }
-              } else {
-                if !include.isEmpty, !exclude.isEmpty {
-                  CircleCounter(value: include.count, mode: .include)
-                  Text(String("/"))
-                  CircleCounter(value: exclude.count, mode: .exclude)
-                } else if !include.isEmpty {
-                  CircleCounter(value: count, mode: .include)
-                } else {
-                  CircleCounter(value: count, mode: .exclude)
-                }
-                Text(.localizable(.tags))
-              }
-            case .anyOf(let ids):
-              if ids.count == 1 {
-                if let name = store.tags[ids.first!]?.name {
-                  Text(name)
-                } else {
-                  Text(.localizable(.numberOfTags(1)))
-                    .redacted(reason: .placeholder)
-                }
-              } else {
-                CircleCounter(value: ids.count)
-                Text(.localizable(.tags))
-              }
-            }
-          }, active: filterState.tags != .any
-        ) {
-          present(.tags)
-        }
-        .accessibilityIdentifier("filterBarTagsFilterButton")
+        tagElement
 
         Element(
           label: {
@@ -564,114 +694,78 @@ struct FilterBar: View {
           }, active: filterState.storagePath != .any
         ) { present(.storagePath) }
 
-        Pill(active: filterState.owner != .any) {
-          switch filterState.owner {
-          case .any:
-            Text(.localizable(.permissions))
-          case .anyOf(let ids):
-            if ids.count == 1, ids[0] == store.currentUser?.id {
-              Text(.localizable(.ownerMyDocuments))
-            } else {
-              CircleCounter(value: ids.count, mode: .include)
-              Text(.localizable(.ownerMultipleUsers))
+        ownerElement
+          .overlay {
+            GeometryReader { geo in
+              ownerMenu {
+                Color.clear
+                  .frame(width: geo.size.width, height: geo.size.height)
+              }
+              .onTapGesture {
+                Haptics.shared.impact(style: .light)
+              }
             }
-          case .noneOf(let ids):
-            if ids.count == 1, ids[0] == store.currentUser?.id {
-              Text(.localizable(.ownerSharedWithMe))
-            } else {
-              CircleCounter(value: ids.count, mode: .exclude)
-              Text(.localizable(.ownerMultipleUsers))
+          }
+
+        Element(
+          label: {
+            Text(.customFields(.title))
+          }, active: filterModel.filterState.customField != .any
+        ) { present(.customFields) }
+
+        Divider()
+
+        SortMenu(filterState: $filterState)
+      }
+    }
+
+    .padding(.horizontal)
+    .animation(.default, value: filterModel.filterState)
+  }
+
+  private var barContent: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack {
+        FilterMenu(filterState: $filterState, savedView: $savedView) {
+          Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
+            Label(
+              String(localized: .localizable(.filtering)), systemImage: "line.3.horizontal.decrease"
+            )
+            .labelStyle(.iconOnly)
+            if filterModel.filterState.filtering {
+              CircleCounter(value: filterModel.filterState.ruleCount)
             }
-          case .notAssigned:
-            Text(.localizable(.ownerUnowned))
           }
         }
-        .overlay {
-          GeometryReader { geo in
 
-            Menu {
-              Button {
-                withAnimation {
-                  filterModel.filterState.owner = .any
-                }
-              } label: {
-                let text = String(localized: .localizable(.ownerAll))
-                if filterState.owner == .any {
-                  Label(text, systemImage: "checkmark")
-                } else {
-                  Text(text)
-                }
-              }
+        tagElement
 
-              if let user = store.currentUser {
-                Button {
-                  withAnimation {
-                    filterModel.filterState.owner = .anyOf(ids: [user.id])
-                  }
-                } label: {
-                  let text = String(localized: .localizable(.ownerMyDocuments))
-                  switch filterState.owner {
-                  case .anyOf(let ids):
-                    if ids.count == 1, ids[0] == store.currentUser?.id {
-                      Label(text, systemImage: "checkmark")
-                    } else {
-                      Text(text)
-                    }
-                  default:
-                    Text(text)
-                  }
-                }
-                Button {
-                  withAnimation {
-                    filterModel.filterState.owner = .noneOf(ids: [user.id])
-                  }
-                } label: {
-                  let text = String(localized: .localizable(.ownerSharedWithMe))
-                  switch filterState.owner {
-                  case .noneOf(let ids):
-                    if ids.count == 1, ids[0] == store.currentUser?.id {
-                      Label(text, systemImage: "checkmark")
-                    } else {
-                      Text(text)
-                    }
-                  default:
-                    Text(text)
-                  }
-                }
-              }
-              Button {
-                withAnimation {
-                  filterModel.filterState.owner = .notAssigned
-                }
+        Element(
+          label: {
+            CommonElementLabel(
+              DocumentType.self,
+              state: filterState.documentType)
+          }, active: filterState.documentType != .any
+        ) { present(.documentType) }
 
-              } label: {
-                let text = String(localized: .localizable(.ownerUnowned))
-                if filterState.owner == .notAssigned {
-                  Label(text, systemImage: "checkmark")
-                } else {
-                  Text(text)
-                }
-              }
+        Element(
+          label: {
+            CommonElementLabel(
+              Correspondent.self,
+              state: filterState.correspondent)
+          }, active: filterState.correspondent != .any
+        ) { present(.correspondent) }
 
-              switch filterState.owner {
-              case .anyOf(let ids), .noneOf(let ids):
-                if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
-                  Divider()
-                  Text(String(localized: .localizable(.ownerFilterExplicitUnsupported)))
-                } else {
-                  EmptyView()
-                }
-              case .notAssigned, .any:
-                EmptyView()
-              }
-            } label: {
-              Color.clear
-                .frame(width: geo.size.width, height: geo.size.height)
-            }
-            .onTapGesture {
-              Haptics.shared.impact(style: .light)
-            }
-          }
+        Element(
+          label: {
+            CommonElementLabel(
+              StoragePath.self,
+              state: filterState.storagePath)
+          }, active: filterState.storagePath != .any
+        ) { present(.storagePath) }
+
+        ownerMenu {
+          ownerElement
         }
 
         Element(
@@ -684,88 +778,103 @@ struct FilterBar: View {
 
         SortMenu(filterState: $filterState)
       }
-      .padding(.horizontal)
-      .foregroundColor(.primary)
     }
-    .scaledToFit()
-    .padding(.vertical, 5)
+    .padding(.horizontal)
+    .animation(.default, value: filterModel.filterState)
+  }
 
-    .task {
-      try? await Task.sleep(for: .seconds(0.5))
-      withAnimation {
-        filterState = filterModel.filterState
+  @ViewBuilder
+  private var barView: some View {
+    if #available(iOS 26.0, *) {
+      GlassEffectContainer {
+        barContent
       }
+    } else {
+      barContentiOS18
     }
+  }
 
-    .onChange(of: filterState.sortOrder) { _, value in
-      filterModel.filterState.sortOrder = value
-    }
+  var body: some View {
+    barView
+      .scaledToFit()
+      .padding(.vertical, 5)
 
-    .onChange(of: filterState.sortField) { _, value in
-      filterModel.filterState.sortField = value
-    }
-
-    // MARK: Sheets
-
-    .sheet(isPresented: $showTags) {
-      Modal(title: String(localized: .localizable(.tags)), filterState: $filterState) {
-        TagFilterView(
-          selectedTags: $filterState.tags)
-      }
-    }
-
-    .sheet(isPresented: $showDocumentType) {
-      Modal(title: String(localized: .localizable(.documentType)), filterState: $filterState) {
-        CommonPickerFilterView(
-          selection: $filterState.documentType,
-          elements: store.documentTypes.sorted {
-            $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-          }.map { ($0.value.id, $0.value.name) },
-          notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
-        )
-      }
-    }
-
-    .sheet(isPresented: $showCorrespondent) {
-      Modal(title: String(localized: .localizable(.correspondent)), filterState: $filterState) {
-        CommonPickerFilterView(
-          selection: $filterState.correspondent,
-          elements: store.correspondents.sorted {
-            $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-          }.map { ($0.value.id, $0.value.name) },
-          notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
-        )
-      }
-    }
-
-    .sheet(isPresented: $showStoragePath) {
-      Modal(title: String(localized: .localizable(.storagePath)), filterState: $filterState) {
-        CommonPickerFilterView(
-          selection: $filterState.storagePath,
-          elements: store.storagePaths.sorted {
-            $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-          }.map { ($0.value.id, $0.value.name) },
-          notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
-        )
-      }
-    }
-
-    .sheet(isPresented: $showCustomFields) {
-      CustomFieldFilterView(query: $filterModel.filterState.customField)
-    }
-
-    .sheet(item: $savedView) { view in
-      AddSavedViewSheet(savedView: view)
-    }
-
-    // @TODO: Revisit if this is needed still, if not simplify
-    .onReceive(filterModel.filterStatePublisher) { value in
-      DispatchQueue.main.async {
+      .task {
+        try? await Task.sleep(for: .seconds(0.5))
         withAnimation {
-          filterState = value
+          filterState = filterModel.filterState
         }
       }
-    }
+
+      .onChange(of: filterState.sortOrder) { _, value in
+        filterModel.filterState.sortOrder = value
+      }
+
+      .onChange(of: filterState.sortField) { _, value in
+        filterModel.filterState.sortField = value
+      }
+
+      // MARK: Sheets
+
+      .sheet(isPresented: $showTags) {
+        Modal(title: String(localized: .localizable(.tags)), filterState: $filterState) {
+          TagFilterView(
+            selectedTags: $filterState.tags)
+        }
+      }
+
+      .sheet(isPresented: $showDocumentType) {
+        Modal(title: String(localized: .localizable(.documentType)), filterState: $filterState) {
+          CommonPickerFilterView(
+            selection: $filterState.documentType,
+            elements: store.documentTypes.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
+          )
+        }
+      }
+
+      .sheet(isPresented: $showCorrespondent) {
+        Modal(title: String(localized: .localizable(.correspondent)), filterState: $filterState) {
+          CommonPickerFilterView(
+            selection: $filterState.correspondent,
+            elements: store.correspondents.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
+          )
+        }
+      }
+
+      .sheet(isPresented: $showStoragePath) {
+        Modal(title: String(localized: .localizable(.storagePath)), filterState: $filterState) {
+          CommonPickerFilterView(
+            selection: $filterState.storagePath,
+            elements: store.storagePaths.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
+          )
+        }
+      }
+
+      .sheet(isPresented: $showCustomFields) {
+        CustomFieldFilterView(query: $filterModel.filterState.customField)
+      }
+
+      .sheet(item: $savedView) { view in
+        AddSavedViewSheet(savedView: view)
+      }
+
+      // @TODO: Revisit if this is needed still, if not simplify
+      .onReceive(filterModel.filterStatePublisher) { value in
+        DispatchQueue.main.async {
+          withAnimation {
+            filterState = value
+          }
+        }
+      }
   }
 }
 

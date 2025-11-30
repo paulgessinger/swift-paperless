@@ -9,7 +9,7 @@ import DataModel
 import Networking
 import SwiftUI
 
-struct FilterAssemblyiOS18: View {
+struct FilterAssembly: View {
   @ObservedObject var filterModel: FilterModel
 
   @State private var searchText: String = ""
@@ -62,19 +62,6 @@ struct FilterAssemblyiOS18: View {
       searchText = filterModel.filterState.searchText
     }
 
-    .background(
-      Rectangle()
-        .fill(
-          Material.bar
-        )
-        .ignoresSafeArea(.container, edges: .top)
-    )
-
-    .overlay(alignment: .bottom) {
-      Rectangle()
-        .fill(.gray)
-        .frame(height: 1, alignment: .bottom)
-    }
   }
 }
 
@@ -92,9 +79,10 @@ struct FilterAssemblyiOS18: View {
     }
 
     .safeAreaInset(edge: .top) {
-      FilterAssemblyiOS18(filterModel: filterModel)
+      FilterAssembly(filterModel: filterModel)
         .environmentObject(store)
         .environmentObject(errorController)
+        // @TODO: Is this needed even?
         .environmentObject(connectionManager)
         .environmentObject(filterModel)
     }

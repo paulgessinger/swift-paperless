@@ -146,6 +146,7 @@
 				Document/DocumentEditView.swift,
 				Document/DocumentList.swift,
 				Document/DocumentView.swift,
+				Document/FilterAssembly.swift,
 				Document/FilterAssemblyiOS18.swift,
 				Filter/CustomFieldFilterView.swift,
 				Filter/CustomFieldQueryDisplayView.swift,
