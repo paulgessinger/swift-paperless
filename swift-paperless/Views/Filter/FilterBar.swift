@@ -13,6 +13,10 @@ import Networking
 import SwiftUI
 import os
 
+private enum TransitionKeys: String {
+  case tags, documentType, correspondent, storagePath, customFields
+}
+
 // @TODO: Add UI for FilterState with remaining rules!
 
 // MARK: FilterMenu
@@ -290,6 +294,7 @@ private struct PillLiquidGlass<Label: View>: View {
   var body: some View {
     HStack {
       label()
+        .fixedSize()
       if chevron {
         Image(systemName: "chevron.down")
       }
@@ -412,6 +417,8 @@ struct FilterBar: View {
 
   @State private var savedView: ProtoSavedView? = nil
 
+  @Namespace private var transition
+
   private struct Modal<Content: View>: View {
     @EnvironmentObject private var store: DocumentStore
     @EnvironmentObject private var filterModel: FilterModel
@@ -500,47 +507,58 @@ struct FilterBar: View {
 
     Element(
       label: {
-        switch filterState.tags {
-        case .any:
-          Text(.localizable(.tags))
-        case .notAssigned:
-          Text(.localizable(.tagsNotAssignedFilter))
-        case .allOf(let include, let exclude):
-          let count = include.count + exclude.count
-          if count == 1 {
-            if let i = include.first, let name = store.tags[i]?.name {
-              Text(name)
-            } else if let i = exclude.first, let name = store.tags[i]?.name {
-              Label(String(localized: .localizable(.tagExclude)), systemImage: "xmark")
-                .labelStyle(.iconOnly)
-              Text(name)
-            } else {
-              Text(.localizable(.numberOfTags(1)))
-                .redacted(reason: .placeholder)
-            }
-          } else {
-            if !include.isEmpty, !exclude.isEmpty {
-              CircleCounter(value: include.count, mode: .include)
-              Text(String("/"))
-              CircleCounter(value: exclude.count, mode: .exclude)
-            } else if !include.isEmpty {
-              CircleCounter(value: count, mode: .include)
-            } else {
-              CircleCounter(value: count, mode: .exclude)
-            }
+        Group {
+          switch filterState.tags {
+          case .any:
             Text(.localizable(.tags))
+          case .notAssigned:
+            Text(.localizable(.tagsNotAssignedFilter))
+          case .allOf(let include, let exclude):
+            let count = include.count + exclude.count
+            if count == 1 {
+              if let i = include.first, let name = store.tags[i]?.name {
+                Text(name)
+              } else if let i = exclude.first, let name = store.tags[i]?.name {
+                Label(String(localized: .localizable(.tagExclude)), systemImage: "xmark")
+                  .labelStyle(.iconOnly)
+                Text(name)
+              } else {
+                Text(.localizable(.numberOfTags(1)))
+                  .redacted(reason: .placeholder)
+              }
+            } else {
+              if !include.isEmpty, !exclude.isEmpty {
+                CircleCounter(value: include.count, mode: .include)
+                Text(String("/"))
+                CircleCounter(value: exclude.count, mode: .exclude)
+              } else if !include.isEmpty {
+                CircleCounter(value: count, mode: .include)
+              } else {
+                CircleCounter(value: count, mode: .exclude)
+              }
+              Text(.localizable(.tags))
+            }
+          case .anyOf(let ids):
+            if ids.count == 1 {
+              if let name = store.tags[ids.first!]?.name {
+                Text(name)
+              } else {
+                Text(.localizable(.numberOfTags(1)))
+                  .redacted(reason: .placeholder)
+              }
+            } else {
+              CircleCounter(value: ids.count)
+              Text(.localizable(.tags))
+            }
           }
-        case .anyOf(let ids):
-          if ids.count == 1 {
-            if let name = store.tags[ids.first!]?.name {
-              Text(name)
-            } else {
-              Text(.localizable(.numberOfTags(1)))
-                .redacted(reason: .placeholder)
-            }
+        }
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.matchedTransitionSource(
+              id: TransitionKeys.tags, in: transition
+            )
           } else {
-            CircleCounter(value: ids.count)
-            Text(.localizable(.tags))
+            $0
           }
         }
       }, active: filterState.tags != .any
@@ -723,6 +741,7 @@ struct FilterBar: View {
     .animation(.default, value: filterModel.filterState)
   }
 
+  @available(iOS 26.0, *)
   private var barContent: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
@@ -744,7 +763,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               DocumentType.self,
-              state: filterState.documentType)
+              state: filterState.documentType
+            )
+            .matchedTransitionSource(
+              id: TransitionKeys.documentType, in: transition
+            )
           }, active: filterState.documentType != .any
         ) { present(.documentType) }
 
@@ -752,7 +775,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               Correspondent.self,
-              state: filterState.correspondent)
+              state: filterState.correspondent
+            )
+            .matchedTransitionSource(
+              id: TransitionKeys.correspondent, in: transition
+            )
           }, active: filterState.correspondent != .any
         ) { present(.correspondent) }
 
@@ -760,7 +787,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               StoragePath.self,
-              state: filterState.storagePath)
+              state: filterState.storagePath
+            )
+            .matchedTransitionSource(
+              id: TransitionKeys.storagePath, in: transition
+            )
           }, active: filterState.storagePath != .any
         ) { present(.storagePath) }
 
@@ -771,6 +802,9 @@ struct FilterBar: View {
         Element(
           label: {
             Text(.customFields(.title))
+              .matchedTransitionSource(
+                id: TransitionKeys.customFields, in: transition
+              )
           }, active: filterModel.filterState.customField != .any
         ) { present(.customFields) }
 
@@ -821,6 +855,16 @@ struct FilterBar: View {
           TagFilterView(
             selectedTags: $filterState.tags)
         }
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.navigationTransition(
+              .zoom(sourceID: TransitionKeys.tags, in: transition)
+            )
+          } else {
+            $0
+          }
+
+        }
       }
 
       .sheet(isPresented: $showDocumentType) {
@@ -832,6 +876,16 @@ struct FilterBar: View {
             }.map { ($0.value.id, $0.value.name) },
             notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
           )
+        }
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.navigationTransition(
+              .zoom(sourceID: TransitionKeys.documentType, in: transition)
+            )
+          } else {
+            $0
+          }
+
         }
       }
 
@@ -845,6 +899,15 @@ struct FilterBar: View {
             notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
           )
         }
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.navigationTransition(
+              .zoom(sourceID: TransitionKeys.correspondent, in: transition)
+            )
+          } else {
+            $0
+          }
+        }
       }
 
       .sheet(isPresented: $showStoragePath) {
@@ -857,10 +920,28 @@ struct FilterBar: View {
             notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
           )
         }
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.navigationTransition(
+              .zoom(sourceID: TransitionKeys.storagePath, in: transition)
+            )
+          } else {
+            $0
+          }
+        }
       }
 
       .sheet(isPresented: $showCustomFields) {
         CustomFieldFilterView(query: $filterModel.filterState.customField)
+          .apply {
+            if #available(iOS 26.0, *) {
+              $0.navigationTransition(
+                .zoom(sourceID: TransitionKeys.customFields, in: transition)
+              )
+            } else {
+              $0
+            }
+          }
       }
 
       .sheet(item: $savedView) { view in
