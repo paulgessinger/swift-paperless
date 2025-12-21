@@ -69,7 +69,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "${{ env.GITHUB_VERSION }}"
+          xcode-version: '${{ env.GITHUB_VERSION }}'
 
 
       - name: Run XCode tests

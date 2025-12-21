@@ -28,6 +28,8 @@ let package = Package(
     .target(
       name: "Networking",
       dependencies: [
+        // Desperate workaround for linker error?
+        .product(name: "CasePaths", package: "swift-case-paths"),
         .product(name: "Common", package: "Common"),
         .product(name: "DataModel", package: "DataModel"),
         .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
