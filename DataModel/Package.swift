@@ -19,7 +19,7 @@ let package = Package(
   dependencies: [
     .package(path: "../Common"),
     .package(url: "https://github.com/SwiftyLab/MetaCodable", from: "1.5.0"),
-    .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.7.1"),
+    .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.7.2"),
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.

@@ -21,7 +21,7 @@ let package = Package(
     .package(path: "../DataModel"),
     .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
     .package(url: "https://github.com/groue/Semaphore", from: "0.1.0"),
-    .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.7.1"),
+    .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.7.2"),
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
