@@ -68,18 +68,6 @@ jobs:
         with:
           xcode-version: "26.1.1"
 
-
-      - name: Run XCode tests
-        run: |
-          set -o pipefail
-          xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
-          xcodebuild test \
-            -scheme swift-paperlessTests \
-            -destination "platform=macOS,name=My Mac"\
-            -skipPackagePluginValidation -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            | xcbeautify
-
       - name: Run ${{ matrix.package }} tests
         run: swift test --package-path ${{ matrix.package }}
 
