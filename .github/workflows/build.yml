@@ -58,7 +58,6 @@ jobs:
           - DataModel
           - Common
           - Networking
-        
 
     steps:
       - name: Checkout
