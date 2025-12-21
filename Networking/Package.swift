@@ -21,7 +21,6 @@ let package = Package(
     .package(path: "../DataModel"),
     .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
     .package(url: "https://github.com/groue/Semaphore", from: "0.1.0"),
-    .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.7.2"),
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,8 +28,6 @@ let package = Package(
     .target(
       name: "Networking",
       dependencies: [
-        // Desperate workaround for linker error?
-        .product(name: "CasePaths", package: "swift-case-paths"),
         .product(name: "Common", package: "Common"),
         .product(name: "DataModel", package: "DataModel"),
         .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
