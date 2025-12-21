@@ -21,7 +21,7 @@ let package = Package(
     .package(
       url: "https://github.com/qizh/MetaCodable",
       revision: "44558a51537794a3eb59639048f2073aaed4c7e5"),
-    .package(url: "https://github.com/pointfreeco/swift-case-paths", exact: "1.7.1"),
+    .package(url: "https://github.com/pointfreeco/swift-case-paths", exact: "1.7.2"),
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.

@@ -68,13 +68,10 @@ jobs:
           xcode-version: "26.2"
 
       - name: Show package versions
-        run: |
-          swift package show-dependencies --package-path ${{ matrix.package }}
-          xcrun swift --version
-          xcodebuild -version
-
+        run: swift package show-dependencies --package-path ${{ matrix.package }}
+          
       - name: Run ${{ matrix.package }} tests
-        run: swift test --package-path ${{ matrix.package }} -v
+        run: swift test --package-path ${{ matrix.package }}
 
   test-xc:
     runs-on: macos-26
