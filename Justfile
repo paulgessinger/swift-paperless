@@ -35,3 +35,6 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
     -skipPackagePluginValidation -skipMacroValidation \
     CODE_SIGN_IDENTITY="" \
     | xcbeautify
+
+lint:
+  @swift-format format --in-place --recursive . --parallel

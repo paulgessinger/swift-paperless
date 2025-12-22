@@ -16,26 +16,31 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ matrix.macos }}
     strategy:
       matrix:
         include:
-          - ios: "18.6"
-            xcode: "26.0"
-            device: "iPhone 16 Pro"
-
-          - ios: "26.0"
-            xcode: "26.0"
-            device: "iPhone 17 Pro"
+          - macos: macos-26
+            ios: "26.2"
+            xcode: default
       fail-fast: false
-    name: "iOS ${{ matrix.ios }} / Xcode ${{ matrix.xcode }}"
+    name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read Xcode version
+        id: xcode-version
+        run: |
+          if [ "${{ matrix.xcode }}" = "default" ]; then
+            echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ matrix.xcode }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "${{ matrix.xcode }}"
+          xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
       - name: Build application
         run: |
@@ -43,23 +48,55 @@ jobs:
           xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
           xcodebuild build \
             -scheme swift-paperless \
-            -destination "platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.ios }}" \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=${{ matrix.ios }}" \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
             | xcbeautify
 
   test:
+    name: "swift tests ${{ matrix.package }}"
     runs-on: macos-26
+
+    strategy:
+      matrix:
+        package:
+          - DataModel
+          - Common
+          - Networking
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read Xcode version
+        id: xcode-version
+        run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          # Stick to 16.4 for now to work around linker error related to case-paths + swift syntax
-          xcode-version: "16.4"
+          xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
+      - name: Show resolved dependencies
+        run: swift package show-dependencies --package-path ${{ matrix.package }}
+
+      - name: Run ${{ matrix.package }} tests
+        run: swift test --package-path ${{ matrix.package }}
+
+  test-xc:
+    runs-on: macos-26
+    name: "Xcode tests"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Xcode version
+        id: xcode-version
+        run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
       - name: Run XCode tests
         run: |
@@ -71,13 +108,6 @@ jobs:
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
             | xcbeautify
-
-      - name: Run Common tests
-        run: swift test --package-path Common
-      - name: Run DataModel tests
-        run: swift test --package-path DataModel
-      - name: Run Networking tests
-        run: swift test --package-path Networking
 
 
   lint:
