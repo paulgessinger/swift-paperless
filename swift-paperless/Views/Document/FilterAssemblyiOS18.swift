@@ -19,7 +19,7 @@ struct FilterAssemblyiOS18: View {
   var body: some View {
     VStack {
       HStack {
-        SearchBarView(text: $searchText, cancelEnabled: false) {}
+        SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
 
         Menu {
           ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in

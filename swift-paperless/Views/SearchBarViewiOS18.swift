@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SearchBarView: View {
+struct SearchBarViewiOS18: View {
   @Binding var text: String
   var cancelEnabled = true
   var isFocused: Binding<Bool>? = nil
@@ -108,7 +108,7 @@ private struct PreviewHelper<Content>: View where Content: View {
   PreviewHelper { $text in
     NavigationStack {
       VStack {
-        SearchBarView(text: $text)
+        SearchBarViewiOS18(text: $text)
         Spacer()
       }
       .padding()
@@ -120,7 +120,7 @@ private struct PreviewHelper<Content>: View where Content: View {
   PreviewHelper { $text in
     NavigationStack {
       VStack {
-        SearchBarView(text: $text, cancelEnabled: false)
+        SearchBarViewiOS18(text: $text, cancelEnabled: false)
         Spacer()
       }
       .padding()

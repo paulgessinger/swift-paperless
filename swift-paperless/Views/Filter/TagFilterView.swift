@@ -126,7 +126,7 @@ struct TagFilterView: View {
   var body: some View {
     VStack {
       VStack {
-        SearchBarView(text: $searchDebounce.text)
+        SearchBarViewiOS18(text: $searchDebounce.text)
       }
       .transition(.opacity)
       .padding(.horizontal)
