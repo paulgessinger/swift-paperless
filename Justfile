@@ -36,5 +36,18 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
     CODE_SIGN_IDENTITY="" \
     | xcbeautify
 
-lint:
-  @swift-format format --in-place --recursive . --parallel
+lint-format:
+  swift-format format --in-place --recursive . --parallel
+
+lint-whitespace:
+  uv run .ci/lint.py whitespace
+
+lint-eof:
+  uv run .ci/lint.py eof
+
+lint: lint-format lint-whitespace lint-eof
+
+resolve-packages:
+  xcodebuild -project swift-paperless.xcodeproj \
+    -scheme swift-paperless \
+    -resolvePackageDependencies | xcbeautify
