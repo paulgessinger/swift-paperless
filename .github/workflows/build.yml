@@ -24,7 +24,7 @@ jobs:
             ios: "26.2"
             xcode: default
       fail-fast: false
-    name: "iOS ${{ matrix.ios }} build (${{ matrix.xcode }})"
+    name: "iOS ${{ matrix.ios }} build (Xcode ${{ matrix.xcode }}, macOS ${{ matrix.macos }})"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
