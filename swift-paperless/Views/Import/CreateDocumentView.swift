@@ -184,16 +184,17 @@ struct CreateDocumentView: View {
   }
 
   private var filename: String {
+    let filename: String
+
     if useOriginalTitle {
-      return sourceUrl.lastPathComponent
+      filename = sourceUrl.lastPathComponent
     } else {
       let ext = sourceUrl.pathExtension
       let stem = document.title.slugify()
-
-      let filename = ext.isEmpty ? stem : "\(stem).\(ext)"
-
-      return filename
+      filename = ext.isEmpty ? stem : "\(stem).\(ext)"
     }
+
+    return filename.precomposedStringWithCanonicalMapping
   }
 
   var body: some View {
