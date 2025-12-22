@@ -38,4 +38,3 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
 
 lint:
   @swift-format format --in-place --recursive . --parallel
-
