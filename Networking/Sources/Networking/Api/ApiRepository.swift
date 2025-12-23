@@ -415,7 +415,8 @@ extension ApiRepository: Repository {
     var request = try request(.createDocument())
 
     let mp = MultiPartFormDataRequest()
-    mp.add(name: "title", string: document.title)
+    let normalizedTitle = document.title.precomposedStringWithCanonicalMapping
+    mp.add(name: "title", string: normalizedTitle)
 
     if let corr = document.correspondent {
       mp.add(name: "correspondent", string: String(corr))
