@@ -16,31 +16,56 @@ struct FilterAssembly: View {
   @State private var searchTask: Task<Void, Never>?
   private let searchTaskDelay: Duration = .seconds(0.5)
 
-  var body: some View {
-    VStack {
-      HStack {
-        SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
-
-        Menu {
-          ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
-            if filterModel.filterState.searchMode == searchMode {
-              Label(searchMode.localizedName, systemImage: "checkmark")
-            } else {
-              Button(searchMode.localizedName) {
-                filterModel.filterState.searchMode = searchMode
-              }
-            }
+  private var searchModeMenu: some View {
+    Menu {
+      ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
+        if filterModel.filterState.searchMode == searchMode {
+          Label(searchMode.localizedName, systemImage: "checkmark")
+        } else {
+          Button(searchMode.localizedName) {
+            filterModel.filterState.searchMode = searchMode
           }
-
-        } label: {
-          Label("X", systemImage: "ellipsis.circle")
-            .labelStyle(.iconOnly)
         }
       }
-      .padding(.horizontal)
+
+    } label: {
+      Label("X", systemImage: "ellipsis.circle")
+        .labelStyle(.iconOnly)
+    }
+  }
+
+  @State private var showSearch = false
+
+  var body: some View {
+    VStack {
+      if #available(iOS 26.0, *) {
+        if showSearch {
+          SearchBarView(text: $searchText) {
+            searchModeMenu
+          }
+          .padding(.horizontal)
+        }
+      } else {
+        HStack {
+          SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
+
+          searchModeMenu
+        }
+        .padding(.horizontal)
+      }
 
       FilterBar()
-        .padding(.bottom, 3)
+        .apply {
+          if #unavailable(iOS 26.0) {
+            $0.padding(.bottom, 3)
+          } else {
+            $0
+          }
+        }
+
+      Button("Show") {
+        withAnimation(.spring(duration: 0.2)) { showSearch.toggle() }
+      }
     }
     .opacity(filterModel.ready ? 1.0 : 0.0)
     .animation(.default, value: filterModel.ready)
@@ -70,6 +95,7 @@ struct FilterAssembly: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var searchText = ""
 
   NavigationStack {
     List {
