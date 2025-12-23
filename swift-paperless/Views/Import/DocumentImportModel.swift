@@ -55,8 +55,10 @@ class DocumentImportModel: ObservableObject {
 
             let temporaryDirectoryURL = URL(
               fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            let normalizedFilename = selectedFile.lastPathComponent
+              .precomposedStringWithCanonicalMapping
             let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(
-              selectedFile.lastPathComponent)
+              normalizedFilename)
 
             if FileManager.default.fileExists(atPath: temporaryFileURL.path) {
               try FileManager.default.removeItem(at: temporaryFileURL)

@@ -140,8 +140,10 @@ struct CreateDocumentView: View {
     title: String? = nil
   ) {
     sourceUrl = url
+    let initialTitle = url.deletingPathExtension().lastPathComponent
+      .precomposedStringWithCanonicalMapping
     _document = State(
-      initialValue: ProtoDocument(title: url.deletingPathExtension().lastPathComponent))
+      initialValue: ProtoDocument(title: initialTitle))
     self.callback = callback
     self.share = share
     self.title = title ?? String(localized: .localizable(.documentAdd))
