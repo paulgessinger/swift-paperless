@@ -35,6 +35,8 @@ struct MultiPartFormDataRequest {
 
   private let boundary: String = UUID().uuidString
   let body = NSMutableData()
+  private static let rfc5987AllowedCharacters =
+    CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
 
   func add(name: String, string: String) {
     body.append("--\(boundary)\r\n")
@@ -57,10 +59,15 @@ struct MultiPartFormDataRequest {
 
     let data = try Data(contentsOf: url)
 
-    let filename = filename ?? url.lastPathComponent
+    let filename =
+      (filename ?? url.lastPathComponent).precomposedStringWithCanonicalMapping
+    let encodedFilename = filename.addingPercentEncoding(
+      withAllowedCharacters: Self.rfc5987AllowedCharacters) ?? filename
 
     body.append("--\(boundary)\r\n")
-    body.append("Content-Disposition: form-data; name=\"document\"; filename=\"\(filename)\"\r\n")
+    body.append(
+      "Content-Disposition: form-data; name=\"document\"; filename=\"\(filename)\"; filename*=UTF-8''\(encodedFilename)\r\n"
+    )
     body.append("Content-Type: \(mimeType)\r\n")
     body.append("\r\n")
     body.append(data)
