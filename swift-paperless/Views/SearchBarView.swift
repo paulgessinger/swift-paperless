@@ -24,12 +24,10 @@ struct SearchBarView<Content: View>: View {
             text: $text,
             label: {
               Text(.localizable(.search))
-                .foregroundStyle(.black)
             }
           )
           .focused($focused)
         }
-        //                .padding(.vertical, 10)
         .padding(.leading, 20)
         .padding(.trailing, 12)
         .frame(height: 45)
@@ -42,6 +40,7 @@ struct SearchBarView<Content: View>: View {
           } label: {
             Label(localized: .localizable(.cancel), systemImage: "xmark")
               .labelStyle(.iconOnly)
+              .foregroundStyle(.accentColorLightened)
           }
           .font(.title2)
           .frame(width: 45, height: 45)
@@ -53,14 +52,16 @@ struct SearchBarView<Content: View>: View {
           .frame(width: 45, height: 45)
           .glassEffect(.regular.interactive(), in: .circle)
       }
-      //            .fixedSize(horizontal: false, vertical: true)
-      //            .frame(maxHeight: 40)
     }
 
     .onChange(of: text) {
       withAnimation {
         showCancel = !text.isEmpty
       }
+    }
+
+    .task {
+      showCancel = !text.isEmpty
     }
   }
 }

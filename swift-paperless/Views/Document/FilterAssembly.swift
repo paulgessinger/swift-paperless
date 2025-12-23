@@ -29,8 +29,15 @@ struct FilterAssembly: View {
       }
 
     } label: {
-      Label("X", systemImage: "ellipsis.circle")
+      Label(localized: .localizable(.searchModeSettings), systemImage: "ellipsis.circle")
         .labelStyle(.iconOnly)
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0.foregroundStyle(.accentColorLightened)
+          } else {
+            $0
+          }
+        }
     }
   }
 
@@ -39,12 +46,10 @@ struct FilterAssembly: View {
   var body: some View {
     VStack {
       if #available(iOS 26.0, *) {
-        if showSearch {
-          SearchBarView(text: $searchText) {
-            searchModeMenu
-          }
-          .padding(.horizontal)
+        SearchBarView(text: $searchText) {
+          searchModeMenu
         }
+        .padding(.horizontal)
       } else {
         HStack {
           SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
@@ -62,10 +67,6 @@ struct FilterAssembly: View {
             $0
           }
         }
-
-      Button("Show") {
-        withAnimation(.spring(duration: 0.2)) { showSearch.toggle() }
-      }
     }
     .opacity(filterModel.ready ? 1.0 : 0.0)
     .animation(.default, value: filterModel.ready)
@@ -87,6 +88,24 @@ struct FilterAssembly: View {
       searchText = filterModel.filterState.searchText
     }
 
+    .background(
+      Rectangle()
+        .fill(
+          Material.ultraThinMaterial
+        )
+        .mask {
+          LinearGradient(
+            colors: [
+              Color.black,
+              Color.black,
+              Color.black.opacity(0.4),
+              Color.black.opacity(0),
+            ], startPoint: .top, endPoint: .bottom)
+
+        }
+
+        .ignoresSafeArea(.container, edges: .top)
+    )
   }
 }
 
@@ -101,6 +120,14 @@ struct FilterAssembly: View {
     List {
       ForEach(0..<100) { i in
         Text("Item \(i)")
+      }
+    }
+
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.scrollEdgeEffectHidden(true, for: .top)
+      } else {
+        $0
       }
     }
 

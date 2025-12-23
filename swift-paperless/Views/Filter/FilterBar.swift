@@ -165,7 +165,12 @@ private struct CircleCounter: View {
   private var bg: Color {
     switch mode {
     case .include:
-      Color.accentColor
+      if #available(iOS 26.0, *) {
+        Color.accentColorLightened
+      } else {
+        Color.accentColor
+      }
+
     case .exclude:
       Color.red
     }
@@ -291,6 +296,10 @@ private struct PillLiquidGlass<Label: View>: View {
   var chevron = true
   @ViewBuilder var label: () -> Label
 
+  private var activeColor: Color {
+    .accentColorLightened
+  }
+
   var body: some View {
     HStack {
       label()
@@ -302,7 +311,7 @@ private struct PillLiquidGlass<Label: View>: View {
     .frame(minHeight: 35)
     .padding(.horizontal, 10)
     .padding(.vertical, 4)
-    .foregroundColor(active ? Color.accent : Color.primary)
+    .foregroundColor(active ? activeColor : Color.primary)
     .fontWeight(active ? .bold : .regular)
     .glassEffect(.regular.interactive())
   }

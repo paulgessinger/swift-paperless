@@ -7817,6 +7817,17 @@
         }
       }
     },
+    "searchModeSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search mode settings"
+          }
+        }
+      }
+    },
     "searchTitle" : {
       "extractionState" : "manual",
       "localizations" : {
