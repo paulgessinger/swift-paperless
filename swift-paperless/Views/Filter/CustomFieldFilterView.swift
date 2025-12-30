@@ -103,7 +103,7 @@ extension CustomFieldQuery.FieldOperator {
       switch dataType {
       case .select: [.exact, .in]
       case .boolean: [.exact]
-      case .string, .url: [.exact, .icontains]
+      case .string, .longText, .url: [.exact, .icontains]
       case .monetary: [.exact, .icontains, .gt, .gte, .lt, .lte]
       case .float, .integer: [.exact, .gt, .gte, .lt, .lte]
       case .date: [.exact, .gte, .lte]
@@ -612,7 +612,7 @@ private struct ExprArgView: View {
       switch field.dataType {
       case .boolean:
         ToggleArgView(value: $value)
-      case .string, .url, .monetary:
+      case .string, .longText, .url, .monetary:
         StringArgView(value: $value)
       case .float:
         FloatArgView(value: $value)

@@ -141,6 +141,7 @@ struct CustomFieldModelTests {
   func testDecodingAllDataTypes() throws {
     let dataTypes = [
       "string",
+      "text",
       "url",
       "date",
       "boolean",

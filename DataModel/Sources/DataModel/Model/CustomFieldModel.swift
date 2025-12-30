@@ -11,6 +11,7 @@ import MetaCodable
 
 public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable, Sendable {
   case string
+  case longText
   case url
   case date
   case boolean
@@ -25,6 +26,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     self =
       switch rawValue {
       case "string": .string
+      case "text": .longText
       case "url": .url
       case "date": .date
       case "boolean": .boolean
@@ -40,6 +42,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   public var rawValue: String {
     switch self {
     case .string: "string"
+    case .longText: "text"
     case .url: "url"
     case .date: "date"
     case .boolean: "boolean"
