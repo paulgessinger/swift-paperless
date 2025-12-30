@@ -426,10 +426,16 @@ struct DocumentEditView: View {
             saveDocument()
           } label: {
             if !saving {
-              Text(.localizable(.save))
-                .bold()
+              Label(localized: .localizable(.save), systemImage: "checkmark")
             } else {
               ProgressView()
+            }
+          }
+          .apply {
+            if #available(iOS 26.0, *) {
+              $0.buttonStyle(.glassProminent)
+            } else {
+              $0
             }
           }
           .disabled(isSaveDisabled || !userCanChange)

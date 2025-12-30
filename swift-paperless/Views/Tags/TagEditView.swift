@@ -126,18 +126,10 @@ extension TagEditView where Element == ProtoTag {
   }
 }
 
-struct TagEditView_Previews: PreviewProvider {
-  struct Container: View {
-    var body: some View {
-      NavigationStack {
-        TagEditView<ProtoTag>(onSave: { _ in })
-          .navigationBarTitleDisplayMode(.inline)
-          .navigationTitle(Text(.localizable(.tagCreateTitle)))
-      }
-    }
-  }
-
-  static var previews: some View {
-    Container()
+#Preview {
+  NavigationStack {
+    TagEditView<ProtoTag>(onSave: { _ in })
+      .navigationBarTitleDisplayMode(.inline)
+      .navigationTitle(Text(.localizable(.tagCreateTitle)))
   }
 }

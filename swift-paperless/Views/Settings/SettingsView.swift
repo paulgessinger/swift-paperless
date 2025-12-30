@@ -84,6 +84,7 @@ struct SettingsView: View {
 
       NavigationLink {
         ManageView<SavedViewManager>()
+          .navigationTitle(Text(.localizable(.savedViews)))
       } label: {
         Label(
           String(localized: .localizable(.savedViews)),
@@ -267,6 +268,10 @@ struct SettingsView: View {
               """, isHTML: false)
           }
         }
+
+        .onChange(of: feedbackLogs) {
+          showMailSheet = true
+        }
       #endif
 
       .sheet(isPresented: $showLoginSheet) {
@@ -275,22 +280,14 @@ struct SettingsView: View {
           .errorOverlay(errorController: errorController, offset: 15)
       }
 
-      .onChange(of: feedbackLogs) {
-        showMailSheet = true
-      }
-
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button {
-            dismiss()
-          } label: {
-            CancelIconButton()
-          }
+          CancelIconButton()
         }
       }
 
       .navigationTitle(Text(.settings(.title)))
-      .navigationBarTitleDisplayMode(.inline)
+      .navigationBarTitleDisplayMode(.large)
     }
   }
 }
@@ -299,14 +296,10 @@ struct SettingsView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
-  @Previewable @State var show = true
 
   VStack {
-    Button("show") {
-      show = true
-    }
   }
-  .sheet(isPresented: $show) {
+  .sheet(isPresented: .constant(true)) {
     SettingsView()
       .environmentObject(store)
       .environmentObject(connectionManager)

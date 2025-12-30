@@ -248,36 +248,28 @@ struct DocumentMetadataView: View {
 
 // - MARK: Preview
 
-private struct PreviewHelper: View {
-  @StateObject var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
-  @StateObject var errorController = ErrorController()
+#Preview {
+  @Previewable @StateObject var store = DocumentStore(
+    repository: PreviewRepository(downloadDelay: 3.0))
+  @Previewable @StateObject var errorController = ErrorController()
 
-  @State var document: Document?
-  @State var metadata: Metadata?
+  @Previewable @State var document: Document?
+  @Previewable @State var metadata: Metadata?
 
-  var body: some View {
-    NavigationStack {
-      VStack {
-        if document != nil {
-          DocumentMetadataView(document: Binding($document)!, metadata: $metadata)
-        }
-      }
-      .task {
-        document = try? await store.document(id: 1)
-        if let document {
-          metadata = try? await store.repository.metadata(documentId: document.id)
-        }
+  NavigationStack {
+    VStack {
+      if document != nil {
+        DocumentMetadataView(document: Binding($document)!, metadata: $metadata)
       }
     }
-    .environmentObject(store)
-    .environmentObject(errorController)
-
     .task {
       try? await store.fetchAll()
+      document = try? await store.document(id: 1)
+      if let document {
+        metadata = try? await store.repository.metadata(documentId: document.id)
+      }
     }
   }
-}
-
-#Preview {
-  PreviewHelper()
+  .environmentObject(store)
+  .environmentObject(errorController)
 }
