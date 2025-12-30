@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 20.07.2024.
 //
 
+import BezelKit
 import DataModel
 import Flow
 import Networking
@@ -228,11 +229,19 @@ private struct DocumentPropertyView: View {
     .scrollBounceBehavior(.basedOnSize)
     .scrollIndicators(.hidden)
     .frame(height: min(panelHeight, 150))
-    .background(
-      RoundedRectangle(cornerRadius: 15)
-        .fill(.ultraThinMaterial)
-        .stroke(.tertiary)
-    )
+
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 15))
+      } else {
+        $0.background(
+          RoundedRectangle(cornerRadius: 15)
+            .fill(.ultraThinMaterial)
+            .stroke(.tertiary)
+        )
+      }
+    }
+
     .offset(y: detailOffset)
     .contentShape(RoundedRectangle(cornerRadius: 15))
   }
@@ -324,6 +333,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   @Environment(\.dismiss) private var dismiss
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+  @Environment(\.colorScheme) private var colorScheme
 
   @EnvironmentObject private var errorController: ErrorController
 
@@ -414,11 +424,19 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             .frame(width: 100)
         }
         .padding()
-        .background(
-          RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(.thinMaterial)
-        )
-        .animation(.spring, value: viewModel.downloadProgress)
+
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0
+              .padding(.horizontal, 20)
+              .glassEffect()
+          } else {
+            $0.background(
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.thinMaterial)
+            )
+          }
+        }
       }
 
       .task {
@@ -434,6 +452,27 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     }
   }
 
+  private var concentricBottomRect: UnevenRoundedRectangle {
+    UnevenRoundedRectangle(
+      topLeadingRadius: 20,
+      bottomLeadingRadius: .deviceBezel - 5,
+      bottomTrailingRadius: .deviceBezel - 5,
+      topTrailingRadius: 20,
+      style: .continuous
+    )
+  }
+
+  @available(iOS 26.0, *)
+  @ViewBuilder
+  private var liquidGlassBackground: some View {
+    if colorScheme == .light {
+      concentricBottomRect
+        .fill(Color(white: 0.9, opacity: 0.5))
+    } else {
+      Color.clear
+    }
+  }
+
   @ViewBuilder
   private var documentPropertyBar: some View {
     DocumentPropertyView(
@@ -442,6 +481,14 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
       dragOffset: $dragOffset
     )
     .padding(.bottom, bottomSpacing)
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.padding(.top, 5)
+          .padding(.horizontal, 5)
+      } else {
+        $0
+      }
+    }
     .overlay(alignment: .bottom) {
       Image(systemName: "chevron.compact.up")
         .resizable()
@@ -454,21 +501,32 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .offset(y: -10 - chevronOffset)
     }
 
-    //        .frame(maxHeight: showPropertyBar ? .infinity : 20)
     .frame(height: showPropertyBar ? nil : 0, alignment: .top)
     .clipped()
 
     .background(
       GeometryReader { geo in
-        UnevenRoundedRectangle(
-          topLeadingRadius: 20,
-          bottomLeadingRadius: 0,
-          bottomTrailingRadius: 0,
-          topTrailingRadius: 20,
-          style: .continuous
-        )
-        .fill(.thinMaterial)
-        .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
+        Group {
+          if #available(iOS 26.0, *) {
+            liquidGlassBackground
+              .glassEffect(
+                colorScheme == .light ? .clear : .regular,
+                in:
+                  concentricBottomRect
+              )
+              .padding(5)
+          } else {
+            UnevenRoundedRectangle(
+              topLeadingRadius: 20,
+              bottomLeadingRadius: 0,
+              bottomTrailingRadius: 0,
+              topTrailingRadius: 20,
+              style: .continuous
+            )
+            .fill(.ultraThinMaterial)
+            .shadow(color: Color(white: 0.5, opacity: 0.3), radius: 10)
+          }
+        }
         .task {
           bottomInsetFrame = geo.frame(in: .global)
           updateWebkitInset()
@@ -477,6 +535,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
           bottomInsetFrame = geo.frame(in: .global)
           updateWebkitInset()
         }
+
       }
     )
 
@@ -558,15 +617,22 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 systemImage: "inset.filled.bottomthird.square"
               )
               .labelStyle(.iconOnly)
-              .font(.title)
-              .fontWeight(.bold)
-              .foregroundStyle(.primary)
               .padding(10)
-              .background(
-                Circle()
-                  .fill(.background.secondary)
-                  .opacity(0.9)
-              )
+              .apply {
+                if #available(iOS 26.0, *) {
+                  $0
+                    .glassEffect(.regular.interactive())
+                } else {
+                  $0
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .background(
+                      Circle()
+                        .fill(.background.secondary)
+                        .opacity(0.9)
+                    )
+                }
+              }
             }
             .padding(.horizontal)
             .padding(.bottom, 10)
