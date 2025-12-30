@@ -27,7 +27,7 @@ struct UISettingsTest {
     #expect(permissions.test(.change, for: .document))
 
     // Test some negative cases
-    #expect(!permissions.test(.delete, for: .appConfig))
+    #expect(!permissions.test(.delete, for: .shareLink))
     #expect(!permissions.test(.add, for: .workflow))
 
     // Default permissions not present yet

@@ -24,8 +24,6 @@ extension UserPermissions.Resource {
     case .group: UserGroup.localizedName
     case .mailAccount: String(localized: .permissions(.resourceMailAccount))
     case .mailRule: String(localized: .permissions(.resourceMailRule))
-    case .history: String(localized: .permissions(.resourceHistory))
-    case .appConfig: String(localized: .permissions(.resourceAppConfig))
     case .shareLink: String(localized: .permissions(.resourceShareLink))
     case .workflow: String(localized: .permissions(.resourceWorkflow))
     case .customField: String(localized: .permissions(.resourceCustomField))

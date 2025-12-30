@@ -89,7 +89,7 @@ struct PermissionsView: View {
 #Preview("Permissions view") {
   let perms = UserPermissions.full.configure {
     $0.set(.view, to: false, for: .storagePath)
-    $0.set(.change, to: false, for: .history)
+    $0.set(.change, to: false, for: .savedView)
   }
 
   NavigationStack {
