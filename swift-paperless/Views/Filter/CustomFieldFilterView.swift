@@ -780,7 +780,7 @@ struct CustomFieldQueryEditView<Content: View>: View {
         Section {
           ContentUnavailableView(
             .customFields(.anyCustomFieldQuery),
-            systemImage: "line.3.horizontal.decrease.circle.fill")
+            systemImage: "line.3.horizontal.decrease")
         }
 
         Section {
