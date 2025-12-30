@@ -76,25 +76,22 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var element: Element
 
-    private var onSave: ((Element) throws -> Void)? {
-      guard model.permissions.test(.change) else {
-        return nil
-      }
-      return { newElement in
-        Task {
-          do {
-            try await model.update(newElement)
-            dismiss()
-          } catch {
-            print(error)
-            errorController.push(error: error)
-          }
+    var onSave: ((Element) async throws -> Void)
+
+    private func onSaveInternal(_ element: Element) throws {
+      Task {
+        do {
+          try await onSave(element)
+          dismiss()
+        } catch {
+          Logger.shared.error("Failed to save \(Element.self): \(error)")
+          errorController.push(error: error)
         }
       }
     }
 
     var body: some View {
-      Manager.EditView(element: element, onSave: onSave)
+      Manager.EditView(element: element, onSave: onSaveInternal)
     }
   }
 
@@ -194,7 +191,18 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
           if !displayElements.isEmpty {
             ForEach(displayElements, id: \.self) { element in
               NavigationLink {
-                Edit(model: model, element: element)
+                Edit(model: model, element: element) { element in
+                  guard model.permissions.test(.change) else {
+                    return
+                  }
+
+                  try await model.update(element)
+
+                  if let index = elements.firstIndex(where: { $0.id == element.id }) {
+                    elements[index] = element
+                  }
+
+                }
               } label: {
                 Manager.RowView(element: element)
               }
