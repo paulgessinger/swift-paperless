@@ -82,12 +82,6 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
       }
     }
 
-    .navigationTitle(
-      Element.self is SavedView.Type
-        ? Text(.localizable(.savedViewEditTitle)) : Text(.localizable(.savedViewCreateTitle))
-    )
-
-    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

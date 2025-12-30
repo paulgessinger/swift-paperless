@@ -53,9 +53,6 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
       }
     }
 
-    .navigationTitle(
-      Element.self is DocumentType.Type
-        ? Text(.localizable(.documentTypeEditTitle)) : Text(.localizable(.documentTypeCreateTitle)))
   }
 }
 

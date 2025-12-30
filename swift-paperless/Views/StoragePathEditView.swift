@@ -61,14 +61,6 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
         .bold()
       }
     }
-
-    .navigationTitle(
-      Element.self is SavedView.Type
-        ? String(localized: .localizable(.storagePathEditTitle))
-        : String(localized: .localizable(.storagePathCreateTitle))
-    )
-
-    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

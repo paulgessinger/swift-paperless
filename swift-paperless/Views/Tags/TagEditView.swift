@@ -95,7 +95,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
 
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(saveLabel) {
+        SaveButton(saveLabel) {
           do {
             try onSave?(tag)
           } catch {
@@ -103,14 +103,8 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
           }
         }
         .disabled(!valid())
-        .bold()
       }
     }
-
-    .navigationTitle(
-      Element.self is Tag.Type
-        ? Text(.localizable(.tagEditTitle)) : Text(.localizable(.tagCreateTitle))
-    )
 
     .scrollBounceBehavior(.basedOnSize)
   }
