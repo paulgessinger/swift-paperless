@@ -137,9 +137,7 @@ public struct UserPermissions: Sendable {
     case storagePath = "storagepath"
     case savedView = "savedview"
     case paperlessTask = "paperlesstask"
-    case appConfig = "appconfig"
     case uiSettings = "uisettings"
-    case history
     case note
     case mailAccount = "mailaccount"
     case mailRule = "mailrule"
