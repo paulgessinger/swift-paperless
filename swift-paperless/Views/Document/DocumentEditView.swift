@@ -158,7 +158,11 @@ struct DocumentEditView: View {
       do {
         saving = true
         try validateCustomFields()
-        documentOut = try await store.updateDocument(document)
+        async let documentUpdated = store.updateDocument(document)
+        // Artificial delay to show that we're *doing* something
+        async let delay: () = Task.sleep(for: .seconds(0.3))
+
+        (documentOut, _) = try await (documentUpdated, delay)
         saving = false
         dismiss()
       } catch let RequestError.unexpectedStatusCode(code, detail) where code == .notFound {
@@ -422,23 +426,13 @@ struct DocumentEditView: View {
           CancelIconButton()
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-          Button {
-            saveDocument()
-          } label: {
-            if !saving {
-              Label(localized: .localizable(.save), systemImage: "checkmark")
-            } else {
-              ProgressView()
-            }
+          if !saving {
+            SaveButton(action: saveDocument)
+              .backport.glassProminentButtonStyle(or: .automatic)
+              .disabled(isSaveDisabled || !userCanChange)
+          } else {
+            ProgressView()
           }
-          .apply {
-            if #available(iOS 26.0, *) {
-              $0.buttonStyle(.glassProminent)
-            } else {
-              $0
-            }
-          }
-          .disabled(isSaveDisabled || !userCanChange)
         }
       }
 
