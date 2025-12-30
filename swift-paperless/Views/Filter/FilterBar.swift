@@ -308,7 +308,7 @@ private struct PillLiquidGlass<Label: View>: View {
         Image(systemName: "chevron.down")
       }
     }
-    .frame(minHeight: 35)
+    .frame(minWidth: 25, minHeight: 35)
     .padding(.horizontal, 10)
     .padding(.vertical, 4)
     .foregroundColor(active ? activeColor : Color.primary)
@@ -679,7 +679,7 @@ struct FilterBar: View {
       HStack {
         Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
           Label(
-            String(localized: .localizable(.filtering)), systemImage: "line.3.horizontal.decrease"
+            localized: .localizable(.filtering), systemImage: "line.3.horizontal.decrease"
           )
           .labelStyle(.iconOnly)
           if filterModel.filterState.filtering {

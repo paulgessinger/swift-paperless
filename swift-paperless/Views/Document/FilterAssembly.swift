@@ -9,6 +9,7 @@ import DataModel
 import Networking
 import SwiftUI
 
+@available(iOS 26.0, *)
 struct FilterAssembly: View {
   @ObservedObject var filterModel: FilterModel
 
@@ -31,42 +32,21 @@ struct FilterAssembly: View {
     } label: {
       Label(localized: .localizable(.searchModeSettings), systemImage: "ellipsis.circle")
         .labelStyle(.iconOnly)
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.foregroundStyle(.accentColorLightened)
-          } else {
-            $0
-          }
-        }
+        .foregroundStyle(.accentColorLightened)
     }
   }
 
   @State private var showSearch = false
 
   var body: some View {
-    VStack {
-      if #available(iOS 26.0, *) {
-        SearchBarView(text: $searchText) {
-          searchModeMenu
-        }
-        .padding(.horizontal)
-      } else {
-        HStack {
-          SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
-
-          searchModeMenu
-        }
-        .padding(.horizontal)
+    VStack(spacing: 0) {
+      SearchBarView(text: $searchText) {
+        searchModeMenu
       }
+      .padding(.horizontal)
 
       FilterBar()
-        .apply {
-          if #unavailable(iOS 26.0) {
-            $0.padding(.bottom, 3)
-          } else {
-            $0
-          }
-        }
+        .padding(.top, 5)
     }
     .opacity(filterModel.ready ? 1.0 : 0.0)
     .animation(.default, value: filterModel.ready)
@@ -109,6 +89,7 @@ struct FilterAssembly: View {
   }
 }
 
+@available(iOS 26.0, *)
 #Preview {
   @Previewable @StateObject var filterModel = FilterModel()
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
@@ -124,11 +105,7 @@ struct FilterAssembly: View {
     }
 
     .apply {
-      if #available(iOS 26.0, *) {
-        $0.scrollEdgeEffectHidden(true, for: .top)
-      } else {
-        $0
-      }
+      $0.scrollEdgeEffectHidden(true, for: .top)
     }
 
     .safeAreaInset(edge: .top) {
