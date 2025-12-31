@@ -289,20 +289,16 @@ struct PermissionsEditView<Object>: View where Object: PermissionsModel {
 
   private var ownerLabel: some View {
     LabeledContent {
-      if object.owner == .none {
-        return Text(.permissions(.noOwner))
+      if object.owner == .none || object.owner == .unset {
+        Text(.permissions(.noOwner))
+      } else if let currentUser = store.currentUser, object.owner == .user(currentUser.id) {
+        Text(.permissions(.userYouLabel(currentUser.username)))
+      } else if case .user(let id) = object.owner, let user = store.users[id] {
+        Text(user.username)
+      } else {
+        Text(.permissions(.private))
+          .italic()
       }
-
-      if let currentUser = store.currentUser, object.owner == .user(currentUser.id) {
-        return Text(.permissions(.userYouLabel(currentUser.username)))
-      }
-
-      if case .user(let id) = object.owner, let user = store.users[id] {
-        return Text(user.username)
-      }
-
-      return Text(.permissions(.private))
-        .italic()
     } label: {
       Text(.permissions(.owner))
     }
