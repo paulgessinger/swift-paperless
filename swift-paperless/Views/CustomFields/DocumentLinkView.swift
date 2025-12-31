@@ -26,16 +26,18 @@ private struct SearchView: View {
 
   var body: some View {
     List {
-      Section(.customFields(.documentLinkSelectedLabel)) {
-        ForEach(selected) { document in
-          Button {
-            selected = selected.filter { $0.id != document.id }
-          } label: {
-            HStack {
-              Text(document.title)
-                .frame(maxWidth: .infinity, alignment: .leading)
-              Image(systemName: "checkmark.circle.fill")
-                .contentTransition(.symbolEffect)
+      if !selected.isEmpty {
+        Section(.customFields(.documentLinkSelectedLabel)) {
+          ForEach(selected) { document in
+            Button {
+              selected = selected.filter { $0.id != document.id }
+            } label: {
+              HStack {
+                Text(document.title)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "checkmark.circle.fill")
+                  .contentTransition(.symbolEffect)
+              }
             }
           }
         }
@@ -58,12 +60,24 @@ private struct SearchView: View {
           }
         }
       }
+
+      if !searching {
+        Button {
+          searching = true
+        } label: {
+          Label(localized: .customFields(.searchDocumentsButtonLabel), systemImage: "plus")
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+      }
     }
     .animation(.spring, value: matchingDocuments)
     .animation(.spring, value: selected)
+    .animation(.spring, value: searching)
     .searchable(
-      text: $searchText, placement: .navigationBarDrawer(displayMode: .always),
-      prompt: .customFields(.documentLinkSearchPlaceholder)
+      text: $searchText,
+      isPresented: $searching,
+      placement: .navigationBarDrawer(displayMode: .always),
+      prompt: .customFields(.documentLinkSearchPlaceholder),
     )
 
     .onChange(of: searchText) {

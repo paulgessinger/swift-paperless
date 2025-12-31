@@ -2333,6 +2333,17 @@
         }
       }
     },
+    "searchDocumentsButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add document"
+          }
+        }
+      }
+    },
     "searchPlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {
