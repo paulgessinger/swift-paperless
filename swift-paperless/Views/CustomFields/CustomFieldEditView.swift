@@ -188,7 +188,7 @@ struct CustomFieldsEditView: View {
         case .url:
           UrlView(instance: field)
         case .documentLink:
-          DocumentLinkView(instance: field)
+          DocumentLinkView(instance: field, document: document)
         case .select:
           SelectView(instance: field)
         case .other(let dataType):

@@ -1,2 +1,3 @@
 - Dropped the unused `appConfig` and `history` permission resources from the app so the permissions UI only reflects values Paperless actually supplies (fixes #366).
 - Improve legibility of document link UI
+- Prevent document from being linked to itself

@@ -13,6 +13,7 @@ import os
 
 private struct SearchView: View {
   @Binding var selected: [Document]
+  let document: Document?
 
   @EnvironmentObject private var store: DocumentStore
   @State private var searchText = ""
@@ -20,6 +21,8 @@ private struct SearchView: View {
 
   @State private var searchTask: Task<Void, Never>?
   @Namespace private var namespace
+
+  @State private var searching: Bool = false
 
   var body: some View {
     List {
@@ -40,7 +43,7 @@ private struct SearchView: View {
 
       Section {
         let show = matchingDocuments.filter {
-          !selected.contains($0)
+          !selected.contains($0) && document != $0
         }
         ForEach(show) { document in
           Button {
@@ -84,8 +87,9 @@ private struct SearchView: View {
 }
 
 struct DocumentSelectionView: View {
-  var title: String
+  let title: String
   @Binding var documentIds: [UInt]
+  let document: Document?
 
   @EnvironmentObject private var store: DocumentStore
   @Environment(\.colorScheme) private var colorScheme
@@ -125,7 +129,7 @@ struct DocumentSelectionView: View {
 
   var body: some View {
     NavigationLink {
-      SearchView(selected: $selected)
+      SearchView(selected: $selected, document: document)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(title)
     } label: {
@@ -174,6 +178,7 @@ struct DocumentSelectionView: View {
 
 struct DocumentLinkView: View {
   @Binding var instance: CustomFieldInstance
+  let document: Document
 
   @State private var documentIds = [UInt]()
   @State private var initial = true
@@ -183,7 +188,8 @@ struct DocumentLinkView: View {
     VStack {
       DocumentSelectionView(
         title: instance.field.name,
-        documentIds: $documentIds)
+        documentIds: $documentIds,
+        document: document)
     }
 
     .task {
@@ -209,10 +215,13 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
   @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([2]))
   @Previewable
   @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var document: Document? = nil
 
-  return NavigationStack {
+  NavigationStack {
     Form {
-      DocumentLinkView(instance: $instance)
+      if let document {
+        DocumentLinkView(instance: $instance, document: document)
+      }
 
       Section("Instance") {
         Text(String(describing: instance.value))
@@ -242,6 +251,12 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
       try? await store.repository.create(
         document: protoDoc, file: URL(string: "file:///\(filename)")!, filename: filename
       )
+    }
+
+    if let allDocuments = try? await store.repository.documents(filter: .default),
+      let doc = try? await allDocuments.fetch(limit: 10000).first
+    {
+      document = doc
     }
   }
 }
