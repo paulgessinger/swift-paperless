@@ -137,11 +137,48 @@ struct CustomFieldModelTests {
     #expect(monetaryField.extraData.defaultCurrency == "USD")
   }
 
-  @Test("Test decoding all custom field data types")
+  @Test("Test decoding all data types")
   func testDecodingAllDataTypes() throws {
-    let dataTypes = [
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "string"))
+        == .string)
+
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "longtext"))
+        == .longText)
+
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "url"))
+        == .url)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "date"))
+        == .date)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "boolean"))
+        == .boolean)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "integer"))
+        == .integer)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "float"))
+        == .float)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "monetary"))
+        == .monetary)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "documentlink"))
+        == .documentLink)
+    #expect(
+      try #require(CustomFieldDataType(rawValue: "select"))
+        == .select)
+
+  }
+
+  @Test(
+    "Test decoding custom fields with all data types",
+    arguments: [
       "string",
-      "text",
+      "longtext",
       "url",
       "date",
       "boolean",
@@ -151,24 +188,24 @@ struct CustomFieldModelTests {
       "documentlink",
       "select",
     ]
+  )
+  func testDecodingFieldsWithAllDataTypes(typeStr: String) throws {
+    let json = """
+      {
+          "id": 1,
+          "name": "Test field",
+          "data_type": "\(typeStr)",
+          "extra_data": {
+              "select_options": [],
+              "default_currency": null
+          },
+          "document_count": 0
+      }
+      """.data(using: .utf8)!
 
-    for typeStr in dataTypes {
-      let json = """
-        {
-            "id": 1,
-            "name": "Test field",
-            "data_type": "\(typeStr)",
-            "extra_data": {
-                "select_options": [],
-                "default_currency": null
-            },
-            "document_count": 0
-        }
-        """.data(using: .utf8)!
-
-      let field = try decoder.decode(CustomField.self, from: json)
-      #expect(field.dataType.rawValue == typeStr)
-    }
+    let field = try decoder.decode(CustomField.self, from: json)
+    #expect(field.dataType.rawValue == typeStr)
+    #expect(field.dataType != .other(typeStr))
   }
 
   @Test("Test encoding and decoding roundtrip")

@@ -26,7 +26,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     self =
       switch rawValue {
       case "string": .string
-      case "text": .longText
+      case "longtext": .longText
       case "url": .url
       case "date": .date
       case "boolean": .boolean
@@ -42,7 +42,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   public var rawValue: String {
     switch self {
     case .string: "string"
-    case .longText: "text"
+    case .longText: "longtext"
     case .url: "url"
     case .date: "date"
     case .boolean: "boolean"
@@ -52,6 +52,26 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     case .documentLink: "documentlink"
     case .select: "select"
     case .other(let value): value
+    }
+  }
+
+  public static func == (lhs: CustomFieldDataType, rhs: CustomFieldDataType) -> Bool {
+    switch (lhs, rhs) {
+    case (.string, .string),
+      (.longText, .longText),
+      (.url, .url),
+      (.date, .date),
+      (.boolean, .boolean),
+      (.integer, .integer),
+      (.float, .float),
+      (.monetary, .monetary),
+      (.documentLink, .documentLink),
+      (.select, .select):
+      return true
+    case (.other(let lValue), .other(let rValue)):
+      return lValue == rValue
+    default:
+      return false
     }
   }
 }
