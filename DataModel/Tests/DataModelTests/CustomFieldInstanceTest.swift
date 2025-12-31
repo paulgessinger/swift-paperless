@@ -192,7 +192,8 @@ struct CustomFieldInstanceTest {
 
   @Test("Test long text field conversion")
   func testLongTextFieldConversion() throws {
-    let longText = "This is a very long text field.\nIt can contain multiple lines.\nAnd be used for detailed notes."
+    let longText =
+      "This is a very long text field.\nIt can contain multiple lines.\nAnd be used for detailed notes."
     let rawEntries = [CustomFieldRawEntry(field: 11, value: .string(longText))]
     let instances = [CustomFieldInstance].fromRawEntries(
       rawEntries, customFields: Self.customFields, locale: Self.locale
