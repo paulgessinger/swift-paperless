@@ -88,25 +88,16 @@ struct DocumentSelectionView: View {
   @Binding var documentIds: [UInt]
 
   @EnvironmentObject private var store: DocumentStore
+  @Environment(\.colorScheme) private var colorScheme
 
   @State private var selected: [Document] = []
 
   @State private var initial = true
 
-  private var backgroundColor: Color {
-    if #available(iOS 18.0, *) {
-      Color.accentColor.mix(with: .white, by: 0.9)
-    } else {
-      Color.accentColor.opacity(0.1)
-    }
-  }
+  private let backgroundColor: Color = .accentColor
+  private let foregroundColor: Color = .white
 
   private func loadSelected() async {
-    // @FIXME: Maybe these are needed?
-
-    //        guard initial else { return }
-    //        initial = false
-
     Logger.shared.trace("Loading documents for \(documentIds.count) document links")
     selected = await withTaskGroup(of: Document?.self, returning: [Document].self) { group in
       for id in documentIds {
@@ -154,6 +145,7 @@ struct DocumentSelectionView: View {
               .lineLimit(1)
               .padding(5)
               .padding(.horizontal, 10)
+              .foregroundStyle(foregroundColor)
               .background {
                 RoundedRectangle(cornerRadius: 5)
                   .fill(backgroundColor)
