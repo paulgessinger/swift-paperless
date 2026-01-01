@@ -1,2 +1,0 @@
-- Add liquid glass interface refresh for iOS 26.
-  Please let me now if anything looks wrong, on iOS 26 or on earlier versions

@@ -1,3 +1,8 @@
+1.9.0 (168)
+
+- Add liquid glass interface refresh for iOS 26.
+  Please let me now if anything looks wrong, on iOS 26 or on earlier versions
+
 1.9.0 (167)
 
 - Dropped the unused `appConfig` and `history` permission resources from the app so the permissions UI only reflects values Paperless actually supplies (fixes #366).
