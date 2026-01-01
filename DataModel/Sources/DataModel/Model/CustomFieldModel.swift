@@ -11,7 +11,6 @@ import MetaCodable
 
 public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable, Sendable {
   case string
-  case longText
   case url
   case date
   case boolean
@@ -21,6 +20,9 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   case documentLink
   case select
   case other(String)
+
+  // Added in https://github.com/paperless-ngx/paperless-ngx/pull/10846 v2.19.0
+  case longText
 
   public init?(rawValue: String) {
     self =
