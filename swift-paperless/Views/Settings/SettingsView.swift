@@ -46,7 +46,7 @@ struct SettingsView: View {
         URLQueryItem(name: "app_version", value: appVersion),
       ]
 
-      if let backendVersion = await (store.repository as? ApiRepository)?.backendVersion?
+      if let backendVersion = (store.repository as? ApiRepository)?.backendVersion?
         .description
       {
         queryItems.append(URLQueryItem(name: "backend_version", value: backendVersion))

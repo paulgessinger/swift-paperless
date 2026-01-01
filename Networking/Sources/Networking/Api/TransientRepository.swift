@@ -3,7 +3,8 @@ import Foundation
 import SwiftUI
 import os
 
-public actor TransientRepository {
+@MainActor
+public class TransientRepository {
   private var documents: [UInt: Document]
   private var tags: [UInt: Tag]
   private var documentTypes: [UInt: DocumentType]

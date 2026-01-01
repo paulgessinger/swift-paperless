@@ -58,7 +58,8 @@ public enum DocumentDownloadEvent {
   case complete
 }
 
-public protocol Repository: Sendable, Actor {
+@MainActor
+public protocol Repository: Sendable {
   func update(document: Document) async throws -> Document
   func delete(document: Document) async throws
   func create(document: ProtoDocument, file: URL, filename: String) async throws

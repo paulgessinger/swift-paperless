@@ -426,12 +426,12 @@ private struct PreviewHelper: View {
     .task {
       do {
         let repository = store.repository as! TransientRepository
-        await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: [1]))
-        await repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
-        await repository.addGroup(UserGroup(id: 1, name: "group 1"))
-        await repository.addGroup(UserGroup(id: 2, name: "group 2"))
-        try? await repository.login(userId: 1)
-        await repository.set(
+        repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: [1]))
+        repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
+        repository.addGroup(UserGroup(id: 1, name: "group 1"))
+        repository.addGroup(UserGroup(id: 2, name: "group 2"))
+        try? repository.login(userId: 1)
+        repository.set(
           permissions: .full {
             $0.set(.view, to: true, for: .user)
             $0.set(.view, to: true, for: .group)
