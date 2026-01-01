@@ -21,10 +21,14 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   case select
   case other(String)
 
+  // Added in https://github.com/paperless-ngx/paperless-ngx/pull/10846 v2.19.0
+  case longText
+
   public init?(rawValue: String) {
     self =
       switch rawValue {
       case "string": .string
+      case "longtext": .longText
       case "url": .url
       case "date": .date
       case "boolean": .boolean
@@ -40,6 +44,7 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   public var rawValue: String {
     switch self {
     case .string: "string"
+    case .longText: "longtext"
     case .url: "url"
     case .date: "date"
     case .boolean: "boolean"
@@ -49,6 +54,26 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
     case .documentLink: "documentlink"
     case .select: "select"
     case .other(let value): value
+    }
+  }
+
+  public static func == (lhs: CustomFieldDataType, rhs: CustomFieldDataType) -> Bool {
+    switch (lhs, rhs) {
+    case (.string, .string),
+      (.longText, .longText),
+      (.url, .url),
+      (.date, .date),
+      (.boolean, .boolean),
+      (.integer, .integer),
+      (.float, .float),
+      (.monetary, .monetary),
+      (.documentLink, .documentLink),
+      (.select, .select):
+      return true
+    case (.other(let lValue), .other(let rValue)):
+      return lValue == rValue
+    default:
+      return false
     }
   }
 }

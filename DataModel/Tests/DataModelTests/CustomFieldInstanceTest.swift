@@ -16,6 +16,7 @@ struct CustomFieldInstanceTest {
     CustomField(id: 2, name: "Custom bool", dataType: .boolean),
     CustomField(id: 4, name: "Custom integer", dataType: .integer),
     CustomField(id: 7, name: "Custom string", dataType: .string),
+    CustomField(id: 11, name: "Custom long text", dataType: .longText),
     CustomField(id: 3, name: "Custom date", dataType: .date),
     CustomField(
       id: 6, name: "Custom monetary", dataType: .monetary,
@@ -187,6 +188,22 @@ struct CustomFieldInstanceTest {
     #expect(instance.field.id == 7)
     #expect(instance.field.dataType == .string)
     #expect(instance.value == .string("Super duper text"))
+  }
+
+  @Test("Test long text field conversion")
+  func testLongTextFieldConversion() throws {
+    let longText =
+      "This is a very long text field.\nIt can contain multiple lines.\nAnd be used for detailed notes."
+    let rawEntries = [CustomFieldRawEntry(field: 11, value: .string(longText))]
+    let instances = [CustomFieldInstance].fromRawEntries(
+      rawEntries, customFields: Self.customFields, locale: Self.locale
+    )
+
+    #expect(instances.count == 1)
+    let instance = try #require(instances.first)
+    #expect(instance.field.id == 11)
+    #expect(instance.field.dataType == .longText)
+    #expect(instance.value == .string(longText))
   }
 
   @Test("Test URL field conversion")

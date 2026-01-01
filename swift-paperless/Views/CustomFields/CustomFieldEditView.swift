@@ -175,6 +175,8 @@ struct CustomFieldsEditView: View {
         switch field.wrappedValue.field.dataType {
         case .string:
           StringView(instance: field)
+        case .longText:
+          LongTextView(instance: field)
         case .float:
           FloatView(instance: field)
         case .boolean:

@@ -102,6 +102,8 @@ public struct CustomFieldInstance: Sendable, Hashable {
     switch field.dataType {
     case .string:
       value = .string("")
+    case .longText:
+      value = .string("")
     case .boolean:
       value = .boolean(false)
     case .date:
@@ -129,6 +131,8 @@ public struct CustomFieldInstance: Sendable, Hashable {
   public var isValid: Bool {
     switch (field.dataType, value) {
     case (.string, .string): return true
+
+    case (.longText, .string): return true
 
     case (.boolean, .boolean): return true
 
@@ -174,6 +178,12 @@ extension CustomFieldInstance {
       self.value = .string(value)
 
     case (.string, .none):
+      value = .string("")
+
+    case (.longText, .string(let value)):
+      self.value = .string(value)
+
+    case (.longText, .none):
       value = .string("")
 
     case (.float, .float(let value)):
