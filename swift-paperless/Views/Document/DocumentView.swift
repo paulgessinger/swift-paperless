@@ -117,33 +117,31 @@ struct DocumentView: View {
     ToolbarItemGroup(placement: .navigationBarTrailing) {
       TaskActivityToolbar(navState: $taskViewNavState)
 
-      Label(String(localized: .localizable(.add)), systemImage: "plus")
-        .tint(.accent)
-        .overlay {
-          Menu {
-            if isDocumentScannerAvailable {
-              Button {
-                showDocumentScanner = true
-              } label: {
-                Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
-              }
-            }
-
-            Button {
-              showFileImporter = true
-            } label: {
-              Label(
-                String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
-            }
-
-            Button {
-              showPhotosPicker = true
-            } label: {
-              Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
-            }
+      Menu {
+        if isDocumentScannerAvailable {
+          Button {
+            showDocumentScanner = true
           } label: {
+            Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
           }
         }
+
+        Button {
+          showFileImporter = true
+        } label: {
+          Label(
+            String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
+        }
+
+        Button {
+          showPhotosPicker = true
+        } label: {
+          Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
+        }
+      } label: {
+        Label(String(localized: .localizable(.add)), systemImage: "plus")
+      }
+      .tint(.accent)
     }
 
     ToolbarItemGroup(placement: .navigationBarLeading) {

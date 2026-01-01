@@ -372,10 +372,10 @@ struct CreateDocumentView: View {
           case .complete:
             Label(
               String(localized: .localizable(.documentUploadComplete)),
-              systemImage: "checkmark.circle.fill"
+              systemImage: "checkmark"
             )
-            .foregroundColor(.accentColor)
             .labelStyle(.iconOnly)
+            .foregroundStyle(Color.accentColor)
 
           case .error:
             Label(

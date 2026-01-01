@@ -200,7 +200,7 @@ struct ConnectionQuickChangeMenu: View {
       Menu {
         ConnectionSelectionViews(connectionManager: connectionManager, animated: true)
       } label: {
-        Text(.settings(.activeServer))
+        Label(localized: .settings(.activeServer), systemImage: "server.rack")
       }
     }
   }
