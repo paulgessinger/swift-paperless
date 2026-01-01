@@ -332,8 +332,15 @@ struct CreateDocumentView: View {
             }
             .contentShape(Rectangle())
 
+            if store.repository.supports(feature: .customFieldsOnCreate) {
+              NavigationLink(.customFields(.title)) {
+                CustomFieldsEditView(document: $document)
+              }
+            }
           } footer: {
-            Text(.customFields(.descriptionUnavailableOnCreate))
+            if !store.repository.supports(feature: .customFieldsOnCreate) {
+              Text(.customFields(.descriptionUnavailableOnCreate))
+            }
           }
         }
       }

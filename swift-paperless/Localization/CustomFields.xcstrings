@@ -483,49 +483,49 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "**Brugerdefinerede felter** kan ikke tilføjes på dette tidspunkt på grund af en begrænsning i serversoftwaren. Du kan redigere brugerdefinerede felter i dokumentet, når det er færdigbehandlet."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "**Benutzerdefinierte Felder** können in diesem Stadium aufgrund einer Einschränkung in der Serversoftware nicht hinzugefügt werden. Du kannst benutzerdefinierte Felder im Dokument bearbeiten, sobald die Verarbeitung abgeschlossen ist."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Custom fields** can not be added at this stage, due to a limitation in the server software. You can edit custom fields on the document once it has finished processing."
+            "value" : "**Custom fields** can not be added at this stage, because your version of the server software does not support it yet. You can update the server software to a newer version!"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "**Les champs personnalisés** ne peuvent pas être ajoutés à ce stade, en raison d'une limitation du logiciel du serveur. Vous pouvez modifier les champs personnalisés sur le document une fois qu'il a été traité."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "I **campi personalizzati** non possono essere aggiunti in questa fase, a causa di una limitazione del software del server. È possibile modificare i campi personalizzati sul documento una volta terminata l'elaborazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "**Aangepaste velden** kunnen in dit stadium niet worden toegevoegd vanwege een beperking in de serversoftware. Je kunt aangepaste velden in het document bewerken zodra het verwerkt is."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "**Pola niestandardowe** nie mogą być dodawane na tym etapie ze względu na ograniczenia w oprogramowaniu serwera. Pola niestandardowe można edytować w dokumencie po zakończeniu jego przetwarzania."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Sunucu yazılımındaki bir sınırlama nedeniyle **özel alanlar** bu aşamada eklenemez. Belgenin işlenmesi tamamlandıktan sonra belge üzerindeki özel alanları düzenleyebilirsiniz."
           }
         }

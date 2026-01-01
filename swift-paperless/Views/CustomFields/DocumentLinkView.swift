@@ -192,7 +192,7 @@ struct DocumentSelectionView: View {
 
 struct DocumentLinkView: View {
   @Binding var instance: CustomFieldInstance
-  let document: Document
+  let document: Document?
 
   @State private var documentIds = [UInt]()
   @State private var initial = true

@@ -15,6 +15,7 @@ public protocol DocumentProtocol: Codable {
   var correspondent: UInt? { get set }
   var tags: [UInt] { get set }
   var storagePath: UInt? { get set }
+  var customFields: CustomFieldRawEntryList { get set }
 }
 
 public struct NotesPayload: Decodable, Equatable, Sendable, Hashable {
@@ -168,6 +169,8 @@ public struct ProtoDocument: DocumentProtocol, Equatable, Sendable {
   public var tags: [UInt]
   public var created: Date
   public var storagePath: UInt?
+
+  public var customFields = CustomFieldRawEntryList()
 
   public init(
     title: String = "", asn: UInt? = nil, documentType: UInt? = nil, correspondent: UInt? = nil,
