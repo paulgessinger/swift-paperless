@@ -267,7 +267,7 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
       )
     }
 
-    if let allDocuments = try? await store.repository.documents(filter: .default),
+    if let allDocuments = try? store.repository.documents(filter: .default),
       let doc = try? await allDocuments.fetch(limit: 10000).first
     {
       document = doc
