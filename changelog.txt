@@ -1,3 +1,13 @@
+1.9.0 (167)
+
+- Dropped the unused `appConfig` and `history` permission resources from the app so the permissions UI only reflects values Paperless actually supplies (fixes #366).
+- Improve legibility of document link UI
+- Prevent document from being linked to itself
+- Clarify interaction for linking a document in custom field
+- Tune no-permissions display on custom fields when editing documents
+- Support long-text custom field type
+- Allow setting custom fields when uploading new documents
+
 1.9.0 (166)
 - Normalize document title and temp file name
 
