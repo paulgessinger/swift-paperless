@@ -302,7 +302,8 @@ private struct DocumentArgView: View {
     VStack(alignment: .leading) {
       DocumentSelectionView(
         title: String(localized: .customFields(.queryArgumentLabel)),
-        documentIds: $ids)
+        documentIds: $ids,
+        document: nil)
     }
 
     .task {

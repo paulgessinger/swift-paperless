@@ -13,6 +13,7 @@ import os
 
 private struct SearchView: View {
   @Binding var selected: [Document]
+  let document: Document?
 
   @EnvironmentObject private var store: DocumentStore
   @State private var searchText = ""
@@ -21,18 +22,22 @@ private struct SearchView: View {
   @State private var searchTask: Task<Void, Never>?
   @Namespace private var namespace
 
+  @State private var searching: Bool = false
+
   var body: some View {
     List {
-      Section(.customFields(.documentLinkSelectedLabel)) {
-        ForEach(selected) { document in
-          Button {
-            selected = selected.filter { $0.id != document.id }
-          } label: {
-            HStack {
-              Text(document.title)
-                .frame(maxWidth: .infinity, alignment: .leading)
-              Image(systemName: "checkmark.circle.fill")
-                .contentTransition(.symbolEffect)
+      if !selected.isEmpty {
+        Section(.customFields(.documentLinkSelectedLabel)) {
+          ForEach(selected) { document in
+            Button {
+              selected = selected.filter { $0.id != document.id }
+            } label: {
+              HStack {
+                Text(document.title)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "checkmark.circle.fill")
+                  .contentTransition(.symbolEffect)
+              }
             }
           }
         }
@@ -40,7 +45,7 @@ private struct SearchView: View {
 
       Section {
         let show = matchingDocuments.filter {
-          !selected.contains($0)
+          !selected.contains($0) && document != $0
         }
         ForEach(show) { document in
           Button {
@@ -55,12 +60,24 @@ private struct SearchView: View {
           }
         }
       }
+
+      if !searching {
+        Button {
+          searching = true
+        } label: {
+          Label(localized: .customFields(.searchDocumentsButtonLabel), systemImage: "plus")
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+      }
     }
     .animation(.spring, value: matchingDocuments)
     .animation(.spring, value: selected)
+    .animation(.spring, value: searching)
     .searchable(
-      text: $searchText, placement: .navigationBarDrawer(displayMode: .always),
-      prompt: .customFields(.documentLinkSearchPlaceholder)
+      text: $searchText,
+      isPresented: $searching,
+      placement: .navigationBarDrawer(displayMode: .always),
+      prompt: .customFields(.documentLinkSearchPlaceholder),
     )
 
     .onChange(of: searchText) {
@@ -84,29 +101,21 @@ private struct SearchView: View {
 }
 
 struct DocumentSelectionView: View {
-  var title: String
+  let title: String
   @Binding var documentIds: [UInt]
+  let document: Document?
 
   @EnvironmentObject private var store: DocumentStore
+  @Environment(\.colorScheme) private var colorScheme
 
   @State private var selected: [Document] = []
 
   @State private var initial = true
 
-  private var backgroundColor: Color {
-    if #available(iOS 18.0, *) {
-      Color.accentColor.mix(with: .white, by: 0.9)
-    } else {
-      Color.accentColor.opacity(0.1)
-    }
-  }
+  private let backgroundColor: Color = .accentColor
+  private let foregroundColor: Color = .white
 
   private func loadSelected() async {
-    // @FIXME: Maybe these are needed?
-
-    //        guard initial else { return }
-    //        initial = false
-
     Logger.shared.trace("Loading documents for \(documentIds.count) document links")
     selected = await withTaskGroup(of: Document?.self, returning: [Document].self) { group in
       for id in documentIds {
@@ -134,7 +143,7 @@ struct DocumentSelectionView: View {
 
   var body: some View {
     NavigationLink {
-      SearchView(selected: $selected)
+      SearchView(selected: $selected, document: document)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(title)
     } label: {
@@ -154,6 +163,7 @@ struct DocumentSelectionView: View {
               .lineLimit(1)
               .padding(5)
               .padding(.horizontal, 10)
+              .foregroundStyle(foregroundColor)
               .background {
                 RoundedRectangle(cornerRadius: 5)
                   .fill(backgroundColor)
@@ -182,6 +192,7 @@ struct DocumentSelectionView: View {
 
 struct DocumentLinkView: View {
   @Binding var instance: CustomFieldInstance
+  let document: Document
 
   @State private var documentIds = [UInt]()
   @State private var initial = true
@@ -191,7 +202,8 @@ struct DocumentLinkView: View {
     VStack {
       DocumentSelectionView(
         title: instance.field.name,
-        documentIds: $documentIds)
+        documentIds: $documentIds,
+        document: document)
     }
 
     .task {
@@ -217,10 +229,13 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
   @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([2]))
   @Previewable
   @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var document: Document? = nil
 
-  return NavigationStack {
+  NavigationStack {
     Form {
-      DocumentLinkView(instance: $instance)
+      if let document {
+        DocumentLinkView(instance: $instance, document: document)
+      }
 
       Section("Instance") {
         Text(String(describing: instance.value))
@@ -250,6 +265,12 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
       try? await store.repository.create(
         document: protoDoc, file: URL(string: "file:///\(filename)")!, filename: filename
       )
+    }
+
+    if let allDocuments = try? await store.repository.documents(filter: .default),
+      let doc = try? await allDocuments.fetch(limit: 10000).first
+    {
+      document = doc
     }
   }
 }
