@@ -864,16 +864,7 @@ struct FilterBar: View {
           TagFilterView(
             selectedTags: $filterState.tags)
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.navigationTransition(
-              .zoom(sourceID: TransitionKeys.tags, in: transition)
-            )
-          } else {
-            $0
-          }
-
-        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
       }
 
       .sheet(isPresented: $showDocumentType) {
@@ -886,16 +877,7 @@ struct FilterBar: View {
             notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
           )
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.navigationTransition(
-              .zoom(sourceID: TransitionKeys.documentType, in: transition)
-            )
-          } else {
-            $0
-          }
-
-        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
       }
 
       .sheet(isPresented: $showCorrespondent) {
@@ -908,15 +890,7 @@ struct FilterBar: View {
             notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
           )
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.navigationTransition(
-              .zoom(sourceID: TransitionKeys.correspondent, in: transition)
-            )
-          } else {
-            $0
-          }
-        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
       }
 
       .sheet(isPresented: $showStoragePath) {
@@ -929,28 +903,12 @@ struct FilterBar: View {
             notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
           )
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.navigationTransition(
-              .zoom(sourceID: TransitionKeys.storagePath, in: transition)
-            )
-          } else {
-            $0
-          }
-        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
       }
 
       .sheet(isPresented: $showCustomFields) {
         CustomFieldFilterView(query: $filterModel.filterState.customField)
-          .apply {
-            if #available(iOS 26.0, *) {
-              $0.navigationTransition(
-                .zoom(sourceID: TransitionKeys.customFields, in: transition)
-              )
-            } else {
-              $0
-            }
-          }
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
       }
 
       .sheet(item: $savedView) { view in

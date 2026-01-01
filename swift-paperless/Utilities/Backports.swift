@@ -38,4 +38,17 @@ extension Backport where Content: View {
       content.buttonStyle(fallback)
     }
   }
+
+  @ViewBuilder
+  public func navigationTransitionZoom(sourceID: some Hashable, in namespace: Namespace.ID)
+    -> some View
+  {
+    if #available(iOS 18.0, *) {
+      content.navigationTransition(
+        .zoom(sourceID: sourceID, in: namespace)
+      )
+    } else {
+      content
+    }
+  }
 }
