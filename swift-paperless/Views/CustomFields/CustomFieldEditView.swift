@@ -108,7 +108,7 @@ private struct AddCustomFieldView: View {
           ContentUnavailableView(
             String(localized: .permissions(.noViewPermissionsDisplayTitle)),
             systemImage: "lock.fill",
-            description: Text(Tag.localizedNoViewPermissions))
+            description: Text(.permissions(.noViewPermissionsCustomFields)))
         } else if availableFields.isEmpty {
           if !searchText.isEmpty {
             ContentUnavailableView.search
@@ -226,19 +226,23 @@ struct CustomFieldsEditView: View {
         }
       }
 
-      if document.customFields.isEmpty {
-        let msg =
-          isEnabled
-          ? Text(.customFields(.noCustomFieldsInDocumentDescription))
-          : Text(.customFields(.noCustomFieldsInDocumentDescriptionNoPerms))
+      if !store.permissions.test(.view, for: .customField) {
         ContentUnavailableView(
-          .customFields(.noCustomFieldsInDocument),
-          systemImage: "plus.square.dashed",
-          description: msg)
+          .permissions(.noViewPermissionsDisplayTitle),
+          systemImage: "lock.fill",
+          description: Text(.permissions(.noViewPermissionsCustomFields))
+        )
       } else {
-        ForEach(0..<customFields.count, id: \.self) { index in
-          let field = $customFields[index]
-          try? fieldView(index: index, field: field)
+        if document.customFields.isEmpty {
+          ContentUnavailableView(
+            .customFields(.noCustomFieldsInDocument),
+            systemImage: "plus.square.dashed",
+            description: Text(.customFields(.noCustomFieldsInDocumentDescription)))
+        } else {
+          ForEach(0..<customFields.count, id: \.self) { index in
+            let field = $customFields[index]
+            try? fieldView(index: index, field: field)
+          }
         }
       }
 
@@ -277,6 +281,7 @@ struct CustomFieldsEditView: View {
           Image(systemName: "plus")
             .accessibilityLabel(.localizable(.add))
         }
+        .disabled(!store.permissions.test(.view, for: .customField))
         .accessibilityAddTraits(.isButton)
       }
     }
