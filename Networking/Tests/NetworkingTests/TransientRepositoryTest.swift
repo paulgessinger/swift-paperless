@@ -5,7 +5,7 @@ import Testing
 @testable import Networking
 
 @Suite struct TransientRepositoryTest {
-  @Test func testDocumentCRUD() async throws {
+  @Test @MainActor func testDocumentCRUD() async throws {
     let repository = TransientRepository()
 
     // Create
@@ -44,7 +44,7 @@ import Testing
     #expect(deletedDoc == nil)
   }
 
-  @Test func testTagCRUD() async throws {
+  @Test @MainActor func testTagCRUD() async throws {
     let repository = TransientRepository()
 
     // Create
@@ -77,7 +77,7 @@ import Testing
     #expect(deletedTag == nil)
   }
 
-  @Test func testCorrespondentCRUD() async throws {
+  @Test @MainActor func testCorrespondentCRUD() async throws {
     let repository = TransientRepository()
 
     // Create
@@ -107,7 +107,7 @@ import Testing
     #expect(deletedCorrespondent == nil)
   }
 
-  @Test func testDocumentTypeCRUD() async throws {
+  @Test @MainActor func testDocumentTypeCRUD() async throws {
     let repository = TransientRepository()
 
     // Create
@@ -137,7 +137,7 @@ import Testing
     #expect(deletedDocType == nil)
   }
 
-  @Test func testStoragePathCRUD() async throws {
+  @Test @MainActor func testStoragePathCRUD() async throws {
     let repository = TransientRepository()
 
     // Create
@@ -167,7 +167,7 @@ import Testing
     #expect(pathsAfterDelete.isEmpty)
   }
 
-  @Test func testDocumentNotes() async throws {
+  @Test @MainActor func testDocumentNotes() async throws {
     let repository = TransientRepository()
 
     // Create a document first
@@ -193,7 +193,7 @@ import Testing
     #expect(notesAfterDelete.isEmpty)
   }
 
-  @Test func testIdGeneration() async throws {
+  @Test @MainActor func testIdGeneration() async throws {
     let repository = TransientRepository()
 
     // Create multiple items and verify IDs are unique and sequential
@@ -206,7 +206,7 @@ import Testing
     #expect(tag3.id == 3)
   }
 
-  @Test func testDocumentNotFoundError() async throws {
+  @Test @MainActor func testDocumentNotFoundError() async throws {
     let repository = TransientRepository()
 
     // Try to access a non-existent document's notes
@@ -217,7 +217,7 @@ import Testing
     }
   }
 
-  @Test func testUserManagement() async throws {
+  @Test @MainActor func testUserManagement() async throws {
     let repository = TransientRepository()
 
     // Initially no user is logged in
@@ -259,7 +259,7 @@ import Testing
     }
   }
 
-  @Test func testCustomFields() async throws {
+  @Test @MainActor func testCustomFields() async throws {
     let repository = TransientRepository()
 
     // Initially should be empty
@@ -297,7 +297,7 @@ import Testing
     #expect(sortedFields[1].extraData.defaultCurrency == "USD")
   }
 
-  @Test func testDocumentSearch() async throws {
+  @Test @MainActor func testDocumentSearch() async throws {
     let repository = TransientRepository()
 
     // Create test documents with different titles
@@ -347,7 +347,7 @@ import Testing
     #expect(emptyDocs.isEmpty)
   }
 
-  @Test func testDocumentSearchHelper() async throws {
+  @Test @MainActor func testDocumentSearchHelper() async throws {
     let repository = TransientRepository()
 
     // Create test documents
