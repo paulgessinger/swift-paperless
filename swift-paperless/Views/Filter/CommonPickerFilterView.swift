@@ -276,6 +276,8 @@ where
 
   @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
+  @Environment(\.dismiss) private var dismiss
+
   private var model: Manager.Model
 
   private var resource: UserPermissions.Resource? {
@@ -335,6 +337,8 @@ where
       Button(action: {
         // set new value
         document[keyPath: Element.documentPath(D.self)] = value
+
+        dismiss()
       }) {
         Text(label)
       }
