@@ -37,25 +37,32 @@ public struct DecodingErrorWithRootType: Error {
   public let error: DecodingError
 }
 
-public actor ApiRepository {
+@MainActor
+public class ApiRepository {
   public nonisolated
     let connection: Connection
 
-  public enum Mode {
+  public enum Mode: Sendable {
     case release
     case debug
   }
 
-  let mode: Mode
+  nonisolated
+    let mode: Mode
 
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
 
-  private var apiVersion: UInt?
-  public static let minimumApiVersion: UInt = 3
-  public static let minimumVersion = Version(1, 14, 1)
-  public static let maximumApiVersion: UInt = 9
-  public private(set) var backendVersion: Version?
+  nonisolated
+    private let apiVersion: UInt?
+  nonisolated
+    public static let minimumApiVersion: UInt = 3
+  nonisolated
+    public static let minimumVersion = Version(1, 14, 1)
+  nonisolated
+    public static let maximumApiVersion: UInt = 9
+  nonisolated
+    public let backendVersion: Version?
 
   public var effectiveApiVersion: UInt {
     min(Self.maximumApiVersion, max(Self.minimumApiVersion, apiVersion ?? Self.minimumApiVersion))
@@ -75,7 +82,14 @@ public actor ApiRepository {
     urlSessionDelegate = delegate
     urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
 
-    await loadBackendVersions()
+    if let versions = await Self.loadBackendVersions(urlSession: urlSession, connection: connection)
+    {
+      apiVersion = versions.apiVersion
+      backendVersion = versions.backendVersion
+    } else {
+      apiVersion = nil
+      backendVersion = nil
+    }
 
     if let apiVersion, let backendVersion {
       Logger.networking.notice(
@@ -164,12 +178,14 @@ public actor ApiRepository {
     #endif
   }
 
-  func sanitizedError(_ error: some Error) -> String {
+  static func sanitizedError(_ error: some Error, url: URL) -> String {
     #if DEBUG
       return String(describing: error)
     #else
+      let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+      let scheme = components?.scheme ?? "http"
       return String(describing: error).replacingOccurrences(
-        of: connection.url.absoluteString, with: "\(connection.scheme)://example.com")
+        of: url.absoluteString, with: "\(scheme)://example.com")
     #endif
   }
 
@@ -177,6 +193,17 @@ public actor ApiRepository {
     for request: URLRequest, code: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData
+  ) async throws -> (Data, URLResponse) {
+    try await Self.fetchData(
+      for: request, code: code, progress: progress, cachePolicy: cachePolicy, urlSession: urlSession
+    )
+  }
+
+  private static func fetchData(
+    for request: URLRequest, code: HTTPStatusCode = .ok,
+    progress: (@Sendable (Double) -> Void)? = nil,
+    cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData,
+    urlSession: URLSession
   ) async throws -> (Data, URLResponse) {
     var request = request
 
@@ -222,7 +249,7 @@ public actor ApiRepository {
       )
       throw error
     } catch {
-      let sanitizedError = sanitizedError(error)
+      let sanitizedError = sanitizedError(error, url: url)
       Logger.networking.error(
         "Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)"
       )
@@ -711,10 +738,16 @@ extension ApiRepository: Repository {
   private nonisolated
     func addTokenTo(request: inout URLRequest)
   {
-    let tokenStr = sanitize(token: connection.token)
-    if let apiToken {
+    Self.addTokenTo(request: &request, token: connection.token)
+  }
+
+  private nonisolated
+    static func addTokenTo(request: inout URLRequest, token: String?)
+  {
+    let tokenStr = sanitize(token: token)
+    if let token {
       Logger.networking.debug("Adding token to request: \(tokenStr, privacy: .public)")
-      request.setValue("Token \(apiToken)", forHTTPHeaderField: "Authorization")
+      request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
     } else {
       Logger.networking.info("NOT adding token to request (token is nil)")
     }
@@ -855,18 +888,28 @@ extension ApiRepository: Repository {
     }
   }
 
-  private func loadBackendVersions() async {
+  private static func loadBackendVersions(urlSession: URLSession, connection: Connection) async -> (
+    apiVersion: UInt, backendVersion: Version
+  )? {
     Logger.networking.info("Getting backend versions")
     do {
       // @TODO: Maybe switch to `/api/remote_version`
-      let request = try request(.uiSettings())
 
-      let (_, res) = try await fetchData(for: request)
+      guard let url = Endpoint.uiSettings().url(url: connection.url) else {
+        Logger.networking.error("Unable to create URL for determining backend version")
+        return nil
+      }
+
+      var request = URLRequest(url: url)
+      Self.addTokenTo(request: &request, token: connection.token)
+      connection.extraHeaders.apply(toRequest: &request)
+
+      let (_, res) = try await Self.fetchData(for: request, urlSession: urlSession)
 
       // fetchData should have already ensured this
       guard let res = res as? HTTPURLResponse else {
         Logger.networking.error("Unable to get API and backend version: Not an HTTP response")
-        return
+        return nil
       }
 
       if res.statusCode != 200 {
@@ -880,28 +923,27 @@ extension ApiRepository: Repository {
 
       guard let backend1, let backend2 else {
         Logger.networking.error("Unable to get API and backend version: X-Version not found")
-        return
+        return nil
       }
       let backend = [backend1, backend2].compactMap { $0 }.first!
 
       guard let backendVersion = Version(backend) else {
         Logger.networking.error("Unable to get API and backend version: Invalid format \(backend)")
-        return
+        return nil
       }
 
       guard let apiVersion = res.value(forHTTPHeaderField: "X-Api-Version"),
         let apiVersion = UInt(apiVersion)
       else {
         Logger.networking.error("Unable to get API and backend version: X-Api-Version not found")
-        return
+        return nil
       }
 
-      self.apiVersion = apiVersion
-      self.backendVersion = backendVersion
+      return (apiVersion, backendVersion)
     } catch {
       Logger.networking.error(
         "Unable to get API and backend version, error: \(String(describing: error))")
-      return
+      return nil
     }
   }
 }

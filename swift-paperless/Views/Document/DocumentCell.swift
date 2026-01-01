@@ -195,8 +195,8 @@ struct DocumentCell: View {
   .task {
     do {
       let repository = store.repository as! TransientRepository
-      await repository.addUser(User(id: 1, isSuperUser: false, username: "user1", groups: []))
-      try? await repository.login(userId: 1)
+      repository.addUser(User(id: 1, isSuperUser: false, username: "user1", groups: []))
+      try? repository.login(userId: 1)
 
       let correspondent = try await store.repository.create(
         correspondent: ProtoCorrespondent(name: "Test Correspondent"))
@@ -212,7 +212,7 @@ struct DocumentCell: View {
           tags: [tag.id], storagePath: storagePath.id),
         file: #URL("http://example.com"), filename: "blubb.pdf")
 
-      guard var document = await repository.allDocuments().first else {
+      guard var document = repository.allDocuments().first else {
         print("DID NOT GET DOCUMENT")
         return
       }

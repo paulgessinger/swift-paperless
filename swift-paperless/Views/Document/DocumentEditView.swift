@@ -490,9 +490,9 @@ struct DocumentEditView: View {
   .task {
     do {
       let repository = store.repository as! TransientRepository
-      await repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: []))
-      await repository.set(permissionTo: .change, for: .document, to: false)
-      try? await repository.login(userId: 1)
+      repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: []))
+      repository.set(permissionTo: .change, for: .document, to: false)
+      try? repository.login(userId: 1)
       try await store.fetchAll()
       try await store.repository.create(
         document: ProtoDocument(title: "blubb"),

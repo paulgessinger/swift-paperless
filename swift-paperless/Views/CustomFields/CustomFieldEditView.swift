@@ -362,9 +362,9 @@ private let instances = [
 @MainActor
 private func getDocument(store: DocumentStore) async throws -> Document? {
   let repository = store.repository as! TransientRepository
-  await repository.addUser(
+  repository.addUser(
     User(id: 1, isSuperUser: false, username: "user", groups: [1]))
-  try? await repository.login(userId: 1)
+  try? repository.login(userId: 1)
   for field in customFields {
     _ = try await repository.add(customField: field)
   }
@@ -426,7 +426,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
     Button("Toggle perms") {
       Task {
         let repository = store.repository as! TransientRepository
-        await repository.set(
+        repository.set(
           permissions: .full {
             $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
           })

@@ -42,7 +42,8 @@ struct SeededGenerator: RandomNumberGenerator {
   }
 }
 
-public actor PreviewRepository: Repository {
+@MainActor
+public class PreviewRepository: Repository {
   private var documents: [UInt: Document]
   private let tags: [UInt: Tag]
   private let documentTypes: [UInt: DocumentType]

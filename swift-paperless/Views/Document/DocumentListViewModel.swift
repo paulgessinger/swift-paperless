@@ -76,7 +76,7 @@ class DocumentListViewModel {
       // Ensure we have up-to-date permissions
       try await store.fetchUISettings()
       if source == nil {
-        source = try await store.repository.documents(filter: filterState)
+        source = try store.repository.documents(filter: filterState)
       }
       try ensurePermissions()
       let batch = try await source!.fetch(limit: initialBatchSize)
@@ -147,7 +147,7 @@ class DocumentListViewModel {
     exhausted = false
     do {
       try ensurePermissions()
-      source = try await store.repository.documents(filter: filterState)
+      source = try store.repository.documents(filter: filterState)
 
       let batch = try await source!.fetch(limit: retain ? UInt(documents.count) : initialBatchSize)
 

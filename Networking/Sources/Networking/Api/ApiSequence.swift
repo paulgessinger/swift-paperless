@@ -96,7 +96,7 @@ where Element: Model & Decodable & Sendable {
       Logger.networking.info("\(Element.self, privacy: .public) API sequence was cancelled")
       throw error
     } catch {
-      let sanitizedError = await repository.sanitizedError(error)
+      let sanitizedError = await ApiRepository.sanitizedError(error, url: url)
       Logger.networking.error(
         "Error in \(Element.self, privacy: .public) API sequence: \(sanitizedError, privacy: .public)"
       )

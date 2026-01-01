@@ -8,7 +8,8 @@
 import DataModel
 import SwiftUI
 
-public actor NullRepository: Repository {
+@MainActor
+public class NullRepository: Repository {
   public struct NotImplemented: Error {}
 
   public init() {}

@@ -795,9 +795,9 @@ private let customFields = [
   .task {
     do {
       let repository = store.repository as! TransientRepository
-      await repository.addUser(
+      repository.addUser(
         User(id: 1, isSuperUser: false, username: "user", groups: [1]))
-      try? await repository.login(userId: 1)
+      try? repository.login(userId: 1)
       for field in customFields {
         _ = try await repository.add(customField: field)
       }
