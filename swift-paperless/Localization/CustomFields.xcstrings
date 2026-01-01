@@ -483,14 +483,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "**Brugerdefinerede felter** kan ikke tilføjes på dette tidspunkt på grund af en begrænsning i serversoftwaren. Du kan redigere brugerdefinerede felter i dokumentet, når det er færdigbehandlet."
+            "state" : "translated",
+            "value" : "**Brugerdefinerede felter** kan ikke tilføjes på nuværende tidspunkt, fordi din version af serversoftwaren ikke understøtter det endnu. Du kan opdatere serversoftwaren til en nyere version!"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "**Benutzerdefinierte Felder** können in diesem Stadium aufgrund einer Einschränkung in der Serversoftware nicht hinzugefügt werden. Du kannst benutzerdefinierte Felder im Dokument bearbeiten, sobald die Verarbeitung abgeschlossen ist."
+            "state" : "translated",
+            "value" : "**Benutzerdefinierte Felder** können in diesem Stadium nicht hinzugefügt werden, da deine Version der Serversoftware dies noch nicht unterstützt. Du kannst die Serversoftware auf eine neuere Version aktualisieren!"
           }
         },
         "en" : {
@@ -501,32 +501,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "**Les champs personnalisés** ne peuvent pas être ajoutés à ce stade, en raison d'une limitation du logiciel du serveur. Vous pouvez modifier les champs personnalisés sur le document une fois qu'il a été traité."
+            "state" : "translated",
+            "value" : "Les **champs personnalisés** ne peuvent pas être ajoutés à ce stade, car votre version du logiciel du serveur ne les prend pas encore en charge. Vous pouvez mettre à jour le logiciel du serveur vers une version plus récente !"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I **campi personalizzati** non possono essere aggiunti in questa fase, a causa di una limitazione del software del server. È possibile modificare i campi personalizzati sul documento una volta terminata l'elaborazione."
+            "state" : "translated",
+            "value" : "I **campi personalizzati** non possono essere aggiunti in questa fase, perché la versione del software del server non li supporta ancora. È possibile aggiornare il software del server a una versione più recente!"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "**Aangepaste velden** kunnen in dit stadium niet worden toegevoegd vanwege een beperking in de serversoftware. Je kunt aangepaste velden in het document bewerken zodra het verwerkt is."
+            "state" : "translated",
+            "value" : "**Aangepaste velden** kunnen in dit stadium niet worden toegevoegd, omdat uw versie van de serversoftware dit nog niet ondersteunt. U kunt de serversoftware bijwerken naar een nieuwere versie!"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "**Pola niestandardowe** nie mogą być dodawane na tym etapie ze względu na ograniczenia w oprogramowaniu serwera. Pola niestandardowe można edytować w dokumencie po zakończeniu jego przetwarzania."
+            "state" : "translated",
+            "value" : "**Pola niestandardowe** nie mogą być dodane na tym etapie, ponieważ twoja wersja oprogramowania serwera jeszcze ich nie obsługuje. Możesz zaktualizować oprogramowanie serwera do nowszej wersji!"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sunucu yazılımındaki bir sınırlama nedeniyle **özel alanlar** bu aşamada eklenemez. Belgenin işlenmesi tamamlandıktan sonra belge üzerindeki özel alanları düzenleyebilirsiniz."
+            "state" : "translated",
+            "value" : "**Özel alanlar** bu aşamada eklenemez, çünkü sunucu yazılımınızın sürümü henüz bunu desteklemiyor. Sunucu yazılımını daha yeni bir sürüme güncelleyebilirsiniz!"
           }
         }
       }
@@ -2336,10 +2336,52 @@
     "searchDocumentsButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj dokument"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokument hinzufügen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add document"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un document"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi documento"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document toevoegen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj dokument"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doküman ekle"
           }
         }
       }
