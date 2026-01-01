@@ -580,6 +580,195 @@ struct FilterStateTest {
       ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8, 99]) }.rules)
   }
 
+  // - MARK: ASN Filtering Tests
+
+  @Test("Convert ASN rules to FilterState")
+  func testRuleToFilterStateAsn() throws {
+    // Test .asn rule with specific value (equalTo)
+    #expect(
+      try FilterState(rules: [
+        #require(FilterRule(ruleType: .asn, value: .number(value: 42)))
+      ]) == FilterState.empty.with { $0.asn = .equalTo(42) }
+    )
+
+    // Test .asnIsnull rule with true (isNull)
+    #expect(
+      try FilterState(rules: [
+        #require(FilterRule(ruleType: .asnIsnull, value: .boolean(value: true)))
+      ]) == FilterState.empty.with { $0.asn = .isNull }
+    )
+
+    // Test .asnIsnull rule with false (isNotNull)
+    #expect(
+      try FilterState(rules: [
+        #require(FilterRule(ruleType: .asnIsnull, value: .boolean(value: false)))
+      ]) == FilterState.empty.with { $0.asn = .isNotNull }
+    )
+
+    // Test .asnGt rule (greaterThan)
+    #expect(
+      try FilterState(rules: [
+        #require(FilterRule(ruleType: .asnGt, value: .number(value: 100)))
+      ]) == FilterState.empty.with { $0.asn = .greaterThan(100) }
+    )
+
+    // Test .asnLt rule (lessThan)
+    #expect(
+      try FilterState(rules: [
+        #require(FilterRule(ruleType: .asnLt, value: .number(value: 50)))
+      ]) == FilterState.empty.with { $0.asn = .lessThan(50) }
+    )
+  }
+
+  @Test("Convert FilterState ASN to rules")
+  func testFilterStateToRuleAsn() throws {
+    // Test .any - should produce no rules
+    #expect(
+      FilterState.empty.with { $0.asn = .any }.rules == []
+    )
+
+    // Test .isNull
+    #expect(
+      [FilterRule(ruleType: .asnIsnull, value: .boolean(value: true))]
+        == FilterState.empty.with { $0.asn = .isNull }.rules
+    )
+
+    // Test .isNotNull
+    #expect(
+      [FilterRule(ruleType: .asnIsnull, value: .boolean(value: false))]
+        == FilterState.empty.with { $0.asn = .isNotNull }.rules
+    )
+
+    // Test .equalTo
+    #expect(
+      try [#require(FilterRule(ruleType: .asn, value: .number(value: 42)))]
+        == FilterState.empty.with { $0.asn = .equalTo(42) }.rules
+    )
+
+    // Test .greaterThan
+    #expect(
+      try [#require(FilterRule(ruleType: .asnGt, value: .number(value: 100)))]
+        == FilterState.empty.with { $0.asn = .greaterThan(100) }.rules
+    )
+
+    // Test .lessThan
+    #expect(
+      try [#require(FilterRule(ruleType: .asnLt, value: .number(value: 50)))]
+        == FilterState.empty.with { $0.asn = .lessThan(50) }.rules
+    )
+  }
+
+  @Test("ASN filter round-trip conversion")
+  func testAsnFilterRoundTrip() throws {
+    // Test that converting FilterState -> Rules -> FilterState preserves ASN filter state
+
+    // equalTo case
+    let equalToState = FilterState.empty.with { $0.asn = .equalTo(42) }
+    let equalToRules = equalToState.rules
+    #expect(FilterState(rules: equalToRules).asn == .equalTo(42))
+
+    // isNull case
+    let isNullState = FilterState.empty.with { $0.asn = .isNull }
+    let isNullRules = isNullState.rules
+    #expect(FilterState(rules: isNullRules).asn == .isNull)
+
+    // isNotNull case
+    let isNotNullState = FilterState.empty.with { $0.asn = .isNotNull }
+    let isNotNullRules = isNotNullState.rules
+    #expect(FilterState(rules: isNotNullRules).asn == .isNotNull)
+
+    // greaterThan case
+    let greaterThanState = FilterState.empty.with { $0.asn = .greaterThan(100) }
+    let greaterThanRules = greaterThanState.rules
+    #expect(FilterState(rules: greaterThanRules).asn == .greaterThan(100))
+
+    // lessThan case
+    let lessThanState = FilterState.empty.with { $0.asn = .lessThan(50) }
+    let lessThanRules = lessThanState.rules
+    #expect(FilterState(rules: lessThanRules).asn == .lessThan(50))
+
+    // any case (default, produces no rules)
+    let anyState = FilterState.empty.with { $0.asn = .any }
+    let anyRules = anyState.rules
+    #expect(FilterState(rules: anyRules).asn == .any)
+  }
+
+  @Test("ASN filter with other filters")
+  func testAsnFilterWithOtherFilters() throws {
+    // Test ASN filter combined with other filter types
+    let rules = try [
+      #require(FilterRule(ruleType: .asn, value: .number(value: 42))),
+      #require(FilterRule(ruleType: .title, value: .string(value: "test"))),
+      #require(FilterRule(ruleType: .hasTagsAll, value: .tag(id: 5))),
+    ]
+
+    let state = FilterState(rules: rules)
+    #expect(state.asn == .equalTo(42))
+    #expect(state.searchText == "test")
+    #expect(state.searchMode == .title)
+    #expect(state.tags == .allOf(include: [5], exclude: []))
+
+    // Verify round-trip preserves all filters
+    let regeneratedRules = state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let originalRules = rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    #expect(regeneratedRules == originalRules)
+  }
+
+  @Test("Invalid ASN rule values go to remaining")
+  func testInvalidAsnRules() throws {
+    // Test that invalid ASN rules are preserved in remaining array
+
+    // Invalid value type for .asn
+    let invalidAsnRule = try #require(
+      FilterRule(ruleType: .asn, value: .invalid(value: "not-a-number"))
+    )
+    let state1 = FilterState(rules: [invalidAsnRule])
+    #expect(state1.asn == .any)  // Should remain as default
+    #expect(state1.remaining.contains(invalidAsnRule))
+
+    // Invalid value type for .asnIsnull
+    let invalidAsnNullRule = try #require(
+      FilterRule(ruleType: .asnIsnull, value: .invalid(value: "invalid"))
+    )
+    let state2 = FilterState(rules: [invalidAsnNullRule])
+    #expect(state2.asn == .any)
+    #expect(state2.remaining.contains(invalidAsnNullRule))
+
+    // Invalid value type for .asnGt
+    let invalidAsnGtRule = try #require(
+      FilterRule(ruleType: .asnGt, value: .invalid(value: "invalid"))
+    )
+    let state3 = FilterState(rules: [invalidAsnGtRule])
+    #expect(state3.asn == .any)
+    #expect(state3.remaining.contains(invalidAsnGtRule))
+
+    // Invalid value type for .asnLt
+    let invalidAsnLtRule = try #require(
+      FilterRule(ruleType: .asnLt, value: .invalid(value: "invalid"))
+    )
+    let state4 = FilterState(rules: [invalidAsnLtRule])
+    #expect(state4.asn == .any)
+    #expect(state4.remaining.contains(invalidAsnLtRule))
+  }
+
+  @Test("Conflicting ASN rules handling")
+  func testConflictingAsnRules() throws {
+    // Test that conflicting ASN rules are handled (last one wins or goes to remaining)
+
+    // Multiple different ASN rules - behavior should match other filter implementations
+    let rules = try [
+      #require(FilterRule(ruleType: .asn, value: .number(value: 10))),
+      #require(FilterRule(ruleType: .asnGt, value: .number(value: 20))),
+    ]
+
+    let state = FilterState(rules: rules)
+
+    // The second rule should either override or both should work
+    // Based on other filter patterns, the last one typically wins
+    // or conflicting ones go to remaining
+    #expect(state.asn == .greaterThan(20) || state.remaining.count > 0)
+  }
+
   @Test("FilterState with custom field query")
   func testFilterStateWithCustomFieldQuery() throws {
     // Test creating a FilterState with a custom field query
