@@ -946,4 +946,9 @@ extension ApiRepository: Repository {
       return nil
     }
   }
+
+  public func supports(feature: BackendFeature) -> Bool {
+    guard let backendVersion else { return false }
+    return feature.isSupported(on: backendVersion)
+  }
 }

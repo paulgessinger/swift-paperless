@@ -154,6 +154,8 @@ public protocol Repository: Sendable {
   nonisolated
     var delegate: (any URLSessionDelegate)?
   { get }
+
+  func supports(feature: BackendFeature) -> Bool
 }
 
 extension Repository {
@@ -169,6 +171,10 @@ extension Repository {
     let source = try documents(filter: filter)
     return try await source.fetch(limit: limit)
   }
+}
+
+extension Repository {
+  public func supports(feature: BackendFeature) -> Bool { true }
 }
 
 // - MARK: DocumentSource
