@@ -769,6 +769,196 @@ struct FilterStateTest {
     #expect(state.asn == .greaterThan(20) || state.remaining.count > 0)
   }
 
+  @Test("Decode ASN rules from JSON with string values")
+  func testDecodeAsnRulesFromJsonStrings() throws {
+    // Test decoding ASN rules where values come as strings (as they do from the API)
+
+    // Test .asnIsnull with string "false"
+    let asnNotNullJson = """
+      {
+        "rule_type": 18,
+        "value": "false"
+      }
+      """.data(using: .utf8)!
+
+    let asnNotNullRule = try JSONDecoder().decode(FilterRule.self, from: asnNotNullJson)
+    #expect(asnNotNullRule.ruleType == .asnIsnull)
+    #expect(asnNotNullRule.value == .boolean(value: false))
+
+    let state1 = FilterState(rules: [asnNotNullRule])
+    #expect(state1.asn == .isNotNull)
+
+    // Test .asnIsnull with string "true"
+    let asnNullJson = """
+      {
+        "rule_type": 18,
+        "value": "true"
+      }
+      """.data(using: .utf8)!
+
+    let asnNullRule = try JSONDecoder().decode(FilterRule.self, from: asnNullJson)
+    #expect(asnNullRule.ruleType == .asnIsnull)
+    #expect(asnNullRule.value == .boolean(value: true))
+
+    let state2 = FilterState(rules: [asnNullRule])
+    #expect(state2.asn == .isNull)
+
+    // Test .asn with string "1"
+    let asnEqualJson = """
+      {
+        "rule_type": 2,
+        "value": "1"
+      }
+      """.data(using: .utf8)!
+
+    let asnEqualRule = try JSONDecoder().decode(FilterRule.self, from: asnEqualJson)
+    #expect(asnEqualRule.ruleType == .asn)
+    #expect(asnEqualRule.value == .number(value: 1))
+
+    let state3 = FilterState(rules: [asnEqualRule])
+    #expect(state3.asn == .equalTo(1))
+
+    // Test .asnGt with string "1"
+    let asnGtJson = """
+      {
+        "rule_type": 23,
+        "value": "1"
+      }
+      """.data(using: .utf8)!
+
+    let asnGtRule = try JSONDecoder().decode(FilterRule.self, from: asnGtJson)
+    #expect(asnGtRule.ruleType == .asnGt)
+    #expect(asnGtRule.value == .number(value: 1))
+
+    let state4 = FilterState(rules: [asnGtRule])
+    #expect(state4.asn == .greaterThan(1))
+
+    // Test .asnLt with string "1"
+    let asnLtJson = """
+      {
+        "rule_type": 24,
+        "value": "1"
+      }
+      """.data(using: .utf8)!
+
+    let asnLtRule = try JSONDecoder().decode(FilterRule.self, from: asnLtJson)
+    #expect(asnLtRule.ruleType == .asnLt)
+    #expect(asnLtRule.value == .number(value: 1))
+
+    let state5 = FilterState(rules: [asnLtRule])
+    #expect(state5.asn == .lessThan(1))
+  }
+
+  @Test("Encode ASN rules to JSON with string values")
+  func testEncodeAsnRulesToJsonStrings() throws {
+    // Test that encoding ASN rules produces string values (for API compatibility)
+
+    struct Payload: Decodable {
+      var rule_type: Int
+      var value: String
+    }
+
+    // Test .isNull encoding
+    let isNullRule = FilterRule(ruleType: .asnIsnull, value: .boolean(value: true))!
+    let isNullJson = try JSONEncoder().encode(isNullRule)
+    let isNullPayload = try JSONDecoder().decode(Payload.self, from: isNullJson)
+    #expect(isNullPayload.rule_type == 18)
+    #expect(isNullPayload.value == "true")
+
+    // Test .isNotNull encoding
+    let isNotNullRule = FilterRule(ruleType: .asnIsnull, value: .boolean(value: false))!
+    let isNotNullJson = try JSONEncoder().encode(isNotNullRule)
+    let isNotNullPayload = try JSONDecoder().decode(Payload.self, from: isNotNullJson)
+    #expect(isNotNullPayload.rule_type == 18)
+    #expect(isNotNullPayload.value == "false")
+
+    // Test .equalTo encoding
+    let equalToRule = FilterRule(ruleType: .asn, value: .number(value: 42))!
+    let equalToJson = try JSONEncoder().encode(equalToRule)
+    let equalToPayload = try JSONDecoder().decode(Payload.self, from: equalToJson)
+    #expect(equalToPayload.rule_type == 2)
+    #expect(equalToPayload.value == "42")
+
+    // Test .greaterThan encoding
+    let greaterThanRule = FilterRule(ruleType: .asnGt, value: .number(value: 100))!
+    let greaterThanJson = try JSONEncoder().encode(greaterThanRule)
+    let greaterThanPayload = try JSONDecoder().decode(Payload.self, from: greaterThanJson)
+    #expect(greaterThanPayload.rule_type == 23)
+    #expect(greaterThanPayload.value == "100")
+
+    // Test .lessThan encoding
+    let lessThanRule = FilterRule(ruleType: .asnLt, value: .number(value: 50))!
+    let lessThanJson = try JSONEncoder().encode(lessThanRule)
+    let lessThanPayload = try JSONDecoder().decode(Payload.self, from: lessThanJson)
+    #expect(lessThanPayload.rule_type == 24)
+    #expect(lessThanPayload.value == "50")
+  }
+
+  @Test("Complete ASN JSON round-trip with string values")
+  func testAsnJsonRoundTripWithStrings() throws {
+    // Test full round-trip: JSON (string values) -> FilterRule -> FilterState -> FilterRule -> JSON (string values)
+
+    let jsonArray = """
+      [
+        {
+          "rule_type": 18,
+          "value": "false"
+        },
+        {
+          "rule_type": 2,
+          "value": "42"
+        },
+        {
+          "rule_type": 23,
+          "value": "100"
+        },
+        {
+          "rule_type": 24,
+          "value": "50"
+        }
+      ]
+      """.data(using: .utf8)!
+
+    // Decode from JSON
+    let rules = try JSONDecoder().decode([FilterRule].self, from: jsonArray)
+    #expect(rules.count == 4)
+
+    // Test each rule individually to ensure proper decoding
+    let notNullRule = rules[0]
+    #expect(notNullRule.ruleType == .asnIsnull)
+    #expect(notNullRule.value == .boolean(value: false))
+
+    let equalRule = rules[1]
+    #expect(equalRule.ruleType == .asn)
+    #expect(equalRule.value == .number(value: 42))
+
+    let gtRule = rules[2]
+    #expect(gtRule.ruleType == .asnGt)
+    #expect(gtRule.value == .number(value: 100))
+
+    let ltRule = rules[3]
+    #expect(ltRule.ruleType == .asnLt)
+    #expect(ltRule.value == .number(value: 50))
+
+    // Test each rule creates correct FilterState
+    // (Note: only one ASN filter can be active at a time, last one wins)
+    let state = FilterState(rules: [ltRule])
+    #expect(state.asn == .lessThan(50))
+
+    // Encode back to JSON
+    let encodedRules = state.rules
+    let encodedJson = try JSONEncoder().encode(encodedRules)
+
+    struct Payload: Decodable {
+      var rule_type: Int
+      var value: String
+    }
+    let decodedPayload = try JSONDecoder().decode([Payload].self, from: encodedJson)
+    #expect(decodedPayload.count == 1)
+    #expect(decodedPayload[0].rule_type == 24)
+    #expect(decodedPayload[0].value == "50")
+  }
+
   @Test("FilterState with custom field query")
   func testFilterStateWithCustomFieldQuery() throws {
     // Test creating a FilterState with a custom field query
