@@ -1,0 +1,15 @@
+1.9.0 (166)
+- Normalize document title and temp file name
+
+1.9.0 (165)
+- Normalize uploaded document file names
+
+1.9.0 (164)
+- Add page count to document view
+
+1.9.0 (163)
+- Fix permissions issue with document deletion
+- Fix debug display in tag edit view
+- Remove v1 and v2 document detail views
+- Remove login screen switch
+- Fix incorrect display of filter state being modified from saved view
