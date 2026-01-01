@@ -4,3 +4,4 @@
 - Clarify interaction for linking a document in custom field
 - Tune no-permissions display on custom fields when editing documents
 - Support long-text custom field type
+- Allow setting custom fields when uploading new documents

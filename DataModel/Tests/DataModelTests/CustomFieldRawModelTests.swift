@@ -418,4 +418,67 @@ struct CustomFieldRawModelTests {
 
     #expect(decoded.custom_fields.hasUnknown == false)
   }
+
+  @Test("Test encoding to dictionary with various value types")
+  func testEncodingToDictionary() throws {
+    let entryList = CustomFieldRawEntryList([
+      CustomFieldRawEntry(field: 1, value: .float(123.45)),
+      CustomFieldRawEntry(field: 2, value: .boolean(true)),
+      CustomFieldRawEntry(field: 3, value: .string("2025-06-25")),
+      CustomFieldRawEntry(field: 4, value: .integer(42)),
+      CustomFieldRawEntry(field: 5, value: .string("USD1000.00")),
+      CustomFieldRawEntry(field: 7, value: .string("Super duper text")),
+      CustomFieldRawEntry(field: 8, value: .string("https://paperless-ngx.com")),
+      CustomFieldRawEntry(field: 9, value: .idList([1, 6])),
+      CustomFieldRawEntry(field: 10, value: .none),
+    ])
+
+    let encoded = try entryList.encodeToDictionary()
+    let decoded = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+
+    #expect(decoded["1"] as? Double == 123.45)
+    #expect(decoded["2"] as? Bool == true)
+    #expect(decoded["3"] as? String == "2025-06-25")
+    #expect(decoded["4"] as? Int == 42)
+    #expect(decoded["5"] as? String == "USD1000.00")
+    #expect(decoded["7"] as? String == "Super duper text")
+    #expect(decoded["8"] as? String == "https://paperless-ngx.com")
+    #expect(decoded["9"] as? [UInt] == [1, 6])
+    #expect(decoded["10"] is NSNull)
+  }
+
+  @Test("Test encoding to dictionary with empty list")
+  func testEncodingToDictionaryWithEmptyList() throws {
+    let entryList = CustomFieldRawEntryList([])
+
+    let encoded = try entryList.encodeToDictionary()
+    let decoded = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+
+    #expect(decoded.isEmpty == true)
+  }
+
+  @Test("Test encoding to dictionary with unknown value throws error")
+  func testEncodingToDictionaryWithUnknownValueThrows() throws {
+    let entryList = CustomFieldRawEntryList([
+      CustomFieldRawEntry(field: 1, value: .string("test")),
+      CustomFieldRawEntry(field: 2, value: .unknown),
+    ])
+
+    #expect(throws: CustomFieldUnknownValue.self) {
+      _ = try entryList.encodeToDictionary()
+    }
+  }
+
+  @Test("Test encoding to dictionary with duplicate field IDs throws error")
+  func testEncodingToDictionaryWithDuplicateFieldIdsThrows() throws {
+    let entryList = CustomFieldRawEntryList([
+      CustomFieldRawEntry(field: 1, value: .string("first")),
+      CustomFieldRawEntry(field: 1, value: .string("second")),
+      CustomFieldRawEntry(field: 2, value: .integer(42)),
+    ])
+
+    #expect(throws: CustomFieldDuplicateFieldID.self) {
+      _ = try entryList.encodeToDictionary()
+    }
+  }
 }

@@ -151,8 +151,8 @@ private struct AddCustomFieldView: View {
   }
 }
 
-struct CustomFieldsEditView: View {
-  @Binding var document: Document
+struct CustomFieldsEditView<D: DocumentProtocol>: View {
+  @Binding var document: D
   @State private var customFields: [CustomFieldInstance] = []
 
   @EnvironmentObject var store: DocumentStore
@@ -162,16 +162,16 @@ struct CustomFieldsEditView: View {
   @State private var showAddSheet = false
   @State private var showInvalidFields = false
 
-  init(document: Binding<Document>) {
+  init(document: Binding<D>) {
     _document = document
   }
 
   @ViewBuilder
   private func fieldView(index: Int, field: Binding<CustomFieldInstance>) throws -> some View {
-    if case .invalid(let reason) = field.wrappedValue.value {
-      InvalidFieldView(instance: field.wrappedValue, reason: reason)
-    } else {
-      Group {
+    Group {
+      if case .invalid(let reason) = field.wrappedValue.value {
+        InvalidFieldView(instance: field.wrappedValue, reason: reason)
+      } else {
         switch field.wrappedValue.field.dataType {
         case .string:
           StringView(instance: field)
@@ -190,7 +190,7 @@ struct CustomFieldsEditView: View {
         case .url:
           UrlView(instance: field)
         case .documentLink:
-          DocumentLinkView(instance: field, document: document)
+          DocumentLinkView(instance: field, document: (document as? Document))
         case .select:
           SelectView(instance: field)
         case .other(let dataType):
@@ -198,12 +198,12 @@ struct CustomFieldsEditView: View {
           InvalidFieldView(instance: field.wrappedValue, reason: .unknownDataType(dataType))
         }
       }
-      .swipeActions {
-        Button(.customFields(.delete), role: .destructive) {
-          deleteField(index: index)
-        }
-        .disabled(!isEnabled)
+    }
+    .swipeActions {
+      Button(.customFields(.delete), role: .destructive) {
+        deleteField(index: index)
       }
+      .disabled(!isEnabled)
     }
   }
 
@@ -303,6 +303,7 @@ struct CustomFieldsEditView: View {
 
     .onChange(of: customFields) {
       document.customFields = customFields.rawEntries
+      showInvalidFields = customFields.hasInvalidValues
     }
   }
 }

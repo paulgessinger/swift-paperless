@@ -470,6 +470,18 @@ extension ApiRepository: Repository {
     }
 
     try mp.add(name: "document", url: file, filename: filename)
+
+    if supports(feature: .customFieldsOnCreate), !document.customFields.isEmpty {
+      Logger.networking.debug("Adding custom fields to document create request")
+
+      let encoded = try document.customFields.encodeToDictionary(encoder: encoder)
+      if let encodedStr = String(data: encoded, encoding: .utf8) {
+        mp.add(name: "custom_fields", string: encodedStr)
+      } else {
+        Logger.networking.error("Failed to encode custom fields to JSON")
+      }
+    }
+
     mp.addTo(request: &request)
 
     do {
@@ -945,5 +957,10 @@ extension ApiRepository: Repository {
         "Unable to get API and backend version, error: \(String(describing: error))")
       return nil
     }
+  }
+
+  public func supports(feature: BackendFeature) -> Bool {
+    guard let backendVersion else { return false }
+    return feature.isSupported(on: backendVersion)
   }
 }
