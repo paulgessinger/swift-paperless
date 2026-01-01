@@ -86,7 +86,7 @@ struct CommonPickerFilterView: View {
 
   var body: some View {
     VStack {
-      SearchBarView(text: $searchDebounce.text)
+      SearchBarViewiOS18(text: $searchDebounce.text)
         .transition(.opacity)
         .padding(.horizontal)
         .padding(.vertical, 2)

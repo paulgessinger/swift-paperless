@@ -42,7 +42,7 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
     }
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(saveLabel) {
+        SaveButton(saveLabel) {
           do {
             try onSave?(element)
           } catch {
@@ -52,10 +52,6 @@ struct CorrespondentEditView<Element>: View where Element: CorrespondentProtocol
         .disabled(!valid())
       }
     }
-    .navigationTitle(
-      Element.self is Correspondent.Type
-        ? String(localized: .localizable(.correspondentEditTitle))
-        : String(localized: .localizable(.correspondentCreateTitle)))
   }
 }
 

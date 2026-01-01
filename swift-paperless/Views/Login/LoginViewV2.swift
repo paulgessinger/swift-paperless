@@ -36,17 +36,24 @@ private struct DetailsView: View {
             Label(localized: .settings(.identities), systemImage: "lock.fill")
           }
 
-          LogRecordExportButton()
+          NavigationLink {
+            LogView()
+          } label: {
+            Label {
+              Text(.settings(.logs))
+                .accentColor(.primary)
+            } icon: {
+              Image(systemName: "text.word.spacing")
+            }
+          }
         }
       }
       .navigationTitle(Text(.login(.detailsTitle)))
       .navigationBarTitleDisplayMode(.inline)
 
       .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button(String(localized: .localizable(.done))) {
-            dismiss()
-          }
+        ToolbarItem(placement: .navigationBarLeading) {
+          CancelIconButton()
         }
       }
     }
@@ -145,9 +152,7 @@ struct LoginViewV2: LoginViewProtocol {
 
           .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-              Button(String(localized: .localizable(.cancel))) {
-                dismiss()
-              }
+              CancelIconButton()
             }
           }
       }

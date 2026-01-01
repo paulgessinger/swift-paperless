@@ -379,9 +379,7 @@ private struct TaskList: View {
     .toolbar {
       ToolbarItem(placement: .topBarLeading) {
         if editMode == .inactive {
-          Button(String(localized: .localizable(.back))) {
-            dismiss()
-          }
+          CancelIconButton()
         } else {
           if selection.isEmpty {
             Button(String(localized: .tasks(.acknowledgeAll)), role: .destructive) {

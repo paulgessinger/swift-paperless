@@ -20,6 +20,7 @@ struct SettingsView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.openURL) private var openURL
+  @Environment(\.dismiss) private var dismiss
 
   @State private var feedbackLogs: URL? = nil
   @State private var showMailSheet: Bool = false
@@ -83,6 +84,7 @@ struct SettingsView: View {
 
       NavigationLink {
         ManageView<SavedViewManager>()
+          .navigationTitle(Text(.localizable(.savedViews)))
       } label: {
         Label(
           String(localized: .localizable(.savedViews)),
@@ -226,79 +228,81 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    Form {
-      ConnectionsView(
-        connectionManager: connectionManager,
-        showLoginSheet: $showLoginSheet)
-
-      Section(String(localized: .settings(.preferences))) {
-        NavigationLink {
-          PreferencesView()
-        } label: {
-          Label(String(localized: .settings(.preferences)), systemImage: "dial.low.fill")
-        }
-      }
-
-      organizationSection
-
-      advancedSection
-
-      detailSection
-    }
-
-    #if canImport(MessageUI)
-      .sheet(isPresented: $showMailSheet) {
-        // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
-        MailView(result: $result, isPresented: $showMailSheet) { vc in
-          vc.setToRecipients(["swift-paperless@paulgessinger.com"])
-          if let feedbackLogs, let data = try? Data(contentsOf: feedbackLogs) {
-            vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
-          }
-
-          let version = Bundle.main.releaseVersionNumber ?? "?"
-          let build = Bundle.main.buildVersionNumber ?? "?"
-
-          vc.setMessageBody(
-            """
-            ---
-            App version: \(version) (\(build)), \(Bundle.main.appConfiguration.rawValue)
-            """, isHTML: false)
-        }
-      }
-    #endif
-
-    .sheet(isPresented: $showLoginSheet) {
-      LoginView(connectionManager: connectionManager, initial: false)
-        .environmentObject(errorController)
-        .errorOverlay(errorController: errorController, offset: 15)
-    }
-
-    .onChange(of: feedbackLogs) {
-      showMailSheet = true
-    }
-
-    .navigationTitle(Text(.settings(.title)))
-    .navigationBarTitleDisplayMode(.inline)
-  }
-}
-
-private struct PreviewHelper: View {
-  @StateObject var store = DocumentStore(repository: PreviewRepository())
-
-  @StateObject var errorController = ErrorController()
-  @StateObject var connectionManager = ConnectionManager()
-
-  var body: some View {
     NavigationStack {
-      SettingsView()
-        .navigationBarTitleDisplayMode(.inline)
+      Form {
+        ConnectionsView(
+          connectionManager: connectionManager,
+          showLoginSheet: $showLoginSheet)
+
+        Section(String(localized: .settings(.preferences))) {
+          NavigationLink {
+            PreferencesView()
+          } label: {
+            Label(String(localized: .settings(.preferences)), systemImage: "dial.low.fill")
+          }
+        }
+
+        organizationSection
+
+        advancedSection
+
+        detailSection
+      }
+
+      #if canImport(MessageUI)
+        .sheet(isPresented: $showMailSheet) {
+          // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
+          MailView(result: $result, isPresented: $showMailSheet) { vc in
+            vc.setToRecipients(["swift-paperless@paulgessinger.com"])
+            if let feedbackLogs, let data = try? Data(contentsOf: feedbackLogs) {
+              vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
+            }
+
+            let version = Bundle.main.releaseVersionNumber ?? "?"
+            let build = Bundle.main.buildVersionNumber ?? "?"
+
+            vc.setMessageBody(
+              """
+              ---
+              App version: \(version) (\(build)), \(Bundle.main.appConfiguration.rawValue)
+              """, isHTML: false)
+          }
+        }
+
+        .onChange(of: feedbackLogs) {
+          showMailSheet = true
+        }
+      #endif
+
+      .sheet(isPresented: $showLoginSheet) {
+        LoginView(connectionManager: connectionManager, initial: false)
+          .environmentObject(errorController)
+          .errorOverlay(errorController: errorController, offset: 15)
+      }
+
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+      }
+
+      .navigationTitle(Text(.settings(.title)))
+      .navigationBarTitleDisplayMode(.large)
     }
-    .environmentObject(store)
-    .environmentObject(connectionManager)
-    .errorOverlay(errorController: errorController)
   }
 }
 
 #Preview("SettingsView") {
-  PreviewHelper()
+  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @StateObject var errorController = ErrorController()
+  @Previewable @StateObject var connectionManager = ConnectionManager()
+
+  VStack {
+  }
+  .sheet(isPresented: .constant(true)) {
+    SettingsView()
+      .environmentObject(store)
+      .environmentObject(connectionManager)
+      .errorOverlay(errorController: errorController)
+  }
 }

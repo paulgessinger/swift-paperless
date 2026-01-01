@@ -7,123 +7,97 @@
 
 import SwiftUI
 
-struct SearchBarView: View {
+@available(iOS 26.0, macOS 26.0, *)
+struct SearchBarView<Content: View>: View {
   @Binding var text: String
-  var cancelEnabled = true
-  var isFocused: Binding<Bool>? = nil
-  var onSubmit: () -> Void = {}
-
-  @Environment(\.colorScheme) private var colorScheme
+  let content: () -> Content
 
   @FocusState private var focused: Bool
   @State private var showCancel: Bool = false
 
-  var barColor: AnyShapeStyle {
-    if colorScheme == .dark {
-      .init(.background.secondary)
-    } else {
-      .init(.background.tertiary)
-    }
-  }
-
   var body: some View {
-    HStack {
+    GlassEffectContainer(spacing: 0) {
       HStack {
-        Label(String(localized: .localizable(.search)), systemImage: "magnifyingglass")
-          .labelStyle(.iconOnly)
-          .foregroundColor(.gray)
-          .padding(.trailing, -2)
-        TextField(String(localized: .localizable(.search)), text: $text)
-          .padding(.trailing, 4)
-          .padding(.leading, 0)
-          .padding(.vertical, 8)
-          .foregroundColor(text.isEmpty ? .gray : .primary)
+        HStack(spacing: 12) {
+          Image(systemName: "magnifyingglass")
+          TextField(
+            text: $text,
+            label: {
+              Text(.localizable(.search))
+            }
+          )
           .focused($focused)
-          .onSubmit(onSubmit)
-          .autocorrectionDisabled()
-          .textInputAutocapitalization(.never)
-
-        if !text.isEmpty {
-          Spacer()
-          Label(String(localized: .localizable(.searchClear)), systemImage: "xmark.circle.fill")
-            .labelStyle(.iconOnly)
-            .foregroundColor(.gray)
-            .onTapGesture {
-              text = ""
-            }
         }
-      }
-      .padding(.horizontal, 10)
-      .background(
-        Rectangle()
-          //                    .fill(barColor)
-          .fill(.ultraThinMaterial)
-          .cornerRadius(10)
-      )
+        .padding(.leading, 20)
+        .padding(.trailing, 12)
+        .frame(height: 45)
+        .glassEffect(.regular.interactive())
 
-      Group {
-        if showCancel, cancelEnabled {
-          Text(.localizable(.cancel))
-            .foregroundColor(.accentColor)
-            .onTapGesture {
-              focused = false
-              withAnimation(.easeInOut) {
-                text = ""
-                showCancel = false
-              }
-            }
-            .transition(.opacity.combined(with: .move(edge: .trailing)))
+        if showCancel {
+          Button {
+            focused = false
+            text = ""
+          } label: {
+            Label(localized: .localizable(.cancel), systemImage: "xmark")
+              .labelStyle(.iconOnly)
+              .foregroundStyle(.accentColorLightened)
+          }
+          .font(.title2)
+          .frame(width: 45, height: 45)
+          .glassEffect(.regular.interactive(), in: .circle)
         }
+
+        content()
+          .font(.title2)
+          .frame(width: 45, height: 45)
+          .glassEffect(.regular.interactive(), in: .circle)
       }
     }
-    .animation(.easeInOut, value: focused)
-    .transition(.opacity)
 
-    .onChange(of: focused) { _, newValue in
-      if let isFocused {
-        isFocused.wrappedValue = newValue
+    .onChange(of: text) {
+      withAnimation {
+        showCancel = !text.isEmpty
       }
+    }
 
-      if newValue {
-        withAnimation(.easeInOut) {
-          showCancel = true
-        }
-      }
+    .task {
+      showCancel = !text.isEmpty
     }
   }
 }
 
-private struct PreviewHelper<Content>: View where Content: View {
-  @State private var text = ""
-  @State private var hidden = false
-
-  var content: (Binding<String>) -> Content
-
-  var body: some View {
-    content($text)
+@available(iOS 26.0, *)
+extension SearchBarView where Content == EmptyView {
+  init(text: Binding<String>) {
+    self._text = text
+    self.content = { EmptyView() }
   }
 }
 
+@available(iOS 26.0, macOS 26.0, *)
 #Preview("SearchBarView") {
-  PreviewHelper { $text in
-    NavigationStack {
-      VStack {
-        SearchBarView(text: $text)
-        Spacer()
-      }
-      .padding()
-    }
-  }
-}
+  @Previewable @State var text = ""
 
-#Preview("SearchBarView (No cancel)") {
-  PreviewHelper { $text in
-    NavigationStack {
-      VStack {
-        SearchBarView(text: $text, cancelEnabled: false)
-        Spacer()
+  NavigationStack {
+    List {
+      ForEach(0..<30) { i in
+        Text("Item \(i)")
       }
-      .padding()
+    }
+
+    .navigationTitle("Hallo")
+    .toolbar {
+      ToolbarItem {
+        Button("go") {}
+      }
+    }
+
+    .safeAreaInset(edge: .top) {
+      //            HStack {
+      SearchBarView(text: $text) {
+        Button("Go") {}
+      }
+      .padding(.horizontal)
     }
   }
 }

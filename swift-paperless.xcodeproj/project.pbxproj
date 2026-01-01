@@ -28,6 +28,7 @@
 		7AAC44542CA0A37D003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44532CA0A37D003E6A3A /* Common */; };
 		7AAC44562CA0A38B003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44552CA0A38B003E6A3A /* Common */; };
 		7AAC44582CA0A391003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44572CA0A391003E6A3A /* Common */; };
+		7AAE481D2F047DAB005C35BE /* BezelKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAE481C2F047DAB005C35BE /* BezelKit */; };
 		7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */; };
 		7AB060DB29C62395004E6C63 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AB060DA29C62395004E6C63 /* AsyncAlgorithms */; };
 		7ABA3B882E6F3F53006BB39B /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7ABA3B872E6F3F53006BB39B /* AppIcon.icon */; };
@@ -146,6 +147,8 @@
 				Document/DocumentEditView.swift,
 				Document/DocumentList.swift,
 				Document/DocumentView.swift,
+				Document/FilterAssembly.swift,
+				Document/FilterAssemblyiOS18.swift,
 				Filter/CustomFieldFilterView.swift,
 				Filter/CustomFieldQueryDisplayView.swift,
 				Filter/FilterBar.swift,
@@ -246,6 +249,7 @@
 				7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */,
 				7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */,
 				7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */,
+				7AAE481D2F047DAB005C35BE /* BezelKit in Frameworks */,
 				7A1C32BF2A5EAF1A00C18B44 /* Nuke in Frameworks */,
 				7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */,
 				7AB060D929C5BEE5004E6C63 /* AsyncAlgorithms in Frameworks */,
@@ -408,6 +412,7 @@
 				7AAC44532CA0A37D003E6A3A /* Common */,
 				7A4D58882D13568900FCB1F1 /* DataModel */,
 				7A6DA6FF2D7DD3E900B3B185 /* Networking */,
+				7AAE481C2F047DAB005C35BE /* BezelKit */,
 			);
 			productName = "swift-paperless";
 			productReference = 7A5482AB299AD56C00D5061E /* swift-paperless.app */;
@@ -510,6 +515,7 @@
 				7AAC44522CA0A37D003E6A3A /* XCLocalSwiftPackageReference "Common" */,
 				7A4D58872D13568900FCB1F1 /* XCLocalSwiftPackageReference "DataModel" */,
 				7A3DC74A2D7DD308009BBBD8 /* XCLocalSwiftPackageReference "Networking" */,
+				7AAE481B2F047DAB005C35BE /* XCRemoteSwiftPackageReference "BezelKit" */,
 			);
 			productRefGroup = 7A5482AC299AD56C00D5061E /* Products */;
 			projectDirPath = "";
@@ -1144,6 +1150,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		7AAE481B2F047DAB005C35BE /* XCRemoteSwiftPackageReference "BezelKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markbattistella/BezelKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.1.1;
+			};
+		};
 		7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-async-algorithms";
@@ -1262,6 +1276,11 @@
 		7AAC44572CA0A391003E6A3A /* Common */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Common;
+		};
+		7AAE481C2F047DAB005C35BE /* BezelKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AAE481B2F047DAB005C35BE /* XCRemoteSwiftPackageReference "BezelKit" */;
+			productName = BezelKit;
 		};
 		7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;

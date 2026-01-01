@@ -62,6 +62,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
   @EnvironmentObject var errorController: ErrorController
   @EnvironmentObject var store: DocumentStore
+  @Environment(\.editMode) private var editMode
 
   @State var model: Manager.Model?
 
@@ -214,14 +215,15 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
       }
     }
-    .animation(.spring, value: displayElements)
+    .animation(.spring(duration: 0.1), value: displayElements)
     .animation(.spring, value: permissions)
-    .searchable(text: $searchText)
+    .animation(.default, value: editMode?.wrappedValue)
+    .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
 
-    .navigationBarTitleDisplayMode(.inline)
+    .navigationBarTitleDisplayMode(.large)
 
     .toolbar {
-      ToolbarItemGroup(placement: .navigationBarTrailing) {
+      ToolbarItemGroup(placement: .topBarTrailing) {
         NavigationLink {
           if let model {
             Create(model: model) {
@@ -236,7 +238,14 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
         .disabled(!test(.add))
 
-        EditButton()
+      }
+
+      if #available(iOS 26.0, *) {
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
+      }
+
+      ToolbarItem(placement: .topBarTrailing) {
+        CustomEditButton()
           .disabled(!test(.change))
       }
     }
@@ -261,20 +270,20 @@ private struct Container<M: ManagerProtocol>: View {
   var body: some View {
     NavigationStack {
       ManageView<M>()
+        .navigationTitle("Title")
     }
     .environmentObject(store)
     .errorOverlay(errorController: errorController)
+    .task {
+      try? await store.fetchAll()
+    }
   }
 }
 
-struct TagManageView_Previews: PreviewProvider {
-  static var previews: some View {
-    Container<TagManager>()
-  }
+#Preview("TagManageView") {
+  Container<TagManager>()
 }
 
-struct CorrespondentManageView_Previews: PreviewProvider {
-  static var previews: some View {
-    Container<CorrespondentManager>()
-  }
+#Preview("CorrespondentManageView") {
+  Container<CorrespondentManager>()
 }
