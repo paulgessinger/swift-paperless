@@ -8,6 +8,9 @@
 import Foundation
 
 public struct CustomFieldUnknownValue: Error {}
+public struct CustomFieldDuplicateFieldID: Error {
+  public let fieldID: UInt
+}
 
 public enum CustomFieldRawValue: Codable, Sendable, Equatable, Hashable {
   case string(String)
@@ -126,6 +129,44 @@ public struct CustomFieldRawEntryList: Codable, Sendable, Equatable, Hashable,
 
   public var endIndex: Int {
     values.endIndex
+  }
+
+  /// Encodes the custom field entries as a JSON object (dictionary) with field IDs as keys.
+  /// - Parameter encoder: The encoder to use for encoding.
+  /// - Returns: The encoded data.
+  /// - Throws: `CustomFieldUnknownValue` if any value is `.unknown`, or `CustomFieldDuplicateFieldID` if duplicate field IDs are present.
+  public func encodeToDictionary(encoder: JSONEncoder = JSONEncoder()) throws -> Data {
+    var dictionary: [String: Any] = [:]
+    var seenFieldIDs: Set<UInt> = []
+
+    for entry in values {
+      // Check for duplicate field IDs
+      if seenFieldIDs.contains(entry.field) {
+        throw CustomFieldDuplicateFieldID(fieldID: entry.field)
+      }
+      seenFieldIDs.insert(entry.field)
+
+      let fieldKey = String(entry.field)
+
+      switch entry.value {
+      case .string(let value):
+        dictionary[fieldKey] = value
+      case .float(let value):
+        dictionary[fieldKey] = value
+      case .integer(let value):
+        dictionary[fieldKey] = value
+      case .boolean(let value):
+        dictionary[fieldKey] = value
+      case .idList(let value):
+        dictionary[fieldKey] = value
+      case .none:
+        dictionary[fieldKey] = NSNull()
+      case .unknown:
+        throw CustomFieldUnknownValue()
+      }
+    }
+
+    return try JSONSerialization.data(withJSONObject: dictionary, options: [.sortedKeys])
   }
 }
 
