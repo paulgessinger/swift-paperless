@@ -71,6 +71,8 @@ Redact screenshots to not include information that you do not wish to expose.
 
 } + changelog
 
+    changelog.strip!
+
     # Change code signing settings after committing
     update_code_signing_settings(
       use_automatic_signing: false,
