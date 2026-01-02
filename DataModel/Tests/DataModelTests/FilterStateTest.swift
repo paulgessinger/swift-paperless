@@ -23,6 +23,21 @@ private func datetime(year: Int, month: Int, day: Int) -> Date {
   return date
 }
 
+private func stringValue(from rule: FilterRule) -> String? {
+  guard case .string(let value) = rule.value else {
+    return nil
+  }
+  return value
+}
+
+private func queryComponents(from value: String) -> Set<String> {
+  Set(
+    value
+      .split(separator: ",")
+      .map { $0.trimmingCharacters(in: .whitespaces) }
+  )
+}
+
 extension FilterState {
   fileprivate init(rules: [FilterRule]) {
     self = .create(using: \.empty, withRules: rules)
@@ -188,6 +203,73 @@ struct FilterStateTest {
     #expect(
       FilterState(rules: [addedAfter]).remaining == [addedAfter]
     )
+  }
+
+  @Test("Convert date between rules to FilterState")
+  func testRuleToFilterStateDateBetween() throws {
+    let createdStart = datetime(year: 2026, month: 1, day: 1)
+    let createdEnd = datetime(year: 2026, month: 1, day: 2)
+    let addedStart = datetime(year: 2025, month: 12, day: 31)
+    let addedEnd = datetime(year: 2026, month: 1, day: 3)
+
+    let rules = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .createdTo, value: .date(value: createdEnd))),
+      #require(FilterRule(ruleType: .addedFrom, value: .date(value: addedStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let state = FilterState(rules: rules)
+    #expect(state.dateFilter.created == .between(start: createdStart, end: createdEnd))
+    #expect(state.dateFilter.added == .between(start: addedStart, end: addedEnd))
+    #expect(state.remaining.isEmpty)
+
+    let createdOnlyState = FilterState(rules: [rules[0]])
+    #expect(createdOnlyState.dateFilter.created == .between(start: createdStart, end: nil))
+    #expect(createdOnlyState.dateFilter.added == .any)
+
+    let addedOnlyState = FilterState(rules: [rules[3]])
+    #expect(addedOnlyState.dateFilter.created == .any)
+    #expect(addedOnlyState.dateFilter.added == .between(start: nil, end: addedEnd))
+  }
+
+  @Test("Parse date ranges from fulltext query rules")
+  func testRuleToFilterStateDateWithinFulltextQuery() throws {
+    let rules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:[-1 week to now],added:[-2 month to now]"))),
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "SEARCH_TERM"))),
+    ])
+
+    let state = FilterState(rules: rules)
+    #expect(state.searchMode == .advanced)
+    #expect(state.searchText == "SEARCH_TERM")
+    #expect(state.dateFilter.created == .range(.within(num: -1, interval: .week)))
+    #expect(state.dateFilter.added == .range(.within(num: -2, interval: .month)))
+    #expect(state.remaining.isEmpty)
+
+    // The backend won't actually return this form, but let's test it anyway
+    let splitRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:[-3 month to now]"))),
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "added:[-1 week to now]"))),
+    ])
+
+    let splitState = FilterState(rules: splitRules)
+    #expect(splitState.searchMode == .advanced)
+    #expect(splitState.searchText.isEmpty)
+    #expect(splitState.dateFilter.created == .range(.within(num: -3, interval: .month)))
+    #expect(splitState.dateFilter.added == .range(.within(num: -1, interval: .week)))
   }
 
   @Test("Convert tag rules to FilterState")
@@ -396,6 +478,84 @@ struct FilterStateTest {
           #require(FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo")))
         ])
     }
+  }
+
+  @Test("Convert FilterState date between to rules")
+  func testFilterStateToRuleDateBetween() throws {
+    let createdStart = datetime(year: 2026, month: 1, day: 1)
+    let createdEnd = datetime(year: 2026, month: 1, day: 2)
+    let addedStart = datetime(year: 2025, month: 12, day: 31)
+    let addedEnd = datetime(year: 2026, month: 1, day: 3)
+
+    let state = FilterState.empty.with {
+      $0.dateFilter.created = .between(start: createdStart, end: createdEnd)
+      $0.dateFilter.added = .between(start: addedStart, end: addedEnd)
+    }
+
+    let expected = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .createdTo, value: .date(value: createdEnd))),
+      #require(FilterRule(ruleType: .addedFrom, value: .date(value: addedStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let sortedRules = state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let sortedExpected = expected.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    #expect(sortedRules == sortedExpected)
+
+    let openEndedState = FilterState.empty.with {
+      $0.dateFilter.created = .between(start: createdStart, end: nil)
+      $0.dateFilter.added = .between(start: nil, end: addedEnd)
+    }
+
+    let openEndedExpected = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let sortedOpenEndedRules = openEndedState.rules.sorted(
+      by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let sortedOpenEndedExpected = openEndedExpected.sorted(
+      by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    #expect(sortedOpenEndedRules == sortedOpenEndedExpected)
+  }
+
+  @Test("Convert FilterState date ranges to fulltext query rules")
+  func testFilterStateToRuleDateWithinFulltextQuery() throws {
+    let state = FilterState.empty.with {
+      $0.searchMode = .advanced
+      $0.searchText = "SEARCH_TERM"
+      $0.dateFilter.created = .range(.within(num: -1, interval: .week))
+      $0.dateFilter.added = .range(.within(num: -2, interval: .month))
+    }
+
+    let components = state.rules
+      .filter { $0.ruleType == .fulltextQuery }
+      .compactMap { stringValue(from: $0) }
+      .flatMap { queryComponents(from: $0) }
+
+    #expect(
+      Set(components) == [
+        "SEARCH_TERM",
+        "created:[-1 week to now]",
+        "added:[-2 month to now]",
+      ])
+
+    let noSearchState = FilterState.empty.with {
+      $0.searchMode = .advanced
+      $0.searchText = ""
+      $0.dateFilter.created = .range(.within(num: -3, interval: .month))
+    }
+
+    let noSearchComponents = noSearchState.rules
+      .filter { $0.ruleType == .fulltextQuery }
+      .compactMap { stringValue(from: $0) }
+      .flatMap { queryComponents(from: $0) }
+
+    #expect(
+      Set(noSearchComponents) == [
+        "created:[-3 month to now]"
+      ])
   }
 
   @Test("Empty FilterState produces no rules")

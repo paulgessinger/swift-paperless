@@ -110,6 +110,9 @@ public struct FilterState: Equatable, Codable, Sendable {
   public var owner: Filter = .any { didSet { modified = modified || owner != oldValue } }
 
   public var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue } }
+  public var dateFilter: DateFilter = .init() {
+    didSet { modified = modified || dateFilter != oldValue }
+  }
   public var remaining: [FilterRule] = [] {
     didSet { modified = modified || remaining != oldValue }
   }
