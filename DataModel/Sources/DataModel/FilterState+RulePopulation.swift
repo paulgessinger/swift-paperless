@@ -15,6 +15,8 @@ extension FilterState {
       switch rule.ruleType {
       case .title, .content, .titleContent, .fulltextQuery:
         handleSearchRule(rule)
+      case .createdFrom, .createdTo, .addedFrom, .addedTo:
+        handleDateBetweenRule(rule)
       case .correspondent:
         handleCorrespondentRule(rule)
       case .hasCorrespondentAny:
@@ -71,7 +73,6 @@ extension FilterState {
     guard let mode = SearchMode(ruleType: rule.ruleType) else {
       fatalError("Could not convert rule type to search mode (this should not occur)")
     }
-    searchMode = mode
     guard case .string(let v) = rule.value else {
       Logger.dataModel.error(
         "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
@@ -79,7 +80,90 @@ extension FilterState {
       remaining.append(rule)
       return
     }
+
+    if mode == .advanced {
+      handleFulltextQueryValue(v)
+      return
+    }
+
+    searchMode = mode
     searchText = v
+  }
+
+  private mutating func handleFulltextQueryValue(_ value: String) {
+    searchMode = .advanced
+
+    let components =
+      value
+      .split(separator: ",")
+      .map { $0.trimmingCharacters(in: .whitespaces) }
+      .filter { !$0.isEmpty }
+
+    var searchComponents: [String] = []
+
+    for component in components {
+      if let (target, range) = parseDateRangeComponent(component) {
+        switch target {
+        case .created:
+          date.created = .range(range)
+        case .added:
+          date.added = .range(range)
+        }
+      } else {
+        searchComponents.append(component)
+      }
+    }
+
+    guard !searchComponents.isEmpty else { return }
+
+    let combined = searchComponents.joined(separator: ",")
+    if searchText.isEmpty {
+      searchText = combined
+    } else {
+      searchText += "," + combined
+    }
+  }
+
+  private enum DateRangeTarget {
+    case created
+    case added
+  }
+
+  private func parseDateRangeComponent(_ component: String) -> (DateRangeTarget, DateFilter.Range)?
+  {
+    let createdPrefix = "created:"
+    let addedPrefix = "added:"
+
+    if component.hasPrefix(createdPrefix) {
+      let value = String(component.dropFirst(createdPrefix.count))
+      let raw = stripQuotes(from: value)
+      guard let range = DateFilter.Range(rawValue: raw) else {
+        return nil
+      }
+      return (.created, range)
+    }
+
+    if component.hasPrefix(addedPrefix) {
+      let value = String(component.dropFirst(addedPrefix.count))
+      let raw = stripQuotes(from: value)
+      guard let range = DateFilter.Range(rawValue: raw) else {
+        return nil
+      }
+      return (.added, range)
+    }
+
+    return nil
+  }
+
+  private func stripQuotes(from value: String) -> String {
+    let trimmed = value.trimmingCharacters(in: .whitespaces)
+    guard trimmed.count >= 2,
+      trimmed.hasPrefix("\""),
+      trimmed.hasSuffix("\"")
+    else {
+      return trimmed
+    }
+    return String(trimmed.dropFirst().dropLast())
   }
 
   // MARK: - Correspondent Rule Handlers
@@ -465,6 +549,68 @@ extension FilterState {
       fallthrough  // reset anyway
     case .any:
       asn = .lessThan(UInt(value))
+    }
+  }
+
+  // MARK: - Date Filter Rule Handlers
+
+  private mutating func handleDateBetweenRule(_ rule: FilterRule) {
+    guard case .date(let value) = rule.value else {
+      Logger.dataModel.error(
+        "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+      )
+      remaining.append(rule)
+      return
+    }
+
+    switch rule.ruleType {
+    case .createdFrom:
+      let result = applyBetweenValue(start: value, end: nil, to: date.created)
+      date.created = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    case .createdTo:
+      let result = applyBetweenValue(start: nil, end: value, to: date.created)
+      date.created = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    case .addedFrom:
+      let result = applyBetweenValue(start: value, end: nil, to: date.added)
+      date.added = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    case .addedTo:
+      let result = applyBetweenValue(start: nil, end: value, to: date.added)
+      date.added = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    default:
+      remaining.append(rule)
+    }
+  }
+
+  private func applyBetweenValue(
+    start: Date?,
+    end: Date?,
+    to argument: DateFilter.Argument
+  ) -> (argument: DateFilter.Argument, shouldAppend: Bool) {
+    switch argument {
+    case .any:
+      return (.between(start: start, end: end), false)
+    case .between(let existingStart, let existingEnd):
+      return (
+        .between(
+          start: start ?? existingStart,
+          end: end ?? existingEnd
+        ),
+        false
+      )
+    case .range:
+      return (argument, true)
     }
   }
 }

@@ -68,24 +68,30 @@ struct AsnFilterView: View {
   }
 
   private func confirm() {
-    guard isValid else { return }
+    Task {
+      guard isValid else { return }
 
-    switch mode {
-    case .any:
-      query = .any
-    case .isNull:
-      query = .isNull
-    case .isNotNull:
-      query = .isNotNull
-    case .equalTo:
-      query = .equalTo(UInt(argument) ?? 0)
-    case .greaterThan:
-      query = .greaterThan(UInt(argument) ?? 0)
-    case .lessThan:
-      query = .lessThan(UInt(argument) ?? 0)
+      switch mode {
+      case .any:
+        query = .any
+      case .isNull:
+        query = .isNull
+      case .isNotNull:
+        query = .isNotNull
+      case .equalTo:
+        query = .equalTo(UInt(argument) ?? 0)
+      case .greaterThan:
+        query = .greaterThan(UInt(argument) ?? 0)
+      case .lessThan:
+        query = .lessThan(UInt(argument) ?? 0)
+      }
+
+      guard (try? await Task.sleep(for: .seconds(0.1))) != nil else {
+        return
+      }
+
+      dismiss()
     }
-
-    dismiss()
   }
 
   var body: some View {

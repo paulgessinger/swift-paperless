@@ -23,6 +23,21 @@ private func datetime(year: Int, month: Int, day: Int) -> Date {
   return date
 }
 
+private func stringValue(from rule: FilterRule) -> String? {
+  guard case .string(let value) = rule.value else {
+    return nil
+  }
+  return value
+}
+
+private func queryComponents(from value: String) -> Set<String> {
+  Set(
+    value
+      .split(separator: ",")
+      .map { $0.trimmingCharacters(in: .whitespaces) }
+  )
+}
+
 extension FilterState {
   fileprivate init(rules: [FilterRule]) {
     self = .create(using: \.empty, withRules: rules)
@@ -188,6 +203,153 @@ struct FilterStateTest {
     #expect(
       FilterState(rules: [addedAfter]).remaining == [addedAfter]
     )
+  }
+
+  @Test("Convert date between rules to FilterState")
+  func testRuleToFilterStateDateBetween() throws {
+    let createdStart = datetime(year: 2026, month: 1, day: 1)
+    let createdEnd = datetime(year: 2026, month: 1, day: 2)
+    let addedStart = datetime(year: 2025, month: 12, day: 31)
+    let addedEnd = datetime(year: 2026, month: 1, day: 3)
+
+    let rules = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .createdTo, value: .date(value: createdEnd))),
+      #require(FilterRule(ruleType: .addedFrom, value: .date(value: addedStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let state = FilterState(rules: rules)
+    #expect(state.date.created == .between(start: createdStart, end: createdEnd))
+    #expect(state.date.added == .between(start: addedStart, end: addedEnd))
+    #expect(state.remaining.isEmpty)
+
+    let createdOnlyState = FilterState(rules: [rules[0]])
+    #expect(createdOnlyState.date.created == .between(start: createdStart, end: nil))
+    #expect(createdOnlyState.date.added == .any)
+
+    let addedOnlyState = FilterState(rules: [rules[3]])
+    #expect(addedOnlyState.date.created == .any)
+    #expect(addedOnlyState.date.added == .between(start: nil, end: addedEnd))
+  }
+
+  @Test("Nil date between values do not create rules")
+  func testDateBetweenNilValues() {
+    let state = FilterState.empty.with {
+      $0.date.created = .between(start: nil, end: nil)
+      $0.date.added = .between(start: nil, end: nil)
+    }
+
+    #expect(state.rules.isEmpty)
+
+    let roundTrip = FilterState(rules: state.rules)
+    #expect(roundTrip.date.created == .any)
+    #expect(roundTrip.date.added == .any)
+  }
+
+  @Test("Parse date ranges from fulltext query rules")
+  func testRuleToFilterStateDateWithinFulltextQuery() throws {
+    let rules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:[-1 week to now],added:[-2 month to now]"))),
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "SEARCH_TERM"))),
+    ])
+
+    let state = FilterState(rules: rules)
+    #expect(state.searchMode == .advanced)
+    #expect(state.searchText == "SEARCH_TERM")
+    #expect(state.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(state.date.added == .range(.within(num: -2, interval: .month)))
+    #expect(state.remaining.isEmpty)
+
+    let combinedRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "SEARCH_TERM,created:[-1 week to now],added:[-2 month to now]")))
+    ])
+
+    let combinedState = FilterState(rules: combinedRules)
+    #expect(combinedState.searchMode == .advanced)
+    #expect(combinedState.searchText == "SEARCH_TERM")
+    #expect(combinedState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(combinedState.date.added == .range(.within(num: -2, interval: .month)))
+    #expect(combinedState.remaining.isEmpty)
+
+    let nonRangeRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:report")))
+    ])
+
+    let nonRangeState = FilterState(rules: nonRangeRules)
+    #expect(nonRangeState.searchMode == .advanced)
+    #expect(nonRangeState.searchText == "created:report")
+    #expect(nonRangeState.date.created == .any)
+    #expect(nonRangeState.date.added == .any)
+
+    let mixedRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:report,created:[-1 week to now]")))
+    ])
+
+    let mixedState = FilterState(rules: mixedRules)
+    #expect(mixedState.searchMode == .advanced)
+    #expect(mixedState.searchText == "created:report")
+    #expect(mixedState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(mixedState.date.added == .any)
+
+    let keywordRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:\"yesterday\",added:\"previous week\"")))
+    ])
+
+    let keywordState = FilterState(rules: keywordRules)
+    #expect(keywordState.searchMode == .advanced)
+    #expect(keywordState.searchText.isEmpty)
+    #expect(keywordState.date.created == .range(.yesterday))
+    #expect(keywordState.date.added == .range(.previousWeek))
+
+    let unsupportedKeywordRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:\"UNSUPPORTED\"")))
+    ])
+
+    let unsupportedKeywordState = FilterState(rules: unsupportedKeywordRules)
+    #expect(unsupportedKeywordState.searchMode == .advanced)
+    #expect(unsupportedKeywordState.searchText == "created:\"UNSUPPORTED\"")
+    #expect(unsupportedKeywordState.date.created == .any)
+    #expect(unsupportedKeywordState.date.added == .any)
+
+    // The backend won't actually return this form, but let's test it anyway
+    let splitRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:[-3 month to now]"))),
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "added:[-1 week to now]"))),
+    ])
+
+    let splitState = FilterState(rules: splitRules)
+    #expect(splitState.searchMode == .advanced)
+    #expect(splitState.searchText.isEmpty)
+    #expect(splitState.date.created == .range(.within(num: -3, interval: .month)))
+    #expect(splitState.date.added == .range(.within(num: -1, interval: .week)))
   }
 
   @Test("Convert tag rules to FilterState")
@@ -396,6 +558,84 @@ struct FilterStateTest {
           #require(FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo")))
         ])
     }
+  }
+
+  @Test("Convert FilterState date between to rules")
+  func testFilterStateToRuleDateBetween() throws {
+    let createdStart = datetime(year: 2026, month: 1, day: 1)
+    let createdEnd = datetime(year: 2026, month: 1, day: 2)
+    let addedStart = datetime(year: 2025, month: 12, day: 31)
+    let addedEnd = datetime(year: 2026, month: 1, day: 3)
+
+    let state = FilterState.empty.with {
+      $0.date.created = .between(start: createdStart, end: createdEnd)
+      $0.date.added = .between(start: addedStart, end: addedEnd)
+    }
+
+    let expected = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .createdTo, value: .date(value: createdEnd))),
+      #require(FilterRule(ruleType: .addedFrom, value: .date(value: addedStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let sortedRules = state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let sortedExpected = expected.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    #expect(sortedRules == sortedExpected)
+
+    let openEndedState = FilterState.empty.with {
+      $0.date.created = .between(start: createdStart, end: nil)
+      $0.date.added = .between(start: nil, end: addedEnd)
+    }
+
+    let openEndedExpected = try [FilterRule]([
+      #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
+      #require(FilterRule(ruleType: .addedTo, value: .date(value: addedEnd))),
+    ])
+
+    let sortedOpenEndedRules = openEndedState.rules.sorted(
+      by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let sortedOpenEndedExpected = openEndedExpected.sorted(
+      by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    #expect(sortedOpenEndedRules == sortedOpenEndedExpected)
+  }
+
+  @Test("Convert FilterState date ranges to fulltext query rules")
+  func testFilterStateToRuleDateWithinFulltextQuery() throws {
+    let state = FilterState.empty.with {
+      $0.searchMode = .advanced
+      $0.searchText = "SEARCH_TERM"
+      $0.date.created = .range(.within(num: -1, interval: .week))
+      $0.date.added = .range(.within(num: -2, interval: .month))
+    }
+
+    let components = state.rules
+      .filter { $0.ruleType == .fulltextQuery }
+      .compactMap { stringValue(from: $0) }
+      .flatMap { queryComponents(from: $0) }
+
+    #expect(
+      Set(components) == [
+        "SEARCH_TERM",
+        "created:[-1 week to now]",
+        "added:[-2 month to now]",
+      ])
+
+    let noSearchState = FilterState.empty.with {
+      $0.searchMode = .advanced
+      $0.searchText = ""
+      $0.date.created = .range(.within(num: -3, interval: .month))
+    }
+
+    let noSearchComponents = noSearchState.rules
+      .filter { $0.ruleType == .fulltextQuery }
+      .compactMap { stringValue(from: $0) }
+      .flatMap { queryComponents(from: $0) }
+
+    #expect(
+      Set(noSearchComponents) == [
+        "created:[-3 month to now]"
+      ])
   }
 
   @Test("Empty FilterState produces no rules")
@@ -1053,5 +1293,85 @@ struct FilterStateTest {
 
     let queryItems2 = FilterRule.queryItems(for: [result, rule])
     #expect(queryItems2 == [URLQueryItem(name: "tags__id__in", value: "12,7,10,9")])
+  }
+
+  // - MARK: Date Filter Range Parsing Tests
+
+  @Test("Parse rolling date ranges with numeric intervals")
+  func testDateFilterRangeRollingRangeParsing() {
+    typealias Range = FilterState.DateFilter.Range
+
+    // Negative numbers with all components
+    #expect(Range(rawValue: "[-1 week to now]") == .within(num: -1, interval: .week))
+    #expect(Range(rawValue: "[-1 month to now]") == .within(num: -1, interval: .month))
+    #expect(Range(rawValue: "[-3 month to now]") == .within(num: -3, interval: .month))
+    #expect(Range(rawValue: "[-1 year to now]") == .within(num: -1, interval: .year))
+
+    // Positive numbers
+    #expect(Range(rawValue: "[3 week to now]") == .within(num: 3, interval: .week))
+    #expect(Range(rawValue: "[6 month to now]") == .within(num: 6, interval: .month))
+    #expect(Range(rawValue: "[2 year to now]") == .within(num: 2, interval: .year))
+  }
+
+  @Test("Parse keyword date ranges")
+  func testDateFilterRangeKeywordParsing() {
+    typealias Range = FilterState.DateFilter.Range
+
+    #expect(Range(rawValue: "this year") == .currentYear)
+    #expect(Range(rawValue: "this month") == .currentMonth)
+    #expect(Range(rawValue: "today") == .today)
+    #expect(Range(rawValue: "yesterday") == .yesterday)
+    #expect(Range(rawValue: "previous week") == .previousWeek)
+    #expect(Range(rawValue: "previous month") == .previousMonth)
+    #expect(Range(rawValue: "previous quarter") == .previousQuarter)
+    #expect(Range(rawValue: "previous year") == .previousYear)
+  }
+
+  @Test("Invalid date filter formats return nil")
+  func testDateFilterRangeInvalidFormats() {
+    typealias Range = FilterState.DateFilter.Range
+
+    // Invalid bracket formats
+    #expect(Range(rawValue: "[-1 month]") == nil)  // missing "to now"
+    #expect(Range(rawValue: "-1 month to now") == nil)  // missing brackets
+    #expect(Range(rawValue: "[1 month to later]") == nil)  // wrong ending
+
+    // Invalid component names
+    #expect(Range(rawValue: "[-1 months to now]") == nil)  // plural
+    #expect(Range(rawValue: "[-1 decades to now]") == nil)  // invalid component
+    #expect(Range(rawValue: "[-1 hour to now]") == nil)  // unsupported component
+
+    // Invalid numbers
+    #expect(Range(rawValue: "[abc month to now]") == nil)
+    #expect(Range(rawValue: "[- month to now]") == nil)
+
+    // Invalid keyword formats
+    #expect(Range(rawValue: "This Year") == nil)  // wrong case
+    #expect(Range(rawValue: "TODAY") == nil)  // wrong case
+    #expect(Range(rawValue: "last week") == nil)  // wrong keyword
+
+    // Empty and malformed
+    #expect(Range(rawValue: "") == nil)
+    #expect(Range(rawValue: "[]") == nil)
+    #expect(Range(rawValue: "random string") == nil)
+  }
+
+  @Test("Date filter ranges round-trip through rawValue")
+  func testDateFilterRangeRawValueRoundTrip() {
+    typealias Range = FilterState.DateFilter.Range
+
+    // Rolling ranges
+    let rolling1 = Range.within(num: -3, interval: .month)
+    #expect(rolling1.rawValue == "[-3 month to now]")
+    #expect(Range(rawValue: rolling1.rawValue) == rolling1)
+
+    // Keywords
+    let keyword1 = Range.today
+    #expect(keyword1.rawValue == "today")
+    #expect(Range(rawValue: keyword1.rawValue) == keyword1)
+
+    let keyword2 = Range.previousMonth
+    #expect(keyword2.rawValue == "previous month")
+    #expect(Range(rawValue: keyword2.rawValue) == keyword2)
   }
 }

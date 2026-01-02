@@ -5,7 +5,9 @@
 //  Created by Paul Gessinger on 09.03.25.
 //
 
+import CasePaths
 import Common
+import Foundation
 import os
 
 public struct FilterState: Equatable, Codable, Sendable {
@@ -67,6 +69,45 @@ public struct FilterState: Equatable, Codable, Sendable {
     case greaterThan(UInt)
   }
 
+  public struct DateFilter: Equatable, Codable, Sendable {
+    public enum Component: String, Codable, Sendable {
+      case week
+      case month
+      case year
+    }
+
+    public enum Range: Equatable, Codable, Sendable, Hashable {
+      case within(num: Int, interval: Component)
+      case currentYear
+      case currentMonth
+      case today
+      case yesterday
+      case previousWeek
+      case previousMonth
+      case previousQuarter
+      case previousYear
+    }
+
+    @CasePathable
+    public enum Argument: Equatable, Codable, Sendable, Hashable {
+      case any
+      case between(start: Date?, end: Date?)
+      case range(Range)
+    }
+
+    public var created: Argument = .any
+    public var added: Argument = .any
+
+    public init(created: Argument = .any, added: Argument = .any) {
+      self.created = created
+      self.added = added
+    }
+
+    public var isActive: Bool {
+      created != .any || added != .any
+    }
+  }
+
   public var correspondent: Filter = .any {
     didSet { modified = modified || correspondent != oldValue }
   }
@@ -112,6 +153,10 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var asn: AsnFilter {
     didSet { modified = modified || asn != oldValue }
+  }
+
+  public var date: DateFilter = .init() {
+    didSet { modified = modified || date != oldValue }
   }
 
   public init(
@@ -238,6 +283,9 @@ public struct FilterState: Equatable, Codable, Sendable {
     if asn != .any {
       result += 1
     }
+    if date.isActive {
+      result += 1
+    }
 
     return result
   }
@@ -248,5 +296,80 @@ public struct FilterState: Equatable, Codable, Sendable {
     var state = Self.self[keyPath: factory]
     state.populateWith(rules: rules)
     return state
+  }
+}
+
+// MARK: - DateFilter.Range RawRepresentable
+
+extension FilterState.DateFilter.Range: RawRepresentable {
+  public init?(rawValue: String) {
+    // Try parsing rolling range: [-N component to now]
+    if rawValue.hasPrefix("[") && rawValue.hasSuffix("]") {
+      // Strip brackets
+      let inner = rawValue.dropFirst().dropLast()
+
+      // Expected format: "-3 month to now"
+      let parts = inner.split(separator: " ")
+      guard parts.count == 4,
+        parts[2] == "to",
+        parts[3] == "now",
+        let num = Int(parts[0])
+      else {
+        return nil
+      }
+
+      // Parse component (singular only)
+      guard let component = FilterState.DateFilter.Component(rawValue: String(parts[1])) else {
+        return nil
+      }
+
+      self = .within(num: num, interval: component)
+      return
+    }
+
+    // Try parsing keyword range (lowercase only)
+    switch rawValue {
+    case "this year":
+      self = .currentYear
+    case "this month":
+      self = .currentMonth
+    case "today":
+      self = .today
+    case "yesterday":
+      self = .yesterday
+    case "previous week":
+      self = .previousWeek
+    case "previous month":
+      self = .previousMonth
+    case "previous quarter":
+      self = .previousQuarter
+    case "previous year":
+      self = .previousYear
+    default:
+      return nil
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .within(let num, let interval):
+      return "[\(num) \(interval.rawValue) to now]"
+    case .currentYear:
+      return "this year"
+    case .currentMonth:
+      return "this month"
+    case .today:
+      return "today"
+    case .yesterday:
+      return "yesterday"
+    case .previousWeek:
+      return "previous week"
+    case .previousMonth:
+      return "previous month"
+    case .previousQuarter:
+      return "previous quarter"
+    case .previousYear:
+      return "previous year"
+    }
   }
 }

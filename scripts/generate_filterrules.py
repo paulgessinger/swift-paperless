@@ -22,6 +22,11 @@ import argparse
 
 input_file = "src-ui/src/app/data/filter-rule-type.ts"
 
+MANUAL_MULTIPLE_OVERRIDES = {
+    # These rule types need to allow comma separated values in the Paperless API
+    "fulltextQuery": True,
+}
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--url",
@@ -130,6 +135,15 @@ for group in groups[:-1]:
     except:
         print(obj)
         raise
+
+for swift_name, value in MANUAL_MULTIPLE_OVERRIDES.items():
+    matches = [rule for rule in rule_types if rule.swift_name == swift_name]
+    if not matches:
+        raise RuntimeError(
+            f"Manual override defined for unknown rule type '{swift_name}'"
+        )
+    for rule in matches:
+        rule.multi = value
 
 env = Environment(loader=FileSystemLoader(Path(__file__).parent))
 env.filters["to_camel"] = to_camel

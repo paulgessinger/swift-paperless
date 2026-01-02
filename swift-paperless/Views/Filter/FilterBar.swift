@@ -14,7 +14,7 @@ import SwiftUI
 import os
 
 private enum TransitionKeys: String {
-  case tags, documentType, correspondent, storagePath, customFields, asn
+  case tags, documentType, correspondent, storagePath, customFields, asn, date
 }
 
 // @TODO: Add UI for FilterState with remaining rules!
@@ -414,6 +414,7 @@ struct FilterBar: View {
   @State private var showStoragePath = false
   @State private var showCustomFields = false
   @State private var showAsn = false
+  @State private var showDate = false
 
   private enum ModalMode {
     case tags
@@ -422,6 +423,7 @@ struct FilterBar: View {
     case storagePath
     case customFields
     case asn
+    case date
   }
 
   @State private var filterState = FilterState.default
@@ -480,6 +482,8 @@ struct FilterBar: View {
         showCustomFields = true
       case .asn:
         showAsn = true
+      case .date:
+        showDate = true
       }
     }
   }
@@ -564,15 +568,10 @@ struct FilterBar: View {
             }
           }
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.matchedTransitionSource(
-              id: TransitionKeys.tags, in: transition
-            )
-          } else {
-            $0
-          }
-        }
+
+        .backport.matchedTransitionSource(
+          id: TransitionKeys.tags, in: transition
+        )
       }, active: filterState.tags != .any
     ) {
       present(.tags)
@@ -704,7 +703,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               DocumentType.self,
-              state: filterState.documentType)
+              state: filterState.documentType
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.documentType, in: transition
+            )
           }, active: filterState.documentType != .any
         ) { present(.documentType) }
 
@@ -712,7 +715,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               Correspondent.self,
-              state: filterState.correspondent)
+              state: filterState.correspondent
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.correspondent, in: transition
+            )
           }, active: filterState.correspondent != .any
         ) { present(.correspondent) }
 
@@ -720,7 +727,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               StoragePath.self,
-              state: filterState.storagePath)
+              state: filterState.storagePath
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.storagePath, in: transition
+            )
           }, active: filterState.storagePath != .any
         ) { present(.storagePath) }
 
@@ -740,14 +751,29 @@ struct FilterBar: View {
         Element(
           label: {
             Text(.customFields(.title))
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.customFields, in: transition
+              )
           }, active: filterModel.filterState.customField != .any
         ) { present(.customFields) }
 
         Element(
           label: {
             AsnFilterDisplayView(query: filterModel.filterState.asn)
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.asn, in: transition
+              )
           }, active: filterModel.filterState.asn != .any
         ) { present(.asn) }
+
+        Element(
+          label: {
+            DateFilterDisplayView(query: filterModel.filterState.date)
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.date, in: transition
+              )
+          }, active: filterModel.filterState.date.isActive
+        ) { present(.date) }
 
         Divider()
 
@@ -834,6 +860,15 @@ struct FilterBar: View {
               )
           }, active: filterModel.filterState.asn != .any
         ) { present(.asn) }
+
+        Element(
+          label: {
+            DateFilterDisplayView(query: filterModel.filterState.date)
+              .matchedTransitionSource(
+                id: TransitionKeys.date, in: transition
+              )
+          }, active: filterModel.filterState.date.isActive
+        ) { present(.date) }
 
         Divider()
 
@@ -932,6 +967,11 @@ struct FilterBar: View {
       .sheet(isPresented: $showAsn) {
         AsnFilterView(query: $filterModel.filterState.asn)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
+      }
+
+      .sheet(isPresented: $showDate) {
+        DateFilterView(query: $filterModel.filterState.date)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
       }
 
       .sheet(item: $savedView) { view in
