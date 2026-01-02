@@ -14,7 +14,7 @@ import SwiftUI
 import os
 
 private enum TransitionKeys: String {
-  case tags, documentType, correspondent, storagePath, customFields
+  case tags, documentType, correspondent, storagePath, customFields, asn
 }
 
 // @TODO: Add UI for FilterState with remaining rules!
@@ -413,6 +413,7 @@ struct FilterBar: View {
   @State private var showCorrespondent = false
   @State private var showStoragePath = false
   @State private var showCustomFields = false
+  @State private var showAsn = false
 
   private enum ModalMode {
     case tags
@@ -420,6 +421,7 @@ struct FilterBar: View {
     case documentType
     case storagePath
     case customFields
+    case asn
   }
 
   @State private var filterState = FilterState.default
@@ -464,7 +466,6 @@ struct FilterBar: View {
   // MARK: present()
 
   private func present(_ mode: ModalMode) {
-    //        impact.impactOccurred()
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
       switch mode {
       case .tags:
@@ -477,6 +478,8 @@ struct FilterBar: View {
         showStoragePath = true
       case .customFields:
         showCustomFields = true
+      case .asn:
+        showAsn = true
       }
     }
   }
@@ -740,6 +743,12 @@ struct FilterBar: View {
           }, active: filterModel.filterState.customField != .any
         ) { present(.customFields) }
 
+        Element(
+          label: {
+            AsnFilterDisplayView(query: filterModel.filterState.asn)
+          }, active: filterModel.filterState.asn != .any
+        ) { present(.asn) }
+
         Divider()
 
         SortMenu(filterState: $filterState)
@@ -816,6 +825,15 @@ struct FilterBar: View {
               )
           }, active: filterModel.filterState.customField != .any
         ) { present(.customFields) }
+
+        Element(
+          label: {
+            AsnFilterDisplayView(query: filterModel.filterState.asn)
+              .matchedTransitionSource(
+                id: TransitionKeys.asn, in: transition
+              )
+          }, active: filterModel.filterState.asn != .any
+        ) { present(.asn) }
 
         Divider()
 
@@ -909,6 +927,11 @@ struct FilterBar: View {
       .sheet(isPresented: $showCustomFields) {
         CustomFieldFilterView(query: $filterModel.filterState.customField)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
+      }
+
+      .sheet(isPresented: $showAsn) {
+        AsnFilterView(query: $filterModel.filterState.asn)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
       }
 
       .sheet(item: $savedView) { view in
