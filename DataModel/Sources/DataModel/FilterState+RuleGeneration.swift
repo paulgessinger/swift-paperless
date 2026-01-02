@@ -36,11 +36,11 @@ extension FilterState {
       components.append(searchText)
     }
 
-    if case .range(let range) = dateFilter.created {
+    if case .range(let range) = date.created {
       components.append("created:\(fulltextQueryValue(for: range))")
     }
 
-    if case .range(let range) = dateFilter.added {
+    if case .range(let range) = date.added {
       components.append("added:\(fulltextQueryValue(for: range))")
     }
 
@@ -222,7 +222,7 @@ extension FilterState {
   private var dateBetweenRules: [FilterRule] {
     var result: [FilterRule] = []
 
-    if case .between(let start, let end) = dateFilter.created {
+    if case .between(let start, let end) = date.created {
       if let start {
         result.append(FilterRule(ruleType: .createdFrom, value: .date(value: start))!)
       }
@@ -231,7 +231,7 @@ extension FilterState {
       }
     }
 
-    if case .between(let start, let end) = dateFilter.added {
+    if case .between(let start, let end) = date.added {
       if let start {
         result.append(FilterRule(ruleType: .addedFrom, value: .date(value: start))!)
       }

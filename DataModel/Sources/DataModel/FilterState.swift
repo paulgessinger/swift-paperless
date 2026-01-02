@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 09.03.25.
 //
 
+import CasePaths
 import Common
 import Foundation
 import os
@@ -70,13 +71,12 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public struct DateFilter: Equatable, Codable, Sendable {
     public enum Component: String, Codable, Sendable {
-      case day
       case week
       case month
       case year
     }
 
-    public enum Range: Equatable, Codable, Sendable {
+    public enum Range: Equatable, Codable, Sendable, Hashable {
       case within(num: Int, interval: Component)
       case currentYear
       case currentMonth
@@ -88,14 +88,24 @@ public struct FilterState: Equatable, Codable, Sendable {
       case previousYear
     }
 
-    public enum Argument: Equatable, Codable, Sendable {
+    @CasePathable
+    public enum Argument: Equatable, Codable, Sendable, Hashable {
       case any
       case between(start: Date?, end: Date?)
       case range(Range)
     }
 
-    var created: Argument = .any
-    var added: Argument = .any
+    public var created: Argument = .any
+    public var added: Argument = .any
+
+    public init(created: Argument = .any, added: Argument = .any) {
+      self.created = created
+      self.added = added
+    }
+
+    public var isActive: Bool {
+      created != .any || added != .any
+    }
   }
 
   public var correspondent: Filter = .any {
@@ -110,9 +120,6 @@ public struct FilterState: Equatable, Codable, Sendable {
   public var owner: Filter = .any { didSet { modified = modified || owner != oldValue } }
 
   public var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue } }
-  public var dateFilter: DateFilter = .init() {
-    didSet { modified = modified || dateFilter != oldValue }
-  }
   public var remaining: [FilterRule] = [] {
     didSet { modified = modified || remaining != oldValue }
   }
@@ -146,6 +153,10 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var asn: AsnFilter {
     didSet { modified = modified || asn != oldValue }
+  }
+
+  public var date: DateFilter = .init() {
+    didSet { modified = modified || date != oldValue }
   }
 
   public init(
@@ -270,6 +281,9 @@ public struct FilterState: Equatable, Codable, Sendable {
       result += 1
     }
     if asn != .any {
+      result += 1
+    }
+    if date.isActive {
       result += 1
     }
 

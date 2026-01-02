@@ -105,9 +105,9 @@ extension FilterState {
       if let (target, range) = parseDateRangeComponent(component) {
         switch target {
         case .created:
-          dateFilter.created = .range(range)
+          date.created = .range(range)
         case .added:
-          dateFilter.added = .range(range)
+          date.added = .range(range)
         }
       } else {
         searchComponents.append(component)
@@ -565,26 +565,26 @@ extension FilterState {
 
     switch rule.ruleType {
     case .createdFrom:
-      let result = applyBetweenValue(start: value, end: nil, to: dateFilter.created)
-      dateFilter.created = result.argument
+      let result = applyBetweenValue(start: value, end: nil, to: date.created)
+      date.created = result.argument
       if result.shouldAppend {
         remaining.append(rule)
       }
     case .createdTo:
-      let result = applyBetweenValue(start: nil, end: value, to: dateFilter.created)
-      dateFilter.created = result.argument
+      let result = applyBetweenValue(start: nil, end: value, to: date.created)
+      date.created = result.argument
       if result.shouldAppend {
         remaining.append(rule)
       }
     case .addedFrom:
-      let result = applyBetweenValue(start: value, end: nil, to: dateFilter.added)
-      dateFilter.added = result.argument
+      let result = applyBetweenValue(start: value, end: nil, to: date.added)
+      date.added = result.argument
       if result.shouldAppend {
         remaining.append(rule)
       }
     case .addedTo:
-      let result = applyBetweenValue(start: nil, end: value, to: dateFilter.added)
-      dateFilter.added = result.argument
+      let result = applyBetweenValue(start: nil, end: value, to: date.added)
+      date.added = result.argument
       if result.shouldAppend {
         remaining.append(rule)
       }

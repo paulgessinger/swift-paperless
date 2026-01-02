@@ -220,17 +220,31 @@ struct FilterStateTest {
     ])
 
     let state = FilterState(rules: rules)
-    #expect(state.dateFilter.created == .between(start: createdStart, end: createdEnd))
-    #expect(state.dateFilter.added == .between(start: addedStart, end: addedEnd))
+    #expect(state.date.created == .between(start: createdStart, end: createdEnd))
+    #expect(state.date.added == .between(start: addedStart, end: addedEnd))
     #expect(state.remaining.isEmpty)
 
     let createdOnlyState = FilterState(rules: [rules[0]])
-    #expect(createdOnlyState.dateFilter.created == .between(start: createdStart, end: nil))
-    #expect(createdOnlyState.dateFilter.added == .any)
+    #expect(createdOnlyState.date.created == .between(start: createdStart, end: nil))
+    #expect(createdOnlyState.date.added == .any)
 
     let addedOnlyState = FilterState(rules: [rules[3]])
-    #expect(addedOnlyState.dateFilter.created == .any)
-    #expect(addedOnlyState.dateFilter.added == .between(start: nil, end: addedEnd))
+    #expect(addedOnlyState.date.created == .any)
+    #expect(addedOnlyState.date.added == .between(start: nil, end: addedEnd))
+  }
+
+  @Test("Nil date between values do not create rules")
+  func testDateBetweenNilValues() {
+    let state = FilterState.empty.with {
+      $0.date.created = .between(start: nil, end: nil)
+      $0.date.added = .between(start: nil, end: nil)
+    }
+
+    #expect(state.rules.isEmpty)
+
+    let roundTrip = FilterState(rules: state.rules)
+    #expect(roundTrip.date.created == .any)
+    #expect(roundTrip.date.added == .any)
   }
 
   @Test("Parse date ranges from fulltext query rules")
@@ -249,8 +263,8 @@ struct FilterStateTest {
     let state = FilterState(rules: rules)
     #expect(state.searchMode == .advanced)
     #expect(state.searchText == "SEARCH_TERM")
-    #expect(state.dateFilter.created == .range(.within(num: -1, interval: .week)))
-    #expect(state.dateFilter.added == .range(.within(num: -2, interval: .month)))
+    #expect(state.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(state.date.added == .range(.within(num: -2, interval: .month)))
     #expect(state.remaining.isEmpty)
 
     let combinedRules = try [FilterRule]([
@@ -263,8 +277,8 @@ struct FilterStateTest {
     let combinedState = FilterState(rules: combinedRules)
     #expect(combinedState.searchMode == .advanced)
     #expect(combinedState.searchText == "SEARCH_TERM")
-    #expect(combinedState.dateFilter.created == .range(.within(num: -1, interval: .week)))
-    #expect(combinedState.dateFilter.added == .range(.within(num: -2, interval: .month)))
+    #expect(combinedState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(combinedState.date.added == .range(.within(num: -2, interval: .month)))
     #expect(combinedState.remaining.isEmpty)
 
     let nonRangeRules = try [FilterRule]([
@@ -277,8 +291,8 @@ struct FilterStateTest {
     let nonRangeState = FilterState(rules: nonRangeRules)
     #expect(nonRangeState.searchMode == .advanced)
     #expect(nonRangeState.searchText == "created:report")
-    #expect(nonRangeState.dateFilter.created == .any)
-    #expect(nonRangeState.dateFilter.added == .any)
+    #expect(nonRangeState.date.created == .any)
+    #expect(nonRangeState.date.added == .any)
 
     let mixedRules = try [FilterRule]([
       #require(
@@ -290,8 +304,8 @@ struct FilterStateTest {
     let mixedState = FilterState(rules: mixedRules)
     #expect(mixedState.searchMode == .advanced)
     #expect(mixedState.searchText == "created:report")
-    #expect(mixedState.dateFilter.created == .range(.within(num: -1, interval: .week)))
-    #expect(mixedState.dateFilter.added == .any)
+    #expect(mixedState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(mixedState.date.added == .any)
 
     let keywordRules = try [FilterRule]([
       #require(
@@ -303,8 +317,8 @@ struct FilterStateTest {
     let keywordState = FilterState(rules: keywordRules)
     #expect(keywordState.searchMode == .advanced)
     #expect(keywordState.searchText.isEmpty)
-    #expect(keywordState.dateFilter.created == .range(.yesterday))
-    #expect(keywordState.dateFilter.added == .range(.previousWeek))
+    #expect(keywordState.date.created == .range(.yesterday))
+    #expect(keywordState.date.added == .range(.previousWeek))
 
     let unsupportedKeywordRules = try [FilterRule]([
       #require(
@@ -316,8 +330,8 @@ struct FilterStateTest {
     let unsupportedKeywordState = FilterState(rules: unsupportedKeywordRules)
     #expect(unsupportedKeywordState.searchMode == .advanced)
     #expect(unsupportedKeywordState.searchText == "created:\"UNSUPPORTED\"")
-    #expect(unsupportedKeywordState.dateFilter.created == .any)
-    #expect(unsupportedKeywordState.dateFilter.added == .any)
+    #expect(unsupportedKeywordState.date.created == .any)
+    #expect(unsupportedKeywordState.date.added == .any)
 
     // The backend won't actually return this form, but let's test it anyway
     let splitRules = try [FilterRule]([
@@ -334,8 +348,8 @@ struct FilterStateTest {
     let splitState = FilterState(rules: splitRules)
     #expect(splitState.searchMode == .advanced)
     #expect(splitState.searchText.isEmpty)
-    #expect(splitState.dateFilter.created == .range(.within(num: -3, interval: .month)))
-    #expect(splitState.dateFilter.added == .range(.within(num: -1, interval: .week)))
+    #expect(splitState.date.created == .range(.within(num: -3, interval: .month)))
+    #expect(splitState.date.added == .range(.within(num: -1, interval: .week)))
   }
 
   @Test("Convert tag rules to FilterState")
@@ -554,8 +568,8 @@ struct FilterStateTest {
     let addedEnd = datetime(year: 2026, month: 1, day: 3)
 
     let state = FilterState.empty.with {
-      $0.dateFilter.created = .between(start: createdStart, end: createdEnd)
-      $0.dateFilter.added = .between(start: addedStart, end: addedEnd)
+      $0.date.created = .between(start: createdStart, end: createdEnd)
+      $0.date.added = .between(start: addedStart, end: addedEnd)
     }
 
     let expected = try [FilterRule]([
@@ -570,8 +584,8 @@ struct FilterStateTest {
     #expect(sortedRules == sortedExpected)
 
     let openEndedState = FilterState.empty.with {
-      $0.dateFilter.created = .between(start: createdStart, end: nil)
-      $0.dateFilter.added = .between(start: nil, end: addedEnd)
+      $0.date.created = .between(start: createdStart, end: nil)
+      $0.date.added = .between(start: nil, end: addedEnd)
     }
 
     let openEndedExpected = try [FilterRule]([
@@ -591,8 +605,8 @@ struct FilterStateTest {
     let state = FilterState.empty.with {
       $0.searchMode = .advanced
       $0.searchText = "SEARCH_TERM"
-      $0.dateFilter.created = .range(.within(num: -1, interval: .week))
-      $0.dateFilter.added = .range(.within(num: -2, interval: .month))
+      $0.date.created = .range(.within(num: -1, interval: .week))
+      $0.date.added = .range(.within(num: -2, interval: .month))
     }
 
     let components = state.rules
@@ -610,7 +624,7 @@ struct FilterStateTest {
     let noSearchState = FilterState.empty.with {
       $0.searchMode = .advanced
       $0.searchText = ""
-      $0.dateFilter.created = .range(.within(num: -3, interval: .month))
+      $0.date.created = .range(.within(num: -3, interval: .month))
     }
 
     let noSearchComponents = noSearchState.rules
@@ -1288,15 +1302,12 @@ struct FilterStateTest {
     typealias Range = FilterState.DateFilter.Range
 
     // Negative numbers with all components
-    #expect(Range(rawValue: "[-1 day to now]") == .within(num: -1, interval: .day))
     #expect(Range(rawValue: "[-1 week to now]") == .within(num: -1, interval: .week))
     #expect(Range(rawValue: "[-1 month to now]") == .within(num: -1, interval: .month))
     #expect(Range(rawValue: "[-3 month to now]") == .within(num: -3, interval: .month))
     #expect(Range(rawValue: "[-1 year to now]") == .within(num: -1, interval: .year))
-    #expect(Range(rawValue: "[-7 day to now]") == .within(num: -7, interval: .day))
 
     // Positive numbers
-    #expect(Range(rawValue: "[1 day to now]") == .within(num: 1, interval: .day))
     #expect(Range(rawValue: "[3 week to now]") == .within(num: 3, interval: .week))
     #expect(Range(rawValue: "[6 month to now]") == .within(num: 6, interval: .month))
     #expect(Range(rawValue: "[2 year to now]") == .within(num: 2, interval: .year))
@@ -1353,10 +1364,6 @@ struct FilterStateTest {
     let rolling1 = Range.within(num: -3, interval: .month)
     #expect(rolling1.rawValue == "[-3 month to now]")
     #expect(Range(rawValue: rolling1.rawValue) == rolling1)
-
-    let rolling2 = Range.within(num: 7, interval: .day)
-    #expect(rolling2.rawValue == "[7 day to now]")
-    #expect(Range(rawValue: rolling2.rawValue) == rolling2)
 
     // Keywords
     let keyword1 = Range.today
