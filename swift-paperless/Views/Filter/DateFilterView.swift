@@ -8,186 +8,230 @@
 import DataModel
 import SwiftUI
 
-struct AsnFilterView: View {
-  @Binding var query: FilterState.AsnFilter
-  @State private var argument: String = ""
-  @State private var mode: Mode = .any
+extension FilterState.DateFilter.Range {
+  var localizedLabel: String {
+    switch self {
+    case .currentYear: String(localized: .localizable(.dateFilterCurrentYear))
+    case .currentMonth: String(localized: .localizable(.dateFilterCurrentMonth))
+    case .today: String(localized: .localizable(.dateFilterToday))
+    case .yesterday: String(localized: .localizable(.dateFilterYesterday))
+    case .previousWeek: String(localized: .localizable(.dateFilterPreviousWeek))
+    case .previousMonth: String(localized: .localizable(.dateFilterPreviousMonth))
+    case .previousQuarter: String(localized: .localizable(.dateFilterPreviousQuarter))
+    case .previousYear: String(localized: .localizable(.dateFilterPreviousYear))
 
-  @Environment(\.dismiss) private var dismiss
-
-  private enum Mode: CaseIterable, Equatable, Hashable {
-    case any
-    case isNull
-    case isNotNull
-    case equalTo
-    case greaterThan
-    case lessThan
-
-    var label: LocalizedStringResource {
-      switch self {
-      case .any: .localizable(.asnFilterAny)
-      case .isNull: .localizable(.asnFilterIsNull)
-      case .isNotNull: .localizable(.asnFilterIsNotNull)
-      case .equalTo: .localizable(.asnFilterEqualTo)
-      case .greaterThan: .localizable(.asnFilterGreaterThan)
-      case .lessThan: .localizable(.asnFilterLessThan)
-      }
-    }
-  }
-
-  private func initFromFilterState() {
-    switch query {
-    case .any:
-      mode = .any
-      argument = ""
-    case .isNull:
-      mode = .isNull
-      argument = ""
-    case .isNotNull:
-      mode = .isNotNull
-      argument = ""
-    case .equalTo(let arg):
-      mode = .equalTo
-      argument = String(arg)
-    case .greaterThan(let arg):
-      mode = .greaterThan
-      argument = String(arg)
-    case .lessThan(let arg):
-      mode = .lessThan
-      argument = String(arg)
-    }
-  }
-
-  private var isValid: Bool {
-    switch mode {
-    case .equalTo, .greaterThan, .lessThan:
-      UInt(argument) != nil
-    case .any, .isNull, .isNotNull:
-      true
-    }
-  }
-
-  private func confirm() {
-    guard isValid else { return }
-
-    switch mode {
-    case .any:
-      query = .any
-    case .isNull:
-      query = .isNull
-    case .isNotNull:
-      query = .isNotNull
-    case .equalTo:
-      query = .equalTo(UInt(argument) ?? 0)
-    case .greaterThan:
-      query = .greaterThan(UInt(argument) ?? 0)
-    case .lessThan:
-      query = .lessThan(UInt(argument) ?? 0)
-    }
-
-    dismiss()
-  }
-
-  var body: some View {
-    NavigationStack {
-      Form {
-        Section {
-          Picker(.localizable(.asnFilterModeSelectLabel), selection: $mode) {
-            ForEach(Mode.allCases, id: \.self) { mode in
-              Text(mode.label)
-                .tag(mode)
-            }
-          }
-
-          if mode == .equalTo || mode == .greaterThan || mode == .lessThan {
-            TextField(.localizable(.asnFilterArgumentLabel), text: $argument)
-              .keyboardType(.numberPad)
-          }
-        }
-      }
-      .animation(.spring, value: mode)
-
-      .toolbar {
-        SaveButton(action: confirm)
-          .backport.glassProminentButtonStyle(or: .automatic)
-          .disabled(!isValid)
-      }
-
-      .navigationTitle(.localizable(.asn))
-      .navigationBarTitleDisplayMode(.inline)
-
-      .onAppear(perform: initFromFilterState)
-
-      .onChange(of: argument) { oldValue, newValue in
-        if newValue.isEmpty {
-          return
-        }
-
-        if UInt(newValue) == nil {
-          argument = oldValue
-          return
-        }
+    case .within(let num, let interval):
+      switch interval {
+      case .week: String(localized: .localizable(.dateFilterWithinWeeks(num.magnitude)))
+      case .month: String(localized: .localizable(.dateFilterWithinMonths(num.magnitude)))
+      case .year: String(localized: .localizable(.dateFilterWithinYears(num.magnitude)))
       }
     }
   }
 }
 
-struct AsnFilterDisplayView: View {
-  let query: FilterState.AsnFilter
+private struct ClearableDatePickerView: View {
+  @Binding private var value: Date?
 
-  @ViewBuilder
-  private func label(_ loc: LocalizedStringResource, systemImage: String) -> some View {
-    HStack {
-      Image(systemName: systemImage)
-      Text(loc)
-    }
+  init(value: Binding<Date?>) {
+    _value = value
   }
 
   var body: some View {
-    switch query {
-    case .any:
-      Text(.localizable(.asn))
-    case .isNotNull:
-      label(.localizable(.asn), systemImage: "number.circle")
-    case .isNull:
-      label(.localizable(.asn), systemImage: "nosign")
-    case .equalTo(let arg):
-      HStack {
-        Text(.localizable(.asn))
-        Image(systemName: "equal.circle")
-        Text("\(arg)")
+    HStack {
+      if let unwrapped = Binding(unwrapping: $value) {
+        DatePicker(selection: unwrapped, displayedComponents: .date) {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundColor(.secondary)
+            .accessibilityLabel(String(localized: .localizable(.dateFilterDateClear)))
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .onTapGesture {
+              value = nil
+            }
+        }
+      } else {
+        HStack {
+          Image(systemName: "plus.circle.fill")
+          Text(.localizable(.dateFilterDateAdd))
+        }
+        .foregroundColor(.accentColor)
+        .onTapGesture {
+          value = .now
+        }
       }
-    case .greaterThan(let arg):
-      HStack {
-        Text(.localizable(.asn))
-        Image(systemName: "lessthan.circle")
-        Text("\(arg)")
+    }
+    .animation(.spring, value: value)
+  }
+}
+
+private struct DateFilterModeView: View {
+  typealias Argument = FilterState.DateFilter.Argument
+  typealias Range = FilterState.DateFilter.Range
+
+  @Binding var value: Argument
+
+  @State private var modeValue: Argument
+
+  init(value: Binding<Argument>) {
+    _value = value
+    self._modeValue = State(initialValue: value.wrappedValue)
+  }
+
+  private let rangeValues: [Range] = [
+    .within(num: -1, interval: .week),
+    .within(num: -1, interval: .month),
+    .within(num: -3, interval: .month),
+    .within(num: -1, interval: .year),
+    .currentYear,
+    .currentMonth,
+    .today,
+    .yesterday,
+    .previousWeek,
+    .previousMonth,
+    .previousQuarter,
+    .previousYear,
+  ]
+
+  var body: some View {
+    Group {
+      Picker(.localizable(.dateFilterRange), selection: $modeValue) {
+        Text(.localizable(.none))
+          .tag(Argument.any)
+        Text(.localizable(.dateFilterBetween))
+          .tag(Argument.between(start: nil, end: nil))
+
+        Divider()
+
+        Section(.localizable(.dateFilterRange)) {
+          ForEach(rangeValues, id: \.self) { value in
+            Text(value.localizedLabel)
+              .tag(Argument.range(value))
+          }
+        }
+
       }
-    case .lessThan(let arg):
-      HStack {
-        Text(.localizable(.asn))
-        Image(systemName: "greaterthan.circle")
-        Text("\(arg)")
+
+      if let btw = $value.between {
+        LabeledContent {
+          ClearableDatePickerView(value: btw.start)
+        } label: {
+          Text(.localizable(.dateFilterFromLabel))
+            .padding(.vertical, 7)
+        }
+
+        LabeledContent {
+          ClearableDatePickerView(value: btw.end)
+        } label: {
+          Text(.localizable(.dateFilterToLabel))
+            .padding(.vertical, 7)
+        }
       }
+    }
+
+    .onChange(of: modeValue) {
+      value = modeValue
+    }
+
+    .onChange(of: value) {
+      switch value {
+      case .between:
+        modeValue = .between(start: nil, end: nil)
+      default:
+        modeValue = value
+        break
+      }
+    }
+  }
+}
+
+struct DateFilterView: View {
+  @Binding var queryOut: FilterState.DateFilter
+  @State private var query: FilterState.DateFilter
+
+  @Environment(\.dismiss) private var dismiss
+
+  init(query: Binding<FilterState.DateFilter>) {
+    _queryOut = query
+    _query = State(initialValue: query.wrappedValue)
+  }
+
+  private func confirm() {
+    Task {
+
+      if case .between(start: nil, end: nil) = query.created {
+        query.created = .any
+      }
+
+      if case .between(start: nil, end: nil) = query.added {
+        query.added = .any
+      }
+
+      queryOut = query
+      guard (try? await Task.sleep(for: .seconds(0.1))) != nil else {
+        return
+      }
+      dismiss()
+    }
+  }
+
+  private func clear() {
+    queryOut = .init()
+    query = .init()
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section(.localizable(.dateFilterCreated)) {
+          DateFilterModeView(value: $query.created)
+        }
+
+        Section(.localizable(.dateFilterAdded)) {
+          DateFilterModeView(value: $query.added)
+        }
+
+        if query.isActive {
+          Section {
+            Button(action: clear) {
+              Label(localized: .localizable(.clearFilters), systemImage: "arrow.counterclockwise")
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+          }
+        }
+      }
+
+      .animation(.spring, value: query)
+
+      .toolbar {
+        SaveButton(action: confirm)
+          .backport.glassProminentButtonStyle(or: .automatic)
+      }
+
+      .navigationTitle(.localizable(.dateFilterTitle))
+      .navigationBarTitleDisplayMode(.inline)
+
+    }
+  }
+}
+
+struct DateFilterDisplayView: View {
+  let query: FilterState.DateFilter
+
+  var body: some View {
+    HStack {
+      if query.isActive {
+        Image(systemName: "clock")
+      }
+      Text(.localizable(.dateFilterTitle))
     }
   }
 }
 
 #Preview {
 
-  @Previewable @State var query = FilterState.AsnFilter.any
+  @Previewable @State var query = FilterState.DateFilter()
 
-  AsnFilterView(query: $query)
+  DateFilterView(query: $query)
 
-}
-
-#Preview("ASN Display view") {
-  VStack {
-    AsnFilterDisplayView(query: .any)
-    AsnFilterDisplayView(query: .isNull)
-    AsnFilterDisplayView(query: .isNotNull)
-    AsnFilterDisplayView(query: .equalTo(42))
-    AsnFilterDisplayView(query: .lessThan(42))
-    AsnFilterDisplayView(query: .greaterThan(42))
-  }
 }
