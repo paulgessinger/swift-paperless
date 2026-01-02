@@ -68,6 +68,13 @@ struct FilterAssembly: View {
       searchText = filterModel.filterState.searchText
     }
 
+    .onChange(of: filterModel.filterState.searchText) {
+      // If we clear the filter state, the search text also needs to be cleared here
+      if searchText != filterModel.filterState.searchText {
+        searchText = filterModel.filterState.searchText
+      }
+    }
+
     .background(
       Rectangle()
         .fill(
