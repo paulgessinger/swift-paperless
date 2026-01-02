@@ -361,6 +361,7 @@ public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable,
     case .hasTagsAll: true
     case .hasTagsAny: true
     case .doesNotHaveTag: true
+    case .fulltextQuery: true
     case .ownerAny: true
     case .ownerDoesNotInclude: true
     case .sharedByUser: true
@@ -383,6 +384,7 @@ public enum FilterRuleType: RawRepresentable, Equatable, CaseIterable, Hashable,
       .hasTagsAll,
       .hasTagsAny,
       .doesNotHaveTag,
+      .fulltextQuery,
       .ownerAny,
       .ownerDoesNotInclude,
       .sharedByUser,
