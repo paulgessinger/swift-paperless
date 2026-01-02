@@ -100,6 +100,34 @@ public enum FilterRuleValue: Equatable, Sendable {
       nil
     }
   }
+
+  public var tagIds: [UInt]? {
+    switch self {
+    case .tag(let id):
+      return [id]
+    case .invalid(let value):
+      Logger.dataModel.warning(
+        "Recovering multi-value rule from invalid value \(value, privacy: .public)"
+      )
+      return value.components(separatedBy: ",").compactMap { UInt($0) }
+    default:
+      return nil
+    }
+  }
+
+  public var ownerIds: [UInt]? {
+    switch self {
+    case .number(let id):
+      return [UInt(id)]
+    case .invalid(let value):
+      Logger.dataModel.warning(
+        "Recovering multi-value rule from invalid value \(value, privacy: .public)"
+      )
+      return value.components(separatedBy: ",").compactMap { UInt($0) }
+    default:
+      return nil
+    }
+  }
 }
 
 extension KeyedDecodingContainerProtocol {
