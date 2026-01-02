@@ -1,1 +1,2 @@
 - Add ability to filter documents by ASN
+- Fix issue with search text not being cleared properly
