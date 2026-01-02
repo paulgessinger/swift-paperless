@@ -6,6 +6,7 @@
 //
 
 import Common
+import Foundation
 import os
 
 public struct FilterState: Equatable, Codable, Sendable {
@@ -65,6 +66,32 @@ public struct FilterState: Equatable, Codable, Sendable {
     case equalTo(UInt)
     case lessThan(UInt)
     case greaterThan(UInt)
+  }
+
+  public struct DateFilter: Equatable, Codable, Sendable {
+    public enum Argument: Equatable, Codable, Sendable {
+      public enum Component: String, Codable, Sendable {
+        case day
+        case week
+        case month
+        case year
+      }
+
+      case any
+      case between(start: Date?, end: Date?)
+      case within(num: Int, interval: Component)
+      case currentYear
+      case currentMonth
+      case today
+      case yesterday
+      case previousWeek
+      case previousMonth
+      case previousQuarter
+      case previousYear
+    }
+
+    var created: Argument = .any
+    var added: Argument = .any
   }
 
   public var correspondent: Filter = .any {
@@ -248,5 +275,84 @@ public struct FilterState: Equatable, Codable, Sendable {
     var state = Self.self[keyPath: factory]
     state.populateWith(rules: rules)
     return state
+  }
+}
+
+// MARK: - DateFilter.Argument RawRepresentable
+
+extension FilterState.DateFilter.Argument: RawRepresentable {
+  public init?(rawValue: String) {
+    // Try parsing rolling range: [-N component to now]
+    if rawValue.hasPrefix("[") && rawValue.hasSuffix("]") {
+      // Strip brackets
+      let inner = rawValue.dropFirst().dropLast()
+
+      // Expected format: "-3 month to now"
+      let parts = inner.split(separator: " ")
+      guard parts.count == 4,
+        parts[2] == "to",
+        parts[3] == "now",
+        let num = Int(parts[0])
+      else {
+        return nil
+      }
+
+      // Parse component (singular only)
+      guard let component = Component(rawValue: String(parts[1])) else {
+        return nil
+      }
+
+      self = .within(num: num, interval: component)
+      return
+    }
+
+    // Try parsing keyword range (lowercase only)
+    switch rawValue {
+    case "this year":
+      self = .currentYear
+    case "this month":
+      self = .currentMonth
+    case "today":
+      self = .today
+    case "yesterday":
+      self = .yesterday
+    case "previous week":
+      self = .previousWeek
+    case "previous month":
+      self = .previousMonth
+    case "previous quarter":
+      self = .previousQuarter
+    case "previous year":
+      self = .previousYear
+    default:
+      return nil
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .any:
+      return ""
+    case .between:
+      return ""  // Not implemented in this phase
+    case .within(let num, let interval):
+      return "[\(num) \(interval.rawValue) to now]"
+    case .currentYear:
+      return "this year"
+    case .currentMonth:
+      return "this month"
+    case .today:
+      return "today"
+    case .yesterday:
+      return "yesterday"
+    case .previousWeek:
+      return "previous week"
+    case .previousMonth:
+      return "previous month"
+    case .previousQuarter:
+      return "previous quarter"
+    case .previousYear:
+      return "previous year"
+    }
   }
 }
