@@ -1,3 +1,9 @@
+1.9.0 (169)
+
+- Add ability to filter documents by ASN
+- Fix issue with search text not being cleared properly
+- Add ability to filter documents by date
+
 1.9.0 (168)
 
 - Add liquid glass interface refresh for iOS 26.
