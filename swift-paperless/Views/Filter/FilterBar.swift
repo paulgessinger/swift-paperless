@@ -766,6 +766,15 @@ struct FilterBar: View {
           }, active: filterModel.filterState.asn != .any
         ) { present(.asn) }
 
+        Element(
+          label: {
+            DateFilterDisplayView(query: filterModel.filterState.date)
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.date, in: transition
+              )
+          }, active: filterModel.filterState.date.isActive
+        ) { present(.date) }
+
         Divider()
 
         SortMenu(filterState: $filterState)
