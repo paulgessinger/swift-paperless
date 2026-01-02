@@ -64,7 +64,6 @@ struct DocumentView: View {
   @State private var selectedPhotos: [PhotosPickerItem] = []
 
   @State private var showDataScanner = false
-  @State private var showTypeAsn = false
   @State private var taskViewNavState: NavigationState? = nil
   @State private var showSettings = false
 
@@ -191,19 +190,7 @@ struct DocumentView: View {
 
       if isDataScannerAvailable {
         Button {
-          Task {
-            try? await Task.sleep(for: .seconds(0.1))
-            showDataScanner = true
-          }
-        } label: {
-          Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
-        }
-        .tint(.accent)
-      } else {
-        Button {
-          withAnimation(.spring(response: 0.5)) {
-            showTypeAsn.toggle()
-          }
+          showDataScanner = true
         } label: {
           Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
         }
@@ -266,18 +253,6 @@ struct DocumentView: View {
           FilterAssembly(filterModel: filterModel)
         } else {
           FilterAssemblyiOS18(filterModel: filterModel)
-        }
-      }
-
-      .safeAreaInset(edge: .bottom) {
-        if showTypeAsn {
-          TypeAsnView { document in
-            navPath.append(NavigationState.detail(document: document))
-            withAnimation {
-              showTypeAsn = false
-            }
-          }
-          .transition(.move(edge: .bottom))
         }
       }
 
@@ -355,7 +330,7 @@ struct DocumentView: View {
         .environmentObject(errorController)
       }
 
-      .sheet(isPresented: $showDataScanner, onDismiss: {}) {
+      .sheet(isPresented: $showDataScanner) {
         DataScannerView(store: store)
       }
 

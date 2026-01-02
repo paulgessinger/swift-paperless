@@ -58,6 +58,15 @@ public struct FilterState: Equatable, Codable, Sendable {
     }
   }
 
+  public enum AsnFilter: Equatable, Codable, Sendable {
+    case any
+    case isNull
+    case isNotNull
+    case equalTo(UInt)
+    case lessThan(UInt)
+    case greaterThan(UInt)
+  }
+
   public var correspondent: Filter = .any {
     didSet { modified = modified || correspondent != oldValue }
   }
@@ -98,7 +107,11 @@ public struct FilterState: Equatable, Codable, Sendable {
   }
 
   public var searchMode: SearchMode {
-    didSet { modified = searchMode != oldValue }
+    didSet { modified = modified || searchMode != oldValue }
+  }
+
+  public var asn: AsnFilter {
+    didSet { modified = modified || asn != oldValue }
   }
 
   public init(
@@ -113,7 +126,8 @@ public struct FilterState: Equatable, Codable, Sendable {
     savedView: UInt?,
     searchText: String?,
     searchMode: SearchMode,
-    customField: CustomFieldQuery
+    customField: CustomFieldQuery,
+    asn: AsnFilter
   ) {
     self.correspondent = correspondent
     self.documentType = documentType
@@ -127,6 +141,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     self.searchText = searchText ?? ""
     self.searchMode = searchMode
     self.customField = customField
+    self.asn = asn
   }
 
   public static var empty: FilterState {
@@ -142,7 +157,8 @@ public struct FilterState: Equatable, Codable, Sendable {
       savedView: nil,
       searchText: nil,
       searchMode: .title,
-      customField: .any)
+      customField: .any,
+      asn: .any)
   }
 
   public func with(_ factory: (inout Self) -> Void) -> Self {
@@ -312,6 +328,30 @@ public struct FilterState: Equatable, Codable, Sendable {
       )
     }
 
+    switch asn {
+    case .any: break
+    case .isNull:
+      result.append(
+        FilterRule(ruleType: .asnIsnull, value: .boolean(value: true))!
+      )
+    case .isNotNull:
+      result.append(
+        FilterRule(ruleType: .asnIsnull, value: .boolean(value: false))!
+      )
+    case .equalTo(let value):
+      result.append(
+        FilterRule(ruleType: .asn, value: .number(value: Int(value)))!
+      )
+    case .greaterThan(let value):
+      result.append(
+        FilterRule(ruleType: .asnGt, value: .number(value: Int(value)))!
+      )
+    case .lessThan(let value):
+      result.append(
+        FilterRule(ruleType: .asnLt, value: .number(value: Int(value)))!
+      )
+    }
+
     return result
   }
 
@@ -336,6 +376,9 @@ public struct FilterState: Equatable, Codable, Sendable {
       result += 1
     }
     if customField != .any {
+      result += 1
+    }
+    if asn != .any {
       result += 1
     }
 
@@ -637,6 +680,113 @@ public struct FilterState: Equatable, Codable, Sendable {
         }
 
         customField = query
+
+      case .asn:
+        guard case .number(let value) = rule.value, value >= 0 else {
+          Logger.dataModel.error(
+            "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+          )
+          remaining.append(rule)
+          break
+        }
+
+        switch asn {
+        case .equalTo(let existing):
+          if existing != value {
+            Logger.dataModel.error(
+              "ASN is already set to .equalTo(\(existing, privacy: .public)), but got .asn=\(value, privacy: .public)"
+            )
+          }
+          fallthrough  // reset anyway
+        case .greaterThan, .lessThan:
+          Logger.dataModel.error(
+            "ASN is already set to comparison filter, but got explicit asn=\(value, privacy: .public)"
+          )
+          fallthrough  // reset anyway
+        case .isNull, .isNotNull:
+          Logger.dataModel.error(
+            "ASN is already set to null check, but got explicit asn=\(value, privacy: .public)")
+          fallthrough  // reset anyway
+        case .any:
+          asn = .equalTo(UInt(value))
+        }
+
+      case .asnIsnull:
+        guard case .boolean(let value) = rule.value else {
+          Logger.dataModel.error(
+            "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+          )
+          remaining.append(rule)
+          break
+        }
+
+        switch asn {
+        case .equalTo, .greaterThan, .lessThan:
+          Logger.dataModel.error(
+            "ASN is already set to a value filter, but got asnIsnull=\(value, privacy: .public)")
+          fallthrough  // reset anyway
+        case .isNull, .isNotNull:
+          Logger.dataModel.error(
+            "Already have asnIsnull rule, but got asnIsnull=\(value, privacy: .public)")
+          fallthrough  // reset anyway
+        case .any:
+          asn = value ? .isNull : .isNotNull
+        }
+
+      case .asnGt:
+        guard case .number(let value) = rule.value, value >= 0 else {
+          Logger.dataModel.error(
+            "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+          )
+          remaining.append(rule)
+          break
+        }
+
+        switch asn {
+        case .greaterThan(let existing):
+          if existing != value {
+            Logger.dataModel.error(
+              "ASN is already set to .greaterThan(\(existing, privacy: .public)), but got .asnGt=\(value, privacy: .public)"
+            )
+          }
+          fallthrough  // reset anyway
+        case .equalTo, .lessThan:
+          Logger.dataModel.error(
+            "ASN is already set to different filter, but got asnGt=\(value, privacy: .public)")
+          fallthrough  // reset anyway
+        case .isNull, .isNotNull:
+          Logger.dataModel.error(
+            "ASN is already set to null check, but got asnGt=\(value, privacy: .public)")
+          fallthrough  // reset anyway
+        case .any:
+          asn = .greaterThan(UInt(value))
+        }
+
+      case .asnLt:
+        guard case .number(let value) = rule.value, value >= 0 else {
+          Logger.dataModel.error(
+            "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+          )
+          remaining.append(rule)
+          break
+        }
+
+        switch asn {
+        case .lessThan(let existing):
+          if existing != value {
+            Logger.dataModel.error(
+              "ASN is already set to .lessThan(\(existing)), but got .asnLt=\(value)")
+          }
+          fallthrough  // reset anyway
+        case .equalTo, .greaterThan:
+          Logger.dataModel.error("ASN is already set to different filter, but got asnLt=\(value)")
+          fallthrough  // reset anyway
+        case .isNull, .isNotNull:
+          Logger.dataModel.error("ASN is already set to null check, but got asnLt=\(value)")
+          fallthrough  // reset anyway
+        case .any:
+          asn = .lessThan(UInt(value))
+        }
 
       default:
         remaining.append(rule)
