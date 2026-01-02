@@ -281,6 +281,65 @@ struct FilterRuleTest {
   }
 
   @Test
+  func testDateQueryItems() throws {
+    let start = datetime(year: 2026, month: 1, day: 1, tz: .gmt)
+    let end = datetime(year: 2026, month: 1, day: 2, tz: .gmt)
+    let fulltextValues = [
+      "SEARCH_TERM",
+      "created:[-1 week to now]",
+      "added:\"previous week\"",
+    ]
+
+    var rules: [FilterRule] = []
+    rules.append(try #require(FilterRule(ruleType: .createdBefore, value: .date(value: start))))
+    rules.append(try #require(FilterRule(ruleType: .createdAfter, value: .date(value: end))))
+    rules.append(try #require(FilterRule(ruleType: .addedBefore, value: .date(value: start))))
+    rules.append(try #require(FilterRule(ruleType: .addedAfter, value: .date(value: end))))
+    rules.append(try #require(FilterRule(ruleType: .createdFrom, value: .date(value: start))))
+    rules.append(try #require(FilterRule(ruleType: .createdTo, value: .date(value: end))))
+    rules.append(try #require(FilterRule(ruleType: .addedFrom, value: .date(value: start))))
+    rules.append(try #require(FilterRule(ruleType: .addedTo, value: .date(value: end))))
+    rules.append(try #require(FilterRule(ruleType: .createdYear, value: .number(value: 2026))))
+    rules.append(try #require(FilterRule(ruleType: .createdMonth, value: .number(value: 1))))
+    rules.append(try #require(FilterRule(ruleType: .createdDay, value: .number(value: 2))))
+    rules.append(
+      try #require(FilterRule(ruleType: .fulltextQuery, value: .string(value: fulltextValues[0]))))
+    rules.append(
+      try #require(FilterRule(ruleType: .fulltextQuery, value: .string(value: fulltextValues[1]))))
+    rules.append(
+      try #require(FilterRule(ruleType: .fulltextQuery, value: .string(value: fulltextValues[2]))))
+
+    let sort = { (a: URLQueryItem, b: URLQueryItem) -> Bool in a.name < b.name }
+    let items = FilterRule.queryItems(for: rules).sorted(by: sort)
+
+    let fulltextValue = fulltextValues.sorted().joined(separator: ",")
+    let expected = [
+      URLQueryItem(name: "created__date__gt", value: "2026-01-02"),
+      URLQueryItem(name: "created__date__gte", value: "2026-01-01"),
+      URLQueryItem(name: "created__date__lt", value: "2026-01-01"),
+      URLQueryItem(name: "created__date__lte", value: "2026-01-02"),
+      URLQueryItem(name: "created__day", value: "2"),
+      URLQueryItem(name: "created__month", value: "1"),
+      URLQueryItem(name: "created__year", value: "2026"),
+      URLQueryItem(name: "added__date__gt", value: "2026-01-02"),
+      URLQueryItem(name: "added__date__gte", value: "2026-01-01"),
+      URLQueryItem(name: "added__date__lt", value: "2026-01-01"),
+      URLQueryItem(name: "added__date__lte", value: "2026-01-02"),
+      URLQueryItem(name: "query", value: fulltextValue),
+    ].sorted(by: sort)
+
+    #expect(items == expected)
+
+    let combinedRules = try [FilterRule]([
+      #require(FilterRule(ruleType: .fulltextQuery, value: .string(value: fulltextValue)))
+    ])
+    #expect(
+      FilterRule.queryItems(for: combinedRules)
+        == [URLQueryItem(name: "query", value: fulltextValue)]
+    )
+  }
+
+  @Test
   func testFilterOwner() throws {
     let input1 = try #require(FilterRule(ruleType: .owner, value: .owner(id: 8)))
     let items = FilterRule.queryItems(for: [input1])
