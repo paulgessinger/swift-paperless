@@ -51,4 +51,15 @@ extension Backport where Content: View {
       content
     }
   }
+
+  @ViewBuilder
+  public func matchedTransitionSource(id: some Hashable, in namespace: Namespace.ID)
+    -> some View
+  {
+    if #available(iOS 18.0, *) {
+      content.matchedTransitionSource(id: id, in: namespace)
+    } else {
+      content
+    }
+  }
 }

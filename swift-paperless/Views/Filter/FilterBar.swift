@@ -568,15 +568,10 @@ struct FilterBar: View {
             }
           }
         }
-        .apply {
-          if #available(iOS 26.0, *) {
-            $0.matchedTransitionSource(
-              id: TransitionKeys.tags, in: transition
-            )
-          } else {
-            $0
-          }
-        }
+
+        .backport.matchedTransitionSource(
+          id: TransitionKeys.tags, in: transition
+        )
       }, active: filterState.tags != .any
     ) {
       present(.tags)
@@ -708,7 +703,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               DocumentType.self,
-              state: filterState.documentType)
+              state: filterState.documentType
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.documentType, in: transition
+            )
           }, active: filterState.documentType != .any
         ) { present(.documentType) }
 
@@ -716,7 +715,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               Correspondent.self,
-              state: filterState.correspondent)
+              state: filterState.correspondent
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.correspondent, in: transition
+            )
           }, active: filterState.correspondent != .any
         ) { present(.correspondent) }
 
@@ -724,7 +727,11 @@ struct FilterBar: View {
           label: {
             CommonElementLabel(
               StoragePath.self,
-              state: filterState.storagePath)
+              state: filterState.storagePath
+            )
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.storagePath, in: transition
+            )
           }, active: filterState.storagePath != .any
         ) { present(.storagePath) }
 
@@ -744,12 +751,18 @@ struct FilterBar: View {
         Element(
           label: {
             Text(.customFields(.title))
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.customFields, in: transition
+              )
           }, active: filterModel.filterState.customField != .any
         ) { present(.customFields) }
 
         Element(
           label: {
             AsnFilterDisplayView(query: filterModel.filterState.asn)
+              .backport.matchedTransitionSource(
+                id: TransitionKeys.asn, in: transition
+              )
           }, active: filterModel.filterState.asn != .any
         ) { present(.asn) }
 
