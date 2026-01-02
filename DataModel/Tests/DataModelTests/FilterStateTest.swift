@@ -253,6 +253,72 @@ struct FilterStateTest {
     #expect(state.dateFilter.added == .range(.within(num: -2, interval: .month)))
     #expect(state.remaining.isEmpty)
 
+    let combinedRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "SEARCH_TERM,created:[-1 week to now],added:[-2 month to now]")))
+    ])
+
+    let combinedState = FilterState(rules: combinedRules)
+    #expect(combinedState.searchMode == .advanced)
+    #expect(combinedState.searchText == "SEARCH_TERM")
+    #expect(combinedState.dateFilter.created == .range(.within(num: -1, interval: .week)))
+    #expect(combinedState.dateFilter.added == .range(.within(num: -2, interval: .month)))
+    #expect(combinedState.remaining.isEmpty)
+
+    let nonRangeRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:report")))
+    ])
+
+    let nonRangeState = FilterState(rules: nonRangeRules)
+    #expect(nonRangeState.searchMode == .advanced)
+    #expect(nonRangeState.searchText == "created:report")
+    #expect(nonRangeState.dateFilter.created == .any)
+    #expect(nonRangeState.dateFilter.added == .any)
+
+    let mixedRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:report,created:[-1 week to now]")))
+    ])
+
+    let mixedState = FilterState(rules: mixedRules)
+    #expect(mixedState.searchMode == .advanced)
+    #expect(mixedState.searchText == "created:report")
+    #expect(mixedState.dateFilter.created == .range(.within(num: -1, interval: .week)))
+    #expect(mixedState.dateFilter.added == .any)
+
+    let keywordRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:\"yesterday\",added:\"previous week\"")))
+    ])
+
+    let keywordState = FilterState(rules: keywordRules)
+    #expect(keywordState.searchMode == .advanced)
+    #expect(keywordState.searchText.isEmpty)
+    #expect(keywordState.dateFilter.created == .range(.yesterday))
+    #expect(keywordState.dateFilter.added == .range(.previousWeek))
+
+    let unsupportedKeywordRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:\"UNSUPPORTED\"")))
+    ])
+
+    let unsupportedKeywordState = FilterState(rules: unsupportedKeywordRules)
+    #expect(unsupportedKeywordState.searchMode == .advanced)
+    #expect(unsupportedKeywordState.searchText == "created:\"UNSUPPORTED\"")
+    #expect(unsupportedKeywordState.dateFilter.created == .any)
+    #expect(unsupportedKeywordState.dateFilter.added == .any)
+
     // The backend won't actually return this form, but let's test it anyway
     let splitRules = try [FilterRule]([
       #require(
