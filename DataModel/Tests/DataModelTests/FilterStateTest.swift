@@ -1055,90 +1055,90 @@ struct FilterStateTest {
     #expect(queryItems2 == [URLQueryItem(name: "tags__id__in", value: "12,7,10,9")])
   }
 
-  // - MARK: Date Filter Argument Parsing Tests
+  // - MARK: Date Filter Range Parsing Tests
 
   @Test("Parse rolling date ranges with numeric intervals")
-  func testDateFilterArgumentRollingRangeParsing() {
-    typealias Argument = FilterState.DateFilter.Argument
+  func testDateFilterRangeRollingRangeParsing() {
+    typealias Range = FilterState.DateFilter.Range
 
     // Negative numbers with all components
-    #expect(Argument(rawValue: "[-1 day to now]") == .within(num: -1, interval: .day))
-    #expect(Argument(rawValue: "[-1 week to now]") == .within(num: -1, interval: .week))
-    #expect(Argument(rawValue: "[-1 month to now]") == .within(num: -1, interval: .month))
-    #expect(Argument(rawValue: "[-3 month to now]") == .within(num: -3, interval: .month))
-    #expect(Argument(rawValue: "[-1 year to now]") == .within(num: -1, interval: .year))
-    #expect(Argument(rawValue: "[-7 day to now]") == .within(num: -7, interval: .day))
+    #expect(Range(rawValue: "[-1 day to now]") == .within(num: -1, interval: .day))
+    #expect(Range(rawValue: "[-1 week to now]") == .within(num: -1, interval: .week))
+    #expect(Range(rawValue: "[-1 month to now]") == .within(num: -1, interval: .month))
+    #expect(Range(rawValue: "[-3 month to now]") == .within(num: -3, interval: .month))
+    #expect(Range(rawValue: "[-1 year to now]") == .within(num: -1, interval: .year))
+    #expect(Range(rawValue: "[-7 day to now]") == .within(num: -7, interval: .day))
 
     // Positive numbers
-    #expect(Argument(rawValue: "[1 day to now]") == .within(num: 1, interval: .day))
-    #expect(Argument(rawValue: "[3 week to now]") == .within(num: 3, interval: .week))
-    #expect(Argument(rawValue: "[6 month to now]") == .within(num: 6, interval: .month))
-    #expect(Argument(rawValue: "[2 year to now]") == .within(num: 2, interval: .year))
+    #expect(Range(rawValue: "[1 day to now]") == .within(num: 1, interval: .day))
+    #expect(Range(rawValue: "[3 week to now]") == .within(num: 3, interval: .week))
+    #expect(Range(rawValue: "[6 month to now]") == .within(num: 6, interval: .month))
+    #expect(Range(rawValue: "[2 year to now]") == .within(num: 2, interval: .year))
   }
 
   @Test("Parse keyword date ranges")
-  func testDateFilterArgumentKeywordParsing() {
-    typealias Argument = FilterState.DateFilter.Argument
+  func testDateFilterRangeKeywordParsing() {
+    typealias Range = FilterState.DateFilter.Range
 
-    #expect(Argument(rawValue: "this year") == .currentYear)
-    #expect(Argument(rawValue: "this month") == .currentMonth)
-    #expect(Argument(rawValue: "today") == .today)
-    #expect(Argument(rawValue: "yesterday") == .yesterday)
-    #expect(Argument(rawValue: "previous week") == .previousWeek)
-    #expect(Argument(rawValue: "previous month") == .previousMonth)
-    #expect(Argument(rawValue: "previous quarter") == .previousQuarter)
-    #expect(Argument(rawValue: "previous year") == .previousYear)
+    #expect(Range(rawValue: "this year") == .currentYear)
+    #expect(Range(rawValue: "this month") == .currentMonth)
+    #expect(Range(rawValue: "today") == .today)
+    #expect(Range(rawValue: "yesterday") == .yesterday)
+    #expect(Range(rawValue: "previous week") == .previousWeek)
+    #expect(Range(rawValue: "previous month") == .previousMonth)
+    #expect(Range(rawValue: "previous quarter") == .previousQuarter)
+    #expect(Range(rawValue: "previous year") == .previousYear)
   }
 
   @Test("Invalid date filter formats return nil")
-  func testDateFilterArgumentInvalidFormats() {
-    typealias Argument = FilterState.DateFilter.Argument
+  func testDateFilterRangeInvalidFormats() {
+    typealias Range = FilterState.DateFilter.Range
 
     // Invalid bracket formats
-    #expect(Argument(rawValue: "[-1 month]") == nil)  // missing "to now"
-    #expect(Argument(rawValue: "-1 month to now") == nil)  // missing brackets
-    #expect(Argument(rawValue: "[1 month to later]") == nil)  // wrong ending
+    #expect(Range(rawValue: "[-1 month]") == nil)  // missing "to now"
+    #expect(Range(rawValue: "-1 month to now") == nil)  // missing brackets
+    #expect(Range(rawValue: "[1 month to later]") == nil)  // wrong ending
 
     // Invalid component names
-    #expect(Argument(rawValue: "[-1 months to now]") == nil)  // plural
-    #expect(Argument(rawValue: "[-1 decades to now]") == nil)  // invalid component
-    #expect(Argument(rawValue: "[-1 hour to now]") == nil)  // unsupported component
+    #expect(Range(rawValue: "[-1 months to now]") == nil)  // plural
+    #expect(Range(rawValue: "[-1 decades to now]") == nil)  // invalid component
+    #expect(Range(rawValue: "[-1 hour to now]") == nil)  // unsupported component
 
     // Invalid numbers
-    #expect(Argument(rawValue: "[abc month to now]") == nil)
-    #expect(Argument(rawValue: "[- month to now]") == nil)
+    #expect(Range(rawValue: "[abc month to now]") == nil)
+    #expect(Range(rawValue: "[- month to now]") == nil)
 
     // Invalid keyword formats
-    #expect(Argument(rawValue: "This Year") == nil)  // wrong case
-    #expect(Argument(rawValue: "TODAY") == nil)  // wrong case
-    #expect(Argument(rawValue: "last week") == nil)  // wrong keyword
+    #expect(Range(rawValue: "This Year") == nil)  // wrong case
+    #expect(Range(rawValue: "TODAY") == nil)  // wrong case
+    #expect(Range(rawValue: "last week") == nil)  // wrong keyword
 
     // Empty and malformed
-    #expect(Argument(rawValue: "") == nil)
-    #expect(Argument(rawValue: "[]") == nil)
-    #expect(Argument(rawValue: "random string") == nil)
+    #expect(Range(rawValue: "") == nil)
+    #expect(Range(rawValue: "[]") == nil)
+    #expect(Range(rawValue: "random string") == nil)
   }
 
-  @Test("Date filter arguments round-trip through rawValue")
-  func testDateFilterArgumentRawValueRoundTrip() {
-    typealias Argument = FilterState.DateFilter.Argument
+  @Test("Date filter ranges round-trip through rawValue")
+  func testDateFilterRangeRawValueRoundTrip() {
+    typealias Range = FilterState.DateFilter.Range
 
     // Rolling ranges
-    let rolling1 = Argument.within(num: -3, interval: .month)
+    let rolling1 = Range.within(num: -3, interval: .month)
     #expect(rolling1.rawValue == "[-3 month to now]")
-    #expect(Argument(rawValue: rolling1.rawValue) == rolling1)
+    #expect(Range(rawValue: rolling1.rawValue) == rolling1)
 
-    let rolling2 = Argument.within(num: 7, interval: .day)
+    let rolling2 = Range.within(num: 7, interval: .day)
     #expect(rolling2.rawValue == "[7 day to now]")
-    #expect(Argument(rawValue: rolling2.rawValue) == rolling2)
+    #expect(Range(rawValue: rolling2.rawValue) == rolling2)
 
     // Keywords
-    let keyword1 = Argument.today
+    let keyword1 = Range.today
     #expect(keyword1.rawValue == "today")
-    #expect(Argument(rawValue: keyword1.rawValue) == keyword1)
+    #expect(Range(rawValue: keyword1.rawValue) == keyword1)
 
-    let keyword2 = Argument.previousMonth
+    let keyword2 = Range.previousMonth
     #expect(keyword2.rawValue == "previous month")
-    #expect(Argument(rawValue: keyword2.rawValue) == keyword2)
+    #expect(Range(rawValue: keyword2.rawValue) == keyword2)
   }
 }

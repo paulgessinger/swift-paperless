@@ -69,16 +69,14 @@ public struct FilterState: Equatable, Codable, Sendable {
   }
 
   public struct DateFilter: Equatable, Codable, Sendable {
-    public enum Argument: Equatable, Codable, Sendable {
-      public enum Component: String, Codable, Sendable {
-        case day
-        case week
-        case month
-        case year
-      }
+    public enum Component: String, Codable, Sendable {
+      case day
+      case week
+      case month
+      case year
+    }
 
-      case any
-      case between(start: Date?, end: Date?)
+    public enum Range: Equatable, Codable, Sendable {
       case within(num: Int, interval: Component)
       case currentYear
       case currentMonth
@@ -88,6 +86,12 @@ public struct FilterState: Equatable, Codable, Sendable {
       case previousMonth
       case previousQuarter
       case previousYear
+    }
+
+    public enum Argument: Equatable, Codable, Sendable {
+      case any
+      case between(start: Date?, end: Date?)
+      case range(Range)
     }
 
     var created: Argument = .any
@@ -278,9 +282,9 @@ public struct FilterState: Equatable, Codable, Sendable {
   }
 }
 
-// MARK: - DateFilter.Argument RawRepresentable
+// MARK: - DateFilter.Range RawRepresentable
 
-extension FilterState.DateFilter.Argument: RawRepresentable {
+extension FilterState.DateFilter.Range: RawRepresentable {
   public init?(rawValue: String) {
     // Try parsing rolling range: [-N component to now]
     if rawValue.hasPrefix("[") && rawValue.hasSuffix("]") {
@@ -298,7 +302,7 @@ extension FilterState.DateFilter.Argument: RawRepresentable {
       }
 
       // Parse component (singular only)
-      guard let component = Component(rawValue: String(parts[1])) else {
+      guard let component = FilterState.DateFilter.Component(rawValue: String(parts[1])) else {
         return nil
       }
 
@@ -331,10 +335,6 @@ extension FilterState.DateFilter.Argument: RawRepresentable {
 
   public var rawValue: String {
     switch self {
-    case .any:
-      return ""
-    case .between:
-      return ""  // Not implemented in this phase
     case .within(let num, let interval):
       return "[\(num) \(interval.rawValue) to now]"
     case .currentYear:
