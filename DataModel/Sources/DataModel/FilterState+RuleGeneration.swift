@@ -11,6 +11,7 @@ extension FilterState {
   public var rules: [FilterRule] {
     var result = remaining
     result += searchRules
+    result += fulltextQueryRules
     result += correspondentRules
     result += documentTypeRules
     result += storagePathRules
@@ -18,12 +19,50 @@ extension FilterState {
     result += ownerRules
     result += customFieldRules
     result += asnRules
+    result += dateBetweenRules
     return result
   }
 
   private var searchRules: [FilterRule] {
     guard !searchText.isEmpty else { return [] }
+    guard searchMode != .advanced else { return [] }
     return [FilterRule(ruleType: searchMode.ruleType, value: .string(value: searchText))!]
+  }
+
+  private var fulltextQueryRules: [FilterRule] {
+    var components: [String] = []
+
+    if searchMode == .advanced, !searchText.isEmpty {
+      components.append(searchText)
+    }
+
+    if case .range(let range) = dateFilter.created {
+      components.append("created:\(fulltextQueryValue(for: range))")
+    }
+
+    if case .range(let range) = dateFilter.added {
+      components.append("added:\(fulltextQueryValue(for: range))")
+    }
+
+    guard !components.isEmpty else { return [] }
+    let value = components.joined(separator: ",")
+    return [FilterRule(ruleType: .fulltextQuery, value: .string(value: value))!]
+  }
+
+  private func fulltextQueryValue(for range: DateFilter.Range) -> String {
+    switch range {
+    case .within:
+      return range.rawValue
+    case .currentYear,
+      .currentMonth,
+      .today,
+      .yesterday,
+      .previousWeek,
+      .previousMonth,
+      .previousQuarter,
+      .previousYear:
+      return "\"\(range.rawValue)\""
+    }
   }
 
   private var correspondentRules: [FilterRule] {
@@ -177,6 +216,30 @@ extension FilterState {
         FilterRule(ruleType: .asnLt, value: .number(value: Int(value)))!
       )
     }
+    return result
+  }
+
+  private var dateBetweenRules: [FilterRule] {
+    var result: [FilterRule] = []
+
+    if case .between(let start, let end) = dateFilter.created {
+      if let start {
+        result.append(FilterRule(ruleType: .createdFrom, value: .date(value: start))!)
+      }
+      if let end {
+        result.append(FilterRule(ruleType: .createdTo, value: .date(value: end))!)
+      }
+    }
+
+    if case .between(let start, let end) = dateFilter.added {
+      if let start {
+        result.append(FilterRule(ruleType: .addedFrom, value: .date(value: start))!)
+      }
+      if let end {
+        result.append(FilterRule(ruleType: .addedTo, value: .date(value: end))!)
+      }
+    }
+
     return result
   }
 }
