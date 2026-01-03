@@ -301,8 +301,8 @@ import Testing
     let endpoint = Endpoint(path: "/api/test", queryItems: [])
     let result = try #require(endpoint.url(url: baseURL))
 
-    // Should properly handle trailing slash
-    #expect(result.absoluteString == "https://example.com//api/test/")
+    // Trailing slash should be removed and double slashes normalized
+    #expect(result.absoluteString == "https://example.com/api/test/")
   }
 
   @Test func testURLBuildingWithExistingPath() throws {

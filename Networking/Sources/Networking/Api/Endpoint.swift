@@ -42,6 +42,15 @@ extension Endpoint {
     if !queryItems.isEmpty {
       result.append(queryItems: queryItems)
     }
+
+    // Normalize double slashes that may appear due to URL construction
+    if var resultComponents = URLComponents(url: result, resolvingAgainstBaseURL: false) {
+      resultComponents.path = resultComponents.path.replacingOccurrences(of: "//", with: "/")
+      if let normalizedURL = resultComponents.url {
+        result = normalizedURL
+      }
+    }
+
     Logger.networking.trace("URL for Endpoint \(path): \(result)")
     return result
   }
