@@ -191,7 +191,7 @@ struct DateFilterView: View {
         Section(.localizable(.dateFilterAdded)) {
           DateFilterModeView(value: $query.added)
         }
-        
+
         if store.repository.supports(feature: .dateFilterModified) {
           Section(.localizable(.dateFilterModified)) {
             DateFilterModeView(value: $query.modified)

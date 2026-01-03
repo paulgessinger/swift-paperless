@@ -215,10 +215,10 @@ struct FilterStateTest {
     // IMPORTANT: modifiedAfter/Before use exclusive bounds (gt/lt), but FilterState uses inclusive.
     // The backend sends: modifiedAfter > Dec 29, modifiedBefore < Jan 5
     // We convert to: start = Dec 30, end = Jan 4 (inclusive bounds)
-    let modifiedStartBackend = datetime(year: 2025, month: 12, day: 29) // Backend: > Dec 29
-    let modifiedEndBackend = datetime(year: 2026, month: 1, day: 5)     // Backend: < Jan 5
-    let modifiedStartExpected = datetime(year: 2025, month: 12, day: 30) // User sees: >= Dec 30
-    let modifiedEndExpected = datetime(year: 2026, month: 1, day: 4)     // User sees: <= Jan 4
+    let modifiedStartBackend = datetime(year: 2025, month: 12, day: 29)  // Backend: > Dec 29
+    let modifiedEndBackend = datetime(year: 2026, month: 1, day: 5)  // Backend: < Jan 5
+    let modifiedStartExpected = datetime(year: 2025, month: 12, day: 30)  // User sees: >= Dec 30
+    let modifiedEndExpected = datetime(year: 2026, month: 1, day: 4)  // User sees: <= Jan 4
 
     let rules = try [FilterRule]([
       #require(FilterRule(ruleType: .createdFrom, value: .date(value: createdStart))),
@@ -376,7 +376,8 @@ struct FilterStateTest {
       #require(
         FilterRule(
           ruleType: .fulltextQuery,
-          value: .string(value: "created:[-1 week to now],added:[-2 month to now],modified:[-3 month to now]")))
+          value: .string(
+            value: "created:[-1 week to now],added:[-2 month to now],modified:[-3 month to now]")))
     ])
 
     let modifiedState = FilterState(rules: modifiedRules)
@@ -620,9 +621,9 @@ struct FilterStateTest {
     // User sets: start = Dec 30, end = Jan 4 (inclusive)
     // Backend gets: modifiedAfter > Dec 29, modifiedBefore < Jan 5 (exclusive)
     let modifiedStartUser = datetime(year: 2025, month: 12, day: 30)  // User: >= Dec 30
-    let modifiedEndUser = datetime(year: 2026, month: 1, day: 4)      // User: <= Jan 4
+    let modifiedEndUser = datetime(year: 2026, month: 1, day: 4)  // User: <= Jan 4
     let modifiedStartBackend = datetime(year: 2025, month: 12, day: 29)  // Backend: > Dec 29
-    let modifiedEndBackend = datetime(year: 2026, month: 1, day: 5)      // Backend: < Jan 5
+    let modifiedEndBackend = datetime(year: 2026, month: 1, day: 5)  // Backend: < Jan 5
 
     let state = FilterState.empty.with {
       $0.date.created = .between(start: createdStart, end: createdEnd)
@@ -1382,7 +1383,7 @@ struct FilterStateTest {
 
     // Test Rule → FilterState conversion
     let backendStart = datetime(year: 2026, month: 1, day: 10)  // Backend: > Jan 10
-    let backendEnd = datetime(year: 2026, month: 1, day: 20)    // Backend: < Jan 20
+    let backendEnd = datetime(year: 2026, month: 1, day: 20)  // Backend: < Jan 20
 
     let ruleToStateRules = try [FilterRule]([
       #require(FilterRule(ruleType: .modifiedAfter, value: .date(value: backendStart))),
@@ -1398,7 +1399,7 @@ struct FilterStateTest {
 
     // Test FilterState → Rule conversion (round-trip)
     let userStart = datetime(year: 2026, month: 1, day: 15)  // User: >= Jan 15
-    let userEnd = datetime(year: 2026, month: 1, day: 25)    // User: <= Jan 25
+    let userEnd = datetime(year: 2026, month: 1, day: 25)  // User: <= Jan 25
 
     let stateToRuleState = FilterState.empty.with {
       $0.date.modified = .between(start: userStart, end: userEnd)
@@ -1409,7 +1410,7 @@ struct FilterStateTest {
 
     // Backend should get Jan 14 and Jan 26 for exclusive bounds
     let expectedBackendStart = datetime(year: 2026, month: 1, day: 14)  // > Jan 14 = >= Jan 15
-    let expectedBackendEnd = datetime(year: 2026, month: 1, day: 26)    // < Jan 26 = <= Jan 25
+    let expectedBackendEnd = datetime(year: 2026, month: 1, day: 26)  // < Jan 26 = <= Jan 25
 
     let afterRule = generatedRules.first { $0.ruleType == .modifiedAfter }
     let beforeRule = generatedRules.first { $0.ruleType == .modifiedBefore }
