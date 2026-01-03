@@ -103,6 +103,8 @@ public protocol Repository: Sendable {
   func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
   func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note]
 
+  func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink]
+
   // @TODO: Remove UIImage
   func thumbnail(document: Document) async throws -> Image?
   func thumbnailData(document: Document) async throws -> Data
@@ -138,6 +140,11 @@ public protocol Repository: Sendable {
   // MARK: Server configuration
 
   func serverConfiguration() async throws -> ServerConfiguration
+
+  // MARK: - Share links
+
+  func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink
+  func delete(shareLink: DataModel.ShareLink) async throws
 
   // MARK: Others
 

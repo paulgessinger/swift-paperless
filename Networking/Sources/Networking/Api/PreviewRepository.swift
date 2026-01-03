@@ -455,4 +455,18 @@ public class PreviewRepository: Repository {
       permissions: UserPermissions.full
     )
   }
+
+  // MARK: - Share links
+
+  public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
+    []
+  }
+
+  public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
+    throw NotImplemented()
+  }
+
+  public func delete(shareLink: DataModel.ShareLink) async throws {
+    throw NotImplemented()
+  }
 }

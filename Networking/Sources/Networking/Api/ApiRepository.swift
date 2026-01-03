@@ -963,4 +963,21 @@ extension ApiRepository: Repository {
     guard let backendVersion else { return false }
     return feature.isSupported(on: backendVersion)
   }
+
+  // MARK: - Share links
+
+  public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
+    // TODO: Implement
+    fatalError("Not yet implemented")
+  }
+
+  public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
+    // TODO: Implement
+    fatalError("Not yet implemented")
+  }
+
+  public func delete(shareLink: DataModel.ShareLink) async throws {
+    // TODO: Implement
+    fatalError("Not yet implemented")
+  }
 }
