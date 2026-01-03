@@ -232,13 +232,13 @@ import Testing
     repository.addUser(user2)
 
     // Test login by ID
-    try await repository.login(userId: 1)
+    try repository.login(userId: 1)
     let currentUser = try await repository.currentUser()
     #expect(currentUser.id == 1)
     #expect(currentUser.username == "admin")
 
     // Test logout
-    await repository.logout()
+    repository.logout()
     await #expect(throws: RepositoryError.noUserLoggedIn) {
       _ = try await repository.currentUser()
     }
@@ -250,11 +250,11 @@ import Testing
     #expect(newCurrentUser.username == "user")
 
     // Test login with non-existent user
-    await #expect(throws: RepositoryError.userNotFound) {
+    #expect(throws: RepositoryError.userNotFound) {
       try repository.login(userId: 999)
     }
 
-    await #expect(throws: RepositoryError.userNotFound) {
+    #expect(throws: RepositoryError.userNotFound) {
       try repository.login(username: "nonexistent")
     }
   }
