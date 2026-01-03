@@ -1880,6 +1880,17 @@
         }
       }
     },
+    "dateFilterModified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modified"
+          }
+        }
+      }
+    },
     "dateFilterPreviousMonth" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -150,6 +150,7 @@ struct DateFilterView: View {
   @State private var query: FilterState.DateFilter
 
   @Environment(\.dismiss) private var dismiss
+  @EnvironmentObject private var store: DocumentStore
 
   init(query: Binding<FilterState.DateFilter>) {
     _queryOut = query
@@ -189,6 +190,12 @@ struct DateFilterView: View {
 
         Section(.localizable(.dateFilterAdded)) {
           DateFilterModeView(value: $query.added)
+        }
+
+        if store.repository.supports(feature: .dateFilterModified) {
+          Section(.localizable(.dateFilterModified)) {
+            DateFilterModeView(value: $query.modified)
+          }
         }
 
         if query.isActive {

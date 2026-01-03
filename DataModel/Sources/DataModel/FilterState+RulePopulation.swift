@@ -15,7 +15,7 @@ extension FilterState {
       switch rule.ruleType {
       case .title, .content, .titleContent, .fulltextQuery:
         handleSearchRule(rule)
-      case .createdFrom, .createdTo, .addedFrom, .addedTo:
+      case .createdFrom, .createdTo, .addedFrom, .addedTo, .modifiedBefore, .modifiedAfter:
         handleDateBetweenRule(rule)
       case .correspondent:
         handleCorrespondentRule(rule)
@@ -108,6 +108,8 @@ extension FilterState {
           date.created = .range(range)
         case .added:
           date.added = .range(range)
+        case .modified:
+          date.modified = .range(range)
         }
       } else {
         searchComponents.append(component)
@@ -127,12 +129,14 @@ extension FilterState {
   private enum DateRangeTarget {
     case created
     case added
+    case modified
   }
 
   private func parseDateRangeComponent(_ component: String) -> (DateRangeTarget, DateFilter.Range)?
   {
     let createdPrefix = "created:"
     let addedPrefix = "added:"
+    let modifiedPrefix = "modified:"
 
     if component.hasPrefix(createdPrefix) {
       let value = String(component.dropFirst(createdPrefix.count))
@@ -150,6 +154,15 @@ extension FilterState {
         return nil
       }
       return (.added, range)
+    }
+
+    if component.hasPrefix(modifiedPrefix) {
+      let value = String(component.dropFirst(modifiedPrefix.count))
+      let raw = stripQuotes(from: value)
+      guard let range = DateFilter.Range(rawValue: raw) else {
+        return nil
+      }
+      return (.modified, range)
     }
 
     return nil
@@ -585,6 +598,28 @@ extension FilterState {
     case .addedTo:
       let result = applyBetweenValue(start: nil, end: value, to: date.added)
       date.added = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    case .modifiedAfter:
+      // WORKAROUND: modifiedAfter uses exclusive (gt) semantics, but we want inclusive bounds
+      // in FilterState. Since modifiedAfter means "modified > date", we add 1 day to get
+      // the inclusive equivalent "modified >= date+1".
+      // If the backend adds modifiedFrom (gte) in the future, we should switch to that.
+      let adjustedValue = Calendar.current.date(byAdding: .day, value: 1, to: value) ?? value
+      let result = applyBetweenValue(start: adjustedValue, end: nil, to: date.modified)
+      date.modified = result.argument
+      if result.shouldAppend {
+        remaining.append(rule)
+      }
+    case .modifiedBefore:
+      // WORKAROUND: modifiedBefore uses exclusive (lt) semantics, but we want inclusive bounds
+      // in FilterState. Since modifiedBefore means "modified < date", we subtract 1 day to get
+      // the inclusive equivalent "modified <= date-1".
+      // If the backend adds modifiedTo (lte) in the future, we should switch to that.
+      let adjustedValue = Calendar.current.date(byAdding: .day, value: -1, to: value) ?? value
+      let result = applyBetweenValue(start: nil, end: adjustedValue, to: date.modified)
+      date.modified = result.argument
       if result.shouldAppend {
         remaining.append(rule)
       }

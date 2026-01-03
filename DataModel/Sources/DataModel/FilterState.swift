@@ -97,14 +97,16 @@ public struct FilterState: Equatable, Codable, Sendable {
 
     public var created: Argument = .any
     public var added: Argument = .any
+    public var modified: Argument = .any
 
-    public init(created: Argument = .any, added: Argument = .any) {
+    public init(created: Argument = .any, added: Argument = .any, modified: Argument = .any) {
       self.created = created
       self.added = added
+      self.modified = modified
     }
 
     public var isActive: Bool {
-      created != .any || added != .any
+      created != .any || added != .any || modified != .any
     }
   }
 
