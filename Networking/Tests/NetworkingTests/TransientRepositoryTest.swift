@@ -228,8 +228,8 @@ import Testing
     // Add some users
     let user1 = User(id: 1, isSuperUser: true, username: "admin")
     let user2 = User(id: 2, isSuperUser: false, username: "user")
-    await repository.addUser(user1)
-    await repository.addUser(user2)
+    repository.addUser(user1)
+    repository.addUser(user2)
 
     // Test login by ID
     try await repository.login(userId: 1)
@@ -244,18 +244,18 @@ import Testing
     }
 
     // Test login by username
-    try await repository.login(username: "user")
+    try repository.login(username: "user")
     let newCurrentUser = try await repository.currentUser()
     #expect(newCurrentUser.id == 2)
     #expect(newCurrentUser.username == "user")
 
     // Test login with non-existent user
     await #expect(throws: RepositoryError.userNotFound) {
-      try await repository.login(userId: 999)
+      try repository.login(userId: 999)
     }
 
     await #expect(throws: RepositoryError.userNotFound) {
-      try await repository.login(username: "nonexistent")
+      try repository.login(username: "nonexistent")
     }
   }
 
@@ -328,21 +328,21 @@ import Testing
     var filter = FilterState.empty
     filter.searchText = "Invoice"
 
-    let invoiceResults = try await repository.documents(filter: filter)
+    let invoiceResults = try repository.documents(filter: filter)
     let invoiceDocs = try await invoiceResults.fetch(limit: 10)
     #expect(invoiceDocs.count == 2)
     #expect(invoiceDocs.map(\.title).sorted() == ["Invoice #123", "Invoice #456"].sorted())
 
     // Test searching for "Tax"
     filter.searchText = "Tax"
-    let taxResults = try await repository.documents(filter: filter)
+    let taxResults = try repository.documents(filter: filter)
     let taxDocs = try await taxResults.fetch(limit: 10)
     #expect(taxDocs.count == 1)
     #expect(taxDocs.first?.title == "Tax document 2024")
 
     // Test searching for non-existent term
     filter.searchText = "Nonexistent"
-    let emptyResults = try await repository.documents(filter: filter)
+    let emptyResults = try repository.documents(filter: filter)
     let emptyDocs = try await emptyResults.fetch(limit: 10)
     #expect(emptyDocs.isEmpty)
   }
