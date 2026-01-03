@@ -44,6 +44,10 @@ extension FilterState {
       components.append("added:\(fulltextQueryValue(for: range))")
     }
 
+    if case .range(let range) = date.modified {
+      components.append("modified:\(fulltextQueryValue(for: range))")
+    }
+
     guard !components.isEmpty else { return [] }
     let value = components.joined(separator: ",")
     return [FilterRule(ruleType: .fulltextQuery, value: .string(value: value))!]
@@ -237,6 +241,22 @@ extension FilterState {
       }
       if let end {
         result.append(FilterRule(ruleType: .addedTo, value: .date(value: end))!)
+      }
+    }
+
+    if case .between(let start, let end) = date.modified {
+      // WORKAROUND: modifiedAfter/Before use exclusive (gt/lt) semantics, but FilterState uses
+      // inclusive bounds. We need to adjust the dates when generating rules:
+      // - For start (inclusive), we subtract 1 day to get "modified > start-1" (exclusive)
+      // - For end (inclusive), we add 1 day to get "modified < end+1" (exclusive)
+      // If the backend adds modifiedFrom/To (gte/lte) in the future, we should switch to those.
+      if let start {
+        let adjustedStart = Calendar.current.date(byAdding: .day, value: -1, to: start) ?? start
+        result.append(FilterRule(ruleType: .modifiedAfter, value: .date(value: adjustedStart))!)
+      }
+      if let end {
+        let adjustedEnd = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end
+        result.append(FilterRule(ruleType: .modifiedBefore, value: .date(value: adjustedEnd))!)
       }
     }
 
