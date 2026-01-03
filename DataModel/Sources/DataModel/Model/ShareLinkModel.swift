@@ -5,7 +5,7 @@ import MetaCodable
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
-public struct ShareLink {
+public struct ShareLink : Sendable {
   public enum FileVersion: String, Codable, Sendable {
     case original
     case archive
@@ -18,6 +18,8 @@ public struct ShareLink {
   public var document: UInt
   public var fileVersion: FileVersion
 }
+
+extension ShareLink : Model {}
 
 @Codable
 @CodingKeys(.snake_case)
