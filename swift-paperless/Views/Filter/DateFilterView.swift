@@ -129,29 +129,28 @@ private struct DateFilterModeView: View {
         break
       }
     }
-    
+
     .task {
-      var rangeValues: [Range]
-      = [
-      .within(num: -1, interval: .week),
-      .within(num: -1, interval: .month),
-      .within(num: -3, interval: .month),
-      .within(num: -1, interval: .year),
-      .currentYear,
-      .currentMonth,
-      .today,
-      .yesterday,
-    ]
-      
+      var rangeValues: [Range] = [
+        .within(num: -1, interval: .week),
+        .within(num: -1, interval: .month),
+        .within(num: -3, interval: .month),
+        .within(num: -1, interval: .year),
+        .currentYear,
+        .currentMonth,
+        .today,
+        .yesterday,
+      ]
+
       if store.repository.supports(feature: .dateFilterPreviousIntervals) {
         rangeValues += [
-        .previousWeek,
-        .previousMonth,
-        .previousQuarter,
-        .previousYear,
+          .previousWeek,
+          .previousMonth,
+          .previousQuarter,
+          .previousYear,
         ]
       }
-      
+
       self.rangeValues = rangeValues
     }
   }
