@@ -402,6 +402,97 @@ struct FilterStateTest {
     #expect(modifiedKeywordState.date.modified == .range(.yesterday))
   }
 
+  @Test("Parse space-separated date filters from fulltext query")
+  func testRuleToFilterStateDateSpaceSeparated() throws {
+    // Test basic space-separated format
+    let spaceRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:[-1 week to now] added:[-2 month to now]")))
+    ])
+
+    let spaceState = FilterState(rules: spaceRules)
+    #expect(spaceState.searchMode == .advanced)
+    #expect(spaceState.searchText.isEmpty)
+    #expect(spaceState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(spaceState.date.added == .range(.within(num: -2, interval: .month)))
+    #expect(spaceState.remaining.isEmpty)
+
+    // Test all three date filters space-separated
+    let allThreeRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(
+            value: "created:[-1 week to now] added:[-2 month to now] modified:[-3 year to now]")))
+    ])
+
+    let allThreeState = FilterState(rules: allThreeRules)
+    #expect(allThreeState.searchMode == .advanced)
+    #expect(allThreeState.searchText.isEmpty)
+    #expect(allThreeState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(allThreeState.date.added == .range(.within(num: -2, interval: .month)))
+    #expect(allThreeState.date.modified == .range(.within(num: -3, interval: .year)))
+
+    // Test space-separated with search terms before and after
+    let withSearchRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "invoice created:[-1 month to now] report added:\"yesterday\"")))
+    ])
+
+    let withSearchState = FilterState(rules: withSearchRules)
+    #expect(withSearchState.searchMode == .advanced)
+    #expect(withSearchState.searchText == "invoice report")
+    #expect(withSearchState.date.created == .range(.within(num: -1, interval: .month)))
+    #expect(withSearchState.date.added == .range(.yesterday))
+
+    // Test keyword format with spaces
+    let keywordSpaceRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "created:\"yesterday\" modified:\"previous week\"")))
+    ])
+
+    let keywordSpaceState = FilterState(rules: keywordSpaceRules)
+    #expect(keywordSpaceState.searchMode == .advanced)
+    #expect(keywordSpaceState.searchText.isEmpty)
+    #expect(keywordSpaceState.date.created == .range(.yesterday))
+    #expect(keywordSpaceState.date.modified == .range(.previousWeek))
+
+    // Test mixed comma and space separators
+    let mixedRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "term1,created:[-1 week to now] term2 added:\"today\",term3")))
+    ])
+
+    let mixedState = FilterState(rules: mixedRules)
+    #expect(mixedState.searchMode == .advanced)
+    // After extracting date filters, remaining tokens are normalized to space-separated
+    #expect(mixedState.searchText == "term1 term2 term3")
+    #expect(mixedState.date.created == .range(.within(num: -1, interval: .week)))
+    #expect(mixedState.date.added == .range(.today))
+
+    // Test that regular search terms with "created" etc in them are preserved
+    let regularSearchRules = try [FilterRule]([
+      #require(
+        FilterRule(
+          ruleType: .fulltextQuery,
+          value: .string(value: "document created by John added to folder")))
+    ])
+
+    let regularSearchState = FilterState(rules: regularSearchRules)
+    #expect(regularSearchState.searchMode == .advanced)
+    #expect(regularSearchState.searchText == "document created by John added to folder")
+    #expect(regularSearchState.date.created == .any)
+    #expect(regularSearchState.date.added == .any)
+  }
+
   @Test("Convert tag rules to FilterState")
   func testRuleToFilterStateTags() throws {
     let tagAll = try [FilterRule]([

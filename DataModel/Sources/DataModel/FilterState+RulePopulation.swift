@@ -93,36 +93,121 @@ extension FilterState {
   private mutating func handleFulltextQueryValue(_ value: String) {
     searchMode = .advanced
 
-    let components =
-      value
-      .split(separator: ",")
-      .map { $0.trimmingCharacters(in: .whitespaces) }
-      .filter { !$0.isEmpty }
+    // Parse both comma-separated and space-separated date filters.
+    // The backend supports queries like: "search term created:[-1 week to now] added:[...] modified:[...]"
+    // We need to extract date filters while preserving other search terms.
 
-    var searchComponents: [String] = []
+    var remainingValue = value
+    var extractedDateFilters: [(DateRangeTarget, DateFilter.Range)] = []
 
-    for component in components {
-      if let (target, range) = parseDateRangeComponent(component) {
-        switch target {
-        case .created:
-          date.created = .range(range)
-        case .added:
-          date.added = .range(range)
-        case .modified:
-          date.modified = .range(range)
+    // Extract all date filter components (created:, added:, modified:)
+    let dateFilterPrefixes = ["created:", "added:", "modified:"]
+
+    for prefix in dateFilterPrefixes {
+      var searchStartIndex = remainingValue.startIndex
+
+      while searchStartIndex < remainingValue.endIndex,
+        let range = remainingValue.range(
+          of: prefix,
+          options: .caseInsensitive,
+          range: searchStartIndex..<remainingValue.endIndex)
+      {
+        let startIndex = range.lowerBound
+
+        // Find the end of this date filter component
+        // It ends at: comma, space (but not within brackets/quotes), or end of string
+        var endIndex = remainingValue.endIndex
+        var inBrackets = false
+        var inQuotes = false
+
+        var currentIndex = range.upperBound
+        while currentIndex < remainingValue.endIndex {
+          let char = remainingValue[currentIndex]
+
+          if char == "\"" {
+            inQuotes.toggle()
+          } else if char == "[" {
+            inBrackets = true
+          } else if char == "]" {
+            inBrackets = false
+          } else if (char == "," || char == " ") && !inBrackets && !inQuotes {
+            endIndex = currentIndex
+            break
+          }
+
+          currentIndex = remainingValue.index(after: currentIndex)
         }
-      } else {
-        searchComponents.append(component)
+
+        // Extract the component
+        let component = String(remainingValue[startIndex..<endIndex]).trimmingCharacters(
+          in: .whitespaces)
+
+        // Try to parse it as a date filter
+        if let (target, dateRange) = parseDateRangeComponent(component) {
+          extractedDateFilters.append((target, dateRange))
+
+          // Remove this component from the remaining value, preserving structure
+          // If there's a trailing separator (space or comma), remove it too
+          var removeEnd = endIndex
+          if endIndex < remainingValue.endIndex {
+            let nextChar = remainingValue[endIndex]
+            if nextChar == " " || nextChar == "," {
+              removeEnd = remainingValue.index(after: endIndex)
+            }
+          }
+          remainingValue.removeSubrange(startIndex..<removeEnd)
+
+          // Reset search to start of remaining value since we modified it
+          searchStartIndex = remainingValue.startIndex
+        } else {
+          // Not a valid date filter, continue searching after this occurrence
+          searchStartIndex = range.upperBound
+        }
       }
     }
 
-    guard !searchComponents.isEmpty else { return }
+    // Apply extracted date filters
+    for (target, range) in extractedDateFilters {
+      switch target {
+      case .created:
+        date.created = .range(range)
+      case .added:
+        date.added = .range(range)
+      case .modified:
+        date.modified = .range(range)
+      }
+    }
 
-    let combined = searchComponents.joined(separator: ",")
+    // Clean up remaining value: normalize whitespace and handle mixed separators
+    // Split by both comma and space, then rejoin appropriately
+    var tokens: [String] = []
+    var currentToken = ""
+    var inQuotes = false
+
+    for char in remainingValue {
+      if char == "\"" {
+        inQuotes.toggle()
+        currentToken.append(char)
+      } else if (char == "," || char == " ") && !inQuotes {
+        if !currentToken.isEmpty {
+          tokens.append(currentToken)
+          currentToken = ""
+        }
+      } else {
+        currentToken.append(char)
+      }
+    }
+    if !currentToken.isEmpty {
+      tokens.append(currentToken)
+    }
+
+    guard !tokens.isEmpty else { return }
+
+    let combined = tokens.joined(separator: " ")
     if searchText.isEmpty {
       searchText = combined
     } else {
-      searchText += "," + combined
+      searchText += " " + combined
     }
   }
 
