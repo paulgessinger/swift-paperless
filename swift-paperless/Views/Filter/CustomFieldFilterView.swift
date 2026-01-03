@@ -421,20 +421,24 @@ private struct SelectExactArgView: View {
 
 private struct MultiPicker<T, Content, Label>: View
 where Content: View, Label: View, T: CustomStringConvertible & Hashable {
-  var content: (T) -> Content
-  var label: () -> Label
+  let content: (T) -> Content
+  let label: () -> Label
+
+  let summary: (T) -> String
 
   let options: [T]
   @Binding var selection: [T]
 
   init(
     options: [T], selection: Binding<[T]>, @ViewBuilder content: @escaping (T) -> Content,
-    @ViewBuilder label: @escaping () -> Label
+    @ViewBuilder label: @escaping () -> Label,
+    summary: @escaping (T) -> String = { $0.description }
   ) {
     self.options = options
     _selection = selection
     self.content = content
     self.label = label
+    self.summary = summary
   }
 
   private struct OptionPickerView: View {
@@ -481,7 +485,7 @@ where Content: View, Label: View, T: CustomStringConvertible & Hashable {
         content: content)
     } label: {
       LabeledContent {
-        Text(selection.map(\.description).joined(separator: ", "))
+        Text(selection.map(summary).joined(separator: ", "))
       } label: {
         label()
       }
@@ -490,8 +494,13 @@ where Content: View, Label: View, T: CustomStringConvertible & Hashable {
 }
 
 extension MultiPicker where Label == EmptyView {
-  init(options: [T], selection: Binding<[T]>, @ViewBuilder content: @escaping (T) -> Content) {
-    self.init(options: options, selection: selection, content: content, label: { EmptyView() })
+  init(
+    options: [T], selection: Binding<[T]>, @ViewBuilder content: @escaping (T) -> Content,
+    summary: @escaping (T) -> String = { $0.description }
+  ) {
+    self.init(
+      options: options, selection: selection, content: content, label: { EmptyView() },
+      summary: summary)
   }
 }
 
@@ -502,19 +511,19 @@ private struct SelectInArgView: View {
 
   @State private var selected: [String] = []
 
-  private func optionView(_ id: String) -> some View {
-    let name = field.extraData.selectOptions.first(where: { $0.id == id })?.label ?? "???"
-    return Text(name)
+  private func optionString(_ id: String) -> String {
+    field.extraData.selectOptions.first(where: { $0.id == id })?.label ?? "???"
   }
 
   var body: some View {
     MultiPicker(
       options: field.extraData.selectOptions.map(\.id),
       selection: $selected,
-      content: { option in optionView(option) },
+      content: { option in Text(optionString(option)) },
       label: {
         Text(String(localized: .customFields(.queryArgumentLabel)))
-      }
+      },
+      summary: optionString
     )
 
     .task {
@@ -1033,5 +1042,3 @@ private struct PreviewHelper<C: View>: View {
     }
   }
 }
-
-// @TODO: Add check by sending this to the server and see if it accepts it! Show big error if not!
