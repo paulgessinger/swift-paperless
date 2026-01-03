@@ -72,26 +72,13 @@ private struct DateFilterModeView: View {
   @Binding var value: Argument
 
   @State private var modeValue: Argument
+  @State private var rangeValues: [Range] = []
+  @EnvironmentObject private var store: DocumentStore
 
   init(value: Binding<Argument>) {
     _value = value
     self._modeValue = State(initialValue: value.wrappedValue)
   }
-
-  private let rangeValues: [Range] = [
-    .within(num: -1, interval: .week),
-    .within(num: -1, interval: .month),
-    .within(num: -3, interval: .month),
-    .within(num: -1, interval: .year),
-    .currentYear,
-    .currentMonth,
-    .today,
-    .yesterday,
-    .previousWeek,
-    .previousMonth,
-    .previousQuarter,
-    .previousYear,
-  ]
 
   var body: some View {
     Group {
@@ -141,6 +128,31 @@ private struct DateFilterModeView: View {
         modeValue = value
         break
       }
+    }
+    
+    .task {
+      var rangeValues: [Range]
+      = [
+      .within(num: -1, interval: .week),
+      .within(num: -1, interval: .month),
+      .within(num: -3, interval: .month),
+      .within(num: -1, interval: .year),
+      .currentYear,
+      .currentMonth,
+      .today,
+      .yesterday,
+    ]
+      
+      if store.repository.supports(feature: .dateFilterPreviousIntervals) {
+        rangeValues += [
+        .previousWeek,
+        .previousMonth,
+        .previousQuarter,
+        .previousYear,
+        ]
+      }
+      
+      self.rangeValues = rangeValues
     }
   }
 }
