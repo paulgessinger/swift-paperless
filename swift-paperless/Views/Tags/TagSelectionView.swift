@@ -143,7 +143,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         }
       }
     }
-    .searchable(text: $searchText)
+    .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
 
     .animation(.spring, value: displayTags)
     .animation(.spring, value: store.permissions[.tag])

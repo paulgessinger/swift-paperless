@@ -451,13 +451,10 @@ struct FilterBar: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
+            SaveButton {
               dismiss()
               filterModel.filterState = filterState
               onDismiss()
-            } label: {
-              Text(.localizable(.done))
-                .accessibilityIdentifier("dismissButton")
             }
           }
         }
