@@ -175,6 +175,12 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
+  @Test func testDocumentUrl() {
+    let endpoint = Endpoint.documentUrl(documentId: 456)
+    #expect(endpoint.path == "/api/documents/456")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
   @Test func testSavedViews() {
     let endpoint = Endpoint.savedViews()
     #expect(endpoint.path == "/api/saved_views")

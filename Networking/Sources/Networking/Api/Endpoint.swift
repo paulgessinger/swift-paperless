@@ -186,6 +186,10 @@ extension Endpoint {
   public static func shareLinks(documentId: UInt) -> Endpoint {
     Endpoint(path: "/api/documents/\(documentId)/share_links")
   }
+
+  public static func documentUrl(documentId: UInt) -> Endpoint {
+    Endpoint(path: "/api/documents/\(documentId)")
+  }
 }
 
 // MARK: - Correspondents related endpoints

@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Networking
 import SwiftUI
 
 struct DocumentDetailViewVersionSelection: View {
@@ -49,12 +50,14 @@ private var editingInterface: AppSettings.EditingUserInterface {
 protocol DocumentDetailViewProtocol: View {
   init(
     store: DocumentStore,
+    connection: Connection?,
     document: Document,
     navPath: Binding<NavigationPath>?)
 }
 
 struct DocumentDetailView: View {
   @ObservedObject private var store: DocumentStore
+  @EnvironmentObject private var connectionManager: ConnectionManager
   @State var document: Document
   var navPath: Binding<NavigationPath>?
 
@@ -73,6 +76,7 @@ struct DocumentDetailView: View {
     case .v3:
       DocumentDetailViewV3(
         store: store,
+        connection: connectionManager.connection,
         document: document,
         navPath: navPath)
     default:
