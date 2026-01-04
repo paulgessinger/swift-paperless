@@ -162,10 +162,11 @@ class ReleaseNotesViewModel: ObservableObject {
 
       let releases = try JSONDecoder().decode([Release].self, from: data)
 
-      // Filter for pre-releases matching the current version
+      // Filter for pre-releases matching the current version with non-empty release notes
       let versionPrefix = "builds/\(version.version)/"
       let matchingReleases = releases.filter { release in
         release.prerelease && release.tag_name.hasPrefix(versionPrefix)
+          && !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
       }
 
       // Parse and sort by build number (descending)
