@@ -157,6 +157,7 @@ class ReleaseNotesViewModel: ObservableObject {
         let tag_name: String
         let prerelease: Bool
         let published_at: String
+        let html_url: String
       }
 
       let releases = try JSONDecoder().decode([Release].self, from: data)
@@ -197,7 +198,11 @@ class ReleaseNotesViewModel: ObservableObject {
           }
           for release in sortedReleases {
             Heading(.level2) {
-              release.name
+              if let url = URL(string: release.html_url) {
+                InlineLink(release.name, destination: url)
+              } else {
+                release.name
+              }
             }
 
             Paragraph {
@@ -209,6 +214,9 @@ class ReleaseNotesViewModel: ObservableObject {
             }
           }
         })
+    } catch {
+      Logger.shared.error("Error loading TestFlight release notes: \(error)")
+      throw error
     }
   }
 
