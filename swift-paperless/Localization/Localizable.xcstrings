@@ -1792,6 +1792,30 @@
         }
       }
     },
+    "dateAdd" : {
+      "comment" : "Used in date picker where “no date” is a valid value. This button sets the value to today",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set"
+          }
+        }
+      }
+    },
+    "dateClear" : {
+      "comment" : "Used in date picker where “no date” is a valid value. This button unsets the value",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear date"
+          }
+        }
+      }
+    },
     "dateFilterAdded" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1843,28 +1867,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This year"
-          }
-        }
-      }
-    },
-    "dateFilterDateAdd" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set"
-          }
-        }
-      }
-    },
-    "dateFilterDateClear" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear date"
           }
         }
       }

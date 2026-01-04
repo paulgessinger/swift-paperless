@@ -30,41 +30,6 @@ extension FilterState.DateFilter.Range {
   }
 }
 
-private struct ClearableDatePickerView: View {
-  @Binding private var value: Date?
-
-  init(value: Binding<Date?>) {
-    _value = value
-  }
-
-  var body: some View {
-    HStack {
-      if let unwrapped = Binding(unwrapping: $value) {
-        DatePicker(selection: unwrapped, displayedComponents: .date) {
-          Image(systemName: "xmark.circle.fill")
-            .foregroundColor(.secondary)
-            .accessibilityLabel(String(localized: .localizable(.dateFilterDateClear)))
-            .contentShape(Rectangle())
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .onTapGesture {
-              value = nil
-            }
-        }
-      } else {
-        HStack {
-          Image(systemName: "plus.circle.fill")
-          Text(.localizable(.dateFilterDateAdd))
-        }
-        .foregroundColor(.accentColor)
-        .onTapGesture {
-          value = .now
-        }
-      }
-    }
-    .animation(.spring, value: value)
-  }
-}
-
 private struct DateFilterModeView: View {
   typealias Argument = FilterState.DateFilter.Argument
   typealias Range = FilterState.DateFilter.Range
