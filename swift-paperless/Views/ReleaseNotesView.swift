@@ -61,6 +61,39 @@ class ReleaseNotesViewModel {
   static let githubUrl = #URL("https://api.github.com")
   static let githubRepo = "paulgessinger/swift-paperless"
   static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
+  static let githubApiToken: String? = nil // Set your GitHub token here for higher API rate limits
+
+  private static let cacheTimestampKey = "releaseNotesCacheTimestamp"
+  private static let cacheLifetimeSeconds: TimeInterval = 3600  // 1 hour
+
+  private func clearCacheIfNeeded() {
+    let currentVersion = AppSettings.shared.currentAppVersion
+    let lastVersion = AppSettings.shared.lastAppVersion
+
+    if currentVersion != lastVersion {
+      // Version changed, clear only the GitHub releases cache
+      if let url = URL(string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100") {
+        let request = URLRequest(url: url)
+        URLCache.shared.removeCachedResponse(for: request)
+        UserDefaults.standard.removeObject(forKey: Self.cacheTimestampKey)
+        Logger.shared.info("Cleared release notes cache due to version change")
+      }
+    }
+  }
+
+  private func shouldUseCachedData() -> Bool {
+    let defaults = UserDefaults.standard
+    guard let cacheTimestamp = defaults.object(forKey: Self.cacheTimestampKey) as? Date else {
+      return false
+    }
+
+    let elapsed = Date().timeIntervalSince(cacheTimestamp)
+    return elapsed < Self.cacheLifetimeSeconds
+  }
+
+  private func updateCacheTimestamp() {
+    UserDefaults.standard.set(Date(), forKey: Self.cacheTimestampKey)
+  }
 
   private func convertIssueReferencesToLinks(_ text: String) -> String {
     var result = text
@@ -142,7 +175,18 @@ class ReleaseNotesViewModel {
     }
 
     var request = URLRequest(url: url)
-    request.cachePolicy = .reloadIgnoringLocalCacheData
+    // Use cached data if it's still fresh, otherwise reload from network
+    request.cachePolicy =
+      shouldUseCachedData() ? .returnCacheDataElseLoad : .reloadIgnoringLocalCacheData
+    request.timeoutInterval = 30
+
+    // Add GitHub token if available
+    if let token = Self.githubApiToken {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+      Logger.shared.debug("Using GitHub API token for authenticated request")
+    } else {
+      Logger.shared.debug("Using unauthenticated GitHub API request")
+    }
 
     Logger.shared.debug(
       "Loading release notes for TestFlight config from \(url, privacy: .public)")
@@ -213,6 +257,9 @@ class ReleaseNotesViewModel {
             }
           }
         })
+
+      // Update cache timestamp after successful load
+      updateCacheTimestamp()
     } catch {
       Logger.shared.error("Error loading TestFlight release notes: \(error)")
       throw error
@@ -223,6 +270,8 @@ class ReleaseNotesViewModel {
     guard let version = appVersion else {
       return
     }
+
+    clearCacheIfNeeded()
 
     do {
       switch appConfiguration {
