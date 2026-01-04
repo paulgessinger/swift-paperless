@@ -58,6 +58,62 @@ class ReleaseNotesViewModel: ObservableObject {
 
   static let baseUrl = #URL("https://swift-paperless.gessinger.dev/release_notes/")
   static let githubUrl = #URL("https://api.github.com")
+  static let githubRepo = "paulgessinger/swift-paperless"
+  static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
+
+  private func convertIssueReferencesToLinks(_ text: String) -> String {
+    var result = text
+
+    // Convert standalone GitHub issue URLs to markdown links
+    // Only if not already in a markdown link format [text](url)
+    let urlRegex = /https:\/\/github\.com\/([\w\-]+)\/([\w\-]+)\/issues\/(\d+)/
+    // Process matches in reverse to maintain correct string indices
+    let urlMatches = Array(result.matches(of: urlRegex).reversed())
+    for match in urlMatches {
+      // Check if already in a markdown link by looking at preceding characters
+      let matchStart = match.range.lowerBound
+      let isPrecededByMarkdownLink =
+        matchStart >= result.index(result.startIndex, offsetBy: 2)
+        && result[result.index(matchStart, offsetBy: -2)..<matchStart] == "]("
+
+      guard !isPrecededByMarkdownLink else { continue }
+
+      // Only process URLs that match our repository
+      let owner = match.1
+      let repo = match.2
+      let issueNumber = match.3
+      if "\(owner)/\(repo)" == Self.githubRepo {
+        let url = result[match.range]
+        let markdownLink = "[#\(issueNumber)](\(url))"
+        result.replaceSubrange(match.range, with: markdownLink)
+      }
+    }
+
+    // Convert standalone #NUMBER references to markdown links
+    // Only if not already in a markdown link format [text](#NUMBER) or [#NUMBER]
+    let issueRegex = /#(\d+)\b/
+    // Process matches in reverse to maintain correct string indices
+    let issueMatches = Array(result.matches(of: issueRegex).reversed())
+    for match in issueMatches {
+      let matchStart = match.range.lowerBound
+
+      // Check if preceded by ]( or [
+      let isPrecededByMarkdownLink =
+        matchStart >= result.index(result.startIndex, offsetBy: 2)
+        && result[result.index(matchStart, offsetBy: -2)..<matchStart] == "]("
+      let isPrecededByBracket =
+        matchStart >= result.index(result.startIndex, offsetBy: 1)
+        && result[result.index(matchStart, offsetBy: -1)..<matchStart] == "["
+
+      guard !isPrecededByMarkdownLink && !isPrecededByBracket else { continue }
+
+      let issueNumber = match.1
+      let markdownLink = "[#\(issueNumber)](\(Self.githubIssuesBaseUrl)/\(issueNumber))"
+      result.replaceSubrange(match.range, with: markdownLink)
+    }
+
+    return result
+  }
 
   private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
     let url = Self.baseUrl.appending(path: "md").appending(path: "v\(version.version).md")
