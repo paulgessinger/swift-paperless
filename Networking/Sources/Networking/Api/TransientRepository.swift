@@ -479,7 +479,7 @@ extension TransientRepository: Repository {
   // MARK: - Share links
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
-    shareLinks.values.filter { $0.document == documentId }
+    shareLinks.values.filter { $0.document == documentId }.sorted(by: { $0.id < $1.id })
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
