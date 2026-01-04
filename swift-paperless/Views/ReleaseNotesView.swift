@@ -345,7 +345,7 @@ private struct HelperView: View {
 }
 
 #Preview("TestFlight") {
-  HelperView(version: AppVersion(version: "1.8.0", build: "142"), appConfiguration: .TestFlight)
+  HelperView(version: AppVersion(version: "1.9.0", build: "170"), appConfiguration: .TestFlight)
 }
 
 #Preview("AppStore") {
