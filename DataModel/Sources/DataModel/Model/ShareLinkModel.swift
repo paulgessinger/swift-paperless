@@ -5,7 +5,7 @@ import MetaCodable
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
-public struct ShareLink : Sendable {
+public struct ShareLink: Sendable, Equatable {
   public enum FileVersion: String, Codable, Sendable {
     case original
     case archive
@@ -19,13 +19,17 @@ public struct ShareLink : Sendable {
   public var fileVersion: FileVersion
 }
 
-extension ShareLink : Model {}
+extension ShareLink: Model {}
 
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
 public struct ProtoShareLink: Sendable {
-  public var expiration: Date?
   public var document: UInt
+
+  @Default(ifMissing: nil as Date?)
+  public var expiration: Date?
+
+  @Default(ifMissing: ShareLink.FileVersion.original)
   public var fileVersion: ShareLink.FileVersion
 }

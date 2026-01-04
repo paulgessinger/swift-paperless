@@ -173,8 +173,8 @@ struct ShareLinkModelTest {
 
   @Test func testProtoShareLinkEncoding() throws {
     let proto = ProtoShareLink(
-      expiration: datetime(year: 2026, month: 2, day: 15, hour: 10, minute: 30, second: 0, tz: tz),
       document: 25,
+      expiration: datetime(year: 2026, month: 2, day: 15, hour: 10, minute: 30, second: 0, tz: tz),
       fileVersion: .original)
 
     let encoder = JSONEncoder()
@@ -190,8 +190,8 @@ struct ShareLinkModelTest {
 
   @Test func testProtoShareLinkEncodingWithNullExpiration() throws {
     let proto = ProtoShareLink(
-      expiration: nil,
       document: 30,
+      expiration: nil,
       fileVersion: .archive)
 
     let encoder = JSONEncoder()
@@ -208,8 +208,8 @@ struct ShareLinkModelTest {
 
   @Test func testProtoShareLinkRoundTrip() throws {
     let original = ProtoShareLink(
-      expiration: datetime(year: 2026, month: 4, day: 1, hour: 0, minute: 0, second: 0, tz: tz),
       document: 99,
+      expiration: datetime(year: 2026, month: 4, day: 1, hour: 0, minute: 0, second: 0, tz: tz),
       fileVersion: .archive)
 
     let encoder = JSONEncoder()
