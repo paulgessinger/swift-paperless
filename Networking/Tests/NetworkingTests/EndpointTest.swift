@@ -169,6 +169,12 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
+  @Test func testDocumentShareLinks() {
+    let endpoint = Endpoint.shareLinks(documentId: 123)
+    #expect(endpoint.path == "/api/documents/123/share_links")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
   @Test func testSavedViews() {
     let endpoint = Endpoint.savedViews()
     #expect(endpoint.path == "/api/saved_views")
@@ -267,6 +273,18 @@ import Testing
   @Test func testAppConfiguration() {
     let endpoint = Endpoint.appConfiguration()
     #expect(endpoint.path == "/api/config")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
+  @Test func testCreateShareLink() {
+    let endpoint = Endpoint.createShareLink()
+    #expect(endpoint.path == "/api/share_links")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
+  @Test func testShareLink() {
+    let endpoint = Endpoint.shareLink(id: 42)
+    #expect(endpoint.path == "/api/share_links/42")
     #expect(endpoint.queryItems.isEmpty)
   }
 

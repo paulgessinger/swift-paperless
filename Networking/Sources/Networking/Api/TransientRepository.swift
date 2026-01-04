@@ -19,6 +19,8 @@ public class TransientRepository {
 
   private var customFields: [UInt: CustomField]
 
+  private var shareLinks: [UInt: DataModel.ShareLink]
+
   private var permissions: UserPermissions = .full
 
   private var nextId: UInt = 1
@@ -36,6 +38,7 @@ public class TransientRepository {
     savedViews = [:]
     customFields = [:]
     notesByDocument = [:]
+    shareLinks = [:]
   }
 
   private func generateId() -> UInt {
@@ -471,6 +474,30 @@ extension TransientRepository: Repository {
 
   public func suggestions(documentId _: UInt) async throws -> Suggestions {
     Suggestions(correspondents: [], tags: [], documentTypes: [], storagePaths: [], dates: [])
+  }
+
+  // MARK: - Share links
+
+  public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
+    shareLinks.values.filter { $0.document == documentId }.sorted(by: { $0.id < $1.id })
+  }
+
+  public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
+    let id = generateId()
+    let newShareLink = DataModel.ShareLink(
+      id: id,
+      created: .now,
+      expiration: shareLink.expiration,
+      slug: "share-\(id)",
+      document: shareLink.document,
+      fileVersion: shareLink.fileVersion
+    )
+    shareLinks[id] = newShareLink
+    return newShareLink
+  }
+
+  public func delete(shareLink: DataModel.ShareLink) async throws {
+    shareLinks.removeValue(forKey: shareLink.id)
   }
 }
 

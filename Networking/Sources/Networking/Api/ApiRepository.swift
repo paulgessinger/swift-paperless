@@ -963,4 +963,25 @@ extension ApiRepository: Repository {
     guard let backendVersion else { return false }
     return feature.isSupported(on: backendVersion)
   }
+
+  // MARK: - Share links
+
+  public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
+    do {
+      let request = try request(.shareLinks(documentId: documentId))
+      return try await fetchData(for: request, as: [DataModel.ShareLink].self)
+    } catch {
+      Logger.networking.error("Getting share links for document \(documentId) failed: \(error)")
+      throw error
+    }
+  }
+
+  public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
+    try await create(
+      element: shareLink, endpoint: .createShareLink(), returns: ShareLink.self)
+  }
+
+  public func delete(shareLink: DataModel.ShareLink) async throws {
+    try await delete(element: shareLink, endpoint: .shareLink(id: shareLink.id))
+  }
 }

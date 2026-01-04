@@ -377,4 +377,92 @@ import Testing
     #expect(alphaResults.count == 2)
     #expect(alphaResults.map(\.title).sorted() == ["Alpha Protocol", "Project Alpha"].sorted())
   }
+
+  @Test @MainActor func testShareLinkCRUD() async throws {
+    let repository = TransientRepository()
+
+    // Create a document first
+    let protoDoc = ProtoDocument(title: "Test Document")
+    try await repository.create(
+      document: protoDoc, file: URL(string: "file:///test.pdf")!, filename: "test.pdf"
+    )
+
+    // Create a share link
+    let protoShareLink = ProtoShareLink(
+      document: 1,
+      expiration: Calendar.current.date(byAdding: .day, value: 7, to: .now),
+      fileVersion: .original
+    )
+    let shareLink = try await repository.create(shareLink: protoShareLink)
+    #expect(shareLink.document == 1)
+    #expect(shareLink.fileVersion == .original)
+    #expect(shareLink.expiration != nil)
+    #expect(shareLink.slug == "share-\(shareLink.id)")
+
+    // Read share links for document
+    let links = try await repository.shareLinks(documentId: 1)
+    #expect(links.count == 1)
+    #expect(links.first?.id == shareLink.id)
+
+    // Create another share link for the same document
+    let protoShareLink2 = ProtoShareLink(
+      document: 1,
+      expiration: nil,
+      fileVersion: .archive
+    )
+    let shareLink2 = try await repository.create(shareLink: protoShareLink2)
+    #expect(shareLink2.document == 1)
+    #expect(shareLink2.fileVersion == .archive)
+    #expect(shareLink2.expiration == nil)
+
+    // Verify both links are returned
+    let allLinks = try await repository.shareLinks(documentId: 1)
+    #expect(allLinks.count == 2)
+
+    // Delete one share link
+    try await repository.delete(shareLink: shareLink)
+    let linksAfterDelete = try await repository.shareLinks(documentId: 1)
+    #expect(linksAfterDelete.count == 1)
+    #expect(linksAfterDelete.first?.id == shareLink2.id)
+
+    // Delete the second share link
+    try await repository.delete(shareLink: shareLink2)
+    let linksAfterSecondDelete = try await repository.shareLinks(documentId: 1)
+    #expect(linksAfterSecondDelete.isEmpty)
+  }
+
+  @Test @MainActor func testShareLinksFilterByDocument() async throws {
+    let repository = TransientRepository()
+
+    // Create two documents
+    let protoDoc1 = ProtoDocument(title: "Document 1")
+    try await repository.create(
+      document: protoDoc1, file: URL(string: "file:///test1.pdf")!, filename: "test1.pdf"
+    )
+    let protoDoc2 = ProtoDocument(title: "Document 2")
+    try await repository.create(
+      document: protoDoc2, file: URL(string: "file:///test2.pdf")!, filename: "test2.pdf"
+    )
+
+    // Create share links for both documents
+    let link1 = try await repository.create(
+      shareLink: ProtoShareLink(document: 1, expiration: nil, fileVersion: .original))
+    let link2 = try await repository.create(
+      shareLink: ProtoShareLink(document: 2, expiration: nil, fileVersion: .original))
+    let link3 = try await repository.create(
+      shareLink: ProtoShareLink(document: 1, expiration: nil, fileVersion: .archive))
+
+    // Verify filtering by document ID
+    let doc1Links = try await repository.shareLinks(documentId: 1)
+    #expect(doc1Links.count == 2)
+    #expect(doc1Links.map(\.id).sorted() == [link1.id, link3.id].sorted())
+
+    let doc2Links = try await repository.shareLinks(documentId: 2)
+    #expect(doc2Links.count == 1)
+    #expect(doc2Links.first?.id == link2.id)
+
+    // Verify non-existent document returns empty array
+    let doc3Links = try await repository.shareLinks(documentId: 999)
+    #expect(doc3Links.isEmpty)
+  }
 }

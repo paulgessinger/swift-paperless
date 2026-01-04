@@ -182,6 +182,10 @@ extension Endpoint {
   public static func createDocument() -> Endpoint {
     Endpoint(path: "/api/documents/post_document", queryItems: [])
   }
+
+  public static func shareLinks(documentId: UInt) -> Endpoint {
+    Endpoint(path: "/api/documents/\(documentId)/share_links")
+  }
 }
 
 // MARK: - Correspondents related endpoints
@@ -315,5 +319,20 @@ extension Endpoint {
   // https://github.com/paperless-ngx/paperless-ngx/pull/8195
   public static func acknowlegdeTasks() -> Endpoint {
     Endpoint(path: "/api/tasks/acknowledge")
+  }
+}
+
+// MARK: - Share link related endpoints
+extension Endpoint {
+  public static func createShareLink() -> Endpoint {
+    Endpoint(path: "/api/share_links")
+  }
+
+  public static func shareLink(id: UInt) -> Endpoint {
+    Endpoint(path: "/api/share_links/\(id)")
+  }
+
+  public static func publicUrl(forShareLink shareLink: ShareLink) -> Endpoint {
+    Endpoint(path: "/share/\(shareLink.slug)")
   }
 }

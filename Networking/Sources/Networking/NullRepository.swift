@@ -116,6 +116,18 @@ public class NullRepository: Repository {
   public nonisolated
     var delegate: (any URLSessionDelegate)?
   { nil }
+
+  // MARK: - Share links
+
+  public func shareLinks(documentId _: UInt) async throws -> [DataModel.ShareLink] { [] }
+
+  public func create(shareLink _: ProtoShareLink) async throws -> DataModel.ShareLink {
+    throw NotImplemented()
+  }
+
+  public func delete(shareLink _: DataModel.ShareLink) async throws {
+    throw NotImplemented()
+  }
 }
 
 public actor NullDocumentSource: DocumentSource {
