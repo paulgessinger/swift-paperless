@@ -195,9 +195,6 @@ class ReleaseNotesViewModel {
       // Generate combined markdown content
       status = .content(
         MarkdownContent {
-          Heading(.level1) {
-            "Release Notes TestFlight"
-          }
           for release in sortedReleases {
             Heading(.level2) {
               if let url = URL(string: release.html_url) {
@@ -248,29 +245,45 @@ class ReleaseNotesViewModel {
 private struct ReleaseNotesBareView: View {
   @Binding var model: ReleaseNotesViewModel
 
+  private var title: String {
+    var base = String(localized: .settings(.releaseNotesLabel))
+
+    if model.appConfiguration == .TestFlight {
+      base += " TestFlight"
+    }
+
+    return base
+  }
+
   var body: some View {
-    ScrollView(.vertical) {
-      switch status {
-      case .none:
-        EmptyView()
-      case .content(let content):
-        Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding()
-      case .error(let error):
-        VStack {
-          Text("😵")
-            .font(.title)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-          if let errorDescription = (error as? any LocalizedError)?.errorDescription {
-            Text("\(errorDescription)")
-          } else {
-            Text("\(error.localizedDescription)")
+    NavigationStack {
+      ScrollView(.vertical) {
+        switch model.status {
+        case .none:
+          EmptyView()
+        case .content(let content):
+          Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+        case .error(let error):
+          VStack {
+            Text("😵")
+              .font(.title)
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            if let errorDescription = (error as? any LocalizedError)?.errorDescription {
+              Text("\(errorDescription)")
+            } else {
+              Text("\(error.localizedDescription)")
+            }
           }
+          .multilineTextAlignment(.center)
+          .padding()
         }
-        .multilineTextAlignment(.center)
-        .padding()
       }
+      .refreshable {
+        await Task { await model.loadReleaseNotes() }.value
+      }
+      .navigationTitle(title)
     }
   }
 }
@@ -324,6 +337,7 @@ struct ReleaseNotesCoverView: View {
       .task {
         await releaseNotesModel.loadReleaseNotes()
       }
+
   }
 }
 
