@@ -1,2 +1,0 @@
-- Fix incorrect display of option ids instead of labels in custom field filter view for "select" custom field type
-- Add support for share links in documents
