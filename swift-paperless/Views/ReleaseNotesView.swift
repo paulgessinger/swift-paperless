@@ -89,7 +89,7 @@ class ReleaseNotesViewModel: ObservableObject {
     request.cachePolicy = .reloadIgnoringLocalCacheData
 
     Logger.shared.debug(
-      "Loading release notes for TestFlight config from \(request.url!, privacy: .public)")
+      "Loading release notes for TestFlight config from \(url, privacy: .public)")
     do {
       let (data, response) = try await URLSession.shared.getData(for: request)
       guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
@@ -180,30 +180,44 @@ struct ReleaseNotesCoverView: View {
   var body: some View {
     ReleaseNotesBareView(status: releaseNotesModel.status)
 
-      .safeAreaInset(edge: .bottom) {
-        Button {
-          releaseNotesModel.showReleaseNotes = false
-        } label: {
-          Text(.localizable(.ok))
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal)
+      .apply {
+        if #available(iOS 26.0, *) {
+          $0.safeAreaBar(edge: .bottom) {
+            Button(.localizable(.ok)) {}
+              .frame(maxWidth: .infinity, alignment: .center)
+              .font(.title2)
+              .padding()
+              .glassEffect(.regular.interactive())
+              .padding()
+
+          }
+        } else {
+          $0.safeAreaInset(edge: .bottom) {
+            Button {
+              releaseNotesModel.showReleaseNotes = false
+            } label: {
+              Text(.localizable(.ok))
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+            }
             .padding(.vertical, 10)
-        }
-        .padding(.vertical, 10)
 
-        .foregroundStyle(.white)
-        .bold()
-        .background {
-          Capsule()
-            .fill(.accent)
-        }
-        .padding()
+            .foregroundStyle(.white)
+            .bold()
+            .background {
+              Capsule()
+                .fill(.accent)
+            }
+            .padding()
 
-        .background {
-          Capsule()
-            .fill(.thickMaterial)
+            .background {
+              Capsule()
+                .fill(.thickMaterial)
+            }
+            .padding(.horizontal, 20)
+          }
         }
-        .padding(.horizontal, 20)
       }
 
       .task {
