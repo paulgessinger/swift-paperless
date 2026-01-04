@@ -25,7 +25,7 @@ struct MainView: View {
 
   @ObservedObject private var appSettings = AppSettings.shared
 
-  @StateObject private var releaseNotesModel = ReleaseNotesViewModel()
+  @State private var releaseNotesModel = ReleaseNotesViewModel()
 
   @StateObject private var biometricLockManager: BiometricLockManager
 
@@ -129,7 +129,7 @@ struct MainView: View {
     }
 
     .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
-      ReleaseNotesCoverView(releaseNotesModel: releaseNotesModel)
+      ReleaseNotesCoverView(releaseNotesModel: $releaseNotesModel)
     }
 
     .task {

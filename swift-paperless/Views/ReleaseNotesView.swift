@@ -22,8 +22,9 @@ private struct ReleaseNotesError: LocalizedError {
 }
 
 @MainActor
-class ReleaseNotesViewModel: ObservableObject {
-  @Published var showReleaseNotes = false
+@Observable
+class ReleaseNotesViewModel {
+  var showReleaseNotes = false
 
   enum Status {
     case none
@@ -31,10 +32,10 @@ class ReleaseNotesViewModel: ObservableObject {
     case error(any Error)
   }
 
-  @Published private(set) var status: Status = .none
+  private(set) var status: Status = .none
 
   private let appVersion: AppVersion?
-  private let appConfiguration: AppConfiguration?
+  let appConfiguration: AppConfiguration?
 
   init(version: AppVersion? = nil, appConfiguration: AppConfiguration? = nil) {
     appVersion = version ?? AppSettings.shared.currentAppVersion
@@ -245,7 +246,7 @@ class ReleaseNotesViewModel: ObservableObject {
 }
 
 private struct ReleaseNotesBareView: View {
-  var status: ReleaseNotesViewModel.Status
+  @Binding var model: ReleaseNotesViewModel
 
   var body: some View {
     ScrollView(.vertical) {
@@ -275,10 +276,10 @@ private struct ReleaseNotesBareView: View {
 }
 
 struct ReleaseNotesCoverView: View {
-  @ObservedObject var releaseNotesModel: ReleaseNotesViewModel
+  @Binding var releaseNotesModel: ReleaseNotesViewModel
 
   var body: some View {
-    ReleaseNotesBareView(status: releaseNotesModel.status)
+    ReleaseNotesBareView(model: $releaseNotesModel)
 
       .apply {
         if #available(iOS 26.0, *) {
@@ -327,10 +328,10 @@ struct ReleaseNotesCoverView: View {
 }
 
 struct ReleaseNotesView: View {
-  @StateObject private var model = ReleaseNotesViewModel()
+  @State private var model = ReleaseNotesViewModel()
 
   var body: some View {
-    ReleaseNotesBareView(status: model.status)
+    ReleaseNotesBareView(model: $model)
       .task {
         await model.loadReleaseNotes()
       }
@@ -338,14 +339,14 @@ struct ReleaseNotesView: View {
 }
 
 private struct HelperView: View {
-  @StateObject var model = ReleaseNotesViewModel()
+  @State var model = ReleaseNotesViewModel()
   var body: some View {
-    ReleaseNotesCoverView(releaseNotesModel: model)
+    ReleaseNotesCoverView(releaseNotesModel: $model)
   }
 
   init(version: AppVersion? = nil, appConfiguration: AppConfiguration? = nil) {
-    _model = StateObject(
-      wrappedValue: ReleaseNotesViewModel(version: version, appConfiguration: appConfiguration))
+    _model = State(
+      initialValue: ReleaseNotesViewModel(version: version, appConfiguration: appConfiguration))
   }
 }
 
