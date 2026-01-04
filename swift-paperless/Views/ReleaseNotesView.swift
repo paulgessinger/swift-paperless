@@ -293,6 +293,7 @@ class ReleaseNotesViewModel {
 
 private struct ReleaseNotesBareView: View {
   @Binding var model: ReleaseNotesViewModel
+  var showDismissButton = false
 
   private var title: String {
     var base = String(localized: .settings(.releaseNotesLabel))
@@ -333,6 +334,52 @@ private struct ReleaseNotesBareView: View {
         await Task { await model.loadReleaseNotes() }.value
       }
       .navigationTitle(title)
+
+      .apply {
+        if #available(iOS 26.0, *) {
+          $0.safeAreaBar(edge: .bottom) {
+            if showDismissButton {
+              Button(.localizable(.ok)) {
+                model.showReleaseNotes = false
+              }
+              .frame(maxWidth: .infinity, alignment: .center)
+              .font(.title2)
+              .padding()
+              .glassEffect(.regular.interactive())
+              .padding()
+
+            }
+          }
+        } else {
+          $0.safeAreaInset(edge: .bottom) {
+            if showDismissButton {
+              Button {
+                model.showReleaseNotes = false
+              } label: {
+                Text(.localizable(.ok))
+                  .frame(maxWidth: .infinity)
+                  .padding(.horizontal)
+                  .padding(.vertical, 10)
+              }
+              .padding(.vertical, 10)
+
+              .foregroundStyle(.white)
+              .bold()
+              .background {
+                Capsule()
+                  .fill(.accent)
+              }
+              .padding()
+
+              .background {
+                Capsule()
+                  .fill(.thickMaterial)
+              }
+              .padding(.horizontal, 20)
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -341,48 +388,7 @@ struct ReleaseNotesCoverView: View {
   @Binding var releaseNotesModel: ReleaseNotesViewModel
 
   var body: some View {
-    ReleaseNotesBareView(model: $releaseNotesModel)
-
-      .apply {
-        if #available(iOS 26.0, *) {
-          $0.safeAreaBar(edge: .bottom) {
-            Button(.localizable(.ok)) {}
-              .frame(maxWidth: .infinity, alignment: .center)
-              .font(.title2)
-              .padding()
-              .glassEffect(.regular.interactive())
-              .padding()
-
-          }
-        } else {
-          $0.safeAreaInset(edge: .bottom) {
-            Button {
-              releaseNotesModel.showReleaseNotes = false
-            } label: {
-              Text(.localizable(.ok))
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-            }
-            .padding(.vertical, 10)
-
-            .foregroundStyle(.white)
-            .bold()
-            .background {
-              Capsule()
-                .fill(.accent)
-            }
-            .padding()
-
-            .background {
-              Capsule()
-                .fill(.thickMaterial)
-            }
-            .padding(.horizontal, 20)
-          }
-        }
-      }
-
+    ReleaseNotesBareView(model: $releaseNotesModel, showDismissButton: true)
       .task {
         await releaseNotesModel.loadReleaseNotes()
       }
