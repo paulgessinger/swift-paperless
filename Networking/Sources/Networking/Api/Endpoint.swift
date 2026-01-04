@@ -332,7 +332,7 @@ extension Endpoint {
     Endpoint(path: "/api/share_links/\(id)")
   }
 
-  public static func publicUrl(for shareLink: ShareLink) -> Endpoint {
+  public static func publicUrl(forShareLink shareLink: ShareLink) -> Endpoint {
     Endpoint(path: "/share/\(shareLink.slug)")
   }
 }
