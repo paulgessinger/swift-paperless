@@ -78,8 +78,7 @@ class ReleaseNotesViewModel: ObservableObject {
   private func loadTestFlightReleaseNotes(for version: AppVersion) async throws {
     guard
       let url = URL(
-        string:
-          "https://api.github.com/repos/paulgessinger/swift-paperless/releases/tags/builds/\(version.version)/\(version.build)"
+        string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100"
       )
     else {
       throw ReleaseNotesError(version: appVersion)
@@ -100,22 +99,58 @@ class ReleaseNotesViewModel: ObservableObject {
         let name: String
         let body: String
         let tag_name: String
+        let prerelease: Bool
+        let published_at: String
       }
 
-      let release = try JSONDecoder().decode(Release.self, from: data)
+      let releases = try JSONDecoder().decode([Release].self, from: data)
 
+      // Filter for pre-releases matching the current version
+      let versionPrefix = "builds/\(version.version)/"
+      let matchingReleases = releases.filter { release in
+        release.prerelease && release.tag_name.hasPrefix(versionPrefix)
+      }
+
+      // Parse and sort by build number (descending)
+      let sortedReleases =
+        matchingReleases
+        .compactMap { release -> (Release, UInt)? in
+          // Extract build number from tag_name (format: "builds/{version}/{build}")
+          let components = release.tag_name.split(separator: "/")
+          guard components.count == 3,
+            let buildNumber = UInt(components[2])
+          else {
+            Logger.shared.warning("Invalid tag format: \(release.tag_name)")
+            return nil
+          }
+          return (release, buildNumber)
+        }
+        .sorted { $0.1 > $1.1 }  // Sort by build number descending
+        .map { $0.0 }  // Extract just the Release objects
+
+      // Check if we have any matching releases
+      guard !sortedReleases.isEmpty else {
+        throw ReleaseNotesError(version: appVersion)
+      }
+
+      // Generate combined markdown content
       status = .content(
         MarkdownContent {
-          Heading {
-            release.name
+          Heading(.level1) {
+            "Release Notes TestFlight"
           }
+          for release in sortedReleases {
+            Heading(.level2) {
+              release.name
+            }
 
-          Paragraph {
-            Code(release.tag_name)
-          }
+            Paragraph {
+              Code(release.tag_name)
+            }
 
-          MarkdownContent {
-            release.body
+            MarkdownContent {
+              convertIssueReferencesToLinks(release.body)
+            }
           }
         })
     }
