@@ -86,10 +86,7 @@ struct CommonPickerFilterView: View {
 
   var body: some View {
     VStack {
-      SearchBarViewiOS18(text: $searchDebounce.text)
-        .transition(.opacity)
-        .padding(.horizontal)
-        .padding(.vertical, 2)
+
       Form {
         Section {
           Row(
@@ -153,12 +150,10 @@ struct CommonPickerFilterView: View {
             }())
         }
       }
-      .overlay(
-        Rectangle()
-          .fill(Color(.divider))
-          .frame(maxWidth: .infinity, maxHeight: 1),
-        alignment: .top
-      )
+
+      .animation(.spring, value: searchDebounce.debouncedText)
+
+      .searchable(text: $searchDebounce.text, placement: .navigationBarDrawer(displayMode: .always))
     }
 
     .navigationBarTitleDisplayMode(.inline)
@@ -417,7 +412,7 @@ where
     .animation(.spring, value: permissions)
     .animation(.spring, value: document)
 
-    .searchable(text: $searchDebounce.text)
+    .searchable(text: $searchDebounce.text, placement: .navigationBarDrawer(displayMode: .always))
 
     .refreshable {
       await Task {

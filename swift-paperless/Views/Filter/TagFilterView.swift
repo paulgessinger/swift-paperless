@@ -125,13 +125,6 @@ struct TagFilterView: View {
 
   var body: some View {
     VStack {
-      VStack {
-        SearchBarViewiOS18(text: $searchDebounce.text)
-      }
-      .transition(.opacity)
-      .padding(.horizontal)
-      .padding(.vertical, 2)
-
       Form {
         Section {
           row(
@@ -227,12 +220,8 @@ struct TagFilterView: View {
             }())
         }
       }
-      .overlay(
-        Rectangle()
-          .fill(Color(.divider))
-          .frame(maxWidth: .infinity, maxHeight: 1),
-        alignment: .top
-      )
+
+      .searchable(text: $searchDebounce.text, placement: .navigationBarDrawer(displayMode: .always))
     }
 
     .onChange(of: mode) { _, value in
@@ -268,6 +257,14 @@ struct TagFilterView: View {
 
   @Previewable @State var filterState = FilterState.default
 
-  TagFilterView(selectedTags: $filterState.tags)
-    .environmentObject(store)
+  NavigationStack {
+    TagFilterView(selectedTags: $filterState.tags)
+      .environmentObject(store)
+
+      .toolbar {
+        ToolbarItem {
+          SaveButton {}
+        }
+      }
+  }
 }
