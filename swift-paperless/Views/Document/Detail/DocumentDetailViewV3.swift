@@ -328,6 +328,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   @State private var dragOffset = CGSize.zero
   @State private var dragging = false
 
+  @State private var showShareLinkSheet = false
+
   @State private var safeAreaInsets = EdgeInsets()
   @State private var shareLinkUrl: URL?
 
@@ -661,11 +663,11 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
           .tint(.accent)
           .overlay {
             Menu {
-              // @TODO: Implement share links
-              //                            Button {
-              //                            } label: {
-              //                                Label(localized: .localizable(.shareLink), systemImage: "link")
-              //                            }
+              Button {
+                showShareLinkSheet = true
+              } label: {
+                Label(localized: .localizable(.shareLink), systemImage: "link")
+              }
 
               // @TODO: Implement app deep links
               //                            Button {
@@ -683,6 +685,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
             }
           }
       }
+    }
+
+    .sheet(isPresented: $showShareLinkSheet) {
+      ShareLinkView(document: viewModel.document)
     }
 
     .sheet(isPresented: $showEditSheet) {
