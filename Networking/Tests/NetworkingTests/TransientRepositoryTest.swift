@@ -389,8 +389,8 @@ import Testing
 
     // Create a share link
     let protoShareLink = ProtoShareLink(
-      expiration: Calendar.current.date(byAdding: .day, value: 7, to: .now),
       document: 1,
+      expiration: Calendar.current.date(byAdding: .day, value: 7, to: .now),
       fileVersion: .original
     )
     let shareLink = try await repository.create(shareLink: protoShareLink)
@@ -406,8 +406,8 @@ import Testing
 
     // Create another share link for the same document
     let protoShareLink2 = ProtoShareLink(
-      expiration: nil,
       document: 1,
+      expiration: nil,
       fileVersion: .archive
     )
     let shareLink2 = try await repository.create(shareLink: protoShareLink2)
@@ -446,11 +446,11 @@ import Testing
 
     // Create share links for both documents
     let link1 = try await repository.create(
-      shareLink: ProtoShareLink(expiration: nil, document: 1, fileVersion: .original))
+      shareLink: ProtoShareLink(document: 1, expiration: nil, fileVersion: .original))
     let link2 = try await repository.create(
-      shareLink: ProtoShareLink(expiration: nil, document: 2, fileVersion: .original))
+      shareLink: ProtoShareLink(document: 2, expiration: nil, fileVersion: .original))
     let link3 = try await repository.create(
-      shareLink: ProtoShareLink(expiration: nil, document: 1, fileVersion: .archive))
+      shareLink: ProtoShareLink(document: 1, expiration: nil, fileVersion: .archive))
 
     // Verify filtering by document ID
     let doc1Links = try await repository.shareLinks(documentId: 1)
