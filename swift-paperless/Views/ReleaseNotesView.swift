@@ -61,7 +61,7 @@ class ReleaseNotesViewModel {
   static let githubUrl = #URL("https://api.github.com")
   static let githubRepo = "paulgessinger/swift-paperless"
   static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
-  static let githubApiToken: String? = nil // Set your GitHub token here for higher API rate limits
+  static let githubApiToken: String? = nil  // Set your GitHub token here for higher API rate limits
 
   private static let cacheTimestampKey = "releaseNotesCacheTimestamp"
   private static let cacheLifetimeSeconds: TimeInterval = 3600  // 1 hour
