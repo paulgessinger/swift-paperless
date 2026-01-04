@@ -967,17 +967,21 @@ extension ApiRepository: Repository {
   // MARK: - Share links
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
-    // TODO: Implement
-    fatalError("Not yet implemented")
+    do {
+      let request = try request(.shareLinks(documentId: documentId))
+      return try await fetchData(for: request, as: [DataModel.ShareLink].self)
+    } catch {
+      Logger.networking.error("Getting share links for document \(documentId) failed: \(error)")
+      throw error
+    }
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
-    // TODO: Implement
-    fatalError("Not yet implemented")
+    try await create(
+      element: shareLink, endpoint: .createShareLink(), returns: ShareLink.self)
   }
 
   public func delete(shareLink: DataModel.ShareLink) async throws {
-    // TODO: Implement
-    fatalError("Not yet implemented")
+    try await delete(element: shareLink, endpoint: .shareLink(id: shareLink.id))
   }
 }
