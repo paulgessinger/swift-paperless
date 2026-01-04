@@ -388,10 +388,14 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
   }
 
-  init(store: DocumentStore, document: Document, navPath: Binding<NavigationPath>?) {
+  init(
+    store: DocumentStore, connection: Connection?, document: Document,
+    navPath: Binding<NavigationPath>?
+  ) {
     _viewModel = State(
       initialValue: DocumentDetailModel(
         store: store,
+        connection: connection,
         document: document))
     self.navPath = navPath
   }
@@ -669,6 +673,12 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 Label(localized: .localizable(.shareLink), systemImage: "link")
               }
 
+              if let url = viewModel.documentUrl {
+                ShareLink(item: url) {
+                  Label(localized: .localizable(.documentLink), systemImage: "safari")
+                }
+              }
+
               // @TODO: Implement app deep links
               //                            Button {
               //                            } label: {
@@ -677,7 +687,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
               if case .loaded(let url) = viewModel.download {
                 ShareLink(item: url) {
-                  Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.up")
+                  Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.down")
                 }
               }
             } label: {
@@ -847,6 +857,7 @@ private struct WebViewInternal: UIViewRepresentable {
 private struct PreviewHelper: View {
   @StateObject var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
   @StateObject var errorController = ErrorController()
+  @StateObject var connectionManager = ConnectionManager(previewMode: true)
 
   @State var document: Document?
   @State var navPath = NavigationPath()
@@ -861,7 +872,9 @@ private struct PreviewHelper: View {
     NavigationStack {
       VStack {
         if let document {
-          DocumentDetailViewV3(store: store, document: document, navPath: $navPath)
+          DocumentDetailViewV3(
+            store: store, connection: connectionManager.connection, document: document,
+            navPath: $navPath)
         } else {
           Text("No document")
         }

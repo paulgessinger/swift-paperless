@@ -7,6 +7,7 @@
 
 import DataModel
 import Foundation
+import Networking
 import SwiftUI
 import os
 
@@ -34,6 +35,8 @@ class DocumentDetailModel {
 
   @ObservationIgnored
   var store: DocumentStore
+  @ObservationIgnored
+  var connection: Connection?
 
   var document: Document
 
@@ -43,9 +46,10 @@ class DocumentDetailModel {
   var metadata: Metadata?
 
   init(
-    store: DocumentStore, document: Document
+    store: DocumentStore, connection: Connection?, document: Document
   ) {
     self.store = store
+    self.connection = connection
     self.document = document
   }
 
@@ -114,5 +118,10 @@ class DocumentDetailModel {
 
   var userCanView: Bool {
     store.userCanView(document: document)
+  }
+
+  var documentUrl: URL? {
+    guard let connection else { return nil }
+    return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
 }

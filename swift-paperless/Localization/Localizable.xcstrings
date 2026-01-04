@@ -3070,6 +3070,17 @@
         }
       }
     },
+    "documentLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal link"
+          }
+        }
+      }
+    },
     "documents" : {
       "extractionState" : "manual",
       "localizations" : {
