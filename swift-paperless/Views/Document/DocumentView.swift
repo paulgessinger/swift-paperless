@@ -7,6 +7,7 @@
 
 import AsyncAlgorithms
 import Combine
+import Common
 import DataModel
 import Networking
 import PhotosUI
@@ -371,6 +372,20 @@ struct DocumentView: View {
 
       .sheet(isPresented: $showSettings) {
         SettingsView()
+      }
+
+      .onOpenURL { url in
+        Logger.shared.info("OpenURL in document view: \(url)")
+        guard let route = Route(from: url) else {
+          return
+        }
+
+        switch route.action {
+        case .scan:
+          showDocumentScanner = true
+        default:
+          break
+        }
       }
 
       .task {

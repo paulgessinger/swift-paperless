@@ -761,7 +761,6 @@ private struct WebView: View, Equatable {
 
         TapGesture()
           .onEnded {
-            print("tap")
             if let tapTask {
               // tap task already pending, we tapped shortly before and a likely now double tapping
               tapTask.cancel()

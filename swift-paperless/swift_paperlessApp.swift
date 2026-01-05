@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import Common
 import Networking
 import SwiftUI
 import os
@@ -35,6 +36,17 @@ struct MainView: View {
     _errorController = StateObject(wrappedValue: errorController)
     _biometricLockManager = StateObject(
       wrappedValue: BiometricLockManager(errorController: errorController))
+  }
+
+  private func handleUrlOpen(_ url: URL) {
+    Logger.shared.info("App opened with URL: \(url)")
+
+    guard let route = Route(from: url) else {
+      Logger.shared.error("Unable to parse route from URL: \(url)")
+      return
+    }
+
+    Logger.shared.info("Parsed route is: \(String(describing: route))")
   }
 
   private func refreshConnection(animated: Bool) {
@@ -175,6 +187,8 @@ struct MainView: View {
         break
       }
     }
+
+    .onOpenURL(perform: handleUrlOpen)
   }
 }
 
