@@ -191,7 +191,7 @@ class ConnectionManager: ObservableObject {
   }
 
   @UserDefaultsBacked("ActiveConnectionId", storage: .group)
-  private(set) var activeConnectionId: UUID? = nil {
+  var activeConnectionId: UUID? = nil {
     willSet {
       objectWillChange.send()
     }

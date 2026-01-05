@@ -11421,6 +11421,28 @@
         }
       }
     },
+    "urlCallbackDocumentNotFound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document with id %u was not found on server %@."
+          }
+        }
+      }
+    },
+    "urlCallbackDocumentNotFoundTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document not found"
+          }
+        }
+      }
+    },
     "user" : {
       "extractionState" : "manual",
       "localizations" : {

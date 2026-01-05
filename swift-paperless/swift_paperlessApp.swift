@@ -29,6 +29,8 @@ struct MainView: View {
   @State private var releaseNotesModel = ReleaseNotesViewModel()
 
   @StateObject private var biometricLockManager: BiometricLockManager
+  
+  @State private var routeManager = RouteManager()
 
   init() {
     _ = AppSettings.shared
@@ -40,16 +42,77 @@ struct MainView: View {
 
   private func handleUrlOpen(_ url: URL) {
     Logger.shared.info("App opened with URL: \(url)")
-
+    
     guard let route = Route(from: url) else {
       Logger.shared.error("Unable to parse route from URL: \(url)")
       return
     }
 
     Logger.shared.info("Parsed route is: \(String(describing: route))")
+    
+    // @TODO: Handle potential connection change at this level before assigning
+    
+    let targetConnection: StoredConnection? = {
+        
+      Logger.shared.info("Attempting to change connection to \(route.server)")
+      
+      guard let target = manager.connections.first(where: { element in
+        let conn = element.value
+        
+        guard var connComponents = URLComponents(url: conn.url, resolvingAgainstBaseURL: false) else {
+          return false
+        }
+
+        // need to add a scheme since username parsing ostensibly depends on it
+        let scheme = connComponents.scheme ?? "http"
+        connComponents.scheme = scheme
+        guard let routeComponents = URLComponents(string: "\(scheme)://\(route.server)") else {
+          return false
+        }
+
+        // if route url has user, copy over for comparison
+        if routeComponents.user != nil {
+          // incoming route has no user, check against no-user stored urls
+          connComponents.user = conn.user.username
+        }
+        
+        guard let connString = connComponents.url?.absoluteString, let routeString = routeComponents.url?.absoluteString else {
+          return false
+        }
+        
+        
+        return connString == routeString
+        
+        
+      }) else {
+        return nil
+      }
+      
+      return target.value
+    }()
+    
+    
+    Task {
+      if let targetConnection {
+        Logger.shared.info("Identified \(String(describing: targetConnection)) as the target connection")
+        if manager.activeConnectionId == targetConnection.id {
+          Logger.shared.debug("Active connection is already \(targetConnection.id), not changing")
+        }
+        else {
+          Logger.shared.debug("Changing active connection to \(targetConnection.id)")
+          manager.activeConnectionId = targetConnection.id
+          await refreshConnection(animated: false)
+        }
+      }
+      else {
+        Logger.shared.warning("Unable to change connection to \(route.server) to accomodate route request")
+      }
+      
+      routeManager.pendingRoute = route
+    }
   }
 
-  private func refreshConnection(animated: Bool) {
+  private func refreshConnection(animated: Bool) async {
     Logger.api.info("Connection info changed, reloading!")
     if let conn = manager.connection {
       storeReady = false
@@ -65,27 +128,23 @@ struct MainView: View {
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
       if let store {
-        Task {
-          await sleep(.seconds(0.1))
-          store.eventPublisher.send(.repositoryWillChange)
-          await sleep(.seconds(0.3))
-          await store.set(
-            repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-          storeReady = true
-          try? await store.fetchAll()
-          store.startTaskPolling()
-          await sleep(.seconds(0.3))
-          showLoadingScreen = false
-        }
+        await sleep(.seconds(0.1))
+        store.eventPublisher.send(.repositoryWillChange)
+        await sleep(.seconds(0.3))
+        await store.set(
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        storeReady = true
+        try? await store.fetchAll()
+        store.startTaskPolling()
+        await sleep(.seconds(0.3))
+        showLoadingScreen = false
       } else {
-        Task {
-          store = await DocumentStore(
-            repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-          storeReady = true
-          try? await store!.fetchAll()
-          store!.startTaskPolling()
-          showLoadingScreen = false
-        }
+        store = await DocumentStore(
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        storeReady = true
+        try? await store!.fetchAll()
+        store!.startTaskPolling()
+        showLoadingScreen = false
       }
       showLoginScreen = false
     } else {
@@ -104,6 +163,7 @@ struct MainView: View {
             .errorOverlay(errorController: errorController)
             .environmentObject(store!)
             .environmentObject(manager)
+            .environment(routeManager)
 
             .overlay {
               if AppSettings.shared.enableBiometricAppLock,
@@ -148,7 +208,7 @@ struct MainView: View {
       biometricLockManager.lockIfEnabled()
 
       Logger.shared.notice("Checking login status")
-      refreshConnection(animated: initialDisplay)
+      await refreshConnection(animated: initialDisplay)
       initialDisplay = false
 
       // @TODO: Remove in a few versions
@@ -161,7 +221,7 @@ struct MainView: View {
     .onReceive(manager.eventPublisher) { event in
       switch event {
       case .connectionChange(let animated):
-        refreshConnection(animated: animated)
+        Task { await refreshConnection(animated: animated) }
       case .logout:
         showLoginScreen = true
       }
