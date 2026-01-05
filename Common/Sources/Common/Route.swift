@@ -15,7 +15,7 @@ public struct Route: Equatable, Sendable {
   }
 
   public let action: Action
-  public let server: String
+  public let server: String?
 
   public init?(from: URL) {
     guard let components = URLComponents(url: from, resolvingAgainstBaseURL: false) else {
@@ -26,14 +26,12 @@ public struct Route: Equatable, Sendable {
       return nil
     }
 
+    // Parse optional server from query string
+    server = components.queryItems?.first(where: { $0.name == "server" })?.value
+
     var parts = components.path.split(separator: "/")
 
-    guard parts.count >= 2 else {
-      return nil
-    }
-
-    server = String(parts.removeFirst())
-    guard !server.isEmpty else {
+    guard parts.count >= 1 else {
       return nil
     }
 

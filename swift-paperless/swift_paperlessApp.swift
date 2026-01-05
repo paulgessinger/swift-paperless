@@ -29,8 +29,8 @@ struct MainView: View {
   @State private var releaseNotesModel = ReleaseNotesViewModel()
 
   @StateObject private var biometricLockManager: BiometricLockManager
-  
-  @State private var routeManager = RouteManager()
+
+  @Environment(RouteManager.self) private var routeManager
 
   init() {
     _ = AppSettings.shared
@@ -42,72 +42,81 @@ struct MainView: View {
 
   private func handleUrlOpen(_ url: URL) {
     Logger.shared.info("App opened with URL: \(url)")
-    
+
     guard let route = Route(from: url) else {
       Logger.shared.error("Unable to parse route from URL: \(url)")
       return
     }
 
     Logger.shared.info("Parsed route is: \(String(describing: route))")
-    
+
     // @TODO: Handle potential connection change at this level before assigning
-    
+
     let targetConnection: StoredConnection? = {
-        
-      Logger.shared.info("Attempting to change connection to \(route.server)")
-      
-      guard let target = manager.connections.first(where: { element in
-        let conn = element.value
-        
-        guard var connComponents = URLComponents(url: conn.url, resolvingAgainstBaseURL: false) else {
-          return false
-        }
 
-        // need to add a scheme since username parsing ostensibly depends on it
-        let scheme = connComponents.scheme ?? "http"
-        connComponents.scheme = scheme
-        guard let routeComponents = URLComponents(string: "\(scheme)://\(route.server)") else {
-          return false
-        }
-
-        // if route url has user, copy over for comparison
-        if routeComponents.user != nil {
-          // incoming route has no user, check against no-user stored urls
-          connComponents.user = conn.user.username
-        }
-        
-        guard let connString = connComponents.url?.absoluteString, let routeString = routeComponents.url?.absoluteString else {
-          return false
-        }
-        
-        
-        return connString == routeString
-        
-        
-      }) else {
+      guard let server = route.server else {
+        // no incoming server, assume current server
         return nil
       }
-      
+
+      Logger.shared.info("Attempting to change connection to \(server)")
+
+      guard
+        let target = manager.connections.first(where: { element in
+          let conn = element.value
+
+          guard var connComponents = URLComponents(url: conn.url, resolvingAgainstBaseURL: false)
+          else {
+            return false
+          }
+
+          // need to add a scheme since username parsing ostensibly depends on it
+          let scheme = connComponents.scheme ?? "http"
+          connComponents.scheme = scheme
+          guard let routeComponents = URLComponents(string: "\(scheme)://\(server)") else {
+            return false
+          }
+
+          // if route url has user, copy over for comparison
+          if routeComponents.user != nil {
+            // incoming route has no user, check against no-user stored urls
+            connComponents.user = conn.user.username
+          }
+
+          guard let connString = connComponents.url?.absoluteString,
+            let routeString = routeComponents.url?.absoluteString
+          else {
+            return false
+          }
+
+          return connString == routeString
+
+        })
+      else {
+        return nil
+      }
+
       return target.value
     }()
-    
-    
+
     Task {
       if let targetConnection {
-        Logger.shared.info("Identified \(String(describing: targetConnection)) as the target connection")
+        Logger.shared.info(
+          "Identified \(String(describing: targetConnection)) as the target connection")
         if manager.activeConnectionId == targetConnection.id {
           Logger.shared.debug("Active connection is already \(targetConnection.id), not changing")
-        }
-        else {
+        } else {
           Logger.shared.debug("Changing active connection to \(targetConnection.id)")
           manager.activeConnectionId = targetConnection.id
           await refreshConnection(animated: false)
         }
+      } else {
+        if let server = route.server {
+          Logger.shared.warning(
+            "Unable to change connection to \(server) to accomodate route request")
+        }
       }
-      else {
-        Logger.shared.warning("Unable to change connection to \(route.server) to accomodate route request")
-      }
-      
+
       routeManager.pendingRoute = route
     }
   }
@@ -155,6 +164,18 @@ struct MainView: View {
     }
   }
 
+  private func setupQuickActions() {
+    let inboxAction = UIApplicationShortcutItem(
+      type: "com.paulgessinger.swift-paperless.ActionScan",
+      localizedTitle: String(localized: .localizable(.scanDocument)),
+      localizedSubtitle: nil,
+      icon: UIApplicationShortcutIcon(systemImageName: "document.viewfinder"),
+      userInfo: ["url": "x-paperless://v1/action/scan" as any NSSecureCoding]
+    )
+
+    UIApplication.shared.shortcutItems = [inboxAction]
+  }
+
   var body: some View {
     VStack {
       ZStack {
@@ -163,7 +184,6 @@ struct MainView: View {
             .errorOverlay(errorController: errorController)
             .environmentObject(store!)
             .environmentObject(manager)
-            .environment(routeManager)
 
             .overlay {
               if AppSettings.shared.enableBiometricAppLock,
@@ -207,6 +227,10 @@ struct MainView: View {
     .task {
       biometricLockManager.lockIfEnabled()
 
+      Logger.shared.info("INITIAL ROUTE: \(String(describing:RouteManager.shared.pendingURL))")
+      Logger.shared.info("INITIAL ROUTE: \(String(describing:routeManager.pendingURL))")
+      setupQuickActions()
+
       Logger.shared.notice("Checking login status")
       await refreshConnection(animated: initialDisplay)
       initialDisplay = false
@@ -249,14 +273,23 @@ struct MainView: View {
     }
 
     .onOpenURL(perform: handleUrlOpen)
+    .onChange(of: routeManager.pendingURL, initial: true) {
+      if let url = routeManager.pendingURL {
+        handleUrlOpen(url)
+        routeManager.pendingURL = nil
+      }
+    }
   }
 }
 
 @main
 struct swift_paperlessApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
   var body: some Scene {
     WindowGroup {
       MainView()
+        .environment(RouteManager.shared)
     }
   }
 }

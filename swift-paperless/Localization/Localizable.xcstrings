@@ -7282,6 +7282,9 @@
         }
       }
     },
+    "S" : {
+      "extractionState" : "manual"
+    },
     "save" : {
       "extractionState" : "manual",
       "localizations" : {

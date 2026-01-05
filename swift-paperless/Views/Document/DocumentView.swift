@@ -39,10 +39,10 @@ extension NavigationPath {
   }
 }
 
-struct DocumentNotFoundError : DisplayableError {
+struct DocumentNotFoundError: DisplayableError {
   let id: UInt
   let connection: StoredConnection
-  
+
   var message: String {
     String(localized: .localizable(.urlCallbackDocumentNotFoundTitle))
   }
@@ -80,7 +80,7 @@ struct DocumentView: View {
   @State private var showDataScanner = false
   @State private var taskViewNavState: NavigationState? = nil
   @State private var showSettings = false
-  
+
   private func createCallback() {
     importModel.pop()
     if importModel.done {
@@ -100,12 +100,12 @@ struct DocumentView: View {
       fatalError()
     }
   }
-  
+
   private func handlePendingRoute() {
     guard let route = routeManager.pendingRoute else {
       return
     }
-    
+
     func clear() async {
       if showDocumentScanner {
         showDocumentScanner = false
@@ -117,26 +117,28 @@ struct DocumentView: View {
         }
       }
     }
-    
+
     Task {
-    switch route.action {
-    case .scan:
-      routeManager.pendingRoute = nil
-      Logger.shared.info("Opening document scanner from URL ")
-      await clear()
-      showDocumentScanner = true
-    case .document(let id):
+      switch route.action {
+      case .scan:
+        routeManager.pendingRoute = nil
+        Logger.shared.info("Opening document scanner from URL ")
+        await clear()
+        showDocumentScanner = true
+      case .document(let id):
         routeManager.pendingRoute = nil
         Logger.shared.info("Opening document id \(id) from URL")
         do {
           guard let document = try await store.document(id: id) else {
             Logger.shared.error("Document with id \(id) was not found")
-            if let connId = connectionManager.activeConnectionId, let connection = connectionManager.connections[connId] {
+            if let connId = connectionManager.activeConnectionId,
+              let connection = connectionManager.connections[connId]
+            {
               errorController.push(error: DocumentNotFoundError(id: id, connection: connection))
             }
             return
           }
-          
+
           await clear()
           navPath.append(NavigationState.detail(document: document))
         }
@@ -429,7 +431,7 @@ struct DocumentView: View {
       .sheet(isPresented: $showSettings) {
         SettingsView()
       }
-      
+
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
       .task {
