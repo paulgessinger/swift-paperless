@@ -12,7 +12,6 @@
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
 		7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C42A5EB08D00C18B44 /* NukeUI */; };
-		7A4631552F0C5D100006728E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4631542F0C5D0E0006728E /* AppDelegate.swift */; };
 		7A4AA8EE29BB969400D845A2 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7A4AA90329BE048800D845A2 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA90229BE048800D845A2 /* Flow */; };
 		7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA91929BE730B00D845A2 /* Semaphore */; };
@@ -73,7 +72,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7A4631542F0C5D0E0006728E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7A4AA8E429BB969400D845A2 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4D58862D13563B00FCB1F1 /* DataModel */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DataModel; sourceTree = "<group>"; };
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +122,7 @@
 		7AC40FA72D134EDE003F68B1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppDelegate.swift,
 				BiometricLockManager.swift,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
@@ -319,7 +318,6 @@
 		7AC40CAA2D134ED1003F68B1 /* swift-paperless */ = {
 			isa = PBXGroup;
 			children = (
-				7A4631542F0C5D0E0006728E /* AppDelegate.swift */,
 				7AC411782D134FDB003F68B1 /* ViewModel */,
 				7AC411772D134F85003F68B1 /* Document */,
 				7AC40DFC2D134EDE003F68B1 /* Localization */,
@@ -582,7 +580,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A4631552F0C5D100006728E /* AppDelegate.swift in Sources */,
 				7AC40DBE2D134ED1003F68B1 /* swift_paperlessApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
