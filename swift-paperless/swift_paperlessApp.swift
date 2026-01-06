@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import Common
 import Networking
 import SwiftUI
 import os
@@ -29,6 +30,8 @@ struct MainView: View {
 
   @StateObject private var biometricLockManager: BiometricLockManager
 
+  @Environment(RouteManager.self) private var routeManager
+
   init() {
     _ = AppSettings.shared
     let errorController = ErrorController()
@@ -37,7 +40,88 @@ struct MainView: View {
       wrappedValue: BiometricLockManager(errorController: errorController))
   }
 
-  private func refreshConnection(animated: Bool) {
+  private func handleUrlOpen(_ url: URL) {
+    Logger.shared.info("App opened with URL: \(url)")
+
+    guard let route = Route(from: url) else {
+      Logger.shared.error("Unable to parse route from URL: \(url)")
+      return
+    }
+
+    Logger.shared.info("Parsed route is: \(String(describing: route))")
+
+    // @TODO: Handle potential connection change at this level before assigning
+
+    let targetConnection: StoredConnection? = {
+
+      guard let server = route.server else {
+        // no incoming server, assume current server
+        return nil
+      }
+
+      Logger.shared.info("Attempting to change connection to \(server)")
+
+      guard
+        let target = manager.connections.first(where: { element in
+          let conn = element.value
+
+          guard var connComponents = URLComponents(url: conn.url, resolvingAgainstBaseURL: false)
+          else {
+            return false
+          }
+
+          // need to add a scheme since username parsing ostensibly depends on it
+          let scheme = connComponents.scheme ?? "http"
+          connComponents.scheme = scheme
+          guard let routeComponents = URLComponents(string: "\(scheme)://\(server)") else {
+            return false
+          }
+
+          // if route url has user, copy over for comparison
+          if routeComponents.user != nil {
+            // incoming route has no user, check against no-user stored urls
+            connComponents.user = conn.user.username
+          }
+
+          guard let connString = connComponents.url?.absoluteString,
+            let routeString = routeComponents.url?.absoluteString
+          else {
+            return false
+          }
+
+          return connString == routeString
+
+        })
+      else {
+        return nil
+      }
+
+      return target.value
+    }()
+
+    Task {
+      if let targetConnection {
+        Logger.shared.info(
+          "Identified \(String(describing: targetConnection)) as the target connection")
+        if manager.activeConnectionId == targetConnection.id {
+          Logger.shared.debug("Active connection is already \(targetConnection.id), not changing")
+        } else {
+          Logger.shared.debug("Changing active connection to \(targetConnection.id)")
+          manager.activeConnectionId = targetConnection.id
+          await refreshConnection(animated: false)
+        }
+      } else {
+        if let server = route.server {
+          Logger.shared.warning(
+            "Unable to change connection to \(server) to accomodate route request")
+        }
+      }
+
+      routeManager.pendingRoute = route
+    }
+  }
+
+  private func refreshConnection(animated: Bool) async {
     Logger.api.info("Connection info changed, reloading!")
     if let conn = manager.connection {
       storeReady = false
@@ -53,27 +137,23 @@ struct MainView: View {
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
       if let store {
-        Task {
-          await sleep(.seconds(0.1))
-          store.eventPublisher.send(.repositoryWillChange)
-          await sleep(.seconds(0.3))
-          await store.set(
-            repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-          storeReady = true
-          try? await store.fetchAll()
-          store.startTaskPolling()
-          await sleep(.seconds(0.3))
-          showLoadingScreen = false
-        }
+        await sleep(.seconds(0.1))
+        store.eventPublisher.send(.repositoryWillChange)
+        await sleep(.seconds(0.3))
+        await store.set(
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        storeReady = true
+        try? await store.fetchAll()
+        store.startTaskPolling()
+        await sleep(.seconds(0.3))
+        showLoadingScreen = false
       } else {
-        Task {
-          store = await DocumentStore(
-            repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-          storeReady = true
-          try? await store!.fetchAll()
-          store!.startTaskPolling()
-          showLoadingScreen = false
-        }
+        store = await DocumentStore(
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        storeReady = true
+        try? await store!.fetchAll()
+        store!.startTaskPolling()
+        showLoadingScreen = false
       }
       showLoginScreen = false
     } else {
@@ -82,6 +162,18 @@ struct MainView: View {
       showLoginScreen = true
       showLoadingScreen = false
     }
+  }
+
+  private func setupQuickActions() {
+    let inboxAction = UIApplicationShortcutItem(
+      type: "com.paulgessinger.swift-paperless.ActionScan",
+      localizedTitle: String(localized: .localizable(.scanDocument)),
+      localizedSubtitle: nil,
+      icon: UIApplicationShortcutIcon(systemImageName: "document.viewfinder"),
+      userInfo: ["url": "x-paperless://v1/action/scan" as any NSSecureCoding]
+    )
+
+    UIApplication.shared.shortcutItems = [inboxAction]
   }
 
   var body: some View {
@@ -135,8 +227,12 @@ struct MainView: View {
     .task {
       biometricLockManager.lockIfEnabled()
 
+      Logger.shared.info("INITIAL ROUTE: \(String(describing:RouteManager.shared.pendingURL))")
+      Logger.shared.info("INITIAL ROUTE: \(String(describing:routeManager.pendingURL))")
+      setupQuickActions()
+
       Logger.shared.notice("Checking login status")
-      refreshConnection(animated: initialDisplay)
+      await refreshConnection(animated: initialDisplay)
       initialDisplay = false
 
       // @TODO: Remove in a few versions
@@ -149,7 +245,7 @@ struct MainView: View {
     .onReceive(manager.eventPublisher) { event in
       switch event {
       case .connectionChange(let animated):
-        refreshConnection(animated: animated)
+        Task { await refreshConnection(animated: animated) }
       case .logout:
         showLoginScreen = true
       }
@@ -175,14 +271,25 @@ struct MainView: View {
         break
       }
     }
+
+    .onOpenURL(perform: handleUrlOpen)
+    .onChange(of: routeManager.pendingURL, initial: true) {
+      if let url = routeManager.pendingURL {
+        handleUrlOpen(url)
+        routeManager.pendingURL = nil
+      }
+    }
   }
 }
 
 @main
 struct swift_paperlessApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
   var body: some Scene {
     WindowGroup {
       MainView()
+        .environment(RouteManager.shared)
     }
   }
 }

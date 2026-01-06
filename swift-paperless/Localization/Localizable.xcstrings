@@ -7282,6 +7282,9 @@
         }
       }
     },
+    "S" : {
+      "extractionState" : "manual"
+    },
     "save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11417,6 +11420,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arayüz ayarları"
+          }
+        }
+      }
+    },
+    "urlCallbackDocumentNotFound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document with id %u was not found on server %@."
+          }
+        }
+      }
+    },
+    "urlCallbackDocumentNotFoundTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document not found"
           }
         }
       }

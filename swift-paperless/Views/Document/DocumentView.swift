@@ -7,6 +7,7 @@
 
 import AsyncAlgorithms
 import Combine
+import Common
 import DataModel
 import Networking
 import PhotosUI
@@ -38,11 +39,24 @@ extension NavigationPath {
   }
 }
 
+struct DocumentNotFoundError: DisplayableError {
+  let id: UInt
+  let connection: StoredConnection
+
+  var message: String {
+    String(localized: .localizable(.urlCallbackDocumentNotFoundTitle))
+  }
+  var details: String? {
+    String(localized: .localizable(.urlCallbackDocumentNotFound(id, connection.label)))
+  }
+}
+
 @MainActor
 struct DocumentView: View {
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
+  @Environment(RouteManager.self) private var routeManager
 
   @StateObject private var filterModel = FilterModel()
 
@@ -84,6 +98,51 @@ struct DocumentView: View {
       SettingsView()
     default:
       fatalError()
+    }
+  }
+
+  private func handlePendingRoute() {
+    guard let route = routeManager.pendingRoute else {
+      return
+    }
+
+    func clear() async {
+      if showDocumentScanner {
+        showDocumentScanner = false
+      }
+      if !navPath.isEmpty {
+        navPath.popToRoot()
+        guard (try? await Task.sleep(for: .seconds(0.5))) != nil else {
+          return
+        }
+      }
+    }
+
+    Task {
+      switch route.action {
+      case .scan:
+        routeManager.pendingRoute = nil
+        Logger.shared.info("Opening document scanner from URL ")
+        await clear()
+        showDocumentScanner = true
+      case .document(let id):
+        routeManager.pendingRoute = nil
+        Logger.shared.info("Opening document id \(id) from URL")
+        do {
+          guard let document = try await store.document(id: id) else {
+            Logger.shared.error("Document with id \(id) was not found")
+            if let connId = connectionManager.activeConnectionId,
+              let connection = connectionManager.connections[connId]
+            {
+              errorController.push(error: DocumentNotFoundError(id: id, connection: connection))
+            }
+            return
+          }
+
+          await clear()
+          navPath.append(NavigationState.detail(document: document))
+        }
+      }
     }
   }
 
@@ -372,6 +431,8 @@ struct DocumentView: View {
       .sheet(isPresented: $showSettings) {
         SettingsView()
       }
+
+      .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
       .task {
         do {
