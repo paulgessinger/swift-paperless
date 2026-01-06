@@ -17,6 +17,7 @@ struct MainView: View {
   @State private var showLoadingScreen = false
   @State private var store: DocumentStore?
   @State private var initialDisplay = true
+  @State private var showSettings = false
 
   @StateObject private var manager = ConnectionManager()
 
@@ -180,7 +181,7 @@ struct MainView: View {
     VStack {
       ZStack {
         if manager.connection != nil, storeReady {
-          DocumentView()
+          DocumentView(showSettings: $showSettings)
             .errorOverlay(errorController: errorController)
             .environmentObject(store!)
             .environmentObject(manager)
@@ -222,6 +223,15 @@ struct MainView: View {
 
     .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
       ReleaseNotesCoverView(releaseNotesModel: $releaseNotesModel)
+    }
+
+    .sheet(isPresented: $showSettings) {
+      if let store {
+        SettingsView()
+          .environmentObject(manager)
+          .environmentObject(store)
+          .environmentObject(errorController)
+      }
     }
 
     .task {
