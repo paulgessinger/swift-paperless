@@ -380,6 +380,10 @@ public class PreviewRepository: Repository {
     []
   }
 
+  public func restoreTrash(documents _: [UInt]) async {}
+
+  public func emptyTrash(documents _: [UInt]) async {}
+
   public func thumbnail(document: Document) async throws -> Image? {
     let data = try await thumbnailData(document: document)
     let image = Image(data: data)

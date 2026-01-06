@@ -129,6 +129,20 @@ extension TransientRepository: Repository {
     trashedDocuments.values.sorted { $0.id < $1.id }
   }
 
+  public func restoreTrash(documents: [UInt]) async throws {
+    for id in documents {
+      if let doc = trashedDocuments.removeValue(forKey: id) {
+        self.documents[id] = doc
+      }
+    }
+  }
+
+  public func emptyTrash(documents: [UInt]) async throws {
+    for id in documents {
+      trashedDocuments.removeValue(forKey: id)
+    }
+  }
+
   public func allDocuments() -> [Document] {
     documents.values.sorted { $0.id < $1.id }
   }

@@ -105,7 +105,9 @@ public protocol Repository: Sendable {
 
   func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink]
 
-  func trash() async throws -> [Document] 
+  func trash() async throws -> [Document]
+  func restoreTrash(documents: [UInt]) async throws
+  func emptyTrash(documents: [UInt]) async throws
 
   // @TODO: Remove UIImage
   func thumbnail(document: Document) async throws -> Image?

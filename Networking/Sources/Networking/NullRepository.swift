@@ -71,6 +71,8 @@ public class NullRepository: Repository {
   }
 
   public func trash() async -> [Document] { [] }
+  public func restoreTrash(documents _: [UInt]) async throws {}
+  public func emptyTrash(documents _: [UInt]) async throws {}
 
   public func nextAsn() async -> UInt { 1 }
 
