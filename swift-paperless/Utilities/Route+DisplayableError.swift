@@ -30,10 +30,6 @@ extension Route.ParseError: DisplayableError {
       return String(localized: .deeplinks(.deeplinkErrorMissingDocumentId))
     case .invalidDocumentId(let id):
       return String(localized: .deeplinks(.deeplinkErrorInvalidDocumentId(id)))
-    case .missingAction:
-      return String(localized: .deeplinks(.deeplinkErrorMissingAction))
-    case .unknownAction(let action):
-      return String(localized: .deeplinks(.deeplinkErrorUnknownAction(action)))
     case .invalidTagMode(let mode):
       return String(localized: .deeplinks(.deeplinkErrorInvalidTagMode(mode)))
     case .excludedTagsNotAllowedInAnyMode:

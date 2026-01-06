@@ -23,8 +23,6 @@ public struct Route: Equatable, Sendable {
     case unknownResource(String)
     case missingDocumentId
     case invalidDocumentId(String)
-    case missingAction
-    case unknownAction(String)
     case invalidTagMode(String)
     case excludedTagsNotAllowedInAnyMode
   }
@@ -69,20 +67,19 @@ public struct Route: Equatable, Sendable {
 
       self.action = .document(id: id)
 
-    case "action":
-      guard parts.count == 1 else {
-        throw ParseError.missingAction
+    case "scan":
+      guard parts.isEmpty else {
+        throw ParseError.unknownResource(String(resource))
       }
-      let subaction = String(parts.removeFirst())
-      switch subaction {
-      case "scan":
-        self.action = .scan
-      case "set_filter":
-        let tagFilter = try Self.parseTagFilter(from: components.queryItems ?? [])
-        self.action = .setFilter(tags: tagFilter)
-      default:
-        throw ParseError.unknownAction(subaction)
+      self.action = .scan
+
+    case "set_filter":
+      guard parts.isEmpty else {
+        throw ParseError.unknownResource(String(resource))
       }
+      let tagFilter = try Self.parseTagFilter(from: components.queryItems ?? [])
+      self.action = .setFilter(tags: tagFilter)
+
     default:
       throw ParseError.unknownResource(String(resource))
     }
