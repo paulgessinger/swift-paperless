@@ -677,6 +677,13 @@ extension ApiRepository: Repository {
     }
   }
 
+  public func trash() async throws -> [Document] {
+    Logger.networking.notice("Getting trash documents")
+    let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
+    let sequence = try ApiSequence<Document>(repository: self, url: url(endpoint))
+    return try await Array(sequence)
+  }
+
   private func nextAsnCompatibility() async throws -> UInt {
     Logger.networking.notice("Getting next ASN with legacy compatibility method")
 

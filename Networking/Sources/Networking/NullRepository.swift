@@ -70,6 +70,8 @@ public class NullRepository: Repository {
     NullDocumentSource()
   }
 
+  public func trash() async -> [Document] { [] }
+
   public func nextAsn() async -> UInt { 1 }
 
   public func thumbnail(document _: Document) async -> Image? { nil }
