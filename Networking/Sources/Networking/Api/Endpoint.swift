@@ -340,3 +340,24 @@ extension Endpoint {
     Endpoint(path: "/share/\(shareLink.slug)")
   }
 }
+
+// MARK: - Trash related endpoints
+extension Endpoint {
+  public static func trash() -> Endpoint {
+    Endpoint(path: "/api/trash")
+  }
+
+  public static func trash(
+    page: UInt, pageSize: UInt = Self.defaultDocumentPageSize
+  ) -> Endpoint {
+    let queryItems = [
+      URLQueryItem(name: "page", value: String(page)),
+      URLQueryItem(name: "page_size", value: String(pageSize)),
+    ]
+
+    return Endpoint(
+      path: "/api/trash",
+      queryItems: queryItems
+    )
+  }
+}

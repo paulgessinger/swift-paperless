@@ -294,6 +294,25 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
+  @Test func testTrashActionEndpoint() {
+    let endpoint = Endpoint.trash()
+    #expect(endpoint.path == "/api/trash")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
+  @Test func testTrash() {
+    let endpoint = Endpoint.trash(page: 2, pageSize: 25)
+    #expect(endpoint.path == "/api/trash")
+    #expect(endpoint.queryItems.count == 2)
+    #expect(endpoint.queryItems.contains { $0.name == "page" && $0.value == "2" })
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "25" })
+  }
+
+  @Test func testTrashDefaultPageSize() {
+    let endpoint = Endpoint.trash(page: 1)
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" })
+  }
+
   // MARK: - URL Building Tests
 
   @Test func testURLBuilding() throws {
