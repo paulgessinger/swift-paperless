@@ -142,9 +142,11 @@ struct DocumentView: View {
           await clear()
           navPath.append(NavigationState.detail(document: document))
         }
-      case .setFilter:
-        // @TODO: Implement set filter
-        break
+      case .setFilter(let tags):
+        if let tags {
+          Logger.shared.info("Setting tags in filter from route")
+          filterModel.filterState.tags = tags
+        }
       }
     }
   }

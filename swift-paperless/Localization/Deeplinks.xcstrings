@@ -1,0 +1,116 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "deeplinkErrorExcludedTagsNotAllowedInAnyMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluded tags (!) are not allowed when using tag_mode=any"
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidDocumentId" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid document ID: \"%@\""
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidTagMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid tag_mode: \"%@\". Must be \"any\" or \"all\""
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidUrl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The deep link URL is malformed or invalid"
+          }
+        }
+      }
+    },
+    "deeplinkErrorMissingDocumentId" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing document ID in deep link"
+          }
+        }
+      }
+    },
+    "deeplinkErrorMissingPath" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep link is missing a resource path"
+          }
+        }
+      }
+    },
+    "deeplinkErrorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid Deep Link"
+          }
+        }
+      }
+    },
+    "deeplinkErrorUnknownResource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown resource type: \"%@\""
+          }
+        }
+      }
+    },
+    "deeplinkErrorUnsupportedVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported deep link version. Only v1 is currently supported"
+          }
+        }
+      }
+    },
+    "deeplinkErrorUnsupportedVersionWithValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported deep link version: \"%@\". Only v1 is currently supported"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

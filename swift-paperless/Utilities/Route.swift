@@ -16,16 +16,33 @@ public struct Route: Equatable, Sendable {
     case scan
   }
 
+  public enum ParseError: Error, Equatable, Sendable {
+    case invalidUrl
+    case unsupportedVersion(String?)
+    case missingPath
+    case unknownResource(String)
+    case missingDocumentId
+    case invalidDocumentId(String)
+    case missingAction
+    case unknownAction(String)
+    case invalidTagMode(String)
+    case excludedTagsNotAllowedInAnyMode
+  }
+
   public let action: Action
   public let server: String?
 
-  public init?(from: URL) {
-    guard let components = URLComponents(url: from, resolvingAgainstBaseURL: false) else {
-      return nil
+  public init(from url: URL) throws {
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+      throw ParseError.invalidUrl
     }
 
-    guard components.host == "v1" else {
-      return nil
+    guard let host = components.host else {
+      throw ParseError.unsupportedVersion(nil)
+    }
+
+    guard host == "v1" else {
+      throw ParseError.unsupportedVersion(host)
     }
 
     // Parse optional server from query string
@@ -34,7 +51,7 @@ public struct Route: Equatable, Sendable {
     var parts = components.path.split(separator: "/")
 
     guard parts.count >= 1 else {
-      return nil
+      throw ParseError.missingPath
     }
 
     let resource = parts.removeFirst()
@@ -42,51 +59,57 @@ public struct Route: Equatable, Sendable {
     switch resource {
     case "document":
       guard parts.count == 1 else {
-        return nil
+        throw ParseError.missingDocumentId
       }
 
-      guard let id = UInt(parts.removeFirst()) else {
-        return nil
+      let idString = String(parts.removeFirst())
+      guard let id = UInt(idString) else {
+        throw ParseError.invalidDocumentId(idString)
       }
 
       self.action = .document(id: id)
 
     case "action":
       guard parts.count == 1 else {
-        return nil
+        throw ParseError.missingAction
       }
-      let subaction = parts.removeFirst()
+      let subaction = String(parts.removeFirst())
       switch subaction {
       case "scan":
         self.action = .scan
       case "set_filter":
-        guard let tagFilter = Self.parseTagFilter(from: components.queryItems ?? []) else {
-          return nil
-        }
+        let tagFilter = try Self.parseTagFilter(from: components.queryItems ?? [])
         self.action = .setFilter(tags: tagFilter)
       default:
-        return nil
+        throw ParseError.unknownAction(subaction)
       }
     default:
-      return nil
+      throw ParseError.unknownResource(String(resource))
     }
 
   }
 
-  static private func parseTagFilter(from queryItems: [URLQueryItem]) -> FilterState.TagFilter? {
+  static private func parseTagFilter(from queryItems: [URLQueryItem]) throws -> FilterState.TagFilter? {
     guard let tagQuery = queryItems.first(where: { $0.name == "tags" })?.value else {
-      return .any
+      return nil
+    }
+
+    // Empty tags parameter means nil (don't change filter)
+    guard !tagQuery.isEmpty else {
+      return nil
     }
 
     let tagMode = queryItems.first(where: { $0.name == "tag_mode" })?.value ?? "any"
 
     guard tagMode == "any" || tagMode == "all" else {
-      return nil
+      throw ParseError.invalidTagMode(tagMode)
     }
 
     switch tagQuery {
     case "none":
       return .notAssigned
+    case "any":
+      return .any
     default:
       let tagStrings = tagQuery.split(separator: ",")
       var include = [UInt]()
@@ -105,13 +128,13 @@ public struct Route: Equatable, Sendable {
       switch tagMode {
       case "any":
         guard exclude.isEmpty else {
-          return nil  // Invalid
+          throw ParseError.excludedTagsNotAllowedInAnyMode
         }
         return .anyOf(ids: include)
       case "all":
         return .allOf(include: include, exclude: exclude)
       default:
-        return nil
+        throw ParseError.invalidTagMode(tagMode)
       }
     }
   }

@@ -126,6 +126,7 @@
 				AppDelegate.swift,
 				BiometricLockManager.swift,
 				Route.swift,
+				"Route+DisplayableError.swift",
 				RouteManager.swift,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
