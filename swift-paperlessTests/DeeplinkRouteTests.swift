@@ -141,7 +141,30 @@ struct DeeplinkRouteTests {
       URL(string: "x-paperless://v1/set_filter?tags=1,2&tag_mode=invalid"))
     #expect(throws: Route.ParseError.invalidTagMode("invalid")) {
       try Route(from: invalidModeURL)
+    }
+  }
+
+  @Test func testV1ClearFilterAction() throws {
+    // Test clear_filter without server
+    let clearFilterURL = try #require(URL(string: "x-paperless://v1/clear_filter"))
     let clearFilterRoute = try Route(from: clearFilterURL)
+    #expect(clearFilterRoute.action == .clearFilter)
+    #expect(clearFilterRoute.server == nil)
+
+    // Test clear_filter with server
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let server = try #require(serverURL.stringDroppingScheme)
+    let encodedServer = server.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let clearFilterWithServerURL = try #require(
+      URL(string: "x-paperless://v1/clear_filter?server=\(encodedServer)"))
+    let clearFilterWithServerRoute = try Route(from: clearFilterWithServerURL)
+    #expect(clearFilterWithServerRoute.action == .clearFilter)
+    #expect(clearFilterWithServerRoute.server == server)
+
+    // Test clear_filter with extra path component should fail
+    #expect(throws: Route.ParseError.unknownResource("clear_filter")) {
+      try Route(from: URL(string: "x-paperless://v1/clear_filter/extra")!)
     }
   }
 

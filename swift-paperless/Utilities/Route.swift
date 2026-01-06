@@ -13,6 +13,7 @@ public struct Route: Equatable, Sendable {
   public enum Action: Equatable, Sendable {
     case document(id: UInt)
     case setFilter(tags: FilterState.TagFilter?)
+    case clearFilter
     case scan
   }
 
@@ -79,6 +80,12 @@ public struct Route: Equatable, Sendable {
       }
       let tagFilter = try Self.parseTagFilter(from: components.queryItems ?? [])
       self.action = .setFilter(tags: tagFilter)
+
+    case "clear_filter":
+      guard parts.isEmpty else {
+        throw ParseError.unknownResource(String(resource))
+      }
+      self.action = .clearFilter
 
     default:
       throw ParseError.unknownResource(String(resource))
