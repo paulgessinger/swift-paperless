@@ -34,6 +34,14 @@ extension Route.ParseError: DisplayableError {
       return String(localized: .deeplinks(.deeplinkErrorInvalidTagMode(mode)))
     case .excludedTagsNotAllowedInAnyMode:
       return String(localized: .deeplinks(.deeplinkErrorExcludedTagsNotAllowedInAnyMode))
+    case .invalidSearchMode(let mode):
+      return String(localized: .deeplinks(.deeplinkErrorInvalidSearchMode(mode)))
+    case .invalidAsnValue(let value):
+      return String(localized: .deeplinks(.deeplinkErrorInvalidAsnValue(value)))
+    case .invalidDateFormat(let value):
+      return String(localized: .deeplinks(.deeplinkErrorInvalidDateFormat(value)))
+    case .invalidSortField(let value):
+      return String(localized: .deeplinks(.deeplinkErrorInvalidSortField(value)))
     }
   }
 

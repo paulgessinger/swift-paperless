@@ -111,11 +111,11 @@ x-paperless://v1/clear_filter?server=example.com
 
 ### Set Filter
 
-Applies a tag filter to the document list. This is useful for creating shortcuts to specific filtered views.
+Applies filter parameters to the document list. This is useful for creating shortcuts to specific filtered views.
 
 **URL Format:**
 ```
-x-paperless://v1/set_filter[?server=<server>][&tags=<tag_spec>][&tag_mode=<mode>]
+x-paperless://v1/set_filter[?server=<server>][&<filters>...]
 ```
 
 **Parameters:**
@@ -177,6 +177,95 @@ Clear tag filter (show all documents):
 x-paperless://v1/set_filter?tags=any
 ```
 
+#### `correspondent`, `document_type`, `storage_path`, `owner` (optional)
+Simple ID-based filters. All of these share the same format:
+
+- **Omit parameter** or **empty value**: Don't change the current filter
+- **`any`**: Clear this filter (show all documents regardless of that field)
+- **`none`**: Show only documents with no value assigned
+- **Comma-separated IDs**: Include any of these IDs (e.g., `1,2,3`)
+- **Excluded IDs**: Prefix IDs with `!` to exclude them, but only when all values are excluded
+  (e.g., `!1,!2`). Mixed include/exclude values are treated as include-only and ignores
+  excluded IDs.
+
+**Examples:**
+```
+x-paperless://v1/set_filter?correspondent=1,2
+x-paperless://v1/set_filter?document_type=none
+x-paperless://v1/set_filter?storage_path=!3,!4
+x-paperless://v1/set_filter?owner=any
+```
+
+#### `search` and `search_mode` (optional)
+Full-text search configuration.
+
+- **`search`**: Search text
+- **`search_mode`**: `title`, `content`, `title_content`, or `advanced`
+
+**Examples:**
+```
+x-paperless://v1/set_filter?search=invoice
+x-paperless://v1/set_filter?search=contract&search_mode=content
+```
+
+#### `asn`, `asn_gt`, `asn_lt` (optional)
+Archive Serial Number filtering.
+
+- **`asn=any`**: Clear ASN filter
+- **`asn=null`**: Only documents without ASN
+- **`asn=not_null`**: Only documents with ASN
+- **`asn=<number>`**: Exact match
+- **`asn_gt=<number>`**: Greater than
+- **`asn_lt=<number>`**: Less than
+
+If `asn` is provided, `asn_gt` and `asn_lt` are ignored.
+
+**Examples:**
+```
+x-paperless://v1/set_filter?asn=123
+x-paperless://v1/set_filter?asn_gt=100
+```
+
+#### `date_created`, `date_added`, `date_modified` (optional)
+Date range filters. Each supports a preset range or an explicit between range.
+
+Preset values:
+- `any`
+- `within_7d`, `within_1w`, `within_3m`, `within_1y`
+
+Notes:
+- `within_<n>d` is only accepted when `n` is a multiple of 7; it is treated as weeks.
+- The `within_` values map to rolling ranges (e.g., "within 3 months").
+
+Between values:
+- `date_created_from=YYYY-MM-DD`
+- `date_created_to=YYYY-MM-DD`
+- (and the same for `date_added_*` / `date_modified_*`)
+
+**Examples:**
+```
+x-paperless://v1/set_filter?date_created=within_7d
+x-paperless://v1/set_filter?date_added=within_1m
+x-paperless://v1/set_filter?date_modified=within_1y
+x-paperless://v1/set_filter?date_created_from=2024-01-01&date_created_to=2024-12-31
+```
+
+#### `sort_field` and `sort_order` (optional)
+Sorting configuration.
+
+- `sort_field` accepts the API raw values (e.g., `created`, `correspondent__name`,
+  `document_type__name`, `storage_path__name`, `archive_serial_number`,
+  `custom_field_12`) or these aliases: `asn`, `correspondent`, `document_type`,
+  `storage_path`.
+- `sort_order` accepts `asc`, `ascending`, `desc`, or `descending`.
+
+**Examples:**
+```
+x-paperless://v1/set_filter?sort_field=created&sort_order=asc
+x-paperless://v1/set_filter?sort_field=correspondent__name&sort_order=desc
+x-paperless://v1/set_filter?sort_field=custom_field_12
+```
+
 ## Error Handling
 
 When a deep link is malformed or invalid, Swift Paperless will display a user-friendly error message explaining what went wrong. The error message will include:
@@ -215,3 +304,19 @@ The following errors may occur when parsing deep links:
 - Excluded tags (prefixed with `!`) can only be used with `tag_mode=all`
 - Example: `?tags=1,!2&tag_mode=any` is invalid
 - Use `tag_mode=all` instead: `?tags=1,!2&tag_mode=all`
+
+**Invalid Search Mode**
+- The `search_mode` parameter must be `title`, `content`, `title_content`, or `advanced`
+- Example: `?search_mode=invalid`
+
+**Invalid ASN Value**
+- ASN values must be numeric or one of `any`, `null`, `not_null`
+- Example: `?asn=invalid`
+
+**Invalid Date Format**
+- Date values must be formatted as `YYYY-MM-DD`
+- Example: `?date_created_from=2024-13-99`
+
+**Invalid Sort Parameter**
+- `sort_field` must be a supported field or alias; `sort_order` must be `asc`/`desc`
+- Example: `?sort_field=not_a_field`

@@ -34,6 +34,50 @@
         }
       }
     },
+    "deeplinkErrorInvalidSearchMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid search_mode: \"%@\". Must be \"title\", \"content\", \"title_content\", or \"advanced\""
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidAsnValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid ASN value: \"%@\""
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidDateFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid date format: \"%@\". Use YYYY-MM-DD"
+          }
+        }
+      }
+    },
+    "deeplinkErrorInvalidSortField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid sort parameter: \"%@\""
+          }
+        }
+      }
+    },
     "deeplinkErrorInvalidUrl" : {
       "extractionState" : "manual",
       "localizations" : {

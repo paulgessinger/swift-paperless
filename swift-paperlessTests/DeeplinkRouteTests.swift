@@ -12,12 +12,22 @@ import Testing
 
 // Helper extension for testing
 extension Route.Action {
-  var setFilterTags: FilterState.TagFilter?? {
+  var setFilterTags: FilterState.TagFilter? {
     guard case .setFilter(let filter) = self else {
       return nil
     }
     return filter.tags
   }
+}
+
+private func parseDate(_ value: String) throws -> Date {
+  let formatter = DateFormatter()
+  formatter.timeZone = .gmt
+  formatter.dateFormat = "yyyy-MM-dd"
+  guard let date = formatter.date(from: value) else {
+    throw DateDecodingError.invalidDate(string: value)
+  }
+  return date
 }
 
 @Suite
@@ -396,6 +406,121 @@ struct DeeplinkRouteTests {
     let invalidURL = try #require(
       URL(string: "x-paperless://v1/set_filter?search=test&search_mode=invalid"))
     #expect(throws: Route.ParseError.invalidSearchMode("invalid")) {
+      try Route(from: invalidURL)
+    }
+  }
+
+  @Test func testV1SetFilterDates() throws {
+    let rangeURL = try #require(
+      URL(
+        string:
+          "x-paperless://v1/set_filter?date_created=within_7d&date_added=within_1m&date_modified=within_1y"
+      )
+    )
+    let rangeRoute = try Route(from: rangeURL)
+    guard case .setFilter(let rangeFilter) = rangeRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(rangeFilter.dateCreated == .range(.within(num: -1, interval: .week)))
+    #expect(rangeFilter.dateAdded == .range(.within(num: -1, interval: .month)))
+    #expect(rangeFilter.dateModified == .range(.within(num: -1, interval: .year)))
+
+    let betweenURL = try #require(
+      URL(
+        string:
+          "x-paperless://v1/set_filter?date_created_from=2024-01-01&date_created_to=2024-12-31"
+      )
+    )
+    let betweenRoute = try Route(from: betweenURL)
+    guard case .setFilter(let betweenFilter) = betweenRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(
+      betweenFilter.dateCreated
+        == .between(start: try parseDate("2024-01-01"), end: try parseDate("2024-12-31"))
+    )
+    #expect(betweenFilter.dateAdded == nil)
+    #expect(betweenFilter.dateModified == nil)
+
+    let openEndedURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?date_added_from=2024-02-02")
+    )
+    let openEndedRoute = try Route(from: openEndedURL)
+    guard case .setFilter(let openEndedFilter) = openEndedRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(
+      openEndedFilter.dateAdded == .between(start: try parseDate("2024-02-02"), end: nil)
+    )
+
+    let anyURL = try #require(URL(string: "x-paperless://v1/set_filter?date_modified=any"))
+    let anyRoute = try Route(from: anyURL)
+    guard case .setFilter(let anyFilter) = anyRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(anyFilter.dateModified == .any)
+
+    let invalidURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?date_created=today")
+    )
+    #expect(throws: Route.ParseError.invalidDateFormat("today")) {
+      try Route(from: invalidURL)
+    }
+  }
+
+  @Test func testV1SetFilterSort() throws {
+    let sortURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?sort_field=created&sort_order=asc")
+    )
+    let sortRoute = try Route(from: sortURL)
+    guard case .setFilter(let sortFilter) = sortRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(sortFilter.sortField == .created)
+    #expect(sortFilter.sortOrder == .ascending)
+
+    let rawURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?sort_field=correspondent__name&sort_order=desc")
+    )
+    let rawRoute = try Route(from: rawURL)
+    guard case .setFilter(let rawFilter) = rawRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(rawFilter.sortField == .correspondent)
+    #expect(rawFilter.sortOrder == .descending)
+
+    let aliasURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?sort_field=document_type&sort_order=desc")
+    )
+    let aliasRoute = try Route(from: aliasURL)
+    guard case .setFilter(let aliasFilter) = aliasRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(aliasFilter.sortField == .documentType)
+    #expect(aliasFilter.sortOrder == .descending)
+
+    let customURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?sort_field=custom_field_12")
+    )
+    let customRoute = try Route(from: customURL)
+    guard case .setFilter(let customFilter) = customRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(customFilter.sortField == .customField(12))
+    #expect(customFilter.sortOrder == nil)
+
+    let invalidURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?sort_field=not_a_field")
+    )
+    #expect(throws: Route.ParseError.invalidSortField("not_a_field")) {
       try Route(from: invalidURL)
     }
   }

@@ -60,7 +60,7 @@ public struct Route: Equatable, Sendable {
       throw ParseError.invalidUrl
     }
 
-    guard let host = components.host else {
+    guard let host = components.host, !host.isEmpty else {
       throw ParseError.unsupportedVersion(nil)
     }
 
@@ -120,7 +120,18 @@ public struct Route: Equatable, Sendable {
 
       filter.asn = try Self.parseAsnFilter(from: components.queryItems ?? [])
 
-      // TODO: Parse date and sort parameters
+      filter.dateCreated = try Self.parseDateFilter(
+        from: components.queryItems ?? [], paramName: "date_created")
+      filter.dateAdded = try Self.parseDateFilter(
+        from: components.queryItems ?? [], paramName: "date_added")
+      filter.dateModified = try Self.parseDateFilter(
+        from: components.queryItems ?? [], paramName: "date_modified")
+
+      let (sortField, sortOrder) = try Self.parseSortParameters(
+        from: components.queryItems ?? [])
+      filter.sortField = sortField
+      filter.sortOrder = sortOrder
+
       self.action = .setFilter(filter)
 
     case "clear_filter":
@@ -323,6 +334,170 @@ public struct Route: Equatable, Sendable {
     }
 
     return nil
+  }
+
+  /// Parses date filters for created/added/modified
+  /// Supports: `date_param=today`, `date_param=current_month`, `date_param=previous_week`,
+  ///           `date_param_from=YYYY-MM-DD`, `date_param_to=YYYY-MM-DD`, `date_param=any`
+  static private func parseDateFilter(
+    from queryItems: [URLQueryItem],
+    paramName: String
+  ) throws -> FilterState.DateFilter.Argument? {
+    let value = queryItems.first(where: { $0.name == paramName })?.value
+    let fromValue = queryItems.first(where: { $0.name == "\(paramName)_from" })?.value
+    let toValue = queryItems.first(where: { $0.name == "\(paramName)_to" })?.value
+
+    if let value {
+      let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !trimmed.isEmpty else {
+        return nil
+      }
+
+      if trimmed == "any" {
+        return .any
+      }
+
+      if let range = parseDateRange(from: trimmed) {
+        return .range(range)
+      }
+
+      throw ParseError.invalidDateFormat(trimmed)
+    }
+
+    guard fromValue != nil || toValue != nil else {
+      return nil
+    }
+
+    let start = try parseDateValue(fromValue)
+    let end = try parseDateValue(toValue)
+
+    guard start != nil || end != nil else {
+      return nil
+    }
+
+    return .between(start: start, end: end)
+  }
+
+  static private func parseDateRange(from value: String) -> FilterState.DateFilter.Range? {
+    let normalized = value.lowercased().replacingOccurrences(of: "_", with: " ")
+    return parseConciseWithinRange(from: normalized)
+  }
+
+  static private func parseConciseWithinRange(
+    from value: String
+  ) -> FilterState.DateFilter.Range? {
+    let ex = /within\s*(?<count>\d+)\s*(?<unit>[dwmy])/
+    guard let match = try? ex.wholeMatch(in: value),
+      let count = Int(match.count),
+      count > 0
+    else {
+      return nil
+    }
+
+    switch match.unit {
+    case "w":
+      return .within(num: -count, interval: .week)
+    case "m":
+      return .within(num: -count, interval: .month)
+    case "y":
+      return .within(num: -count, interval: .year)
+    case "d":
+      guard count % 7 == 0 else {
+        return nil
+      }
+      return .within(num: -(count / 7), interval: .week)
+    default:
+      return nil
+    }
+  }
+
+  static private func parseDateValue(_ value: String?) throws -> Date? {
+    guard let value else {
+      return nil
+    }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+      return nil
+    }
+
+    let ex = /(\d{4}-\d{2}-\d{2}).*/
+    guard let match = try? ex.wholeMatch(in: trimmed) else {
+      throw ParseError.invalidDateFormat(trimmed)
+    }
+
+    let formatter = DateFormatter()
+    formatter.timeZone = .gmt
+    formatter.dateFormat = "yyyy-MM-dd"
+    guard let date = formatter.date(from: String(match.1)) else {
+      throw ParseError.invalidDateFormat(trimmed)
+    }
+
+    return date
+  }
+
+  /// Parses sort field and order parameters
+  /// Supports `sort_field` with API field names or aliases, and `sort_order` as `asc`/`desc`.
+  static private func parseSortParameters(
+    from queryItems: [URLQueryItem]
+  ) throws -> (SortField?, DataModel.SortOrder?) {
+    let sortFieldValue = queryItems.first(where: { $0.name == "sort_field" })?.value
+    let sortOrderValue = queryItems.first(where: { $0.name == "sort_order" })?.value
+
+    let sortField = try parseSortField(sortFieldValue)
+    let sortOrder = try parseSortOrder(sortOrderValue)
+
+    return (sortField, sortOrder)
+  }
+
+  static private func parseSortField(_ value: String?) throws -> SortField? {
+    guard let value else {
+      return nil
+    }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+      return nil
+    }
+
+    let normalized = trimmed.lowercased()
+    let mappedValue: String
+    switch normalized {
+    case "asn":
+      mappedValue = SortField.asn.rawValue
+    case "correspondent":
+      mappedValue = SortField.correspondent.rawValue
+    case "document_type":
+      mappedValue = SortField.documentType.rawValue
+    case "storage_path":
+      mappedValue = SortField.storagePath.rawValue
+    default:
+      mappedValue = normalized
+    }
+
+    let field = SortField(rawValue: mappedValue)
+    if case .other = field {
+      throw ParseError.invalidSortField(trimmed)
+    }
+
+    return field
+  }
+
+  static private func parseSortOrder(_ value: String?) throws -> DataModel.SortOrder? {
+    guard let value else {
+      return nil
+    }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+      return nil
+    }
+
+    switch trimmed.lowercased() {
+    case "asc", "ascending":
+      return .ascending
+    case "desc", "descending":
+      return .descending
+    default:
+      throw ParseError.invalidSortField(trimmed)
+    }
   }
 
 }
