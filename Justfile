@@ -16,15 +16,16 @@ set_build number:
 beta:
   fastlane beta
 
-default_os := '18.3.1'
-build os=default_os:
+default_os := '26.2'
+default_device := 'iPhone 17 Pro'
+build os=default_os device=default_device:
   #!/bin/bash
-  xcodebuild -scheme swift-paperless -project ./swift-paperless.xcodeproj -configuration Release -destination platform\=iOS\ Simulator,OS\={{os}},name\=iPhone\ 16\ Pro | xcbeautify
+  xcodebuild -scheme swift-paperless -project ./swift-paperless.xcodeproj -configuration Release -destination "platform=iOS Simulator,OS={{os}},name={{device}}" | xcbeautify
 
 _test_swift package:
   swift test --package-path {{package}}
 
-test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking")
+test-xcode:
   #!/bin/bash
   set -e
   set -o pipefail
@@ -36,6 +37,8 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
     -skipPackagePluginValidation -skipMacroValidation \
     CODE_SIGN_IDENTITY="" \
     | xcbeautify
+
+test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") test-xcode
 
 lint-format:
   swift-format format --in-place --recursive . --parallel
