@@ -106,6 +106,7 @@
 				Gather.swift,
 				Haptics.swift,
 				Logging.swift,
+				Route.swift,
 				"View+alert.swift",
 			);
 			target = 7A5482BB299AD56E00D5061E /* swift-paperlessTests */;
@@ -124,6 +125,8 @@
 			membershipExceptions = (
 				AppDelegate.swift,
 				BiometricLockManager.swift,
+				Route.swift,
+				RouteManager.swift,
 			);
 			target = 7A4AA8E329BB969400D845A2 /* ShareExtension */;
 		};
