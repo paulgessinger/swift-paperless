@@ -414,7 +414,7 @@ struct DeeplinkRouteTests {
     let rangeURL = try #require(
       URL(
         string:
-          "x-paperless://v1/set_filter?date_created=within_7d&date_added=within_1m&date_modified=within_1y"
+          "x-paperless://v1/set_filter?date_created=within_1w&date_added=within_1m&date_modified=within_1y"
       )
     )
     let rangeRoute = try Route(from: rangeURL)
@@ -469,6 +469,20 @@ struct DeeplinkRouteTests {
     )
     #expect(throws: Route.ParseError.invalidDateFormat("today")) {
       try Route(from: invalidURL)
+    }
+
+    let invalidWithinURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?date_created=within_2w")
+    )
+    #expect(throws: Route.ParseError.invalidDateFormat("within_2w")) {
+      try Route(from: invalidWithinURL)
+    }
+
+    let invalidWithinDaysURL = try #require(
+      URL(string: "x-paperless://v1/set_filter?date_created=within_7d")
+    )
+    #expect(throws: Route.ParseError.invalidDateFormat("within_7d")) {
+      try Route(from: invalidWithinDaysURL)
     }
   }
 

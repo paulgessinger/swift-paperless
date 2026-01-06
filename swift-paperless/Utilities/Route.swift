@@ -396,16 +396,20 @@ public struct Route: Equatable, Sendable {
 
     switch match.unit {
     case "w":
-      return .within(num: -count, interval: .week)
-    case "m":
-      return .within(num: -count, interval: .month)
-    case "y":
-      return .within(num: -count, interval: .year)
-    case "d":
-      guard count % 7 == 0 else {
+      guard count == 1 else {
         return nil
       }
-      return .within(num: -(count / 7), interval: .week)
+      return .within(num: -1, interval: .week)
+    case "m":
+      guard count == 1 || count == 3 else {
+        return nil
+      }
+      return .within(num: -count, interval: .month)
+    case "y":
+      guard count == 1 else {
+        return nil
+      }
+      return .within(num: -1, interval: .year)
     default:
       return nil
     }
