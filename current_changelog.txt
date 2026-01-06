@@ -1,1 +1,3 @@
 - Add ability to share link to the web UI for a document
+- Add deep link support (open scanner, open document for now)
+- Add a home screen quick action to open the scanner
