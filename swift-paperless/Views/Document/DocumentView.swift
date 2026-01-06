@@ -18,7 +18,6 @@ import os
 enum NavigationState: Equatable, Hashable, Identifiable {
   case root
   case detail(document: Document)
-  case settings
   case tasks
   case task(_: PaperlessTask)
 
@@ -26,7 +25,6 @@ enum NavigationState: Equatable, Hashable, Identifiable {
     switch self {
     case .root: 1
     case .detail: 2
-    case .settings: 3
     case .tasks: 4
     case .task: 5
     }
@@ -79,7 +77,11 @@ struct DocumentView: View {
 
   @State private var showDataScanner = false
   @State private var taskViewNavState: NavigationState? = nil
-  @State private var showSettings = false
+  @Binding private var showSettings: Bool
+
+  init(showSettings: Binding<Bool>) {
+    _showSettings = showSettings
+  }
 
   private func createCallback() {
     importModel.pop()
@@ -94,8 +96,6 @@ struct DocumentView: View {
     switch nav {
     case .detail(let doc):
       DocumentDetailView(store: store, document: doc, navPath: $navPath)
-    case .settings:
-      SettingsView()
     default:
       fatalError()
     }
@@ -142,6 +142,9 @@ struct DocumentView: View {
           await clear()
           navPath.append(NavigationState.detail(document: document))
         }
+      case .setFilter:
+        // @TODO: Implement set filter
+        break
       }
     }
   }
@@ -428,10 +431,6 @@ struct DocumentView: View {
         Button(String(localized: .localizable(.cancel)), role: .cancel) {}
       }
 
-      .sheet(isPresented: $showSettings) {
-        SettingsView()
-      }
-
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
       .task {
@@ -475,8 +474,9 @@ struct DocumentView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var showSettings = false
 
-  DocumentView()
+  DocumentView(showSettings: $showSettings)
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
