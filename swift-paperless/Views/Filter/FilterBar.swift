@@ -360,16 +360,19 @@ private struct SortMenu: View {
 
     let inclusive =
       SortField.allCases
-      + store.customFields
-      .map(\.value)
-      .sorted { $0.name < $1.name }
-      .map { SortField.customField($0.id) }
 
     if isAdvancedSearch || filterState.sortField == .score {
       return inclusive
     } else {
       return inclusive.filter { $0 != .score }
     }
+  }
+
+  private var customFields: [SortField] {
+    store.customFields
+      .map(\.value)
+      .sorted { $0.name < $1.name }
+      .map { SortField.customField($0.id) }
   }
 
   var body: some View {
@@ -390,6 +393,13 @@ private struct SortMenu: View {
             .tag(SortField.other(value))
         }
       }
+
+      Picker(String(localized: .localizable(.customFields)), selection: $filterState.sortField) {
+        ForEach(customFields, id: \.rawValue) { f in
+          Text(f.localizedName(customFields: store.customFields)).tag(f)
+        }
+      }
+      .pickerStyle(.menu)
     } label: {
       Element(
         label: {
