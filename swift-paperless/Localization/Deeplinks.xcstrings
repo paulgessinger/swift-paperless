@@ -1,0 +1,193 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "errorExcludedTagsNotAllowedInAnyMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluded tags (!) are not allowed when using tag_mode=any"
+          }
+        }
+      }
+    },
+    "errorInvalidAsnValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid ASN value: \"%@\""
+          }
+        }
+      }
+    },
+    "errorInvalidDateFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid date format: \"%@\". Use YYYY-MM-DD"
+          }
+        }
+      }
+    },
+    "errorInvalidDocumentId" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid document ID: \"%@\""
+          }
+        }
+      }
+    },
+    "errorInvalidSearchMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid search_mode: \"%@\". Must be \"title\", \"content\", \"title_content\", or \"advanced\""
+          }
+        }
+      }
+    },
+    "errorInvalidSortField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid sort parameter: \"%@\""
+          }
+        }
+      }
+    },
+    "errorInvalidTagMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid tag_mode: \"%@\". Must be \"any\" or \"all\""
+          }
+        }
+      }
+    },
+    "errorInvalidUrl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The deep link URL is malformed or invalid"
+          }
+        }
+      }
+    },
+    "errorMissingDocumentId" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing document ID in deep link"
+          }
+        }
+      }
+    },
+    "errorMissingPath" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep link is missing a resource path"
+          }
+        }
+      }
+    },
+    "errorMixedFilterIdsNotAllowed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot mix included and excluded IDs for \"%@\""
+          }
+        }
+      }
+    },
+    "errorTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid Deep Link"
+          }
+        }
+      }
+    },
+    "errorUnknownResource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown resource type: \"%@\""
+          }
+        }
+      }
+    },
+    "errorUnsupportedModifiedDateFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deep link uses the modified date filter, which is unsupported by the current backend"
+          }
+        }
+      }
+    },
+    "errorUnsupportedPreviousIntervalDateFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deep link uses previous-interval date ranges, which are unsupported by the current backend"
+          }
+        }
+      }
+    },
+    "errorUnsupportedVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported deep link version. Only v1 is currently supported"
+          }
+        }
+      }
+    },
+    "errorUnsupportedVersionWithValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported deep link version: \"%@\". Only v1 is currently supported"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

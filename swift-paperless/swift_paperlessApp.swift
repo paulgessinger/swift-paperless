@@ -44,14 +44,17 @@ struct MainView: View {
   private func handleUrlOpen(_ url: URL) {
     Logger.shared.info("App opened with URL: \(url)")
 
-    guard let route = Route(from: url) else {
-      Logger.shared.error("Unable to parse route from URL: \(url)")
+    let route: Route
+    do {
+      route = try Route(from: url)
+    } catch {
+      Logger.shared.error(
+        "Unable to parse route from URL: \(url), error: \(String(describing: error))")
+      errorController.push(error: error)
       return
     }
 
     Logger.shared.info("Parsed route is: \(String(describing: route))")
-
-    // @TODO: Handle potential connection change at this level before assigning
 
     let targetConnection: StoredConnection? = {
 
