@@ -51,6 +51,8 @@ public struct Route: Equatable, Sendable {
     case invalidDateFormat(String)
     case invalidSortField(String)
     case mixedFilterIdsNotAllowed(String)
+    case unsupportedModifiedDateFilter
+    case unsupportedPreviousIntervalDateFilter
   }
 
   public let action: Action
@@ -388,7 +390,7 @@ public struct Route: Equatable, Sendable {
   static private func parseWithinRange(
     from value: String
   ) -> FilterState.DateFilter.Range? {
-    let ex = /within\s*(?<count>\d+)\s*(?<unit>[dwmy])/
+    let ex = /within\s*(?<count>\d+)\s*(?<unit>[wmy])/
     guard let match = try? ex.wholeMatch(in: value),
       let count = Int(match.count),
       count > 0

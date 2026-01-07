@@ -165,6 +165,28 @@
           }
         }
       }
+    },
+    "errorUnsupportedModifiedDateFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deep link uses the modified date filter, which is unsupported by the current backend"
+          }
+        }
+      }
+    },
+    "errorUnsupportedPreviousIntervalDateFilter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This deep link uses previous-interval date ranges, which are unsupported by the current backend"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

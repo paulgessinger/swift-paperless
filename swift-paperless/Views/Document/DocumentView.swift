@@ -143,16 +143,86 @@ struct DocumentView: View {
           navPath.append(NavigationState.detail(document: document))
         }
       case .setFilter(let filter):
-        if let tags = filter.tags{
-          Logger.shared.info("Setting tags in filter from route")
-          filterModel.filterState.tags = tags
+        routeManager.pendingRoute = nil
+        Logger.shared.info("Setting filter from route")
+        do {
+          try applyRouteFilter(filter)
+        } catch {
+          errorController.push(error: error)
         }
-        
       case .clearFilter:
+        routeManager.pendingRoute = nil
         Logger.shared.info("Clearing filter in filter from route")
         filterModel.filterState.clear()
       }
     }
+  }
+
+  private func applyRouteFilter(_ filter: Route.DeepLinkFilter) throws {
+    var state = filterModel.filterState
+
+    if let tags = filter.tags {
+      state.tags = tags
+    }
+    if let correspondent = filter.correspondent {
+      state.correspondent = correspondent
+    }
+    if let documentType = filter.documentType {
+      state.documentType = documentType
+    }
+    if let storagePath = filter.storagePath {
+      state.storagePath = storagePath
+    }
+    if let owner = filter.owner {
+      state.owner = owner
+    }
+    if let searchText = filter.searchText {
+      state.searchText = searchText
+    }
+    if let searchMode = filter.searchMode {
+      state.searchMode = searchMode
+    }
+    if let asn = filter.asn {
+      state.asn = asn
+    }
+    if let dateCreated = filter.dateCreated {
+      try applyDateArgument(dateCreated, to: &state.date.created)
+    }
+    if let dateAdded = filter.dateAdded {
+      try applyDateArgument(dateAdded, to: &state.date.added)
+    }
+    if let dateModified = filter.dateModified {
+      if !store.repository.supports(feature: .dateFilterModified) {
+        throw Route.ParseError.unsupportedModifiedDateFilter
+      }
+      try applyDateArgument(dateModified, to: &state.date.modified)
+    }
+    if let sortField = filter.sortField {
+      state.sortField = sortField
+    }
+    if let sortOrder = filter.sortOrder {
+      state.sortOrder = sortOrder
+    }
+
+    filterModel.filterState = state
+  }
+
+  private func applyDateArgument(
+    _ argument: FilterState.DateFilter.Argument,
+    to target: inout FilterState.DateFilter.Argument
+  ) throws {
+    if case .range(let range) = argument,
+      !store.repository.supports(feature: .dateFilterPreviousIntervals)
+    {
+      switch range {
+      case .previousWeek, .previousMonth, .previousQuarter, .previousYear:
+        throw Route.ParseError.unsupportedPreviousIntervalDateFilter
+      default:
+        break
+      }
+    }
+
+    target = argument
   }
 
   private var savedViewNavigationTitle: String {

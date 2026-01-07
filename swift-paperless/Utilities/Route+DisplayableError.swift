@@ -44,6 +44,10 @@ extension Route.ParseError: DisplayableError {
       return String(localized: .deeplinks(.errorInvalidSortField(value)))
     case .mixedFilterIdsNotAllowed(let parameter):
       return String(localized: .deeplinks(.errorMixedFilterIdsNotAllowed(parameter)))
+    case .unsupportedModifiedDateFilter:
+      return String(localized: .deeplinks(.errorUnsupportedModifiedDateFilter))
+    case .unsupportedPreviousIntervalDateFilter:
+      return String(localized: .deeplinks(.errorUnsupportedPreviousIntervalDateFilter))
     }
   }
 
