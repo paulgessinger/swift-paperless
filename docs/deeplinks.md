@@ -212,8 +212,7 @@ Simple ID-based filters. All of these share the same format:
 - **Comma-separated IDs**: Include any of these IDs (e.g., `1,2,3`)
 
 - **Excluded IDs**: Prefix IDs with `!` to exclude them, but only when all values are excluded
-  (e.g., `!1,!2`). Mixed include/exclude values are treated as include-only and ignores
-  excluded IDs.
+  (e.g., `!1,!2`). Mixing include and exclude values is invalid.
 
 **Examples:**
 ```
@@ -386,3 +385,10 @@ The following errors may occur when parsing deep links:
 - `sort_field` must be a supported field or alias; `sort_order` must be `asc`/`desc`
 
 - Example: `?sort_field=not_a_field`
+
+**Mixed Include/Exclude IDs**
+
+- Simple filters (`correspondent`, `document_type`, `storage_path`, `owner`) do not support
+  mixing included and excluded IDs
+
+- Example: `?owner=1,!2`

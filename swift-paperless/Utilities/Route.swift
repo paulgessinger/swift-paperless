@@ -50,6 +50,7 @@ public struct Route: Equatable, Sendable {
     case invalidAsnValue(String)
     case invalidDateFormat(String)
     case invalidSortField(String)
+    case mixedFilterIdsNotAllowed(String)
   }
 
   public let action: Action
@@ -263,6 +264,11 @@ public struct Route: Equatable, Sendable {
       // If all IDs are excluded, use noneOf
       if !excludeIds.isEmpty && includeIds.isEmpty {
         return .noneOf(ids: excludeIds)
+      }
+
+      // Mixing include/exclude is not supported for simple filters
+      if !excludeIds.isEmpty && !includeIds.isEmpty {
+        throw ParseError.mixedFilterIdsNotAllowed(paramName)
       }
 
       // If we have included IDs, use anyOf (exclude not supported in anyOf)

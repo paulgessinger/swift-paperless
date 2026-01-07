@@ -78,12 +78,23 @@
         }
       }
     },
+    "errorMixedFilterIdsNotAllowed" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Cannot mix included and excluded IDs for \"%@\""
+          }
+        }
+      }
+    },
     "errorInvalidUrl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "The deep link URL is malformed or invalid"
           }
         }

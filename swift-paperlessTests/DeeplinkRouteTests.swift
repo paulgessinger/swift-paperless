@@ -183,6 +183,12 @@ struct DeeplinkRouteTests {
     }
     #expect(filter2.correspondent == .noneOf(ids: [1, 2]))
 
+    // Test correspondent with mixed include/exclude should throw error
+    let mixedURL = try #require(URL(string: "x-paperless://v1/set_filter?correspondent=1,!2"))
+    #expect(throws: Route.ParseError.mixedFilterIdsNotAllowed("correspondent")) {
+      try Route(from: mixedURL)
+    }
+
     // Test correspondent=none (notAssigned)
     let noneURL = try #require(URL(string: "x-paperless://v1/set_filter?correspondent=none"))
     let noneRoute = try Route(from: noneURL)
