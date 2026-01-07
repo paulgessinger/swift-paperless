@@ -10,16 +10,6 @@ import DataModel
 import Foundation
 import Testing
 
-// Helper extension for testing
-extension Route.Action {
-  var setFilterTags: FilterState.TagFilter? {
-    guard case .setFilter(let filter) = self else {
-      return nil
-    }
-    return filter.tags
-  }
-}
-
 private func parseDate(_ value: String) throws -> Date {
   let formatter = DateFormatter()
   formatter.timeZone = .gmt
@@ -90,33 +80,57 @@ struct DeeplinkRouteTests {
     // Test set_filter with multiple tags (anyOf mode, default)
     let filterURL = try #require(URL(string: "x-paperless://v1/set_filter?tags=1,2,3"))
     let filterRoute = try Route(from: filterURL)
-    #expect(filterRoute.action.setFilterTags == .anyOf(ids: [1, 2, 3]))
+    guard case .setFilter(let filter) = filterRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(filter.tags == .anyOf(ids: [1, 2, 3]))
     #expect(filterRoute.server == nil)
 
     // Test set_filter with single tag
     let singleTagURL = try #require(URL(string: "x-paperless://v1/set_filter?tags=42"))
     let singleTagRoute = try Route(from: singleTagURL)
-    #expect(singleTagRoute.action.setFilterTags == .anyOf(ids: [42]))
+    guard case .setFilter(let singleFilter) = singleTagRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(singleFilter.tags == .anyOf(ids: [42]))
 
     // Test set_filter with no tags parameter (nil means don't change current filter)
     let noTagsURL = try #require(URL(string: "x-paperless://v1/set_filter"))
     let noTagsRoute = try Route(from: noTagsURL)
-    #expect(noTagsRoute.action.setFilterTags == nil)
+    guard case .setFilter(let noTagsFilter) = noTagsRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(noTagsFilter.tags == nil)
 
     // Test set_filter with empty tags parameter (nil means don't change current filter)
     let emptyTagsURL = try #require(URL(string: "x-paperless://v1/set_filter?tags="))
     let emptyTagsRoute = try Route(from: emptyTagsURL)
-    #expect(emptyTagsRoute.action.setFilterTags == nil)
+    guard case .setFilter(let emptyTagsFilter) = emptyTagsRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(emptyTagsFilter.tags == nil)
 
     // Test set_filter with tags=none (notAssigned)
     let noneTagsURL = try #require(URL(string: "x-paperless://v1/set_filter?tags=none"))
     let noneTagsRoute = try Route(from: noneTagsURL)
-    #expect(noneTagsRoute.action.setFilterTags == .notAssigned)
+    guard case .setFilter(let noneTagsFilter) = noneTagsRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(noneTagsFilter.tags == .notAssigned)
 
     // Test set_filter with tags=any (reset to .any)
     let anyTagsURL = try #require(URL(string: "x-paperless://v1/set_filter?tags=any"))
     let anyTagsRoute = try Route(from: anyTagsURL)
-    #expect(anyTagsRoute.action.setFilterTags == .any)
+    guard case .setFilter(let anyTagsFilter) = anyTagsRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(anyTagsFilter.tags == .any)
 
     // Test set_filter with server only (tags nil, won't change filter)
     let serverURL = try #require(URL(string: "https://example.com"))
@@ -126,28 +140,43 @@ struct DeeplinkRouteTests {
     let serverOnlyURL = try #require(
       URL(string: "x-paperless://v1/set_filter?server=\(encodedServer)"))
     let serverOnlyRoute = try Route(from: serverOnlyURL)
-    #expect(serverOnlyRoute.action.setFilterTags == nil)
+    guard case .setFilter(let serverOnlyFilter) = serverOnlyRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(serverOnlyFilter.tags == nil)
     #expect(serverOnlyRoute.server == server)
 
     // Test set_filter with server and tags
     let filterWithServerURL = try #require(
       URL(string: "x-paperless://v1/set_filter?server=\(encodedServer)&tags=10,20"))
     let filterWithServerRoute = try Route(from: filterWithServerURL)
-    #expect(filterWithServerRoute.action.setFilterTags == .anyOf(ids: [10, 20]))
+    guard case .setFilter(let serverTagsFilter) = filterWithServerRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(serverTagsFilter.tags == .anyOf(ids: [10, 20]))
     #expect(filterWithServerRoute.server == server)
 
     // Test set_filter with tag_mode=all (allOf mode with include only)
     let allOfURL = try #require(
       URL(string: "x-paperless://v1/set_filter?tags=1,2,3&tag_mode=all"))
     let allOfRoute = try Route(from: allOfURL)
-    #expect(allOfRoute.action.setFilterTags == .allOf(include: [1, 2, 3], exclude: []))
+    guard case .setFilter(let allOfFilter) = allOfRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(allOfFilter.tags == .allOf(include: [1, 2, 3], exclude: []))
 
     // Test set_filter with tag_mode=all and excluded tags (!)
     let allOfExcludeURL = try #require(
       URL(string: "x-paperless://v1/set_filter?tags=1,2,!3,!4&tag_mode=all"))
     let allOfExcludeRoute = try Route(from: allOfExcludeURL)
-    #expect(
-      allOfExcludeRoute.action.setFilterTags == .allOf(include: [1, 2], exclude: [3, 4]))
+    guard case .setFilter(let allOfExcludeFilter) = allOfExcludeRoute.action else {
+      Issue.record("Expected setFilter action")
+      return
+    }
+    #expect(allOfExcludeFilter.tags == .allOf(include: [1, 2], exclude: [3, 4]))
 
     // Test set_filter with tag_mode=any and excluded tags should throw error
     let anyOfExcludeURL = try #require(
