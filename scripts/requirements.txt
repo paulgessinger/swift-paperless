@@ -2,52 +2,55 @@
 #    uv pip compile scripts/requirements.in -o scripts/requirements.txt
 annotated-types==0.7.0
     # via pydantic
-certifi==2024.2.2
+certifi==2026.1.4
     # via requests
-charset-normalizer==3.3.2
+charset-normalizer==3.4.4
     # via requests
-click==8.1.7
+click==8.3.1
     # via typer
 dirtyjson==1.0.8
     # via -r scripts/requirements.in
-idna==3.7
+idna==3.11
     # via requests
-jinja2==3.1.4
+jinja2==3.1.6
     # via -r scripts/requirements.in
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via rich
-markupsafe==2.1.5
+markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-numpy==1.26.4
+numpy==2.4.0
     # via -r scripts/requirements.in
-pillow==10.3.0
+pillow==12.1.0
     # via -r scripts/requirements.in
-pydantic==2.7.1
+pydantic==2.12.5
     # via -r scripts/requirements.in
-pydantic-core==2.18.2
+pydantic-core==2.41.5
     # via pydantic
-pygments==2.18.0
+pygments==2.19.2
     # via rich
-python-dotenv==1.0.1
+python-dotenv==1.2.1
     # via -r scripts/requirements.in
-pyyaml==6.0.1
+pyyaml==6.0.3
     # via -r scripts/requirements.in
-requests==2.32.2
+requests==2.32.5
     # via -r scripts/requirements.in
-rich==13.7.1
+rich==14.2.0
     # via
     #   -r scripts/requirements.in
     #   typer
 shellingham==1.5.4
     # via typer
-typer==0.12.3
+typer==0.21.1
     # via -r scripts/requirements.in
-typing-extensions==4.11.0
+typing-extensions==4.15.0
     # via
     #   pydantic
     #   pydantic-core
     #   typer
-urllib3==2.2.1
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
+urllib3==2.6.2
     # via requests
