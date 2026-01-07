@@ -174,7 +174,7 @@ struct MainView: View {
       localizedTitle: String(localized: .localizable(.scanDocument)),
       localizedSubtitle: nil,
       icon: UIApplicationShortcutIcon(systemImageName: "document.viewfinder"),
-      userInfo: ["url": "x-paperless://v1/action/scan" as any NSSecureCoding]
+      userInfo: ["url": "x-paperless://v1/scan" as any NSSecureCoding]
     )
 
     UIApplication.shared.shortcutItems = [inboxAction]
