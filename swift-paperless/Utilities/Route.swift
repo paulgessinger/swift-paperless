@@ -363,7 +363,8 @@ public struct Route: Equatable, Sendable {
         return .any
       }
 
-      if let range = parseDateRange(from: trimmed) {
+      let normalized = trimmed.lowercased().replacingOccurrences(of: "_", with: " ")
+      if let range = parseWithinRange(from: normalized) {
         return .range(range)
       }
 
@@ -384,12 +385,7 @@ public struct Route: Equatable, Sendable {
     return .between(start: start, end: end)
   }
 
-  static private func parseDateRange(from value: String) -> FilterState.DateFilter.Range? {
-    let normalized = value.lowercased().replacingOccurrences(of: "_", with: " ")
-    return parseConciseWithinRange(from: normalized)
-  }
-
-  static private func parseConciseWithinRange(
+  static private func parseWithinRange(
     from value: String
   ) -> FilterState.DateFilter.Range? {
     let ex = /within\s*(?<count>\d+)\s*(?<unit>[dwmy])/
