@@ -1,0 +1,1 @@
+- Fix issue with the home screen app icon scan shortcut
