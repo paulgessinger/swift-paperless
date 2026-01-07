@@ -1,7 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "deeplinkErrorExcludedTagsNotAllowedInAnyMode" : {
+    "errorExcludedTagsNotAllowedInAnyMode" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -12,7 +12,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidDocumentId" : {
+    "errorInvalidDocumentId" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -23,7 +23,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidTagMode" : {
+    "errorInvalidTagMode" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -34,7 +34,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidSearchMode" : {
+    "errorInvalidSearchMode" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -45,7 +45,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidAsnValue" : {
+    "errorInvalidAsnValue" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -56,7 +56,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidDateFormat" : {
+    "errorInvalidDateFormat" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -67,7 +67,7 @@
         }
       }
     },
-    "deeplinkErrorInvalidSortField" : {
+    "errorInvalidSortField" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -78,18 +78,18 @@
         }
       }
     },
-    "deeplinkErrorInvalidUrl" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+    "errorInvalidUrl" : {
             "value" : "The deep link URL is malformed or invalid"
           }
         }
       }
     },
-    "deeplinkErrorMissingDocumentId" : {
+    "errorMissingDocumentId" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -100,7 +100,7 @@
         }
       }
     },
-    "deeplinkErrorMissingPath" : {
+    "errorMissingPath" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -111,7 +111,7 @@
         }
       }
     },
-    "deeplinkErrorTitle" : {
+    "errorTitle" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -122,7 +122,7 @@
         }
       }
     },
-    "deeplinkErrorUnknownResource" : {
+    "errorUnknownResource" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -133,7 +133,7 @@
         }
       }
     },
-    "deeplinkErrorUnsupportedVersion" : {
+    "errorUnsupportedVersion" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -144,7 +144,7 @@
         }
       }
     },
-    "deeplinkErrorUnsupportedVersionWithValue" : {
+    "errorUnsupportedVersionWithValue" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
