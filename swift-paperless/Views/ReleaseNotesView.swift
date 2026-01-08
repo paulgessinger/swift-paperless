@@ -344,15 +344,16 @@ private struct ReleaseNotesBareView: View {
         if #available(iOS 26.0, *) {
           $0.safeAreaBar(edge: .bottom) {
             if showDismissButton {
-              Button(.localizable(.ok)) {
+              Button {
                 model.showReleaseNotes = false
+              } label: {
+                Text(.localizable(.ok))
+                  .frame(maxWidth: .infinity, alignment: .center)
+                  .font(.title2)
+                  .padding()
               }
-              .frame(maxWidth: .infinity, alignment: .center)
-              .font(.title2)
-              .padding()
               .glassEffect(.regular.interactive())
               .padding()
-
             }
           }
         } else {
