@@ -37,7 +37,7 @@ public struct Route: Equatable, Sendable {
     case scan
 
     public enum FilterSetting: String, Equatable, Sendable {
-      case tags, correspondent, documentType, storagePath, asn, dateCreated, dateAdded, dateModified
+      case tags, correspondent, documentType, storagePath, asn, date, customField
     }
     case openFilterSettings(_: FilterSetting)
   }

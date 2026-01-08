@@ -154,6 +154,9 @@ struct DocumentView: View {
         routeManager.pendingRoute = nil
         Logger.shared.info("Clearing filter in filter from route")
         filterModel.filterState.clear()
+
+      default:
+        break
       }
     }
   }
