@@ -10,20 +10,45 @@ import Networking
 import SwiftUI
 import os
 
+//private struct BarButton
+
 struct TrashView: View {
   @State private var documents: [Document] = []
   @EnvironmentObject private var store: DocumentStore
+  @State var editMode: EditMode = .inactive
+  @EnvironmentObject private var errorController: ErrorController
 
-  @State private var multiSelection = Set<UInt>()
+  @State private var selection = Set<UInt>()
+  @State private var showDeleteConfirmation: Bool = false
 
   private func deleteDocuments(at offsets: IndexSet) {
-    // @TODO: Delete documents
-    documents.remove(atOffsets: offsets)
+    deleteDocuments(ids: Set(offsets.compactMap { documents[$0].id }))
   }
 
-  private func restoreDocuments(at offsets: IndexSet) {
-    // @TODO: Restore documents
-    documents.remove(atOffsets: offsets)
+  private func deleteDocuments(ids: Set<UInt>) {
+    Task {
+      do {
+        try await store.repository.emptyTrash(documents: Array(ids))
+        documents.removeAll(where: { ids.contains($0.id) })
+        selection.subtract(ids)
+      } catch {
+        Logger.shared.error("Error restoring documents: \(error)")
+        errorController.push(error: error)
+      }
+    }
+  }
+
+  private func restoreDocuments(ids: Set<UInt>) {
+    Task {
+      do {
+        try await store.repository.restoreTrash(documents: Array(ids))
+        documents.removeAll(where: { ids.contains($0.id) })
+        selection.subtract(ids)
+      } catch {
+        Logger.shared.error("Error restoring documents: \(error)")
+        errorController.push(error: error)
+      }
+    }
   }
 
   private func load() async {
@@ -31,26 +56,79 @@ struct TrashView: View {
       documents = try await store.repository.trash()
     } catch {
       Logger.shared.error("Error loading trash: \(error)")
-
     }
   }
 
+  private var confirmTitle: LocalizedStringResource {
+    .settings(.trashConfirmDeleteAction(UInt(selection.count)))
+  }
+
   var body: some View {
-    List {
-      ForEach(documents) { doc in
-        Text(doc.title)
-      }
-      .onDelete(perform: deleteDocuments)
-      .swipeActions(edge: .leading, allowsFullSwipe: true) {
-        Button(.settings(.trashRestoreButton), systemImage: "arrow.counterclockwise") {}
-          .tint(.accentColor)
+    //      if documents.isEmpty {
+    //        Form {
+    //          ContentUnavailableView(.settings(.trashEmptyTitle), image: "trash")
+    //        }
+    //      }
+    List(selection: $selection) {
+      if documents.isEmpty {
+        ContentUnavailableView(
+          .settings(.trashEmptyTitle), systemImage: "trash",
+          description: Text(.settings(.trashEmptyDescription)))
+      } else {
+        ForEach(documents) { doc in
+          Text(doc.title)
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+              Button(.settings(.trashRestoreButton), systemImage: "arrow.counterclockwise") {
+                restoreDocuments(ids: [doc.id])
+              }
+              .tint(.accentColor)
+            }
+        }
+        .onDelete { offsets in
+          deleteDocuments(ids: Set(offsets.compactMap { documents[$0].id }))
+        }
       }
     }
+
+    .animation(.spring, value: documents)
+    .animation(.default, value: editMode)
     .navigationTitle(.settings(.trashTitle))
 
     .toolbar {
-      EditButton()
+      ToolbarItem(placement: .topBarTrailing) {
+        if !documents.isEmpty {
+          CustomEditButton()
+        }
+      }
+
+      ToolbarItemGroup(placement: .bottomBar) {
+        if editMode.isEditing {
+          Button(.settings(.trashRestoreButton), systemImage: "arrow.counterclockwise") {
+            restoreDocuments(ids: selection)
+          }
+          .disabled(selection.isEmpty)
+
+          Button(.localizable(.delete), systemImage: "trash") {
+            showDeleteConfirmation = true
+          }
+          .disabled(selection.isEmpty)
+          .confirmationDialog(
+            confirmTitle, isPresented: $showDeleteConfirmation, titleVisibility: .visible
+          ) {
+            Button(.localizable(.delete), role: .destructive) {
+              deleteDocuments(ids: selection)
+              showDeleteConfirmation = false
+            }
+            Button(.localizable(.cancel)) {
+              selection = Set()
+              showDeleteConfirmation = false
+            }
+          }
+        }
+      }
     }
+
+    .environment(\.editMode, $editMode)
 
     .refreshable {
       await load()
