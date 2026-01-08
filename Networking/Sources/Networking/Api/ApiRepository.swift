@@ -677,6 +677,47 @@ extension ApiRepository: Repository {
     }
   }
 
+  public func trash() async throws -> [Document] {
+    Logger.networking.notice("Getting trash documents")
+    let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
+    let sequence = try ApiSequence<Document>(repository: self, url: url(endpoint))
+    return try await Array(sequence)
+  }
+
+  private enum TrashAction: String, Encodable {
+    case restore
+    case empty
+  }
+
+  private struct TrashActionRequest: Encodable {
+    let action: TrashAction
+    let documents: [UInt]
+  }
+
+  public func restoreTrash(documents: [UInt]) async throws {
+    try await performTrashAction(.restore, documents: documents)
+  }
+
+  public func emptyTrash(documents: [UInt]) async throws {
+    try await performTrashAction(.empty, documents: documents)
+  }
+
+  private func performTrashAction(_ action: TrashAction, documents: [UInt]) async throws {
+    Logger.networking.notice("Sending trash action \(action.rawValue)")
+    var request = try request(.trash())
+    let payload = TrashActionRequest(action: action, documents: documents)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(payload)
+
+    do {
+      _ = try await fetchData(for: request, code: .ok)
+    } catch {
+      Logger.networking.error("Trash action \(action.rawValue) failed: \(error)")
+      throw error
+    }
+  }
+
   private func nextAsnCompatibility() async throws -> UInt {
     Logger.networking.notice("Getting next ASN with legacy compatibility method")
 

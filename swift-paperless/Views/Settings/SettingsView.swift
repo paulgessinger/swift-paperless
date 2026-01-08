@@ -97,6 +97,12 @@ struct SettingsView: View {
       } label: {
         Label(String(localized: .localizable(.storagePaths)), systemImage: "archivebox.fill")
       }
+
+      NavigationLink {
+        TrashView()
+      } label: {
+        Label(String(localized: .settings(.trashTitle)), systemImage: "trash.fill")
+      }
     }
     .task {
       await checked(store.fetchAll)

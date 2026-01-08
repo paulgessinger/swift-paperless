@@ -14,6 +14,7 @@ public class TransientRepository {
   private var users: [User]
   private var groups: [UserGroup]
   private var savedViews: [UInt: SavedView]
+  private var trashedDocuments: [UInt: Document]
 
   private var notesByDocument: [UInt: [Document.Note]]
 
@@ -39,6 +40,7 @@ public class TransientRepository {
     customFields = [:]
     notesByDocument = [:]
     shareLinks = [:]
+    trashedDocuments = [:]
   }
 
   private func generateId() -> UInt {
@@ -123,6 +125,24 @@ extension TransientRepository: Repository {
     return TransientDocumentSource(sequence: filteredDocs)
   }
 
+  public func trash() async throws -> [Document] {
+    trashedDocuments.values.sorted { $0.id < $1.id }
+  }
+
+  public func restoreTrash(documents: [UInt]) async throws {
+    for id in documents {
+      if let doc = trashedDocuments.removeValue(forKey: id) {
+        self.documents[id] = doc
+      }
+    }
+  }
+
+  public func emptyTrash(documents: [UInt]) async throws {
+    for id in documents {
+      trashedDocuments.removeValue(forKey: id)
+    }
+  }
+
   public func allDocuments() -> [Document] {
     documents.values.sorted { $0.id < $1.id }
   }
@@ -132,7 +152,9 @@ extension TransientRepository: Repository {
   }
 
   public func delete(document: Document) async throws {
-    documents.removeValue(forKey: document.id)
+    if let existing = documents.removeValue(forKey: document.id) {
+      trashedDocuments[existing.id] = existing
+    }
   }
 
   public func create(document: ProtoDocument, file _: URL, filename _: String) async throws {

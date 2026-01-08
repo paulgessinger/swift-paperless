@@ -376,6 +376,14 @@ public class PreviewRepository: Repository {
     PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
   }
 
+  public func trash() async -> [Document] {
+    []
+  }
+
+  public func restoreTrash(documents _: [UInt]) async {}
+
+  public func emptyTrash(documents _: [UInt]) async {}
+
   public func thumbnail(document: Document) async throws -> Image? {
     let data = try await thumbnailData(document: document)
     let image = Image(data: data)
