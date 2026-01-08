@@ -6,7 +6,6 @@ import os
 struct PreferencesView: View {
   @ObservedObject private var appSettings = AppSettings.shared
 
-  @EnvironmentObject private var errorController: ErrorController
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
   @EnvironmentObject private var store: DocumentStore
 
