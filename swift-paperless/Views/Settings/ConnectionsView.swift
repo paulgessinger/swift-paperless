@@ -75,12 +75,30 @@ struct ConnectionsView: View {
 
   @State private var backendVersion: Version?
 
+  @State private var showExtraHeader = false
+
   @EnvironmentObject private var store: DocumentStore
 
   init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
     self.connectionManager = connectionManager
     _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
     _showLoginSheet = showLoginSheet
+  }
+
+  private func updateExtraHeaders() {
+    Logger.shared.trace("Extra header manipulated in ConnectionsView")
+    let existing = connectionManager.connection?.extraHeaders ?? []
+    if existing != extraHeaders {
+      Logger.shared.info("Active connection extra headers have changed")
+      connectionManager.setExtraHeaders(extraHeaders)
+      if let connection = connectionManager.connection {
+        Task {
+          let repository = await ApiRepository(
+            connection: connection, mode: Bundle.main.appConfiguration.mode)
+          store.set(repository: repository)
+        }
+      }
+    }
   }
 
   var body: some View {
@@ -107,6 +125,20 @@ struct ConnectionsView: View {
           }
         }
 
+        .sheet(isPresented: $showExtraHeader, onDismiss: updateExtraHeaders) {
+          NavigationStack {
+            ExtraHeadersView(headers: $extraHeaders)
+              .navigationBarTitleDisplayMode(.inline)
+              .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                  SaveButton {
+                    showExtraHeader = false
+                  }
+                }
+              }
+          }
+        }
+
         LabeledContent(
           String(localized: .settings(.activeServerUsername)), value: stored.user.username)
         LabeledContent(
@@ -119,11 +151,10 @@ struct ConnectionsView: View {
           Label(localized: .permissions(.title), systemImage: "lock.fill")
         }
 
-        NavigationLink {
-          ExtraHeadersView(headers: $extraHeaders)
-        } label: {
-          Label(String(localized: .login(.extraHeaders)), systemImage: "list.bullet.rectangle.fill")
+        Button(.login(.extraHeaders), systemImage: "list.bullet.rectangle.fill") {
+          showExtraHeader = true
         }
+        .tint(.primary)
 
         Button(role: .destructive) {
           logoutRequested = true
@@ -143,11 +174,6 @@ struct ConnectionsView: View {
             connectionManager.logout(animated: false)
           }
           Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-        }
-
-        .onChange(of: extraHeaders) {
-          Logger.shared.trace("Extra header manipulated in ConnectionsView")
-          connectionManager.setExtraHeaders(extraHeaders)
         }
 
       } else if let compat = connectionManager.connection {

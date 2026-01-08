@@ -136,10 +136,12 @@ final class DocumentStore: ObservableObject, Sendable {
     settings = UISettingsSettings()
   }
 
-  func set(repository: some Repository) {
+  func set(repository: some Repository, reload: Bool = true) {
     self.repository = repository
-    eventPublisher.send(.repositoryChanged)
-    clear()
+    if reload {
+      eventPublisher.send(.repositoryChanged)
+      clear()
+    }
   }
 
   func updateDocument(_ document: Document) async throws -> Document {
