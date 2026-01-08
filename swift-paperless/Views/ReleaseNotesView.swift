@@ -226,6 +226,11 @@ class ReleaseNotesViewModel {
             Logger.shared.warning("Invalid tag format: \(release.tag_name)")
             return nil
           }
+          guard buildNumber <= version.build else {
+            Logger.shared.debug(
+              "Skipping release \(release.tag_name) newer than current build \(version.build)")
+            return nil
+          }
           return (release, buildNumber)
         }
         .sorted { $0.1 > $1.1 }  // Sort by build number descending
