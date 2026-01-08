@@ -234,6 +234,7 @@ struct MainView: View {
           .environmentObject(manager)
           .environmentObject(store)
           .environmentObject(errorController)
+          .environmentObject(biometricLockManager)
       }
     }
 
