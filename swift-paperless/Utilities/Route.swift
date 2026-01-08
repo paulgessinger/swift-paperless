@@ -35,6 +35,11 @@ public struct Route: Equatable, Sendable {
     case setFilter(DeepLinkFilter)
     case clearFilter
     case scan
+
+    public enum FilterSetting: String, Equatable, Sendable {
+      case tags, correspondent, documentType, storagePath, asn, dateCreated, dateAdded, dateModified
+    }
+    case openFilterSettings(_: FilterSetting)
   }
 
   public enum ParseError: Error, Equatable, Sendable {
@@ -142,6 +147,18 @@ public struct Route: Equatable, Sendable {
         throw ParseError.unknownResource(String(resource))
       }
       self.action = .clearFilter
+
+    case "open_filter":
+      guard parts.count == 1 else {
+        throw ParseError.unknownResource(String(resource))
+      }
+
+      let settingString = String(parts.removeFirst())
+      guard let filterSetting = Action.FilterSetting(rawValue: settingString) else {
+        throw ParseError.unknownResource(settingString)
+      }
+
+      self.action = .openFilterSettings(filterSetting)
 
     default:
       throw ParseError.unknownResource(String(resource))

@@ -703,4 +703,70 @@ struct DeeplinkRouteTests {
     }
   }
 
+  @Test func testV1OpenFilterSettings() throws {
+    // Test all valid filter settings
+    let tagsUrl = try #require(URL(string: "x-paperless://v1/open_filter/tags"))
+    let tagsRoute = try Route(from: tagsUrl)
+    #expect(tagsRoute.action == .openFilterSettings(.tags))
+    #expect(tagsRoute.server == nil)
+
+    let correspondentUrl = try #require(URL(string: "x-paperless://v1/open_filter/correspondent"))
+    let correspondentRoute = try Route(from: correspondentUrl)
+    #expect(correspondentRoute.action == .openFilterSettings(.correspondent))
+
+    let documentTypeUrl = try #require(URL(string: "x-paperless://v1/open_filter/documentType"))
+    let documentTypeRoute = try Route(from: documentTypeUrl)
+    #expect(documentTypeRoute.action == .openFilterSettings(.documentType))
+
+    let storagePathUrl = try #require(URL(string: "x-paperless://v1/open_filter/storagePath"))
+    let storagePathRoute = try Route(from: storagePathUrl)
+    #expect(storagePathRoute.action == .openFilterSettings(.storagePath))
+
+    let asnUrl = try #require(URL(string: "x-paperless://v1/open_filter/asn"))
+    let asnRoute = try Route(from: asnUrl)
+    #expect(asnRoute.action == .openFilterSettings(.asn))
+
+    let dateCreatedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateCreated"))
+    let dateCreatedRoute = try Route(from: dateCreatedUrl)
+    #expect(dateCreatedRoute.action == .openFilterSettings(.dateCreated))
+
+    let dateAddedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateAdded"))
+    let dateAddedRoute = try Route(from: dateAddedUrl)
+    #expect(dateAddedRoute.action == .openFilterSettings(.dateAdded))
+
+    let dateModifiedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateModified"))
+    let dateModifiedRoute = try Route(from: dateModifiedUrl)
+    #expect(dateModifiedRoute.action == .openFilterSettings(.dateModified))
+  }
+
+  @Test func testV1OpenFilterSettingsWithServer() throws {
+    // Test open_filter with server parameter
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let server = try #require(serverURL.stringDroppingScheme)
+    let encodedServer = server.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let tagsWithServerUrl = try #require(
+      URL(string: "x-paperless://v1/open_filter/tags?server=\(encodedServer)"))
+    let tagsWithServerRoute = try Route(from: tagsWithServerUrl)
+    #expect(tagsWithServerRoute.action == .openFilterSettings(.tags))
+    #expect(tagsWithServerRoute.server == server)
+  }
+
+  @Test func testV1OpenFilterSettingsInvalidRoutes() throws {
+    // Test invalid filter setting name
+    #expect(throws: Route.ParseError.unknownResource("invalid")) {
+      try Route(from: URL(string: "x-paperless://v1/open_filter/invalid")!)
+    }
+
+    // Test missing filter setting
+    #expect(throws: Route.ParseError.unknownResource("open_filter")) {
+      try Route(from: URL(string: "x-paperless://v1/open_filter")!)
+    }
+
+    // Test extra path components
+    #expect(throws: Route.ParseError.unknownResource("open_filter")) {
+      try Route(from: URL(string: "x-paperless://v1/open_filter/tags/extra")!)
+    }
+  }
+
 }
