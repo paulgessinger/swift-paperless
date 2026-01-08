@@ -64,11 +64,6 @@ struct TrashView: View {
   }
 
   var body: some View {
-    //      if documents.isEmpty {
-    //        Form {
-    //          ContentUnavailableView(.settings(.trashEmptyTitle), image: "trash")
-    //        }
-    //      }
     List(selection: $selection) {
       if documents.isEmpty {
         ContentUnavailableView(
