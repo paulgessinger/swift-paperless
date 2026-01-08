@@ -32,7 +32,7 @@ struct DeeplinkRouteTests {
     let documentURL = try #require(
       URL(string: "x-paperless://v1/document/123?server=\(encodedServer)"))
     let documentRoute = try Route(from: documentURL)
-    #expect(documentRoute.action == .document(id: 123))
+    #expect(documentRoute.action == .document(id: 123, edit: false))
     #expect(documentRoute.server == server)
 
     // Test valid scan route with server query parameter
@@ -47,7 +47,7 @@ struct DeeplinkRouteTests {
     // Test valid document route without server
     let documentURL = try #require(URL(string: "x-paperless://v1/document/456"))
     let documentRoute = try Route(from: documentURL)
-    #expect(documentRoute.action == .document(id: 456))
+    #expect(documentRoute.action == .document(id: 456, edit: false))
     #expect(documentRoute.server == nil)
 
     // Test valid scan route without server
@@ -55,6 +55,59 @@ struct DeeplinkRouteTests {
     let scanRoute = try Route(from: scanURL)
     #expect(scanRoute.action == .scan)
     #expect(scanRoute.server == nil)
+  }
+
+  @Test func testV1DocumentWithEditParameter() throws {
+    // Test document with edit=true
+    let editTrueURL = try #require(URL(string: "x-paperless://v1/document/789?edit=true"))
+    let editTrueRoute = try Route(from: editTrueURL)
+    #expect(editTrueRoute.action == .document(id: 789, edit: true))
+    #expect(editTrueRoute.server == nil)
+
+    // Test document with edit=1 (true)
+    let edit1URL = try #require(URL(string: "x-paperless://v1/document/790?edit=1"))
+    let edit1Route = try Route(from: edit1URL)
+    #expect(edit1Route.action == .document(id: 790, edit: true))
+
+    // Test document with edit=yes (true)
+    let editYesURL = try #require(URL(string: "x-paperless://v1/document/791?edit=yes"))
+    let editYesRoute = try Route(from: editYesURL)
+    #expect(editYesRoute.action == .document(id: 791, edit: true))
+
+    // Test document with edit=false (explicit)
+    let editFalseURL = try #require(URL(string: "x-paperless://v1/document/101?edit=false"))
+    let editFalseRoute = try Route(from: editFalseURL)
+    #expect(editFalseRoute.action == .document(id: 101, edit: false))
+
+    // Test document with edit=0 (false)
+    let edit0URL = try #require(URL(string: "x-paperless://v1/document/102?edit=0"))
+    let edit0Route = try Route(from: edit0URL)
+    #expect(edit0Route.action == .document(id: 102, edit: false))
+
+    // Test document with edit=no (false)
+    let editNoURL = try #require(URL(string: "x-paperless://v1/document/103?edit=no"))
+    let editNoRoute = try Route(from: editNoURL)
+    #expect(editNoRoute.action == .document(id: 103, edit: false))
+
+    // Test document with edit parameter but invalid value (should throw error)
+    #expect(throws: Route.ParseError.invalidEditValue("on")) {
+      try Route(from: URL(string: "x-paperless://v1/document/202?edit=on")!)
+    }
+
+    #expect(throws: Route.ParseError.invalidEditValue("invalid")) {
+      try Route(from: URL(string: "x-paperless://v1/document/203?edit=invalid")!)
+    }
+
+    // Test document with edit=true and server
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let server = try #require(serverURL.stringDroppingScheme)
+    let encodedServer = server.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let editWithServerURL = try #require(
+      URL(string: "x-paperless://v1/document/303?edit=true&server=\(encodedServer)"))
+    let editWithServerRoute = try Route(from: editWithServerURL)
+    #expect(editWithServerRoute.action == .document(id: 303, edit: true))
+    #expect(editWithServerRoute.server == server)
   }
 
   @Test func testV1ParsingInvalidRoutes() throws {
@@ -726,17 +779,13 @@ struct DeeplinkRouteTests {
     let asnRoute = try Route(from: asnUrl)
     #expect(asnRoute.action == .openFilterSettings(.asn))
 
-    let dateCreatedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateCreated"))
-    let dateCreatedRoute = try Route(from: dateCreatedUrl)
-    #expect(dateCreatedRoute.action == .openFilterSettings(.dateCreated))
+    let dateUrl = try #require(URL(string: "x-paperless://v1/open_filter/date"))
+    let dateRoute = try Route(from: dateUrl)
+    #expect(dateRoute.action == .openFilterSettings(.date))
 
-    let dateAddedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateAdded"))
-    let dateAddedRoute = try Route(from: dateAddedUrl)
-    #expect(dateAddedRoute.action == .openFilterSettings(.dateAdded))
-
-    let dateModifiedUrl = try #require(URL(string: "x-paperless://v1/open_filter/dateModified"))
-    let dateModifiedRoute = try Route(from: dateModifiedUrl)
-    #expect(dateModifiedRoute.action == .openFilterSettings(.dateModified))
+    let customFieldUrl = try #require(URL(string: "x-paperless://v1/open_filter/customField"))
+    let customFieldRoute = try Route(from: customFieldUrl)
+    #expect(customFieldRoute.action == .openFilterSettings(.customField))
   }
 
   @Test func testV1OpenFilterSettingsWithServer() throws {
