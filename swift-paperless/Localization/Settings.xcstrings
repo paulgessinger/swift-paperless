@@ -2657,6 +2657,28 @@
         }
       }
     },
+    "trashRestoreButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
+          }
+        }
+      }
+    },
+    "trashTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trash"
+          }
+        }
+      }
+    },
     "unsupportedVersion" : {
       "extractionState" : "manual",
       "localizations" : {
