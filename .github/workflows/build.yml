@@ -80,7 +80,7 @@ jobs:
         run: swift package show-dependencies --package-path ${{ matrix.package }}
 
       - name: Run ${{ matrix.package }} tests
-        run: swift test --package-path ${{ matrix.package }}
+        run: swift test --package-path ${{ matrix.package }} --jobs 4
 
   test-xc:
     runs-on: macos-26
