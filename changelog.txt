@@ -1,3 +1,7 @@
+1.9.0 (173)
+
+- Fix crash on settings > preferences view
+
 1.9.0 (172)
 
 - Fix issue with the home screen app icon scan shortcut

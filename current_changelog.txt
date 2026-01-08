@@ -1,1 +1,0 @@
-- Fix crash on settings > preferences view
