@@ -48,7 +48,7 @@ import Testing
   func testFromJson() throws {
     for (s, c) in inputs {
       let input = "{\"color\":\"\(s)\"}".data(using: .utf8)!
-      let test = try #require(try JSONDecoder().decode(TestStruct.self, from: input))
+      let test = try JSONDecoder().decode(TestStruct.self, from: input)
       #expect(test.color.color == c)
     }
   }
