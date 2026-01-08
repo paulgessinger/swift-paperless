@@ -31,7 +31,7 @@ public struct Route: Equatable, Sendable {
   }
 
   public enum Action: Equatable, Sendable {
-    case document(id: UInt)
+    case document(id: UInt, edit: Bool)
     case setFilter(DeepLinkFilter)
     case clearFilter
     case scan
@@ -49,6 +49,7 @@ public struct Route: Equatable, Sendable {
     case unknownResource(String)
     case missingDocumentId
     case invalidDocumentId(String)
+    case invalidEditValue(String)
     case invalidTagMode(String)
     case excludedTagsNotAllowedInAnyMode
     case invalidSearchMode(String)
@@ -98,7 +99,10 @@ public struct Route: Equatable, Sendable {
         throw ParseError.invalidDocumentId(idString)
       }
 
-      self.action = .document(id: id)
+      // Parse optional edit parameter
+      let edit = try Self.parseEditParameter(from: components.queryItems ?? [])
+
+      self.action = .document(id: id, edit: edit)
 
     case "scan":
       guard parts.isEmpty else {
@@ -522,6 +526,27 @@ public struct Route: Equatable, Sendable {
       return .descending
     default:
       throw ParseError.invalidSortField(trimmed)
+    }
+  }
+
+  /// Parses the edit parameter from query items
+  /// Accepts "true", "1", "yes" as true; "false", "0", "no" as false
+  /// Missing parameter defaults to false
+  /// Any other value throws an error
+  static private func parseEditParameter(from queryItems: [URLQueryItem]) throws -> Bool {
+    guard let value = queryItems.first(where: { $0.name == "edit" })?.value else {
+      return false
+    }
+
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+    switch trimmed {
+    case "true", "1", "yes":
+      return true
+    case "false", "0", "no":
+      return false
+    default:
+      throw ParseError.invalidEditValue(value)
     }
   }
 

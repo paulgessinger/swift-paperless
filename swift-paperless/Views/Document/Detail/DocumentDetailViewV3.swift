@@ -321,6 +321,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   @State private var webviewOpacity = 0.0
   @State private var topPadding: CGFloat = 0.0
   @State private var bottomPadding: CGFloat = 200
+  @Environment(RouteManager.self) private var routeManager
 
   @State private var bottomInsetFrame = CGRect.zero
 
@@ -386,6 +387,14 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     bottomPadding =
       UIScreen.main.bounds.size.height - bottomInsetFrame.maxY + bottomInsetFrame.height  // + safeAreaInsets.bottom
     //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
+  }
+
+  private func handlePendingRoute() {
+    guard let action = routeManager.pendingRoute?.action else { return }
+    if case .document(_, let edit) = action {
+      routeManager.pendingRoute = nil
+      showEditSheet = edit
+    }
   }
 
   init(
@@ -649,6 +658,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
         .animation(.spring(duration: 0.2), value: showPropertyBar)
       }
     }
+
+    .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
     .task {
       editDetent = defaultEditDetent
