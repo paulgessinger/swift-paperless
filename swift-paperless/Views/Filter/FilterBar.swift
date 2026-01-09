@@ -523,6 +523,9 @@ struct FilterBar: View {
         case .customField: .customFields
         }
       present(target)
+    case .closeFilterSettings:
+      closeAll()
+      routeManager.pendingRoute = nil
     default:
       break
     }

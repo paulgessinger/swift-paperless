@@ -73,19 +73,24 @@ Opens a specific document by its ID.
 
 **URL Format:**
 ```
-x-paperless://v1/document/<document_id>[?server=<server>]
+x-paperless://v1/document/<document_id>[?edit=<boolean>][&server=<server>]
 ```
 
 **Parameters:**
 
 - `document_id` (required): The numeric ID of the document
 
+- `edit` (optional): Whether to open the document in edit mode. Defaults to `false` if not specified.
+  - Accepted values for `true`: `true`, `1`, `yes` (case-insensitive)
+  - Accepted values for `false`: `false`, `0`, `no` (case-insensitive)
+
 - `server` (optional): Server specification
 
 **Examples:**
 ```
 x-paperless://v1/document/123
-x-paperless://v1/document/456?server=example.com
+x-paperless://v1/document/456?edit=true
+x-paperless://v1/document/789?edit=yes&server=example.com
 ```
 
 ### Scan Document
@@ -124,6 +129,55 @@ x-paperless://v1/clear_filter[?server=<server>]
 ```
 x-paperless://v1/clear_filter
 x-paperless://v1/clear_filter?server=example.com
+```
+
+### Open Filter Settings
+
+Opens the filter settings interface for a specific filter type.
+
+**URL Format:**
+```
+x-paperless://v1/open_filter/<setting>[?server=<server>]
+```
+
+**Parameters:**
+
+- `setting` (required): The type of filter setting to open. Valid values:
+  - `tags`: Open tag filter settings
+  - `correspondent`: Open correspondent filter settings
+  - `documentType`: Open document type filter settings
+  - `storagePath`: Open storage path filter settings
+  - `asn`: Open archive serial number filter settings
+  - `date`: Open date filter settings
+  - `customField`: Open custom field filter settings
+
+- `server` (optional): Server specification
+
+**Examples:**
+```
+x-paperless://v1/open_filter/tags
+x-paperless://v1/open_filter/correspondent?server=example.com
+x-paperless://v1/open_filter/date
+x-paperless://v1/open_filter/customField
+```
+
+### Close Filter Settings
+
+Closes all open filter setting tabs/panels.
+
+**URL Format:**
+```
+x-paperless://v1/close_filter[?server=<server>]
+```
+
+**Parameters:**
+
+- `server` (optional): Server specification
+
+**Examples:**
+```
+x-paperless://v1/close_filter
+x-paperless://v1/close_filter?server=example.com
 ```
 
 ### Set Filter
@@ -336,7 +390,7 @@ The following errors may occur when parsing deep links:
 
 - The resource type in the path is not recognized
 
-- Valid resources are: `document`, `scan`, `set_filter`, `clear_filter`
+- Valid resources are: `document`, `scan`, `set_filter`, `clear_filter`, `open_filter`, `close_filter`
 
 - Example: `x-paperless://v1/unknown/123`
 
@@ -347,6 +401,16 @@ The following errors may occur when parsing deep links:
 - Example: `x-paperless://v1/document/abc` (non-numeric ID)
 
 - Example: `x-paperless://v1/document` (missing ID)
+
+**Invalid Edit Parameter**
+
+- The `edit` parameter must be one of the accepted boolean values
+
+- Accepted values for `true`: `true`, `1`, `yes` (case-insensitive)
+
+- Accepted values for `false`: `false`, `0`, `no` (case-insensitive)
+
+- Example: `x-paperless://v1/document/123?edit=on` (invalid value)
 
 **Invalid Tag Mode**
 

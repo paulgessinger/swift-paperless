@@ -786,6 +786,7 @@ struct DeeplinkRouteTests {
     let customFieldUrl = try #require(URL(string: "x-paperless://v1/open_filter/customField"))
     let customFieldRoute = try Route(from: customFieldUrl)
     #expect(customFieldRoute.action == .openFilterSettings(.customField))
+
   }
 
   @Test func testV1OpenFilterSettingsWithServer() throws {
@@ -815,6 +816,30 @@ struct DeeplinkRouteTests {
     // Test extra path components
     #expect(throws: Route.ParseError.unknownResource("open_filter")) {
       try Route(from: URL(string: "x-paperless://v1/open_filter/tags/extra")!)
+    }
+  }
+
+  @Test func testV1CloseFilterSettings() throws {
+    // Test close_filter without server
+    let closeFilterURL = try #require(URL(string: "x-paperless://v1/close_filter"))
+    let closeFilterRoute = try Route(from: closeFilterURL)
+    #expect(closeFilterRoute.action == .closeFilterSettings)
+    #expect(closeFilterRoute.server == nil)
+
+    // Test close_filter with server
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let server = try #require(serverURL.stringDroppingScheme)
+    let encodedServer = server.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let closeFilterWithServerURL = try #require(
+      URL(string: "x-paperless://v1/close_filter?server=\(encodedServer)"))
+    let closeFilterWithServerRoute = try Route(from: closeFilterWithServerURL)
+    #expect(closeFilterWithServerRoute.action == .closeFilterSettings)
+    #expect(closeFilterWithServerRoute.server == server)
+
+    // Test close_filter with extra path component should fail
+    #expect(throws: Route.ParseError.unknownResource("close_filter")) {
+      try Route(from: URL(string: "x-paperless://v1/close_filter/extra")!)
     }
   }
 

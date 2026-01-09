@@ -40,6 +40,7 @@ public struct Route: Equatable, Sendable {
       case tags, correspondent, documentType, storagePath, asn, date, customField
     }
     case openFilterSettings(_: FilterSetting)
+    case closeFilterSettings
   }
 
   public enum ParseError: Error, Equatable, Sendable {
@@ -163,6 +164,12 @@ public struct Route: Equatable, Sendable {
       }
 
       self.action = .openFilterSettings(filterSetting)
+
+    case "close_filter":
+      guard parts.isEmpty else {
+        throw ParseError.unknownResource(String(resource))
+      }
+      self.action = .closeFilterSettings
 
     default:
       throw ParseError.unknownResource(String(resource))

@@ -125,7 +125,7 @@ struct DocumentView: View {
         Logger.shared.info("Opening document scanner from URL ")
         await clear()
         showDocumentScanner = true
-      case .document(let id, let edit):
+      case .document(let id, _):
         Logger.shared.info("Opening document id \(id) from URL")
         do {
           guard let document = try await store.document(id: id) else {
