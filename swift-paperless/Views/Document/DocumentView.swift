@@ -60,7 +60,7 @@ struct DocumentView: View {
 
   // MARK: State
 
-  @State private var navPath = NavigationPath()
+  @State private var navPath: [NavigationState] = []
 
   @State private var showFileImporter = false
   @State private var isDocumentScannerAvailable = false
@@ -111,7 +111,7 @@ struct DocumentView: View {
         showDocumentScanner = false
       }
       if !navPath.isEmpty {
-        navPath.popToRoot()
+        navPath.removeLast()
         guard (try? await Task.sleep(for: .seconds(0.5))) != nil else {
           return
         }
@@ -530,7 +530,7 @@ struct DocumentView: View {
   }
 
   private func tasksSheet(state: NavigationState) -> some View {
-    var navPath = NavigationPath()
+    var navPath = [NavigationState]()
     switch state {
     case .task:
       navPath.append(state)

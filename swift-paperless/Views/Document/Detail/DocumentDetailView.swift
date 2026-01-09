@@ -52,19 +52,19 @@ protocol DocumentDetailViewProtocol: View {
     store: DocumentStore,
     connection: Connection?,
     document: Document,
-    navPath: Binding<NavigationPath>?)
+    navPath: Binding<[NavigationState]>?)
 }
 
 struct DocumentDetailView: View {
   @ObservedObject private var store: DocumentStore
   @EnvironmentObject private var connectionManager: ConnectionManager
   @State var document: Document
-  var navPath: Binding<NavigationPath>?
+  var navPath: Binding<[NavigationState]>?
 
   init(
     store: DocumentStore,
     document: Document,
-    navPath: Binding<NavigationPath>? = nil
+    navPath: Binding<[NavigationState]>? = nil
   ) {
     self.store = store
     self.document = document

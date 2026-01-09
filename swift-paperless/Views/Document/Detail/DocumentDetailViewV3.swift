@@ -340,7 +340,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   @EnvironmentObject private var errorController: ErrorController
 
-  var navPath: Binding<NavigationPath>? = nil
+  var navPath: Binding<[NavigationState]>? = nil
 
   @State private var editDetent: PresentationDetent = .medium
 
@@ -399,7 +399,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   init(
     store: DocumentStore, connection: Connection?, document: Document,
-    navPath: Binding<NavigationPath>?
+    navPath: Binding<[NavigationState]>?
   ) {
     _viewModel = State(
       initialValue: DocumentDetailModel(
@@ -870,7 +870,7 @@ private struct PreviewHelper: View {
   @StateObject var connectionManager = ConnectionManager(previewMode: true)
 
   @State var document: Document?
-  @State var navPath = NavigationPath()
+  @State var navPath = [NavigationState]()
 
   let documentId: UInt
 

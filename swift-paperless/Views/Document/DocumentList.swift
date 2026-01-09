@@ -39,7 +39,7 @@ struct LoadingDocumentList: View {
 
 struct DocumentList: View {
   var store: DocumentStore
-  @Binding var navPath: NavigationPath
+  @Binding var navPath: [NavigationState]
   @ObservedObject var filterModel: FilterModel
 
   @State private var documentToDelete: Document?
@@ -51,7 +51,7 @@ struct DocumentList: View {
   @ObservedObject private var appSettings = AppSettings.shared
 
   init(
-    store: DocumentStore, navPath: Binding<NavigationPath>, filterModel: FilterModel,
+    store: DocumentStore, navPath: Binding<[NavigationState]>, filterModel: FilterModel,
     errorController: ErrorController
   ) {
     self.store = store
@@ -67,7 +67,7 @@ struct DocumentList: View {
   struct Cell: View {
     var store: DocumentStore
     var document: Document
-    @Binding var navPath: NavigationPath
+    @Binding var navPath: [NavigationState]
     var documentDeleteConfirmation: Bool
     @Binding var documentToDelete: Document?
     var viewModel: DocumentListViewModel

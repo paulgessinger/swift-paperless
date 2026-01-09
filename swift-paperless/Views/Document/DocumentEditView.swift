@@ -65,7 +65,7 @@ struct DocumentEditView: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.locale) private var locale
 
-  var navPath: Binding<NavigationPath>? = nil
+  var navPath: Binding<[NavigationState]>? = nil
 
   @State private var initial = true
 
@@ -102,7 +102,7 @@ struct DocumentEditView: View {
 
   init(
     store: DocumentStore,
-    document: Binding<Document>, navPath: Binding<NavigationPath>? = nil
+    document: Binding<Document>, navPath: Binding<[NavigationState]>? = nil
   ) {
     self.store = store
     _documentOut = document
@@ -122,7 +122,7 @@ struct DocumentEditView: View {
         dismiss()
         if let navPath {
           Logger.shared.notice("Pop navigation to root\("")")
-          navPath.wrappedValue.popToRoot()
+          navPath.wrappedValue = []
         }
       } catch {
         errorController.push(error: error)
@@ -478,7 +478,7 @@ struct DocumentEditView: View {
   @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @State var document: Document?
-  @Previewable @State var navPath = NavigationPath()
+  @Previewable @State var navPath = [NavigationState]()
 
   VStack {
     if document != nil {
