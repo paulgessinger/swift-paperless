@@ -391,10 +391,10 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   private func handlePendingRoute() {
     guard let action = routeManager.pendingRoute?.action else { return }
-    if case .document(_, let edit) = action {
-      routeManager.pendingRoute = nil
-      showEditSheet = edit
-    }
+    guard case .document(let docId, let edit) = action else { return }
+    guard docId == viewModel.document.id else { return }
+    routeManager.pendingRoute = nil
+    showEditSheet = edit
   }
 
   init(

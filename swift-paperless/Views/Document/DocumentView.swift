@@ -128,6 +128,16 @@ struct DocumentView: View {
       case .document(let id, _):
         Logger.shared.info("Opening document id \(id) from URL")
         do {
+
+          guard case .document(let reqId, _) = route.action else { return }
+
+          // Check if currently open id is the one that's requested
+          if let last = navPath.last {
+            if case .detail(let open) = last {
+              if reqId == open.id { return }
+            }
+          }
+
           guard let document = try await store.document(id: id) else {
             Logger.shared.error("Document with id \(id) was not found")
             if let connId = connectionManager.activeConnectionId,
