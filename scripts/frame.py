@@ -178,7 +178,9 @@ root_dir = Path(__file__).parent.parent
 
 
 def main(
-    inputs: Annotated[list[Path], typer.Argument(exists=True)],
+    inputs: Annotated[
+        list[Path], typer.Argument(exists=True, help="Input directories or files")
+    ] = [root_dir / "fastlane/screenshots"],
     output_folder: Annotated[
         Path, typer.Option("--output", file_okay=False, writable=True)
     ] = root_dir
@@ -243,6 +245,14 @@ def main(
 
 
 def get_device_name(name: str):
+    # Expected format: {device_name}-{index:02d}_{step_name}
+    # Example: iPhone-16-Pro-01_documents
+    # We need to extract everything before the last hyphen followed by digits
+    import re
+    match = re.match(r"^(.+)-\d+_", name)
+    if match:
+        return match.group(1)
+    # Fallback to old behavior
     return "-".join(name.split("-")[:-1])
 
 
@@ -340,7 +350,7 @@ def frame(
     screenshot_raw = screenshot_raw.resize([*frame_config.target_size])
 
     screenshot = Image.new("RGBA", frame_config.frame.size)
-    screenshot.paste(screenshot_raw, box=[*frame_config.offset])
+    screenshot.paste(screenshot_raw, box=[*frame_config.offset]
 
     buffer = Image.new("RGBA", frame_config.frame.size)
 

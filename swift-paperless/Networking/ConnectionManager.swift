@@ -265,8 +265,12 @@ class ConnectionManager: ObservableObject {
       let env = ProcessInfo.processInfo.environment
 
       // Try environment variables first, then UserDefaults
-      let urlString = env["PreviewURL"] ?? udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/"
-      let token = env["PreviewToken"] ?? udef.string(forKey: "PreviewToken") ?? "pseudo-token-that-will-not-work"
+      let urlString =
+        env["PreviewURL"] ?? udef.string(forKey: "PreviewURL")
+        ?? "https://paperless.example.com/api/"
+      let token =
+        env["PreviewToken"] ?? udef.string(forKey: "PreviewToken")
+        ?? "pseudo-token-that-will-not-work"
 
       let url = URL(string: urlString)!
       return Connection(
@@ -327,7 +331,9 @@ class ConnectionManager: ObservableObject {
       let udef = UserDefaults.standard
 
       // Try environment variables first, then UserDefaults
-      let urlString = env["PreviewURL"] ?? udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/"
+      let urlString =
+        env["PreviewURL"] ?? udef.string(forKey: "PreviewURL")
+        ?? "https://paperless.example.com/api/"
       let url = URL(string: urlString)!
 
       return StoredConnection(
