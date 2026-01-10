@@ -160,7 +160,12 @@ class ConnectionManager: ObservableObject {
     if let previewMode {
       self.previewMode = previewMode
     } else {
-      self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+      // Try environment variable first, then UserDefaults
+      if let envPreview = ProcessInfo.processInfo.environment["PreviewMode"] {
+        self.previewMode = (envPreview == "1" || envPreview.lowercased() == "true")
+      } else {
+        self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+      }
     }
   }
 
@@ -257,9 +262,13 @@ class ConnectionManager: ObservableObject {
     if previewMode {
       Logger.api.info("Running in preview mode")
       let udef = UserDefaults.standard
-      let url = URL(
-        string: udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/")!
-      let token = udef.string(forKey: "PreviewToken") ?? "pseudo-token-that-will-not-work"
+      let env = ProcessInfo.processInfo.environment
+
+      // Try environment variables first, then UserDefaults
+      let urlString = env["PreviewURL"] ?? udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/"
+      let token = env["PreviewToken"] ?? udef.string(forKey: "PreviewToken") ?? "pseudo-token-that-will-not-work"
+
+      let url = URL(string: urlString)!
       return Connection(
         url: url,
         token: token,
@@ -314,9 +323,13 @@ class ConnectionManager: ObservableObject {
   var storedConnection: StoredConnection? {
     if previewMode {
       Logger.api.info("Running in preview mode")
-      let url = URL(
-        string: UserDefaults.standard.string(forKey: "PreviewURL")
-          ?? "https://paperless.example.com/api/")!
+      let env = ProcessInfo.processInfo.environment
+      let udef = UserDefaults.standard
+
+      // Try environment variables first, then UserDefaults
+      let urlString = env["PreviewURL"] ?? udef.string(forKey: "PreviewURL") ?? "https://paperless.example.com/api/"
+      let url = URL(string: urlString)!
+
       return StoredConnection(
         url: url,
         extraHeaders: extraHeaders,
