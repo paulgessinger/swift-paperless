@@ -10,7 +10,7 @@
 
 import asyncio
 from dataclasses import dataclass
-import os
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -42,13 +42,13 @@ class ScreenshotStep:
 
 
 DEFAULT_STEPS = [
-    ScreenshotStep("documents"),
+    ScreenshotStep("documents", wait=2),
     ScreenshotStep(
         "filter_tags",
         "x-paperless://v1/open_filter/tags",
         "x-paperless://v1/close_filter",
     ),
-    ScreenshotStep("document_view", "x-paperless://v1/document/3?edit=0"),
+    ScreenshotStep("document_view", "x-paperless://v1/document/3?edit=0", wait=4),
     ScreenshotStep("document_edit", "x-paperless://v1/document/3?edit=1", wait=4),
 ]
 
@@ -169,16 +169,17 @@ def display_plan(languages: list[str], steps: list[ScreenshotStep]) -> None:
 
 def configure_simulator(
     *,
+    target: str,
     status_bar_time: str,
     status_bar_cellular_bars: int,
     appearance: str,
     dry_run: bool,
 ) -> None:
-    simctl(["ui", "booted", "appearance", appearance], dry_run=dry_run)
+    simctl(["ui", target, "appearance", appearance], dry_run=dry_run)
     simctl(
         [
             "status_bar",
-            "booted",
+            target,
             "override",
             "--time",
             status_bar_time,
@@ -187,6 +188,99 @@ def configure_simulator(
         ],
         dry_run=dry_run,
     )
+
+
+def normalize_preview_base_url(preview_url: str) -> str:
+    trimmed = preview_url.rstrip("/")
+    if trimmed.endswith("/api"):
+        return trimmed[: -len("/api")]
+    return trimmed
+
+
+def set_preview_defaults(target: str, bundle_id: str, preview_url: str, preview_token: str, *, dry_run: bool) -> None:
+    simctl(
+        ["spawn", target, "defaults", "write", bundle_id, "PreviewMode", "-bool", "YES"],
+        dry_run=dry_run,
+    )
+    simctl(
+        ["spawn", target, "defaults", "write", bundle_id, "PreviewURL", "-string", preview_url],
+        dry_run=dry_run,
+    )
+    simctl(
+        ["spawn", target, "defaults", "write", bundle_id, "PreviewToken", "-string", preview_token],
+        dry_run=dry_run,
+    )
+
+
+def clear_preview_defaults(target: str, bundle_id: str, *, dry_run: bool) -> None:
+    simctl(
+        ["spawn", target, "defaults", "delete", bundle_id, "PreviewMode"],
+        check=False,
+        dry_run=dry_run,
+    )
+    simctl(
+        ["spawn", target, "defaults", "delete", bundle_id, "PreviewURL"],
+        check=False,
+        dry_run=dry_run,
+    )
+    simctl(
+        ["spawn", target, "defaults", "delete", bundle_id, "PreviewToken"],
+        check=False,
+        dry_run=dry_run,
+    )
+
+
+def list_booted_simulators() -> list[dict[str, str]]:
+    result = subprocess.run(
+        ["xcrun", "simctl", "list", "devices", "--json"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    data = json.loads(result.stdout)
+    devices = data.get("devices", {})
+    booted: list[dict[str, str]] = []
+    for runtime, runtime_devices in devices.items():
+        for device in runtime_devices:
+            if device.get("state") == "Booted":
+                booted.append(
+                    {
+                        "name": device.get("name", "Unknown"),
+                        "udid": device.get("udid", ""),
+                        "runtime": runtime,
+                    }
+                )
+    return booted
+
+
+def resolve_simulator(simulator: str | None) -> str:
+    booted = list_booted_simulators()
+    if simulator:
+        matches = [
+            device
+            for device in booted
+            if device["udid"] == simulator or device["name"] == simulator
+        ]
+        if not matches:
+            console.print(f"[red]Error: Simulator '{simulator}' is not booted.")
+            raise typer.Exit(1)
+        if len(matches) > 1:
+            console.print(f"[red]Error: Multiple booted simulators match '{simulator}'.")
+            for device in matches:
+                console.print(f"  {device['name']} ({device['udid']}) - {device['runtime']}")
+            raise typer.Exit(1)
+        return matches[0]["udid"]
+
+    if not booted:
+        console.print("[red]Error: No booted simulators found.")
+        raise typer.Exit(1)
+    if len(booted) == 1:
+        return booted[0]["udid"]
+
+    console.print("[red]Error: Multiple booted simulators found. Please specify one with --simulator.")
+    for device in booted:
+        console.print(f"  {device['name']} ({device['udid']}) - {device['runtime']}")
+    raise typer.Exit(1)
 
 
 # ============================================================================
@@ -697,15 +791,18 @@ def capture(
     output_dir: Annotated[Path, typer.Option("--output-dir", "-o", help="Screenshot output directory")] = Path("fastlane/screenshots"),
     bundle_id: Annotated[str, typer.Option("--bundle-id", help="App bundle identifier")] = "com.paulgessinger.swift-paperless",
     device_name: Annotated[str, typer.Option("--device-name", help="Device name for filenames")] = "iPhone-16-Pro",
+    simulator: Annotated[str | None, typer.Option("--simulator", help="Booted simulator name or UDID")] = None,
     launch_wait: Annotated[float, typer.Option("--launch-wait", help="Seconds to wait after launching app")] = 2.0,
     url_wait: Annotated[float, typer.Option("--url-wait", help="Seconds to wait after opening URL")] = 2.0,
     status_bar_time: Annotated[str, typer.Option("--status-bar-time", help="Status bar time (ISO 8601)")] = "2007-01-09T09:41:00.000+01:00",
     status_bar_cellular_bars: Annotated[int, typer.Option("--status-bar-cellular-bars", min=0, max=4, help="Cellular signal strength")] = 4,
     appearance: Annotated[str, typer.Option("--appearance", help="Simulator appearance (light/dark)")] = "light",
     steps: Annotated[list[str], typer.Option("--step", help="Screenshot steps (name=url[@wait])")] = [],
-    preview_mode: Annotated[bool, typer.Option("--preview-mode", help="Enable preview mode")] = False,
-    preview_url: Annotated[str, typer.Option("--preview-url", help="Preview mode backend URL")] = "http://localhost:9988/api/",
+    preview_mode: Annotated[bool, typer.Option("--preview-mode", help="Enable preview mode")] = True,
+    preview_url: Annotated[str, typer.Option("--preview-url", help="Preview mode backend URL")] = "http://localhost:9988",
     preview_token: Annotated[str, typer.Option("--preview-token", help="Preview mode auth token")] = "",
+    preview_username: Annotated[str, typer.Option("--preview-username", help="Preview mode username")] = "admin",
+    preview_password: Annotated[str, typer.Option("--preview-password", help="Preview mode password")] = "admin",
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Print commands without executing")] = False,
 ) -> None:
     """Capture screenshots from iOS simulator."""
@@ -713,69 +810,77 @@ def capture(
     output_dir.mkdir(parents=True, exist_ok=True)
     display_plan(languages, screenshot_steps)
 
+    target = resolve_simulator(simulator)
     configure_simulator(
+        target=target,
         status_bar_time=status_bar_time,
         status_bar_cellular_bars=status_bar_cellular_bars,
         appearance=appearance,
         dry_run=dry_run,
     )
 
-    # Prepare environment variables for preview mode
-    env = os.environ.copy() if preview_mode else None
-    if preview_mode:
-        if not preview_token:
-            console.print("[red]Error: --preview-token is required when --preview-mode is enabled")
-            raise typer.Exit(1)
-
-        env["PreviewMode"] = "1"
-        env["PreviewURL"] = preview_url
-        env["PreviewToken"] = preview_token
-        console.log(f"[green]Preview mode enabled: {preview_url}")
-
-    for language in languages:
-        language_slug = sanitize_filename(language)
-        language_dir = output_dir / language_slug
-        language_dir.mkdir(parents=True, exist_ok=True)
-        console.rule(f"[bold green]Language: {language}")
-
-        simctl(["terminate", "booted", bundle_id], check=False, dry_run=dry_run)
-        simctl(
-            [
-                "launch",
-                "booted",
+    try:
+        if preview_mode:
+            if not preview_token:
+                preview_base_url = normalize_preview_base_url(preview_url)
+                preview_token = asyncio.run(
+                    authenticate(preview_base_url, preview_username, preview_password)
+                )
+            console.log(f"[green]Preview mode enabled: {preview_url}")
+            set_preview_defaults(
+                target,
                 bundle_id,
-                "-AppleLanguages",
-                f"({language})",
-                "-AppleLocale",
-                language,
-            ],
-            dry_run=dry_run,
-            env=env,
-        )
-        if launch_wait > 0:
-            time.sleep(launch_wait)
-
-        for index, step in enumerate(screenshot_steps, start=1):
-            wait_time = step.wait if step.wait is not None else url_wait
-            if step.url:
-                simctl(["openurl", "booted", step.url], dry_run=dry_run)
-                if wait_time > 0:
-                    time.sleep(wait_time)
-            elif step.wait is not None and wait_time > 0:
-                time.sleep(wait_time)
-
-            screenshot_name = f"{device_name}-{index:02d}_{sanitize_filename(step.name)}.png"
-            output_path = language_dir / screenshot_name
-            simctl(
-                ["io", "booted", "screenshot", "--type", "png", str(output_path)],
+                preview_url,
+                preview_token,
                 dry_run=dry_run,
             )
-            console.log(f"Saved {output_path}")
+        for language in languages:
+            language_slug = sanitize_filename(language)
+            language_dir = output_dir / language_slug
+            language_dir.mkdir(parents=True, exist_ok=True)
+            console.rule(f"[bold green]Language: {language}")
 
-            if step.post_url:
-                simctl(["openurl", "booted", step.post_url], dry_run=dry_run)
-                if wait_time > 0:
+            simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
+            simctl(
+                [
+                    "launch",
+                    "--terminate-running-process",
+                    target,
+                    bundle_id,
+                    "-AppleLanguages",
+                    f"({language})",
+                    "-AppleLocale",
+                    language,
+                ],
+                dry_run=dry_run,
+            )
+            if launch_wait > 0:
+                time.sleep(launch_wait)
+
+            for index, step in enumerate(screenshot_steps, start=1):
+                wait_time = step.wait if step.wait is not None else url_wait
+                if step.url:
+                    simctl(["openurl", target, step.url], dry_run=dry_run)
+                    if wait_time > 0:
+                        time.sleep(wait_time)
+                elif step.wait is not None and wait_time > 0:
                     time.sleep(wait_time)
+
+                screenshot_name = f"{device_name}-{index:02d}_{sanitize_filename(step.name)}.png"
+                output_path = language_dir / screenshot_name
+                simctl(
+                    ["io", target, "screenshot", "--type", "png", str(output_path)],
+                    dry_run=dry_run,
+                )
+                console.log(f"Saved {output_path}")
+
+                if step.post_url:
+                    simctl(["openurl", target, step.post_url], dry_run=dry_run)
+                    if wait_time > 0:
+                        time.sleep(wait_time)
+    finally:
+        if preview_mode:
+            clear_preview_defaults(target, bundle_id, dry_run=dry_run)
 
 
 if __name__ == "__main__":

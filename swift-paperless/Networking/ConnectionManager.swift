@@ -160,12 +160,7 @@ class ConnectionManager: ObservableObject {
     if let previewMode {
       self.previewMode = previewMode
     } else {
-      // Try environment variable first, then UserDefaults
-      if let envPreview = ProcessInfo.processInfo.environment["PreviewMode"] {
-        self.previewMode = (envPreview == "1" || envPreview.lowercased() == "true")
-      } else {
-        self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
-      }
+      self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
     }
   }
 
@@ -262,14 +257,11 @@ class ConnectionManager: ObservableObject {
     if previewMode {
       Logger.api.info("Running in preview mode")
       let udef = UserDefaults.standard
-      let env = ProcessInfo.processInfo.environment
-
-      // Try environment variables first, then UserDefaults
       let urlString =
-        env["PreviewURL"] ?? udef.string(forKey: "PreviewURL")
+        udef.string(forKey: "PreviewURL")
         ?? "https://paperless.example.com/api/"
       let token =
-        env["PreviewToken"] ?? udef.string(forKey: "PreviewToken")
+        udef.string(forKey: "PreviewToken")
         ?? "pseudo-token-that-will-not-work"
 
       let url = URL(string: urlString)!
@@ -327,12 +319,10 @@ class ConnectionManager: ObservableObject {
   var storedConnection: StoredConnection? {
     if previewMode {
       Logger.api.info("Running in preview mode")
-      let env = ProcessInfo.processInfo.environment
       let udef = UserDefaults.standard
 
-      // Try environment variables first, then UserDefaults
       let urlString =
-        env["PreviewURL"] ?? udef.string(forKey: "PreviewURL")
+        udef.string(forKey: "PreviewURL")
         ?? "https://paperless.example.com/api/"
       let url = URL(string: urlString)!
 
