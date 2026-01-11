@@ -42,11 +42,32 @@ struct StageSelection: View {
 
     .padding(.vertical, 10)
     .padding(.horizontal)
-    .background(
-      Capsule()
-        .fill(.thickMaterial)
-        .stroke(.tertiary)
-        .shadow(color: Color(white: 0.2, opacity: 0.1), radius: 10)
-    )
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0
+          .glassEffect()
+      } else {
+        $0
+          .background(
+            Capsule()
+              .fill(.thickMaterial)
+              .stroke(.tertiary)
+              .shadow(color: Color(white: 0.2, opacity: 0.1), radius: 10)
+          )
+      }
+
+    }
+  }
+}
+
+#Preview {
+  @Previewable @State var stage = LoginStage.connection
+
+  VStack {
+    StageSelection(stage: $stage)
+    Text(String(describing: stage))
+    Button("Next") {
+      stage = .credentials
+    }
   }
 }

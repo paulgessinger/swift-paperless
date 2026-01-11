@@ -89,8 +89,9 @@ struct ConnectionStageView: View {
         } label: {
           Text(.login(.continueButtonLabel))
             .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 10)
         }
-        .buttonStyle(.borderedProminent)
+        .backport.glassProminentButtonStyle(or: .borderedProminent)
 
         .padding()
         .disabled(viewModel.loginState != .valid)
