@@ -96,7 +96,7 @@ final class PaperlessOIDCClient {
   }
 
   private func fetchProvider() async throws -> Provider {
-    guard let url = URL(string: "_allauth/app/v1/config", relativeTo: baseURL) else {
+    guard let url = URL(string: "api/oidc/app/v1/config", relativeTo: baseURL) else {
       throw OIDCError.invalidURL
     }
     let (data, _) = try await session.data(from: url)
@@ -105,7 +105,7 @@ final class PaperlessOIDCClient {
   }
 
   private func fetchScope(providerId: String, csrf: String) async throws -> String {
-    guard let url = URL(string: "_allauth/browser/v1/auth/provider/redirect", relativeTo: baseURL)
+    guard let url = URL(string: "api/oidc/browser/v1/auth/provider/redirect", relativeTo: baseURL)
     else {
       throw OIDCError.invalidURL
     }
@@ -163,7 +163,7 @@ final class PaperlessOIDCClient {
     idToken: String,
     csrf: String
   ) async throws -> String {
-    guard let url = URL(string: "_allauth/app/v1/auth/provider/token", relativeTo: baseURL) else {
+    guard let url = URL(string: "api/oidc/app/v1/auth/provider/token", relativeTo: baseURL) else {
       throw OIDCError.invalidURL
     }
     var request = URLRequest(url: url)
