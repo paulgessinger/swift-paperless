@@ -18,6 +18,8 @@
 		7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D58882D13568900FCB1F1 /* DataModel */; };
 		7A4D588B2D13569500FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588A2D13569500FCB1F1 /* DataModel */; };
 		7A4D588D2D13569A00FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588C2D13569A00FCB1F1 /* DataModel */; };
+		7A59C91B2F143239002EC151 /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7A59C91A2F143239002EC151 /* Common */; };
+		7A59C91D2F143239002EC151 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A59C91C2F143239002EC151 /* Networking */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
@@ -295,6 +297,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A59C91D2F143239002EC151 /* Networking in Frameworks */,
+				7A59C91B2F143239002EC151 /* Common in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -504,6 +508,8 @@
 			);
 			name = OAuthTest;
 			packageProductDependencies = (
+				7A59C91A2F143239002EC151 /* Common */,
+				7A59C91C2F143239002EC151 /* Networking */,
 			);
 			productName = OAuthTest;
 			productReference = 7A59BE012F129272002EC151 /* OAuthTest.app */;
@@ -1380,6 +1386,14 @@
 		7A4D588C2D13569A00FCB1F1 /* DataModel */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DataModel;
+		};
+		7A59C91A2F143239002EC151 /* Common */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Common;
+		};
+		7A59C91C2F143239002EC151 /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Networking;
 		};
 		7A5C138929AA7E2F00D71F51 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;
