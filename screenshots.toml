@@ -1,0 +1,35 @@
+locales = ["en-US"]
+output_dir = "fastlane/screenshots"
+bundle_id = "com.paulgessinger.swift-paperless"
+device_name = "iPhone-16-Pro"
+launch_wait = 2.0
+url_wait = 2.0
+status_bar_time = "2007-01-09T09:41:00.000+01:00"
+status_bar_cellular_bars = 4
+appearance = "light"
+
+[preview]
+mode = true
+url = "http://localhost:9988/api/"
+token = ""
+username = "admin"
+password = "admin"
+
+[[steps]]
+name = "documents"
+wait = 2.0
+
+[[steps]]
+name = "filter_tags"
+url = "x-paperless://v1/open_filter/tags"
+post_url = "x-paperless://v1/close_filter"
+
+[[steps]]
+name = "document_view"
+url = "x-paperless://v1/document/3?edit=0"
+wait = 4.0
+
+[[steps]]
+name = "document_edit"
+url = "x-paperless://v1/document/3?edit=1"
+wait = 4.0

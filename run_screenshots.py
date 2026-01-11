@@ -3,8 +3,10 @@
 # dependencies = [
 #   "rich",
 #   "typer",
+#   "pydantic>=2",
 #   "pypaperless",
 #   "aiohttp>=3.9",
+#   "tomli; python_version < '3.11'",
 # ]
 # ///
 
@@ -19,10 +21,16 @@ from typing import Annotated
 
 import aiohttp
 import typer
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pypaperless import Paperless
 from pypaperless.exceptions import TaskNotFoundError
 from rich.console import Console
 from rich.table import Table
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
+    import tomli as tomllib
 
 app = typer.Typer(no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app")
 console = Console()
@@ -51,6 +59,68 @@ DEFAULT_STEPS = [
     ScreenshotStep("document_view", "x-paperless://v1/document/3?edit=0", wait=4),
     ScreenshotStep("document_edit", "x-paperless://v1/document/3?edit=1", wait=4),
 ]
+
+
+class ScreenshotStepConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    url: str | None = None
+    post_url: str | None = None
+    wait: float | None = None
+
+
+def default_step_configs() -> list[ScreenshotStepConfig]:
+    return [
+        ScreenshotStepConfig(
+            name=step.name,
+            url=step.url,
+            post_url=step.post_url,
+            wait=step.wait,
+        )
+        for step in DEFAULT_STEPS
+    ]
+
+
+class PreviewConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: bool = True
+    url: str = "http://localhost:9988/api/"
+    token: str = ""
+    username: str = "admin"
+    password: str = "admin"
+
+
+class CaptureConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    locales: list[str] = Field(default_factory=lambda: ["en-US"])
+    steps: list[ScreenshotStepConfig] = Field(default_factory=default_step_configs)
+    output_dir: Path = Path("fastlane/screenshots")
+    bundle_id: str = "com.paulgessinger.swift-paperless"
+    device_name: str = "iPhone-16-Pro"
+    simulator: str | None = None
+    launch_wait: float = 2.0
+    url_wait: float = 2.0
+    status_bar_time: str = "2007-01-09T09:41:00.000+01:00"
+    status_bar_cellular_bars: int = Field(default=4, ge=0, le=4)
+    appearance: str = "light"
+    preview: PreviewConfig = Field(default_factory=PreviewConfig)
+
+    @field_validator("locales")
+    @classmethod
+    def validate_locales(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("At least one locale is required.")
+        return value
+
+    @field_validator("appearance")
+    @classmethod
+    def validate_appearance(cls, value: str) -> str:
+        if value not in {"light", "dark"}:
+            raise ValueError("Appearance must be 'light' or 'dark'.")
+        return value
 
 
 # Data model matching PreviewRepository.swift
@@ -137,29 +207,6 @@ def simctl(args: list[str], *, check: bool = True, dry_run: bool = False, env: d
     run_command(["xcrun", "simctl", *args], check=check, dry_run=dry_run, env=env)
 
 
-def parse_steps(raw_steps: list[str]) -> list[ScreenshotStep]:
-    if not raw_steps:
-        return DEFAULT_STEPS
-    steps: list[ScreenshotStep] = []
-    for raw_step in raw_steps:
-        wait: float | None = None
-        base_step = raw_step
-        name_and_url, wait_separator, wait_value = raw_step.rpartition("@")
-        if wait_separator:
-            try:
-                wait = float(wait_value)
-                base_step = name_and_url
-            except ValueError:
-                base_step = raw_step
-        name, separator, url = base_step.partition("=")
-        name = name.strip()
-        url = url.strip() if separator else None
-        if not name:
-            raise typer.BadParameter("Step name cannot be empty.")
-        steps.append(ScreenshotStep(name=name, url=url or None, wait=wait))
-    return steps
-
-
 def display_plan(languages: list[str], steps: list[ScreenshotStep]) -> None:
     table = Table(title="Screenshot plan", header_style="bold magenta")
     table.add_column("Language")
@@ -171,6 +218,23 @@ def display_plan(languages: list[str], steps: list[ScreenshotStep]) -> None:
     for language in languages:
         table.add_row(language, step_names)
     console.print(table)
+
+
+def load_capture_config(path: Path) -> CaptureConfig:
+    if not path.exists():
+        console.print(f"[red]Error: Config file not found: {path}")
+        raise typer.Exit(1)
+    try:
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        console.print(f"[red]Error: Failed to parse config file: {exc}")
+        raise typer.Exit(1)
+    try:
+        return CaptureConfig.model_validate(raw)
+    except ValidationError as exc:
+        console.print(f"[red]Error: Invalid config file:")
+        console.print(str(exc))
+        raise typer.Exit(1)
 
 
 def configure_simulator(
@@ -795,26 +859,43 @@ def setup(
 
 @app.command()
 def capture(
-    languages: Annotated[list[str], typer.Option("--language", "-l", help="Language tags to capture")] = ["en-US"],
-    output_dir: Annotated[Path, typer.Option("--output-dir", "-o", help="Screenshot output directory")] = Path("fastlane/screenshots"),
-    bundle_id: Annotated[str, typer.Option("--bundle-id", help="App bundle identifier")] = "com.paulgessinger.swift-paperless",
-    device_name: Annotated[str, typer.Option("--device-name", help="Device name for filenames")] = "iPhone-16-Pro",
-    simulator: Annotated[str | None, typer.Option("--simulator", help="Booted simulator name or UDID")] = None,
-    launch_wait: Annotated[float, typer.Option("--launch-wait", help="Seconds to wait after launching app")] = 2.0,
-    url_wait: Annotated[float, typer.Option("--url-wait", help="Seconds to wait after opening URL")] = 2.0,
-    status_bar_time: Annotated[str, typer.Option("--status-bar-time", help="Status bar time (ISO 8601)")] = "2007-01-09T09:41:00.000+01:00",
-    status_bar_cellular_bars: Annotated[int, typer.Option("--status-bar-cellular-bars", min=0, max=4, help="Cellular signal strength")] = 4,
-    appearance: Annotated[str, typer.Option("--appearance", help="Simulator appearance (light/dark)")] = "light",
-    steps: Annotated[list[str], typer.Option("--step", help="Screenshot steps (name=url[@wait])")] = [],
-    preview_mode: Annotated[bool, typer.Option("--preview-mode", help="Enable preview mode")] = True,
-    preview_url: Annotated[str, typer.Option("--preview-url", help="Preview mode backend URL")] = "http://localhost:9988",
-    preview_token: Annotated[str, typer.Option("--preview-token", help="Preview mode auth token")] = "",
-    preview_username: Annotated[str, typer.Option("--preview-username", help="Preview mode username")] = "admin",
-    preview_password: Annotated[str, typer.Option("--preview-password", help="Preview mode password")] = "admin",
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to screenshots TOML config",
+        ),
+    ] = Path("screenshots.toml"),
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Print commands without executing")] = False,
 ) -> None:
     """Capture screenshots from iOS simulator."""
-    screenshot_steps = parse_steps(steps)
+    capture_config = load_capture_config(config)
+    screenshot_steps = [
+        ScreenshotStep(
+            name=step.name,
+            url=step.url,
+            post_url=step.post_url,
+            wait=step.wait,
+        )
+        for step in capture_config.steps
+    ]
+    languages = capture_config.locales
+    output_dir = capture_config.output_dir
+    bundle_id = capture_config.bundle_id
+    device_name = capture_config.device_name
+    simulator = capture_config.simulator
+    launch_wait = capture_config.launch_wait
+    url_wait = capture_config.url_wait
+    status_bar_time = capture_config.status_bar_time
+    status_bar_cellular_bars = capture_config.status_bar_cellular_bars
+    appearance = capture_config.appearance
+    preview_mode = capture_config.preview.mode
+    preview_url = capture_config.preview.url
+    preview_token = capture_config.preview.token
+    preview_username = capture_config.preview.username
+    preview_password = capture_config.preview.password
+
     output_dir.mkdir(parents=True, exist_ok=True)
     display_plan(languages, screenshot_steps)
 
