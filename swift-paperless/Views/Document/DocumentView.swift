@@ -326,6 +326,15 @@ struct DocumentView: View {
       }
       .tint(.accent)
 
+      .confirmationDialog(
+        String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested,
+        titleVisibility: .visible
+      ) {
+        Button(String(localized: .localizable(.logout)), role: .destructive) {
+          connectionManager.logout(animated: true)
+        }
+      }
+
       if isDataScannerAvailable {
         Button {
           showDataScanner = true
@@ -497,15 +506,6 @@ struct DocumentView: View {
       }
 
       .sheet(item: $taskViewNavState, content: tasksSheet)
-
-      .fullScreenConfirmationDialog(
-        String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested
-      ) {
-        Button(String(localized: .localizable(.logout)), role: .destructive) {
-          connectionManager.logout(animated: true)
-        }
-        Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-      }
 
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
