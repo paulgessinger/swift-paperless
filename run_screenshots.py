@@ -81,6 +81,12 @@ STORAGE_PATHS = [
     {"name": "Path B", "path": "bbb", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
 ]
 
+DOCUMENT_TITLES = [
+    "Quarterly Statement",
+    "Travel Itinerary",
+    "Home Insurance Renewal",
+]
+
 
 # ============================================================================
 # Exceptions
@@ -413,13 +419,15 @@ async def upload_documents(paperless: Paperless, fixtures_dir: Path, num_documen
 
     task_ids = []
     # Use paperless.request_json for upload
-    for pdf_path in pdf_files:
+    for index, pdf_path in enumerate(pdf_files):
         try:
             console.log(f"  Uploading {pdf_path.name}...")
 
             # Use direct aiohttp with proper authorization
             data = aiohttp.FormData()
+            title = DOCUMENT_TITLES[index % len(DOCUMENT_TITLES)]
             with open(pdf_path, 'rb') as f:
+                data.add_field('title', title)
                 data.add_field('document',
                               f,
                               filename=pdf_path.name,
