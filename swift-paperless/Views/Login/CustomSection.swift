@@ -18,18 +18,38 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
     VStack(spacing: 4) {
       header?()
         .foregroundStyle(.secondary)
-        .font(.footnote)
-        .textCase(.uppercase)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0
+              .bold()
+          } else {
+            $0
+              .font(.footnote)
+              .textCase(.uppercase)
+          }
+        }
 
       content()
         .padding(.horizontal)
         .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
-        .background(
-          RoundedRectangle(cornerRadius: 10, style: .circular)
-            .fill(.background.tertiary)
-        )
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0
+              .padding(.vertical, 5)
+              .background(
+                RoundedRectangle(cornerRadius: 23, style: .continuous)
+                  .fill(.background.tertiary)
+              )
+          } else {
+            $0
+              .background(
+                RoundedRectangle(cornerRadius: 10, style: .circular)
+                  .fill(.background.tertiary)
+              )
+          }
+        }
 
       footer?()
         .foregroundStyle(.secondary)
@@ -78,17 +98,59 @@ extension CustomSection where Header == EmptyView {
 }
 
 #Preview("CustomSection") {
-  ScrollView(.vertical) {
-    CustomSection {
-      HStack {
-        Text("GO IDENTITY!")
-        Text("Right")
-          .frame(maxWidth: .infinity, alignment: .trailing)
+  VStack {
+    ScrollView(.vertical) {
+      CustomSection {
+        HStack {
+          Text("GO IDENTITY!")
+          Text("Right")
+            .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+      } header: {
+        Text("head")
+      } footer: {
+        Text("yo")
       }
-    } header: {
-      Text("head")
-    } footer: {
-      Text("yo")
+
+      CustomSection {
+        VStack {
+          Text("GO IDENTITY!")
+          Text("Right")
+          Text("Right")
+          Text("Right")
+        }
+      } header: {
+        Text("head")
+      } footer: {
+        Text("yo")
+      }
+    }
+
+    Form {
+      Section {
+        HStack {
+          Text("GO IDENTITY!")
+          Text("Right")
+            .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+      } header: {
+        Text("head")
+      } footer: {
+        Text("yo")
+      }
+
+      Section {
+        VStack {
+          Text("GO IDENTITY!")
+          Text("Right")
+          Text("Right")
+          Text("Right")
+        }
+      } header: {
+        Text("head")
+      } footer: {
+        Text("yo")
+      }
     }
   }
   .modifier(BackgroundColorModifier())

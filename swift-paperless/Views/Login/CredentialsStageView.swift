@@ -54,20 +54,24 @@ struct CredentialsStageView: View {
     Button {
       validate()
     } label: {
-      switch viewModel.credentialState {
-      case .validating:
-        HStack {
-          ProgressView()
-          Text(.login(.buttonValidating))
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
-      default:
-        Text(.login(.buttonLabel))
+      Group {
+        switch viewModel.credentialState {
+        case .validating:
+          HStack {
+            ProgressView()
+            Text(.login(.buttonValidating))
+          }
           .frame(maxWidth: .infinity, alignment: .center)
+        default:
+          Text(.login(.buttonLabel))
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
       }
+      .padding(.vertical, 10)
     }
+
     .id(viewModel.credentialMode)
-    .buttonStyle(.borderedProminent)
+    .backport.glassProminentButtonStyle(or: .borderedProminent)
     .padding(.horizontal)
     .disabled(!loginEnabled)
   }
