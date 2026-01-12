@@ -53,6 +53,7 @@ nav:
   - index.md
   - Release notes: release_notes/
   - deeplinks.md
+  - oidc.md
   - Common Issues:
       # @TODO: Remove when v1.8.0 is live
       - common_issues/forbidden.md
