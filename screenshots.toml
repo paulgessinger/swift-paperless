@@ -1,4 +1,13 @@
-locales = ["en-US", "de-DE", "fr-FR", "it-IT", "nl-NL", "pl-PL"]
+locales = [
+    "en-US", 
+    "de-DE", 
+    "fr-FR", 
+    "it-IT", 
+    "nl-NL", 
+    "pl-PL",
+    "da-DK",
+    "tr-TR",
+]
 output_dir = "fastlane/screenshots"
 bundle_id = "com.paulgessinger.swift-paperless"
 launch_wait = 2.0
