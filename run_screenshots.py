@@ -12,7 +12,6 @@
 
 import asyncio
 from dataclasses import dataclass
-import json
 from pathlib import Path
 import re
 import subprocess
@@ -85,11 +84,27 @@ def default_step_configs() -> list[ScreenshotStepConfig]:
 class PreviewConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    mode: bool = True
-    url: str = "http://localhost:9988/api/"
-    token: str = ""
+    url: str = "http://localhost:9988/"
     username: str = "admin"
     password: str = "admin"
+
+
+class BuildConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    scheme: str = "swift-paperless"
+    project: Path = Path("swift-paperless.xcodeproj")
+    configuration: str = "Release"
+    derived_data_path: Path = Path(".build/DerivedData")
+    app_name: str = "swift-paperless"
+
+
+class SimulatorConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    udid: str
 
 
 class CaptureConfig(BaseModel):
@@ -99,20 +114,27 @@ class CaptureConfig(BaseModel):
     steps: list[ScreenshotStepConfig] = Field(default_factory=default_step_configs)
     output_dir: Path = Path("fastlane/screenshots")
     bundle_id: str = "com.paulgessinger.swift-paperless"
-    device_name: str = "iPhone-16-Pro"
-    simulator: str | None = None
+    simulators: list[SimulatorConfig] = Field(default_factory=list)
     launch_wait: float = 2.0
     url_wait: float = 2.0
     status_bar_time: str = "2007-01-09T09:41:00.000+01:00"
     status_bar_cellular_bars: int = Field(default=4, ge=0, le=4)
     appearance: str = "light"
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
+    build: BuildConfig = Field(default_factory=BuildConfig)
 
     @field_validator("locales")
     @classmethod
     def validate_locales(cls, value: list[str]) -> list[str]:
         if not value:
             raise ValueError("At least one locale is required.")
+        return value
+
+    @field_validator("simulators")
+    @classmethod
+    def validate_simulators(cls, value: list[SimulatorConfig]) -> list[SimulatorConfig]:
+        if not value:
+            raise ValueError("At least one simulator is required.")
         return value
 
     @field_validator("appearance")
@@ -267,58 +289,63 @@ def normalize_preview_base_url(preview_url: str) -> str:
     return trimmed
 
 
-def list_booted_simulators() -> list[dict[str, str]]:
-    result = subprocess.run(
-        ["xcrun", "simctl", "list", "devices", "--json"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    data = json.loads(result.stdout)
-    devices = data.get("devices", {})
-    booted: list[dict[str, str]] = []
-    for runtime, runtime_devices in devices.items():
-        for device in runtime_devices:
-            if device.get("state") == "Booted":
-                booted.append(
-                    {
-                        "name": device.get("name", "Unknown"),
-                        "udid": device.get("udid", ""),
-                        "runtime": runtime,
-                    }
-                )
-    return booted
+def ensure_simulator_booted(target: str, *, dry_run: bool) -> None:
+    simctl(["boot", target], check=False, dry_run=dry_run)
+    simctl(["bootstatus", target, "-b"], dry_run=dry_run)
 
 
-def resolve_simulator(simulator: str | None) -> str:
-    booted = list_booted_simulators()
-    if simulator:
-        matches = [
-            device
-            for device in booted
-            if device["udid"] == simulator or device["name"] == simulator
-        ]
-        if not matches:
-            console.print(f"[red]Error: Simulator '{simulator}' is not booted.")
-            raise typer.Exit(1)
-        if len(matches) > 1:
-            console.print(f"[red]Error: Multiple booted simulators match '{simulator}'.")
-            for device in matches:
-                console.print(f"  {device['name']} ({device['udid']}) - {device['runtime']}")
-            raise typer.Exit(1)
-        return matches[0]["udid"]
+def build_app_for_simulator(
+    *,
+    simulator: SimulatorConfig,
+    build: BuildConfig,
+    dry_run: bool,
+) -> Path:
+    derived_data = build.derived_data_path / sanitize_filename(simulator.name)
+    command = [
+        "xcodebuild",
+        "-scheme",
+        build.scheme,
+        "-project",
+        str(build.project),
+        "-configuration",
+        build.configuration,
+        "-destination",
+        f"id={simulator.udid}",
+        "-derivedDataPath",
+        str(derived_data),
+    ]
+    display = " ".join(command)
+    console.log(f"[bold blue]$ {display}[/bold blue]")
+    if dry_run:
+        return derived_data / "Build" / "Products" / f"{build.app_name}.app"
 
-    if not booted:
-        console.print("[red]Error: No booted simulators found.")
-        raise typer.Exit(1)
-    if len(booted) == 1:
-        return booted[0]["udid"]
+    derived_data.mkdir(parents=True, exist_ok=True)
+    log_path = derived_data / "build.log"
+    with log_path.open("w", encoding="utf-8") as log_file:
+        result = subprocess.run(command, stdout=log_file, stderr=subprocess.STDOUT)
+    if result.returncode != 0:
+        console.print(f"[red]Build failed for {simulator.name} (log: {log_path})[/red]")
+        if log_path.exists():
+            console.print(log_path.read_text(encoding="utf-8", errors="replace"))
+        raise typer.Exit(result.returncode)
 
-    console.print("[red]Error: Multiple booted simulators found. Please specify one with --simulator.")
-    for device in booted:
-        console.print(f"  {device['name']} ({device['udid']}) - {device['runtime']}")
-    raise typer.Exit(1)
+    app_path = find_built_app(derived_data, build.app_name)
+    console.log(f"[green]Built app: {app_path}")
+    return app_path
 
+
+def find_built_app(derived_data: Path, app_name: str) -> Path:
+    products_dir = derived_data / "Build" / "Products"
+    if not products_dir.exists():
+        raise FileNotFoundError(f"Build products not found at {products_dir}")
+    matches = list(products_dir.rglob(f"{app_name}.app"))
+    if not matches:
+        raise FileNotFoundError(f"Unable to locate {app_name}.app under {products_dir}")
+    return max(matches, key=lambda path: path.stat().st_mtime)
+
+
+def install_app(target: str, app_path: Path, *, dry_run: bool) -> None:
+    simctl(["install", target, str(app_path)], dry_run=dry_run)
 
 # ============================================================================
 # Docker Compose Management
@@ -834,6 +861,10 @@ def capture(
             help="Path to screenshots TOML config",
         ),
     ] = Path("screenshots.toml"),
+    skip_build: Annotated[
+        bool,
+        typer.Option("--skip-build", help="Skip xcodebuild and reuse an existing build"),
+    ] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Print commands without executing")] = False,
 ) -> None:
     """Capture screenshots from iOS simulator."""
@@ -850,91 +881,112 @@ def capture(
     languages = capture_config.locales
     output_dir = capture_config.output_dir
     bundle_id = capture_config.bundle_id
-    device_name = capture_config.device_name
-    simulator = capture_config.simulator
+    simulators = capture_config.simulators
     launch_wait = capture_config.launch_wait
     url_wait = capture_config.url_wait
     status_bar_time = capture_config.status_bar_time
     status_bar_cellular_bars = capture_config.status_bar_cellular_bars
     appearance = capture_config.appearance
-    preview_mode = capture_config.preview.mode
     preview_url = capture_config.preview.url
-    preview_token = capture_config.preview.token
     preview_username = capture_config.preview.username
     preview_password = capture_config.preview.password
+    build_config = capture_config.build
 
     output_dir.mkdir(parents=True, exist_ok=True)
     display_plan(languages, screenshot_steps)
 
-    target = resolve_simulator(simulator)
-    configure_simulator(
-        target=target,
-        status_bar_time=status_bar_time,
-        status_bar_cellular_bars=status_bar_cellular_bars,
-        appearance=appearance,
-        dry_run=dry_run,
+    preview_base_url = normalize_preview_base_url(preview_url)
+    preview_token = asyncio.run(
+        authenticate(preview_base_url, preview_username, preview_password)
     )
+    console.log(f"[green]Preview mode enabled: {preview_base_url}")
+    preview_args = [
+        "--preview-mode",
+        "--preview-url",
+        preview_base_url,
+        "--preview-token",
+        preview_token,
+    ]
 
-    preview_args: list[str] = ["--preview-mode=false"]
-    if preview_mode:
-        if not preview_token:
-            preview_base_url = normalize_preview_base_url(preview_url)
-            preview_token = asyncio.run(
-                authenticate(preview_base_url, preview_username, preview_password)
-            )
-        console.log(f"[green]Preview mode enabled: {preview_url}")
-        preview_args = [
-            "--preview-mode",
-            "--preview-url",
-            preview_url,
-            "--preview-token",
-            preview_token,
-        ]
-    for language in languages:
-        language_slug = sanitize_filename(language)
-        language_dir = output_dir / language_slug
-        language_dir.mkdir(parents=True, exist_ok=True)
-        console.rule(f"[bold green]Language: {language}")
+    for simulator in simulators:
+        target = simulator.udid
+        device_name = simulator.name
+        console.rule(f"[bold green]Simulator: {device_name}")
 
-        simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
-        simctl(
-            [
-                "launch",
-                "--terminate-running-process",
-                target,
-                bundle_id,
-                "-AppleLanguages",
-                f"({language})",
-                "-AppleLocale",
-                language,
-                *preview_args,
-            ],
+        ensure_simulator_booted(target, dry_run=dry_run)
+        configure_simulator(
+            target=target,
+            status_bar_time=status_bar_time,
+            status_bar_cellular_bars=status_bar_cellular_bars,
+            appearance=appearance,
             dry_run=dry_run,
         )
-        if launch_wait > 0:
-            time.sleep(launch_wait)
 
-        for index, step in enumerate(screenshot_steps, start=1):
-            wait_time = step.wait if step.wait is not None else url_wait
-            if step.url:
-                simctl(["openurl", target, step.url], dry_run=dry_run)
-                if wait_time > 0:
-                    time.sleep(wait_time)
-            elif step.wait is not None and wait_time > 0:
-                time.sleep(wait_time)
-
-            screenshot_name = f"{device_name}-{index:02d}_{sanitize_filename(step.name)}.png"
-            output_path = language_dir / screenshot_name
-            simctl(
-                ["io", target, "screenshot", "--type", "png", str(output_path)],
+        derived_data = build_config.derived_data_path / sanitize_filename(simulator.name)
+        if build_config.enabled and not skip_build:
+            app_path = build_app_for_simulator(
+                simulator=simulator,
+                build=build_config,
                 dry_run=dry_run,
             )
-            console.log(f"Saved {output_path}")
+        elif dry_run:
+            app_path = derived_data / "Build" / "Products" / f"{build_config.app_name}.app"
+            console.log(f"[yellow]Using existing build (dry-run): {app_path}")
+        else:
+            try:
+                app_path = find_built_app(derived_data, build_config.app_name)
+                console.log(f"[green]Using existing build: {app_path}")
+            except FileNotFoundError as exc:
+                console.print(f"[red]Error: {exc}")
+                raise typer.Exit(1)
 
-            if step.post_url:
-                simctl(["openurl", target, step.post_url], dry_run=dry_run)
-                if wait_time > 0:
+        install_app(target, app_path, dry_run=dry_run)
+
+        for language in languages:
+            language_slug = sanitize_filename(language)
+            language_dir = output_dir / language_slug
+            language_dir.mkdir(parents=True, exist_ok=True)
+            console.rule(f"[bold green]Language: {language}")
+
+            simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
+            simctl(
+                [
+                    "launch",
+                    "--terminate-running-process",
+                    target,
+                    bundle_id,
+                    "-AppleLanguages",
+                    f"({language})",
+                    "-AppleLocale",
+                    language,
+                    *preview_args,
+                ],
+                dry_run=dry_run,
+            )
+            if launch_wait > 0:
+                time.sleep(launch_wait)
+
+            for index, step in enumerate(screenshot_steps, start=1):
+                wait_time = step.wait if step.wait is not None else url_wait
+                if step.url:
+                    simctl(["openurl", target, step.url], dry_run=dry_run)
+                    if wait_time > 0:
+                        time.sleep(wait_time)
+                elif step.wait is not None and wait_time > 0:
                     time.sleep(wait_time)
+
+                screenshot_name = f"{sanitize_filename(device_name)}-{index:02d}_{sanitize_filename(step.name)}.png"
+                output_path = language_dir / screenshot_name
+                simctl(
+                    ["io", target, "screenshot", "--type", "png", str(output_path)],
+                    dry_run=dry_run,
+                )
+                console.log(f"Saved {output_path}")
+
+                if step.post_url:
+                    simctl(["openurl", target, step.post_url], dry_run=dry_run)
+                    if wait_time > 0:
+                        time.sleep(wait_time)
 
 
 if __name__ == "__main__":
