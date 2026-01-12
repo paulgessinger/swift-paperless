@@ -5,13 +5,14 @@
 //  Created by Paul Gessinger on 31.07.2024.
 //
 
+import AuthenticationServices
 import Common
 import DataModel
 import Foundation
 import Networking
+import Nuke
 import SwiftUI
 import os
-import AuthenticationServices
 
 enum LoginState: Equatable {
   case empty
@@ -27,12 +28,13 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
   case oidc
 
   var label: String {
-    let res: LocalizedStringResource = switch self {
-    case .usernameAndPassword: .login(.credentialModeUsernamePassword)
-    case .token: .login(.credentialModeToken)
-    case .none: .login(.credentialModeNone)
-    case .oidc: .login(.credentialModeOidc)
-    }
+    let res: LocalizedStringResource =
+      switch self {
+      case .usernameAndPassword: .login(.credentialModeUsernamePassword)
+      case .token: .login(.credentialModeToken)
+      case .none: .login(.credentialModeNone)
+      case .oidc: .login(.credentialModeOidc)
+      }
     return String(localized: res)
   }
 
@@ -47,10 +49,6 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
     case .oidc:
       Text(.login(.credentialModeOidcDescription(DocumentationLinks.oidc.absoluteString)))
     }
-  }
-  
-  var alwaysAvailable: [CredentialMode] {
-    [.none, .token, .usernameAndPassword]
   }
 }
 
@@ -109,6 +107,19 @@ class LoginViewModel {
   var token: String = ""
 
   var oidcClient: OIDCClient?
+
+  @ObservationIgnored
+  let imagePipeline = ImagePipeline()
+  @ObservationIgnored
+  let imagePrefetcher: ImagePrefetcher
+
+  init() {
+    imagePrefetcher = ImagePrefetcher(pipeline: imagePipeline)
+
+    imagePrefetcher.didComplete = {
+      Logger.shared.debug("LoginViewModel prefetching completes")
+    }
+  }
 
   // - MARK: Methods
 
@@ -298,9 +309,36 @@ class LoginViewModel {
     do {
       try await client.fetchProviders()
       Logger.shared.info("Have providers: \(client.providers)")
+
+      await prefetchOIDCProviderIcons()
     } catch {
       Logger.shared.error("Failed to fetch OIDC providers: \(error, privacy: .public)")
     }
+
+  }
+
+  private func prefetchOIDCProviderIcons() async {
+    guard let client = oidcClient, !client.providers.isEmpty else {
+      return
+    }
+
+    Logger.shared.debug("Prefetching icons for \(client.providers.count) providers")
+
+    let icons = await withTaskGroup(returning: [URL].self) { group in
+      for provider in client.providers {
+        group.addTask { await provider.iconURL }
+      }
+
+      var icons: [URL] = []
+      for await task in group {
+        if let url = task {
+          icons.append(url)
+        }
+      }
+      return icons
+    }
+
+    imagePrefetcher.startPrefetching(with: icons)
   }
 
   // @TODO: Centralize this to RequestError
@@ -470,7 +508,9 @@ class LoginViewModel {
     }
   }
 
-  func validateCredentials(auth: WebAuthenticationSession? = nil, provider: OIDCProvider? = nil) async -> StoredConnection? {
+  func validateCredentials(auth: WebAuthenticationSession? = nil, provider: OIDCProvider? = nil)
+    async -> StoredConnection?
+  {
     let fullUrl = fullUrl
     Logger.shared.info("Validating credentials against url: \(fullUrl)")
     credentialState = .validating
@@ -516,17 +556,23 @@ class LoginViewModel {
 
     case .token:
       connection = makeConnection(token)
-      
+
     case .oidc:
       guard let client = oidcClient, let auth, let provider else {
-        Logger.shared.warning("Somehow ended up in validateCredentials with OIDC mode, but no auth and no provider (internal error)")
+        Logger.shared.warning(
+          "Somehow ended up in validateCredentials with OIDC mode, but no auth and no provider (internal error)"
+        )
         credentialState = .none
         return nil
       }
-      
+
       do {
         let token = try await client.login(provider: provider, auth: auth)
         connection = makeConnection(token)
+      } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+        Logger.shared.debug("User canceled login")
+        credentialState = .none
+        return nil
       } catch {
         Logger.shared.error("Error when executing OIDC flow with provider \(provider.id): \(error)")
         // @TODO: Handle cancel separately as that's not really an error

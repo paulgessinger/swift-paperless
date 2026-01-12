@@ -14,6 +14,8 @@ import os
 @Observable
 @MainActor
 public final class OIDCClient {
+  static let urlFragment = "api/auth"
+
   private let baseURL: URL
   private let session: URLSession
   private let redirectURI: URL
@@ -55,13 +57,15 @@ public final class OIDCClient {
     let scope = try await fetchScope(providerId: provider.id, csrf: csrf)
     logger.debug("Received scope: \(scope, privacy: .public)")
 
-    guard let openidConfigurationUrl = URL(string: provider.openidConfigurationUrl) else {
+    guard let openidConfigurationUrl = provider.openidConfigurationUrl,
+      let oidcURL = URL(string: openidConfigurationUrl)
+    else {
       throw OIDCError.missingConfigurationURL
     }
 
-    logger.debug("OIDC configuation url: \(openidConfigurationUrl)")
+    logger.debug("OIDC configuation url: \(oidcURL)")
 
-    let discovery = try await fetchDiscovery(url: openidConfigurationUrl)
+    let discovery = try await fetchDiscovery(url: oidcURL)
     logger.debug(
       "OIDC discovery: authorization = \(discovery.authorization_endpoint), token = \(discovery.token_endpoint)"
     )
@@ -133,7 +137,7 @@ public final class OIDCClient {
 
   public func fetchProviders() async throws {
     logger.info("Fetching providers")
-    guard let url = URL(string: "api/oidc/app/v1/config", relativeTo: baseURL) else {
+    guard let url = URL(string: "\(Self.urlFragment)/app/v1/config", relativeTo: baseURL) else {
       logger.error("Failed to build config url")
       throw OIDCError.invalidURL
     }
@@ -145,13 +149,21 @@ public final class OIDCClient {
     }
 
     let (data, _) = try await session.data(from: url)
-    let config = try JSONDecoder().decode(HeadlessConfig.self, from: data)
+    let config: HeadlessConfig
+    do {
+      config = try JSONDecoder().decode(HeadlessConfig.self, from: data)
+    } catch {
+      logger.error("Unable to decode response from provider config endpoint: \(error)")
+      return
+    }
     providers = config.data.socialaccount.providers.filter { $0.supported }
   }
 
   private func fetchScope(providerId: String, csrf: String) async throws -> String {
     logger.info("Fetching scope from redirect")
-    guard let url = URL(string: "api/oidc/browser/v1/auth/provider/redirect", relativeTo: baseURL)
+    guard
+      let url = URL(
+        string: "\(Self.urlFragment)/browser/v1/auth/provider/redirect", relativeTo: baseURL)
     else {
       logger.error("Failed to build provider redirect url")
       throw OIDCError.invalidURL
@@ -223,7 +235,9 @@ public final class OIDCClient {
     idToken: String,
     csrf: String
   ) async throws -> String {
-    guard let url = URL(string: "api/oidc/app/v1/auth/provider/token", relativeTo: baseURL) else {
+    guard
+      let url = URL(string: "\(Self.urlFragment)/app/v1/auth/provider/token", relativeTo: baseURL)
+    else {
       logger.error("Failed to construct URL for obtaining Paperless token")
       throw OIDCError.invalidURL
     }
@@ -300,15 +314,16 @@ public struct OIDCProvider: Decodable, Identifiable, Sendable {
   public let name: String
   public let flows: [String]
   public let clientId: String
-  public let openidConfigurationUrl: String
-  
+  public let openidConfigurationUrl: String?
+
   public var supported: Bool {
     flows.contains("provider_redirect") && flows.contains("provider_token")
+      && openidConfigurationUrl != nil
   }
-  
+
   public var iconURL: URL? {
     get async {
-      guard var comp = URLComponents(string: openidConfigurationUrl) else {
+      guard let oidcUrl = openidConfigurationUrl, var comp = URLComponents(string: oidcUrl) else {
         return nil
       }
       comp.path = ""
@@ -316,7 +331,7 @@ public struct OIDCProvider: Decodable, Identifiable, Sendable {
       guard let url = comp.url else {
         return nil
       }
-      
+
       return await fetchFavicon(from: url)
     }
   }

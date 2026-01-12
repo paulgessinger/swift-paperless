@@ -5,9 +5,10 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import Networking
+import NukeUI
 import SwiftUI
 import os
-import Networking
 
 private typealias Section = CustomSection
 
@@ -52,7 +53,7 @@ struct CredentialsStageView: View {
       }
     }
   }
-  
+
   @ViewBuilder
   private var button: some View {
     Button {
@@ -125,19 +126,9 @@ struct CredentialsStageView: View {
       return
     }
   }
-  
+
   private var availableCredentialModes: [CredentialMode] {
-    var defaults: [CredentialMode] = [
-      .usernameAndPassword,
-      .token,
-      .none,
-    ]
-    
-    if let client = viewModel.oidcClient, !client.providers.isEmpty {
-      defaults.append(.oidc)
-    }
-    
-    return defaults
+    CredentialMode.allCases
   }
 
   var body: some View {
@@ -232,7 +223,7 @@ struct CredentialsStageView: View {
                   validate()
                 }
             }
-            
+
           case .oidc:
             OIDCView(onSuccess: onSuccess)
 
@@ -271,10 +262,10 @@ struct CredentialsStageView: View {
   }
 }
 
-private struct OIDCView : View {
+private struct OIDCView: View {
   @Environment(LoginViewModel.self) private var viewModel
   @Environment(\.webAuthenticationSession) private var auth
-  
+
   var onSuccess: (StoredConnection) -> Void
 
   private func validate(provider: OIDCProvider) {
@@ -284,47 +275,48 @@ private struct OIDCView : View {
       if let stored = await viewModel.validateCredentials(auth: auth, provider: provider) {
         onSuccess(stored)
       } else {
-        Logger.shared.error("Got error validating credentials")
+        Logger.shared.info("Did not receive credentials (may be error)")
       }
     }
   }
 
   private struct Favicon: View {
+    @Environment(LoginViewModel.self) private var viewModel
+
     var provider: OIDCProvider
-    
+
     @State private var url: URL? = nil
-    
+
     private var placeholder: some View {
       Image(systemName: "person.crop.circle")
         .resizable()
         .frame(width: 30, height: 30)
     }
-    
+
     var body: some View {
       Group {
-        AsyncImage(url: url, transaction: Transaction(animation: .default)) { phase in
-          switch phase {
-          case .success(let image):
+        LazyImage(url: url, transaction: Transaction(animation: .default)) { phase in
+          if let image = phase.image {
             image
               .resizable()
               .aspectRatio(contentMode: .fit)
               .frame(width: 30, height: 30)
-          case .empty, .failure: placeholder
-          @unknown default:
+          } else {
             placeholder
           }
         }
+        .pipeline(viewModel.imagePipeline)
       }
-        .task {
-          url = await provider.iconURL
-        }
+      .task {
+        url = await provider.iconURL
+      }
     }
   }
-  
+
   var body: some View {
     @Bindable var viewModel = self.viewModel
     VStack {
-      if let client = viewModel.oidcClient {
+      if let client = viewModel.oidcClient, !client.providers.isEmpty {
         ForEach(client.providers) { provider in
           Button {
             validate(provider: provider)
@@ -336,8 +328,16 @@ private struct OIDCView : View {
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .center)
           }
-            .backport.glassButtonStyle()
-            .padding(.horizontal)
+          .backport.glassButtonStyle()
+          .padding(.horizontal)
+        }
+      } else {
+        Section {
+          ContentUnavailableView(
+            .login(.oidcUnavailableTitle),
+            systemImage: "person.fill.xmark",
+            description: Text(
+              .login(.oidcUnavailableDescription(DocumentationLinks.oidc.absoluteString))))
         }
       }
     }

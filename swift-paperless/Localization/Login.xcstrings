@@ -538,7 +538,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OAuth2 / OIDC"
+            "value" : "OpenID Connect"
           }
         }
       }
@@ -549,7 +549,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use and external OAuth2 / OIDC provider to log in. See [here](%@) for more information."
+            "value" : "Use an external OpenID Connect provider to log in. See [here](%@) for more information."
           }
         }
       }
@@ -718,49 +718,49 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Log ind med et brugernavn og en adgangskode. Dette fungerer kun med lokale konti og ikke med konti, der er godkendt via OAuth2/OIDC."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Anmeldung mit einem Benutzernamen und einem Passwort. Dies funktioniert nur mit lokalen Konten und nicht mit Konten, die über OAuth2/OIDC authentifiziert wurden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OAuth2/OIDC."
+            "value" : "Login with a username and password. This only works with local accounts, and not with accounts authenticated through OpenID Connect."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Se connecter avec un nom d'utilisateur et un mot de passe. Cela ne fonctionne qu'avec les comptes locaux, et non avec les comptes authentifiés par OAuth2/OIDC."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Accedi con un nome utente e una password. Funziona solo con gli account locali, e non con gli account autenticati tramite OAuth2/OIDC."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Inloggen met een gebruikersnaam en wachtwoord. Dit werkt alleen met lokale accounts en niet met accounts die geverifieerd zijn via OAuth2/OIDC."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OAuth2/OIDC."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Bir kullanıcı adı ve parola ile giriş yapın. Bu yalnızca yerel hesaplarla çalışır ve OAuth2/OIDC aracılığıyla kimliği doğrulanan hesaplarla çalışmaz."
           }
         }
@@ -1886,6 +1886,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Login using %@"
+          }
+        }
+      }
+    },
+    "oidcUnavailableDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login using OpenID Connect accounts is not possible. Please make sure that this capability is configured in Paperless-ngx. You can find more information [here](%@)."
+          }
+        }
+      }
+    },
+    "oidcUnavailableTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect is not available"
           }
         }
       }
