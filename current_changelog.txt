@@ -1,2 +1,0 @@
-- Add trashed document management
-- Add support for OIDC login using social account providers. Please see the [documentation](https://swift-paperless.gessinger.dev/oidc/). Let me know if you run into any issues with this.
