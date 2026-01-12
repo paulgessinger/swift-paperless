@@ -5,10 +5,10 @@
 //  Created by Paul Gessinger on 11.01.26.
 //
 
-import SwiftUI
 import AuthenticationServices
 import Common
 import MetaCodable
+import SwiftUI
 import os
 
 @Observable
@@ -20,20 +20,22 @@ public final class OIDCClient {
   private let callbackScheme: String
 
   public private(set) var token: String? = nil
-  
+
   public private(set) var providers: [OIDCProvider] = []
-  
+
   private let logger = Logger(subsystem: "com.paulgessinger.swift-paperless", category: "OIDC")
 
   public init(baseURL: URL, redirectURI: URL) throws(OIDCError) {
     self.baseURL = baseURL
-    
+
     self.redirectURI = redirectURI
-    
-    guard let components = URLComponents(url: redirectURI, resolvingAgainstBaseURL: false), let scheme = components.scheme else {
+
+    guard let components = URLComponents(url: redirectURI, resolvingAgainstBaseURL: false),
+      let scheme = components.scheme
+    else {
       throw .invalidRedirectURL
     }
-    
+
     self.callbackScheme = scheme
 
     let config = URLSessionConfiguration.default
@@ -49,18 +51,20 @@ public final class OIDCClient {
     // Paperless-ngx requires us to go through CSRF protection to talk to the allauth headless endpoints
     let csrf = try await fetchCSRF()
     logger.debug("Received CSRF token: \(csrf)")
-    
+
     let scope = try await fetchScope(providerId: provider.id, csrf: csrf)
     logger.debug("Received scope: \(scope, privacy: .public)")
-    
+
     guard let openidConfigurationUrl = URL(string: provider.openidConfigurationUrl) else {
       throw OIDCError.missingConfigurationURL
     }
-    
+
     logger.debug("OIDC configuation url: \(openidConfigurationUrl)")
-    
+
     let discovery = try await fetchDiscovery(url: openidConfigurationUrl)
-    logger.debug("OIDC discovery: authorization = \(discovery.authorization_endpoint), token = \(discovery.token_endpoint)")
+    logger.debug(
+      "OIDC discovery: authorization = \(discovery.authorization_endpoint), token = \(discovery.token_endpoint)"
+    )
 
     let pkce = PKCE()
     let state = UUID().uuidString
@@ -72,20 +76,21 @@ public final class OIDCClient {
       state: state,
       pkce: pkce
     )
-    
+
     logger.debug("Authorization URL is \(authURL), launching user authentication flow")
     let callback = try await auth.authenticate(
       using: authURL,
       callbackURLScheme: callbackScheme
     )
-    
+
     logger.debug("User authentication returned callback url: \(callback)")
 
     let params = queryParams(from: callback)
     logger.debug("Extracting parameters from callback url: \(params)")
 
     guard params["state"] == state else {
-      logger.error("Parameter state \(String(describing: params["state"])) is not the expected state \(state)")
+      logger.error(
+        "Parameter state \(String(describing: params["state"])) is not the expected state \(state)")
       throw OIDCError.invalidState
     }
     guard let code = params["code"] else {
@@ -99,7 +104,7 @@ public final class OIDCClient {
       code: code,
       pkce: pkce
     )
-    
+
     logger.debug("Have received OIDC token from provider: \(token.id_token)")
 
     let apiToken = try await exchangeIdTokenWithPaperless(
@@ -108,7 +113,7 @@ public final class OIDCClient {
       idToken: token.id_token,
       csrf: csrf
     )
-    
+
     logger.debug("Have received Paperless api token: \(apiToken)")
 
     self.token = apiToken
@@ -132,7 +137,7 @@ public final class OIDCClient {
       logger.error("Failed to build config url")
       throw OIDCError.invalidURL
     }
-    
+
     struct HeadlessConfig: Decodable {
       struct DataContainer: Decodable { let socialaccount: SocialAccount }
       struct SocialAccount: Decodable { let providers: [OIDCProvider] }
@@ -141,7 +146,7 @@ public final class OIDCClient {
 
     let (data, _) = try await session.data(from: url)
     let config = try JSONDecoder().decode(HeadlessConfig.self, from: data)
-    providers = config.data.socialaccount.providers
+    providers = config.data.socialaccount.providers.filter { $0.supported }
   }
 
   private func fetchScope(providerId: String, csrf: String) async throws -> String {
@@ -163,20 +168,22 @@ public final class OIDCClient {
     ])
 
     let (_, response) = try await session.data(for: request, delegate: NoRedirectDelegate())
-    
+
     guard let http = response as? HTTPURLResponse else {
       logger.error("Redirect response is not HTTPURLRespone")
       throw OIDCError.missingScope
     }
-    
+
     guard let location = http.value(forHTTPHeaderField: "Location")
     else {
       logger.error("Redirect response does not contain Location header")
       throw OIDCError.missingScope
     }
-    
-    guard let scope = URLComponents(string: location)?.queryItems?.first(where: { $0.name == "scope" })?
-      .value else {
+
+    guard
+      let scope = URLComponents(string: location)?.queryItems?.first(where: { $0.name == "scope" })?
+        .value
+    else {
       logger.error("Redirect response location header did not include scope query parameter")
       throw OIDCError.missingScope
     }
@@ -269,12 +276,12 @@ public final class OIDCClient {
     }
     .joined(separator: "&")
     .data(using: .utf8)
-    
+
     guard let data else {
       logger.error("Failed to build form body from params \(params)")
       throw .formBodyEncodingFailed
     }
-    
+
     return data
   }
 
@@ -288,31 +295,56 @@ public final class OIDCClient {
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
-public struct OIDCProvider: Decodable, Identifiable {
+public struct OIDCProvider: Decodable, Identifiable, Sendable {
   public let id: String
+  public let name: String
+  public let flows: [String]
   public let clientId: String
   public let openidConfigurationUrl: String
+  
+  public var supported: Bool {
+    flows.contains("provider_redirect") && flows.contains("provider_token")
+  }
+  
+  public var iconURL: URL? {
+    get async {
+      guard var comp = URLComponents(string: openidConfigurationUrl) else {
+        return nil
+      }
+      comp.path = ""
+      comp.queryItems = [URLQueryItem]()
+      guard let url = comp.url else {
+        return nil
+      }
+      
+      return await fetchFavicon(from: url)
+    }
+  }
 }
 
-fileprivate
-struct OIDCDiscovery: Decodable {
+private
+  struct OIDCDiscovery: Decodable
+{
   let authorization_endpoint: URL
   let token_endpoint: URL
 }
 
-fileprivate
-struct TokenResponse: Decodable {
+private
+  struct TokenResponse: Decodable
+{
   let id_token: String
 }
 
-fileprivate
-struct PaperlessTokenResponse: Decodable {
+private
+  struct PaperlessTokenResponse: Decodable
+{
   struct Meta: Decodable { let access_token: String }
   let meta: Meta
 }
 
-fileprivate
-final class NoRedirectDelegate: NSObject, URLSessionTaskDelegate {
+private
+  final class NoRedirectDelegate: NSObject, URLSessionTaskDelegate
+{
   func urlSession(
     _ session: URLSession, task: URLSessionTask,
     willPerformHTTPRedirection response: HTTPURLResponse,

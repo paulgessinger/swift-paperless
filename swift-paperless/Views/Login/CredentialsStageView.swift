@@ -7,6 +7,7 @@
 
 import SwiftUI
 import os
+import Networking
 
 private typealias Section = CustomSection
 
@@ -31,6 +32,9 @@ struct CredentialsStageView: View {
       return valid
     case .token:
       return !viewModel.token.isEmpty
+    case .oidc:
+      // @TODO: This needs to check the client state
+      return true
     case .none:
       return true
     }
@@ -48,7 +52,7 @@ struct CredentialsStageView: View {
       }
     }
   }
-
+  
   @ViewBuilder
   private var button: some View {
     Button {
@@ -89,6 +93,8 @@ struct CredentialsStageView: View {
             Text(.login(.errorTokenInvalidUsernamePassword))
           case .none:
             Text(.login(.errorNoCredentialsUnauthorized))
+          case .oidc:
+            Text("OIDC")
           }
         }
         .foregroundColor(.red)
@@ -119,6 +125,20 @@ struct CredentialsStageView: View {
       return
     }
   }
+  
+  private var availableCredentialModes: [CredentialMode] {
+    var defaults: [CredentialMode] = [
+      .usernameAndPassword,
+      .token,
+      .none,
+    ]
+    
+    if let client = viewModel.oidcClient, !client.providers.isEmpty {
+      defaults.append(.oidc)
+    }
+    
+    return defaults
+  }
 
   var body: some View {
     @Bindable var viewModel = viewModel
@@ -126,7 +146,7 @@ struct CredentialsStageView: View {
       VStack {
         Section {
           Menu {
-            ForEach(CredentialMode.allCases, id: \.self) { item in
+            ForEach(availableCredentialModes, id: \.self) { item in
               Button {
                 viewModel.credentialMode = item
               } label: {
@@ -212,6 +232,9 @@ struct CredentialsStageView: View {
                   validate()
                 }
             }
+            
+          case .oidc:
+            OIDCView(onSuccess: onSuccess)
 
           case .none:
             EmptyView()
@@ -225,7 +248,9 @@ struct CredentialsStageView: View {
               button
               errorView(error)
             default:
-              button
+              if viewModel.credentialMode != .oidc {
+                button
+              }
             }
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -246,6 +271,79 @@ struct CredentialsStageView: View {
   }
 }
 
+private struct OIDCView : View {
+  @Environment(LoginViewModel.self) private var viewModel
+  @Environment(\.webAuthenticationSession) private var auth
+  
+  var onSuccess: (StoredConnection) -> Void
+
+  private func validate(provider: OIDCProvider) {
+    Logger.shared.info("Attempting to validate the credentials")
+    Task {
+      // Getting nil here means we got an error, but the view model handles this internally
+      if let stored = await viewModel.validateCredentials(auth: auth, provider: provider) {
+        onSuccess(stored)
+      } else {
+        Logger.shared.error("Got error validating credentials")
+      }
+    }
+  }
+
+  private struct Favicon: View {
+    var provider: OIDCProvider
+    
+    @State private var url: URL? = nil
+    
+    private var placeholder: some View {
+      Image(systemName: "person.crop.circle")
+        .resizable()
+        .frame(width: 30, height: 30)
+    }
+    
+    var body: some View {
+      Group {
+        AsyncImage(url: url, transaction: Transaction(animation: .default)) { phase in
+          switch phase {
+          case .success(let image):
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(width: 30, height: 30)
+          case .empty, .failure: placeholder
+          @unknown default:
+            placeholder
+          }
+        }
+      }
+        .task {
+          url = await provider.iconURL
+        }
+    }
+  }
+  
+  var body: some View {
+    @Bindable var viewModel = self.viewModel
+    VStack {
+      if let client = viewModel.oidcClient {
+        ForEach(client.providers) { provider in
+          Button {
+            validate(provider: provider)
+          } label: {
+            HStack {
+              Favicon(provider: provider)
+              Text(.login(.oidcLoginUsing(provider.name)))
+            }
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .center)
+          }
+            .backport.glassButtonStyle()
+            .padding(.horizontal)
+        }
+      }
+    }
+  }
+}
+
 #Preview("Credentials") {
   @Previewable @State var viewModel = LoginViewModel()
 
@@ -257,5 +355,9 @@ struct CredentialsStageView: View {
     Button("Toggle OTP") {
       viewModel.otpEnabled.toggle()
     }
+  }
+  .task {
+    viewModel.url = "http://localhost:8000"
+    viewModel.onChangeUrl()
   }
 }

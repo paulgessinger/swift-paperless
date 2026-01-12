@@ -21,4 +21,6 @@ struct DocumentationLinks {
   static let certificate = Self.baseUrl.appending(path: "common_issues/certificates")
 
   static let supportedVersions = Self.baseUrl.appending(path: "common_issues/supported-versions")
+
+  static let oidc = Self.baseUrl.appending(path: "oidc")
 }
