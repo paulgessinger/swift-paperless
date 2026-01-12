@@ -5,6 +5,8 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import Networking
+import NukeUI
 import SwiftUI
 import os
 
@@ -31,6 +33,8 @@ struct CredentialsStageView: View {
       return valid
     case .token:
       return !viewModel.token.isEmpty
+    case .oidc:
+      return true
     case .none:
       return true
     }
@@ -89,6 +93,8 @@ struct CredentialsStageView: View {
             Text(.login(.errorTokenInvalidUsernamePassword))
           case .none:
             Text(.login(.errorNoCredentialsUnauthorized))
+          case .oidc:
+            Text(.login(.oidcError))
           }
         }
         .foregroundColor(.red)
@@ -120,13 +126,17 @@ struct CredentialsStageView: View {
     }
   }
 
+  private var availableCredentialModes: [CredentialMode] {
+    CredentialMode.allCases
+  }
+
   var body: some View {
     @Bindable var viewModel = viewModel
     ScrollView(.vertical) {
       VStack {
         Section {
           Menu {
-            ForEach(CredentialMode.allCases, id: \.self) { item in
+            ForEach(availableCredentialModes, id: \.self) { item in
               Button {
                 viewModel.credentialMode = item
               } label: {
@@ -213,6 +223,9 @@ struct CredentialsStageView: View {
                 }
             }
 
+          case .oidc:
+            OIDCView(onSuccess: onSuccess)
+
           case .none:
             EmptyView()
           }
@@ -225,7 +238,9 @@ struct CredentialsStageView: View {
               button
               errorView(error)
             default:
-              button
+              if viewModel.credentialMode != .oidc {
+                button
+              }
             }
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -246,6 +261,87 @@ struct CredentialsStageView: View {
   }
 }
 
+private struct OIDCView: View {
+  @Environment(LoginViewModel.self) private var viewModel
+  @Environment(\.webAuthenticationSession) private var auth
+
+  var onSuccess: (StoredConnection) -> Void
+
+  private func validate(provider: OIDCProvider) {
+    Logger.shared.info("Attempting to validate the credentials")
+    Task {
+      if let stored = await viewModel.validateCredentials(auth: auth, provider: provider) {
+        onSuccess(stored)
+      } else {
+        Logger.shared.info("Did not receive credentials (may be error)")
+      }
+    }
+  }
+
+  private struct Favicon: View {
+    @Environment(LoginViewModel.self) private var viewModel
+
+    var provider: OIDCProvider
+
+    @State private var url: URL? = nil
+
+    private var placeholder: some View {
+      Image(systemName: "person.crop.circle")
+        .resizable()
+        .frame(width: 30, height: 30)
+    }
+
+    var body: some View {
+      Group {
+        LazyImage(url: url, transaction: Transaction(animation: .default)) { phase in
+          if let image = phase.image {
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(width: 30, height: 30)
+          } else {
+            placeholder
+          }
+        }
+        .pipeline(viewModel.imagePipeline)
+      }
+      .task {
+        url = await provider.iconURL
+      }
+    }
+  }
+
+  var body: some View {
+    @Bindable var viewModel = self.viewModel
+    VStack {
+      if let client = viewModel.oidcClient, !client.providers.isEmpty {
+        ForEach(client.providers) { provider in
+          Button {
+            validate(provider: provider)
+          } label: {
+            HStack {
+              Favicon(provider: provider)
+              Text(.login(.oidcLoginUsing(provider.name)))
+            }
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .center)
+          }
+          .backport.glassButtonStyle()
+          .padding(.horizontal)
+        }
+      } else {
+        Section {
+          ContentUnavailableView(
+            .login(.oidcUnavailableTitle),
+            systemImage: "person.fill.xmark",
+            description: Text(
+              .login(.oidcUnavailableDescription(DocumentationLinks.oidc.absoluteString))))
+        }
+      }
+    }
+  }
+}
+
 #Preview("Credentials") {
   @Previewable @State var viewModel = LoginViewModel()
 
@@ -257,5 +353,9 @@ struct CredentialsStageView: View {
     Button("Toggle OTP") {
       viewModel.otpEnabled.toggle()
     }
+  }
+  .task {
+    viewModel.url = "http://localhost:8000"
+    viewModel.onChangeUrl()
   }
 }

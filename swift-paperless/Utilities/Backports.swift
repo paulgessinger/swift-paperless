@@ -40,6 +40,15 @@ extension Backport where Content: View {
   }
 
   @ViewBuilder
+  public func glassButtonStyle(or fallback: some PrimitiveButtonStyle = .plain) -> some View {
+    if #available(iOS 26.0, *) {
+      content.buttonStyle(.glass)
+    } else {
+      content.buttonStyle(fallback)
+    }
+  }
+
+  @ViewBuilder
   public func navigationTransitionZoom(sourceID: some Hashable, in namespace: Namespace.ID)
     -> some View
   {

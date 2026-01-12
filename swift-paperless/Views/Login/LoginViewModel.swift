@@ -5,10 +5,12 @@
 //  Created by Paul Gessinger on 31.07.2024.
 //
 
+import AuthenticationServices
 import Common
 import DataModel
 import Foundation
 import Networking
+import Nuke
 import SwiftUI
 import os
 
@@ -23,16 +25,17 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
   case usernameAndPassword
   case token
   case none
+  case oidc
 
   var label: String {
-    switch self {
-    case .usernameAndPassword:
-      String(localized: .login(.credentialModeUsernamePassword))
-    case .token:
-      String(localized: .login(.credentialModeToken))
-    case .none:
-      String(localized: .login(.credentialModeNone))
-    }
+    let res: LocalizedStringResource =
+      switch self {
+      case .usernameAndPassword: .login(.credentialModeUsernamePassword)
+      case .token: .login(.credentialModeToken)
+      case .none: .login(.credentialModeNone)
+      case .oidc: .login(.credentialModeOidc)
+      }
+    return String(localized: res)
   }
 
   var description: Text {
@@ -43,6 +46,8 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
       Text(.login(.credentialModeTokenDescription))
     case .none:
       Text(.login(.credentialModeNoneDescription))
+    case .oidc:
+      Text(.login(.credentialModeOidcDescription(DocumentationLinks.oidc.absoluteString)))
     }
   }
 }
@@ -101,8 +106,26 @@ class LoginViewModel {
   // for token login
   var token: String = ""
 
+  var oidcClient: OIDCClient?
+
+  @ObservationIgnored
+  let imagePipeline = ImagePipeline()
+  @ObservationIgnored
+  let imagePrefetcher: ImagePrefetcher
+
+  init() {
+    imagePrefetcher = ImagePrefetcher(pipeline: imagePipeline)
+
+    imagePrefetcher.didComplete = {
+      Logger.shared.debug("LoginViewModel prefetching completes")
+    }
+  }
+
+  // - MARK: Methods
+
   func onChangeUrl(immediate: Bool = false) {
     checkUrlTask?.cancel()
+    oidcClient = nil
 
     guard !url.isEmpty else {
       loginState = .empty
@@ -235,6 +258,7 @@ class LoginViewModel {
 
       loginState = .valid
 
+      await makeOIDCClient()
     } catch let error where error.isCancellationError {
       // do nothing
       return
@@ -258,6 +282,63 @@ class LoginViewModel {
       loginState = .error(LoginError(other: error))
       return
     }
+  }
+
+  private func makeOIDCClient() async {
+    let fullUrl = fullUrl
+    Logger.shared.info("Making OIDC client with url \(fullUrl)")
+    let baseUrl: URL
+    do {
+      (baseUrl, _) = try deriveUrl(string: fullUrl, suffix: "token")
+    } catch {
+      Logger.shared.error("Failed to derive URL for OIDC client: \(error)")
+      return
+    }
+
+    let client: OIDCClient
+    do {
+      let redirectURI = #URL("x-paperless://oidc-callback")
+      client = try OIDCClient(baseURL: baseUrl, redirectURI: redirectURI)
+    } catch {
+      Logger.shared.error("Failed to build OIDC client: \(error, privacy: .public)")
+      return
+    }
+
+    oidcClient = client
+
+    do {
+      try await client.fetchProviders()
+      Logger.shared.info("Have providers: \(client.providers)")
+
+      await prefetchOIDCProviderIcons()
+    } catch {
+      Logger.shared.error("Failed to fetch OIDC providers: \(error, privacy: .public)")
+    }
+
+  }
+
+  private func prefetchOIDCProviderIcons() async {
+    guard let client = oidcClient, !client.providers.isEmpty else {
+      return
+    }
+
+    Logger.shared.debug("Prefetching icons for \(client.providers.count) providers")
+
+    let icons = await withTaskGroup(returning: [URL].self) { group in
+      for provider in client.providers {
+        group.addTask { await provider.iconURL }
+      }
+
+      var icons: [URL] = []
+      for await task in group {
+        if let url = task {
+          icons.append(url)
+        }
+      }
+      return icons
+    }
+
+    imagePrefetcher.startPrefetching(with: icons)
   }
 
   // @TODO: Centralize this to RequestError
@@ -427,7 +508,9 @@ class LoginViewModel {
     }
   }
 
-  func validateCredentials() async -> StoredConnection? {
+  func validateCredentials(auth: WebAuthenticationSession? = nil, provider: OIDCProvider? = nil)
+    async -> StoredConnection?
+  {
     let fullUrl = fullUrl
     Logger.shared.info("Validating credentials against url: \(fullUrl)")
     credentialState = .validating
@@ -445,7 +528,7 @@ class LoginViewModel {
 
     let connection: Connection
 
-    let makeConnection = { [self] (token: String?) -> Connection in
+    func makeConnection(_ token: String?) -> Connection {
       Connection(
         url: baseUrl,
         token: token,
@@ -474,6 +557,29 @@ class LoginViewModel {
     case .token:
       connection = makeConnection(token)
 
+    case .oidc:
+      guard let client = oidcClient, let auth, let provider else {
+        Logger.shared.warning(
+          "Somehow ended up in validateCredentials with OIDC mode, but no auth and no provider (internal error)"
+        )
+        credentialState = .none
+        return nil
+      }
+
+      do {
+        let token = try await client.login(provider: provider, auth: auth)
+        connection = makeConnection(token)
+      } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+        Logger.shared.debug("User canceled login")
+        credentialState = .none
+        return nil
+      } catch {
+        Logger.shared.error("Error when executing OIDC flow with provider \(provider.id): \(error)")
+        // @TODO: Handle cancel separately as that's not really an error
+        //        https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsessionerror/canceledlogin
+        credentialState = .error(LoginError(other: error))
+        return nil
+      }
     case .none:
       connection = makeConnection(nil)
     }
