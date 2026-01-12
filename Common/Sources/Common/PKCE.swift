@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import Security
 
 /// Proof Key for Code Exchange (PKCE) implementation for OAuth 2.0
 ///
@@ -27,8 +28,16 @@ public struct PKCE: Sendable {
   /// - Parameter length: The number of random bytes to generate
   /// - Returns: A base64url-encoded string
   private static func randomBase64URL(length: Int) -> String {
-    let bytes = (0..<length).map { _ in UInt8.random(in: 0...255) }
-    return Data(bytes).base64EncodedString()
+    var data = Data(count: length)
+    let result = data.withUnsafeMutableBytes { buffer -> Int32 in
+      guard let baseAddress = buffer.baseAddress else {
+        return errSecAllocate
+      }
+      return SecRandomCopyBytes(kSecRandomDefault, length, baseAddress)
+    }
+    precondition(result == errSecSuccess, "Failed to generate secure random bytes.")
+
+    return data.base64EncodedString()
       .replacingOccurrences(of: "+", with: "-")
       .replacingOccurrences(of: "/", with: "_")
       .replacingOccurrences(of: "=", with: "")
