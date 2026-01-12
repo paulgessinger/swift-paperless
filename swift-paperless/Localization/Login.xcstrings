@@ -544,6 +544,7 @@
       }
     },
     "credentialModeOidcDescription" : {
+      "comment" : "The argument is the link to the OIDC documentation page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1879,7 +1880,19 @@
         }
       }
     },
+    "oidcError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was an error logging in using OIDC."
+          }
+        }
+      }
+    },
     "oidcLoginUsing" : {
+      "comment" : "The argument is the OIDC provider name",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1891,6 +1904,7 @@
       }
     },
     "oidcUnavailableDescription" : {
+      "comment" : "The argument is the link to the OIDC documentation page.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

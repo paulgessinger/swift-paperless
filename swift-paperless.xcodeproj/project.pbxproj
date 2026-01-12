@@ -79,7 +79,6 @@
 		7A5482AB299AD56C00D5061E /* swift-paperless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-paperless.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482BC299AD56E00D5061E /* swift-paperlessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A59BE012F129272002EC151 /* OAuthTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OAuthTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7A6DA7212D7DD42100B3B185 /* Networking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Networking; sourceTree = "<group>"; };
 		7AAC44512CA0A31E003E6A3A /* Common */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Common; sourceTree = "<group>"; };
@@ -327,7 +326,6 @@
 				7A5482BC299AD56E00D5061E /* swift-paperlessTests.xctest */,
 				7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */,
 				7A4AA8E429BB969400D845A2 /* ShareExtension.appex */,
-				7A59BE012F129272002EC151 /* OAuthTest.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -482,27 +480,6 @@
 			productReference = 7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		7A59BE002F129272002EC151 /* OAuthTest */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7A59BE0B2F129274002EC151 /* Build configuration list for PBXNativeTarget "OAuthTest" */;
-			buildPhases = (
-				7A59BDFD2F129272002EC151 /* Sources */,
-				7A59BDFE2F129272002EC151 /* Frameworks */,
-				7A59BDFF2F129272002EC151 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = OAuthTest;
-			packageProductDependencies = (
-				7A59C91A2F143239002EC151 /* Common */,
-				7A59C91C2F143239002EC151 /* Networking */,
-			);
-			productName = OAuthTest;
-			productReference = 7A59BE012F129272002EC151 /* OAuthTest.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -525,9 +502,6 @@
 					7A5482C5299AD56E00D5061E = {
 						CreatedOnToolsVersion = 14.2;
 						TestTargetID = 7A5482AA299AD56C00D5061E;
-					};
-					7A59BE002F129272002EC151 = {
-						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -567,7 +541,6 @@
 				7A5482BB299AD56E00D5061E /* swift-paperlessTests */,
 				7A5482C5299AD56E00D5061E /* swift-paperlessUITests */,
 				7A4AA8E329BB969400D845A2 /* ShareExtension */,
-				7A59BE002F129272002EC151 /* OAuthTest */,
 			);
 		};
 /* End PBXProject section */
@@ -608,13 +581,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7A59BDFF2F129272002EC151 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -641,13 +607,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7A5482C2299AD56E00D5061E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		7A59BDFD2F129272002EC151 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1093,80 +1052,6 @@
 			};
 			name = Release;
 		};
-		7A59BE092F129274002EC151 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
-				ENABLE_PREVIEWS = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = OAuthTest/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.OAuthTest;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		7A59BE0A2F129274002EC151 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ZHKJ4NHK6F;
-				ENABLE_PREVIEWS = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = OAuthTest/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.OAuthTest;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1211,15 +1096,6 @@
 			buildConfigurations = (
 				7A5482D7299AD56E00D5061E /* Debug */,
 				7A5482D8299AD56E00D5061E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		7A59BE0B2F129274002EC151 /* Build configuration list for PBXNativeTarget "OAuthTest" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7A59BE092F129274002EC151 /* Debug */,
-				7A59BE0A2F129274002EC151 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

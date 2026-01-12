@@ -34,7 +34,6 @@ struct CredentialsStageView: View {
     case .token:
       return !viewModel.token.isEmpty
     case .oidc:
-      // @TODO: This needs to check the client state
       return true
     case .none:
       return true
@@ -95,7 +94,7 @@ struct CredentialsStageView: View {
           case .none:
             Text(.login(.errorNoCredentialsUnauthorized))
           case .oidc:
-            Text("OIDC")
+            Text(.login(.oidcError))
           }
         }
         .foregroundColor(.red)
@@ -271,7 +270,6 @@ private struct OIDCView: View {
   private func validate(provider: OIDCProvider) {
     Logger.shared.info("Attempting to validate the credentials")
     Task {
-      // Getting nil here means we got an error, but the view model handles this internally
       if let stored = await viewModel.validateCredentials(auth: auth, provider: provider) {
         onSuccess(stored)
       } else {
