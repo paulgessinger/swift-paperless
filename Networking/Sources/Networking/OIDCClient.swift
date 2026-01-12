@@ -13,6 +13,7 @@ import os
 
 @Observable
 @MainActor
+@available(macOS 14.0, *)
 public final class OIDCClient {
   static let urlFragment = "api/auth"
 
