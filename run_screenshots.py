@@ -267,39 +267,6 @@ def normalize_preview_base_url(preview_url: str) -> str:
     return trimmed
 
 
-def set_preview_defaults(target: str, bundle_id: str, preview_url: str, preview_token: str, *, dry_run: bool) -> None:
-    simctl(
-        ["spawn", target, "defaults", "write", bundle_id, "PreviewMode", "-bool", "YES"],
-        dry_run=dry_run,
-    )
-    simctl(
-        ["spawn", target, "defaults", "write", bundle_id, "PreviewURL", "-string", preview_url],
-        dry_run=dry_run,
-    )
-    simctl(
-        ["spawn", target, "defaults", "write", bundle_id, "PreviewToken", "-string", preview_token],
-        dry_run=dry_run,
-    )
-
-
-def clear_preview_defaults(target: str, bundle_id: str, *, dry_run: bool) -> None:
-    simctl(
-        ["spawn", target, "defaults", "delete", bundle_id, "PreviewMode"],
-        check=False,
-        dry_run=dry_run,
-    )
-    simctl(
-        ["spawn", target, "defaults", "delete", bundle_id, "PreviewURL"],
-        check=False,
-        dry_run=dry_run,
-    )
-    simctl(
-        ["spawn", target, "defaults", "delete", bundle_id, "PreviewToken"],
-        check=False,
-        dry_run=dry_run,
-    )
-
-
 def list_booted_simulators() -> list[dict[str, str]]:
     result = subprocess.run(
         ["xcrun", "simctl", "list", "devices", "--json"],
@@ -908,68 +875,66 @@ def capture(
         dry_run=dry_run,
     )
 
-    try:
-        if preview_mode:
-            if not preview_token:
-                preview_base_url = normalize_preview_base_url(preview_url)
-                preview_token = asyncio.run(
-                    authenticate(preview_base_url, preview_username, preview_password)
-                )
-            console.log(f"[green]Preview mode enabled: {preview_url}")
-            set_preview_defaults(
+    preview_args: list[str] = ["--preview-mode=false"]
+    if preview_mode:
+        if not preview_token:
+            preview_base_url = normalize_preview_base_url(preview_url)
+            preview_token = asyncio.run(
+                authenticate(preview_base_url, preview_username, preview_password)
+            )
+        console.log(f"[green]Preview mode enabled: {preview_url}")
+        preview_args = [
+            "--preview-mode",
+            "--preview-url",
+            preview_url,
+            "--preview-token",
+            preview_token,
+        ]
+    for language in languages:
+        language_slug = sanitize_filename(language)
+        language_dir = output_dir / language_slug
+        language_dir.mkdir(parents=True, exist_ok=True)
+        console.rule(f"[bold green]Language: {language}")
+
+        simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
+        simctl(
+            [
+                "launch",
+                "--terminate-running-process",
                 target,
                 bundle_id,
-                preview_url,
-                preview_token,
-                dry_run=dry_run,
-            )
-        for language in languages:
-            language_slug = sanitize_filename(language)
-            language_dir = output_dir / language_slug
-            language_dir.mkdir(parents=True, exist_ok=True)
-            console.rule(f"[bold green]Language: {language}")
+                "-AppleLanguages",
+                f"({language})",
+                "-AppleLocale",
+                language,
+                *preview_args,
+            ],
+            dry_run=dry_run,
+        )
+        if launch_wait > 0:
+            time.sleep(launch_wait)
 
-            simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
-            simctl(
-                [
-                    "launch",
-                    "--terminate-running-process",
-                    target,
-                    bundle_id,
-                    "-AppleLanguages",
-                    f"({language})",
-                    "-AppleLocale",
-                    language,
-                ],
-                dry_run=dry_run,
-            )
-            if launch_wait > 0:
-                time.sleep(launch_wait)
-
-            for index, step in enumerate(screenshot_steps, start=1):
-                wait_time = step.wait if step.wait is not None else url_wait
-                if step.url:
-                    simctl(["openurl", target, step.url], dry_run=dry_run)
-                    if wait_time > 0:
-                        time.sleep(wait_time)
-                elif step.wait is not None and wait_time > 0:
+        for index, step in enumerate(screenshot_steps, start=1):
+            wait_time = step.wait if step.wait is not None else url_wait
+            if step.url:
+                simctl(["openurl", target, step.url], dry_run=dry_run)
+                if wait_time > 0:
                     time.sleep(wait_time)
+            elif step.wait is not None and wait_time > 0:
+                time.sleep(wait_time)
 
-                screenshot_name = f"{device_name}-{index:02d}_{sanitize_filename(step.name)}.png"
-                output_path = language_dir / screenshot_name
-                simctl(
-                    ["io", target, "screenshot", "--type", "png", str(output_path)],
-                    dry_run=dry_run,
-                )
-                console.log(f"Saved {output_path}")
+            screenshot_name = f"{device_name}-{index:02d}_{sanitize_filename(step.name)}.png"
+            output_path = language_dir / screenshot_name
+            simctl(
+                ["io", target, "screenshot", "--type", "png", str(output_path)],
+                dry_run=dry_run,
+            )
+            console.log(f"Saved {output_path}")
 
-                if step.post_url:
-                    simctl(["openurl", target, step.post_url], dry_run=dry_run)
-                    if wait_time > 0:
-                        time.sleep(wait_time)
-    finally:
-        if preview_mode:
-            clear_preview_defaults(target, bundle_id, dry_run=dry_run)
+            if step.post_url:
+                simctl(["openurl", target, step.post_url], dry_run=dry_run)
+                if wait_time > 0:
+                    time.sleep(wait_time)
 
 
 if __name__ == "__main__":

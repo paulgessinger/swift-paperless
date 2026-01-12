@@ -146,6 +146,63 @@ struct StoredConnection: Equatable, Codable, Identifiable {
 
 @MainActor
 class ConnectionManager: ObservableObject {
+  private struct PreviewLaunchArguments {
+    let mode: Bool?
+    let url: String?
+    let token: String?
+
+    var effectiveMode: Bool? {
+      if let mode {
+        return mode
+      }
+      if url != nil || token != nil {
+        return true
+      }
+      return nil
+    }
+
+    static func parse(_ args: [String]) -> PreviewLaunchArguments? {
+      var mode: Bool? = nil
+      var url: String? = nil
+      var token: String? = nil
+      var index = 0
+
+      while index < args.count {
+        let arg = args[index]
+        switch arg {
+        case "--preview-mode":
+          mode = true
+        case "--preview-url":
+          if index + 1 < args.count {
+            url = args[index + 1]
+            index += 1
+          }
+        case "--preview-token":
+          if index + 1 < args.count {
+            token = args[index + 1]
+            index += 1
+          }
+        default:
+          if arg.hasPrefix("--preview-mode=") {
+            let value = String(arg.dropFirst("--preview-mode=".count))
+            let lowercased = value.lowercased()
+            mode = !(lowercased == "0" || lowercased == "false" || lowercased == "no")
+          } else if arg.hasPrefix("--preview-url=") {
+            url = String(arg.dropFirst("--preview-url=".count))
+          } else if arg.hasPrefix("--preview-token=") {
+            token = String(arg.dropFirst("--preview-token=".count))
+          }
+        }
+        index += 1
+      }
+
+      if mode == nil && url == nil && token == nil {
+        return nil
+      }
+      return PreviewLaunchArguments(mode: mode, url: url, token: token)
+    }
+  }
+
   enum Event {
     case connectionChange(animated: Bool)
     case logout
@@ -154,13 +211,18 @@ class ConnectionManager: ObservableObject {
   var eventPublisher =
     PassthroughSubject<Event, Never>()
 
+  private let previewArguments: PreviewLaunchArguments?
   let previewMode: Bool
 
   init(previewMode: Bool? = nil) {
+    let previewArguments = PreviewLaunchArguments.parse(ProcessInfo.processInfo.arguments)
+    self.previewArguments = previewArguments
     if let previewMode {
       self.previewMode = previewMode
+    } else if let previewMode = previewArguments?.effectiveMode {
+      self.previewMode = previewMode
     } else {
-      self.previewMode = UserDefaults.standard.bool(forKey: "PreviewMode")
+      self.previewMode = false
     }
   }
 
@@ -256,12 +318,11 @@ class ConnectionManager: ObservableObject {
 
     if previewMode {
       Logger.api.info("Running in preview mode")
-      let udef = UserDefaults.standard
       let urlString =
-        udef.string(forKey: "PreviewURL")
+        previewArguments?.url
         ?? "https://paperless.example.com/api/"
       let token =
-        udef.string(forKey: "PreviewToken")
+        previewArguments?.token
         ?? "pseudo-token-that-will-not-work"
 
       let url = URL(string: urlString)!
@@ -319,10 +380,9 @@ class ConnectionManager: ObservableObject {
   var storedConnection: StoredConnection? {
     if previewMode {
       Logger.api.info("Running in preview mode")
-      let udef = UserDefaults.standard
 
       let urlString =
-        udef.string(forKey: "PreviewURL")
+        previewArguments?.url
         ?? "https://paperless.example.com/api/"
       let url = URL(string: urlString)!
 
