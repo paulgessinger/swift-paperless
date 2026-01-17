@@ -151,7 +151,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie będziesz już mógł oglądać tego obiektu!"
+            "value" : "Nie będzie już można wyświetlić tego obiektu!"
           }
         },
         "tr" : {
@@ -629,7 +629,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie masz uprawnień do wyświetlania pól niestandardowych."
+            "value" : "Nie masz uprawnień do wyświetlania pól dodatkowych."
           }
         },
         "tr" : {
@@ -1000,7 +1000,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie masz uprawnień do wyświetlania ścieżek magazynu."
+            "value" : "Nie masz uprawnień do wyświetlania ścieżek składowania."
           }
         },
         "tr" : {
@@ -1371,7 +1371,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "*Private* oznacza użytkownika lub grupę, do której przeglądania nie masz uprawnień."
+            "value" : "*Prywatny* oznacza użytkownika lub grupę, do której przeglądania nie masz uprawnień."
           }
         },
         "tr" : {
@@ -1424,7 +1424,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zasoby"
+            "value" : "Zasób"
           }
         },
         "tr" : {
@@ -1477,7 +1477,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfiguracje aplikacji"
+            "value" : "Konfiguracja aplikacji"
           }
         },
         "tr" : {
@@ -1530,7 +1530,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pole niestandardowe"
+            "value" : "Pole dodatkowe"
           }
         },
         "tr" : {
@@ -1795,7 +1795,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przepływ pracy"
+            "value" : "Proces"
           }
         },
         "tr" : {
