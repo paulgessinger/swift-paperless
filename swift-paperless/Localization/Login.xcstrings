@@ -535,7 +535,49 @@
     "credentialModeOidc" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenId Connect"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OpenID Connect"
@@ -547,10 +589,52 @@
       "comment" : "The argument is the link to the OIDC documentation page.",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brug en ekstern OpenID Connect-udbyder til at logge ind. Se [her](%@) for mere information."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwende einen externen OpenID Connect-Anbieter für die Anmeldung. Siehe [hier](%@) für weitere Informationen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Use an external OpenID Connect provider to log in. See [here](%@) for more information."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisez un fournisseur OpenID Connect externe pour vous connecter. Voir [ici](%@) pour plus d'informations."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilizzare un provider OpenID Connect esterno per accedere. Per ulteriori informazioni, vedere [qui](%@)."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik een externe OpenID Connect provider om in te loggen. Zie [hier](%@) voor meer informatie."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użyj zewnętrznego dostawcy OpenID Connect, aby się zalogować. Więcej informacji można znaleźć [tutaj](%@)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oturum açmak için harici bir OpenID Connect sağlayıcısı kullanın. Daha fazla bilgi için [buraya](%@) bakın."
           }
         }
       }
@@ -719,13 +803,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Log ind med et brugernavn og en adgangskode. Dette fungerer kun med lokale konti og ikke med konti, der er godkendt via OAuth2/OIDC."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Anmeldung mit einem Benutzernamen und einem Passwort. Dies funktioniert nur mit lokalen Konten und nicht mit Konten, die über OAuth2/OIDC authentifiziert wurden."
           }
         },
@@ -737,31 +821,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Se connecter avec un nom d'utilisateur et un mot de passe. Cela ne fonctionne qu'avec les comptes locaux, et non avec les comptes authentifiés par OAuth2/OIDC."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Accedi con un nome utente e una password. Funziona solo con gli account locali, e non con gli account autenticati tramite OAuth2/OIDC."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Inloggen met een gebruikersnaam en wachtwoord. Dit werkt alleen met lokale accounts en niet met accounts die geverifieerd zijn via OAuth2/OIDC."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OAuth2/OIDC."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bir kullanıcı adı ve parola ile giriş yapın. Bu yalnızca yerel hesaplarla çalışır ve OAuth2/OIDC aracılığıyla kimliği doğrulanan hesaplarla çalışmaz."
           }
         }
@@ -1883,10 +1967,52 @@
     "oidcError" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der opstod en fejl ved login med OIDC."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der Anmeldung über OIDC ist ein Fehler aufgetreten."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "There was an error logging in using OIDC."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une erreur s'est produite lors de la connexion à l'aide de l'OIDC."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si è verificato un errore di accesso utilizzando OIDC."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is een fout opgetreden bij het aanmelden met OIDC."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wystąpił błąd logowania przy użyciu OIDC."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC kullanarak oturum açarken bir hata oluştu."
           }
         }
       }
@@ -1895,10 +2021,52 @@
       "comment" : "The argument is the OIDC provider name",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log ind med %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden mit %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Login using %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter à l'aide de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso con %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inloggen met %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie przy użyciu %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@adresini kullanarak giriş yapın"
           }
         }
       }
@@ -1907,10 +2075,52 @@
       "comment" : "The argument is the link to the OIDC documentation page.",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det er ikke muligt at logge ind med OpenID Connect-konti. Sørg for, at denne funktion er konfigureret i Paperless-ngx. Du kan finde flere oplysninger [her](%@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung über OpenID Connect-Konten ist nicht möglich. Bitte stelle sicher, dass diese Funktion in Paperless-ngx konfiguriert ist. Weitere Informationen findest du [hier](%@)."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Login using OpenID Connect accounts is not possible. Please make sure that this capability is configured in Paperless-ngx. You can find more information [here](%@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion à l'aide de comptes OpenID Connect n'est pas possible. Veuillez vous assurer que cette fonctionnalité est configurée dans Paperless-ngx. Vous pouvez trouver plus d'informations [ici](%@)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accesso tramite account OpenID Connect non è possibile. Assicurarsi che questa funzionalità sia configurata in Paperless-ngx. È possibile trovare ulteriori informazioni [qui] (%@)."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inloggen met OpenID Connect-accounts is niet mogelijk. Zorg ervoor dat deze mogelijkheid is geconfigureerd in Paperless-ngx. Meer informatie vindt u [hier](%@)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie przy użyciu kont OpenID Connect nie jest możliwe. Upewnij się, że ta funkcja jest skonfigurowana w Paperless-ngx. Więcej informacji można znaleźć [tutaj](%@)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect hesaplarını kullanarak giriş yapmak mümkün değildir. Lütfen bu özelliğin Paperless-ngx'te yapılandırıldığından emin olun. Daha fazla bilgiyi [burada](%@) bulabilirsiniz."
           }
         }
       }
@@ -1918,10 +2128,52 @@
     "oidcUnavailableTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect er ikke tilgængelig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect ist nicht verfügbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OpenID Connect is not available"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect n'est pas disponible"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect non è disponibile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect is niet beschikbaar"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect nie jest dostępny"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenID Connect kullanılamıyor"
           }
         }
       }

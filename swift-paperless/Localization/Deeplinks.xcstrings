@@ -4,10 +4,52 @@
     "errorExcludedTagsNotAllowedInAnyMode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekskluderede tags (!) er ikke tilladt, når man bruger tag_mode=any"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgeschlossene Tags (!) sind nicht erlaubt, wenn tag_mode=any verwendet wird"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Excluded tags (!) are not allowed when using tag_mode=any"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les balises exclues (!) ne sont pas autorisées lors de l'utilisation de tag_mode=any"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I tag esclusi (!) non sono ammessi quando si usa tag_mode=any"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitgesloten tags (!) zijn niet toegestaan bij gebruik van tag_mode=any"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wykluczone tagi (!) nie są dozwolone przy użyciu tag_mode=any"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag_mode=any kullanılırken hariç tutulan etiketlere (!) izin verilmez"
           }
         }
       }
@@ -15,10 +57,52 @@
     "errorInvalidAsnValue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig ASN-værdi: \"%@\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger ASN-Wert: \"%@\""
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid ASN value: \"%@\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeur ASN invalide : \"%@\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valore ASN non valido: \"%@\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige ASN-waarde: \"%@\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowa wartość ASN: \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz ASN değeri: \"%@\""
           }
         }
       }
@@ -26,10 +110,52 @@
     "errorInvalidDateFormat" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldigt datoformat: \"%@\". Brug ÅÅÅÅ-MM-DD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiges Datumsformat: \"%@\". Verwenden Sie JJJJ-MM-TT"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid date format: \"%@\". Use YYYY-MM-DD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format de date invalide : \"%@\". Utiliser YYYY-MM-DD"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato data non valido: \"%@\". Utilizzare YYYY-MM-DD"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldig datumformaat: \"%@\". Gebruik JJJJ-MM-DD"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy format daty: \"%@\". Użyj RRRR-MM-DD"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz tarih biçimi: \"%@\". YYYY-MM-DD kullanın"
           }
         }
       }
@@ -37,10 +163,52 @@
     "errorInvalidDocumentId" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldigt dokument-ID: \"%@\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Dokument-ID: \"%@\""
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid document ID: \"%@\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de document invalide : \"%@\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID documento non valido: \"%@\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldig document ID: \"%@\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy identyfikator dokumentu: \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz belge kimliği: \"%@\""
           }
         }
       }
@@ -48,10 +216,52 @@
     "errorInvalidSearchMode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig search_mode: \"%@\". Skal være \"title\", \"content\", \"title_content\" eller \"advanced\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger search_mode: \"%@\". Muss \"title\", \"content\", \"title_content\", oder \"advanced\" sein."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid search_mode: \"%@\". Must be \"title\", \"content\", \"title_content\", or \"advanced\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode de recherche invalide : \"%@\". Doit être \"title\", \"content\", \"title_content\", ou \"advanced\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modalità di ricerca non valida: \"%@\". Deve essere \"titolo\", \"contenuto\", \"titolo_contenuto\" o \"avanzato\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige zoekmodus: \"%@\". Moet zijn \"title\", \"content\", \"title_content\", of \"advanced\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy search_mode: \"%@\". Musi być \"title\", \"content\", \"title_content\" lub \"advanced\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz search_mode: \"%@\". \"title\", \"content\", \"title_content\" veya \"advanced\" olmalıdır"
           }
         }
       }
@@ -59,10 +269,52 @@
     "errorInvalidSortField" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig sorteringsparameter: \"%@\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Sortierparameter: \"%@\""
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid sort parameter: \"%@\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paramètre de tri invalide : \"%@\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parametro di ordinamento non valido: \"%@\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige sorteerparameter: \"%@\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy parametr sortowania: \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz sıralama parametresi: \"%@\""
           }
         }
       }
@@ -70,10 +322,52 @@
     "errorInvalidTagMode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig tag_mode: \"%@\". Skal være \"any\" eller \"all\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger tag_mode: \"%@\". Muss \"any\" oder \"all\" sein"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid tag_mode: \"%@\". Must be \"any\" or \"all\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid tag_mode : \"%@\". Doit être \"any\" ou \"all\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag_mode non valido: \"%@\". Deve essere \"any\" o \"all\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige tag_mode: \"%@\". Moet \"any\" of \"all\" zijn"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy tag_mode: \"%@\". Musi być \"any\" lub \"all\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz tag_mode: \"%@\". \"any\" veya \"all\" olmalıdır"
           }
         }
       }
@@ -81,10 +375,52 @@
     "errorInvalidUrl" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL'en til det dybe link er misdannet eller ugyldig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Deep-Link-URL ist missgebildet oder ungültig"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The deep link URL is malformed or invalid"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'URL du lien profond est malformée ou invalide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'URL del deep link è malformato o non valido"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De URL van de deeplink is misvormd of ongeldig"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres URL głębokiego linku jest zniekształcony lub nieprawidłowy"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derin bağlantı URL'si hatalı biçimlendirilmiş veya geçersiz"
           }
         }
       }
@@ -92,10 +428,52 @@
     "errorMissingDocumentId" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manglende dokument-ID i dybt link"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Dokument-ID in Deep Link"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Missing document ID in deep link"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID du document manquant dans le lien profond"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID documento mancante nel deep link"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontbrekend document ID in diepe link"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brakujący identyfikator dokumentu w głębokim linku"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derin bağlantıda eksik belge kimliği"
           }
         }
       }
@@ -103,10 +481,52 @@
     "errorMissingPath" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dybt link mangler en ressourcesti"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep Link fehlt ein Ressourcenpfad"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deep link is missing a resource path"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il manque un chemin d'accès aux ressources dans le lien profond"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il collegamento profondo manca di un percorso di risorse"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diepe link mist een bronpad"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W głębokim linku brakuje ścieżki zasobu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derin bağlantıda bir kaynak yolu eksik"
           }
         }
       }
@@ -114,10 +534,52 @@
     "errorMixedFilterIdsNotAllowed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan ikke blande inkluderede og ekskluderede ID'er for \"%@\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es können keine eingeschlossenen und ausgeschlossenen IDs für \"%@\" gemischt werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cannot mix included and excluded IDs for \"%@\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de mélanger les identifiants inclus et exclus pour \"%@\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è possibile mescolare ID inclusi ed esclusi per \"%@\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan inbegrepen en uitgesloten ID's niet combineren voor \"%@\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można łączyć uwzględnionych i wykluczonych identyfikatorów dla \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" için dahil edilen ve hariç tutulan kimlikler karıştırılamıyor"
           }
         }
       }
@@ -125,10 +587,52 @@
     "errorTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldigt dybt link"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Deep Link"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid Deep Link"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lien profond invalide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collegamento profondo non valido"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige diepe link"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowe głębokie łącze"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz Derin Bağlantı"
           }
         }
       }
@@ -136,10 +640,52 @@
     "errorUnknownResource" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukendt ressourcetype: \"%@\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannter Ressourcentyp: \"%@\""
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unknown resource type: \"%@\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type de ressource inconnu : \"%@\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo di risorsa sconosciuta: \"%@\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type bron onbekend: \"%@\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieznany typ zasobu: \"%@\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilinmeyen kaynak türü: \"%@\""
           }
         }
       }
@@ -147,10 +693,52 @@
     "errorUnsupportedModifiedDateFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dette dybe link bruger filteret for ændret dato, som ikke understøttes af den nuværende backend"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Deep Link verwendet den Filter für das Änderungsdatum, der vom aktuellen Backend nicht unterstützt wird"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "This deep link uses the modified date filter, which is unsupported by the current backend"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce lien profond utilise le filtre de la date de modification, qui n'est pas pris en charge par le backend actuel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo link profondo utilizza il filtro della data di modifica, che non è supportato dal backend attuale"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze deeplink gebruikt de gewijzigde datumfilter, die niet wordt ondersteund door het huidige backend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten głęboki link używa filtra daty modyfikacji, który nie jest obsługiwany przez obecny backend"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu derin bağlantı, mevcut arka uç tarafından desteklenmeyen değiştirilme tarihi filtresini kullanır"
           }
         }
       }
@@ -158,10 +746,52 @@
     "errorUnsupportedPreviousIntervalDateFilter" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dette dybe link bruger datointervaller for tidligere intervaller, som ikke understøttes af den nuværende backend"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Deep Link verwendet Datumsbereiche mit früheren Intervallen, die vom aktuellen Backend nicht unterstützt werden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "This deep link uses previous-interval date ranges, which are unsupported by the current backend"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce lien profond utilise des intervalles de dates antérieurs, qui ne sont pas pris en charge par le backend actuel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo deep link utilizza intervalli di date con intervallo precedente, non supportati dal backend attuale"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze diepe link gebruikt datumbereiken van vorige intervallen, die niet worden ondersteund door het huidige backend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten głęboki link używa zakresów dat z poprzedniego interwału, które nie są obsługiwane przez obecny backend"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu derin bağlantı, mevcut arka uç tarafından desteklenmeyen önceki aralık tarih aralıklarını kullanır"
           }
         }
       }
@@ -169,10 +799,52 @@
     "errorUnsupportedVersion" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke-understøttet deep link-version. Kun v1 understøttes i øjeblikket"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützte Deep-Link-Version. Nur v1 wird derzeit unterstützt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unsupported deep link version. Only v1 is currently supported"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version de lien profond non prise en charge. Seule la v1 est actuellement prise en charge"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione del deep link non supportata. Attualmente è supportata solo la v1"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet ondersteunde deep link versie. Alleen v1 wordt momenteel ondersteund"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieobsługiwana wersja głębokiego linku. Obecnie obsługiwana jest tylko wersja v1"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desteklenmeyen derin bağlantı sürümü. Şu anda yalnızca v1 desteklenmektedir"
           }
         }
       }
@@ -180,10 +852,52 @@
     "errorUnsupportedVersionWithValue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version af dybt link, der ikke understøttes: \"%@\". Kun v1 understøttes i øjeblikket"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstützte Deep-Link-Version: \"%@\". Nur v1 wird derzeit unterstützt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unsupported deep link version: \"%@\". Only v1 is currently supported"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version de lien profond non prise en charge : \"%@\". Seule la v1 est actuellement prise en charge"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione del deep link non supportata: \"%@\". Attualmente è supportata solo la v1"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet-ondersteunde deep link versie: \"%@\". Alleen v1 wordt momenteel ondersteund"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieobsługiwana wersja głębokiego linku: \"%@\". Obecnie obsługiwana jest tylko wersja v1"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desteklenmeyen derin bağlantı sürümü: \"%@\". Şu anda yalnızca v1 desteklenmektedir"
           }
         }
       }

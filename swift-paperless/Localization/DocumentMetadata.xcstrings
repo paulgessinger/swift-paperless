@@ -361,7 +361,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uwaga"
+            "value" : "Notatka"
           }
         },
         "tr" : {
@@ -626,7 +626,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nazwa pliku oryginału"
+            "value" : "Oryginalna nazwa pliku"
           }
         },
         "tr" : {
@@ -679,7 +679,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rozmiar pliku oryginału"
+            "value" : "Rozmiar oryginalnego pliku"
           }
         },
         "tr" : {

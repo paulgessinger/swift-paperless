@@ -43,7 +43,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ustaw niestandardowy filtr pól"
+            "value" : "Ustaw filtr pól dodatkowych"
           }
         },
         "tr" : {
@@ -202,7 +202,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dodaj pole niestandardowe"
+            "value" : "Dodaj pole dodatkowe"
           }
         },
         "tr" : {
@@ -255,7 +255,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brak ustawionego filtra pól niestandardowych"
+            "value" : "Brak ustawionego filtra pól dodatkowych"
           }
         },
         "tr" : {
@@ -308,7 +308,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyczyść filtr pól niestandardowych"
+            "value" : "Wyczyść filtr pól dodatkowych"
           }
         },
         "tr" : {
@@ -361,7 +361,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ustalona data"
+            "value" : "Wybierz datę"
           }
         },
         "tr" : {
@@ -520,7 +520,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Pola niestandardowe** nie mogą być dodane na tym etapie, ponieważ twoja wersja oprogramowania serwera jeszcze ich nie obsługuje. Możesz zaktualizować oprogramowanie serwera do nowszej wersji!"
+            "value" : "**Pola dodatkowe** nie mogą być dodane na tym etapie, ponieważ twoja wersja oprogramowania serwera jeszcze ich nie obsługuje. Możesz zaktualizować oprogramowanie serwera do nowszej wersji!"
           }
         },
         "tr" : {
@@ -891,7 +891,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieprawidłowy operator dla tego niestandardowego typu pola."
+            "value" : "Nieprawidłowy operator dla typu tego pola dodatkowego."
           }
         },
         "tr" : {
@@ -944,7 +944,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Podana opcja o id \"%@\" nie jest jedną z dostępnych opcji (%@)"
+            "value" : "Wybrana opcja o id \"%@\" nie jest jedną z dostępnych opcji (%@)"
           }
         },
         "tr" : {
@@ -997,7 +997,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Niektóre pola niestandardowe w tym dokumencie mają **nieprawidłową konfigurację**. Więcej informacji można znaleźć w polu niestandardowym wyświetlającym komunikaty o błędach.\n\nNie można **zapisać** dokumentu w tym stanie, aby **zapobiec utracie danych**."
+            "value" : "Niektóre pola dodatkowe w tym dokumencie mają **nieprawidłową konfigurację**. Sprawdź szczegóły pola dodatkowego, aby zobaczyć komunikaty o błędach.\n\n**Nie można** zapisać dokumentu w tym stanie, aby **zapobiec utracie danych**."
           }
         },
         "tr" : {
@@ -1050,7 +1050,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieprawidłowe pola niestandardowe"
+            "value" : "Nieprawidłowe pola dodatkowe"
           }
         },
         "tr" : {
@@ -1209,7 +1209,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie istnieją pola niestandardowe"
+            "value" : "Brak pól dodatkowych"
           }
         },
         "tr" : {
@@ -1262,7 +1262,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie ma możliwości dodania pól niestandardowych."
+            "value" : "Brak dostępnych pól dodatkowych do dodania."
           }
         },
         "tr" : {
@@ -1315,7 +1315,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brak dołączonych pól niestandardowych"
+            "value" : "Brak dodanych pól dodatkowych"
           }
         },
         "tr" : {
@@ -1368,7 +1368,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ten dokument nie ma jeszcze dołączonych żadnych pól niestandardowych. Można je dodać za pomocą paska narzędzi."
+            "value" : "Ten dokument nie ma jeszcze ustawionych żadnych pól dodatkowych. Można je dodać za pomocą paska narzędzi."
           }
         },
         "tr" : {
@@ -1421,7 +1421,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ten dokument nie zawiera żadnych pól niestandardowych."
+            "value" : "Ten dokument nie zawiera żadnych pól dodatkowych."
           }
         },
         "tr" : {
@@ -1474,7 +1474,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obecnie nie ustalono żadnej daty"
+            "value" : "Obecnie nie ustawiono żadnej daty"
           }
         },
         "tr" : {
@@ -1686,7 +1686,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zawiera (wielkość liter nie ma znaczenia)"
+            "value" : "Zawiera (ignorując wielkość liter)"
           }
         },
         "tr" : {
@@ -2004,7 +2004,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "W"
+            "value" : "Jeden z"
           }
         },
         "tr" : {
@@ -2057,7 +2057,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serwer zgłosił, że zapytanie o pole niestandardowe jest nieprawidłowe. Popraw zapytanie, aby kontynuować!"
+            "value" : "Serwer odrzucił ustawiony filtr pól dodatkowych. Popraw go, aby kontynuować!"
           }
         },
         "tr" : {
@@ -2110,7 +2110,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Is null"
+            "value" : "Jest puste"
           }
         },
         "tr" : {
@@ -2163,7 +2163,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mniej niż"
+            "value" : "Mniejszy niż"
           }
         },
         "tr" : {
@@ -2428,7 +2428,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyszukiwanie pól niestandardowych"
+            "value" : "Wyszukiwanie pól dodatkowych"
           }
         },
         "tr" : {
@@ -2481,7 +2481,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pola niestandardowe"
+            "value" : "Pola dodatkowe"
           }
         },
         "tr" : {
@@ -2534,7 +2534,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wartość **`%@`** zwrócona przez serwer nie mogła zostać zinterpretowana z typem danych **`%@`** tego pola niestandardowego. Może to być wewnętrzna niespójność danych. "
+            "value" : "Wartość **`%@`** zwrócona przez serwer nie mogła zostać zinterpretowana z typem danych **`%@`** tego pola dodatkowego. Może to być wewnętrzna niespójność danych. "
           }
         },
         "tr" : {
@@ -2640,7 +2640,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Typ danych **%@** tego pola niestandardowego nie jest zaimplementowany w aplikacji. Jest to prawdopodobnie niezgodność między aplikacją a wersją serwera."
+            "value" : "Typ danych **%@** tego pola dodatkowego nie jest zaimplementowany w aplikacji. Jest to prawdopodobnie niezgodność między aplikacją a wersją serwera."
           }
         },
         "tr" : {
@@ -2693,7 +2693,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie można zdekodować podanej wartości pola niestandardowego. Może to być niezgodność między wersją aplikacji i serwera."
+            "value" : "Nie można zdekodować podanej wartości pola dodatkowego. Może to być niezgodność między wersją aplikacji i serwera."
           }
         },
         "tr" : {
@@ -2746,7 +2746,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie można zakodować wartości pola niestandardowego, której pierwotnie nie można było zdekodować. Może to być niezgodność między wersją aplikacji i serwera."
+            "value" : "Nie można zakodować wartości pola dodatkowego, której pierwotnie nie można było zdekodować. Może to być niezgodność między wersją aplikacji i serwera."
           }
         },
         "tr" : {
@@ -2799,7 +2799,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieznana wartość pola niestandardowego"
+            "value" : "Nieznana wartość pola dodatkowego"
           }
         },
         "tr" : {
@@ -2905,7 +2905,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otwarty"
+            "value" : "Otwórz"
           }
         },
         "tr" : {
