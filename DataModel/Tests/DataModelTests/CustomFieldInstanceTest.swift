@@ -176,18 +176,32 @@ struct CustomFieldInstanceTest {
     #expect(instance2.value == .monetary(currency: "NOK", amount: Decimal(string: "1000.00")!))
   }
 
-  @Test("Test string field conversion")
-  func testStringFieldConversion() throws {
-    let rawEntries = [CustomFieldRawEntry(field: 7, value: .string("Super duper text"))]
-    let instances = [CustomFieldInstance].fromRawEntries(
-      rawEntries, customFields: Self.customFields, locale: Self.locale
-    )
+  @Test(
+    "Test monetary field without currency and single decimal",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/435", id: 435))
+  func testMonetaryFieldWithoutCurrencySingleDecimal() throws {
+    let rawEntries = [CustomFieldRawEntry(field: 5, value: .string("0.0"))]
+    let instance = try #require(
+      [CustomFieldInstance].fromRawEntries(
+        rawEntries, customFields: Self.customFields, locale: Self.locale
+      ).first)
 
-    #expect(instances.count == 1)
-    let instance = try #require(instances.first)
-    #expect(instance.field.id == 7)
-    #expect(instance.field.dataType == .string)
-    #expect(instance.value == .string("Super duper text"))
+    #expect(instance.field.id == 5)
+    #expect(instance.field.dataType == .monetary)
+    #expect(instance.value == .monetary(currency: "USD", amount: Decimal(string: "0.0")!))
+  }
+
+  @Test(
+    "Test string field conversion",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/435", id: 435))
+  func testStringFieldConversion() throws {
+    let rawEntry = CustomFieldRawEntry(field: 6, value: .string("0.0"))
+    let instance = CustomFieldInstance(
+      field: Self.customFields[rawEntry.field]!, rawValue: rawEntry.value, locale: Self.locale)
+
+    #expect(instance.field.id == 6)
+    #expect(instance.field.dataType == .monetary)
+    #expect(instance.value == .monetary(currency: "NOK", amount: Decimal(string: "0.0")!))
   }
 
   @Test("Test long text field conversion")
@@ -436,13 +450,14 @@ struct CustomFieldInstanceTest {
     )
     #expect(invalidMonetaryFormat.value == .invalid(.invalidMonetary("not-a-monetary")))
 
-    // Test invalid monetary amount
-    let invalidMonetaryAmount = CustomFieldInstance(
+    // Test monetary amount with single decimal place (should be valid)
+    let singleDecimalMonetary = CustomFieldInstance(
       field: monetaryField,
       rawValue: .string("USD1.1"),
       locale: Self.locale
     )
-    #expect(invalidMonetaryAmount.value == .invalid(.invalidMonetary("USD1.1")))
+    #expect(
+      singleDecimalMonetary.value == .monetary(currency: "USD", amount: Decimal(string: "1.1")!))
 
     // Test invalid select option
     let selectField = try #require(Self.customFields[10])

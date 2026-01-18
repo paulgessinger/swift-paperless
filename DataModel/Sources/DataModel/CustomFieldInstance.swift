@@ -238,7 +238,7 @@ extension CustomFieldInstance {
       value = .monetary(currency: currency, amount: nil)
 
     case (.monetary, .string(let value)):
-      let regex = /^(?<currency>[A-Z]{3})?(?<amount>\d+(?:\.\d{2})?)$/
+      let regex = /^(?<currency>[A-Z]{3})?(?<amount>\d+(?:\.\d{1,2})?)$/
 
       guard let match = value.wholeMatch(of: regex) else {
         Logger.dataModel.error(
@@ -318,11 +318,6 @@ extension [CustomFieldInstance] {
   public static func fromRawEntries(
     _ rawEntries: [CustomFieldRawEntry], customFields: [UInt: CustomField], locale: Locale
   ) -> [CustomFieldInstance] {
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd"
-
-    // @TODO: Preserve somehow that this can be incomplete
-
     let result: [CustomFieldInstance] = rawEntries.compactMap {
       (entry: CustomFieldRawEntry) -> CustomFieldInstance? in
       guard let customField = customFields[entry.field] else {
