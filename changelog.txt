@@ -1,3 +1,7 @@
+1.9.0 (176)
+
+- Fix bug parsing monetary custom field value like `0.0` (single digit after decimal point).
+
 1.9.0 (175)
 
 - Another attempt at fixing date decoding issues https://github.com/paulgessinger/swift-paperless/issues/360
