@@ -11,6 +11,7 @@
 # ///
 
 import asyncio
+import concurrent.futures
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -24,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from pypaperless import Paperless
 from pypaperless.exceptions import TaskNotFoundError
 from rich.console import Console
+from rich.progress import BarColumn, Progress, TextColumn, TimeRemainingColumn
 from rich.table import Table
 
 try:
@@ -222,7 +224,23 @@ def run_command(args: list[str], *, check: bool = True, dry_run: bool = False, e
     console.log(f"[bold blue]$ {display}[/bold blue]")
     if dry_run:
         return
-    subprocess.run(args, check=check, env=env)
+    process = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if process.stdout:
+        for line in process.stdout:
+            line = line.rstrip()
+            if line:
+                console.log(line, markup=False)
+    return_code = process.wait()
+    if check and return_code != 0:
+        raise subprocess.CalledProcessError(return_code, args)
 
 
 def simctl(args: list[str], *, check: bool = True, dry_run: bool = False, env: dict | None = None) -> None:
@@ -239,23 +257,23 @@ def display_plan(languages: list[str], steps: list[ScreenshotStep]) -> None:
     )
     for language in languages:
         table.add_row(language, step_names)
-    console.print(table)
+    console.log(table)
 
 
 def load_capture_config(path: Path) -> CaptureConfig:
     if not path.exists():
-        console.print(f"[red]Error: Config file not found: {path}")
+        console.log(f"[red]Error: Config file not found: {path}")
         raise typer.Exit(1)
     try:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:
-        console.print(f"[red]Error: Failed to parse config file: {exc}")
+        console.log(f"[red]Error: Failed to parse config file: {exc}")
         raise typer.Exit(1)
     try:
         return CaptureConfig.model_validate(raw)
     except ValidationError as exc:
-        console.print(f"[red]Error: Invalid config file:")
-        console.print(str(exc))
+        console.log(f"[red]Error: Invalid config file:")
+        console.log(str(exc))
         raise typer.Exit(1)
 
 
@@ -324,9 +342,9 @@ def build_app_for_simulator(
     with log_path.open("w", encoding="utf-8") as log_file:
         result = subprocess.run(command, stdout=log_file, stderr=subprocess.STDOUT)
     if result.returncode != 0:
-        console.print(f"[red]Build failed for {simulator.name} (log: {log_path})[/red]")
+        console.log(f"[red]Build failed for {simulator.name} (log: {log_path})[/red]")
         if log_path.exists():
-            console.print(log_path.read_text(encoding="utf-8", errors="replace"))
+            console.log(log_path.read_text(encoding="utf-8", errors="replace"))
         raise typer.Exit(result.returncode)
 
     app_path = find_built_app(derived_data, build.app_name)
@@ -366,10 +384,10 @@ def manage_docker_backend(compose_file: Path, recreate: bool, wait_timeout: int,
     """Start or recreate Docker backend."""
     if recreate:
         console.log("[yellow]Tearing down existing containers...")
-        subprocess.run(docker_compose_cmd(compose_file, "down", "-v"), check=False)
+        run_command(docker_compose_cmd(compose_file, "down", "-v"), check=False)
 
     console.log("[blue]Starting Docker backend...")
-    subprocess.run(docker_compose_cmd(compose_file, "up", "-d"), check=True)
+    run_command(docker_compose_cmd(compose_file, "up", "-d"), check=True)
 
     console.log("[blue]Waiting for services to start...")
     wait_for_docker_services(url, wait_timeout)
@@ -789,9 +807,9 @@ async def setup_backend_async(
         ]
         await assign_metadata(paperless, document_ids)
 
-    console.print(f"\n[bold green]Backend setup complete!")
-    console.print(f"[bold cyan]Auth token:[/bold cyan] {token}")
-    console.print(f"[bold cyan]Use this token with the capture command's --preview-token option")
+    console.log(f"\n[bold green]Backend setup complete!")
+    console.log(f"[bold cyan]Auth token:[/bold cyan] {token}")
+    console.log(f"[bold cyan]Use this token with the capture command's --preview-token option")
 
     return token
 
@@ -815,19 +833,19 @@ def setup(
         # 1. Manage Docker lifecycle
         compose_file = Path("docker-compose.screenshot.yml")
         if not compose_file.exists():
-            console.print(f"[red]Error: {compose_file} not found")
+            console.log(f"[red]Error: {compose_file} not found")
             raise typer.Exit(1)
 
         manage_docker_backend(compose_file, recreate, wait_timeout, url)
 
         # 2. Validate fixtures directory
         if not fixtures_dir.exists():
-            console.print(f"[red]Error: Fixtures directory not found: {fixtures_dir}")
+            console.log(f"[red]Error: Fixtures directory not found: {fixtures_dir}")
             raise typer.Exit(1)
 
         pdf_files = list(fixtures_dir.glob("*.pdf"))
         if not pdf_files:
-            console.print(f"[red]Error: No PDF files found in {fixtures_dir}")
+            console.log(f"[red]Error: No PDF files found in {fixtures_dir}")
             raise typer.Exit(1)
 
         console.log(f"Found {len(pdf_files)} PDF files in {fixtures_dir}")
@@ -836,18 +854,18 @@ def setup(
         asyncio.run(setup_backend_async(url, username, password, fixtures_dir, wait_timeout))
 
     except BackendNotReadyError:
-        console.print(f"[red]Error: Backend not ready. Check Docker logs:")
-        console.print(f"[yellow]  docker compose -f docker-compose.screenshot.yml logs")
+        console.log(f"[red]Error: Backend not ready. Check Docker logs:")
+        console.log(f"[yellow]  docker compose -f docker-compose.screenshot.yml logs")
         raise typer.Exit(1)
     except AuthenticationError as e:
-        console.print(f"[red]Error: {e}")
+        console.log(f"[red]Error: {e}")
         raise typer.Exit(1)
     except DocumentUploadError as e:
         raise e
-        console.print(f"[red]Error: {e}")
+        console.log(f"[red]Error: {e}")
         raise typer.Exit(1)
     except Exception as e:
-        console.print(f"[red]Unexpected error: {e}")
+        console.log(f"[red]Unexpected error: {e}")
         raise
 
 
@@ -891,6 +909,10 @@ def capture(
     preview_username = capture_config.preview.username
     preview_password = capture_config.preview.password
     build_config = capture_config.build
+    steps_per_simulator = len(languages) * len(screenshot_steps)
+    if steps_per_simulator == 0:
+        console.log("[yellow]No screenshot steps configured; nothing to capture")
+        return
 
     output_dir.mkdir(parents=True, exist_ok=True)
     display_plan(languages, screenshot_steps)
@@ -908,85 +930,124 @@ def capture(
         preview_token,
     ]
 
-    for simulator in simulators:
-        target = simulator.udid
-        device_name = simulator.name
-        console.rule(f"[bold green]Simulator: {device_name}")
+    with Progress(
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("Step {task.completed:>3.0f}/{task.total:.0f}"),
+        TimeRemainingColumn(),
+        console=console,
+    ) as progress:
+        progress_tasks = {
+            simulator.udid: progress.add_task(
+                f"{simulator.name} • queued",
+                total=steps_per_simulator,
+            )
+            for simulator in simulators
+        }
 
-        ensure_simulator_booted(target, dry_run=dry_run)
-        configure_simulator(
-            target=target,
-            status_bar_time=status_bar_time,
-            status_bar_cellular_bars=status_bar_cellular_bars,
-            appearance=appearance,
-            dry_run=dry_run,
-        )
+        def capture_simulator(simulator: SimulatorConfig) -> None:
+            target = simulator.udid
+            device_name = simulator.name
+            progress_task_id = progress_tasks[target]
+            progress.update(progress_task_id, description=f"{device_name} • preparing")
 
-        derived_data = build_config.derived_data_path / sanitize_filename(simulator.name)
-        if build_config.enabled and not skip_build:
-            app_path = build_app_for_simulator(
-                simulator=simulator,
-                build=build_config,
+            ensure_simulator_booted(target, dry_run=dry_run)
+            configure_simulator(
+                target=target,
+                status_bar_time=status_bar_time,
+                status_bar_cellular_bars=status_bar_cellular_bars,
+                appearance=appearance,
                 dry_run=dry_run,
             )
-        elif dry_run:
-            app_path = derived_data / "Build" / "Products" / f"{build_config.app_name}.app"
-            console.log(f"[yellow]Using existing build (dry-run): {app_path}")
-        else:
-            try:
-                app_path = find_built_app(derived_data, build_config.app_name)
-                console.log(f"[green]Using existing build: {app_path}")
-            except FileNotFoundError as exc:
-                console.print(f"[red]Error: {exc}")
-                raise typer.Exit(1)
 
-        install_app(target, app_path, dry_run=dry_run)
-
-        for language in languages:
-            language_slug = sanitize_filename(language)
-            language_dir = output_dir / language_slug
-            language_dir.mkdir(parents=True, exist_ok=True)
-            console.rule(f"[bold green]Language: {language}")
-
-            simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
-            simctl(
-                [
-                    "launch",
-                    "--terminate-running-process",
-                    target,
-                    bundle_id,
-                    "-AppleLanguages",
-                    f"({language})",
-                    "-AppleLocale",
-                    language,
-                    *preview_args,
-                ],
-                dry_run=dry_run,
-            )
-            if launch_wait > 0:
-                time.sleep(launch_wait)
-
-            for index, step in enumerate(screenshot_steps, start=1):
-                wait_time = step.wait if step.wait is not None else url_wait
-                if step.url:
-                    simctl(["openurl", target, step.url], dry_run=dry_run)
-                    if wait_time > 0:
-                        time.sleep(wait_time)
-                elif step.wait is not None and wait_time > 0:
-                    time.sleep(wait_time)
-
-                screenshot_name = f"{sanitize_filename(device_name)}-{index:02d}_{sanitize_filename(step.name)}.png"
-                output_path = language_dir / screenshot_name
-                simctl(
-                    ["io", target, "screenshot", "--type", "png", str(output_path)],
+            derived_data = build_config.derived_data_path / sanitize_filename(simulator.name)
+            if build_config.enabled and not skip_build:
+                app_path = build_app_for_simulator(
+                    simulator=simulator,
+                    build=build_config,
                     dry_run=dry_run,
                 )
-                console.log(f"Saved {output_path}")
+            elif dry_run:
+                app_path = derived_data / "Build" / "Products" / f"{build_config.app_name}.app"
+                console.log(f"[yellow]Using existing build (dry-run): {app_path}")
+            else:
+                try:
+                    app_path = find_built_app(derived_data, build_config.app_name)
+                    console.log(f"[green]Using existing build: {app_path}")
+                except FileNotFoundError as exc:
+                    console.log(f"[red]Error: {exc}")
+                    raise typer.Exit(1)
 
-                if step.post_url:
-                    simctl(["openurl", target, step.post_url], dry_run=dry_run)
-                    if wait_time > 0:
+            install_app(target, app_path, dry_run=dry_run)
+
+            for language in languages:
+                language_slug = sanitize_filename(language)
+                language_dir = output_dir / language_slug
+                language_dir.mkdir(parents=True, exist_ok=True)
+                console.log(f"[bold green]Language: {language}")
+
+                simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
+                simctl(
+                    [
+                        "launch",
+                        "--terminate-running-process",
+                        target,
+                        bundle_id,
+                        "-AppleLanguages",
+                        f"({language})",
+                        "-AppleLocale",
+                        language,
+                        *preview_args,
+                    ],
+                    dry_run=dry_run,
+                )
+                if launch_wait > 0:
+                    time.sleep(launch_wait)
+
+                for index, step in enumerate(screenshot_steps, start=1):
+                    progress.update(
+                        progress_task_id,
+                        description=f"{device_name} • {language} • {step.name}",
+                    )
+                    wait_time = step.wait if step.wait is not None else url_wait
+                    if step.url:
+                        simctl(["openurl", target, step.url], dry_run=dry_run)
+                        if wait_time > 0:
+                            time.sleep(wait_time)
+                    elif step.wait is not None and wait_time > 0:
                         time.sleep(wait_time)
+
+                    screenshot_name = f"{sanitize_filename(device_name)}-{index:02d}_{sanitize_filename(step.name)}.png"
+                    output_path = language_dir / screenshot_name
+                    simctl(
+                        ["io", target, "screenshot", "--type", "png", str(output_path)],
+                        dry_run=dry_run,
+                    )
+                    console.log(f"Saved {output_path}")
+                    progress.advance(progress_task_id)
+
+                    if step.post_url:
+                        simctl(["openurl", target, step.post_url], dry_run=dry_run)
+                        if wait_time > 0:
+                            time.sleep(wait_time)
+
+            progress.update(progress_task_id, description=f"{device_name} • done")
+
+        errors: list[str] = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(simulators)) as executor:
+            futures = {
+                executor.submit(capture_simulator, simulator): simulator
+                for simulator in simulators
+            }
+            for future in concurrent.futures.as_completed(futures):
+                simulator = futures[future]
+                try:
+                    future.result()
+                except Exception as exc:
+                    console.log(f"[red]Error capturing {simulator.name}: {exc}")
+                    errors.append(simulator.name)
+        if errors:
+            raise typer.Exit(1)
 
 
 if __name__ == "__main__":
