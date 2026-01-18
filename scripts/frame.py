@@ -420,7 +420,15 @@ def frame(
     if title_key := screen_config.title_key:
         text_buffer = Image.new("RGBA", screenshot_raw.size)
         text_buffer_draw = ImageDraw.Draw(text_buffer)
-        title = titles.get(title_key, {}).get(lang_code, title_key.upper())
+        if title_key not in titles:
+            console.log(f"[red]Missing localization key: {title_key}")
+            raise KeyError(title_key)
+        if lang_code not in titles[title_key]:
+            console.log(
+                f"[red]Missing localization for {title_key} ({lang_code})"
+            )
+            raise KeyError(f"{title_key}:{lang_code}")
+        title = titles[title_key][lang_code]
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
         text_buffer_draw.multiline_text(

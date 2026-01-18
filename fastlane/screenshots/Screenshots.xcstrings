@@ -6,13 +6,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Arbejd med dine \ndokumenter på farten, \nse eksempler og del \nmed enhver app"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Arbeite unterwegs mit\ndeinen Dokumenten, \nzeige sie an und teile \nsie mit jeder App"
           }
         },
@@ -24,20 +24,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Travaillez avec vos\ndocuments, prévisua-\nlisez-les et partagez-les\navec toutes les appli."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavora con i tuoi \ndocumenti ovunque ti trovi,\n visualizza l'anteprima e \ncondividili con qualsiasi app"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Werk onderweg met je\ndocumenten, bekijk\nvoorbeelden en deel ze\nmet elke app"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Praca z dokumentami \nw podróży, podgląd i \nudostępnianie w \ndowolnej aplikacji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavora con i tuoi \ndocumenti ovunque ti trovi,\n visualizza l'anteprima e \ncondividili con qualsiasi app"
           }
         }
       }
@@ -69,6 +81,12 @@
             "value" : "Une rédaction et une\norganisation complètes"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisione completa\ne organizzazione"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -80,6 +98,12 @@
             "state" : "translated",
             "value" : "Kompleksowa edycja\ni organizacja"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica completa\ne organizzazione"
+          }
         }
       }
     },
@@ -88,13 +112,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dokumenthåndtering\nmed Paperless"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dokumenten-\nmanagement mit \nPaperless"
           }
         },
@@ -106,20 +130,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Gestion des documents\navec Paperless"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestione dei documenti\ncon Paperless"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Documentbeheer\nmet Paperless"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zarządzanie\ndokumentami\nz Paperless"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestione dei documenti\ncon Paperless"
           }
         }
       }
@@ -129,13 +165,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kraftig søgning \nog filtrering"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Leistungsstarke Suche \nund Filter"
           }
         },
@@ -147,20 +183,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Filtres de recherche\npuissants"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca avanzata\ne filtro"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Krachtig zoeken \nen filteren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zaawansowane \nwyszukiwanie \ni filtrowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca avanzata\ne filtro"
           }
         }
       }
