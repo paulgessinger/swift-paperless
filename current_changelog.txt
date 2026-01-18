@@ -1,0 +1,2 @@
+- Another attempt at fixing date decoding issues https://github.com/paulgessinger/swift-paperless/issues/360
+- Fix updated allauth headless url https://github.com/paulgessinger/swift-paperless/issues/50, [upstream PR](https://github.com/paperless-ngx/paperless-ngx/pull/11756)
