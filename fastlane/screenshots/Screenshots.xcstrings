@@ -49,7 +49,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lavora con i tuoi \ndocumenti ovunque ti trovi,\n visualizza l'anteprima e \ncondividili con qualsiasi app"
+            "value" : "Belgelerinizi \nhareket halindeyken\nçalışın, önizleyin ve \nherhangi bir uygulamayla paylaşın"
           }
         }
       }
@@ -102,7 +102,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modifica completa\ne organizzazione"
+            "value" : "Kapsamlı düzenleme\nve organizasyon"
           }
         }
       }
@@ -155,7 +155,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gestione dei documenti\ncon Paperless"
+            "value" : "Kağıtsız belge \nyönetimi\nPaperless ile"
           }
         }
       }
@@ -208,7 +208,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ricerca avanzata\ne filtro"
+            "value" : "Güçlü arama\nve filtreleme"
           }
         }
       }
