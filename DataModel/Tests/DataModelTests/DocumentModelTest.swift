@@ -274,4 +274,33 @@ struct DocumentModelTest {
     #expect(customFields[9].field == 1)
     #expect(customFields[9].value == .float(123.45))
   }
+
+  @Test(
+    "Test decoding document with date-based title",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/360", id: 360)
+  )
+  func testDecodeDocumentWithDateTitle() throws {
+    let jsonString = """
+      {"id":17,"correspondent":null,"document_type":null,"storage_path":null,"title":"1990-10-21","content":"1990-10-21","tags":[1],"created":"1990-10-21","created_date":"1990-10-21","modified":"2026-01-16T19:15:49.032469Z","added":"2026-01-16T19:14:45.591218Z","deleted_at":null,"archive_serial_number":null,"original_file_name":"1990-10-21.pdf","archived_file_name":"1990-10-21 1990-10-21.pdf","owner":3,"user_can_change":true,"is_shared_by_requester":false,"notes":[],"custom_fields":[],"page_count":1,"mime_type":"application/pdf"}
+      """
+    let data = try #require(jsonString.data(using: .utf8))
+    let document = try decoder.decode(Document.self, from: data)
+
+    #expect(document.id == 17)
+    #expect(document.correspondent == nil)
+    #expect(document.documentType == nil)
+    #expect(document.storagePath == nil)
+    #expect(document.title == "1990-10-21")
+    #expect(document.tags == [1])
+    #expect(
+      dateApprox(
+        document.created,
+        datetime(year: 1990, month: 10, day: 21, hour: 0, minute: 0, second: 0, tz: .current)))
+    #expect(document.asn == nil)
+    #expect(document.owner == .user(3))
+    #expect(document.userCanChange == true)
+    #expect(document.customFields.isEmpty)
+    #expect(document.notes.count == 0)
+    #expect(document.pageCount == 1)
+  }
 }
