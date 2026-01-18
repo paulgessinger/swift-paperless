@@ -321,6 +321,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   @State private var webviewOpacity = 0.0
   @State private var topPadding: CGFloat = 0.0
   @State private var bottomPadding: CGFloat = 200
+  @Environment(RouteManager.self) private var routeManager
 
   @State private var bottomInsetFrame = CGRect.zero
 
@@ -339,7 +340,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   @EnvironmentObject private var errorController: ErrorController
 
-  var navPath: Binding<NavigationPath>? = nil
+  var navPath: Binding<[NavigationState]>? = nil
 
   @State private var editDetent: PresentationDetent = .medium
 
@@ -388,9 +389,17 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     //        print("updateWebkitInset \(UIScreen.main.bounds.size.height) - \(bottomInsetFrame.maxY) + \(bottomInsetFrame.height) + \(safeAreaInsets.bottom) = \(bottomPadding)")
   }
 
+  private func handlePendingRoute() {
+    guard let action = routeManager.pendingRoute?.action else { return }
+    guard case .document(let docId, let edit) = action else { return }
+    guard docId == viewModel.document.id else { return }
+    routeManager.pendingRoute = nil
+    showEditSheet = edit
+  }
+
   init(
     store: DocumentStore, connection: Connection?, document: Document,
-    navPath: Binding<NavigationPath>?
+    navPath: Binding<[NavigationState]>?
   ) {
     _viewModel = State(
       initialValue: DocumentDetailModel(
@@ -650,6 +659,8 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
       }
     }
 
+    .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
+
     .task {
       editDetent = defaultEditDetent
 
@@ -859,7 +870,7 @@ private struct PreviewHelper: View {
   @StateObject var connectionManager = ConnectionManager(previewMode: true)
 
   @State var document: Document?
-  @State var navPath = NavigationPath()
+  @State var navPath = [NavigationState]()
 
   let documentId: UInt
 

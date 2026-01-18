@@ -417,6 +417,7 @@ struct FilterBar: View {
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var filterModel: FilterModel
   @Environment(\.dismiss) private var dismiss
+  @Environment(RouteManager.self) private var routeManager
 
   @State private var showTags = false
   @State private var showDocumentType = false
@@ -492,6 +493,41 @@ struct FilterBar: View {
       case .date:
         showDate = true
       }
+    }
+  }
+
+  private func closeAll() {
+    showTags = false
+    showCorrespondent = false
+    showDocumentType = false
+    showStoragePath = false
+    showCustomFields = false
+    showAsn = false
+    showDate = false
+  }
+
+  private func handlePendingRoute() {
+    guard let action = routeManager.pendingRoute?.action else { return }
+    switch action {
+    case .openFilterSettings(let setting):
+      closeAll()
+      routeManager.pendingRoute = nil
+      let target: ModalMode =
+        switch setting {
+        case .tags: .tags
+        case .asn: .asn
+        case .correspondent: .correspondent
+        case .documentType: .documentType
+        case .storagePath: .storagePath
+        case .date: .date
+        case .customField: .customFields
+        }
+      present(target)
+    case .closeFilterSettings:
+      closeAll()
+      routeManager.pendingRoute = nil
+    default:
+      break
     }
   }
 
@@ -916,6 +952,8 @@ struct FilterBar: View {
       .onChange(of: filterState.sortField) { _, value in
         filterModel.filterState.sortField = value
       }
+
+      .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
       // MARK: Sheets
 

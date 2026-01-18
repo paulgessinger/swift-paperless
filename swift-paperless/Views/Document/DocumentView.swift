@@ -60,7 +60,7 @@ struct DocumentView: View {
 
   // MARK: State
 
-  @State private var navPath = NavigationPath()
+  @State private var navPath: [NavigationState] = []
 
   @State private var showFileImporter = false
   @State private var isDocumentScannerAvailable = false
@@ -111,7 +111,7 @@ struct DocumentView: View {
         showDocumentScanner = false
       }
       if !navPath.isEmpty {
-        navPath.popToRoot()
+        navPath.removeLast()
         guard (try? await Task.sleep(for: .seconds(0.5))) != nil else {
           return
         }
@@ -125,10 +125,19 @@ struct DocumentView: View {
         Logger.shared.info("Opening document scanner from URL ")
         await clear()
         showDocumentScanner = true
-      case .document(let id):
-        routeManager.pendingRoute = nil
+      case .document(let id, _):
         Logger.shared.info("Opening document id \(id) from URL")
         do {
+
+          guard case .document(let reqId, _) = route.action else { return }
+
+          // Check if currently open id is the one that's requested
+          if let last = navPath.last {
+            if case .detail(let open) = last {
+              if reqId == open.id { return }
+            }
+          }
+
           guard let document = try await store.document(id: id) else {
             Logger.shared.error("Document with id \(id) was not found")
             if let connId = connectionManager.activeConnectionId,
@@ -154,6 +163,9 @@ struct DocumentView: View {
         routeManager.pendingRoute = nil
         Logger.shared.info("Clearing filter in filter from route")
         filterModel.filterState.clear()
+
+      default:
+        break
       }
     }
   }
@@ -528,7 +540,7 @@ struct DocumentView: View {
   }
 
   private func tasksSheet(state: NavigationState) -> some View {
-    var navPath = NavigationPath()
+    var navPath = [NavigationState]()
     switch state {
     case .task:
       navPath.append(state)

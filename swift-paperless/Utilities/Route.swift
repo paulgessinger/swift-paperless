@@ -31,10 +31,16 @@ public struct Route: Equatable, Sendable {
   }
 
   public enum Action: Equatable, Sendable {
-    case document(id: UInt)
+    case document(id: UInt, edit: Bool)
     case setFilter(DeepLinkFilter)
     case clearFilter
     case scan
+
+    public enum FilterSetting: String, Equatable, Sendable {
+      case tags, correspondent, documentType, storagePath, asn, date, customField
+    }
+    case openFilterSettings(_: FilterSetting)
+    case closeFilterSettings
   }
 
   public enum ParseError: Error, Equatable, Sendable {
@@ -44,6 +50,7 @@ public struct Route: Equatable, Sendable {
     case unknownResource(String)
     case missingDocumentId
     case invalidDocumentId(String)
+    case invalidEditValue(String)
     case invalidTagMode(String)
     case excludedTagsNotAllowedInAnyMode
     case invalidSearchMode(String)
@@ -93,7 +100,10 @@ public struct Route: Equatable, Sendable {
         throw ParseError.invalidDocumentId(idString)
       }
 
-      self.action = .document(id: id)
+      // Parse optional edit parameter
+      let edit = try Self.parseEditParameter(from: components.queryItems ?? [])
+
+      self.action = .document(id: id, edit: edit)
 
     case "scan":
       guard parts.isEmpty else {
@@ -142,6 +152,24 @@ public struct Route: Equatable, Sendable {
         throw ParseError.unknownResource(String(resource))
       }
       self.action = .clearFilter
+
+    case "open_filter":
+      guard parts.count == 1 else {
+        throw ParseError.unknownResource(String(resource))
+      }
+
+      let settingString = String(parts.removeFirst())
+      guard let filterSetting = Action.FilterSetting(rawValue: settingString) else {
+        throw ParseError.unknownResource(settingString)
+      }
+
+      self.action = .openFilterSettings(filterSetting)
+
+    case "close_filter":
+      guard parts.isEmpty else {
+        throw ParseError.unknownResource(String(resource))
+      }
+      self.action = .closeFilterSettings
 
     default:
       throw ParseError.unknownResource(String(resource))
@@ -505,6 +533,27 @@ public struct Route: Equatable, Sendable {
       return .descending
     default:
       throw ParseError.invalidSortField(trimmed)
+    }
+  }
+
+  /// Parses the edit parameter from query items
+  /// Accepts "true", "1", "yes" as true; "false", "0", "no" as false
+  /// Missing parameter defaults to false
+  /// Any other value throws an error
+  static private func parseEditParameter(from queryItems: [URLQueryItem]) throws -> Bool {
+    guard let value = queryItems.first(where: { $0.name == "edit" })?.value else {
+      return false
+    }
+
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+    switch trimmed {
+    case "true", "1", "yes":
+      return true
+    case "false", "0", "no":
+      return false
+    default:
+      throw ParseError.invalidEditValue(value)
     }
   }
 

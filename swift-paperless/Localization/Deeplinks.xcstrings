@@ -213,6 +213,17 @@
         }
       }
     },
+    "errorInvalidEditValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid edit parameter value: \"%@\". Must be \"true\", \"1\", \"yes\", \"false\", \"0\", or \"no\""
+          }
+        }
+      }
+    },
     "errorInvalidSearchMode" : {
       "extractionState" : "manual",
       "localizations" : {

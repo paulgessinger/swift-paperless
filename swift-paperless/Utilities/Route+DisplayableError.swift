@@ -26,6 +26,7 @@ extension Route.ParseError: DisplayableError {
       case .unknownResource(let resource): .deeplinks(.errorUnknownResource(resource))
       case .missingDocumentId: .deeplinks(.errorMissingDocumentId)
       case .invalidDocumentId(let id): .deeplinks(.errorInvalidDocumentId(id))
+      case .invalidEditValue(let value): .deeplinks(.errorInvalidEditValue(value))
       case .invalidTagMode(let mode): .deeplinks(.errorInvalidTagMode(mode))
       case .excludedTagsNotAllowedInAnyMode: .deeplinks(.errorExcludedTagsNotAllowedInAnyMode)
       case .invalidSearchMode(let mode): .deeplinks(.errorInvalidSearchMode(mode))

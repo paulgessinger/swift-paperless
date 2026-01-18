@@ -231,11 +231,11 @@ struct TaskDetailView: View {
 }
 
 struct TasksView: View {
-  @State var navPath: NavigationPath
+  @State var navPath: [NavigationState]
 
   @EnvironmentObject private var store: DocumentStore
 
-  init(navPath: NavigationPath = NavigationPath()) {
+  init(navPath: [NavigationState] = []) {
     _navPath = State(initialValue: navPath)
   }
 
@@ -268,7 +268,7 @@ struct TasksView: View {
 private struct TaskList: View {
   let tasks: [PaperlessTask]
 
-  @Binding var navPath: NavigationPath
+  @Binding var navPath: [NavigationState]
 
   @State private var errorTask: PaperlessTask? = nil
 
