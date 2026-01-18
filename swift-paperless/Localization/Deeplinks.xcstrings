@@ -216,10 +216,52 @@
     "errorInvalidEditValue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugyldig værdi for redigeringsparameter: \"%@\". Skal være \"true\", \"1\", \"yes\", \"false\", \"0\" eller \"no\""
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Wert des Bearbeitungsparameters: \"%@\". Muss \"true\", \"1\", \"yes\", \"false\", \"0\" oder \"no\" sein"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid edit parameter value: \"%@\". Must be \"true\", \"1\", \"yes\", \"false\", \"0\", or \"no\""
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeur invalide du paramètre d'édition : \"%@\". Doit être \"true\", \"1\", \"yes\", \"false\", \"0\", ou \"no\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valore del parametro di modifica non valido: \"%@\". Deve essere \"true\", \"1\", \"yes\", \"false\", \"0\" o \"no\""
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongeldige bewerkingsparameterwaarde: \"%@\". Moet zijn \"true\", \"1\", \"yes\", \"false\", \"0\", of \"no\""
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowa wartość parametru edycji: \"%@\". Musi być \"true\", \"1\", \"yes\", \"false\", \"0\" lub \"no\""
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçersiz düzenleme parametresi değeri: \"%@\". \"true\", \"1\", \"yes\", \"false\", \"0\" veya \"no\" olmalıdır"
           }
         }
       }
