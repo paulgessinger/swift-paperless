@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=67"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swift-paperless-scripts"
+version = "0.1.0"
+description = "Automation tooling for Swift Paperless"
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.9",
+    "numpy",
+    "Pillow",
+    "pydantic>=2",
+    "pypaperless",
+    "rich",
+    "typer",
+    "tomli; python_version < '3.11'",
+]
+
+[project.scripts]
+swift-paperless-scripts = "scripts.cli:app"
+
+[tool.setuptools]
+package-dir = {"scripts" = "."}
+packages = ["scripts"]

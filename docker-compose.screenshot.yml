@@ -1,0 +1,47 @@
+# Docker Compose configuration for screenshot automation
+# Optimized for CI/automated screenshot generation
+
+version: "3.4"
+services:
+  broker:
+    image: docker.io/library/redis:7
+    volumes:
+      - redisdata:/data
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    depends_on:
+      - broker
+    ports:
+      - 9988:8000
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000/api/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - data:/usr/src/paperless/data
+      - media:/usr/src/paperless/media
+      - export:/usr/src/paperless/export
+      - consume:/usr/src/paperless/consume
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_URL: http://localhost:9988
+      PAPERLESS_TIME_ZONE: UTC
+      PAPERLESS_OCR_LANGUAGE: eng
+      PAPERLESS_SECRET_KEY: screenshot-automation-key
+      PAPERLESS_ALLOWED_HOSTS: localhost
+      # Auto-create admin user for automation
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: admin
+      PAPERLESS_ADMIN_MAIL: admin@example.com
+      # Disable Tika for faster startup
+      PAPERLESS_TIKA_ENABLED: 0
+
+volumes:
+  redisdata:
+  data:
+  media:
+  export:
+  consume:

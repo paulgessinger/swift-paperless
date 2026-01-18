@@ -1,31 +1,40 @@
 #!/usr/bin/env python3
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import argparse
+# /// script
+# dependencies = [
+# "Pillow",
+# "tomli; python_version < '3.11'",
+# "pydantic",
+# "rich",
+# "typer",
+# "numpy",
+# ]
+# ///
+
+import multiprocessing
 import os
-from pathlib import Path
-import yaml
-import pydantic
-from pydantic import SkipValidation
-from typing import Optional
-from typing_extensions import Annotated
 import re
 import textwrap
-import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from rich.progress import track
-import gettext
-import json
-import requests
-import typer
-from rich.console import Console
-import numpy
+from pathlib import Path
+from typing import Annotated, Optional
 
-from string_catalog import load as load_string_catalog
+import numpy
+import typer
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from pydantic import BaseModel, ConfigDict, Field, RootModel, SkipValidation
+from rich.console import Console
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
+    import tomli as tomllib
+
+from swpngx.string_catalog import load as load_string_catalog
 
 console = Console()
 
 
-class Point(pydantic.RootModel):
+class Point(RootModel):
     root: tuple[int, int]
 
     @property
@@ -49,15 +58,14 @@ class Point(pydantic.RootModel):
         return Point((self.x + other.x, self.y + other.y))
 
 
-class DeviceConfig(pydantic.BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
+class DeviceConfig(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    frame_src: Path = pydantic.Field(alias="frame")
+    frame_path: Path = Field(alias="frame")
     name: str
-    frame: Annotated[Image.Image, SkipValidation]
-    offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
-    post_offset: Point = pydantic.Field(default_factory=lambda: Point((0, 0)))
+    frame: Annotated[Image.Image | None, SkipValidation] = None
+    offset: Point = Field(default_factory=lambda: Point((0, 0)))
+    post_offset: Point = Field(default_factory=lambda: Point((0, 0)))
     post_margin: int = 0
     target_size: Point
     mask_corner_radius: int
@@ -66,22 +74,16 @@ class DeviceConfig(pydantic.BaseModel):
     shadow_blur: int = 30
 
 
-class ScreenStyle(pydantic.BaseModel):
-    background_color_internal: str | None = pydantic.Field(
+class ScreenStyle(BaseModel):
+    background_color_internal: str | None = Field(
         default=None, alias="background_color"
     )
-    text_color_internal: str | None = pydantic.Field(default=None, alias="text_color")
-    text_offset_internal: Point | None = pydantic.Field(
-        default=None, alias="text_offset"
-    )
-    text_size_internal: int | None = pydantic.Field(default=None, alias="text_size")
-    text_wrap_internal: int | None = pydantic.Field(default=None, alias="text_wrap")
-    font_spacing_internal: int | None = pydantic.Field(
-        default=None, alias="font_spacing"
-    )
-    shadow_color_internal: str | None = pydantic.Field(
-        default=None, alias="shadow_color"
-    )
+    text_color_internal: str | None = Field(default=None, alias="text_color")
+    text_offset_internal: Point | None = Field(default=None, alias="text_offset")
+    text_size_internal: int | None = Field(default=None, alias="text_size")
+    text_wrap_internal: int | None = Field(default=None, alias="text_wrap")
+    font_spacing_internal: int | None = Field(default=None, alias="font_spacing")
+    shadow_color_internal: str | None = Field(default=None, alias="shadow_color")
 
     @property
     def background_color(self) -> str:
@@ -127,7 +129,7 @@ class ScreenStyle(pydantic.BaseModel):
         )
 
 
-class ScreenConfig(pydantic.BaseModel):
+class ScreenConfig(BaseModel):
     device_pattern: str = ".*"
     screen_pattern: str = ".*"
 
@@ -136,9 +138,13 @@ class ScreenConfig(pydantic.BaseModel):
     style: ScreenStyle | None = None
 
 
-class Config(pydantic.BaseModel):
+class Config(BaseModel):
     devices: list[DeviceConfig]
     screens: list[ScreenConfig]
+    input_folder: Path
+    output_folder: Path
+    string_catalog: Path = Path("Screenshots.xcstrings")
+    font_file: Path
 
     def __getitem__(self, key: str) -> DeviceConfig:
         for device in self.devices:
@@ -146,16 +152,12 @@ class Config(pydantic.BaseModel):
                 return device
         raise KeyError(key)
 
-    def __hasitem__(self, key: str) -> bool:
-        for device in self.devices:
-            if device.name == key:
-                return True
-        return False
-
     def load_frames(self, base: Path) -> None:
-        frame_dir = base / "frames"
         for device in self.devices:
-            device.frame = Image.open(frame_dir / device.frame_src)
+            frame_path = base / device.frame_path
+            if not frame_path.is_file():
+                raise FileNotFoundError(f"Frame image not found: {frame_path}")
+            device.frame = Image.open(frame_path).convert("RGBA")
 
     def load_screen_config(
         self, device: str, file: Path
@@ -174,75 +176,130 @@ class Config(pydantic.BaseModel):
         return config, style
 
 
-root_dir = Path(__file__).parent.parent
+LANGUAGE_OVERRIDES = {
+    "da-DK": "da",
+    "da-DA": "da",
+    "pl-PL": "pl",
+}
+
+_FRAME_CONFIG: Config | None = None
+_STRING_TITLES: dict[str, dict[str, str]] | None = None
+_FONT_FILE: Path | None = None
+_OUTPUT_DIR: Path | None = None
 
 
+def should_process_file(file: Path) -> bool:
+    return (
+        file.suffix.lower() == ".png"
+        and not file.stem.endswith("-framed")
+        and "frames" not in file.parts
+    )
+
+
+def collect_input_files(inputs: list[Path]) -> list[Path]:
+    files: list[Path] = []
+    for input_path in inputs:
+        if input_path.is_file():
+            if should_process_file(input_path):
+                files.append(input_path)
+            continue
+        for root, _dirs, filenames in os.walk(input_path):
+            root_path = Path(root)
+            for filename in filenames:
+                candidate = root_path / filename
+                if should_process_file(candidate):
+                    files.append(candidate)
+    return sorted(files)
+
+
+def load_config(config_file: Path) -> Config:
+    config_data = tomllib.loads(config_file.read_text(encoding="utf-8"))
+    return Config(**config_data)
+
+
+def init_worker(
+    config_file: Path,
+    string_catalog_file: Path,
+    output_dir: Path,
+    font_file: Path,
+) -> None:
+    global _FRAME_CONFIG, _STRING_TITLES, _FONT_FILE, _OUTPUT_DIR
+    config = load_config(config_file)
+    config.load_frames(config_file.resolve().parent)
+    _FRAME_CONFIG = config
+    _STRING_TITLES = load_string_catalog(string_catalog_file.read_text()).as_dict()
+    _FONT_FILE = font_file
+    _OUTPUT_DIR = output_dir
+
+
+def frame_worker(file: Path) -> None:
+    if _FRAME_CONFIG is None or _STRING_TITLES is None:
+        raise RuntimeError("Worker config not initialized")
+    if _FONT_FILE is None or _OUTPUT_DIR is None:
+        raise RuntimeError("Worker paths not initialized")
+    frame(file, _FRAME_CONFIG, _OUTPUT_DIR, _STRING_TITLES, _FONT_FILE)
+
+
+app = typer.Typer(no_args_is_help=True, help="Screenshot framing tool")
+
+
+@app.command()
 def main(
-    inputs: Annotated[list[Path], typer.Argument(exists=True)],
-    output_folder: Annotated[
-        Path, typer.Option("--output", file_okay=False, writable=True)
-    ] = root_dir
-    / "fastlane/screenshots/framed",
     config_file: Annotated[
         Path, typer.Option("--config", exists=True, dir_okay=False)
-    ] = root_dir
-    / "fastlane/screenshots/frames.yml",
+    ] = Path("frames.toml"),
     jobs: Annotated[int, typer.Option("--jobs", "-j")] = multiprocessing.cpu_count(),
 ):
-    with config_file.open() as fh:
-        config = Config(**yaml.safe_load(fh))
-    config.load_frames(Path(__file__).parent)
+    config_file = config_file.resolve()
+    jobs = max(1, jobs)
+    config = load_config(config_file)
+    config.load_frames(config_file.parent)
 
-    string_catalog_file = config_file.parent / "Screenshots.xcstrings"
-    assert string_catalog_file.is_file(), "String catalog not found"
-    string_catalog = load_string_catalog(string_catalog_file.read_text())
+    string_catalog_file = config_file.parent / config.string_catalog
+    if not string_catalog_file.is_file():
+        console.log(f"[red]String catalog not found at {string_catalog_file}")
+        raise typer.Exit(1)
+    string_titles = load_string_catalog(string_catalog_file.read_text()).as_dict()
 
-    if not output_folder.exists():
-        output_folder.mkdir(parents=True)
+    output_folder = config.output_folder
+    output_folder.mkdir(parents=True, exist_ok=True)
 
-    files = []
-
-    for i in inputs:
-        if i.is_file():
-            files.append(i)
-        else:
-            for root, dirs, file in os.walk(i):
-                root = Path(root)
-                for f in file:
-                    if f.endswith(".png"):
-                        files.append(root / f)
+    files = collect_input_files([config.input_folder])
+    if not files:
+        console.log("[yellow]No screenshots found to frame")
+        return
 
     # font_file = config_file.parent / "DejaVuSans-Bold.ttf"
-    font_file = config_file.parent / "OpenSans-VariableFont_wdth,wght.ttf"
+    font_file = config_file.parent / config.font_file
+    if not font_file.is_file():
+        console.log(f"[red]Font file not found at {font_file}")
+        raise typer.Exit(1)
     #  font_file = config_file.parent / "helvetica-bold.ttf"
 
     if jobs == 1 or len(files) == 1:
-        for f in files:
-            frame(f, config, output_folder, string_catalog.as_dict(), font_file)
+        for file in files:
+            frame(file, config, output_folder, string_titles, font_file)
     else:
-        with ProcessPoolExecutor(jobs) as executor:
-            futures = []
-            for f in files:
-                if f.stem.endswith("-framed") or "frames" in str(f):
-                    continue
-                futures.append(
-                    executor.submit(
-                        frame,
-                        f,
-                        config,
-                        output_folder,
-                        string_catalog.as_dict(),
-                        font_file,
-                    )
-                )
+        with ProcessPoolExecutor(
+            max_workers=jobs,
+            initializer=init_worker,
+            initargs=(config_file, string_catalog_file, output_folder, font_file),
+        ) as executor:
+            futures = [executor.submit(frame_worker, file) for file in files]
+            for future in as_completed(futures):
+                future.result()
 
-            for f in as_completed(futures):
-                f.result()
-
-        console.print("Done")
+    console.log("[green]Done")
 
 
 def get_device_name(name: str):
+    # Expected format: {device_name}-{index:02d}_{step_name}
+    # Example: iPhone_16_Pro-01_documents
+    # We need to extract everything before the last hyphen followed by digits
+    match = re.match(r"^(.+)-\d+_", name)
+    if match:
+        return match.group(1)
+    # Fallback to old behavior
     return "-".join(name.split("-")[:-1])
 
 
@@ -309,34 +366,25 @@ def frame(
     titles: dict[str, dict[str, str]],
     font_file: Path,
 ):
-    console.print(file)
+    console.log(f"Framing {file}")
     device_name = get_device_name(file.stem)
-    lang = get_language(file)
-    if "-" in lang:
-        lang_code, _ = lang.split("-")
-    else:
-        lang_code = lang
+    locale = get_language(file)
+    normalized_locale = LANGUAGE_OVERRIDES.get(locale, locale)
+    lang_code = normalized_locale.split("-")[0]
 
-    lang_dict = {
-        "da-DA": "da",
-        "pl-PL": "pl",
-    }
-
-    lang = lang_dict.get(lang, lang)
-
-    console.print(" -", device_name, " ", lang)
+    console.log(f" - Device: {device_name} | Locale: {locale}")
 
     try:
         frame_config = config[device_name]
     except KeyError:
-        console.print(" - no frame config found")
+        console.log(" - No frame config found")
         return
-    console.print(" -", frame_config)
+    if frame_config.frame is None:
+        raise ValueError(f"Frame image not loaded for {device_name}")
 
     screen_config, screen_style = config.load_screen_config(device_name, file)
-    console.print("Combined screen style:", screen_style)
 
-    screenshot_raw = Image.open(file)
+    screenshot_raw = Image.open(file).convert("RGBA")
     screenshot_raw = screenshot_raw.resize([*frame_config.target_size])
 
     screenshot = Image.new("RGBA", frame_config.frame.size)
@@ -357,25 +405,27 @@ def frame(
     buffer.paste(screenshot, mask=mask)
     buffer.alpha_composite(frame_config.frame)
 
-    buffer.paste(screenshot, mask=mask)
-    buffer.alpha_composite(frame_config.frame)
-
     # resize to original device screenshot size to comply with AppStore requirements
     output = Image.new("RGBA", screenshot_raw.size)
     output_draw = ImageDraw.Draw(output)
-
-    output_draw.rectangle([0, 0, *buffer.size], fill=screen_style.background_color)
+    output_draw.rectangle([0, 0, *output.size], fill=screen_style.background_color)
 
     font = ImageFont.truetype(str(font_file), screen_style.text_size)
-    font.set_variation_by_name("Bold")
-    # print(font.get_variation_names())
+    try:
+        font.set_variation_by_name("Bold")
+    except (AttributeError, OSError, ValueError):
+        pass
 
     if title_key := screen_config.title_key:
         text_buffer = Image.new("RGBA", screenshot_raw.size)
         text_buffer_draw = ImageDraw.Draw(text_buffer)
-        title = titles[title_key].get(lang_code, title_key.upper())
-        console.print("Wrap:", screen_style.text_wrap)
-        print(title)
+        if title_key not in titles:
+            console.log(f"[red]Missing localization key: {title_key}")
+            raise KeyError(title_key)
+        if lang_code not in titles[title_key]:
+            console.log(f"[red]Missing localization for {title_key} ({lang_code})")
+            raise KeyError(f"{title_key}:{lang_code}")
+        title = titles[title_key][lang_code]
         if wrap_size := screen_style.text_wrap:
             title = "\n".join(textwrap.wrap(title, wrap_size))
         text_buffer_draw.multiline_text(
@@ -388,19 +438,13 @@ def frame(
         output.alpha_composite(text_buffer)
 
     aspect_ratio = buffer.size[0] / buffer.size[1]
-
-    console.print("ratio:", aspect_ratio)
     target_size = (screenshot_raw.size[0], int(screenshot_raw.size[0] / aspect_ratio))
     buffer = buffer.resize(target_size)
-    console.print("size:", buffer.size, "->", target_size)
-
-    console.print(output.size)
 
     if frame_config.post_margin:
         aspect_ratio = buffer.size[0] / buffer.size[1]
         new_w = buffer.size[0] - frame_config.post_margin * 2
         new_h = int(new_w / aspect_ratio)
-        print("Resizing from", buffer.size, " to ", (new_w, new_h))
         buffer = buffer.resize((new_w, new_h))
 
     delta_x = (output.size[0] - buffer.size[0]) // 2
@@ -423,13 +467,8 @@ def frame(
     )
     output.alpha_composite(offset_buffer)
 
-    locale_dir = output_dir / lang
-    if not locale_dir.exists():
-        locale_dir.mkdir(parents=True)
+    locale_dir = output_dir / locale
+    locale_dir.mkdir(parents=True, exist_ok=True)
     output_file = locale_dir / f"{file.stem}-framed.png"
-    console.print("Saving to", output_file)
+    console.log(f"Saving to {output_file}")
     output.save(output_file)
-
-
-if __name__ == "__main__":
-    typer.run(main)

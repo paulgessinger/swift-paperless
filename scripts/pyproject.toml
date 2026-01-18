@@ -1,0 +1,22 @@
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "swpngx"
+version = "0.1.0"
+description = "Automation tooling for Swift Paperless"
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.9",
+    "numpy",
+    "Pillow",
+    "pydantic>=2",
+    "pypaperless",
+    "rich",
+    "typer",
+    "tomli; python_version < '3.11'",
+]
+
+[project.scripts]
+swpngx = "swpngx.cli:app"

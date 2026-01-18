@@ -53,8 +53,9 @@ If you have any questions or need support create an issue on [GitHub](https://gi
 - Run the screenshot automation:
 
 ```console
-fastlane snapshot
-scripts/frame.py fastlane/screenshots
+swpngx capture setup
+swpngx capture capture
+swpngx frame
 fastlane deliver
 ```
 

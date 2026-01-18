@@ -1,0 +1,57 @@
+locales = [
+    "en-US",
+    "de-DE",
+    "fr-FR",
+    "it-IT",
+    "nl-NL",
+    "pl-PL",
+    "da-DK",
+    "tr-TR",
+]
+output_dir = "fastlane/screenshots"
+bundle_id = "com.paulgessinger.swift-paperless"
+launch_wait = 2.0
+url_wait = 2.0
+status_bar_time = "2007-01-09T09:41:00.000+01:00"
+status_bar_cellular_bars = 4
+appearance = "light"
+
+[build]
+enabled = true
+scheme = "swift-paperless"
+project = "swift-paperless.xcodeproj"
+configuration = "Release"
+derived_data_path = ".build/DerivedData"
+app_name = "swift-paperless"
+
+[preview]
+url = "http://localhost:9988/"
+username = "admin"
+password = "admin"
+
+[[simulators]]
+name = "iPhone 17 Pro"
+udid = "07ACA670-CF2B-42C2-B33A-229787FDF3B9"
+
+[[simulators]]
+name = "iPad Pro 13-inch"
+udid="B14463F9-4862-46B8-9D69-AA05A15DFDA9"
+
+[[steps]]
+name = "documents"
+wait = 2.0
+
+[[steps]]
+name = "filter_tags"
+url = "x-paperless://v1/open_filter/tags"
+post_url = "x-paperless://v1/close_filter"
+
+[[steps]]
+name = "document_view"
+url = "x-paperless://v1/document/3?edit=0"
+wait = 4.0
+
+[[steps]]
+name = "document_edit"
+url = "x-paperless://v1/document/3?edit=1"
+wait = 4.0
