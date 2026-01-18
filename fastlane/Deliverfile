@@ -6,5 +6,6 @@
 screenshots_path "fastlane/screenshots/framed"
 
 skip_binary_upload true
+app_version("1.9.0")
 
 # overwrite_screenshots true
