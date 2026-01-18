@@ -2,7 +2,7 @@
 # /// script
 # dependencies = [
 # "Pillow",
-# "pyyaml",
+# "tomli; python_version < '3.11'",
 # "pydantic",
 # "rich",
 # "typer",
@@ -20,10 +20,14 @@ from typing import Annotated, Optional
 
 import numpy
 import typer
-import yaml
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from pydantic import BaseModel, ConfigDict, Field, RootModel, SkipValidation
 from rich.console import Console
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
+    import tomli as tomllib
 
 from string_catalog import load as load_string_catalog
 
@@ -209,6 +213,11 @@ def collect_input_files(inputs: list[Path]) -> list[Path]:
     return sorted(files)
 
 
+def load_config(config_file: Path) -> Config:
+    config_data = tomllib.loads(config_file.read_text(encoding="utf-8"))
+    return Config(**config_data)
+
+
 def init_worker(
     config_file: Path,
     string_catalog_file: Path,
@@ -216,8 +225,7 @@ def init_worker(
     font_file: Path,
 ) -> None:
     global _FRAME_CONFIG, _STRING_TITLES, _FONT_FILE, _OUTPUT_DIR
-    with config_file.open() as file_handle:
-        config = Config(**yaml.safe_load(file_handle))
+    config = load_config(config_file)
     config.load_frames(Path(__file__).parent)
     _FRAME_CONFIG = config
     _STRING_TITLES = load_string_catalog(string_catalog_file.read_text()).as_dict()
@@ -244,12 +252,11 @@ def main(
     config_file: Annotated[
         Path, typer.Option("--config", exists=True, dir_okay=False)
     ] = root_dir
-    / "fastlane/screenshots/frames.yml",
+    / "fastlane/screenshots/frames.toml",
     jobs: Annotated[int, typer.Option("--jobs", "-j")] = multiprocessing.cpu_count(),
 ):
     jobs = max(1, jobs)
-    with config_file.open() as file_handle:
-        config = Config(**yaml.safe_load(file_handle))
+    config = load_config(config_file)
     config.load_frames(Path(__file__).parent)
 
     string_catalog_file = config_file.parent / "Screenshots.xcstrings"

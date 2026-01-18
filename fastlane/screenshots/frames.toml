@@ -1,0 +1,56 @@
+[[devices]]
+name = "iPad_Pro_13-inch__M4_"
+frame = "iPad Pro 13 - M4 - Space Gray - Portrait.png"
+target_size = [2064, 2752]
+offset = [120, 125]
+post_offset = [0, 500]
+mask_corner_radius = 50
+mask_margin = 10
+
+[[devices]]
+name = "iPhone_17_Pro"
+frame = "iPhone 17 Pro - Silver - Portrait.png"
+offset = [70, 70]
+post_offset = [0, 400]
+target_size = [1206, 2622]
+mask_corner_radius = 150
+mask_margin = 0
+
+[[screens]]
+device_pattern = ".*"
+screen_pattern = ".*"
+
+[screens.style]
+background_color = "#f0f0f0"
+shadow_color = "#888888"
+text_color = "#17541F"
+text_offset = [60, 60]
+text_size = 100
+font_spacing = 10
+
+[[screens]]
+device_pattern = "iPhone_17_Pro$"
+screen_pattern = ".*"
+
+[screens.style]
+text_size = 80
+
+[[screens]]
+device_pattern = ".*"
+screen_pattern = "01_documents"
+title_key = "documentView"
+
+[[screens]]
+device_pattern = ".*"
+screen_pattern = "02_filter_tags"
+title_key = "tagsFilter"
+
+[[screens]]
+device_pattern = ".*"
+screen_pattern = "03_document_view"
+title_key = "documentDetailView"
+
+[[screens]]
+device_pattern = ".*"
+screen_pattern = "04_document_edit"
+title_key = "documentEditing"
