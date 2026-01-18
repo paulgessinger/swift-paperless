@@ -287,7 +287,7 @@ def main(
 
 def get_device_name(name: str):
     # Expected format: {device_name}-{index:02d}_{step_name}
-    # Example: iPhone-16-Pro-01_documents
+    # Example: iPhone_16_Pro-01_documents
     # We need to extract everything before the last hyphen followed by digits
     match = re.match(r"^(.+)-\d+_", name)
     if match:
