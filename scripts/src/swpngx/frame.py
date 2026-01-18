@@ -29,7 +29,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
     import tomli as tomllib
 
-from string_catalog import load as load_string_catalog
+from swpngx.string_catalog import load as load_string_catalog
 
 console = Console()
 
@@ -79,17 +79,11 @@ class ScreenStyle(BaseModel):
         default=None, alias="background_color"
     )
     text_color_internal: str | None = Field(default=None, alias="text_color")
-    text_offset_internal: Point | None = Field(
-        default=None, alias="text_offset"
-    )
+    text_offset_internal: Point | None = Field(default=None, alias="text_offset")
     text_size_internal: int | None = Field(default=None, alias="text_size")
     text_wrap_internal: int | None = Field(default=None, alias="text_wrap")
-    font_spacing_internal: int | None = Field(
-        default=None, alias="font_spacing"
-    )
-    shadow_color_internal: str | None = Field(
-        default=None, alias="shadow_color"
-    )
+    font_spacing_internal: int | None = Field(default=None, alias="font_spacing")
+    shadow_color_internal: str | None = Field(default=None, alias="shadow_color")
 
     @property
     def background_color(self) -> str:
@@ -147,6 +141,10 @@ class ScreenConfig(BaseModel):
 class Config(BaseModel):
     devices: list[DeviceConfig]
     screens: list[ScreenConfig]
+    input_folder: Path
+    output_folder: Path
+    string_catalog: Path = Path("Screenshots.xcstrings")
+    font_file: Path
 
     def __getitem__(self, key: str) -> DeviceConfig:
         for device in self.devices:
@@ -155,9 +153,11 @@ class Config(BaseModel):
         raise KeyError(key)
 
     def load_frames(self, base: Path) -> None:
-        frame_dir = base / "frames"
         for device in self.devices:
-            device.frame = Image.open(frame_dir / device.frame_path).convert("RGBA")
+            frame_path = base / device.frame_path
+            if not frame_path.is_file():
+                raise FileNotFoundError(f"Frame image not found: {frame_path}")
+            device.frame = Image.open(frame_path).convert("RGBA")
 
     def load_screen_config(
         self, device: str, file: Path
@@ -175,8 +175,6 @@ class Config(BaseModel):
 
         return config, style
 
-
-root_dir = Path(__file__).parent.parent
 
 LANGUAGE_OVERRIDES = {
     "da-DK": "da",
@@ -227,7 +225,7 @@ def init_worker(
 ) -> None:
     global _FRAME_CONFIG, _STRING_TITLES, _FONT_FILE, _OUTPUT_DIR
     config = load_config(config_file)
-    config.load_frames(Path(__file__).parent)
+    config.load_frames(config_file.resolve().parent)
     _FRAME_CONFIG = config
     _STRING_TITLES = load_string_catalog(string_catalog_file.read_text()).as_dict()
     _FONT_FILE = font_file
@@ -242,39 +240,40 @@ def frame_worker(file: Path) -> None:
     frame(file, _FRAME_CONFIG, _OUTPUT_DIR, _STRING_TITLES, _FONT_FILE)
 
 
+app = typer.Typer(no_args_is_help=True, help="Screenshot framing tool")
+
+
+@app.command()
 def main(
-    inputs: Annotated[
-        list[Path], typer.Argument(exists=True, help="Input directories or files")
-    ] = [root_dir / "fastlane/screenshots"],
-    output_folder: Annotated[
-        Path, typer.Option("--output", file_okay=False, writable=True)
-    ] = root_dir
-    / "fastlane/screenshots/framed",
     config_file: Annotated[
         Path, typer.Option("--config", exists=True, dir_okay=False)
-    ] = root_dir
-    / "fastlane/screenshots/frames.toml",
+    ] = Path("frames.toml"),
     jobs: Annotated[int, typer.Option("--jobs", "-j")] = multiprocessing.cpu_count(),
 ):
+    config_file = config_file.resolve()
     jobs = max(1, jobs)
     config = load_config(config_file)
-    config.load_frames(Path(__file__).parent)
+    config.load_frames(config_file.parent)
 
-    string_catalog_file = config_file.parent / "Screenshots.xcstrings"
+    string_catalog_file = config_file.parent / config.string_catalog
     if not string_catalog_file.is_file():
-        console.log("[red]String catalog not found")
+        console.log(f"[red]String catalog not found at {string_catalog_file}")
         raise typer.Exit(1)
     string_titles = load_string_catalog(string_catalog_file.read_text()).as_dict()
 
+    output_folder = config.output_folder
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    files = collect_input_files(inputs)
+    files = collect_input_files([config.input_folder])
     if not files:
         console.log("[yellow]No screenshots found to frame")
         return
 
     # font_file = config_file.parent / "DejaVuSans-Bold.ttf"
-    font_file = config_file.parent / "OpenSans-VariableFont_wdth,wght.ttf"
+    font_file = config_file.parent / config.font_file
+    if not font_file.is_file():
+        console.log(f"[red]Font file not found at {font_file}")
+        raise typer.Exit(1)
     #  font_file = config_file.parent / "helvetica-bold.ttf"
 
     if jobs == 1 or len(files) == 1:
@@ -424,9 +423,7 @@ def frame(
             console.log(f"[red]Missing localization key: {title_key}")
             raise KeyError(title_key)
         if lang_code not in titles[title_key]:
-            console.log(
-                f"[red]Missing localization for {title_key} ({lang_code})"
-            )
+            console.log(f"[red]Missing localization for {title_key} ({lang_code})")
             raise KeyError(f"{title_key}:{lang_code}")
         title = titles[title_key][lang_code]
         if wrap_size := screen_style.text_wrap:
@@ -475,7 +472,3 @@ def frame(
     output_file = locale_dir / f"{file.stem}-framed.png"
     console.log(f"Saving to {output_file}")
     output.save(output_file)
-
-
-if __name__ == "__main__":
-    typer.run(main)

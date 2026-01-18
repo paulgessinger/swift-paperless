@@ -33,7 +33,9 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
     import tomli as tomllib
 
-app = typer.Typer(no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app")
+app = typer.Typer(
+    no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app"
+)
 console = Console()
 
 
@@ -95,11 +97,11 @@ class BuildConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
-    scheme: str = "swift-paperless"
-    project: Path = Path("swift-paperless.xcodeproj")
+    scheme: str
+    project: Path
     configuration: str = "Release"
     derived_data_path: Path = Path(".build/DerivedData")
-    app_name: str = "swift-paperless"
+    app_name: str
 
 
 class SimulatorConfig(BaseModel):
@@ -114,8 +116,8 @@ class CaptureConfig(BaseModel):
 
     locales: list[str] = Field(default_factory=lambda: ["en-US"])
     steps: list[ScreenshotStepConfig] = Field(default_factory=default_step_configs)
-    output_dir: Path = Path("fastlane/screenshots")
-    bundle_id: str = "com.paulgessinger.swift-paperless"
+    output_dir: Path
+    bundle_id: str
     simulators: list[SimulatorConfig] = Field(default_factory=list)
     launch_wait: float = 2.0
     url_wait: float = 2.0
@@ -149,16 +151,56 @@ class CaptureConfig(BaseModel):
 
 # Data model matching PreviewRepository.swift
 TAGS = [
-    {"name": "Inbox", "color": "#800080", "is_inbox_tag": True, "matching_algorithm": 1, "is_insensitive": True, "match": ""},
-    {"name": "Bank", "color": "#0000FF", "matching_algorithm": 1, "is_insensitive": True, "match": "", "is_inbox_tag": False},
-    {"name": "Travel Document", "color": "#008000", "matching_algorithm": 1, "is_insensitive": True, "match": "", "is_inbox_tag": False},
-    {"name": "Important", "color": "#FF0000", "matching_algorithm": 1, "is_insensitive": True, "match": "", "is_inbox_tag": False},
-    {"name": "Book", "color": "#FFFF00", "matching_algorithm": 1, "is_insensitive": True, "match": "", "is_inbox_tag": False},
+    {
+        "name": "Inbox",
+        "color": "#800080",
+        "is_inbox_tag": True,
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+    },
+    {
+        "name": "Bank",
+        "color": "#0000FF",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+        "is_inbox_tag": False,
+    },
+    {
+        "name": "Travel Document",
+        "color": "#008000",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+        "is_inbox_tag": False,
+    },
+    {
+        "name": "Important",
+        "color": "#FF0000",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+        "is_inbox_tag": False,
+    },
+    {
+        "name": "Book",
+        "color": "#FFFF00",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+        "is_inbox_tag": False,
+    },
 ]
 
 CORRESPONDENTS = [
     {"name": "McMillan", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
-    {"name": "Credit Suisse", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
+    {
+        "name": "Credit Suisse",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+    },
     {"name": "UBS", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
     {"name": "Home", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
 ]
@@ -167,12 +209,29 @@ DOCUMENT_TYPES = [
     {"name": "Letter", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
     {"name": "Invoice", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
     {"name": "Receipt", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
-    {"name": "Bank Statement", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
+    {
+        "name": "Bank Statement",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+    },
 ]
 
 STORAGE_PATHS = [
-    {"name": "Path A", "path": "aaa", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
-    {"name": "Path B", "path": "bbb", "matching_algorithm": 1, "is_insensitive": True, "match": ""},
+    {
+        "name": "Path A",
+        "path": "aaa",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+    },
+    {
+        "name": "Path B",
+        "path": "bbb",
+        "matching_algorithm": 1,
+        "is_insensitive": True,
+        "match": "",
+    },
 ]
 
 DOCUMENT_TITLES = [
@@ -189,21 +248,25 @@ DOCUMENT_TITLES = [
 
 class BackendSetupError(Exception):
     """Base exception for backend setup failures."""
+
     pass
 
 
 class BackendNotReadyError(BackendSetupError):
     """Backend didn't become ready in time."""
+
     pass
 
 
 class AuthenticationError(BackendSetupError):
     """Failed to authenticate with backend."""
+
     pass
 
 
 class DocumentUploadError(BackendSetupError):
     """Failed to upload documents."""
+
     pass
 
 
@@ -219,7 +282,13 @@ def sanitize_filename(value: str) -> str:
     )
 
 
-def run_command(args: list[str], *, check: bool = True, dry_run: bool = False, env: dict | None = None) -> None:
+def run_command(
+    args: list[str],
+    *,
+    check: bool = True,
+    dry_run: bool = False,
+    env: dict | None = None,
+) -> None:
     display = " ".join(args)
     console.log(f"[bold blue]$ {display}[/bold blue]")
     if dry_run:
@@ -243,7 +312,13 @@ def run_command(args: list[str], *, check: bool = True, dry_run: bool = False, e
         raise subprocess.CalledProcessError(return_code, args)
 
 
-def simctl(args: list[str], *, check: bool = True, dry_run: bool = False, env: dict | None = None) -> None:
+def simctl(
+    args: list[str],
+    *,
+    check: bool = True,
+    dry_run: bool = False,
+    env: dict | None = None,
+) -> None:
     run_command(["xcrun", "simctl", *args], check=check, dry_run=dry_run, env=env)
 
 
@@ -365,6 +440,7 @@ def find_built_app(derived_data: Path, app_name: str) -> Path:
 def install_app(target: str, app_path: Path, *, dry_run: bool) -> None:
     simctl(["install", target, str(app_path)], dry_run=dry_run)
 
+
 # ============================================================================
 # Docker Compose Management
 # ============================================================================
@@ -380,7 +456,9 @@ def wait_for_docker_services(url: str, timeout: int) -> None:
     asyncio.run(wait_for_backend(url, timeout))
 
 
-def manage_docker_backend(compose_file: Path, recreate: bool, wait_timeout: int, url: str) -> None:
+def manage_docker_backend(
+    compose_file: Path, recreate: bool, wait_timeout: int, url: str
+) -> None:
     """Start or recreate Docker backend."""
     if recreate:
         console.log("[yellow]Tearing down existing containers...")
@@ -407,7 +485,9 @@ async def wait_for_backend(url: str, timeout: int) -> None:
         async with aiohttp.ClientSession() as session:
             while time.time() - start_time < timeout:
                 try:
-                    async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=2)) as resp:
+                    async with session.get(
+                        api_url, timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
                         if resp.status == 200:
                             console.log(f"[green]Backend ready at {api_url}")
                             return
@@ -424,8 +504,7 @@ async def authenticate(url: str, username: str, password: str) -> str:
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(
-                token_url,
-                json={"username": username, "password": password}
+                token_url, json={"username": username, "password": password}
             ) as resp:
                 resp.raise_for_status()
                 data = await resp.json()
@@ -457,7 +536,9 @@ async def create_correspondents(paperless: Paperless) -> None:
             corr_id = await draft.save()
             console.log(f"  Created correspondent: {corr_data['name']} (ID: {corr_id})")
         except Exception as e:
-            console.log(f"  [yellow]Correspondent {corr_data['name']} may already exist: {e}")
+            console.log(
+                f"  [yellow]Correspondent {corr_data['name']} may already exist: {e}"
+            )
 
 
 async def create_document_types(paperless: Paperless) -> None:
@@ -469,7 +550,9 @@ async def create_document_types(paperless: Paperless) -> None:
             dt_id = await draft.save()
             console.log(f"  Created document type: {dt_data['name']} (ID: {dt_id})")
         except Exception as e:
-            console.log(f"  [yellow]Document type {dt_data['name']} may already exist: {e}")
+            console.log(
+                f"  [yellow]Document type {dt_data['name']} may already exist: {e}"
+            )
 
 
 async def create_storage_paths(paperless: Paperless) -> None:
@@ -481,15 +564,21 @@ async def create_storage_paths(paperless: Paperless) -> None:
             sp_id = await draft.save()
             console.log(f"  Created storage path: {sp_data['name']} (ID: {sp_id})")
         except Exception as e:
-            console.log(f"  [yellow]Storage path {sp_data['name']} may already exist: {e}")
+            console.log(
+                f"  [yellow]Storage path {sp_data['name']} may already exist: {e}"
+            )
 
 
-async def upload_documents(paperless: Paperless, fixtures_dir: Path, num_documents: int = 3) -> list[str]:
+async def upload_documents(
+    paperless: Paperless, fixtures_dir: Path, num_documents: int = 3
+) -> list[str]:
     """Upload PDFs via direct API call and return task IDs."""
     pdf_files = sorted(fixtures_dir.glob("*.pdf"))[:num_documents]
 
     if len(pdf_files) < num_documents:
-        console.log(f"[yellow]Warning: Only found {len(pdf_files)} PDFs in {fixtures_dir}")
+        console.log(
+            f"[yellow]Warning: Only found {len(pdf_files)} PDFs in {fixtures_dir}"
+        )
 
     console.log(f"[blue]Uploading {len(pdf_files)} documents...")
 
@@ -502,12 +591,14 @@ async def upload_documents(paperless: Paperless, fixtures_dir: Path, num_documen
             # Use direct aiohttp with proper authorization
             data = aiohttp.FormData()
             title = DOCUMENT_TITLES[index % len(DOCUMENT_TITLES)]
-            with open(pdf_path, 'rb') as f:
-                data.add_field('title', title)
-                data.add_field('document',
-                              f,
-                              filename=pdf_path.name,
-                              content_type='application/pdf')
+            with open(pdf_path, "rb") as f:
+                data.add_field("title", title)
+                data.add_field(
+                    "document",
+                    f,
+                    filename=pdf_path.name,
+                    content_type="application/pdf",
+                )
 
                 headers = {"Authorization": f"Token {paperless._token}"}
                 url = f"{paperless.base_url}/api/documents/post_document/"
@@ -521,6 +612,7 @@ async def upload_documents(paperless: Paperless, fixtures_dir: Path, num_documen
                             task_id = result.get("task_id") or result.get("id")
                         elif isinstance(result, str):
                             import re
+
                             if re.fullmatch(r"[0-9a-fA-F-]{36}", result):
                                 task_id = result
                         elif isinstance(result, list):
@@ -615,9 +707,7 @@ async def fetch_tasks_by_id(
     )
 
     return {
-        task_id: payload
-        for task_id, payload in results
-        if isinstance(payload, dict)
+        task_id: payload for task_id, payload in results if isinstance(payload, dict)
     }
 
 
@@ -691,14 +781,18 @@ async def wait_for_processing(
                         f"{task_id} ({result})" if result else task_id
                         for task_id, result in other_failures.items()
                     )
-                    console.log(f"[yellow]Document processing failures: {failure_lines}")
+                    console.log(
+                        f"[yellow]Document processing failures: {failure_lines}"
+                    )
                 console.log("[green]Document processing complete")
                 return task_details
 
             status.update(f"[blue]Waiting for {len(remaining)} task(s) to finish...")
             await asyncio.sleep(poll_interval)
 
-    raise DocumentUploadError(f"Timed out waiting for document processing after {timeout}s")
+    raise DocumentUploadError(
+        f"Timed out waiting for document processing after {timeout}s"
+    )
 
 
 async def update_document_metadata(
@@ -729,7 +823,9 @@ async def assign_metadata(paperless: Paperless, document_ids: list[int]) -> None
     document_type_map = await fetch_resource_map(paperless.document_types)
     storage_path_map = await fetch_resource_map(paperless.storage_paths)
 
-    tag_ids = [tag_map[name] for name in (tag["name"] for tag in TAGS) if name in tag_map]
+    tag_ids = [
+        tag_map[name] for name in (tag["name"] for tag in TAGS) if name in tag_map
+    ]
     correspondent_ids = [
         correspondent_map[name]
         for name in (corr["name"] for corr in CORRESPONDENTS)
@@ -746,7 +842,12 @@ async def assign_metadata(paperless: Paperless, document_ids: list[int]) -> None
         if name in storage_path_map
     ]
 
-    if not tag_ids and not correspondent_ids and not document_type_ids and not storage_path_ids:
+    if (
+        not tag_ids
+        and not correspondent_ids
+        and not document_type_ids
+        and not storage_path_ids
+    ):
         console.log("[yellow]No metadata IDs found; skipping document updates")
         return
 
@@ -754,8 +855,12 @@ async def assign_metadata(paperless: Paperless, document_ids: list[int]) -> None
         payload: dict[str, object] = {}
         if tag_ids:
             primary = tag_ids[index % len(tag_ids)]
-            secondary = tag_ids[(index + 1) % len(tag_ids)] if len(tag_ids) > 1 else None
-            tags = [primary] + ([secondary] if secondary and secondary != primary else [])
+            secondary = (
+                tag_ids[(index + 1) % len(tag_ids)] if len(tag_ids) > 1 else None
+            )
+            tags = [primary] + (
+                [secondary] if secondary and secondary != primary else []
+            )
             payload["tags"] = tags
         if correspondent_ids:
             payload["correspondent"] = correspondent_ids[index % len(correspondent_ids)]
@@ -772,11 +877,7 @@ async def assign_metadata(paperless: Paperless, document_ids: list[int]) -> None
 
 
 async def setup_backend_async(
-    url: str,
-    username: str,
-    password: str,
-    fixtures_dir: Path,
-    timeout: int
+    url: str, username: str, password: str, fixtures_dir: Path, timeout: int
 ) -> str:
     """Main backend setup orchestrator."""
     # 1. Authenticate and get token
@@ -784,7 +885,7 @@ async def setup_backend_async(
 
     # 2. Create and initialize Paperless client
     # Paperless client expects base URL without /api suffix
-    base_url = url.rstrip('/')
+    base_url = url.rstrip("/")
     async with Paperless(base_url, token) as paperless:
         console.log("[green]Paperless client initialized")
 
@@ -809,7 +910,9 @@ async def setup_backend_async(
 
     console.log(f"\n[bold green]Backend setup complete!")
     console.log(f"[bold cyan]Auth token:[/bold cyan] {token}")
-    console.log(f"[bold cyan]Use this token with the capture command's --preview-token option")
+    console.log(
+        f"[bold cyan]Use this token with the capture command's --preview-token option"
+    )
 
     return token
 
@@ -821,12 +924,24 @@ async def setup_backend_async(
 
 @app.command()
 def setup(
-    recreate: Annotated[bool, typer.Option("--recreate", help="Tear down and recreate containers")] = False,
-    url: Annotated[str, typer.Option("--url", help="Paperless-ngx URL")] = "http://localhost:9988",
-    username: Annotated[str, typer.Option("--username", help="Admin username")] = "admin",
-    password: Annotated[str, typer.Option("--password", help="Admin password")] = "admin",
-    fixtures_dir: Annotated[Path, typer.Option("--fixtures-dir", help="PDF fixtures directory")] = Path("Preview PDFs"),
-    wait_timeout: Annotated[int, typer.Option("--wait-timeout", help="Backend readiness timeout (seconds)")] = 120,
+    recreate: Annotated[
+        bool, typer.Option("--recreate", help="Tear down and recreate containers")
+    ] = False,
+    url: Annotated[
+        str, typer.Option("--url", help="Paperless-ngx URL")
+    ] = "http://localhost:9988",
+    username: Annotated[
+        str, typer.Option("--username", help="Admin username")
+    ] = "admin",
+    password: Annotated[
+        str, typer.Option("--password", help="Admin password")
+    ] = "admin",
+    fixtures_dir: Annotated[
+        Path, typer.Option("--fixtures-dir", help="PDF fixtures directory")
+    ] = Path("Preview PDFs"),
+    wait_timeout: Annotated[
+        int, typer.Option("--wait-timeout", help="Backend readiness timeout (seconds)")
+    ] = 120,
 ) -> None:
     """Setup backend: start Docker and populate with test data."""
     try:
@@ -851,7 +966,9 @@ def setup(
         console.log(f"Found {len(pdf_files)} PDF files in {fixtures_dir}")
 
         # 3. Populate backend
-        asyncio.run(setup_backend_async(url, username, password, fixtures_dir, wait_timeout))
+        asyncio.run(
+            setup_backend_async(url, username, password, fixtures_dir, wait_timeout)
+        )
 
     except BackendNotReadyError:
         console.log(f"[red]Error: Backend not ready. Check Docker logs:")
@@ -881,9 +998,13 @@ def capture(
     ] = Path("screenshots.toml"),
     skip_build: Annotated[
         bool,
-        typer.Option("--skip-build", help="Skip xcodebuild and reuse an existing build"),
+        typer.Option(
+            "--skip-build", help="Skip xcodebuild and reuse an existing build"
+        ),
     ] = False,
-    dry_run: Annotated[bool, typer.Option("--dry-run", help="Print commands without executing")] = False,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Print commands without executing")
+    ] = False,
 ) -> None:
     """Capture screenshots from iOS simulator."""
     capture_config = load_capture_config(config)
@@ -960,7 +1081,9 @@ def capture(
                 dry_run=dry_run,
             )
 
-            derived_data = build_config.derived_data_path / sanitize_filename(simulator.name)
+            derived_data = build_config.derived_data_path / sanitize_filename(
+                simulator.name
+            )
             if build_config.enabled and not skip_build:
                 app_path = build_app_for_simulator(
                     simulator=simulator,
@@ -968,7 +1091,9 @@ def capture(
                     dry_run=dry_run,
                 )
             elif dry_run:
-                app_path = derived_data / "Build" / "Products" / f"{build_config.app_name}.app"
+                app_path = (
+                    derived_data / "Build" / "Products" / f"{build_config.app_name}.app"
+                )
                 console.log(f"[yellow]Using existing build (dry-run): {app_path}")
             else:
                 try:
@@ -1034,7 +1159,9 @@ def capture(
             progress.update(progress_task_id, description=f"{device_name} • done")
 
         errors: list[str] = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(simulators)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(simulators)
+        ) as executor:
             futures = {
                 executor.submit(capture_simulator, simulator): simulator
                 for simulator in simulators
