@@ -267,26 +267,31 @@ struct DocumentView: View {
       TaskActivityToolbar(navState: $taskViewNavState)
 
       Menu {
-        if isDocumentScannerAvailable {
-          Button {
-            showDocumentScanner = true
-          } label: {
-            Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
+        Group {
+          if isDocumentScannerAvailable {
+            Button {
+              showDocumentScanner = true
+            } label: {
+              Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
+            }
           }
-        }
 
-        Button {
-          showFileImporter = true
-        } label: {
-          Label(
-            String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
-        }
+          Button {
+            showFileImporter = true
+          } label: {
+            Label(
+              String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
+          }
 
-        Button {
-          showPhotosPicker = true
-        } label: {
-          Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
+          Button {
+            showPhotosPicker = true
+          } label: {
+            Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
+          }
+
         }
+        .disabled(!store.permissions.test(.add, for: .document))
+
       } label: {
         Label(String(localized: .localizable(.add)), systemImage: "plus")
       }
