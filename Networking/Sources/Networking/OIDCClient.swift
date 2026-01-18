@@ -15,7 +15,7 @@ import os
 @MainActor
 @available(macOS 14.0, *)
 public final class OIDCClient {
-  static let urlFragment = "api/auth"
+  static let urlFragment = "api/auth/headless"
 
   private let baseURL: URL
   private let session: URLSession
