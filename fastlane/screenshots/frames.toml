@@ -1,5 +1,5 @@
 [[devices]]
-name = "iPad_Pro_13-inch__M4_"
+name = "iPad_Pro_13-inch"
 frame = "iPad Pro 13 - M4 - Space Gray - Portrait.png"
 target_size = [2064, 2752]
 offset = [120, 125]

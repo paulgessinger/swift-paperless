@@ -179,6 +179,7 @@ class Config(BaseModel):
 root_dir = Path(__file__).parent.parent
 
 LANGUAGE_OVERRIDES = {
+    "da-DK": "da",
     "da-DA": "da",
     "pl-PL": "pl",
 }
@@ -368,11 +369,11 @@ def frame(
 ):
     console.log(f"Framing {file}")
     device_name = get_device_name(file.stem)
-    lang = get_language(file)
-    lang = LANGUAGE_OVERRIDES.get(lang, lang)
-    lang_code = lang.split("-")[0]
+    locale = get_language(file)
+    normalized_locale = LANGUAGE_OVERRIDES.get(locale, locale)
+    lang_code = normalized_locale.split("-")[0]
 
-    console.log(f" - Device: {device_name} | Locale: {lang}")
+    console.log(f" - Device: {device_name} | Locale: {locale}")
 
     try:
         frame_config = config[device_name]
@@ -461,7 +462,7 @@ def frame(
     )
     output.alpha_composite(offset_buffer)
 
-    locale_dir = output_dir / lang
+    locale_dir = output_dir / locale
     locale_dir.mkdir(parents=True, exist_ok=True)
     output_file = locale_dir / f"{file.stem}-framed.png"
     console.log(f"Saving to {output_file}")
