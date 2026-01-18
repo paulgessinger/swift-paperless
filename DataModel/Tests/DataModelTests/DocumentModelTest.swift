@@ -295,7 +295,7 @@ struct DocumentModelTest {
     #expect(
       dateApprox(
         document.created,
-        datetime(year: 1990, month: 10, day: 21, hour: 0, minute: 0, second: 0, tz: tz)))
+        datetime(year: 1990, month: 10, day: 21, hour: 0, minute: 0, second: 0, tz: .current)))
     #expect(document.asn == nil)
     #expect(document.owner == .user(3))
     #expect(document.userCanChange == true)
