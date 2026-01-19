@@ -18,14 +18,13 @@
 		7A4D58892D13568900FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D58882D13568900FCB1F1 /* DataModel */; };
 		7A4D588B2D13569500FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588A2D13569500FCB1F1 /* DataModel */; };
 		7A4D588D2D13569A00FCB1F1 /* DataModel in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4D588C2D13569A00FCB1F1 /* DataModel */; };
-		7A59C91B2F143239002EC151 /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7A59C91A2F143239002EC151 /* Common */; };
-		7A59C91D2F143239002EC151 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A59C91C2F143239002EC151 /* Networking */; };
 		7A5C138A29AA7E2F00D71F51 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5C138929AA7E2F00D71F51 /* Semaphore */; };
 		7A64771C2BDD50D200217C18 /* libraries.md in Resources */ = {isa = PBXBuildFile; fileRef = 7A64771B2BDD50D200217C18 /* libraries.md */; };
 		7A68F0B329B4B94B00878223 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A68F0B229B4B94B00878223 /* Flow */; };
 		7A6AA3452C1EDEBE007A1866 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6AA3442C1EDEBE007A1866 /* MarkdownUI */; };
 		7A6DA7002D7DD3E900B3B185 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6DA6FF2D7DD3E900B3B185 /* Networking */; };
 		7A6DA7022D7DD3F000B3B185 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 7A6DA7012D7DD3F000B3B185 /* Networking */; };
+		7A94EF072F1ECE05005DA431 /* Swift Paperless.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 7A94EF062F1ECE05005DA431 /* Swift Paperless.storekit */; };
 		7AAC43182CA06F8D003E6A3A /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC43172CA06F8D003E6A3A /* AsyncAlgorithms */; };
 		7AAC44542CA0A37D003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44532CA0A37D003E6A3A /* Common */; };
 		7AAC44562CA0A38B003E6A3A /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = 7AAC44552CA0A38B003E6A3A /* Common */; };
@@ -81,6 +80,7 @@
 		7A5482C6299AD56E00D5061E /* swift-paperlessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-paperlessUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A64771B2BDD50D200217C18 /* libraries.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = libraries.md; path = docs/libraries.md; sourceTree = "<group>"; };
 		7A6DA7212D7DD42100B3B185 /* Networking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Networking; sourceTree = "<group>"; };
+		7A94EF062F1ECE05005DA431 /* Swift Paperless.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Swift Paperless.storekit"; sourceTree = "<group>"; };
 		7AAC44512CA0A31E003E6A3A /* Common */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Common; sourceTree = "<group>"; };
 		7ABA3B872E6F3F53006BB39B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		7AC40C9A2D134ED1003F68B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -284,15 +284,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7A59BDFE2F129272002EC151 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7A59C91D2F143239002EC151 /* Networking in Frameworks */,
-				7A59C91B2F143239002EC151 /* Common in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -347,6 +338,7 @@
 				7AC40CA72D134ED1003F68B1 /* PrivacyInfo.xcprivacy */,
 				7AC40CA82D134ED1003F68B1 /* swift_paperless.entitlements */,
 				7AC40CA92D134ED1003F68B1 /* swift_paperlessApp.swift */,
+				7A94EF062F1ECE05005DA431 /* Swift Paperless.storekit */,
 			);
 			path = "swift-paperless";
 			sourceTree = "<group>";
@@ -561,6 +553,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AC40D402D134ED1003F68B1 /* Assets.xcassets in Resources */,
+				7A94EF072F1ECE05005DA431 /* Swift Paperless.storekit in Resources */,
 				7AC40D422D134ED1003F68B1 /* PrivacyInfo.xcprivacy in Resources */,
 				7A64771C2BDD50D200217C18 /* libraries.md in Resources */,
 				7ABA3B882E6F3F53006BB39B /* AppIcon.icon in Resources */,
@@ -1250,14 +1243,6 @@
 		7A4D588C2D13569A00FCB1F1 /* DataModel */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DataModel;
-		};
-		7A59C91A2F143239002EC151 /* Common */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Common;
-		};
-		7A59C91C2F143239002EC151 /* Networking */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Networking;
 		};
 		7A5C138929AA7E2F00D71F51 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;

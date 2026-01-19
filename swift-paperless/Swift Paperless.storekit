@@ -1,0 +1,94 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "7A580E54",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "8074B1B0",
+      "localizations" : [
+        {
+          "description" : "Keeps me pleasantly caffeinated",
+          "displayName" : "Coffee money",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "",
+          "displayName" : "x",
+          "locale" : "da"
+        },
+        {
+          "description" : "",
+          "displayName" : "x",
+          "locale" : "nl"
+        }
+      ],
+      "productID" : "tip_small",
+      "referenceName" : "Small Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "5B643797",
+      "localizations" : [
+        {
+          "description" : "This genuinely means a lot",
+          "displayName" : "Proper thank-you",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_medium",
+      "referenceName" : "Medium Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "19.99",
+      "familyShareable" : false,
+      "internalID" : "36E96362",
+      "localizations" : [
+        {
+          "description" : "I may tell stories about you",
+          "displayName" : "Legendary generosity",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_large",
+      "referenceName" : "Large Tip",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

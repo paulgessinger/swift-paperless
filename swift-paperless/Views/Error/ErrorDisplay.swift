@@ -131,10 +131,10 @@ struct ErrorDisplay: ViewModifier {
 
       .alert(
         unwrapping: $detail,
-        title: { $detail in
+        title: { detail in
           Text(detail.message)
         },
-        actions: { $detail in
+        actions: { detail in
           Button(String(localized: .localizable(.copyToClipboard))) {
             Pasteboard.general.string = detail.details
           }
@@ -145,7 +145,7 @@ struct ErrorDisplay: ViewModifier {
 
           Button(String(localized: .localizable(.ok)), role: .cancel) {}
         },
-        message: { $detail in
+        message: { detail in
           Text(detail.details!)
         }
       )

@@ -2603,6 +2603,161 @@
         }
       }
     },
+    "tipJarDescription" : {
+      "comment" : "Tip jar description text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support development with a **one-time tip**! Tips are **optional** and don’t unlock extra features."
+          }
+        }
+      }
+    },
+    "tipJarLoadError" : {
+      "comment" : "Tip jar load error message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t load tips right now. Please try again later."
+          }
+        }
+      }
+    },
+    "tipJarLoading" : {
+      "comment" : "Tip jar loading state label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading tip options…"
+          }
+        }
+      }
+    },
+    "tipJarNoProducts" : {
+      "comment" : "Tip jar no products label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tip options are available yet."
+          }
+        }
+      }
+    },
+    "tipJarOptionsTitle" : {
+      "comment" : "Tip jar section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a tip"
+          }
+        }
+      }
+    },
+    "tipJarPendingMessage" : {
+      "comment" : "Tip jar pending purchase message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your tip is pending approval from the App Store."
+          }
+        }
+      }
+    },
+    "tipJarPendingTitle" : {
+      "comment" : "Tip jar pending purchase title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchase Pending"
+          }
+        }
+      }
+    },
+    "tipJarPurchaseErrorMessage" : {
+      "comment" : "Tip jar purchase error message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The purchase didn’t go through. Please try again later."
+          }
+        }
+      }
+    },
+    "tipJarPurchaseErrorTitle" : {
+      "comment" : "Tip jar purchase error title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchase Failed"
+          }
+        }
+      }
+    },
+    "tipJarThanksMessage" : {
+      "comment" : "Tip jar thank you message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks for supporting Swift Paperless!"
+          }
+        }
+      }
+    },
+    "tipJarThanksTitle" : {
+      "comment" : "Tip jar thank you title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thank You! ❤️"
+          }
+        }
+      }
+    },
+    "tipJarTipsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips!"
+          }
+        }
+      }
+    },
+    "tipJarTitle" : {
+      "comment" : "Tip jar navigation title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip Jar"
+          }
+        }
+      }
+    },
     "title" : {
       "comment" : "Details menu",
       "extractionState" : "manual",
