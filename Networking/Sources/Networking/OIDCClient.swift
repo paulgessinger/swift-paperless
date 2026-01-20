@@ -150,11 +150,14 @@ public final class OIDCClient {
     }
 
     let (data, _) = try await session.data(from: url)
+
     let config: HeadlessConfig
     do {
       config = try JSONDecoder().decode(HeadlessConfig.self, from: data)
     } catch {
-      logger.error("Unable to decode response from provider config endpoint: \(error)")
+      logger.info(
+        "Unable to decode response from provider config endpoint. This likely means the endpoint is not available: \(error)"
+      )
       return
     }
     providers = config.data.socialaccount.providers.filter { $0.supported }

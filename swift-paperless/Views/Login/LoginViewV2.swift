@@ -118,7 +118,6 @@ struct LoginViewV2: LoginViewProtocol {
       .animation(.spring(duration: 0.3), value: stage)
 
       .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(.hidden, for: .navigationBar)
 
       .toolbar {
         if initial {
@@ -143,7 +142,6 @@ struct LoginViewV2: LoginViewProtocol {
           .padding(.top, 5)
           .frame(maxWidth: .infinity)
           .padding(.bottom)
-          .background(.thinMaterial)
       }
 
       .if(!initial) { view in
