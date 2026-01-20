@@ -1,3 +1,3 @@
 SwiftPaperless to natywna aplikacja iOS, która współpracuje z popularnym oprogramowaniem do zarządzania dokumentami Paperless-ngx. Paperless-ngx jest samodzielnie hostowany, a więc w pełni chroni prywatność: kontrolujesz swoje dane!
 
-Z SwiftPaperless łatwo znajdziesz, sklasyfikujesz i także dodasz dokumenty z telefonu!
+Dzięki SwiftPaperless łatwo znajdziesz, sklasyfikujesz i dodasz dokumenty z telefonu!

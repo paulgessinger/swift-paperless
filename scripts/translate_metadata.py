@@ -406,9 +406,9 @@ def translate(
         typer.Option(
             "--languages",
             "-l",
-            help="Comma-separated list of target languages (locale codes or names)",
+            help="Target languages (locale codes or names)",
         ),
-    ] = ["de-DE", "fr-FR", "it-IT", "nl-NL", "pl-PL", "da-DK", "tr-TR"],
+    ] = ["de-DE", "fr-FR", "it", "nl-NL", "pl", "da", "tr"],
     model: Annotated[
         str,
         typer.Option(

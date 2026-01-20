@@ -1,3 +1,0 @@
-SwiftPaperless, popüler Paperless-ngx belge yönetim yazılımıyla etkileşime giren yerel bir iOS uygulamasıdır. Paperless-ngx, kendi kendine barındırılan bir çözümdür ve bu nedenle tam anlamıyla gizliliği korur: verilerinizi siz kontrol edersiniz!
-
-SwiftPaperless ile, telefonunuzdan belgeleri bulmak, kategorize etmek ve eklemek çok kolay!
