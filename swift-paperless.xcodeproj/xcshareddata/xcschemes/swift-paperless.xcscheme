@@ -58,7 +58,7 @@
          </EnvironmentVariable>
       </EnvironmentVariables>
       <StoreKitConfigurationFileReference
-         identifier = "../../swift-paperless/Swift Paperless.storekit">
+         identifier = "../../swift-paperless/Testing.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

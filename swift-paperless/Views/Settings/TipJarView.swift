@@ -18,15 +18,14 @@ class TipJarStore {
   }
 
   enum ProductID: String, CaseIterable {
-    case tip_small,
-      tip_medium,
-      tip_large
+    case tip_small, tip_medium, tip_large, tip_xlarge
 
     var emoji: String {
       switch self {
       case .tip_small: "☕"
       case .tip_medium: "🙌"
-      case .tip_large: "💸"
+      case .tip_large: "🤩"
+      case .tip_xlarge: "💰"
       }
     }
   }

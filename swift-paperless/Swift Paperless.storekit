@@ -9,40 +9,45 @@
       }
     ]
   },
-  "identifier" : "7A580E54",
+  "identifier" : "FEE3F56F",
   "nonRenewingSubscriptions" : [
 
   ],
   "products" : [
     {
-      "displayPrice" : "4.99",
+      "displayPrice" : "44.99",
       "familyShareable" : false,
-      "internalID" : "8074B1B0",
+      "internalID" : "6758055909",
       "localizations" : [
         {
-          "description" : "Keeps me pleasantly caffeinated",
-          "displayName" : "Coffee money",
+          "description" : "I may tell stories about you",
+          "displayName" : "Legendary generosity",
           "locale" : "en_US"
-        },
-        {
-          "description" : "",
-          "displayName" : "x",
-          "locale" : "da"
-        },
-        {
-          "description" : "",
-          "displayName" : "x",
-          "locale" : "nl"
         }
       ],
-      "productID" : "tip_small",
-      "referenceName" : "Small Tip",
+      "productID" : "tip_xlarge",
+      "referenceName" : "Extra Large Tip",
       "type" : "Consumable"
     },
     {
-      "displayPrice" : "9.99",
+      "displayPrice" : "17.99",
       "familyShareable" : false,
-      "internalID" : "5B643797",
+      "internalID" : "6758055862",
+      "localizations" : [
+        {
+          "description" : "You’re officially making my day",
+          "displayName" : "Above and beyond",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_large",
+      "referenceName" : "Large Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "8.99",
+      "familyShareable" : false,
+      "internalID" : "6758055854",
       "localizations" : [
         {
           "description" : "This genuinely means a lot",
@@ -55,27 +60,30 @@
       "type" : "Consumable"
     },
     {
-      "displayPrice" : "19.99",
+      "displayPrice" : "3.99",
       "familyShareable" : false,
-      "internalID" : "36E96362",
+      "internalID" : "6758055849",
       "localizations" : [
         {
-          "description" : "I may tell stories about you",
-          "displayName" : "Legendary generosity",
+          "description" : "Keeps me pleasantly caffeinated",
+          "displayName" : "Coffee money",
           "locale" : "en_US"
         }
       ],
-      "productID" : "tip_large",
-      "referenceName" : "Large Tip",
+      "productID" : "tip_small",
+      "referenceName" : "Small Tip",
       "type" : "Consumable"
     }
   ],
   "settings" : {
+    "_applicationInternalID" : "6448698521",
     "_askToBuyEnabled" : false,
     "_billingGracePeriodEnabled" : false,
     "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "ZHKJ4NHK6F",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 790623950.95388198,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
