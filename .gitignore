@@ -12,6 +12,7 @@ venv
 
 *.xcloc
 swift-paperless.xcodeproj/project.xcworkspace/xcuserdata/*
+swift-paperless.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 *.afdesign~lock~
 swift-paperless.xcodeproj/xcuserdata
 .env
