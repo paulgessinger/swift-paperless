@@ -18,9 +18,7 @@ let package = Package(
   ],
   dependencies: [
     .package(path: "../Common"),
-    .package(
-      url: "https://github.com/qizh/MetaCodable",
-      revision: "44558a51537794a3eb59639048f2073aaed4c7e5"),
+    .package(url: "https://github.com/SwiftyLab/MetaCodable", exact: "1.6.0"),
     .package(url: "https://github.com/pointfreeco/swift-case-paths", exact: "1.7.2"),
   ],
   targets: [
