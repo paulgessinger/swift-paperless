@@ -170,7 +170,9 @@ def translate_text(
     retry_reason: str | None = None
 
     for attempt in range(MAX_SUBTITLE_RETRIES if file_type == "subtitle.txt" else 1):
-        prompt = get_translation_prompt(content, target_language, file_type, retry_reason)
+        prompt = get_translation_prompt(
+            content, target_language, file_type, retry_reason
+        )
         response = model.prompt(prompt)
         translated = response.text().strip()
 
@@ -208,7 +210,9 @@ def translate_file(
         return True, "would translate"
 
     # Translate
-    translated, error = translate_text(model, content, target_language, source_file.name)
+    translated, error = translate_text(
+        model, content, target_language, source_file.name
+    )
 
     if error:
         return False, f"[red]FAILED: {error}[/red]"
