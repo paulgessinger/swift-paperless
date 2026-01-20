@@ -8,7 +8,7 @@
 # ]
 # ///
 """
-Translate fastlane metadata files using the llm library.
+Translate fastlane metadata and StoreKit files using the llm library.
 
 Usage:
     uv run translate_metadata.py [OPTIONS]
@@ -20,10 +20,11 @@ Setup:
 
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich import print as rprint
@@ -44,6 +45,7 @@ except ImportError:
 # Configuration
 METADATA_DIR = Path(__file__).parent.parent / "fastlane" / "metadata"
 SOURCE_DIR = METADATA_DIR / "default"
+STOREKIT_FILE = Path(__file__).parent.parent / "swift-paperless" / "Testing.storekit"
 
 # Files to translate (these contain localizable content)
 TRANSLATABLE_FILES = [
@@ -71,6 +73,17 @@ DEFAULT_TARGET_LANGUAGES = {
     "pl": "Polish",
     "da": "Danish",
     "tr": "Turkish",
+}
+
+# Mapping from fastlane locale codes to StoreKit locale codes
+STOREKIT_LOCALE_MAP = {
+    "de-DE": "de",
+    "fr-FR": "fr",
+    "it": "it",
+    "nl-NL": "nl",
+    "pl": "pl",
+    "da": "da",
+    "tr": "tr",
 }
 
 # Default model (configured via llm)
@@ -212,6 +225,137 @@ def translate_to_language(
     return translated_count
 
 
+def get_storekit_prompt(content: str, target_language: str, field_type: str) -> str:
+    """Generate a prompt for StoreKit product translation."""
+    context = f"This is a {field_type} for an in-app purchase product (tip jar)."
+
+    return f"""Translate the following text to {target_language}. {context}
+
+Important:
+- Do not add any explanations or notes
+- Only output the translated text
+- Keep it concise and natural for an app store product
+
+Text to translate:
+{content}"""
+
+
+def translate_storekit_text(
+    model: llm.Model, content: str, target_language: str, field_type: str
+) -> str:
+    """Translate StoreKit product text using the LLM model."""
+    prompt = get_storekit_prompt(content, target_language, field_type)
+    response = model.prompt(prompt)
+    return response.text().strip()
+
+
+def translate_storekit(
+    model: llm.Model | None,
+    target_languages: dict[str, str],
+    config: TranslationConfig,
+) -> int:
+    """Translate StoreKit product localizations."""
+    if not STOREKIT_FILE.exists():
+        rprint(f"[yellow]Warning:[/yellow] StoreKit file not found: {STOREKIT_FILE}")
+        return 0
+
+    # Read the StoreKit file
+    with open(STOREKIT_FILE) as f:
+        storekit_data: dict[str, Any] = json.load(f)
+
+    products = storekit_data.get("products", [])
+    if not products:
+        rprint("[yellow]Warning:[/yellow] No products found in StoreKit file")
+        return 0
+
+    translated_count = 0
+
+    for product in products:
+        product_name = product.get("referenceName", product.get("productID", "unknown"))
+        localizations: list[dict[str, str]] = product.get("localizations", [])
+
+        # Find English source
+        en_loc = next(
+            (loc for loc in localizations if loc.get("locale") == "en_US"), None
+        )
+        if not en_loc:
+            if config.verbose or config.dry_run:
+                rprint(f"  [dim]{product_name}: skipped (no English source)[/dim]")
+            continue
+
+        source_name = en_loc.get("displayName", "")
+        source_desc = en_loc.get("description", "")
+
+        if not source_name:
+            if config.verbose or config.dry_run:
+                rprint(f"  [dim]{product_name}: skipped (empty displayName)[/dim]")
+            continue
+
+        # Get existing locales
+        existing_locales = {loc.get("locale") for loc in localizations}
+
+        for fastlane_code, language_name in target_languages.items():
+            storekit_locale = STOREKIT_LOCALE_MAP.get(fastlane_code)
+            if not storekit_locale:
+                continue
+
+            # Check if already exists
+            if storekit_locale in existing_locales and not config.overwrite:
+                if config.verbose or config.dry_run:
+                    rprint(
+                        f"  [dim]{product_name} ({storekit_locale}): skipped (exists)[/dim]"
+                    )
+                continue
+
+            if config.dry_run:
+                rprint(
+                    f"  [green]{product_name} ({storekit_locale}): would translate[/green]"
+                )
+                translated_count += 1
+                continue
+
+            # Translate
+            translated_name = translate_storekit_text(
+                model, source_name, language_name, "product display name"
+            )
+            translated_desc = ""
+            if source_desc:
+                translated_desc = translate_storekit_text(
+                    model, source_desc, language_name, "product description"
+                )
+
+            # Update or add localization
+            existing_loc = next(
+                (loc for loc in localizations if loc.get("locale") == storekit_locale),
+                None,
+            )
+            if existing_loc:
+                existing_loc["displayName"] = translated_name
+                existing_loc["description"] = translated_desc
+            else:
+                localizations.append(
+                    {
+                        "description": translated_desc,
+                        "displayName": translated_name,
+                        "locale": storekit_locale,
+                    }
+                )
+
+            if config.verbose or config.dry_run:
+                rprint(
+                    f"  [green]{product_name} ({storekit_locale}): translated[/green]"
+                )
+            translated_count += 1
+
+    # Write back the file
+    if not config.dry_run and translated_count > 0:
+        with open(STOREKIT_FILE, "w") as f:
+            json.dump(storekit_data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+
+    return translated_count
+
+
 def parse_languages(lang_strings: list[str]) -> dict[str, str]:
     """Parse language string into dict of locale_code -> language_name."""
     languages = {}
@@ -298,7 +442,7 @@ def translate(
         ),
     ] = False,
 ) -> None:
-    """Translate metadata files to target languages."""
+    """Translate fastlane metadata files to target languages."""
     # Check source directory
     if not SOURCE_DIR.exists():
         rprint(
@@ -386,11 +530,113 @@ def translate(
         )
 
 
+@app.command("storekit")
+def storekit_cmd(
+    languages: Annotated[
+        list[str],
+        typer.Option(
+            "--languages",
+            "-l",
+            help="Target languages (locale codes or names)",
+        ),
+    ] = ["de-DE", "fr-FR", "it", "nl-NL", "pl", "da", "tr"],
+    model: Annotated[
+        str,
+        typer.Option(
+            "--model",
+            "-m",
+            help="LLM model alias to use",
+        ),
+    ] = DEFAULT_MODEL,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            "-n",
+            help="Preview translations without writing files",
+        ),
+    ] = False,
+    overwrite: Annotated[
+        bool,
+        typer.Option(
+            "--overwrite",
+            "-f",
+            help="Overwrite existing translations",
+        ),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Show detailed progress",
+        ),
+    ] = False,
+) -> None:
+    """Translate StoreKit product localizations only."""
+    # Parse target languages
+    if languages:
+        target_languages = parse_languages(languages)
+    else:
+        target_languages = DEFAULT_TARGET_LANGUAGES.copy()
+
+    if not target_languages:
+        rprint("[red]Error:[/red] No valid target languages specified")
+        raise typer.Exit(1)
+
+    config = TranslationConfig(
+        target_languages=target_languages,
+        model_name=model,
+        dry_run=dry_run,
+        verbose=verbose,
+        overwrite=overwrite,
+    )
+
+    # Display configuration
+    lang_list = ", ".join(
+        f"[cyan]{n}[/cyan] ({c})" for c, n in target_languages.items()
+    )
+    panel_content = f"""[bold]StoreKit file:[/bold] {STOREKIT_FILE}
+[bold]Languages:[/bold] {lang_list}
+[bold]Model:[/bold] [cyan]{config.model_name}[/cyan]"""
+
+    if config.dry_run:
+        panel_content += "\n[yellow](Dry run - no files will be written)[/yellow]"
+
+    console.print(
+        Panel(panel_content, title="StoreKit Translation", border_style="magenta")
+    )
+
+    # Set up the model
+    llm_model: llm.Model | None = None
+    if not config.dry_run:
+        with console.status("[bold green]Loading model..."):
+            llm_model = get_model(config.model_name)
+        rprint(f"[green]Using model:[/green] [cyan]{config.model_name}[/cyan]\n")
+
+    # Translate StoreKit products
+    if verbose or config.dry_run:
+        rprint("[bold magenta]StoreKit Products:[/bold magenta]")
+
+    storekit_count = translate_storekit(llm_model, target_languages, config)
+
+    # Summary
+    rprint()
+    if storekit_count > 0:
+        rprint(
+            f"[green]Done![/green] Translated [bold]{storekit_count}[/bold] StoreKit product localization(s)."
+        )
+    else:
+        rprint(
+            "[yellow]No products were translated.[/yellow] Use [cyan]--overwrite[/cyan] to replace existing translations."
+        )
+
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
 ) -> None:
-    """Translate fastlane metadata using llm."""
+    """Translate fastlane metadata and StoreKit files using llm."""
     if ctx.invoked_subcommand is None:
         # Default to translate command
         ctx.invoke(translate)
