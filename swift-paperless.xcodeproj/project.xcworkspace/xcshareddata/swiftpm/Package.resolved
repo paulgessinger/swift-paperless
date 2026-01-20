@@ -1,5 +1,5 @@
 {
-  "originHash" : "30f283bdecbd93029cd24c06bfa83f1cd06fafbf580e20f6de7e4e92d60bbcb7",
+  "originHash" : "386a8bfcedacb95078e51ee68c7c5ca764caa98f17222a40f72f4b20fc9f6c28",
   "pins" : [
     {
       "identity" : "bezelkit",
@@ -13,9 +13,10 @@
     {
       "identity" : "metacodable",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/qizh/MetaCodable",
+      "location" : "https://github.com/SwiftyLab/MetaCodable",
       "state" : {
-        "revision" : "44558a51537794a3eb59639048f2073aaed4c7e5"
+        "revision" : "c2a6cc907e2f95463ba8f2b55432bd2aee8a4bfd",
+        "version" : "1.6.0"
       }
     },
     {
@@ -50,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "revision" : "41982a3656a71c768319979febd796c6fd111d5c",
-        "version" : "1.5.0"
+        "revision" : "c5d11a805e765f52ba34ec7284bd4fcd6ba68615",
+        "version" : "1.7.0"
       }
     },
     {
