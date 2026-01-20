@@ -108,19 +108,30 @@ class TranslationConfig:
     overwrite: bool
 
 
-def get_translation_prompt(content: str, target_language: str, file_type: str) -> str:
+def get_translation_prompt(
+    content: str, target_language: str, file_type: str, retry_reason: str | None = None
+) -> str:
     """Generate a prompt for translation."""
     context = ""
+    constraints = ""
+
     if file_type == "description.txt":
         context = "This is an App Store description for a document management iOS app."
     elif file_type == "subtitle.txt":
-        context = "This is an App Store subtitle (max 30 characters)."
+        context = "This is an App Store subtitle."
+        constraints = """
+- CRITICAL: The translation MUST be 30 characters or fewer (including spaces)
+- Be concise - abbreviate or simplify if needed to fit the limit"""
     elif file_type == "keywords.txt":
         context = (
             "These are App Store keywords, comma-separated. Keep them comma-separated."
         )
     elif file_type == "release_notes.txt":
         context = "These are release notes for an app update. Each line starting with '-' is a separate item."
+
+    retry_note = ""
+    if retry_reason:
+        retry_note = f"\n\nPREVIOUS ATTEMPT FAILED: {retry_reason}\nPlease try again with a shorter translation.\n"
 
     return f"""Translate the following text to {target_language}. {context}
 
@@ -129,7 +140,7 @@ Important:
 - Do not add any explanations or notes
 - Only output the translated text
 - Keep technical terms like "Paperless-ngx", "SwiftPaperless", "iOS" unchanged
-- For keywords, keep them comma-separated
+- For keywords, keep them comma-separated{constraints}{retry_note}
 
 Text to translate:
 {content}"""
@@ -148,13 +159,30 @@ def get_model(model_name: str) -> llm.Model:
         raise typer.Exit(1)
 
 
+MAX_SUBTITLE_LENGTH = 30
+MAX_SUBTITLE_RETRIES = 3
+
+
 def translate_text(
     model: llm.Model, content: str, target_language: str, file_type: str
-) -> str:
-    """Translate text using the LLM model."""
-    prompt = get_translation_prompt(content, target_language, file_type)
-    response = model.prompt(prompt)
-    return response.text().strip()
+) -> tuple[str, str | None]:
+    """Translate text using the LLM model. Returns (translation, error_message)."""
+    retry_reason: str | None = None
+
+    for attempt in range(MAX_SUBTITLE_RETRIES if file_type == "subtitle.txt" else 1):
+        prompt = get_translation_prompt(content, target_language, file_type, retry_reason)
+        response = model.prompt(prompt)
+        translated = response.text().strip()
+
+        # Validate subtitle length
+        if file_type == "subtitle.txt" and len(translated) > MAX_SUBTITLE_LENGTH:
+            retry_reason = f"Translation was {len(translated)} characters (max {MAX_SUBTITLE_LENGTH}): '{translated}'"
+            continue
+
+        return translated, None
+
+    # Failed after retries
+    return translated, f"exceeds {MAX_SUBTITLE_LENGTH} chars ({len(translated)})"
 
 
 def translate_file(
@@ -180,7 +208,10 @@ def translate_file(
         return True, "would translate"
 
     # Translate
-    translated = translate_text(model, content, target_language, source_file.name)
+    translated, error = translate_text(model, content, target_language, source_file.name)
+
+    if error:
+        return False, f"[red]FAILED: {error}[/red]"
 
     # Write to target
     target_file.write_text(translated + "\n")
@@ -216,8 +247,12 @@ def translate_to_language(
             )
 
             if config.verbose or config.dry_run:
-                status_color = "green" if success else "dim"
-                rprint(f"  [{status_color}]{file_name}: {status}[/{status_color}]")
+                if success:
+                    rprint(f"  [green]{file_name}: {status}[/green]")
+                elif "FAILED" in status:
+                    rprint(f"  {file_name}: {status}")
+                else:
+                    rprint(f"  [dim]{file_name}: {status}[/dim]")
 
             if success:
                 translated_count += 1
