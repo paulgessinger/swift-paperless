@@ -115,6 +115,7 @@ struct SettingsView: View {
         TipJarView()
       } label: {
         Label(localized: .settings(.tipJarTitle), systemImage: "heart.fill")
+          .labelStyle(.iconTint(.red))
       }
 
       NavigationLink {

@@ -155,13 +155,6 @@ struct TipJarView: View {
       message: { alert in
         Text(alert.message)
       })
-
-    //    .alert(item: $store.alert) { alert in
-    //      Alert(
-    //        title: Text(alert.title),
-    //        message: Text(alert.message),
-    //        dismissButton: .default(Text(.localizable(.ok))))
-    //    }
   }
 
   @ViewBuilder
