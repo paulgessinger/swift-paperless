@@ -21,6 +21,15 @@ target_size = [1206, 2622]
 mask_corner_radius = 150
 mask_margin = 0
 
+[[devices]]
+name = "iPhone_17_Pro_Max"
+frame = "fastlane/screenshots/frames/iPhone 17 Pro Max - Silver - Portrait.png"
+offset = [74, 68]
+post_offset = [0, 400]
+target_size = [1320, 2868]
+mask_corner_radius = 150
+mask_margin = 0
+
 [[screens]]
 device_pattern = ".*"
 screen_pattern = ".*"

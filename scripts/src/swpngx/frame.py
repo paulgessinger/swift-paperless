@@ -181,6 +181,62 @@ LANGUAGE_OVERRIDES = {
     "da-DA": "da",
     "pl-PL": "pl",
 }
+OUTPUT_LOCALE_OVERRIDES = {
+    "nb-NO": "no",
+    "nb": "no",
+    "iw-IL": "he",
+    "iw": "he",
+    "in-ID": "id",
+    "in": "id",
+    "zh-CN": "zh-Hans",
+    "zh-SG": "zh-Hans",
+    "zh-HK": "zh-Hant",
+    "zh-TW": "zh-Hant",
+}
+VALID_OUTPUT_LOCALES = {
+    "ar-SA",
+    "ca",
+    "cs",
+    "da",
+    "de-DE",
+    "el",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fi",
+    "fr-CA",
+    "fr-FR",
+    "he",
+    "hi",
+    "hr",
+    "hu",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "ms",
+    "nl-NL",
+    "no",
+    "pl",
+    "pt-BR",
+    "pt-PT",
+    "ro",
+    "ru",
+    "sk",
+    "sv",
+    "th",
+    "tr",
+    "uk",
+    "vi",
+    "zh-Hans",
+    "zh-Hant",
+    "appleTV",
+    "iMessage",
+    "default",
+}
 
 _FRAME_CONFIG: Config | None = None
 _STRING_TITLES: dict[str, dict[str, str]] | None = None
@@ -307,6 +363,18 @@ def get_language(file: Path) -> str:
     return file.parent.name
 
 
+def normalize_output_locale(locale: str) -> str:
+    normalized = locale.replace("_", "-")
+    if normalized in VALID_OUTPUT_LOCALES:
+        return normalized
+    if normalized in OUTPUT_LOCALE_OVERRIDES:
+        return OUTPUT_LOCALE_OVERRIDES[normalized]
+    base = normalized.split("-")[0]
+    if base in VALID_OUTPUT_LOCALES:
+        return base
+    raise ValueError(f"Unsupported output locale: {locale}")
+
+
 def round_rect(x, y, w, h, r, draw, **kwargs):
     d = r * 2
 
@@ -369,7 +437,8 @@ def frame(
     console.log(f"Framing {file}")
     device_name = get_device_name(file.stem)
     locale = get_language(file)
-    normalized_locale = LANGUAGE_OVERRIDES.get(locale, locale)
+    locale_normalized = locale.replace("_", "-")
+    normalized_locale = LANGUAGE_OVERRIDES.get(locale_normalized, locale_normalized)
     lang_code = normalized_locale.split("-")[0]
 
     console.log(f" - Device: {device_name} | Locale: {locale}")
@@ -467,7 +536,8 @@ def frame(
     )
     output.alpha_composite(offset_buffer)
 
-    locale_dir = output_dir / locale
+    output_locale = normalize_output_locale(locale)
+    locale_dir = output_dir / output_locale
     locale_dir.mkdir(parents=True, exist_ok=True)
     output_file = locale_dir / f"{file.stem}-framed.png"
     console.log(f"Saving to {output_file}")

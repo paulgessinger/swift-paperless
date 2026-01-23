@@ -29,9 +29,13 @@ url = "http://localhost:9988/"
 username = "admin"
 password = "admin"
 
+# [[simulators]]
+# name = "iPhone 17 Pro"
+# udid = "07ACA670-CF2B-42C2-B33A-229787FDF3B9"
+#
 [[simulators]]
-name = "iPhone 17 Pro"
-udid = "07ACA670-CF2B-42C2-B33A-229787FDF3B9"
+name = "iPhone 17 Pro Max"
+udid = "D38BC21C-2840-4B54-88C3-018011A0BE29"
 
 [[simulators]]
 name = "iPad Pro 13-inch"
