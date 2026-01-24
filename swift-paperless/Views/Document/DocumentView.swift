@@ -329,12 +329,14 @@ struct DocumentView: View {
 
         Divider()
 
-        Button(role: .destructive) {
+        Button {
           logoutRequested = true
         } label: {
           Label(
             String(localized: .localizable(.logout)),
-            systemImage: "rectangle.portrait.and.arrow.right")
+            systemImage: "rectangle.portrait.and.arrow.right"
+          )
+          .foregroundStyle(.red)
         }
 
       } label: {
@@ -573,4 +575,5 @@ struct DocumentView: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
+    .environment(RouteManager.shared)
 }
