@@ -1,0 +1,239 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "7A580E54",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "8074B1B0",
+      "localizations" : [
+        {
+          "description" : "Keeps me pleasantly caffeinated",
+          "displayName" : "Coffee money",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Versorgt mich angenehm mit Koffein.",
+          "displayName" : "Kaffeegeld",
+          "locale" : "de"
+        },
+        {
+          "description" : "Me garde agréablement caféinée",
+          "displayName" : "Pourboire café",
+          "locale" : "fr"
+        },
+        {
+          "description" : "Zorgt voor een aangename cafeïneboost",
+          "displayName" : "Koffiegeld",
+          "locale" : "nl"
+        },
+        {
+          "description" : "Keyifli bir şekilde kafeinli kalmamı sağlar.",
+          "displayName" : "Kahve Parası",
+          "locale" : "tr"
+        },
+        {
+          "description" : "Utrzymuje mnie przyjemnie w kofeinie",
+          "displayName" : "Pieniądze na kawę",
+          "locale" : "pl"
+        },
+        {
+          "description" : "Mi mantiene piacevolmente caffeinato",
+          "displayName" : "Soldi per il caffè",
+          "locale" : "it"
+        },
+        {
+          "description" : "Giver mig en behagelig kaffekick",
+          "displayName" : "Kaffepenge",
+          "locale" : "da"
+        }
+      ],
+      "productID" : "tip_small",
+      "referenceName" : "Small Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "5B643797",
+      "localizations" : [
+        {
+          "description" : "This genuinely means a lot",
+          "displayName" : "Proper thank-you",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Das bedeutet mir wirklich viel.",
+          "displayName" : "Richtiger Dank",
+          "locale" : "de"
+        },
+        {
+          "description" : "Cela compte vraiment beaucoup",
+          "displayName" : "Remerciements appropriés",
+          "locale" : "fr"
+        },
+        {
+          "description" : "Dit betekent echt veel",
+          "displayName" : "Correcte dankbetuiging",
+          "locale" : "nl"
+        },
+        {
+          "description" : "Ciò conta davvero molto",
+          "displayName" : "Ringraziamento adeguato",
+          "locale" : "it"
+        },
+        {
+          "description" : "To naprawdę ma dla mnie ogromne znaczenie",
+          "displayName" : "Odpowiednie podziękowanie",
+          "locale" : "pl"
+        },
+        {
+          "description" : "Dette betyder virkelig meget",
+          "displayName" : "Taknemmelighed",
+          "locale" : "da"
+        },
+        {
+          "description" : "Gerçekten çok değerli bir şey.",
+          "displayName" : "Uygun Teşekkür",
+          "locale" : "tr"
+        }
+      ],
+      "productID" : "tip_medium",
+      "referenceName" : "Medium Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "49.99",
+      "familyShareable" : false,
+      "internalID" : "36E96362",
+      "localizations" : [
+        {
+          "description" : "I may tell stories about you",
+          "displayName" : "Legendary generosity",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Möglicherweise erzähle ich Geschichten über dich erzählen.",
+          "displayName" : "Legendäre Großzügigkeit",
+          "locale" : "de"
+        },
+        {
+          "description" : "Je peux raconter des histoires à ton sujet.",
+          "displayName" : "Générosité légendaire",
+          "locale" : "fr"
+        },
+        {
+          "description" : "Ik kan verhalen over jou vertellen",
+          "displayName" : "Legendarische vrijgevigheid",
+          "locale" : "nl"
+        },
+        {
+          "description" : "Posso raccontare storie su di te",
+          "displayName" : "Generosità leggendaria",
+          "locale" : "it"
+        },
+        {
+          "description" : "Mogę opowiadać historie o Tobie",
+          "displayName" : "Legendarna hojność",
+          "locale" : "pl"
+        },
+        {
+          "description" : "Jeg kan fortælle historier om dig",
+          "displayName" : "Legendarisk generøsitet",
+          "locale" : "da"
+        },
+        {
+          "description" : "Senin hakkında hikayeler anlatabilirim.",
+          "displayName" : "Efsanevi Cömertlik",
+          "locale" : "tr"
+        }
+      ],
+      "productID" : "tip_xlarge",
+      "referenceName" : "Extra Large Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "19.99",
+      "familyShareable" : false,
+      "internalID" : "BDC8575C",
+      "localizations" : [
+        {
+          "description" : "You’re officially making my day",
+          "displayName" : "Above and beyond",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Das Highlight meines Tages!",
+          "displayName" : "Mehr als erwartet",
+          "locale" : "de"
+        },
+        {
+          "description" : "Vous me faites officiellement la journée.",
+          "displayName" : "Au delà",
+          "locale" : "fr"
+        },
+        {
+          "description" : "Je maakt officieel mijn dag.",
+          "displayName" : "Boven en verder",
+          "locale" : "nl"
+        },
+        {
+          "description" : "Mi stai rendendo la mia giornata.",
+          "displayName" : "Al di là",
+          "locale" : "it"
+        },
+        {
+          "description" : "Jesteś oficjalnie moim dniem.",
+          "displayName" : "Ponad oczekiwania",
+          "locale" : "pl"
+        },
+        {
+          "description" : "Du gør min dag.",
+          "displayName" : "Mere end forventet",
+          "locale" : "da"
+        },
+        {
+          "description" : "Günümü resmi olarak aydınlatıyorsun",
+          "displayName" : "Bundan Öteye",
+          "locale" : "tr"
+        }
+      ],
+      "productID" : "tip_large",
+      "referenceName" : "Large Tip",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

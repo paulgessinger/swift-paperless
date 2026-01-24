@@ -10,12 +10,16 @@ import SwiftUI
 private struct AlertModifier<Item: Sendable, M: View, A: View>: ViewModifier {
   @Binding var item: Item?
 
-  var title: (Binding<Item>) -> Text
-  var actions: (Binding<Item>) -> M
-  var message: ((Binding<Item>) -> A)?
+  var title: (Item) -> Text
+  var actions: (Item) -> M
+  var message: ((Item) -> A)?
 
   var titleText: Text {
-    item == nil ? Text("nil") : title(Binding($item)!)
+    if let item = Binding($item) {
+      title(item.wrappedValue)
+    } else {
+      Text("nil")
+    }
   }
 
   func body(content: Content) -> some View {
@@ -24,14 +28,14 @@ private struct AlertModifier<Item: Sendable, M: View, A: View>: ViewModifier {
         titleText, isPresented: .present($item),
         actions: {
           if let item = Binding($item) {
-            actions(item)
+            actions(item.wrappedValue)
           } else {
             EmptyView()
           }
         },
         message: {
           if let item = Binding($item) {
-            message?(item)
+            message?(item.wrappedValue)
           } else {
             EmptyView()
           }
@@ -43,17 +47,17 @@ private struct AlertModifier<Item: Sendable, M: View, A: View>: ViewModifier {
 extension View {
   func alert<Item: Sendable>(
     unwrapping item: Binding<Item?>,
-    title: @escaping (Binding<Item>) -> Text,
-    @ViewBuilder actions: @escaping (Binding<Item>) -> some View,
-    @ViewBuilder message: @escaping (Binding<Item>) -> some View
+    title: @escaping (Item) -> Text,
+    @ViewBuilder actions: @escaping (Item) -> some View,
+    @ViewBuilder message: @escaping (Item) -> some View
   ) -> some View {
     modifier(AlertModifier(item: item, title: title, actions: actions, message: message))
   }
 
   func alert<Item: Sendable>(
     unwrapping item: Binding<Item?>,
-    title: @escaping (Binding<Item>) -> Text,
-    @ViewBuilder actions: @escaping (Binding<Item>) -> some View
+    title: @escaping (Item) -> Text,
+    @ViewBuilder actions: @escaping (Item) -> some View
   ) -> some View {
     modifier(
       AlertModifier(item: item, title: title, actions: actions, message: { _ in EmptyView() }))
