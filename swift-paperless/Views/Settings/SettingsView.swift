@@ -183,12 +183,6 @@ struct SettingsView: View {
       #endif
 
       NavigationLink {
-        AppVersionView()
-      } label: {
-        Label(localized: .settings(.versionInfoLabel), systemImage: "info.bubble.fill")
-      }
-
-      NavigationLink {
         ReleaseNotesView()
       } label: {
         Label(localized: .settings(.releaseNotesLabel), systemImage: "newspaper.fill")
@@ -198,16 +192,6 @@ struct SettingsView: View {
 
   var advancedSection: some View {
     Section(String(localized: .settings(.advanced))) {
-      NavigationLink {
-        LogView()
-      } label: {
-        Label {
-          Text(.settings(.logs))
-            .accentColor(.primary)
-        } icon: {
-          Image(systemName: "text.word.spacing")
-        }
-      }
 
       NavigationLink {
         LogoChangeView()

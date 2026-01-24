@@ -888,6 +888,12 @@ extension ApiRepository: Repository {
     return firstConfig
   }
 
+  public func remoteVersion() async throws -> RemoteVersion {
+    let request = try request(.remoteVersion())
+    return try await fetchData(for: request, as: RemoteVersion.self)
+
+  }
+
   // MARK: Others
 
   public func currentUser() async throws -> User {

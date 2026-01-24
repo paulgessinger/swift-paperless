@@ -34,6 +34,12 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
+  @Test func testRemoteVersion() {
+    let endpoint = Endpoint.remoteVersion()
+    #expect(endpoint.path == "/api/remote_version")
+    #expect(endpoint.queryItems.isEmpty)
+  }
+
   @Test func testDocumentsWithPageAndRules() {
     let endpoint = Endpoint.documents(page: 2, rules: [], pageSize: 50)
     #expect(endpoint.path == "/api/documents")

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.03.23.
 //
 
+import Common
 import DataModel
 import GameplayKit
 import SwiftUI
@@ -450,6 +451,10 @@ public class PreviewRepository: Repository {
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     ServerConfiguration(id: 1, barcodeAsnPrefix: "ASN")
+  }
+
+  public func remoteVersion() async throws -> RemoteVersion {
+    RemoteVersion(version: Version(1, 2, 3), updateAvailable: true)
   }
 
   public nonisolated
