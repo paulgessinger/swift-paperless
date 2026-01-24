@@ -5,9 +5,16 @@
 //  Created by Paul Gessinger on 24.01.26.
 //
 
-enum FeatureFlags {
+import Foundation
 
-  enum Features {
+enum AppFeatures {
+  case tipJar
+
+  static func enabled(_ feature: Self) -> Bool {
+    let channel = Bundle.main.appConfiguration
+
+    return switch feature {
+    case .tipJar: channel != .AppStore
+    }
   }
-
 }

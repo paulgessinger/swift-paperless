@@ -12,8 +12,8 @@
 		7A1C32C12A5EAF1A00C18B44 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */; };
 		7A1C32C32A5EAF1A00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C22A5EAF1A00C18B44 /* NukeUI */; };
 		7A1C32C52A5EB08D00C18B44 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7A1C32C42A5EB08D00C18B44 /* NukeUI */; };
-		7A384D5F2F251598005D921F /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A384D372F251594005D921F /* FeatureFlags.swift */; };
 		7A384D602F251598005D921F /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A384D372F251594005D921F /* FeatureFlags.swift */; };
+		7A3859CF2F252EBB005D921F /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A384D372F251594005D921F /* FeatureFlags.swift */; };
 		7A4AA8EE29BB969400D845A2 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A4AA8E429BB969400D845A2 /* ShareExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7A4AA90329BE048800D845A2 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA90229BE048800D845A2 /* Flow */; };
 		7A4AA91A29BE730B00D845A2 /* Semaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A4AA91929BE730B00D845A2 /* Semaphore */; };
@@ -591,7 +591,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A384D5F2F251598005D921F /* FeatureFlags.swift in Sources */,
+				7A3859CF2F252EBB005D921F /* FeatureFlags.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

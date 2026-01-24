@@ -111,11 +111,13 @@ struct SettingsView: View {
 
   private var detailSection: some View {
     Section(String(localized: .settings(.detailsTitle))) {
-      NavigationLink {
-        TipJarView()
-      } label: {
-        Label(localized: .settings(.tipJarTitle), systemImage: "heart.fill")
-          .labelStyle(.iconTint(.red))
+      if AppFeatures.enabled(.tipJar) {
+        NavigationLink {
+          TipJarView()
+        } label: {
+          Label(localized: .settings(.tipJarTitle), systemImage: "heart.fill")
+            .labelStyle(.iconTint(.red))
+        }
       }
 
       NavigationLink {
