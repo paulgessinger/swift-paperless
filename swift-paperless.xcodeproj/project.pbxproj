@@ -159,6 +159,7 @@
 				Document/Detail/DocumentMetadataView.swift,
 				Document/DocumentEditView.swift,
 				Document/DocumentList.swift,
+				Document/DocumentListViewModel.swift,
 				Document/DocumentView.swift,
 				Document/FilterAssembly.swift,
 				Document/FilterAssemblyiOS18.swift,

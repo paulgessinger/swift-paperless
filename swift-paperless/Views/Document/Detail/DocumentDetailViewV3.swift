@@ -556,37 +556,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     .animation(.spring(duration: 0.2), value: showPropertyBar)
 
-    .gesture(
-      DragGesture(minimumDistance: 15, coordinateSpace: .global)
-        .onChanged { value in
-          dragging = true
-          Haptics.shared.prepare()
-          if dragOffset.height >= -dragThresholdUp, value.translation.height < -dragThresholdUp {
-            Haptics.shared.impact(style: .medium)
-          }
-
-          withAnimation(.interactiveSpring) {
-            dragOffset = value.translation
-          }
-        }
-        .onEnded { value in
-          if value.translation.height < -dragThresholdUp {
-            showEditSheet = true
-          }
-
-          if value.translation.height > dragThresholdDown {
-            showPropertyBar = false
-          }
-
-          let velocity =
-            (-value.translation.height < maxDragOffset)
-            ? min(max(-20, value.velocity.height), 0) : 0
-          withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
-            dragOffset = .zero
-          }
-          dragging = false
-        }
-    )
   }
 
   var body: some View {
@@ -690,11 +659,25 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 }
               }
 
-              // @TODO: Implement app deep links
-              //                            Button {
-              //                            } label: {
-              //                                Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
-              //                            }
+              Menu {
+
+                let deepLinks = viewModel.deepLinks
+
+                if let url = deepLinks.withoutServer?.url {
+                  ShareLink(item: url) {
+                    Text(.localizable(.documentDeepLinkWithoutBackend))
+                  }
+                }
+
+                if let url = deepLinks.withServer?.url {
+                  ShareLink(item: url) {
+                    Text(.localizable(.documentDeepLinkWithBackend))
+                  }
+                }
+
+              } label: {
+                Label(localized: .localizable(.documentDeepLink), systemImage: "app")
+              }
 
               if case .loaded(let url) = viewModel.download {
                 ShareLink(item: url) {
@@ -906,6 +889,7 @@ private struct PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
+    .environment(RouteManager.shared)
     .task {
       try? await store.fetchAll()
     }

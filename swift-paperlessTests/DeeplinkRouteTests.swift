@@ -843,4 +843,17 @@ struct DeeplinkRouteTests {
     }
   }
 
+  @Test func testDocumentRouteToURL() throws {
+    let route = Route(action: .document(id: 1, edit: false))
+
+    let expected = try #require(URL(string: "x-paperless://v1/document/1"))
+    #expect(route.url == expected)
+
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let route2 = Route(action: .document(id: 1, edit: false), server: serverURL.absoluteString)
+    let expected2 = try #require(
+      URL(string: "x-paperless://v1/document/1?server=https://example.com"))
+    #expect(route2.url == expected2)
+  }
+
 }
