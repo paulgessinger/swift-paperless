@@ -1,3 +1,8 @@
+1.9.0 (177)
+
+- Enable sharing a deep link to the app from a document
+- Disable drag gesture on the document detail view (some users are reporting issues)
+
 1.9.0 (176)
 
 - Fix bug parsing monetary custom field value like `0.0` (single digit after decimal point).
