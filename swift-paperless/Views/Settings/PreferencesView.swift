@@ -65,6 +65,12 @@ struct PreferencesView: View {
       } footer: {
         Text(.settings(.defaultSearchModeDescription))
       }
+
+      NavigationLink {
+        FilterBarConfigView()
+      } label: {
+        Text(.settings(.filterConfiguration))
+      }
     }
     .navigationTitle(Text(.settings(.preferences)))
     .navigationBarTitleDisplayMode(.inline)
