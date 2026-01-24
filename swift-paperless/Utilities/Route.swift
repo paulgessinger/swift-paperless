@@ -9,6 +9,7 @@ import DataModel
 import Foundation
 
 public struct Route: Equatable, Sendable {
+  public static let scheme = "x-paperless"
 
   /// Captures filter parameters from deep link URLs
   /// All properties are optional - nil means don't change that filter
@@ -64,6 +65,11 @@ public struct Route: Equatable, Sendable {
 
   public let action: Action
   public let server: String?
+
+  public init(action: Action, server: String? = nil) {
+    self.action = action
+    self.server = server
+  }
 
   public init(from url: URL) throws {
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
@@ -557,4 +563,27 @@ public struct Route: Equatable, Sendable {
     }
   }
 
+  var url: URL? {
+    guard case .document(let id, let edit) = action else {
+      return nil
+    }
+
+    var components = URLComponents()
+    components.scheme = Self.scheme
+    components.host = "v1"
+    components.path = "/document/\(id)"
+
+    var queryItems = [URLQueryItem]()
+    if edit {
+      queryItems.append(URLQueryItem(name: "edit", value: "1"))
+    }
+    if let server {
+      queryItems.append(URLQueryItem(name: "server", value: server))
+    }
+    if !queryItems.isEmpty {
+      components.queryItems = queryItems
+    }
+
+    return components.url
+  }
 }

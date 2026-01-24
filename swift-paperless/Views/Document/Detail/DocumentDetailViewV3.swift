@@ -690,11 +690,25 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 }
               }
 
-              // @TODO: Implement app deep links
-              //                            Button {
-              //                            } label: {
-              //                                Label(localized: .localizable(.shareAppLink), systemImage: "arrow.up.forward.app")
-              //                            }
+              Menu {
+
+                let deepLinks = viewModel.deepLinks
+
+                if let url = deepLinks.withoutServer?.url {
+                  ShareLink(item: url) {
+                    Text(.localizable(.documentDeepLinkWithoutBackend))
+                  }
+                }
+
+                if let url = deepLinks.withServer?.url {
+                  ShareLink(item: url) {
+                    Text(.localizable(.documentDeepLinkWithBackend))
+                  }
+                }
+
+              } label: {
+                Label(localized: .localizable(.documentDeepLink), systemImage: "app")
+              }
 
               if case .loaded(let url) = viewModel.download {
                 ShareLink(item: url) {
@@ -906,6 +920,7 @@ private struct PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
+    .environment(RouteManager.shared)
     .task {
       try? await store.fetchAll()
     }

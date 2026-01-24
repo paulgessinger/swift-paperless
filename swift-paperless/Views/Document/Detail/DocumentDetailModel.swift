@@ -124,4 +124,16 @@ class DocumentDetailModel {
     guard let connection else { return nil }
     return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
+
+  var deepLinks: (withServer: Route?, withoutServer: Route?) {
+    let withServer: Route? = (store.repository as? ApiRepository).flatMap {
+      let serverURL = $0.connection.url
+      guard let server = serverURL.stringDroppingScheme else { return nil }
+      return Route(action: .document(id: document.id, edit: false), server: server)
+    }
+
+    let withoutServer: Route? = Route(action: .document(id: document.id, edit: false))
+    return (withServer, withoutServer)
+
+  }
 }
