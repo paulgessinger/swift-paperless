@@ -1,1 +1,2 @@
 - Enable sharing a deep link to the app from a document
+- Disable drag gesture on the document detail view (some users are reporting issues)

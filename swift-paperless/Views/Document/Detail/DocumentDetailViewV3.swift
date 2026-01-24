@@ -556,37 +556,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
     .animation(.spring(duration: 0.2), value: showPropertyBar)
 
-    .gesture(
-      DragGesture(minimumDistance: 15, coordinateSpace: .global)
-        .onChanged { value in
-          dragging = true
-          Haptics.shared.prepare()
-          if dragOffset.height >= -dragThresholdUp, value.translation.height < -dragThresholdUp {
-            Haptics.shared.impact(style: .medium)
-          }
-
-          withAnimation(.interactiveSpring) {
-            dragOffset = value.translation
-          }
-        }
-        .onEnded { value in
-          if value.translation.height < -dragThresholdUp {
-            showEditSheet = true
-          }
-
-          if value.translation.height > dragThresholdDown {
-            showPropertyBar = false
-          }
-
-          let velocity =
-            (-value.translation.height < maxDragOffset)
-            ? min(max(-20, value.velocity.height), 0) : 0
-          withAnimation(.interpolatingSpring(initialVelocity: velocity)) {
-            dragOffset = .zero
-          }
-          dragging = false
-        }
-    )
   }
 
   var body: some View {
