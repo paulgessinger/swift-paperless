@@ -144,6 +144,7 @@ public protocol Repository: Sendable {
   // MARK: Server configuration
 
   func serverConfiguration() async throws -> ServerConfiguration
+  func remoteVersion() async throws -> RemoteVersion
 
   // MARK: - Share links
 

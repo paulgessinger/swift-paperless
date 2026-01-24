@@ -101,6 +101,10 @@ extension Endpoint {
       path: "/api/\(segment)/\(id)",
       queryItems: [])
   }
+
+  public static func remoteVersion() -> Endpoint {
+    Endpoint(path: "/api/remote_version")
+  }
 }
 
 // MARK: - Document related endpoints

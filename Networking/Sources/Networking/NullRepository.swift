@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.05.2024.
 //
 
+import Common
 import DataModel
 import SwiftUI
 
@@ -101,6 +102,10 @@ public class NullRepository: Repository {
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     ServerConfiguration(id: 0, barcodeAsnPrefix: nil)
+  }
+
+  public func remoteVersion() async throws -> RemoteVersion {
+    RemoteVersion(version: Version(1, 2, 3), updateAvailable: true)
   }
 
   public func currentUser() async throws -> User {

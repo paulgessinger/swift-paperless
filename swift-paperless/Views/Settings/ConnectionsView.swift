@@ -57,7 +57,6 @@ struct ConnectionSelectionMenu: View {
           .labelStyle(.iconOnly)
           .foregroundStyle(.gray)
         }
-        //            .frame(maxWidth: .infinity)
       }
     }
   }
@@ -74,6 +73,7 @@ struct ConnectionsView: View {
   @State private var logoutRequested = false
 
   @State private var backendVersion: Version?
+  @State private var updateAvailable = false
 
   @State private var showExtraHeader = false
 
@@ -139,10 +139,14 @@ struct ConnectionsView: View {
           }
         }
 
+        if let backendVersion {
+          BackendVersionView(backendVersion: backendVersion, updateAvailable: updateAvailable)
+        }
+
+        LabeledContent(.settings(.activeServerUsername), value: stored.user.username)
+
         LabeledContent(
-          String(localized: .settings(.activeServerUsername)), value: stored.user.username)
-        LabeledContent(
-          String(localized: .settings(.activeIdentity)),
+          .settings(.activeIdentity),
           value: stored.identity ?? String(localized: .login(.noIdentity)))
 
         NavigationLink {
@@ -210,6 +214,7 @@ struct ConnectionsView: View {
           let repository = try await ApiRepository(
             connection: stored.connection, mode: Bundle.main.appConfiguration.mode)
           backendVersion = repository.backendVersion
+          updateAvailable = try await repository.remoteVersion().updateAvailable
         } catch {
           Logger.shared.error("Could not make ApiRepository for settings display: \(error)")
         }
@@ -229,5 +234,39 @@ struct ConnectionQuickChangeMenu: View {
         Label(localized: .settings(.activeServer), systemImage: "server.rack")
       }
     }
+  }
+}
+
+private
+  struct BackendVersionView: View
+{
+
+  let backendVersion: Version
+  let updateAvailable: Bool
+
+  private let releases = #URL("https://github.com/paperless-ngx/paperless-ngx/releases")
+
+  var body: some View {
+    LabeledContent {
+      Text(backendVersion.description)
+    } label: {
+      Text(.settings(.backendVersion))
+      if updateAvailable {
+        Link(destination: releases) {
+          HStack {
+            Image(systemName: "arrow.up.circle.fill")
+            Text(.settings(.updateAvailable))
+          }
+          .foregroundStyle(.green)
+        }
+      }
+    }
+  }
+}
+
+#Preview {
+  Form {
+    BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: false)
+    BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: true)
   }
 }

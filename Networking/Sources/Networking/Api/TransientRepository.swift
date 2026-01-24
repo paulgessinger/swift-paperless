@@ -1,3 +1,4 @@
+import Common
 import DataModel
 import Foundation
 import SwiftUI
@@ -382,6 +383,10 @@ extension TransientRepository: Repository {
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     ServerConfiguration(id: 1, barcodeAsnPrefix: nil)
+  }
+
+  public func remoteVersion() async throws -> RemoteVersion {
+    RemoteVersion(version: Version(1, 2, 3), updateAvailable: true)
   }
 
   // This is not part of the `Repository` protocol, but it's useful for testing
