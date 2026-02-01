@@ -1,3 +1,3 @@
-SwiftPaperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!
+Swift Paperless is a native iOS app that interacts with the popular Paperless-ngx document management software. Paperless-ngx is self-hosted, and therefore fully privacy preserving: you control your data!
 
-With SwiftPaperless, it's easy to find, categorize and also add documents from your phone!
+With Swift Paperless, it's easy to find, categorize and also add documents from your phone!

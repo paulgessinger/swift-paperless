@@ -13,7 +13,6 @@
 import multiprocessing
 import os
 import re
-import textwrap
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Annotated, Optional
@@ -30,6 +29,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
     import tomli as tomllib
 
 from swpngx.string_catalog import load as load_string_catalog
+from swpngx.text_wrap import TextWrapConfig, calculate_text_max_width, wrap_text_pixel
 
 console = Console()
 
@@ -81,7 +81,9 @@ class ScreenStyle(BaseModel):
     text_color_internal: str | None = Field(default=None, alias="text_color")
     text_offset_internal: Point | None = Field(default=None, alias="text_offset")
     text_size_internal: int | None = Field(default=None, alias="text_size")
-    text_wrap_internal: int | None = Field(default=None, alias="text_wrap")
+    text_max_width_internal: int | None = Field(default=None, alias="text_max_width")
+    text_margin_internal: int | None = Field(default=None, alias="text_margin")
+    text_hyphenate_internal: bool | None = Field(default=None, alias="text_hyphenate")
     font_spacing_internal: int | None = Field(default=None, alias="font_spacing")
     shadow_color_internal: str | None = Field(default=None, alias="shadow_color")
 
@@ -102,8 +104,20 @@ class ScreenStyle(BaseModel):
         return self.text_size_internal or 100
 
     @property
-    def text_wrap(self) -> int | None:
-        return self.text_wrap_internal
+    def text_max_width(self) -> int | None:
+        return self.text_max_width_internal
+
+    @property
+    def text_margin(self) -> int:
+        return self.text_margin_internal or 60
+
+    @property
+    def text_hyphenate(self) -> bool:
+        return (
+            self.text_hyphenate_internal
+            if self.text_hyphenate_internal is not None
+            else True
+        )
 
     @property
     def font_spacing(self) -> int:
@@ -123,7 +137,14 @@ class ScreenStyle(BaseModel):
             text_color=other.text_color_internal or self.text_color_internal,
             text_offset=other.text_offset_internal or self.text_offset_internal,
             text_size=other.text_size_internal or self.text_size_internal,
-            text_wrap=other.text_wrap_internal or self.text_wrap_internal,
+            text_max_width=other.text_max_width_internal
+            or self.text_max_width_internal,
+            text_margin=other.text_margin_internal or self.text_margin_internal,
+            text_hyphenate=(
+                other.text_hyphenate_internal
+                if other.text_hyphenate_internal is not None
+                else self.text_hyphenate_internal
+            ),
             font_spacing=other.font_spacing_internal or self.font_spacing_internal,
             shadow_color=other.shadow_color_internal or self.shadow_color_internal,
         )
@@ -491,8 +512,24 @@ def frame(
             console.log(f"[red]Missing localization for {title_key} ({lang_code})")
             raise KeyError(f"{title_key}:{lang_code}")
         title = titles[title_key][lang_code]
-        if wrap_size := screen_style.text_wrap:
-            title = "\n".join(textwrap.wrap(title, wrap_size))
+
+        # Calculate max width (explicit or auto from image dimensions)
+        text_max_width = screen_style.text_max_width or calculate_text_max_width(
+            image_width=output.size[0],
+            text_offset_x=screen_style.text_offset.x,
+            text_margin=screen_style.text_margin,
+        )
+
+        # Pixel-based wrapping with hyphenation
+        wrap_config = TextWrapConfig(
+            max_width=text_max_width,
+            hyphenate=screen_style.text_hyphenate,
+        )
+        wrapped_lines = wrap_text_pixel(
+            title, font, wrap_config, locale=normalized_locale
+        )
+        title = "\n".join(line.text for line in wrapped_lines)
+
         text_buffer_draw.multiline_text(
             [*screen_style.text_offset],
             title,

@@ -14,6 +14,7 @@ dependencies = [
     "Pillow",
     "pydantic>=2",
     "pypaperless",
+    "pyphen>=0.14",
     "rich",
     "typer",
     "tomli; python_version < '3.11'",
