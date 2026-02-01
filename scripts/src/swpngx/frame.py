@@ -296,10 +296,6 @@ def frame_worker(file: Path) -> None:
     frame(file, _FRAME_CONFIG, _OUTPUT_DIR, _STRING_TITLES, _FONT_FILE)
 
 
-app = typer.Typer(no_args_is_help=True, help="Screenshot framing tool")
-
-
-@app.command()
 def main(
     config_file: Annotated[
         Path, typer.Option("--config", exists=True, dir_okay=False)
