@@ -14,7 +14,7 @@ enum AppFeatures {
     let channel = Bundle.main.appConfiguration
 
     return switch feature {
-    case .tipJar: false // disable for now until ready
+    case .tipJar: false  // disable for now until ready
     }
   }
 }
