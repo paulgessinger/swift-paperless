@@ -237,9 +237,7 @@ struct ConnectionQuickChangeMenu: View {
   }
 }
 
-private
-  struct BackendVersionView: View
-{
+private struct BackendVersionView: View {
 
   let backendVersion: Version
   let updateAvailable: Bool
@@ -251,22 +249,30 @@ private
       Text(backendVersion.description)
     } label: {
       Text(.settings(.backendVersion))
-      if updateAvailable {
-        Link(destination: releases) {
-          HStack {
-            Image(systemName: "arrow.up.circle.fill")
-            Text(.settings(.updateAvailable))
-          }
-          .foregroundStyle(.green)
+      Link(destination: releases) {
+        HStack {
+          Image(systemName: "arrow.up.circle.fill")
+          Text(.settings(.updateAvailable))
         }
+        .foregroundStyle(.green)
       }
+      .opacity(updateAvailable ? 1 : 0)
     }
+    .animation(.default, value: updateAvailable)
   }
 }
 
 #Preview {
+  @Previewable @State var updateAvailable = false
+
   Form {
     BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: false)
+    BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: updateAvailable)
     BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: true)
+  }
+
+  .task {
+    try? await Task.sleep(for: .seconds(1))
+    updateAvailable = true
   }
 }
