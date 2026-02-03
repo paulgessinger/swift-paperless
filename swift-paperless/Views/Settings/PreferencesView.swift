@@ -27,6 +27,19 @@ struct PreferencesView: View {
         Text(.settings(.showDocumentDetailPropertyBarDescription))
       }
 
+      Section {
+        Toggle(
+          String(localized: .settings(.scannerFlashLabel)),
+          isOn: $appSettings.scannerFlashEnabled
+        )
+        Toggle(
+          String(localized: .settings(.scannerAutoscanLabel)),
+          isOn: $appSettings.scannerAutoscanEnabled
+        )
+      } header: {
+        Text(.settings(.scannerSectionHeader))
+      }
+
       if let biometricName = BiometricLockManager.biometricName {
         Section {
           Toggle(
