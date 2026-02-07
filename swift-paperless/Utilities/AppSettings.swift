@@ -21,6 +21,9 @@ enum SettingsKeys: String {
   case editingUserInterfaceExperiment
 
   case showDocumentDetailPropertyBar
+
+  case scannerFlashEnabled
+  case scannerAutoscanEnabled
 }
 
 extension PublishedUserDefaultsBacked {
@@ -108,6 +111,12 @@ class AppSettings: ObservableObject {
 
   @PublishedUserDefaultsBacked(.showDocumentDetailPropertyBar)
   var showDocumentDetailPropertyBar: Bool = true
+
+  @PublishedUserDefaultsBacked(.scannerFlashEnabled)
+  var scannerFlashEnabled = false
+
+  @PublishedUserDefaultsBacked(.scannerAutoscanEnabled)
+  var scannerAutoscanEnabled = true
 
   var lastAppVersion: AppVersion?
   @UserDefaultsBacked(appVersionKey)
