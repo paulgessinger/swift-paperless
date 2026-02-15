@@ -166,7 +166,7 @@ extension TransientRepository: Repository {
       asn: document.asn,
       documentType: document.documentType,
       correspondent: document.correspondent,
-      created: document.created,
+      created: document.created ?? .now,
       tags: document.tags,
       added: .now,
       modified: .now,
