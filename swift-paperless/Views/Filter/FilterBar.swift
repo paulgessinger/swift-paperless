@@ -835,8 +835,8 @@ struct FilterBar: View {
 
         SortMenu(filterState: $filterState)
       }
+      .padding(.horizontal)
     }
-    .padding(.horizontal)
     .animation(.default, value: filterModel.filterState)
   }
 
