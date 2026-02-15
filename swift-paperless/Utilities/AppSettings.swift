@@ -94,6 +94,7 @@ class AppSettings: ObservableObject {
   // @TODO: We need a sentinel here that's just "all defaults"
   @PublishedUserDefaultsBacked(.filterBarConfiguration)
   var filterBarConfiguration = FilterBarConfiguration.default
+
   enum EditingUserInterface: String, Codable, CaseIterable {
     static var allCases: [AppSettings.EditingUserInterface] {
       [.automatic, .v3]
