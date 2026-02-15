@@ -27,19 +27,15 @@ plugins:
   - literate-nav
   - redirects:
       redirect_maps:
-        "common-issues/forbidden.md": "common_issues/forbidden.md"
         "common-issues/invalid-certificate.md": "common_issues/certificates.md"
         "common_issues/invalid-certificate.md": "common_issues/certificates.md"
 
-        # @TODO: Enable when v1.8.0 is live
-        # "common_issues/forbidden.md": "common_issues/permissions.md"
-        # "common-issues/forbidden.md": "common_issues/permissions.md"
+        "common_issues/forbidden.md": "common_issues/permissions.md"
+        "common-issues/forbidden.md": "common_issues/permissions.md"
+        "common_issues/insufficient-permissions.md": "common_issues/permissions.md"
 
         "common-issues/local-network-denied.md": "common_issues/local-network-denied.md"
 
-
-        # @TODO: Enable when v1.8.0 is live
-        "common_issues/insufficient-permissions.md": "common_issues/forbidden.md"
 
 markdown_extensions:
   - pymdownx.snippets:
@@ -55,11 +51,8 @@ nav:
   - deeplinks.md
   - oidc.md
   - Common Issues:
-      # @TODO: Remove when v1.8.0 is live
-      - common_issues/forbidden.md
+      - common_issues/permissions.md
 
-      # @TODO: Make separate page when https://github.com/paulgessinger/swift-paperless/pull/200 lands in App Store release
-      # - common_issues/insufficient-permissions.md
       - common_issues/local-network-denied.md
       - common_issues/certificates.md
       - common_issues/supported-versions.md
