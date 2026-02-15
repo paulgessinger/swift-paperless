@@ -1,6 +1,6 @@
 default_port := '8000'
 docs-serve port=default_port:
-    uv run --with-requirements docs/requirements.txt mkdocs serve -o -a localhost:{{port}}
+    uv run --with-requirements docs/requirements.txt mkdocs serve -o -a localhost:{{port}} -w docs
 
 docs:
     uv run --with-requirements docs/requirements.txt mkdocs build
