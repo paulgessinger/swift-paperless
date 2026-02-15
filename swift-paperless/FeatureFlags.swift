@@ -11,7 +11,7 @@ enum AppFeatures {
   case tipJar
 
   static func enabled(_ feature: Self) -> Bool {
-    let channel = Bundle.main.appConfiguration
+    //    let channel = Bundle.main.appConfiguration
 
     return switch feature {
     case .tipJar: false  // disable for now until ready
