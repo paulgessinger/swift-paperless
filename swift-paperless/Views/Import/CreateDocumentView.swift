@@ -103,6 +103,17 @@ private struct DetailView: View {
   }
 }
 
+extension ProtoDocument {
+  fileprivate var createdDate: Date {
+    get {
+      created ?? .now
+    }
+    set {
+      created = newValue
+    }
+  }
+}
+
 struct CreateDocumentView: View {
   private enum Status {
     case none
@@ -124,7 +135,10 @@ struct CreateDocumentView: View {
   @State private var status = Status.none
   @State private var isAsnValid = true
 
-  @AppStorage("CreateDocumentUseOriginalTitle", store: .group, )
+  @AppStorage("IncludeDocumentCreatedDate", store: .group)
+  private var includeCreatedDate = true
+
+  @AppStorage("CreateDocumentUseOriginalTitle", store: .group)
   private var useOriginalTitle = false
 
   private var isDocumentValid: Bool {
@@ -142,12 +156,14 @@ struct CreateDocumentView: View {
     sourceUrl = url
     let initialTitle = url.deletingPathExtension().lastPathComponent
       .precomposedStringWithCanonicalMapping
-    _document = State(
-      initialValue: ProtoDocument(title: initialTitle))
     self.callback = callback
     self.share = share
     self.title = title ?? String(localized: .localizable(.documentAdd))
     thumbnailView = ThumbnailView(sourceUrl: sourceUrl)
+
+    let initialDocument = ProtoDocument(
+      title: initialTitle, created: includeCreatedDate ? .now : nil)
+    _document = State(initialValue: initialDocument)
   }
 
   func upload() async {
@@ -183,6 +199,7 @@ struct CreateDocumentView: View {
     document.correspondent = nil
     document.tags = []
     document.storagePath = nil
+    document.created = includeCreatedDate ? .now : nil
   }
 
   private var filename: String {
@@ -246,9 +263,31 @@ struct CreateDocumentView: View {
             DocumentAsnEditingView(document: $document, isValid: $isAsnValid)
               .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
-            DatePicker(
-              String(localized: .localizable(.documentEditCreatedDateLabel)),
-              selection: $document.created, displayedComponents: .date)
+            //            Toggle(
+            //              .localizable(.documentEditCreatedDateLabel),
+            //              isOn: $includeCreatedDate
+            //            )
+
+            //            .onChange(of: includeCreatedDate) { _, include in
+            //              if include {
+            //                if document.created == nil {
+            //                  document.created = .now
+            //                }
+            //              } else {
+            //                document.created = nil
+            //              }
+            //            }
+
+            ClearableDatePickerView(
+              value: $document.created, title: .localizable(.documentEditCreatedDateLabel))
+
+            //            if includeCreatedDate {
+            //              DatePicker(
+            //                String(localized: .localizable(.documentEditCreatedDateLabel)),
+            //                selection: $document.createdDate,
+            //                displayedComponents: .date
+            //              )
+            //            }
 
             Toggle(.localizable(.documentUploadUseOriginalFilename), isOn: $useOriginalTitle)
           }
@@ -412,6 +451,11 @@ struct CreateDocumentView: View {
           resetDocument()
         default: break
         }
+      }
+
+      // When the user adds or removes the date, we remember that for the future
+      .onChange(of: document.created) {
+        includeCreatedDate = document.created != nil
       }
     }
 

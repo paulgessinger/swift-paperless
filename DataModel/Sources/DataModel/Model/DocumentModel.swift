@@ -167,14 +167,14 @@ public struct ProtoDocument: DocumentProtocol, Equatable, Sendable {
   public var documentType: UInt?
   public var correspondent: UInt?
   public var tags: [UInt]
-  public var created: Date
+  public var created: Date?
   public var storagePath: UInt?
 
   public var customFields = CustomFieldRawEntryList()
 
   public init(
     title: String = "", asn: UInt? = nil, documentType: UInt? = nil, correspondent: UInt? = nil,
-    tags: [UInt] = [], created: Date = .now, storagePath: UInt? = nil
+    tags: [UInt] = [], created: Date? = .now, storagePath: UInt? = nil
   ) {
     self.title = title
     self.asn = asn
