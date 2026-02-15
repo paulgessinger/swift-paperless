@@ -17,6 +17,7 @@ enum SettingsKeys: String {
   case defaultSearchMode
   case defaultSortField
   case defaultSortOrder
+  case filterBarConfiguration
 
   case editingUserInterfaceExperiment
 
@@ -90,6 +91,10 @@ class AppSettings: ObservableObject {
   @PublishedUserDefaultsBacked(.defaultSortOrder)
   var defaultSortOrder = DataModel.SortOrder.descending
 
+  // @TODO: We need a sentinel here that's just "all defaults"
+  @PublishedUserDefaultsBacked(.filterBarConfiguration)
+  var filterBarConfiguration = FilterBarConfiguration.default
+
   enum EditingUserInterface: String, Codable, CaseIterable {
     static var allCases: [AppSettings.EditingUserInterface] {
       [.automatic, .v3]
@@ -144,6 +149,7 @@ extension AppSettings {
   }
 }
 
+@available(*, deprecated)
 @MainActor
 @propertyWrapper
 class AppSettingsObject: ObservableObject {
@@ -169,6 +175,7 @@ class AppSettingsObject: ObservableObject {
   }
 }
 
+@available(*, deprecated)
 @MainActor
 @propertyWrapper
 struct AppSetting<Value: Codable>: DynamicProperty {

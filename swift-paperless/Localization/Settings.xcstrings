@@ -1755,6 +1755,17 @@
         }
       }
     },
+    "filterConfiguration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document filter configuration"
+          }
+        }
+      }
+    },
     "identities" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2387,6 +2398,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uygulama, sürümüne bağlı olarak belirli kayıtlar tutar. Bu, uygulama sürümünü sıfırlar ve uygulamanın temiz bir yükleme gibi çalışmasını sağlar."
+          }
+        }
+      }
+    },
+    "resetFilterConfiguration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
           }
         }
       }
