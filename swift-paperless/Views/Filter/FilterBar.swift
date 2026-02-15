@@ -719,116 +719,99 @@ struct FilterBar: View {
     }
   }
 
-  private var barContentiOS18: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack {
-        Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
-          Label(
-            localized: .localizable(.filtering), systemImage: "line.3.horizontal.decrease"
+  private var configuredComponents: [FilterBarComponent] {
+    switch AppSettings.shared.filterBarConfiguration {
+    case .default:
+      return FilterBarComponent.allCases
+    case .configured(let components):
+      return components
+    }
+  }
+
+  @ViewBuilder
+  private func componentView(_ component: FilterBarComponent) -> some View {
+    switch component {
+    case .tags:
+      tagElement
+    case .documentType:
+      Element(
+        label: {
+          CommonElementLabel(
+            DocumentType.self,
+            state: filterState.documentType
           )
-          .labelStyle(.iconOnly)
-          if filterModel.filterState.filtering {
-            CircleCounter(value: filterModel.filterState.ruleCount)
-          }
-        }
+          .backport.matchedTransitionSource(
+            id: TransitionKeys.documentType, in: transition
+          )
+        }, active: filterState.documentType != .any
+      ) { present(.documentType) }
+    case .correspondent:
+      Element(
+        label: {
+          CommonElementLabel(
+            Correspondent.self,
+            state: filterState.correspondent
+          )
+          .backport.matchedTransitionSource(
+            id: TransitionKeys.correspondent, in: transition
+          )
+        }, active: filterState.correspondent != .any
+      ) { present(.correspondent) }
+    case .storagePath:
+      Element(
+        label: {
+          CommonElementLabel(
+            StoragePath.self,
+            state: filterState.storagePath
+          )
+          .backport.matchedTransitionSource(
+            id: TransitionKeys.storagePath, in: transition
+          )
+        }, active: filterState.storagePath != .any
+      ) { present(.storagePath) }
+    case .permissions:
+      ownerElement
         .overlay {
           GeometryReader { geo in
-            FilterMenu(filterState: $filterState, savedView: $savedView) {
+            ownerMenu {
               Color.clear
                 .frame(width: geo.size.width, height: geo.size.height)
             }
-          }
-        }
-
-        tagElement
-
-        Element(
-          label: {
-            CommonElementLabel(
-              DocumentType.self,
-              state: filterState.documentType
-            )
-            .backport.matchedTransitionSource(
-              id: TransitionKeys.documentType, in: transition
-            )
-          }, active: filterState.documentType != .any
-        ) { present(.documentType) }
-
-        Element(
-          label: {
-            CommonElementLabel(
-              Correspondent.self,
-              state: filterState.correspondent
-            )
-            .backport.matchedTransitionSource(
-              id: TransitionKeys.correspondent, in: transition
-            )
-          }, active: filterState.correspondent != .any
-        ) { present(.correspondent) }
-
-        Element(
-          label: {
-            CommonElementLabel(
-              StoragePath.self,
-              state: filterState.storagePath
-            )
-            .backport.matchedTransitionSource(
-              id: TransitionKeys.storagePath, in: transition
-            )
-          }, active: filterState.storagePath != .any
-        ) { present(.storagePath) }
-
-        ownerElement
-          .overlay {
-            GeometryReader { geo in
-              ownerMenu {
-                Color.clear
-                  .frame(width: geo.size.width, height: geo.size.height)
-              }
-              .onTapGesture {
-                Haptics.shared.impact(style: .light)
-              }
+            .onTapGesture {
+              Haptics.shared.impact(style: .light)
             }
           }
-
-        Element(
-          label: {
-            Text(.customFields(.title))
-              .backport.matchedTransitionSource(
-                id: TransitionKeys.customFields, in: transition
-              )
-          }, active: filterModel.filterState.customField != .any
-        ) { present(.customFields) }
-
-        Element(
-          label: {
-            AsnFilterDisplayView(query: filterModel.filterState.asn)
-              .backport.matchedTransitionSource(
-                id: TransitionKeys.asn, in: transition
-              )
-          }, active: filterModel.filterState.asn != .any
-        ) { present(.asn) }
-
-        Element(
-          label: {
-            DateFilterDisplayView(query: filterModel.filterState.date)
-              .backport.matchedTransitionSource(
-                id: TransitionKeys.date, in: transition
-              )
-          }, active: filterModel.filterState.date.isActive
-        ) { present(.date) }
-
-        Divider()
-
-        SortMenu(filterState: $filterState)
-      }
-      .padding(.horizontal)
+        }
+    case .customFields:
+      Element(
+        label: {
+          Text(.customFields(.title))
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.customFields, in: transition
+            )
+        }, active: filterModel.filterState.customField != .any
+      ) { present(.customFields) }
+    case .asn:
+      Element(
+        label: {
+          AsnFilterDisplayView(query: filterModel.filterState.asn)
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.asn, in: transition
+            )
+        }, active: filterModel.filterState.asn != .any
+      ) { present(.asn) }
+    case .date:
+      Element(
+        label: {
+          DateFilterDisplayView(query: filterModel.filterState.date)
+            .backport.matchedTransitionSource(
+              id: TransitionKeys.date, in: transition
+            )
+        }, active: filterModel.filterState.date.isActive
+      ) { present(.date) }
     }
-
-    .animation(.default, value: filterModel.filterState)
   }
 
-  @available(iOS 26.0, *)
   private var barContent: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
@@ -844,74 +827,9 @@ struct FilterBar: View {
           }
         }
 
-        tagElement
-
-        Element(
-          label: {
-            CommonElementLabel(
-              DocumentType.self,
-              state: filterState.documentType
-            )
-            .matchedTransitionSource(
-              id: TransitionKeys.documentType, in: transition
-            )
-          }, active: filterState.documentType != .any
-        ) { present(.documentType) }
-
-        Element(
-          label: {
-            CommonElementLabel(
-              Correspondent.self,
-              state: filterState.correspondent
-            )
-            .matchedTransitionSource(
-              id: TransitionKeys.correspondent, in: transition
-            )
-          }, active: filterState.correspondent != .any
-        ) { present(.correspondent) }
-
-        Element(
-          label: {
-            CommonElementLabel(
-              StoragePath.self,
-              state: filterState.storagePath
-            )
-            .matchedTransitionSource(
-              id: TransitionKeys.storagePath, in: transition
-            )
-          }, active: filterState.storagePath != .any
-        ) { present(.storagePath) }
-
-        ownerMenu {
-          ownerElement
+        ForEach(configuredComponents, id: \.self) { component in
+          componentView(component)
         }
-
-        Element(
-          label: {
-            Text(.customFields(.title))
-              .matchedTransitionSource(
-                id: TransitionKeys.customFields, in: transition
-              )
-          }, active: filterModel.filterState.customField != .any
-        ) { present(.customFields) }
-
-        Element(
-          label: {
-            AsnFilterDisplayView(query: filterModel.filterState.asn)
-              .matchedTransitionSource(
-                id: TransitionKeys.asn, in: transition
-              )
-          }, active: filterModel.filterState.asn != .any
-        ) { present(.asn) }
-
-        Element(
-          label: {
-            DateFilterDisplayView(query: filterModel.filterState.date)
-              .matchedTransitionSource(
-                id: TransitionKeys.date, in: transition
-              )
-          }, active: filterModel.filterState.date.isActive
-        ) { present(.date) }
 
         Divider()
 
@@ -929,7 +847,7 @@ struct FilterBar: View {
         barContent
       }
     } else {
-      barContentiOS18
+      barContent
     }
   }
 
@@ -1051,6 +969,7 @@ private let customFields = [
         .environmentObject(store)
         .environmentObject(filterModel)
         .environmentObject(errorController)
+        .environment(RouteManager.shared)
 
       Section {
         Text(String(describing: filterModel.filterState))
