@@ -1,7 +1,5 @@
 # Deep Links
 
-!!! warning "Beta Feature"
-    Deep link support is currently in development and not yet available in the App Store version. This feature will be available in an upcoming release.
 
 Deep links allow you to open specific content or trigger actions in Swift Paperless from external sources like shortcuts, automation apps, or other applications. Swift Paperless uses the custom URL scheme `x-paperless://` for deep linking.
 
