@@ -42,7 +42,7 @@ struct DocumentTypeEditView<Element>: View where Element: DocumentTypeProtocol {
     }
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(saveLabel) {
+        SaveButton(saveLabel) {
           do {
             try onSave?(element)
           } catch {
