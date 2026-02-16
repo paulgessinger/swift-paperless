@@ -50,7 +50,8 @@ struct StoragePathEditView<Element>: View where Element: StoragePathProtocol {
 
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(saveLabel) {
+
+        SaveButton(saveLabel) {
           do {
             try onSave?(storagePath)
           } catch {
@@ -71,15 +72,10 @@ extension StoragePathEditView where Element == ProtoStoragePath {
   }
 }
 
-struct EditStoragePath_Previews: PreviewProvider {
-  struct Container: View {
-    @State var path = ProtoStoragePath()
-    var body: some View {
-      StoragePathEditView(element: path, onSave: { _ in })
-    }
-  }
-
-  static var previews: some View {
-    Container()
+#Preview {
+  NavigationStack {
+    StoragePathEditView<ProtoStoragePath>(onSave: { _ in })
+      .navigationBarTitleDisplayMode(.inline)
+      .navigationTitle(Text(.localizable(.storagePathCreateTitle)))
   }
 }

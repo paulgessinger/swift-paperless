@@ -93,6 +93,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
     var body: some View {
       Manager.EditView(element: element, onSave: onSaveInternal)
+        .disabled(!model.permissions.test(.change))
     }
   }
 
@@ -194,6 +195,9 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
               NavigationLink {
                 Edit(model: model, element: element) { element in
                   guard model.permissions.test(.change) else {
+                    Logger.shared.info(
+                      "Silently not saving from edit view: this likely indicates a button is active that shouldn't be"
+                    )
                     return
                   }
 
