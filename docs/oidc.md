@@ -1,7 +1,7 @@
 # OpenID Connect (OIDC) Login
 
 !!! warning "Beta Feature"
-    OIDC login support is currently only available in the development version of Paperless-ngx. It is planned to be released in version 3.0.0. 
+    OIDC login support is currently only available in the development version of Paperless-ngx. It is planned to be released in version 3.0.0.
 
 Swift Paperless can sign in using OpenID Connect (OIDC) providers configured on
 your Paperless-ngx server. This flow relies on a mobile-friendly OIDC setup
