@@ -143,6 +143,7 @@ struct FilterBarConfigView: View {
         }
         AppSettings.shared.filterBarConfiguration = FilterBarConfiguration.fromComponents(
           components)
+        UserDefaults.standard.synchronize()
       }
     }
 
