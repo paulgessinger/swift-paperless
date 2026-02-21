@@ -7,50 +7,73 @@
 
 import DataModel
 import Foundation
-import QuickLook
+@preconcurrency import QuickLook
 import SwiftUI
 import UIKit
 
+final class QuickLookPreviewCoordinator: NSObject, QLPreviewControllerDataSource,
+  @preconcurrency QLPreviewControllerDelegate
+{
+  let url: URL
+
+  init(url: URL) {
+    self.url = url
+  }
+
+  func numberOfPreviewItems(in _: QLPreviewController) -> Int {
+    1
+  }
+
+  func previewController(_: QLPreviewController, previewItemAt _: Int) -> any QLPreviewItem {
+    url as NSURL
+  }
+
+  func previewController(
+    _: QLPreviewController,
+    editingModeFor _: any QLPreviewItem
+  ) -> QLPreviewItemEditingMode {
+    .disabled
+  }
+}
+
 struct QuickLookPreview: UIViewControllerRepresentable {
   let url: URL
+  var title: String? = nil
+  var onClose: (() -> Void)? = nil
 
   func makeUIViewController(context: Context) -> some UIViewController {
     let controller = QLPreviewController()
     controller.dataSource = context.coordinator
-    //        print(controller.view!)
+    controller.delegate = context.coordinator
+    controller.title = title
+    controller.navigationItem.leftBarButtonItem = UIBarButtonItem(
+      systemItem: .close,
+      primaryAction: UIAction { _ in
+        onClose?()
+      }
+    )
 
-    //        print(controller.contentScrollView(for: .leading))
-
-    return controller
-    //        let navigationController = UINavigationController(
-    //            rootViewController: controller
-    //        )
-
-    //        navigationController.navigationBar.isHidden = true
-    //        navigationController.isNavigationBarHidden = true
-    //        return navigationController
+    let navigationController = UINavigationController(rootViewController: controller)
+    let appearance = UINavigationBarAppearance()
+    appearance.configureWithTransparentBackground()
+    navigationController.navigationBar.standardAppearance = appearance
+    navigationController.navigationBar.scrollEdgeAppearance = appearance
+    navigationController.navigationBar.compactAppearance = appearance
+    navigationController.navigationBar.prefersLargeTitles = false
+    return navigationController
   }
 
-  func updateUIViewController(_: UIViewControllerType, context _: Context) {}
-
-  func makeCoordinator() -> Coordinator {
-    Coordinator(parent: self)
+  func updateUIViewController(_ uiViewController: UIViewControllerType, context _: Context) {
+    guard let navigationController = uiViewController as? UINavigationController,
+      let controller = navigationController.viewControllers.first as? QLPreviewController
+    else {
+      return
+    }
+    controller.title = title
   }
 
-  class Coordinator: QLPreviewControllerDataSource {
-    let parent: QuickLookPreview
-
-    init(parent: QuickLookPreview) {
-      self.parent = parent
-    }
-
-    func numberOfPreviewItems(in _: QLPreviewController) -> Int {
-      1
-    }
-
-    func previewController(_: QLPreviewController, previewItemAt _: Int) -> any QLPreviewItem {
-      parent.url as NSURL
-    }
+  func makeCoordinator() -> QuickLookPreviewCoordinator {
+    QuickLookPreviewCoordinator(url: url)
   }
 }
 
