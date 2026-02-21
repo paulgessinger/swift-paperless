@@ -2466,6 +2466,39 @@
         }
       }
     },
+    "scannerAutoscanLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic Scanning"
+          }
+        }
+      }
+    },
+    "scannerFlashLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flash"
+          }
+        }
+      }
+    },
+    "scannerSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanner"
+          }
+        }
+      }
+    },
     "showDocumentDetailPropertyBar" : {
       "extractionState" : "manual",
       "localizations" : {
