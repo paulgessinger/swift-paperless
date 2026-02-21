@@ -20,6 +20,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showEditSheet = false
   @State private var showMetadataSheet = false
   @State private var showNotesSheet = false
+  @State private var showPreview = false
 
   var navPath: Binding<[NavigationState]>? = nil
 
@@ -107,6 +108,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(document: viewModel.document)
           .frame(maxWidth: .infinity)
+          .onTapGesture {
+            showPreview = true
+          }
 
         Text(viewModel.document.title)
           .font(.title2)
@@ -139,6 +143,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .environmentObject(store)
         .environmentObject(errorController)
     }
+    .sheet(isPresented: $showPreview) {
+      if case let .loaded(url) = viewModel.download {
+        QuickLookPreview(url: url, title: viewModel.document.title) {
+          showPreview = false
+        }
+      } else {
+        DocumentQuickLookPreview(document: viewModel.document)
+      }
+    }
+
     .task {
       await viewModel.loadDocument()
       await viewModel.loadMetadata()
