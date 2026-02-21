@@ -11,19 +11,23 @@ import SwiftUI
 
 struct DebugMenuView: View {
   @ObservedObject private var appSettings = AppSettings.shared
+  @State private var showResetConfirmation = false
 
   var body: some View {
     Form {
       Section {
         AppVersionView()
 
-        if let version = appSettings.currentAppVersion?.description {
-          LabeledContent(.settings(.appVersionTitle), value: version)
-        } else {
-          Text(.localizable(.none))
+        LabeledContent(.settings(.appVersionTitle)) {
+          if let version = appSettings.currentAppVersion?.description {
+            Text(version)
+          } else {
+            Text(.localizable(.none))
+          }
         }
         Button {
           AppSettings.shared.resetAppVersion()
+          showResetConfirmation = true
         } label: {
           Text(.settings(.debugResetAppVersion))
         }
@@ -47,6 +51,12 @@ struct DebugMenuView: View {
     }
     .navigationTitle(String(localized: .settings(.debugMenu)))
     .navigationBarTitleDisplayMode(.inline)
+    .alert(String(localized: .settings(.appVersionResetTitle)), isPresented: $showResetConfirmation)
+    {
+      Button(.localizable(.ok)) {}
+    } message: {
+      Text(.settings(.appVersionResetMessage))
+    }
   }
 }
 
@@ -66,24 +76,34 @@ struct AppVersionView: View {
   }
 
   var body: some View {
-    if let version, let config {
-      LabeledContent {
+    LabeledContent {
+      if let version {
         Text(version.version.description)
-      } label: {
-        Text(.settings(.appVersionLabel))
+      } else {
+        Text(.localizable(.none))
       }
+    } label: {
+      Text(.settings(.appVersionLabel))
+    }
 
-      LabeledContent {
+    LabeledContent {
+      if let version {
         Text("\(version.build)")
-      } label: {
-        Text(.settings(.appBuildNumberLabel))
+      } else {
+        Text(.localizable(.none))
       }
+    } label: {
+      Text(.settings(.appBuildNumberLabel))
+    }
 
-      LabeledContent {
+    LabeledContent {
+      if let config {
         Text(config.rawValue)
-      } label: {
-        Text(.settings(.appConfigurationLabel))
+      } else {
+        Text(.localizable(.none))
       }
+    } label: {
+      Text(.settings(.appConfigurationLabel))
     }
   }
 }

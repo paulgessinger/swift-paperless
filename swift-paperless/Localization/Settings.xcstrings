@@ -481,6 +481,28 @@
         }
       }
     },
+    "appVersionResetMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The stored app version has been reset."
+          }
+        }
+      }
+    },
+    "appVersionResetTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version Reset"
+          }
+        }
+      }
+    },
     "backendVersion" : {
       "extractionState" : "manual",
       "localizations" : {
