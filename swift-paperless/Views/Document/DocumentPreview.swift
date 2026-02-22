@@ -44,18 +44,13 @@ private final class IntegratedDocumentPreviewModel {
   func loadDocument(
     store: DocumentStore,
     document: Document,
+    pipeline: ImagePipeline,
     image: FetchImage
   ) async {
 
     image.transaction = Transaction(animation: .linear(duration: 0.1))
 
-    let dataloader = DataLoader()
-
-    if let delegate = store.repository.delegate {
-      dataloader.delegate = delegate
-    }
-
-    image.pipeline = ImagePipeline(configuration: .init(dataLoader: dataloader))
+    image.pipeline = pipeline
 
     do {
 
@@ -93,6 +88,7 @@ private final class IntegratedDocumentPreviewModel {
 
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 
@@ -107,6 +103,7 @@ private struct IntegratedDocumentPreview: View {
           .resizable()
           .scaledToFit()
           .blur(radius: 10)
+          .frame(minHeight:400)
 
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
@@ -124,13 +121,18 @@ private struct IntegratedDocumentPreview: View {
     .animation(.easeOut(duration: 0.8), value: viewModel.download)
 
     .task {
-      await viewModel.loadDocument(store: store, document: document, image: image)
+      await viewModel.loadDocument(
+        store: store,
+        document: document,
+        pipeline: imagePipelineProvider.pipeline,
+        image: image)
     }
   }
 }
 
 struct PopupDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 
@@ -164,7 +166,11 @@ struct PopupDocumentPreview: View {
     .animation(.easeOut(duration: 0.8), value: viewModel.download)
 
     .task {
-      await viewModel.loadDocument(store: store, document: document, image: image)
+      await viewModel.loadDocument(
+        store: store,
+        document: document,
+        pipeline: imagePipelineProvider.pipeline,
+        image: image)
     }
   }
 }

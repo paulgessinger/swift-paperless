@@ -52,7 +52,8 @@ struct DocumentList: View {
 
   init(
     store: DocumentStore, navPath: Binding<[NavigationState]>, filterModel: FilterModel,
-    errorController: ErrorController
+    errorController: ErrorController,
+    imagePipelineProvider: ImagePipelineProvider
   ) {
     self.store = store
     _navPath = navPath
@@ -61,7 +62,8 @@ struct DocumentList: View {
       initialValue: DocumentListViewModel(
         store: store,
         filterState: filterModel.filterState,
-        errorController: errorController))
+        errorController: errorController,
+        imagePipelineProvider: imagePipelineProvider))
   }
 
   struct Cell: View {

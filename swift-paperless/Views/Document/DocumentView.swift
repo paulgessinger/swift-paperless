@@ -55,6 +55,7 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
 
   @StateObject private var filterModel = FilterModel()
 
@@ -413,7 +414,8 @@ struct DocumentView: View {
       DocumentList(
         store: store, navPath: $navPath,
         filterModel: filterModel,
-        errorController: errorController
+        errorController: errorController,
+        imagePipelineProvider: imagePipelineProvider
       )
 
       .safeAreaInset(edge: .top) {
@@ -571,11 +573,13 @@ struct DocumentView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @StateObject var imagePipelineProvider = ImagePipelineProvider()
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
+    .environmentObject(imagePipelineProvider)
     .environment(RouteManager.shared)
 }
