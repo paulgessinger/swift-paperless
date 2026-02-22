@@ -9,8 +9,8 @@ import Common
 import DataModel
 import Flow
 import Networking
+import PDFKit
 import SwiftUI
-import UIKit
 
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
@@ -21,7 +21,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showEditSheet = false
   @State private var showMetadataSheet = false
   @State private var showNotesSheet = false
+  
   @State private var showPreview = false
+  @State private var showShadow = true
+  @State private var shadowDelay: Double? = nil
 
   var navPath: Binding<[NavigationState]>? = nil
   
@@ -104,46 +107,37 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
-  private func quickLookShareMenu(_ viewModel: DocumentDetailModel) -> UIMenu? {
-    var elements: [UIMenuElement] = []
+  private struct BasicPDFPreview: View {
+    let url: URL
+    let onButtonDismiss: () -> ()
+    
+    @Environment(\.dismiss) private var dismiss
 
-    if let url = viewModel.documentUrl {
-      elements.append(
-        UIAction(
-          title: String(localized: .localizable(.documentLink)),
-          image: UIImage(systemName: "safari")
-        ) { _ in
-          UIPasteboard.general.url = url
+    var body: some View {
+      Group {
+        if let document = PDFDocument(url: url) {
+          PDFKitView(
+            document: document,
+            displayMode: .singlePageContinuous,
+            pageShadows: true,
+            autoScales: true,
+            userInteraction: true,
+            displayPageBreaks: true
+          )
+          .background(Color(uiColor: .secondarySystemBackground))
+        } else {
+          Text(.localizable(.error))
         }
-      )
-    }
-
-    let deepLinks = viewModel.deepLinks
-
-    if let url = deepLinks.withoutServer?.url {
-      elements.append(
-        UIAction(
-          title: String(localized: .localizable(.documentDeepLinkWithoutBackend)),
-          image: UIImage(systemName: "app")
-        ) { _ in
-          UIPasteboard.general.url = url
+      }
+      .toolbar{
+        ToolbarItem(placement: .topBarLeading) {
+          CancelIconButton {
+            onButtonDismiss()
+            dismiss()
+          }
         }
-      )
+      }
     }
-
-    if let url = deepLinks.withServer?.url {
-      elements.append(
-        UIAction(
-          title: String(localized: .localizable(.documentDeepLinkWithBackend)),
-          image: UIImage(systemName: "app.badge.checkmark")
-        ) { _ in
-          UIPasteboard.general.url = url
-        }
-      )
-    }
-
-    guard !elements.isEmpty else { return nil }
-    return UIMenu(children: elements)
   }
 
   var body: some View {
@@ -153,10 +147,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(document: viewModel.document)
           .frame(maxWidth: .infinity)
+          .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+          .shadow(color: Color(.imageShadow).opacity(showShadow ? 1 : 0), radius: 15)
+          .backport.matchedTransitionSource(id: "doc", in: namespace)
+
           .onTapGesture {
             showPreview = true
+            showShadow = false
           }
-          .backport.matchedTransitionSource(id: "doc", in: namespace)
+
+          .animation(.default, value: showShadow)
 
         Text(viewModel.document.title)
           .font(.title2)
@@ -189,19 +189,22 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .environmentObject(store)
         .environmentObject(errorController)
     }
-    .sheet(isPresented: $showPreview) {
+    .sheet(isPresented: $showPreview,
+           onDismiss: {
+      Task {
+        try? await Task.sleep(for: .seconds(shadowDelay ?? 0.9))
+        showShadow = true
+        shadowDelay = nil
+      }
+    }) {
       if case let .loaded(url) = viewModel.download {
-        QuickLookPreview(
-          url: url,
-          title: "",
-          onClose: {
-            showPreview = false
-          },
-          customShareMenu: quickLookShareMenu(viewModel)
-        )
-        .ignoresSafeArea()
+        NavigationStack {
+          BasicPDFPreview(url: url, onButtonDismiss: {
+            shadowDelay = 0.2
+          })
+            .ignoresSafeArea()
+        }
         .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
-//        .presentationDetents([.medium, .large])
       }
     }
 
@@ -210,4 +213,69 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       await viewModel.loadMetadata()
     }
   }
+}
+
+// MARK: - Previews
+
+private struct DocumentDetailViewV4PreviewHelper: View {
+  @StateObject private var store = DocumentStore(repository: TransientRepository())
+  @StateObject private var errorController = ErrorController()
+  @StateObject private var connectionManager = ConnectionManager(previewMode: true)
+
+  @State private var document: Document?
+  @State private var navPath = [NavigationState]()
+
+  let documentId: UInt
+
+  init(id documentId: UInt) {
+    self.documentId = documentId
+  }
+
+  var body: some View {
+    NavigationStack {
+      if let document {
+        DocumentDetailViewV4(
+          store: store,
+          connection: connectionManager.connection,
+          document: document,
+          navPath: $navPath
+        )
+      } else {
+        Text("No document")
+      }
+    }
+    .environmentObject(store)
+    .environmentObject(errorController)
+    .environment(RouteManager.shared)
+    .task {
+      do {
+        guard let repository = store.repository as? TransientRepository else {
+          return
+        }
+        repository.addUser(User(id: 1, isSuperUser: true, username: "preview", groups: []))
+        try repository.login(userId: 1)
+
+        try await repository.create(
+          document: ProtoDocument(
+            title: "Preview document",
+            asn: 42,
+            created: .now
+          ),
+          url: #URL(
+            "https://github.com/paulgessinger/swift-paperless/raw/refs/heads/main/Preview%20PDFs/street.pdf"
+          )
+        )
+
+        try await store.fetchAll()
+        let documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
+        document = documents.first(where: { $0.id == documentId }) ?? documents.first
+      } catch {
+        print(error)
+      }
+    }
+  }
+}
+
+#Preview("DocumentDetailViewV4") {
+  DocumentDetailViewV4PreviewHelper(id: 2)
 }

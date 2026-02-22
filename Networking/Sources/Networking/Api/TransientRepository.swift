@@ -1,6 +1,7 @@
 import Common
 import DataModel
 import Foundation
+import PDFKit
 import SwiftUI
 import os
 
@@ -16,6 +17,8 @@ public class TransientRepository {
   private var groups: [UserGroup]
   private var savedViews: [UInt: SavedView]
   private var trashedDocuments: [UInt: Document]
+  private var documentPDFData: [UInt: Data]
+  private var documentThumbnailData: [UInt: Data]
 
   private var notesByDocument: [UInt: [Document.Note]]
 
@@ -42,6 +45,8 @@ public class TransientRepository {
     notesByDocument = [:]
     shareLinks = [:]
     trashedDocuments = [:]
+    documentPDFData = [:]
+    documentThumbnailData = [:]
   }
 
   private func generateId() -> UInt {
@@ -95,6 +100,34 @@ public class TransientRepository {
     to value: Bool
   ) {
     permissions.set(op, to: value, for: resource)
+  }
+
+  /// Creates a document and associates PDF content from a remote URL.
+  /// The filename is derived from the URL path.
+  public func create(document: ProtoDocument, url: URL) async throws {
+    let documentId = generateId()
+    let newDoc = Document(
+      id: documentId,
+      title: document.title,
+      asn: document.asn,
+      documentType: document.documentType,
+      correspondent: document.correspondent,
+      created: document.created ?? .now,
+      tags: document.tags,
+      added: .now,
+      modified: .now,
+      storagePath: document.storagePath
+    )
+    documents[documentId] = newDoc
+
+    let request = URLRequest(url: url)
+    let (data, _) = try await URLSession.shared.getData(for: request)
+    documentPDFData[documentId] = data
+    if let pdf = PDFDocument(data: data),
+      let thumbnailData = pdf.thumbnailPNGData()
+    {
+      documentThumbnailData[documentId] = thumbnailData
+    }
   }
 }
 
@@ -155,6 +188,8 @@ extension TransientRepository: Repository {
   public func delete(document: Document) async throws {
     if let existing = documents.removeValue(forKey: document.id) {
       trashedDocuments[existing.id] = existing
+      documentPDFData.removeValue(forKey: existing.id)
+      documentThumbnailData.removeValue(forKey: existing.id)
     }
   }
 
@@ -450,7 +485,7 @@ extension TransientRepository: Repository {
     return notes
   }
 
-  public func download(documentID _: UInt, progress: (@Sendable (Double) -> Void)? = nil)
+  public func download(documentID: UInt, progress: (@Sendable (Double) -> Void)? = nil)
     async throws -> URL?
   {
     // Simulate download progress
@@ -458,7 +493,13 @@ extension TransientRepository: Repository {
       try await Task.sleep(for: .seconds(0.1))
       progress?(Double(i) / 10.0)
     }
-    return nil
+
+    guard let data = documentPDFData[documentID] else { return nil }
+    let outputURL = FileManager.default.temporaryDirectory
+      .appendingPathComponent("transient-\(documentID)")
+      .appendingPathExtension("pdf")
+    try data.write(to: outputURL, options: .atomic)
+    return outputURL
   }
 
   public func thumbnail(document: Document) async throws -> Image? {
@@ -468,6 +509,18 @@ extension TransientRepository: Repository {
   }
 
   public func thumbnailData(document: Document) async throws -> Data {
+    if let thumbnailData = documentThumbnailData[document.id] {
+      return thumbnailData
+    }
+
+    if let pdfData = documentPDFData[document.id],
+      let pdf = PDFDocument(data: pdfData),
+      let thumbnailData = pdf.thumbnailPNGData()
+    {
+      documentThumbnailData[document.id] = thumbnailData
+      return thumbnailData
+    }
+
     let request = URLRequest(
       url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
 
