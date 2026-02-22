@@ -13,6 +13,7 @@ struct SearchablePDFPreview: View {
     @Binding var pdfView: PDFKit.PDFView?
 
     final class Coordinator {
+      // Initial top-alignment should run once per loaded document.
       var didApplyInitialTopAlignment = false
     }
 
@@ -22,6 +23,7 @@ struct SearchablePDFPreview: View {
 
     func makeUIView(context _: Context) -> PDFKit.PDFView {
       let view = PDFKit.PDFView()
+      // Keep PDFKit defaults close to the native viewer behavior.
       view.document = document
       view.displayMode = .singlePageContinuous
       view.pageShadowsEnabled = true
@@ -35,6 +37,7 @@ struct SearchablePDFPreview: View {
 
     func updateUIView(_ uiView: PDFKit.PDFView, context: Context) {
       if uiView.document !== document {
+        // Reset one-time layout fixes when the underlying document changes.
         uiView.document = document
         context.coordinator.didApplyInitialTopAlignment = false
       }
@@ -52,6 +55,7 @@ struct SearchablePDFPreview: View {
         return
       }
 
+      // Prevent UIKit from adding another automatic safe-area inset on top of ours.
       scrollView.contentInsetAdjustmentBehavior = .never
 
       let topInset = pdfView.safeAreaInsets.top
@@ -67,10 +71,12 @@ struct SearchablePDFPreview: View {
       contentInset.top = topInset
       scrollView.contentInset = contentInset
 
+      // Keep the scroll indicator aligned with the visible content start.
       var verticalIndicatorInset = scrollView.verticalScrollIndicatorInsets
       verticalIndicatorInset.top = topInset
       scrollView.verticalScrollIndicatorInsets = verticalIndicatorInset
 
+      // Start aligned below the top bar, while still allowing later scrolling under it.
       scrollView.setContentOffset(
         CGPoint(x: scrollView.contentOffset.x, y: -topInset),
         animated: false
@@ -121,6 +127,7 @@ struct SearchablePDFPreview: View {
               .focused($isSearchFieldFocused)
               .submitLabel(.search)
               .onChange(of: query) { _, _ in
+                // Live-search keeps the interaction fast and predictable.
                 runSearch()
               }
 
@@ -144,6 +151,7 @@ struct SearchablePDFPreview: View {
             .disabled(matches.isEmpty)
 
             Button("Done") {
+              // Leaving search mode should also clear highlights/selections.
               setSearchMode(false)
               isSearchFieldFocused = false
             }
@@ -169,9 +177,10 @@ struct SearchablePDFPreview: View {
           }
         }
       }
-      .onDisappear {
-        setSearchMode(false)
-      }
+    .onDisappear {
+      // Avoid leaking search state when this sheet is dismissed and re-presented.
+      setSearchMode(false)
+    }
   }
 
   private func setSearchMode(_ enabled: Bool) {
@@ -215,6 +224,7 @@ struct SearchablePDFPreview: View {
       term,
       withOptions: [.caseInsensitive, .diacriticInsensitive]
     )
+    // Line-level selections avoid oversized highlight rectangles on some PDFs.
     let foundSelections = rawSelections.flatMap { $0.selectionsByLine() }
 
     matches = foundSelections
@@ -239,6 +249,7 @@ struct SearchablePDFPreview: View {
 
     let match = matches[currentMatchIndex]
     updateHighlightedSelections(pdfView: pdfView)
+    // Keep the active match visually selected and in view.
     pdfView.currentSelection = match
     pdfView.go(to: match)
   }
@@ -262,6 +273,7 @@ struct SearchablePDFPreview: View {
       guard let copy = selection.copy() as? PDFSelection else {
         return nil
       }
+      // Show all matches, but make the active one visually stronger.
       copy.color =
         index == currentMatchIndex
         ? UIColor.systemYellow.withAlphaComponent(0.75)
@@ -269,6 +281,7 @@ struct SearchablePDFPreview: View {
       return copy
     }
 
+    // PDFView often needs a full reset to repaint highlight style changes.
     pdfView.highlightedSelections = nil
     pdfView.highlightedSelections = highlightedSelections
   }
