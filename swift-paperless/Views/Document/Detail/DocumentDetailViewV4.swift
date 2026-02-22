@@ -10,6 +10,7 @@ import DataModel
 import Flow
 import Networking
 import SwiftUI
+import UIKit
 
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
@@ -23,6 +24,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showPreview = false
 
   var navPath: Binding<[NavigationState]>? = nil
+  
+  @Namespace private var namespace
 
   init(
     store: DocumentStore,
@@ -101,6 +104,48 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
+  private func quickLookShareMenu(_ viewModel: DocumentDetailModel) -> UIMenu? {
+    var elements: [UIMenuElement] = []
+
+    if let url = viewModel.documentUrl {
+      elements.append(
+        UIAction(
+          title: String(localized: .localizable(.documentLink)),
+          image: UIImage(systemName: "safari")
+        ) { _ in
+          UIPasteboard.general.url = url
+        }
+      )
+    }
+
+    let deepLinks = viewModel.deepLinks
+
+    if let url = deepLinks.withoutServer?.url {
+      elements.append(
+        UIAction(
+          title: String(localized: .localizable(.documentDeepLinkWithoutBackend)),
+          image: UIImage(systemName: "app")
+        ) { _ in
+          UIPasteboard.general.url = url
+        }
+      )
+    }
+
+    if let url = deepLinks.withServer?.url {
+      elements.append(
+        UIAction(
+          title: String(localized: .localizable(.documentDeepLinkWithBackend)),
+          image: UIImage(systemName: "app.badge.checkmark")
+        ) { _ in
+          UIPasteboard.general.url = url
+        }
+      )
+    }
+
+    guard !elements.isEmpty else { return nil }
+    return UIMenu(children: elements)
+  }
+
   var body: some View {
     @Bindable var viewModel = viewModel
 
@@ -111,6 +156,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .onTapGesture {
             showPreview = true
           }
+          .backport.matchedTransitionSource(id: "doc", in: namespace)
 
         Text(viewModel.document.title)
           .font(.title2)
@@ -145,11 +191,17 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .sheet(isPresented: $showPreview) {
       if case let .loaded(url) = viewModel.download {
-        QuickLookPreview(url: url, title: viewModel.document.title) {
-          showPreview = false
-        }
-      } else {
-        DocumentQuickLookPreview(document: viewModel.document)
+        QuickLookPreview(
+          url: url,
+          title: "",
+          onClose: {
+            showPreview = false
+          },
+          customShareMenu: quickLookShareMenu(viewModel)
+        )
+        .ignoresSafeArea()
+        .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
+//        .presentationDetents([.medium, .large])
       }
     }
 
