@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Nuke
 import NukeUI
 import SwiftUI
 import os
@@ -27,27 +28,40 @@ private enum DownloadState: Equatable {
 }
 
 struct DocumentPreview: View {
-  @State private var download = DownloadState.initial
   var document: Document
 
   var body: some View {
-    IntegratedDocumentPreview(download: $download, document: document)
+    IntegratedDocumentPreview(document: document)
       .frame(minWidth: 200, minHeight: 200)
   }
 }
 
-private struct IntegratedDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
-  @Binding var download: DownloadState
-  var document: Document
+@MainActor
+@Observable
+private final class IntegratedDocumentPreviewModel {
+  var download: DownloadState = .initial
 
-  @StateObject private var image = FetchImage()
+  func loadDocument(
+    store: DocumentStore,
+    document: Document,
+    image: FetchImage
+  ) async {
 
-  private func loadDocument() async {
     image.transaction = Transaction(animation: .linear(duration: 0.1))
+
+    let dataloader = DataLoader()
+
+    if let delegate = store.repository.delegate {
+      dataloader.delegate = delegate
+    }
+
+    image.pipeline = ImagePipeline(configuration: .init(dataLoader: dataloader))
+
     do {
+
       try image.load(
-        ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document)))
+        ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
+      )
     } catch {
       Logger.shared.error("Error loading document thumbnail: \(error)")
     }
@@ -66,33 +80,34 @@ private struct IntegratedDocumentPreview: View {
           return
         }
         download = .loaded(view)
-
       } catch {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
-        return
       }
 
     default:
       break
     }
   }
+}
 
-  private var isLoaded: Bool {
-    if case .loaded = download {
-      return true
-    }
-    return false
-  }
+private struct IntegratedDocumentPreview: View {
+  @EnvironmentObject private var store: DocumentStore
+  @State private var viewModel = IntegratedDocumentPreviewModel()
+  var document: Document
+
+  @StateObject private var image = FetchImage()
 
   var body: some View {
     ZStack {
-      image.image?
-        .resizable()
-        .scaledToFit()
-        .blur(radius: 10)
 
-      switch download {
+      switch viewModel.download {
+      case .initial, .loading:
+        image.image?
+          .resizable()
+          .scaledToFit()
+          .blur(radius: 10)
+
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
           .labelStyle(.iconOnly)
@@ -102,22 +117,54 @@ private struct IntegratedDocumentPreview: View {
       case .loaded(let view):
         view
           .background(.white)
-
-      default:
-        EmptyView()
       }
     }
 
     .transition(.opacity)
-    .animation(.easeOut(duration: 0.8), value: download)
-    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-    .overlay(
-      RoundedRectangle(cornerRadius: 15, style: .continuous)
-        .stroke(.gray, lineWidth: 0.33)
-    )
-    .shadow(color: Color(.imageShadow), radius: 15)
+    .animation(.easeOut(duration: 0.8), value: viewModel.download)
+
     .task {
-      await loadDocument()
+      await viewModel.loadDocument(store: store, document: document, image: image)
+    }
+  }
+}
+
+struct PopupDocumentPreview: View {
+  @EnvironmentObject private var store: DocumentStore
+  @State private var viewModel = IntegratedDocumentPreviewModel()
+  var document: Document
+
+  @StateObject private var image = FetchImage()
+
+  var body: some View {
+    ZStack {
+
+      switch viewModel.download {
+      case .initial, .loading:
+        image.image?
+          .resizable()
+          .scaledToFit()
+          .blur(radius: 10)
+
+      case .error:
+        Label("Unable to load preview", systemImage: "eye.slash")
+          .labelStyle(.iconOnly)
+          .imageScale(.large)
+          .frame(maxWidth: .infinity, alignment: .center)
+
+      case .loaded(let view):
+        view.image?
+          .resizable()
+          .scaledToFit()
+          .background(.white)
+      }
+    }
+
+    .transition(.opacity)
+    .animation(.easeOut(duration: 0.8), value: viewModel.download)
+
+    .task {
+      await viewModel.loadDocument(store: store, document: document, image: image)
     }
   }
 }

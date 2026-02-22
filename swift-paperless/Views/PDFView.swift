@@ -14,18 +14,26 @@ struct PDFThumbnail: View {
 
   let file: URL
 
+  let image: Image?
+
   init?(file: URL) {
     self.file = file
     guard let document = PDFDocument(url: file) else {
       return nil
     }
     self.document = document
-    let bounds = document.page(at: 0)?.bounds(for: .trimBox)
-    if let bounds {
-      aspectRatio = CGFloat(bounds.width / bounds.height)
+    let size: CGSize
+    if let page = document.page(at: 0) {
+      size = page.bounds(for: .trimBox).size
     } else {
-      aspectRatio = 1
+      size = CGSize(width: 800, height: 800)
     }
+
+    aspectRatio = CGFloat(size.width / size.height)
+
+    image = document.thumbnailPNGData(pageIndex: 0, size: size)
+      .flatMap { UIImage(data: $0) }
+      .map { Image(uiImage: $0) }
   }
 
   var body: some View {
