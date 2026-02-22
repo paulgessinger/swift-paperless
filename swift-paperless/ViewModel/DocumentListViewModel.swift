@@ -99,8 +99,8 @@ class DocumentListViewModel {
         try batch
         .map { try store.repository.thumbnailRequest(document: $0) }
         .map { [
-          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
           ImageRequest(urlRequest: $0),
+          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
         ] }
         .flatMap { $0 }
       
@@ -146,7 +146,11 @@ class DocumentListViewModel {
           let requests =
             try batch
             .map { try repository.thumbnailRequest(document: $0) }
-            .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+            .map { [
+              ImageRequest(urlRequest: $0),
+              ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+            ] }
+            .flatMap { $0 }
 
           Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
           await self.updatePrefetcherIfNeeded()
@@ -179,7 +183,11 @@ class DocumentListViewModel {
       let requests =
         try batch
         .map { try self.store.repository.thumbnailRequest(document: $0) }
-        .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+        .map { [
+          ImageRequest(urlRequest: $0),
+          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+        ] }
+        .flatMap { $0 }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
       updatePrefetcherIfNeeded()
