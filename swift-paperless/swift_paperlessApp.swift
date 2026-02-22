@@ -20,7 +20,7 @@ struct MainView: View {
   @State private var showSettings = false
 
   @StateObject private var manager = ConnectionManager()
-  @StateObject private var imagePipelineProvider = ImagePipelineProvider()
+  @State private var imagePipelineProvider = ImagePipelineProvider()
 
   @StateObject private var errorController: ErrorController
 
@@ -220,7 +220,7 @@ struct MainView: View {
 
     .environmentObject(errorController)
     .environmentObject(biometricLockManager)
-    .environmentObject(imagePipelineProvider)
+    .environment(imagePipelineProvider)
 
     .fullScreenCover(isPresented: $showLoginScreen) {
       LoginView(connectionManager: manager)

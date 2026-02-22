@@ -17,7 +17,7 @@ struct DocumentPreviewImage: View {
   var store: DocumentStore
   var document: Document
 
-  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @StateObject private var image = FetchImage()
 
   var body: some View {
@@ -226,5 +226,5 @@ struct DocumentCell: View {
       try await store.fetchAll()
     } catch { print(error) }
   }
-  .environmentObject(ImagePipelineProvider())
+  .environment(ImagePipelineProvider())
 }

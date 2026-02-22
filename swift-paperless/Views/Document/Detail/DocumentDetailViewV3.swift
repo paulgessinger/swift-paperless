@@ -411,7 +411,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   private struct LoadingView: View {
     @Bindable var viewModel: DocumentDetailModel
-    @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
+    @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
     @StateObject private var image = FetchImage()
 

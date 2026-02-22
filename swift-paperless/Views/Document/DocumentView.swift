@@ -55,7 +55,7 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
-  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
   @StateObject private var filterModel = FilterModel()
 
@@ -573,13 +573,12 @@ struct DocumentView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
-  @Previewable @StateObject var imagePipelineProvider = ImagePipelineProvider()
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
-    .environmentObject(imagePipelineProvider)
+    .environment(ImagePipelineProvider())
     .environment(RouteManager.shared)
 }

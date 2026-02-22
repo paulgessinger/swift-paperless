@@ -53,7 +53,6 @@ private final class IntegratedDocumentPreviewModel {
     image.pipeline = pipeline
 
     do {
-
       try image.load(
         ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
       )
@@ -88,7 +87,7 @@ private final class IntegratedDocumentPreviewModel {
 
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 
@@ -132,7 +131,7 @@ private struct IntegratedDocumentPreview: View {
 
 struct PopupDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 

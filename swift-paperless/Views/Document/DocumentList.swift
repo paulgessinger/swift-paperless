@@ -75,6 +75,7 @@ struct DocumentList: View {
     var viewModel: DocumentListViewModel
 
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
     private var userCanChange: Bool {
       store.userCanChange(document: document)
@@ -157,6 +158,7 @@ struct DocumentList: View {
         } preview: {
           PopupDocumentPreview(document: document)
             .environmentObject(store)
+            .environment(imagePipelineProvider)
         }
 
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
