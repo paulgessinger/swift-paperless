@@ -20,13 +20,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showEditSheet = false
   @State private var showMetadataSheet = false
   @State private var showNotesSheet = false
-  
+
   @State private var showPreview = false
   @State private var showShadow = true
   @State private var shadowDelay: Double? = nil
 
   var navPath: Binding<[NavigationState]>? = nil
-  
+
   @Namespace private var namespace
 
   init(
@@ -155,19 +155,24 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .environmentObject(store)
         .environmentObject(errorController)
     }
-    .sheet(isPresented: $showPreview,
-           onDismiss: {
-      Task {
-        try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
-        showShadow = true
-        shadowDelay = nil
+    .sheet(
+      isPresented: $showPreview,
+      onDismiss: {
+        Task {
+          try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
+          showShadow = true
+          shadowDelay = nil
+        }
       }
-    }) {
-      if case let .loaded(url: _, document: document) = viewModel.download {
+    ) {
+      if case .loaded(url: _, document: let document) = viewModel.download {
         NavigationStack {
-          SearchablePDFPreview(document: document, onButtonDismiss: {
-            shadowDelay = 0.2
-          })
+          SearchablePDFPreview(
+            document: document,
+            onButtonDismiss: {
+              shadowDelay = 0.2
+            }
+          )
           .ignoresSafeArea(.container, edges: .top)
         }
         .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
