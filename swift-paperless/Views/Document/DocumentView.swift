@@ -294,6 +294,8 @@ struct DocumentView: View {
 
       } label: {
         Label(String(localized: .localizable(.add)), systemImage: "plus")
+      } primaryAction: {
+        showDocumentScanner = true
       }
       .tint(.accent)
     }
