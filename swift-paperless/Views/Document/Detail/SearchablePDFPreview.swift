@@ -32,13 +32,12 @@ struct SearchablePDFPreview: View {
     }
   }
 
-  let url: URL
+  let document: PDFDocument
   let onButtonDismiss: () -> Void
 
   @Environment(\.dismiss) private var dismiss
   @FocusState private var isSearchFieldFocused: Bool
   @State private var pdfView: PDFKit.PDFView?
-  @State private var pdfDocument: PDFDocument?
   @State private var query = ""
   @State private var isSearchMode = false
   @State private var matches = [PDFSelection]()
@@ -52,78 +51,67 @@ struct SearchablePDFPreview: View {
   }
 
   var body: some View {
-    Group {
-      if let document = pdfDocument {
-        SearchablePDFView(document: document, pdfView: $pdfView)
-          .background(Color(uiColor: .secondarySystemBackground))
-          .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 8) {
-              if isSearchMode {
-                TextField("Search", text: $query)
-                  .textFieldStyle(.roundedBorder)
-                  .focused($isSearchFieldFocused)
-                  .submitLabel(.search)
-                  .onChange(of: query) { _, _ in
-                    runSearch()
-                  }
-
-                Text(resultLabel)
-                  .font(.footnote.monospacedDigit())
-                  .foregroundStyle(.secondary)
-                  .frame(minWidth: 42)
-
-                Button {
-                  goToPrevious()
-                } label: {
-                  Image(systemName: "chevron.up")
-                }
-                .disabled(matches.isEmpty)
-
-                Button {
-                  goToNext()
-                } label: {
-                  Image(systemName: "chevron.down")
-                }
-                .disabled(matches.isEmpty)
-
-                Button("Done") {
-                  setSearchMode(false)
-                  isSearchFieldFocused = false
-                }
-              } else {
-                Spacer()
-                Button {
-                  setSearchMode(true)
-                  isSearchFieldFocused = true
-                } label: {
-                  Label("Search", systemImage: "magnifyingglass")
-                }
+    SearchablePDFView(document: document, pdfView: $pdfView)
+      .background(Color(uiColor: .secondarySystemBackground))
+      .safeAreaInset(edge: .bottom) {
+        HStack(spacing: 8) {
+          if isSearchMode {
+            TextField("Search", text: $query)
+              .textFieldStyle(.roundedBorder)
+              .focused($isSearchFieldFocused)
+              .submitLabel(.search)
+              .onChange(of: query) { _, _ in
+                runSearch()
               }
+
+            Text(resultLabel)
+              .font(.footnote.monospacedDigit())
+              .foregroundStyle(.secondary)
+              .frame(minWidth: 42)
+
+            Button {
+              goToPrevious()
+            } label: {
+              Image(systemName: "chevron.up")
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .disabled(matches.isEmpty)
+
+            Button {
+              goToNext()
+            } label: {
+              Image(systemName: "chevron.down")
+            }
+            .disabled(matches.isEmpty)
+
+            Button("Done") {
+              setSearchMode(false)
+              isSearchFieldFocused = false
+            }
+          } else {
+            Spacer()
+            Button {
+              setSearchMode(true)
+              isSearchFieldFocused = true
+            } label: {
+              Label("Search", systemImage: "magnifyingglass")
+            }
           }
-      } else {
-        Text(.localizable(.error))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial)
       }
-    }
-    .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        CancelIconButton {
-          onButtonDismiss()
-          dismiss()
+      .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          CancelIconButton {
+            onButtonDismiss()
+            dismiss()
+          }
         }
       }
-    }
-    .onDisappear {
-      setSearchMode(false)
-    }
-    .task {
-      if pdfDocument == nil {
-        pdfDocument = PDFDocument(url: url)
+      .onDisappear {
+        setSearchMode(false)
       }
-    }
   }
 
   private func setSearchMode(_ enabled: Bool) {

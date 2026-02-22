@@ -163,12 +163,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         shadowDelay = nil
       }
     }) {
-      if case let .loaded(url) = viewModel.download {
+      if case let .loaded(url: _, document: document) = viewModel.download {
         NavigationStack {
-          SearchablePDFPreview(url: url, onButtonDismiss: {
+          SearchablePDFPreview(document: document, onButtonDismiss: {
             shadowDelay = 0.2
           })
-            .ignoresSafeArea(.container, edges: .top)
+          .ignoresSafeArea(.container, edges: .top)
         }
         .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
       }
