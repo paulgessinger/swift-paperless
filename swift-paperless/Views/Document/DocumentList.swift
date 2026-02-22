@@ -153,7 +153,7 @@ struct DocumentList: View {
           }
 
         } preview: {
-          DocumentPreview(document: document)
+          PopupDocumentPreview(document: document)
             .environmentObject(store)
         }
 
