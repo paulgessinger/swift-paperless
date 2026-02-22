@@ -14,10 +14,22 @@ import UIKit
 final class QuickLookPreviewCoordinator: NSObject, QLPreviewControllerDataSource,
   @preconcurrency QLPreviewControllerDelegate
 {
-  let url: URL
+  final class PreviewItem: NSObject, QLPreviewItem {
+    let previewItemURL: URL?
+    let previewItemTitle: String?
 
-  init(url: URL) {
+    init(url: URL, title: String?) {
+      previewItemURL = url
+      previewItemTitle = title
+    }
+  }
+
+  let url: URL
+  let title: String?
+
+  init(url: URL, title: String?) {
     self.url = url
+    self.title = title
   }
 
   func numberOfPreviewItems(in _: QLPreviewController) -> Int {
@@ -25,7 +37,7 @@ final class QuickLookPreviewCoordinator: NSObject, QLPreviewControllerDataSource
   }
 
   func previewController(_: QLPreviewController, previewItemAt _: Int) -> any QLPreviewItem {
-    url as NSURL
+    PreviewItem(url: url, title: title)
   }
 
   func previewController(
@@ -40,6 +52,7 @@ struct QuickLookPreview: UIViewControllerRepresentable {
   let url: URL
   var title: String? = nil
   var onClose: (() -> Void)? = nil
+  var customShareMenu: UIMenu? = nil
 
   func makeUIViewController(context: Context) -> some UIViewController {
     let controller = QLPreviewController()
@@ -52,6 +65,12 @@ struct QuickLookPreview: UIViewControllerRepresentable {
         onClose?()
       }
     )
+    if let customShareMenu {
+      controller.navigationItem.rightBarButtonItem = UIBarButtonItem(
+        image: UIImage(systemName: "ellipsis.circle"),
+        menu: customShareMenu
+      )
+    }
 
     let navigationController = UINavigationController(rootViewController: controller)
     let appearance = UINavigationBarAppearance()
@@ -70,10 +89,24 @@ struct QuickLookPreview: UIViewControllerRepresentable {
       return
     }
     controller.title = title
+    controller.navigationItem.leftBarButtonItem = UIBarButtonItem(
+      systemItem: .close,
+      primaryAction: UIAction { _ in
+        onClose?()
+      }
+    )
+    if let customShareMenu {
+      controller.navigationItem.rightBarButtonItem = UIBarButtonItem(
+        image: UIImage(systemName: "ellipsis.circle"),
+        menu: customShareMenu
+      )
+    } else {
+      controller.navigationItem.rightBarButtonItem = nil
+    }
   }
 
   func makeCoordinator() -> QuickLookPreviewCoordinator {
-    QuickLookPreviewCoordinator(url: url)
+    QuickLookPreviewCoordinator(url: url, title: title)
   }
 }
 
