@@ -47,6 +47,8 @@ private final class IntegratedDocumentPreviewModel {
     pipeline: ImagePipeline,
     image: FetchImage
   ) async {
+    
+    // @TODO: If we have a cache hit on the downloaded PDF, skip the blurred thumbnail
 
     image.transaction = Transaction(animation: .linear(duration: 0.1))
 
@@ -101,8 +103,7 @@ private struct IntegratedDocumentPreview: View {
         image.image?
           .resizable()
           .scaledToFit()
-          .blur(radius: 10)
-          .frame(minHeight:400)
+          .blur(radius: 5, opaque: true)
 
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
