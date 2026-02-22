@@ -561,7 +561,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   var body: some View {
     GeometryReader { geoOuter in
       ZStack(alignment: .center) {
-        if case .loaded(let url) = viewModel.download {
+        if case .loaded(url: let url, document: _) = viewModel.download {
           WebView(
             url: url,
             topPadding: $topPadding,
@@ -679,7 +679,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 Label(localized: .localizable(.documentDeepLink), systemImage: "app")
               }
 
-              if case .loaded(let url) = viewModel.download {
+              if case .loaded(url: let url, document: _) = viewModel.download {
                 ShareLink(item: url) {
                   Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.down")
                 }
