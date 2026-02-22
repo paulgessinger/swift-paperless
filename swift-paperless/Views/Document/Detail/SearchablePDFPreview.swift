@@ -12,6 +12,14 @@ struct SearchablePDFPreview: View {
     let document: PDFDocument
     @Binding var pdfView: PDFKit.PDFView?
 
+    final class Coordinator {
+      var didApplyInitialTopAlignment = false
+    }
+
+    func makeCoordinator() -> Coordinator {
+      Coordinator()
+    }
+
     func makeUIView(context _: Context) -> PDFKit.PDFView {
       let view = PDFKit.PDFView()
       view.document = document
@@ -25,10 +33,62 @@ struct SearchablePDFPreview: View {
       return view
     }
 
-    func updateUIView(_ uiView: PDFKit.PDFView, context _: Context) {
+    func updateUIView(_ uiView: PDFKit.PDFView, context: Context) {
       if uiView.document !== document {
         uiView.document = document
+        context.coordinator.didApplyInitialTopAlignment = false
       }
+      applyInitialTopAlignmentIfNeeded(uiView, coordinator: context.coordinator)
+    }
+
+    private func applyInitialTopAlignmentIfNeeded(
+      _ pdfView: PDFKit.PDFView,
+      coordinator: Coordinator
+    ) {
+      guard !coordinator.didApplyInitialTopAlignment else {
+        return
+      }
+      guard let scrollView = findScrollView(in: pdfView) else {
+        return
+      }
+
+      scrollView.contentInsetAdjustmentBehavior = .never
+
+      let topInset = pdfView.safeAreaInsets.top
+      guard topInset > 0 else {
+        // Wait until layout/safe area is finalized before applying initial offset.
+        DispatchQueue.main.async {
+          applyInitialTopAlignmentIfNeeded(pdfView, coordinator: coordinator)
+        }
+        return
+      }
+
+      var contentInset = scrollView.contentInset
+      contentInset.top = topInset
+      scrollView.contentInset = contentInset
+
+      var verticalIndicatorInset = scrollView.verticalScrollIndicatorInsets
+      verticalIndicatorInset.top = topInset
+      scrollView.verticalScrollIndicatorInsets = verticalIndicatorInset
+
+      scrollView.setContentOffset(
+        CGPoint(x: scrollView.contentOffset.x, y: -topInset),
+        animated: false
+      )
+
+      coordinator.didApplyInitialTopAlignment = true
+    }
+
+    private func findScrollView(in view: UIView) -> UIScrollView? {
+      if let scrollView = view as? UIScrollView {
+        return scrollView
+      }
+      for subview in view.subviews {
+        if let scrollView = findScrollView(in: subview) {
+          return scrollView
+        }
+      }
+      return nil
     }
   }
 
