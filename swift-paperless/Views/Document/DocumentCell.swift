@@ -17,6 +17,7 @@ struct DocumentPreviewImage: View {
   var store: DocumentStore
   var document: Document
 
+  @EnvironmentObject private var imagePipelineProvider: ImagePipelineProvider
   @StateObject private var image = FetchImage()
 
   var body: some View {
@@ -29,13 +30,7 @@ struct DocumentPreviewImage: View {
     .task {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       do {
-        let dataloader = DataLoader()
-
-        if let delegate = store.repository.delegate {
-          dataloader.delegate = delegate
-        }
-
-        image.pipeline = ImagePipeline(configuration: .init(dataLoader: dataloader))
+        image.pipeline = imagePipelineProvider.pipeline
 
         try image.load(
           ImageRequest(
@@ -231,4 +226,5 @@ struct DocumentCell: View {
       try await store.fetchAll()
     } catch { print(error) }
   }
+  .environmentObject(ImagePipelineProvider())
 }

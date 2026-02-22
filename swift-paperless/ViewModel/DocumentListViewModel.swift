@@ -19,6 +19,7 @@ class DocumentListViewModel {
   private var store: DocumentStore
   private var filterState: FilterState
   private var errorController: ErrorController
+  private let imagePipelineProvider: ImagePipelineProvider
 
   var documents: [Document] = []
   var ready = false
@@ -33,21 +34,34 @@ class DocumentListViewModel {
   private var fetchMargin = 10
 
   private var imagePrefetcher: ImagePrefetcher
+  private var prefetchPipeline: ImagePipeline
 
-  init(store: DocumentStore, filterState: FilterState, errorController: ErrorController) {
+  init(
+    store: DocumentStore,
+    filterState: FilterState,
+    errorController: ErrorController,
+    imagePipelineProvider: ImagePipelineProvider
+  ) {
     self.store = store
     self.filterState = filterState
     self.errorController = errorController
+    self.imagePipelineProvider = imagePipelineProvider
+    let prefetchPipeline = imagePipelineProvider.pipeline
+    self.prefetchPipeline = prefetchPipeline
+    imagePrefetcher = ImagePrefetcher(pipeline: prefetchPipeline)
 
-    let dataloader = DataLoader()
-
-    if let delegate = store.repository.delegate {
-      dataloader.delegate = delegate
+    imagePrefetcher.didComplete = {
+      Logger.shared.debug("Thumbnail prefetching completed")
     }
+  }
 
-    imagePrefetcher = ImagePrefetcher(
-      pipeline: ImagePipeline(configuration: .init(dataLoader: dataloader)))
+  private func updatePrefetcherIfNeeded() {
+    let pipeline = imagePipelineProvider.pipeline
+    guard pipeline !== prefetchPipeline else { return }
 
+    imagePrefetcher.stopPrefetching()
+    prefetchPipeline = pipeline
+    imagePrefetcher = ImagePrefetcher(pipeline: pipeline)
     imagePrefetcher.didComplete = {
       Logger.shared.debug("Thumbnail prefetching completed")
     }
@@ -81,12 +95,22 @@ class DocumentListViewModel {
       try ensurePermissions()
       let batch = try await source!.fetch(limit: initialBatchSize)
 
-      let requests =
+      let requests: [ImageRequest] =
         try batch
         .map { try store.repository.thumbnailRequest(document: $0) }
-        .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+        .map { [
+          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+          ImageRequest(urlRequest: $0),
+        ] }
+        .flatMap { $0 }
+      
+//      let requests =
+      //    try batch
+//    .map { try store.repository.thumbnailRequest(document: $0) }
+//    .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+      updatePrefetcherIfNeeded()
       imagePrefetcher.startPrefetching(with: requests)
 
       documents = batch
@@ -125,6 +149,7 @@ class DocumentListViewModel {
             .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
 
           Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+          await self.updatePrefetcherIfNeeded()
           await self.imagePrefetcher.startPrefetching(with: requests)
 
           await MainActor.run {
@@ -157,6 +182,7 @@ class DocumentListViewModel {
         .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+      updatePrefetcherIfNeeded()
       imagePrefetcher.startPrefetching(with: requests)
 
       return batch
