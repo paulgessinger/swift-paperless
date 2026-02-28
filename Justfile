@@ -14,7 +14,7 @@ set_build number:
   uv run bump.py build swift-paperless.xcodeproj/project.pbxproj {{number}}
 
 beta:
-  fastlane beta
+  bundle exec fastlane beta
 
 default_os := '26.2'
 default_device := 'iPhone 17 Pro'
