@@ -47,7 +47,7 @@ private final class IntegratedDocumentPreviewModel {
     pipeline: ImagePipeline,
     image: FetchImage
   ) async {
-    
+
     // @TODO: If we have a cache hit on the downloaded PDF, skip the blurred thumbnail
 
     image.transaction = Transaction(animation: .linear(duration: 0.1))

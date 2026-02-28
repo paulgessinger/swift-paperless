@@ -35,9 +35,10 @@ struct DocumentPreviewImage: View {
           ImageRequest(
             urlRequest: store.repository.thumbnailRequest(document: document),
             processors: [.resize(width: 130)]))
-        
-        imagePipelineProvider.pipeline.loadImage(with:
-          ImageRequest(urlRequest: try store.repository.thumbnailRequest(document: document))
+
+        imagePipelineProvider.pipeline.loadImage(
+          with:
+            ImageRequest(urlRequest: try store.repository.thumbnailRequest(document: document))
         ) { _ in }
       } catch {
         Logger.shared.error("Error loading document thumbnail for cell: \(error)")
