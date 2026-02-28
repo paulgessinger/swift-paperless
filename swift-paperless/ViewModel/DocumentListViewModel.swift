@@ -98,16 +98,18 @@ class DocumentListViewModel {
       let requests: [ImageRequest] =
         try batch
         .map { try store.repository.thumbnailRequest(document: $0) }
-        .map { [
-          ImageRequest(urlRequest: $0),
-          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
-        ] }
+        .map {
+          [
+            ImageRequest(urlRequest: $0),
+            ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+          ]
+        }
         .flatMap { $0 }
-      
-//      let requests =
+
+      //      let requests =
       //    try batch
-//    .map { try store.repository.thumbnailRequest(document: $0) }
-//    .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+      //    .map { try store.repository.thumbnailRequest(document: $0) }
+      //    .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
       updatePrefetcherIfNeeded()
@@ -146,10 +148,12 @@ class DocumentListViewModel {
           let requests =
             try batch
             .map { try repository.thumbnailRequest(document: $0) }
-            .map { [
-              ImageRequest(urlRequest: $0),
-              ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
-            ] }
+            .map {
+              [
+                ImageRequest(urlRequest: $0),
+                ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+              ]
+            }
             .flatMap { $0 }
 
           Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
@@ -183,10 +187,12 @@ class DocumentListViewModel {
       let requests =
         try batch
         .map { try self.store.repository.thumbnailRequest(document: $0) }
-        .map { [
-          ImageRequest(urlRequest: $0),
-          ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
-        ] }
+        .map {
+          [
+            ImageRequest(urlRequest: $0),
+            ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+          ]
+        }
         .flatMap { $0 }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")

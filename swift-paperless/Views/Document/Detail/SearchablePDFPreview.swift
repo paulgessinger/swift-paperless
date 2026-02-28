@@ -177,10 +177,10 @@ struct SearchablePDFPreview: View {
           }
         }
       }
-    .onDisappear {
-      // Avoid leaking search state when this sheet is dismissed and re-presented.
-      setSearchMode(false)
-    }
+      .onDisappear {
+        // Avoid leaking search state when this sheet is dismissed and re-presented.
+        setSearchMode(false)
+      }
   }
 
   private func setSearchMode(_ enabled: Bool) {
