@@ -1,0 +1,4 @@
+1.10.0 (181)
+
+- Add ability to configure the filter bar
+- Fix bug where filter state would be reset when closing filter sheet
