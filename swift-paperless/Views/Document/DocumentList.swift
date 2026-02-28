@@ -40,7 +40,7 @@ struct LoadingDocumentList: View {
 struct DocumentList: View {
   var store: DocumentStore
   @Binding var navPath: [NavigationState]
-  @ObservedObject var filterModel: FilterModel
+  var filterModel: FilterModel
 
   @State private var documentToDelete: Document?
 

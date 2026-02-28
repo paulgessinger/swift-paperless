@@ -30,8 +30,10 @@ private struct SavedViewError: LocalizedError {
   }
 }
 
-private extension FilterModel {
-  func binding<Value>(for keyPath: WritableKeyPath<FilterState, Value>) -> Binding<Value> {
+extension FilterModel {
+  fileprivate func binding<Value>(for keyPath: WritableKeyPath<FilterState, Value>) -> Binding<
+    Value
+  > {
     Binding(
       get: { self.filterState[keyPath: keyPath] },
       set: { value in
@@ -45,7 +47,7 @@ private extension FilterModel {
 
 private struct FilterMenu<Content: View>: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var filterModel: FilterModel
+  @Environment(FilterModel.self) private var filterModel
   @EnvironmentObject private var errorController: ErrorController
   @Binding var savedView: ProtoSavedView?
   @ViewBuilder var label: () -> Content
@@ -362,11 +364,12 @@ private struct PilliOS18<Label: View>: View {
 }
 
 private struct SortMenu: View {
-  @EnvironmentObject private var filterModel: FilterModel
+  @Environment(FilterModel.self) private var filterModel
   @EnvironmentObject private var store: DocumentStore
 
   private var eligibleSortFields: [SortField] {
-    let isAdvancedSearch = !filterModel.filterState.searchText.isEmpty && filterModel.filterState.searchMode == .advanced
+    let isAdvancedSearch =
+      !filterModel.filterState.searchText.isEmpty && filterModel.filterState.searchMode == .advanced
 
     let inclusive =
       SortField.allCases
@@ -434,7 +437,7 @@ private struct SortMenu: View {
 
 struct FilterBar: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var filterModel: FilterModel
+  @Environment(FilterModel.self) private var filterModel
   @Environment(\.dismiss) private var dismiss
   @Environment(RouteManager.self) private var routeManager
 
@@ -549,7 +552,7 @@ struct FilterBar: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var filterModel: FilterModel
+    @Environment(FilterModel.self) private var filterModel
 
     var body: some View {
       NavigationStack {
@@ -829,7 +832,10 @@ struct FilterBar: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
         FilterMenu(savedView: $savedView) {
-          Pill(active: filterModel.filterState.filtering || filterModel.filterState.savedView != nil, chevron: false) {
+          Pill(
+            active: filterModel.filterState.filtering || filterModel.filterState.savedView != nil,
+            chevron: false
+          ) {
             Label(
               String(localized: .localizable(.filtering)), systemImage: "line.3.horizontal.decrease"
             )
@@ -950,14 +956,14 @@ private let customFields = [
 
 #Preview {
   @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
-  @Previewable @StateObject var filterModel = FilterModel()
+  @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var errorController = ErrorController()
 
   NavigationStack {
     Form {
       FilterBar()
         .environmentObject(store)
-        .environmentObject(filterModel)
+        .environment(filterModel)
         .environmentObject(errorController)
         .environment(RouteManager.shared)
 

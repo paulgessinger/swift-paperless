@@ -8,13 +8,15 @@
 import Combine
 import DataModel
 import Foundation
+import Observation
 import os
 
 @MainActor
-class FilterModel: ObservableObject {
-  private var tasks = Set<AnyCancellable>()
+@Observable
+final class FilterModel {
+  @ObservationIgnored private var tasks = Set<AnyCancellable>()
 
-  @Published var ready: Bool = true
+  var ready: Bool = true
 
   var filterState: FilterState = {
     Logger.shared.trace("Loading FilterState")
@@ -39,9 +41,6 @@ class FilterModel: ObservableObject {
     }
   }()
   {
-    willSet {
-      objectWillChange.send()
-    }
     didSet {
       Logger.shared.trace("FilterState modified")
       if filterState == oldValue, filterState.modified == oldValue.modified {

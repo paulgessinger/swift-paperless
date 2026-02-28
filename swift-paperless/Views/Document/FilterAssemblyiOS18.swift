@@ -10,7 +10,7 @@ import Networking
 import SwiftUI
 
 struct FilterAssemblyiOS18: View {
-  @ObservedObject var filterModel: FilterModel
+  var filterModel: FilterModel
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
@@ -79,7 +79,7 @@ struct FilterAssemblyiOS18: View {
 }
 
 #Preview {
-  @Previewable @StateObject var filterModel = FilterModel()
+  @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
@@ -96,7 +96,7 @@ struct FilterAssemblyiOS18: View {
         .environmentObject(store)
         .environmentObject(errorController)
         .environmentObject(connectionManager)
-        .environmentObject(filterModel)
+        .environment(filterModel)
     }
 
     .toolbarTitleMenu {
