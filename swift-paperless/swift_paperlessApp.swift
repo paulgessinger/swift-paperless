@@ -241,6 +241,10 @@ struct MainView: View {
     .task {
       biometricLockManager.lockIfEnabled()
 
+      guard initialDisplay else {
+        return
+      }
+
       Logger.shared.info("INITIAL ROUTE: \(String(describing:RouteManager.shared.pendingURL))")
       Logger.shared.info("INITIAL ROUTE: \(String(describing:routeManager.pendingURL))")
       setupQuickActions()
