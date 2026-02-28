@@ -8,18 +8,17 @@
 import Combine
 import DataModel
 import Foundation
+import Observation
 import os
 
 @MainActor
-class FilterModel: ObservableObject {
-  private var tasks = Set<AnyCancellable>()
+@Observable
+final class FilterModel {
+  @ObservationIgnored private var tasks = Set<AnyCancellable>()
 
-  var filterStatePublisher =
-    PassthroughSubject<FilterState, Never>()
+  var ready: Bool = true
 
-  @Published var ready: Bool = true
-
-  @Published var filterState: FilterState = {
+  var filterState: FilterState = {
     Logger.shared.trace("Loading FilterState")
     guard
       let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.object(
@@ -63,14 +62,6 @@ class FilterModel: ObservableObject {
   }
 
   init() {
-    $filterState
-      .removeDuplicates()
-      .debounce(for: .seconds(0.2), scheduler: DispatchQueue.main)
-      .sink { [weak self] value in
-        self?.filterStatePublisher.send(value)
-      }
-      .store(in: &tasks)
-
     AppSettings.shared.settingsChanged
       .sink { [weak self] in
         guard let self else { return }

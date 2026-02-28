@@ -56,7 +56,7 @@ struct DocumentView: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
 
-  @StateObject private var filterModel = FilterModel()
+  @State private var filterModel = FilterModel()
 
   // MARK: State
 
@@ -543,7 +543,7 @@ struct DocumentView: View {
       }
     }
 
-    .environmentObject(filterModel)
+    .environment(filterModel)
   }
 
   private func tasksSheet(state: NavigationState) -> some View {

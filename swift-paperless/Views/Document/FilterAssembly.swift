@@ -11,7 +11,7 @@ import SwiftUI
 
 @available(iOS 26.0, *)
 struct FilterAssembly: View {
-  @ObservedObject var filterModel: FilterModel
+  var filterModel: FilterModel
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
@@ -98,7 +98,7 @@ struct FilterAssembly: View {
 
 @available(iOS 26.0, *)
 #Preview {
-  @Previewable @StateObject var filterModel = FilterModel()
+  @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
@@ -121,7 +121,7 @@ struct FilterAssembly: View {
         .environmentObject(errorController)
         // @TODO: Is this needed even?
         .environmentObject(connectionManager)
-        .environmentObject(filterModel)
+        .environment(filterModel)
     }
 
     .toolbarTitleMenu {

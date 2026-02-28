@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 10.04.23.
 //
 
-import Combine
 import Common
 import DataModel
 import Foundation
@@ -33,9 +32,8 @@ private struct SavedViewError: LocalizedError {
 
 private struct FilterMenu<Content: View>: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var filterModel: FilterModel
+  @Environment(FilterModel.self) private var filterModel
   @EnvironmentObject private var errorController: ErrorController
-  @Binding var filterState: FilterState
   @Binding var savedView: ProtoSavedView?
   @ViewBuilder var label: () -> Content
 
@@ -131,16 +129,15 @@ private struct FilterMenu<Content: View>: View {
           }
         }
 
-        if filterState.filtering {
+        if filterModel.filterState.filtering {
           if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
             Divider()
           }
-          Text(.localizable(.filtersApplied(UInt(filterState.ruleCount))))
+          Text(.localizable(.filtersApplied(UInt(filterModel.filterState.ruleCount))))
           Divider()
           Button(role: .destructive) {
             Haptics.shared.notification(.success)
             filterModel.filterState.clear()
-            filterState.clear()
           } label: {
             Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
           }
@@ -352,16 +349,17 @@ private struct PilliOS18<Label: View>: View {
 }
 
 private struct SortMenu: View {
-  @Binding var filterState: FilterState
+  @Environment(FilterModel.self) private var filterModel
   @EnvironmentObject private var store: DocumentStore
 
   private var eligibleSortFields: [SortField] {
-    let isAdvancedSearch = !filterState.searchText.isEmpty && filterState.searchMode == .advanced
+    let isAdvancedSearch =
+      !filterModel.filterState.searchText.isEmpty && filterModel.filterState.searchMode == .advanced
 
     let inclusive =
       SortField.allCases
 
-    if isAdvancedSearch || filterState.sortField == .score {
+    if isAdvancedSearch || filterModel.filterState.sortField == .score {
       return inclusive
     } else {
       return inclusive.filter { $0 != .score }
@@ -376,25 +374,36 @@ private struct SortMenu: View {
   }
 
   var body: some View {
+    @Bindable var filterModel = filterModel
+
     Menu {
-      Picker(String(localized: .localizable(.sortOrder)), selection: $filterState.sortOrder) {
+      Picker(
+        String(localized: .localizable(.sortOrder)),
+        selection: $filterModel.filterState.sortOrder
+      ) {
         Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
           .tag(SortOrder.ascending)
         Label(SortOrder.descending.localizedName, systemImage: "arrow.down")
           .tag(SortOrder.descending)
       }
 
-      Picker(String(localized: .localizable(.sortBy)), selection: $filterState.sortField) {
+      Picker(
+        String(localized: .localizable(.sortBy)),
+        selection: $filterModel.filterState.sortField
+      ) {
         ForEach(eligibleSortFields, id: \.rawValue) { f in
           Text(f.localizedName(customFields: store.customFields)).tag(f)
         }
-        if case .other(let value) = filterState.sortField {
+        if case .other(let value) = filterModel.filterState.sortField {
           Text(value)
             .tag(SortField.other(value))
         }
       }
 
-      Picker(String(localized: .localizable(.customFields)), selection: $filterState.sortField) {
+      Picker(
+        String(localized: .localizable(.customFields)),
+        selection: $filterModel.filterState.sortField
+      ) {
         ForEach(customFields, id: \.rawValue) { f in
           Text(f.localizedName(customFields: store.customFields)).tag(f)
         }
@@ -405,7 +414,7 @@ private struct SortMenu: View {
         label: {
           Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
             .labelStyle(.iconOnly)
-        }, active: !filterState.defaultSorting, action: {})
+        }, active: !filterModel.filterState.defaultSorting, action: {})
     }
     .onTapGesture {
       Haptics.shared.impact(style: .light)
@@ -415,7 +424,7 @@ private struct SortMenu: View {
 
 struct FilterBar: View {
   @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var filterModel: FilterModel
+  @Environment(FilterModel.self) private var filterModel
   @Environment(\.dismiss) private var dismiss
   @Environment(RouteManager.self) private var routeManager
 
@@ -437,19 +446,14 @@ struct FilterBar: View {
     case date
   }
 
-  @State private var filterState = FilterState.default
-
   @State private var savedView: ProtoSavedView? = nil
 
   @Namespace private var transition
 
   private struct Modal<Content: View>: View {
-    @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var filterModel: FilterModel
     @Environment(\.dismiss) private var dismiss
 
     var title: String
-    @Binding var filterState: FilterState
     var onDismiss: () -> Void = {}
     @ViewBuilder var content: () -> Content
 
@@ -464,7 +468,6 @@ struct FilterBar: View {
           ToolbarItem(placement: .navigationBarTrailing) {
             SaveButton {
               dismiss()
-              filterModel.filterState = filterState
               onDismiss()
             }
           }
@@ -536,7 +539,7 @@ struct FilterBar: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DocumentStore
-    @EnvironmentObject private var filterModel: FilterModel
+    @Environment(FilterModel.self) private var filterModel
 
     var body: some View {
       NavigationStack {
@@ -567,7 +570,7 @@ struct FilterBar: View {
     Element(
       label: {
         Group {
-          switch filterState.tags {
+          switch filterModel.filterState.tags {
           case .any:
             Text(.localizable(.tags))
           case .notAssigned:
@@ -615,7 +618,7 @@ struct FilterBar: View {
         .backport.matchedTransitionSource(
           id: TransitionKeys.tags, in: transition
         )
-      }, active: filterState.tags != .any
+      }, active: filterModel.filterState.tags != .any
     ) {
       present(.tags)
     }
@@ -628,7 +631,7 @@ struct FilterBar: View {
         filterModel.filterState.owner = .any
       } label: {
         let text = String(localized: .localizable(.ownerAll))
-        if filterState.owner == .any {
+        if filterModel.filterState.owner == .any {
           Label(text, systemImage: "checkmark")
         } else {
           Text(text)
@@ -640,7 +643,7 @@ struct FilterBar: View {
           filterModel.filterState.owner = .anyOf(ids: [user.id])
         } label: {
           let text = String(localized: .localizable(.ownerMyDocuments))
-          switch filterState.owner {
+          switch filterModel.filterState.owner {
           case .anyOf(let ids):
             if ids.count == 1, ids[0] == store.currentUser?.id {
               Label(text, systemImage: "checkmark")
@@ -655,7 +658,7 @@ struct FilterBar: View {
           filterModel.filterState.owner = .noneOf(ids: [user.id])
         } label: {
           let text = String(localized: .localizable(.ownerSharedWithMe))
-          switch filterState.owner {
+          switch filterModel.filterState.owner {
           case .noneOf(let ids):
             if ids.count == 1, ids[0] == store.currentUser?.id {
               Label(text, systemImage: "checkmark")
@@ -671,14 +674,14 @@ struct FilterBar: View {
         filterModel.filterState.owner = .notAssigned
       } label: {
         let text = String(localized: .localizable(.ownerUnowned))
-        if filterState.owner == .notAssigned {
+        if filterModel.filterState.owner == .notAssigned {
           Label(text, systemImage: "checkmark")
         } else {
           Text(text)
         }
       }
 
-      switch filterState.owner {
+      switch filterModel.filterState.owner {
       case .anyOf(let ids), .noneOf(let ids):
         if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
           Divider()
@@ -695,8 +698,8 @@ struct FilterBar: View {
   }
 
   private var ownerElement: some View {
-    Pill(active: filterState.owner != .any) {
-      switch filterState.owner {
+    Pill(active: filterModel.filterState.owner != .any) {
+      switch filterModel.filterState.owner {
       case .any:
         Text(.localizable(.permissions))
       case .anyOf(let ids):
@@ -738,36 +741,36 @@ struct FilterBar: View {
         label: {
           CommonElementLabel(
             DocumentType.self,
-            state: filterState.documentType
+            state: filterModel.filterState.documentType
           )
           .backport.matchedTransitionSource(
             id: TransitionKeys.documentType, in: transition
           )
-        }, active: filterState.documentType != .any
+        }, active: filterModel.filterState.documentType != .any
       ) { present(.documentType) }
     case .correspondent:
       Element(
         label: {
           CommonElementLabel(
             Correspondent.self,
-            state: filterState.correspondent
+            state: filterModel.filterState.correspondent
           )
           .backport.matchedTransitionSource(
             id: TransitionKeys.correspondent, in: transition
           )
-        }, active: filterState.correspondent != .any
+        }, active: filterModel.filterState.correspondent != .any
       ) { present(.correspondent) }
     case .storagePath:
       Element(
         label: {
           CommonElementLabel(
             StoragePath.self,
-            state: filterState.storagePath
+            state: filterModel.filterState.storagePath
           )
           .backport.matchedTransitionSource(
             id: TransitionKeys.storagePath, in: transition
           )
-        }, active: filterState.storagePath != .any
+        }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
     case .permissions:
       ownerElement
@@ -815,8 +818,11 @@ struct FilterBar: View {
   private var barContent: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
-        FilterMenu(filterState: $filterState, savedView: $savedView) {
-          Pill(active: filterState.filtering || filterState.savedView != nil, chevron: false) {
+        FilterMenu(savedView: $savedView) {
+          Pill(
+            active: filterModel.filterState.filtering || filterModel.filterState.savedView != nil,
+            chevron: false
+          ) {
             Label(
               String(localized: .localizable(.filtering)), systemImage: "line.3.horizontal.decrease"
             )
@@ -833,7 +839,7 @@ struct FilterBar: View {
 
         Divider()
 
-        SortMenu(filterState: $filterState)
+        SortMenu()
       }
       .padding(.horizontal)
     }
@@ -852,41 +858,28 @@ struct FilterBar: View {
   }
 
   var body: some View {
+    @Bindable var filterModel = filterModel
+
     barView
       .scaledToFit()
       .padding(.vertical, 5)
-
-      .task {
-        try? await Task.sleep(for: .seconds(0.5))
-        withAnimation {
-          filterState = filterModel.filterState
-        }
-      }
-
-      .onChange(of: filterState.sortOrder) { _, value in
-        filterModel.filterState.sortOrder = value
-      }
-
-      .onChange(of: filterState.sortField) { _, value in
-        filterModel.filterState.sortField = value
-      }
 
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
       // MARK: Sheets
 
       .sheet(isPresented: $showTags) {
-        Modal(title: String(localized: .localizable(.tags)), filterState: $filterState) {
+        Modal(title: String(localized: .localizable(.tags))) {
           TagFilterView(
-            selectedTags: $filterState.tags)
+            selectedTags: $filterModel.filterState.tags)
         }
         .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
       }
 
       .sheet(isPresented: $showDocumentType) {
-        Modal(title: String(localized: .localizable(.documentType)), filterState: $filterState) {
+        Modal(title: String(localized: .localizable(.documentType))) {
           CommonPickerFilterView(
-            selection: $filterState.documentType,
+            selection: $filterModel.filterState.documentType,
             elements: store.documentTypes.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -897,9 +890,9 @@ struct FilterBar: View {
       }
 
       .sheet(isPresented: $showCorrespondent) {
-        Modal(title: String(localized: .localizable(.correspondent)), filterState: $filterState) {
+        Modal(title: String(localized: .localizable(.correspondent))) {
           CommonPickerFilterView(
-            selection: $filterState.correspondent,
+            selection: $filterModel.filterState.correspondent,
             elements: store.correspondents.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -910,9 +903,9 @@ struct FilterBar: View {
       }
 
       .sheet(isPresented: $showStoragePath) {
-        Modal(title: String(localized: .localizable(.storagePath)), filterState: $filterState) {
+        Modal(title: String(localized: .localizable(.storagePath))) {
           CommonPickerFilterView(
-            selection: $filterState.storagePath,
+            selection: $filterModel.filterState.storagePath,
             elements: store.storagePaths.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -941,14 +934,6 @@ struct FilterBar: View {
         AddSavedViewSheet(savedView: view)
       }
 
-      // @TODO: Revisit if this is needed still, if not simplify
-      .onReceive(filterModel.filterStatePublisher) { value in
-        DispatchQueue.main.async {
-          withAnimation {
-            filterState = value
-          }
-        }
-      }
   }
 }
 
@@ -960,14 +945,14 @@ private let customFields = [
 
 #Preview {
   @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
-  @Previewable @StateObject var filterModel = FilterModel()
+  @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var errorController = ErrorController()
 
   NavigationStack {
     Form {
       FilterBar()
         .environmentObject(store)
-        .environmentObject(filterModel)
+        .environment(filterModel)
         .environmentObject(errorController)
         .environment(RouteManager.shared)
 
