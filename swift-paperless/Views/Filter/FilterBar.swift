@@ -30,21 +30,6 @@ private struct SavedViewError: LocalizedError {
   }
 }
 
-extension FilterModel {
-  fileprivate func binding<Value>(for keyPath: WritableKeyPath<FilterState, Value>) -> Binding<
-    Value
-  > {
-    Binding(
-      get: { self.filterState[keyPath: keyPath] },
-      set: { value in
-        var state = self.filterState
-        state[keyPath: keyPath] = value
-        self.filterState = state
-      }
-    )
-  }
-}
-
 private struct FilterMenu<Content: View>: View {
   @EnvironmentObject private var store: DocumentStore
   @Environment(FilterModel.self) private var filterModel
@@ -389,10 +374,12 @@ private struct SortMenu: View {
   }
 
   var body: some View {
+    @Bindable var filterModel = filterModel
+
     Menu {
       Picker(
         String(localized: .localizable(.sortOrder)),
-        selection: filterModel.binding(for: \.sortOrder)
+        selection: $filterModel.filterState.sortOrder
       ) {
         Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
           .tag(SortOrder.ascending)
@@ -402,7 +389,7 @@ private struct SortMenu: View {
 
       Picker(
         String(localized: .localizable(.sortBy)),
-        selection: filterModel.binding(for: \.sortField)
+        selection: $filterModel.filterState.sortField
       ) {
         ForEach(eligibleSortFields, id: \.rawValue) { f in
           Text(f.localizedName(customFields: store.customFields)).tag(f)
@@ -415,7 +402,7 @@ private struct SortMenu: View {
 
       Picker(
         String(localized: .localizable(.customFields)),
-        selection: filterModel.binding(for: \.sortField)
+        selection: $filterModel.filterState.sortField
       ) {
         ForEach(customFields, id: \.rawValue) { f in
           Text(f.localizedName(customFields: store.customFields)).tag(f)
@@ -871,6 +858,8 @@ struct FilterBar: View {
   }
 
   var body: some View {
+    @Bindable var filterModel = filterModel
+
     barView
       .scaledToFit()
       .padding(.vertical, 5)
@@ -882,7 +871,7 @@ struct FilterBar: View {
       .sheet(isPresented: $showTags) {
         Modal(title: String(localized: .localizable(.tags))) {
           TagFilterView(
-            selectedTags: filterModel.binding(for: \.tags))
+            selectedTags: $filterModel.filterState.tags)
         }
         .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
       }
@@ -890,7 +879,7 @@ struct FilterBar: View {
       .sheet(isPresented: $showDocumentType) {
         Modal(title: String(localized: .localizable(.documentType))) {
           CommonPickerFilterView(
-            selection: filterModel.binding(for: \.documentType),
+            selection: $filterModel.filterState.documentType,
             elements: store.documentTypes.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -903,7 +892,7 @@ struct FilterBar: View {
       .sheet(isPresented: $showCorrespondent) {
         Modal(title: String(localized: .localizable(.correspondent))) {
           CommonPickerFilterView(
-            selection: filterModel.binding(for: \.correspondent),
+            selection: $filterModel.filterState.correspondent,
             elements: store.correspondents.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -916,7 +905,7 @@ struct FilterBar: View {
       .sheet(isPresented: $showStoragePath) {
         Modal(title: String(localized: .localizable(.storagePath))) {
           CommonPickerFilterView(
-            selection: filterModel.binding(for: \.storagePath),
+            selection: $filterModel.filterState.storagePath,
             elements: store.storagePaths.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
@@ -927,17 +916,17 @@ struct FilterBar: View {
       }
 
       .sheet(isPresented: $showCustomFields) {
-        CustomFieldFilterView(query: filterModel.binding(for: \.customField))
+        CustomFieldFilterView(query: $filterModel.filterState.customField)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
       }
 
       .sheet(isPresented: $showAsn) {
-        AsnFilterView(query: filterModel.binding(for: \.asn))
+        AsnFilterView(query: $filterModel.filterState.asn)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
       }
 
       .sheet(isPresented: $showDate) {
-        DateFilterView(query: filterModel.binding(for: \.date))
+        DateFilterView(query: $filterModel.filterState.date)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
       }
 
