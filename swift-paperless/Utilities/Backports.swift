@@ -24,6 +24,12 @@ extension ToolbarContent {
 
 @MainActor
 extension Backport where Content: View {
+  public enum GlassEffectStyle: Sendable {
+    case clear
+    case identity
+    case regular
+
+  }
 
   @ViewBuilder
   public func glassProminentButtonStyle() -> some View {
@@ -49,6 +55,18 @@ extension Backport where Content: View {
   }
 
   @ViewBuilder
+  public func glassEffect(
+    _ style: GlassEffectStyle = .regular,
+    in shape: some Shape = Capsule()
+  ) -> some View {
+    if #available(iOS 26.0, *) {
+      content.glassEffect(style.glass, in: shape)
+    } else {
+      content
+    }
+  }
+
+  @ViewBuilder
   public func navigationTransitionZoom(sourceID: some Hashable, in namespace: Namespace.ID)
     -> some View
   {
@@ -69,6 +87,21 @@ extension Backport where Content: View {
       content.matchedTransitionSource(id: id, in: namespace)
     } else {
       content
+    }
+  }
+
+}
+
+@available(iOS 26.0, *)
+extension Backport.GlassEffectStyle {
+  var glass: Glass {
+    switch self {
+    case .clear:
+      .clear
+    case .identity:
+      .identity
+    case .regular:
+      .regular
     }
   }
 }
