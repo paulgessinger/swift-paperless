@@ -55,7 +55,9 @@ test-xcode:
 test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") test-xcode
 
 lint-format:
-  swift-format format --in-place --recursive . --parallel
+  find . -name '*.swift' \
+    -not -path '*/.git/*' -not -path '*/.build/*' -not -path '*/vendor/*' \
+    | parallel swift-format format --in-place {}
 
 lint-whitespace:
   uv run .ci/lint.py whitespace
