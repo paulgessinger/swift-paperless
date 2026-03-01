@@ -128,22 +128,21 @@ struct SearchablePDFPreview: View {
     if matches.isEmpty {
       if query.isEmpty {
         return nil
-      }
-      else {
+      } else {
         return "0"
       }
     }
-    
+
     return "\(currentMatchIndex + 1)/\(matches.count)"
   }
 
   private var activeSearchBarVerticalPadding: CGFloat {
     let hasSoftwareKeyboard = isSoftwareKeyboardVisible || keyboardHeight > 100
-    
+
     if isSearchFieldFocused && hasSoftwareKeyboard {
       return 12
     }
-    
+
     return hasSoftwareKeyboard ? 24 : 34
   }
 
@@ -163,18 +162,18 @@ struct SearchablePDFPreview: View {
           }
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.tint(.accent).interactive(), in: Circle())
-          
+
           TextField("Search", text: $query)
             .focused($isSearchFieldFocused)
             .submitLabel(.search)
-          
+
             .onChange(of: query) { _, _ in
               // Live-search keeps the interaction fast and predictable.
               runSearch()
             }
             .padding(.horizontal)
             .frame(maxHeight: .infinity)
-          
+
             .overlay(alignment: .trailing) {
               HStack {
                 if let resultLabel {
@@ -183,12 +182,11 @@ struct SearchablePDFPreview: View {
                     .foregroundStyle(.secondary)
                     .frame(minWidth: 42)
                 }
-                
+
                 if !query.isEmpty {
                   Button {
                     query = ""
-                  }
-                  label: {
+                  } label: {
                     Label(localized: .localizable(.clearText), systemImage: "xmark.circle.fill")
                       .labelStyle(.iconOnly)
                   }
@@ -199,8 +197,7 @@ struct SearchablePDFPreview: View {
             }
 
             .glassEffect(.regular.interactive())
-          
-          
+
           HStack {
             Button {
               goToPrevious()
@@ -208,7 +205,7 @@ struct SearchablePDFPreview: View {
               Image(systemName: "chevron.up")
             }
             .disabled(matches.isEmpty)
-            
+
             Button {
               goToNext()
             } label: {
@@ -223,7 +220,7 @@ struct SearchablePDFPreview: View {
         .padding(.horizontal, 12)
         .padding(.vertical, activeSearchBarVerticalPadding)
         .fixedSize(horizontal: false, vertical: true)
-        
+
       } else {
         Button {
           setSearchMode(true)

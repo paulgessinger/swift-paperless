@@ -32,6 +32,7 @@ class DocumentListViewModel {
   private var initialBatchSize: UInt = 250
   private var batchSize: UInt = 250
   private var fetchMargin = 10
+  private let highPriorityPrefetchCount = 10
 
   private var imagePrefetcher: ImagePrefetcher
   private var prefetchPipeline: ImagePipeline
@@ -97,11 +98,14 @@ class DocumentListViewModel {
 
       let requests: [ImageRequest] =
         try batch
-        .map { try store.repository.thumbnailRequest(document: $0) }
-        .map {
-          [
-            ImageRequest(urlRequest: $0),
-            ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+        .enumerated()
+        .map { index, document in
+          let urlRequest = try store.repository.thumbnailRequest(document: document)
+          let fullPriority: ImageRequest.Priority =
+            index < highPriorityPrefetchCount ? .high : .normal
+          return [
+            ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+            ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
           ]
         }
         .flatMap { $0 }
@@ -130,6 +134,7 @@ class DocumentListViewModel {
     if exhausted { return }
     if currentIndex >= documents.count - fetchMargin {
       let repository = store.repository
+      let highPriorityCount = highPriorityPrefetchCount
       Task.detached {
         do {
           Logger.shared.info("Fetching additional documents")
@@ -147,11 +152,14 @@ class DocumentListViewModel {
 
           let requests =
             try batch
-            .map { try repository.thumbnailRequest(document: $0) }
-            .map {
-              [
-                ImageRequest(urlRequest: $0),
-                ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+            .enumerated()
+            .map { index, document in
+              let urlRequest = try repository.thumbnailRequest(document: document)
+              let fullPriority: ImageRequest.Priority =
+                index < highPriorityCount ? .high : .normal
+              return [
+                ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+                ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
               ]
             }
             .flatMap { $0 }
@@ -186,11 +194,14 @@ class DocumentListViewModel {
 
       let requests =
         try batch
-        .map { try self.store.repository.thumbnailRequest(document: $0) }
-        .map {
-          [
-            ImageRequest(urlRequest: $0),
-            ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]),
+        .enumerated()
+        .map { index, document in
+          let urlRequest = try self.store.repository.thumbnailRequest(document: document)
+          let fullPriority: ImageRequest.Priority =
+            index < highPriorityPrefetchCount ? .high : .normal
+          return [
+            ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+            ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
           ]
         }
         .flatMap { $0 }

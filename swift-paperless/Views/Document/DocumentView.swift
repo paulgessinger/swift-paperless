@@ -10,6 +10,7 @@ import Combine
 import Common
 import DataModel
 import Networking
+import Nuke
 import PhotosUI
 import QuickLook
 import SwiftUI
@@ -149,6 +150,10 @@ struct DocumentView: View {
             return
           }
 
+          if let urlRequest = try? store.repository.thumbnailRequest(document: document) {
+            let request = ImageRequest(urlRequest: urlRequest, priority: .high)
+            imagePipelineProvider.pipeline.loadImage(with: request) { _ in }
+          }
           await clear()
           navPath.append(NavigationState.detail(document: document))
         }
@@ -563,6 +568,7 @@ struct DocumentView: View {
     return TasksView(navPath: navPath)
       .environmentObject(store)
       .environmentObject(errorController)
+      .environment(imagePipelineProvider)
       .errorOverlay(errorController: errorController, offset: 15)
   }
 }
