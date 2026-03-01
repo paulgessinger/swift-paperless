@@ -121,21 +121,37 @@ struct SearchablePDFPreview: View {
   @State private var matches = [PDFSelection]()
   @State private var currentMatchIndex = 0
   @State private var bottomBarHeight: CGFloat = 0
+  @State private var isSoftwareKeyboardVisible = false
+  @State private var keyboardHeight: CGFloat = 0
 
-  @Namespace private var namespace
-
-  private var resultLabel: String {
-    guard !matches.isEmpty else {
-      return "0"
+  private var resultLabel: String? {
+    if matches.isEmpty {
+      if query.isEmpty {
+        return nil
+      }
+      else {
+        return "0"
+      }
     }
+    
     return "\(currentMatchIndex + 1)/\(matches.count)"
+  }
+
+  private var activeSearchBarVerticalPadding: CGFloat {
+    let hasSoftwareKeyboard = isSoftwareKeyboardVisible || keyboardHeight > 100
+    
+    if isSearchFieldFocused && hasSoftwareKeyboard {
+      return 12
+    }
+    
+    return hasSoftwareKeyboard ? 24 : 34
   }
 
   @available(iOS 26.0, *)
   private var searchBar: some View {
     GlassEffectContainer {
-      HStack(spacing: 8) {
-        if isSearchMode {
+      if isSearchMode {
+        HStack(spacing: 8) {
           Button {
             setSearchMode(false)
             isSearchFieldFocused = false
@@ -147,24 +163,44 @@ struct SearchablePDFPreview: View {
           }
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.tint(.accent).interactive(), in: Circle())
-
+          
           TextField("Search", text: $query)
             .focused($isSearchFieldFocused)
             .submitLabel(.search)
-
+          
             .onChange(of: query) { _, _ in
               // Live-search keeps the interaction fast and predictable.
               runSearch()
             }
             .padding(.horizontal)
             .frame(maxHeight: .infinity)
-            .glassEffect(.regular.interactive())
+          
+            .overlay(alignment: .trailing) {
+              HStack {
+                if let resultLabel {
+                  Text(resultLabel)
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 42)
+                }
+                
+                if !query.isEmpty {
+                  Button {
+                    query = ""
+                  }
+                  label: {
+                    Label(localized: .localizable(.clearText), systemImage: "xmark.circle.fill")
+                      .labelStyle(.iconOnly)
+                  }
+                  .foregroundStyle(.secondary)
+                  .padding(.trailing)
+                }
+              }
+            }
 
-          //        Text(resultLabel)
-          //          .font(.footnote.monospacedDigit())
-          //          .foregroundStyle(.secondary)
-          //          .frame(minWidth: 42)
-          //
+            .glassEffect(.regular.interactive())
+          
+          
           HStack {
             Button {
               goToPrevious()
@@ -172,7 +208,7 @@ struct SearchablePDFPreview: View {
               Image(systemName: "chevron.up")
             }
             .disabled(matches.isEmpty)
-
+            
             Button {
               goToNext()
             } label: {
@@ -182,40 +218,27 @@ struct SearchablePDFPreview: View {
           }
           .padding()
           .frame(maxHeight: .infinity)
-          .glassEffect()
-        } else {
-          Button {
-            setSearchMode(true)
-            isSearchFieldFocused = true
-          } label: {
-            Label(localized: .localizable(.search), systemImage: "magnifyingglass")
-              .labelStyle(.iconOnly)
-
-          }
-          .padding()
-          .frame(maxHeight: .infinity)
           .glassEffect(.regular.interactive())
-          .padding()
-          Spacer()
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, activeSearchBarVerticalPadding)
+        .fixedSize(horizontal: false, vertical: true)
+        
+      } else {
+        Button {
+          setSearchMode(true)
+          isSearchFieldFocused = true
+        } label: {
+          Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+            .labelStyle(.iconOnly)
+            .padding()
+        }
+        .glassEffect(.regular.interactive(), in: Circle())
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(34)
       }
-      .padding()
-      .fixedSize(horizontal: false, vertical: true)
     }
     .animation(.spring(duration: 0.2), value: isSearchMode)
-
-    //    .toolbar {
-    //      ToolbarItem(placement: .bottomBar) {
-    //        Button {
-    //          setSearchMode(true)
-    //          isSearchFieldFocused = true
-    //        } label: {
-    //          Label(localized: .localizable(.search), systemImage: "magnifyingglass")
-    //            .labelStyle(.iconOnly)
-    //
-    //        }
-    //      }
-    //    }
   }
 
   private var searchBariOS18: some View {
@@ -234,7 +257,7 @@ struct SearchablePDFPreview: View {
   var body: some View {
     SearchablePDFView(
       document: document,
-      bottomContentInset: max(bottomBarHeight, 44) + 8,
+      bottomContentInset: max(bottomBarHeight, 44) + 0,
       pdfView: $pdfView
     )
     .ignoresSafeArea(.container, edges: .bottom)
@@ -244,6 +267,7 @@ struct SearchablePDFPreview: View {
           bottomBarHeight = height
         }
     }
+    .trackKeyboardState(isVisible: $isSoftwareKeyboardVisible, height: $keyboardHeight)
     .toolbar {
       ToolbarItem(placement: .topBarLeading) {
         CancelIconButton {
@@ -360,6 +384,7 @@ struct SearchablePDFPreview: View {
     pdfView.highlightedSelections = nil
     pdfView.highlightedSelections = highlightedSelections
   }
+
 }
 
 extension View {
