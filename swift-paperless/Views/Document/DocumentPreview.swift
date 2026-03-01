@@ -40,6 +40,7 @@ struct DocumentPreview: View {
 @Observable
 private final class IntegratedDocumentPreviewModel {
   var download: DownloadState = .initial
+  var downloadProgress: Double = 0.0
 
   func loadDocument(
     store: DocumentStore,
@@ -66,7 +67,15 @@ private final class IntegratedDocumentPreviewModel {
     case .initial:
       download = .loading
       do {
-        guard let url = try await store.repository.download(documentID: document.id) else {
+        guard
+          let url = try await store.repository.download(
+            documentID: document.id,
+            progress: { @Sendable value in
+              Task { @MainActor in
+                self.downloadProgress = value
+              }
+            })
+        else {
           download = .error
           return
         }
@@ -91,9 +100,12 @@ private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
   @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
+  @State private var showLoadingOverlay = false
   var document: Document
 
   @StateObject private var image = FetchImage()
+
+  private static let loadingOverlayDelay: Duration = .seconds(0.5)
 
   var body: some View {
     ZStack {
@@ -117,7 +129,31 @@ private struct IntegratedDocumentPreview: View {
       }
     }
 
-    .transition(.opacity)
+    .overlay {
+      if showLoadingOverlay {
+        VStack {
+          Text(.localizable(.loading))
+            .foregroundStyle(.primary)
+          ProgressView(value: viewModel.downloadProgress, total: 1.0)
+            .frame(width: 100)
+        }
+        .padding()
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0
+              .padding(.horizontal, 20)
+              .glassEffect()
+          } else {
+            $0.background(
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.thinMaterial)
+            )
+          }
+        }
+        .transition(.opacity)
+      }
+    }
+    .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
     .animation(.easeOut(duration: 0.8), value: viewModel.download)
 
     .task {
@@ -126,6 +162,19 @@ private struct IntegratedDocumentPreview: View {
         document: document,
         pipeline: imagePipelineProvider.pipeline,
         image: image)
+    }
+    .onChange(of: viewModel.download) { _, newState in
+      if case .loading = newState {
+        Task {
+          try? await Task.sleep(for: Self.loadingOverlayDelay)
+          guard !Task.isCancelled else { return }
+          if case .loading = viewModel.download {
+            showLoadingOverlay = true
+          }
+        }
+      } else {
+        showLoadingOverlay = false
+      }
     }
   }
 }

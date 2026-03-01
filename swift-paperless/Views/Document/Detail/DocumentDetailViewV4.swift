@@ -118,6 +118,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .backport.matchedTransitionSource(id: "doc", in: namespace)
 
           .onTapGesture {
+            guard case .loaded = viewModel.download else { return }
             showPreview = true
             showShadow = false
           }
