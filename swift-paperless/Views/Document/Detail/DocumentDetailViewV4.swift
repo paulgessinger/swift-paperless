@@ -22,7 +22,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showNotesSheet = false
 
   @State private var showPreview = false
-  @State private var showShadow = true
   @State private var shadowDelay: Double? = nil
 
   var navPath: Binding<[NavigationState]>? = nil
@@ -113,17 +112,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(document: viewModel.document)
           .frame(maxWidth: .infinity)
-          .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
-          .shadow(color: Color(.imageShadow).opacity(showShadow ? 1 : 0), radius: 15)
           .backport.matchedTransitionSource(id: "doc", in: namespace)
+          .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+          .shadow(color: Color(.imageShadow), radius: 15)
 
           .onTapGesture {
             guard case .loaded = viewModel.download else { return }
             showPreview = true
-            showShadow = false
           }
-
-          .animation(.default, value: showShadow)
 
         Text(viewModel.document.title)
           .font(.title2)
@@ -161,7 +157,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       onDismiss: {
         Task {
           try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
-          showShadow = true
           shadowDelay = nil
         }
       }
