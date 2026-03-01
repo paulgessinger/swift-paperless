@@ -41,6 +41,7 @@ struct DocumentPreview: View {
 private final class IntegratedDocumentPreviewModel {
   var download: DownloadState = .initial
   var downloadProgress: Double = 0.0
+  var hasReceivedProgress = false
 
   func loadDocument(
     store: DocumentStore,
@@ -66,12 +67,15 @@ private final class IntegratedDocumentPreviewModel {
     switch download {
     case .initial:
       download = .loading
+      hasReceivedProgress = false
+      downloadProgress = 0
       do {
         guard
           let url = try await store.repository.download(
             documentID: document.id,
             progress: { @Sendable value in
               Task { @MainActor in
+                self.hasReceivedProgress = true
                 self.downloadProgress = value
               }
             })
@@ -134,8 +138,12 @@ private struct IntegratedDocumentPreview: View {
         VStack {
           Text(.localizable(.loading))
             .foregroundStyle(.primary)
-          ProgressView(value: viewModel.downloadProgress, total: 1.0)
-            .frame(width: 100)
+          LinearProgressBar(
+            mode: viewModel.hasReceivedProgress
+              ? .determinate(viewModel.downloadProgress)
+              : .indeterminate
+          )
+          .frame(width: 100)
         }
         .padding()
         .apply {
@@ -155,6 +163,7 @@ private struct IntegratedDocumentPreview: View {
     }
     .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
     .animation(.easeOut(duration: 0.8), value: viewModel.download)
+    .animation(.easeInOut(duration: 0.2), value: viewModel.hasReceivedProgress)
 
     .task {
       await viewModel.loadDocument(
