@@ -15,8 +15,6 @@ import Observation
 final class ImagePipelineProvider {
   private(set) var pipeline: ImagePipeline
 
-  private var delegateIdentifier: ObjectIdentifier?
-
   init() {
     self.pipeline = ImagePipeline()
   }

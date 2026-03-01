@@ -9,6 +9,7 @@ import Combine
 import DataModel
 import Foundation
 import Networking
+import Nuke
 import SwiftUI
 import os
 
@@ -100,6 +101,14 @@ struct DocumentList: View {
       }
     }
 
+    private func preloadThumbnail(for document: Document) {
+      guard let urlRequest = try? store.repository.thumbnailRequest(document: document) else {
+        return
+      }
+      let request = ImageRequest(urlRequest: urlRequest, priority: .high)
+      imagePipelineProvider.pipeline.loadImage(with: request) { _ in }
+    }
+
     var body: some View {
       DocumentCell(document: document, store: store)
         .contentShape(Rectangle())
@@ -107,6 +116,7 @@ struct DocumentList: View {
         .padding(.horizontal)
         .padding(.vertical)
         .onTapGesture {
+          preloadThumbnail(for: document)
           navPath.append(NavigationState.detail(document: document))
         }
 
@@ -134,6 +144,7 @@ struct DocumentList: View {
 
         .contextMenu {
           Button {
+            preloadThumbnail(for: document)
             navPath.append(NavigationState.detail(document: document))
           } label: {
             Label(String(localized: .localizable(.edit)), systemImage: "pencil")
