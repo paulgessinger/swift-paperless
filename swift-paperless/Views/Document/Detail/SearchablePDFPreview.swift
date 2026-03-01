@@ -203,6 +203,8 @@ struct SearchablePDFPreview: View {
               goToPrevious()
             } label: {
               Image(systemName: "chevron.up")
+                .padding(.vertical)
+                .padding(.leading)
             }
             .disabled(matches.isEmpty)
 
@@ -210,10 +212,12 @@ struct SearchablePDFPreview: View {
               goToNext()
             } label: {
               Image(systemName: "chevron.down")
+                .padding(.vertical)
+                .padding(.trailing)
             }
             .disabled(matches.isEmpty)
           }
-          .padding()
+          //          .padding()
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.interactive())
         }
