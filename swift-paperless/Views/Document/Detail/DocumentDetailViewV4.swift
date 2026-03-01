@@ -173,7 +173,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
               shadowDelay = 0.2
             }
           )
-          .ignoresSafeArea(.container, edges: .top)
+          .ignoresSafeArea(.container)
         }
         .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
       }
@@ -218,6 +218,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environment(RouteManager.shared)
+    .environment(ImagePipelineProvider())
     .task {
       do {
         guard let repository = store.repository as? TransientRepository else {

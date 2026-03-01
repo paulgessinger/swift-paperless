@@ -10,6 +10,7 @@ import SwiftUI
 struct SearchablePDFPreview: View {
   private struct SearchablePDFView: UIViewRepresentable {
     let document: PDFDocument
+    let bottomContentInset: CGFloat
     @Binding var pdfView: PDFKit.PDFView?
 
     final class Coordinator {
@@ -41,16 +42,18 @@ struct SearchablePDFPreview: View {
         uiView.document = document
         context.coordinator.didApplyInitialTopAlignment = false
       }
-      applyInitialTopAlignmentIfNeeded(uiView, coordinator: context.coordinator)
+      applyInsetsAndInitialTopAlignmentIfNeeded(
+        uiView,
+        bottomInset: bottomContentInset,
+        coordinator: context.coordinator
+      )
     }
 
-    private func applyInitialTopAlignmentIfNeeded(
+    private func applyInsetsAndInitialTopAlignmentIfNeeded(
       _ pdfView: PDFKit.PDFView,
+      bottomInset: CGFloat,
       coordinator: Coordinator
     ) {
-      guard !coordinator.didApplyInitialTopAlignment else {
-        return
-      }
       guard let scrollView = findScrollView(in: pdfView) else {
         return
       }
@@ -59,22 +62,31 @@ struct SearchablePDFPreview: View {
       scrollView.contentInsetAdjustmentBehavior = .never
 
       let topInset = pdfView.safeAreaInsets.top
-      guard topInset > 0 else {
-        // Wait until layout/safe area is finalized before applying initial offset.
-        DispatchQueue.main.async {
-          applyInitialTopAlignmentIfNeeded(pdfView, coordinator: coordinator)
-        }
-        return
-      }
-
       var contentInset = scrollView.contentInset
       contentInset.top = topInset
+      contentInset.bottom = bottomInset
       scrollView.contentInset = contentInset
 
       // Keep the scroll indicator aligned with the visible content start.
       var verticalIndicatorInset = scrollView.verticalScrollIndicatorInsets
       verticalIndicatorInset.top = topInset
+      verticalIndicatorInset.bottom = bottomInset
       scrollView.verticalScrollIndicatorInsets = verticalIndicatorInset
+
+      guard !coordinator.didApplyInitialTopAlignment else {
+        return
+      }
+      guard topInset > 0 else {
+        // Wait until layout/safe area is finalized before applying initial offset.
+        DispatchQueue.main.async {
+          applyInsetsAndInitialTopAlignmentIfNeeded(
+            pdfView,
+            bottomInset: bottomInset,
+            coordinator: coordinator
+          )
+        }
+        return
+      }
 
       // Start aligned below the top bar, while still allowing later scrolling under it.
       scrollView.setContentOffset(
@@ -108,6 +120,9 @@ struct SearchablePDFPreview: View {
   @State private var isSearchMode = false
   @State private var matches = [PDFSelection]()
   @State private var currentMatchIndex = 0
+  @State private var bottomBarHeight: CGFloat = 0
+
+  @Namespace private var namespace
 
   private var resultLabel: String {
     guard !matches.isEmpty else {
@@ -116,26 +131,41 @@ struct SearchablePDFPreview: View {
     return "\(currentMatchIndex + 1)/\(matches.count)"
   }
 
-  var body: some View {
-    SearchablePDFView(document: document, pdfView: $pdfView)
-      .background(Color(uiColor: .secondarySystemBackground))
-      .safeAreaInset(edge: .bottom) {
-        HStack(spacing: 8) {
-          if isSearchMode {
-            TextField("Search", text: $query)
-              .textFieldStyle(.roundedBorder)
-              .focused($isSearchFieldFocused)
-              .submitLabel(.search)
-              .onChange(of: query) { _, _ in
-                // Live-search keeps the interaction fast and predictable.
-                runSearch()
-              }
+  @available(iOS 26.0, *)
+  private var searchBar: some View {
+    GlassEffectContainer {
+      HStack(spacing: 8) {
+        if isSearchMode {
+          Button {
+            setSearchMode(false)
+            isSearchFieldFocused = false
+          } label: {
+            Label(localized: .localizable(.done), systemImage: "checkmark")
+              .labelStyle(.iconOnly)
+              .padding()
+              .foregroundStyle(.white)
+          }
+          .frame(maxHeight: .infinity)
+          .glassEffect(.regular.tint(.accent).interactive(), in: Circle())
 
-            Text(resultLabel)
-              .font(.footnote.monospacedDigit())
-              .foregroundStyle(.secondary)
-              .frame(minWidth: 42)
+          TextField("Search", text: $query)
+            .focused($isSearchFieldFocused)
+            .submitLabel(.search)
 
+            .onChange(of: query) { _, _ in
+              // Live-search keeps the interaction fast and predictable.
+              runSearch()
+            }
+            .padding(.horizontal)
+            .frame(maxHeight: .infinity)
+            .glassEffect(.regular.interactive())
+
+          //        Text(resultLabel)
+          //          .font(.footnote.monospacedDigit())
+          //          .foregroundStyle(.secondary)
+          //          .frame(minWidth: 42)
+          //
+          HStack {
             Button {
               goToPrevious()
             } label: {
@@ -149,38 +179,83 @@ struct SearchablePDFPreview: View {
               Image(systemName: "chevron.down")
             }
             .disabled(matches.isEmpty)
+          }
+          .padding()
+          .frame(maxHeight: .infinity)
+          .glassEffect()
+        } else {
+          Button {
+            setSearchMode(true)
+            isSearchFieldFocused = true
+          } label: {
+            Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+              .labelStyle(.iconOnly)
 
-            Button("Done") {
-              // Leaving search mode should also clear highlights/selections.
-              setSearchMode(false)
-              isSearchFieldFocused = false
-            }
-          } else {
-            Spacer()
-            Button {
-              setSearchMode(true)
-              isSearchFieldFocused = true
-            } label: {
-              Label("Search", systemImage: "magnifyingglass")
-            }
           }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
-      }
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          CancelIconButton {
-            onButtonDismiss()
-            dismiss()
-          }
+          .padding()
+          .frame(maxHeight: .infinity)
+          .glassEffect(.regular.interactive())
+          .padding()
+          Spacer()
         }
       }
-      .onDisappear {
-        // Avoid leaking search state when this sheet is dismissed and re-presented.
-        setSearchMode(false)
+      .padding()
+      .fixedSize(horizontal: false, vertical: true)
+    }
+    .animation(.spring(duration: 0.2), value: isSearchMode)
+
+    //    .toolbar {
+    //      ToolbarItem(placement: .bottomBar) {
+    //        Button {
+    //          setSearchMode(true)
+    //          isSearchFieldFocused = true
+    //        } label: {
+    //          Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+    //            .labelStyle(.iconOnly)
+    //
+    //        }
+    //      }
+    //    }
+  }
+
+  private var searchBariOS18: some View {
+    Text("IOS18")
+  }
+
+  @ViewBuilder
+  private var bottomBar: some View {
+    if #available(iOS 26.0, *) {
+      searchBar
+    } else {
+      searchBariOS18
+    }
+  }
+
+  var body: some View {
+    SearchablePDFView(
+      document: document,
+      bottomContentInset: max(bottomBarHeight, 44) + 8,
+      pdfView: $pdfView
+    )
+    .ignoresSafeArea(.container, edges: .bottom)
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      bottomBar
+        .readHeight { height in
+          bottomBarHeight = height
+        }
+    }
+    .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        CancelIconButton {
+          onButtonDismiss()
+          dismiss()
+        }
       }
+    }
+    .onDisappear {
+      // Avoid leaking search state when this sheet is dismissed and re-presented.
+      setSearchMode(false)
+    }
   }
 
   private func setSearchMode(_ enabled: Bool) {
@@ -284,5 +359,84 @@ struct SearchablePDFPreview: View {
     // PDFView often needs a full reset to repaint highlight style changes.
     pdfView.highlightedSelections = nil
     pdfView.highlightedSelections = highlightedSelections
+  }
+}
+
+extension View {
+  fileprivate func readHeight(onChange: @escaping (CGFloat) -> Void) -> some View {
+    overlay {
+      GeometryReader { proxy in
+        Color.clear
+          .allowsHitTesting(false)
+          .onAppear {
+            onChange(proxy.size.height)
+          }
+          .onChange(of: proxy.size.height) { _, newValue in
+            onChange(newValue)
+          }
+      }
+    }
+  }
+}
+
+#Preview {
+  NavigationStack {
+    SearchablePDFPreview(
+      document: SearchablePDFPreviewPreviewData.document,
+      onButtonDismiss: {}
+    )
+    .ignoresSafeArea()
+  }
+}
+
+private enum SearchablePDFPreviewPreviewData {
+  static var document: PDFDocument {
+    let document = PDFDocument()
+    let pages: [(title: String, body: String)] = [
+      (
+        "Sample PDF Preview - Page 1",
+        "Use the Search button below to find matches across multiple pages."
+      ),
+      (
+        "Sample PDF Preview - Page 2",
+        "This page repeats the word preview several times. Preview text makes search testing easier."
+      ),
+      (
+        "Sample PDF Preview - Page 3",
+        "Final page with a different paragraph so scrolling and navigation can be validated."
+      ),
+    ]
+
+    for (index, content) in pages.enumerated() {
+      if let page = makePage(title: content.title, body: content.body) {
+        document.insert(page, at: index)
+      }
+    }
+    return document
+  }
+
+  private static func makePage(title: String, body: String) -> PDFPage? {
+    let pageSize = CGSize(width: 612, height: 792)
+    let renderer = UIGraphicsImageRenderer(size: pageSize)
+    let image = renderer.image { context in
+      UIColor.systemBackground.setFill()
+      context.fill(CGRect(origin: .zero, size: pageSize))
+
+      let titleAttributes: [NSAttributedString.Key: Any] = [
+        .font: UIFont.preferredFont(forTextStyle: .title2),
+        .foregroundColor: UIColor.label,
+      ]
+      let bodyAttributes: [NSAttributedString.Key: Any] = [
+        .font: UIFont.preferredFont(forTextStyle: .body),
+        .foregroundColor: UIColor.secondaryLabel,
+      ]
+
+      title.draw(at: CGPoint(x: 40, y: 48), withAttributes: titleAttributes)
+      body.draw(
+        in: CGRect(x: 40, y: 96, width: pageSize.width - 80, height: 300),
+        withAttributes: bodyAttributes
+      )
+    }
+    return PDFPage(image: image)
   }
 }
