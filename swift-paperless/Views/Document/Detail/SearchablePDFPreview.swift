@@ -163,7 +163,7 @@ struct SearchablePDFPreview: View {
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.tint(.accent).interactive(), in: Circle())
 
-          TextField("Search", text: $query)
+          TextField(.localizable(.search), text: $query)
             .focused($isSearchFieldFocused)
             .submitLabel(.search)
 
@@ -190,8 +190,8 @@ struct SearchablePDFPreview: View {
                     Label(localized: .localizable(.clearText), systemImage: "xmark.circle.fill")
                       .labelStyle(.iconOnly)
                   }
-                  .foregroundStyle(.secondary)
                   .padding(.trailing)
+                  .foregroundStyle(.secondary)
                 }
               }
             }
@@ -238,8 +238,117 @@ struct SearchablePDFPreview: View {
     .animation(.spring(duration: 0.2), value: isSearchMode)
   }
 
-  private var searchBariOS18: some View {
-    Text("IOS18")
+  private var searchBarPreiOS26: some View {
+    return VStack {
+      if isSearchMode {
+        // Solid bar: Done | recessed search field | prev/next arrows
+        VStack(spacing: 0) {
+          HStack(spacing: 12) {
+            Button {
+              setSearchMode(false)
+              isSearchFieldFocused = false
+            } label: {
+              Text(.localizable(.done))
+                .font(.body)
+                .foregroundStyle(.primary)
+            }
+
+            TextField(.localizable(.search), text: $query)
+              .focused($isSearchFieldFocused)
+              .submitLabel(.search)
+              .onChange(of: query) { _, _ in
+                runSearch()
+              }
+              .padding(.horizontal, 12)
+              .padding(.vertical, 8)
+              .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                  .fill(Color(white: 0.9))
+              )
+              .overlay(alignment: .trailing) {
+                HStack(spacing: 8) {
+                  if let resultLabel {
+                    Text(resultLabel)
+                      .font(.footnote.monospacedDigit())
+                      .foregroundStyle(.secondary)
+                  }
+
+                  if !query.isEmpty {
+                    Button {
+                      query = ""
+                    } label: {
+                      Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                    }
+                  }
+                }
+                .padding(.trailing, 8)
+              }
+
+            HStack(spacing: 4) {
+              Button {
+                goToPrevious()
+              } label: {
+                Image(systemName: "chevron.up")
+                  .font(.body.weight(.medium))
+              }
+              .foregroundStyle(matches.isEmpty ? .tertiary : .primary)
+              .disabled(matches.isEmpty)
+
+              Button {
+                goToNext()
+              } label: {
+                Image(systemName: "chevron.down")
+                  .font(.body.weight(.medium))
+              }
+              .foregroundStyle(matches.isEmpty ? .tertiary : .primary)
+              .disabled(matches.isEmpty)
+            }
+          }
+          .padding(.horizontal, 20)
+          .padding(.top)
+          .padding(.bottom, 16)
+          .frame(maxWidth: .infinity)
+
+          // Grabber
+          Capsule()
+            .fill(.tertiary)
+            .frame(width: 36, height: 5)
+            .padding(.bottom, 12)
+        }
+        .background(Rectangle().fill(Color(uiColor: .secondarySystemBackground)))
+        .transition(.move(edge: .bottom))
+
+      } else {
+        // Compact bar with search icon only
+        VStack(spacing: 0) {
+          Button {
+            setSearchMode(true)
+            isSearchFieldFocused = true
+          } label: {
+            Image(systemName: "magnifyingglass")
+              .font(.title2)
+              .foregroundStyle(.accent)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 24)
+          .padding(.top, 24)
+          .padding(.bottom, 16)
+
+          // Grabber
+          Capsule()
+            .fill(.tertiary)
+            .frame(width: 36, height: 5)
+            .padding(.bottom, 12)
+        }
+        .background(
+          Rectangle().fill(.thinMaterial)
+            .stroke(Color(white: 0.8), lineWidth: 0.66)
+        )
+      }
+    }
+    .animation(.spring(duration: 0.2), value: isSearchMode)
   }
 
   @ViewBuilder
@@ -247,7 +356,7 @@ struct SearchablePDFPreview: View {
     if #available(iOS 26.0, *) {
       searchBar
     } else {
-      searchBariOS18
+      searchBarPreiOS26
     }
   }
 
