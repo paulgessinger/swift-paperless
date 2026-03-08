@@ -68,6 +68,43 @@ struct UISettingsTest {
     #expect(settings.permissions.defaultEditGroups == [6])
   }
 
+  @Test
+  func testSavedViewsDecode() throws {
+    let data = try #require(testData("Data/UISettings/ui_settings_v3.0.0_api_v10.json"))
+    let response = try JSONDecoder().decode(UISettings.self, from: data)
+
+    let savedViews = response.settings.savedViews
+    #expect(savedViews.dashboardViewsVisibleIds == [7])
+    #expect(savedViews.sidebarViewsVisibleIds == [7])
+  }
+
+  @Test
+  func testSavedViewsDecodePartial() throws {
+    // v2.13.5 has saved_views with only warn_on_unsaved_change; visibility IDs default to []
+    let data = try #require(testData("Data/UISettings/ui_settings_v2.13.5.json"))
+    let response = try JSONDecoder().decode(UISettings.self, from: data)
+
+    let savedViews = response.settings.savedViews
+    #expect(savedViews.dashboardViewsVisibleIds == [])
+    #expect(savedViews.sidebarViewsVisibleIds == [])
+  }
+
+  @Test
+  func testSavedViewsEncodeRoundTrip() throws {
+    let savedViews = UISettingsSavedViews(
+      dashboardViewsVisibleIds: [7, 10],
+      sidebarViewsVisibleIds: [7]
+    )
+
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    let encoded = try encoder.encode(savedViews)
+    let decoded = try JSONDecoder().decode(UISettingsSavedViews.self, from: encoded)
+
+    #expect(decoded.dashboardViewsVisibleIds == savedViews.dashboardViewsVisibleIds)
+    #expect(decoded.sidebarViewsVisibleIds == savedViews.sidebarViewsVisibleIds)
+  }
+
   struct TestCorrespondent: PermissionsModel {
     var name: String
     var owner: Owner = .unset

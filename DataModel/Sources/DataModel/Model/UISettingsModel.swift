@@ -64,6 +64,22 @@ public struct UISettingsPermissions: Sendable {
   }
 }
 
+/// Saved view visibility (moved from per-view to UI settings in backend v3+).
+/// Only the keys the app interacts with are modeled.
+@Codable
+@CodingKeys(.snake_case)
+@MemberInit
+public struct UISettingsSavedViews: Sendable {
+  @Default([UInt]())
+  public var dashboardViewsVisibleIds: [UInt]
+
+  @Default([UInt]())
+  public var sidebarViewsVisibleIds: [UInt]
+
+  @usableFromInline
+  static var `default`: Self { .init() }
+}
+
 @Codable
 @CodingKeys(.snake_case)
 @MemberInit
@@ -73,6 +89,9 @@ public struct UISettingsSettings: Sendable {
 
   @Default(UISettingsPermissions.default)
   public var permissions: UISettingsPermissions
+
+  @Default(UISettingsSavedViews.default)
+  public var savedViews: UISettingsSavedViews
 
   @usableFromInline
   static var `default`: Self { .init() }
