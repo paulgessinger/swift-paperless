@@ -1,0 +1,178 @@
+{
+    "count": 7,
+    "next": null,
+    "previous": null,
+    "all": [
+        7,
+        10,
+        5,
+        9,
+        11,
+        1,
+        6
+    ],
+    "results": [
+        {
+            "id": 7,
+            "name": "ASN: 1",
+            "sort_field": "custom_field_1",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 24,
+                    "value": "1"
+                }
+            ],
+            "page_size": null,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "tag",
+                "correspondent",
+                "documenttype",
+                "storagepath",
+                "note",
+                "owner",
+                "shared",
+                "asn",
+                "pagecount"
+            ],
+            "owner": 4,
+            "user_can_change": true
+        },
+        {
+            "id": 10,
+            "name": "Advanced full text",
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 20,
+                    "value": "created:\"yesterday\",added:\"previous week\""
+                }
+            ],
+            "page_size": null,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "tag",
+                "correspondent",
+                "documenttype",
+                "storagepath",
+                "note",
+                "owner",
+                "shared",
+                "asn",
+                "pagecount"
+            ],
+            "owner": 4,
+            "user_can_change": true
+        },
+        {
+            "id": 5,
+            "name": "App custom fields",
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 42,
+                    "value": "[\"OR\",[[1,\"gt\",2]]]"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 4,
+            "user_can_change": true
+        },
+        {
+            "id": 9,
+            "name": "Date filter",
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 20,
+                    "value": "created:[-1 month to now],added:[-1 week to now]"
+                }
+            ],
+            "page_size": null,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "tag",
+                "correspondent",
+                "documenttype",
+                "storagepath",
+                "note",
+                "owner",
+                "shared",
+                "asn",
+                "pagecount"
+            ],
+            "owner": 4,
+            "user_can_change": true
+        },
+        {
+            "id": 11,
+            "name": "Saved view",
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "14"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 5,
+            "user_can_change": true
+        },
+        {
+            "id": 1,
+            "name": "Sorted by rank",
+            "sort_field": "custom_field_1",
+            "sort_reverse": true,
+            "filter_rules": [],
+            "page_size": null,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "tag",
+                "correspondent",
+                "documenttype",
+                "storagepath",
+                "note",
+                "owner",
+                "shared",
+                "asn",
+                "pagecount"
+            ],
+            "owner": 4,
+            "user_can_change": true
+        },
+        {
+            "id": 6,
+            "name": "Tag filter",
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "9"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 4,
+            "user_can_change": true
+        }
+    ]
+}
