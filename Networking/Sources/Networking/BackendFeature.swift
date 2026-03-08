@@ -15,12 +15,17 @@ public enum BackendFeature {
   case dateFilterPreviousIntervals
   case dateFilterModified
 
-  func isSupported(on backendVersion: Version) -> Bool {
+  // https://github.com/paperless-ngx/paperless-ngx/pull/12142 / API v10, likely v3.0.0
+  case savedViewOldVisibility
+
+  func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
     case .customFieldsOnCreate:
       backendVersion >= Version(2, 19, 0)
     case .dateFilterModified, .dateFilterPreviousIntervals:
       backendVersion >= Version(2, 20, 0)
+    case .savedViewOldVisibility:
+      apiVersion <= 9 || backendVersion >= Version(3, 0, 0)
     }
   }
 }

@@ -42,12 +42,15 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
         TextField(String(localized: .localizable(.title)), text: $savedView.name)
           .clearable($savedView.name)
 
-        Toggle(
-          String(localized: .localizable(.savedViewShowOnDashboard)),
-          isOn: $savedView.showOnDashboard)
+        if store.repository.supports(feature: .savedViewOldVisibility) {
+          Toggle(
+            String(localized: .localizable(.savedViewShowOnDashboard)),
+            isOn: $savedView.showOnDashboard)
 
-        Toggle(
-          String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar)
+          Toggle(
+            String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar
+          )
+        }
       }
       .disabled(!editable)
 

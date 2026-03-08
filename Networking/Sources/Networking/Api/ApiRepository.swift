@@ -60,7 +60,7 @@ public class ApiRepository {
   nonisolated
     public static let minimumVersion = Version(1, 14, 1)
   nonisolated
-    public static let maximumApiVersion: UInt = 9
+    public static let maximumApiVersion: UInt = 10
   nonisolated
     public let backendVersion: Version?
 
@@ -1009,8 +1009,8 @@ extension ApiRepository: Repository {
   }
 
   public func supports(feature: BackendFeature) -> Bool {
-    guard let backendVersion else { return false }
-    return feature.isSupported(on: backendVersion)
+    guard let backendVersion, let apiVersion else { return false }
+    return feature.isSupported(on: backendVersion, api: apiVersion)
   }
 
   // MARK: - Share links
