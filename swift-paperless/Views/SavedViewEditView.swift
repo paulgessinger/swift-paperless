@@ -32,6 +32,21 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
     saveLabel = String(localized: .localizable(.save))
   }
 
+  private func load() async {
+    guard let sv = savedView as? SavedView else {
+      // nothing to do
+      return
+    }
+
+    guard store.repository.supports(feature: .savedViewNewVisibility) else {
+      return
+    }
+
+    // pull visibility settings from ui settings
+    savedView.showInSidebar = store.settings.savedViews.sidebarViewsVisibleIds.contains(sv.id)
+    savedView.showOnDashboard = store.settings.savedViews.dashboardViewsVisibleIds.contains(sv.id)
+  }
+
   private func localizedName(for field: SortField) -> String {
     field.localizedName(customFields: store.customFields)
   }
@@ -42,15 +57,13 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
         TextField(String(localized: .localizable(.title)), text: $savedView.name)
           .clearable($savedView.name)
 
-        if store.repository.supports(feature: .savedViewOldVisibility) {
-          Toggle(
-            String(localized: .localizable(.savedViewShowOnDashboard)),
-            isOn: $savedView.showOnDashboard)
+        Toggle(
+          String(localized: .localizable(.savedViewShowOnDashboard)),
+          isOn: $savedView.showOnDashboard)
 
-          Toggle(
-            String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar
-          )
-        }
+        Toggle(
+          String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar
+        )
       }
       .disabled(!editable)
 
@@ -83,6 +96,10 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
         .disabled(!valid)
         .bold()
       }
+    }
+
+    .task {
+      await load()
     }
 
   }

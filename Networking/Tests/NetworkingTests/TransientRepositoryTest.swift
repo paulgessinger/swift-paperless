@@ -259,6 +259,23 @@ import Testing
     }
   }
 
+  @Test @MainActor func testPostUISettings() async throws {
+    let repository = TransientRepository()
+    let user = User(id: 1, isSuperUser: true, username: "admin")
+    repository.addUser(user)
+    try repository.login(userId: user.id)
+
+    var updated = UISettingsSettings()
+    updated.savedViews.dashboardViewsVisibleIds = [7, 8]
+    updated.savedViews.sidebarViewsVisibleIds = [8]
+
+    try await repository.update(settings: updated)
+
+    let fetched = try await repository.uiSettings()
+    #expect(fetched.settings.savedViews.dashboardViewsVisibleIds == [7, 8])
+    #expect(fetched.settings.savedViews.sidebarViewsVisibleIds == [8])
+  }
+
   @Test @MainActor func testCustomFields() async throws {
     let repository = TransientRepository()
 

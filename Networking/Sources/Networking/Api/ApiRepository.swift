@@ -907,6 +907,19 @@ extension ApiRepository: Repository {
     return try await fetchData(for: request, as: UISettings.self)
   }
 
+  public func update(settings: UISettingsSettings) async throws {
+    struct UISettingsPayload: Encodable {
+      let settings: UISettingsSettings
+    }
+
+    var request = try request(.uiSettings())
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(UISettingsPayload(settings: settings))
+
+    _ = try await fetchData(for: request, code: .ok)
+  }
+
   public func tasks() async throws -> [PaperlessTask] {
     let request = try request(.tasks(name: .consumeFile, acknowledged: false))
 

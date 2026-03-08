@@ -469,6 +469,8 @@ public class PreviewRepository: Repository {
     )
   }
 
+  public func update(settings: UISettingsSettings) async {}
+
   // MARK: - Share links
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {

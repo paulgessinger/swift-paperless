@@ -24,6 +24,7 @@ public class TransientRepository {
   private var shareLinks: [UInt: DataModel.ShareLink]
 
   private var permissions: UserPermissions = .full
+  private var settings: UISettingsSettings = .init()
 
   private var nextId: UInt = 1
   private var currentLoggedInUser: User?
@@ -490,9 +491,13 @@ extension TransientRepository: Repository {
   public func uiSettings() async throws -> UISettings {
     try await UISettings(
       user: currentUser(),
-      settings: UISettingsSettings(),
+      settings: settings,
       permissions: permissions
     )
+  }
+
+  public func update(settings: UISettingsSettings) async throws {
+    self.settings = settings
   }
 
   public nonisolated

@@ -35,6 +35,8 @@ public class NullRepository: Repository {
     UISettings(user: User(id: 0, isSuperUser: false, username: "nobody"), permissions: .empty)
   }
 
+  public func update(settings: UISettingsSettings) async throws {}
+
   public func correspondent(id _: UInt) async -> Correspondent? { nil }
   public func create(correspondent _: ProtoCorrespondent) async throws -> Correspondent {
     throw NotImplemented()
