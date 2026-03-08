@@ -55,7 +55,8 @@ def make_app(upstream_url: str, delay: float, match: re.Pattern[str] | None) -> 
                 allow_redirects=False,
             ) as upstream:
                 delayed_tag = f" [delayed {delay}s]" if should_delay else " [no delay]"
-                print(f"{request.method} {request.rel_url} -> {upstream.status}{delayed_tag}")
+                user_agent = request.headers.get("User-Agent", "(none)")
+                print(f"{request.method} {request.rel_url} -> {upstream.status}{delayed_tag} | User-Agent: {user_agent}")
                 response = aiohttp.web.StreamResponse(
                     status=upstream.status,
                     headers={k: v for k, v in upstream.headers.items() if k.lower() not in SKIP_HEADERS},
