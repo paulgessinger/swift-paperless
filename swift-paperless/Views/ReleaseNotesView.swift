@@ -148,7 +148,7 @@ class ReleaseNotesViewModel {
   private func fetchAllReleases() async throws -> [Release] {
     guard
       let url = URL(
-        string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100"
+        string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=250"
       )
     else {
       throw ReleaseNotesError(version: appVersion)
@@ -369,7 +369,7 @@ private struct ReleaseNotesBareView: View {
         .animation(.easeInOut, value: model.status)
       }
       .refreshable {
-        await Task { await model.loadReleaseNotes() }.value
+        await model.loadReleaseNotes()
       }
       .navigationTitle(title)
 
