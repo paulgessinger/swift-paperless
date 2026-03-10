@@ -60,7 +60,7 @@ public class ApiRepository {
   nonisolated
     public static let minimumVersion = Version(1, 14, 1)
   nonisolated
-    public static let maximumApiVersion: UInt = 9
+    public static let maximumApiVersion: UInt = 10
   nonisolated
     public let backendVersion: Version?
 
@@ -907,6 +907,19 @@ extension ApiRepository: Repository {
     return try await fetchData(for: request, as: UISettings.self)
   }
 
+  public func update(settings: UISettingsSettings) async throws {
+    struct UISettingsPayload: Encodable {
+      let settings: UISettingsSettings
+    }
+
+    var request = try request(.uiSettings())
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(UISettingsPayload(settings: settings))
+
+    _ = try await fetchData(for: request, code: .ok)
+  }
+
   public func tasks() async throws -> [PaperlessTask] {
     let request = try request(.tasks(name: .consumeFile, acknowledged: false))
 
@@ -1009,8 +1022,8 @@ extension ApiRepository: Repository {
   }
 
   public func supports(feature: BackendFeature) -> Bool {
-    guard let backendVersion else { return false }
-    return feature.isSupported(on: backendVersion)
+    guard let backendVersion, let apiVersion else { return false }
+    return feature.isSupported(on: backendVersion, api: apiVersion)
   }
 
   // MARK: - Share links

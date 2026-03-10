@@ -25,8 +25,13 @@ public struct SavedView:
 {
   public var id: UInt
   public var name: String
+
+  @Default(false)
   public var showOnDashboard: Bool
+
+  @Default(false)
   public var showInSidebar: Bool
+
   public var sortField: SortField?
 
   @CodedAt("sort_reverse")

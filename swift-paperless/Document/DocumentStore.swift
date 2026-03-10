@@ -556,7 +556,39 @@ final class DocumentStore: ObservableObject, Sendable {
     Logger.api.info("Creating saved view with name \(savedView.name)")
     let created = try await repository.create(savedView: savedView)
     savedViews[created.id] = created
+
+    try await handleSavedViewVisibility(created)
+
     return created
+  }
+
+  private func handleSavedViewVisibility(_ savedView: SavedView) async throws {
+
+    guard repository.supports(feature: .savedViewNewVisibility) else {
+      // Nothing to do
+      return
+    }
+
+    Logger.api.info("Updating saved view visibility via ui settings")
+
+    // Normalize to exclude
+    var dashboardVisibleIds = settings.savedViews.dashboardViewsVisibleIds.filter {
+      $0 != savedView.id
+    }
+    var sidebarVisibleIds = settings.savedViews.sidebarViewsVisibleIds.filter { $0 != savedView.id }
+
+    if savedView.showOnDashboard {
+      dashboardVisibleIds.append(savedView.id)
+    }
+
+    if savedView.showInSidebar {
+      sidebarVisibleIds.append(savedView.id)
+    }
+
+    settings.savedViews.dashboardViewsVisibleIds = dashboardVisibleIds
+    settings.savedViews.sidebarViewsVisibleIds = sidebarVisibleIds
+
+    try await repository.update(settings: settings)
   }
 
   func create(document: ProtoDocument, file: URL, filename: String? = nil) async throws {
@@ -569,6 +601,8 @@ final class DocumentStore: ObservableObject, Sendable {
   func update(savedView: SavedView) async throws {
     Logger.api.info("Updating saved view with ID \(savedView.id)")
     savedViews[savedView.id] = try await repository.update(savedView: savedView)
+
+    try await handleSavedViewVisibility(savedView)
   }
 
   func delete(savedView: SavedView) async throws {

@@ -164,4 +164,22 @@ struct SavedViewTest {
     #expect(result.sortField == .other("invalid_field"))
     #expect(result.sortOrder == .ascending)
   }
+
+  /// Backend v3+ removed show_on_dashboard and show_in_sidebar; they default to false when absent.
+  @Test func testDecodingV3WithoutShowFields() throws {
+    let data = try #require(testData("Data/SavedView/saved_view_perms_v3.json"))
+    let result = try decoder.decode(ListResponse<SavedView>.self, from: data)
+
+    #expect(result.count == 7)
+    #expect(result.results.count == 7)
+
+    let first = try #require(result.results.first)
+    #expect(first.id == 7)
+    #expect(first.name == "ASN: 1")
+    #expect(first.showOnDashboard == false)
+    #expect(first.showInSidebar == false)
+    #expect(first.sortField == .other("custom_field_1"))
+    #expect(first.sortOrder == .descending)
+    #expect(first.filterRules.count == 1)
+  }
 }
