@@ -26,10 +26,19 @@ private struct ReleaseNotesError: LocalizedError {
 class ReleaseNotesViewModel {
   var showReleaseNotes = false
 
-  enum Status {
+  enum Status: Equatable {
     case none
     case content(MarkdownContent)
     case error(any Error)
+
+    static func == (lhs: Status, rhs: Status) -> Bool {
+      switch (lhs, rhs) {
+      case (.none, .none): true
+      case (.content(let a), .content(let b)): a == b
+      case (.error, .error): true
+      default: false
+      }
+    }
   }
 
   private(set) var status: Status = .none
@@ -63,36 +72,23 @@ class ReleaseNotesViewModel {
   static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
   static let githubApiToken: String? = nil  // Set your GitHub token here for higher API rate limits
 
-  private static let cacheTimestampKey = "releaseNotesCacheTimestamp"
-  private static let cacheLifetimeSeconds: TimeInterval = 3600  // 1 hour
-
-  private func clearCacheIfNeeded() {
-    let currentVersion = AppSettings.shared.currentAppVersion
-    let lastVersion = AppSettings.shared.lastAppVersion
-
-    if currentVersion != lastVersion {
-      // Version changed, clear only the GitHub releases cache
-      if let url = URL(string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100") {
-        let request = URLRequest(url: url)
-        URLCache.shared.removeCachedResponse(for: request)
-        UserDefaults.standard.removeObject(forKey: Self.cacheTimestampKey)
-        Logger.shared.info("Cleared release notes cache due to version change")
-      }
-    }
+  private struct Release: Codable {
+    let name: String
+    let body: String
+    let tag_name: String
+    let prerelease: Bool
+    let published_at: String
+    let html_url: String
   }
 
-  private func shouldUseCachedData() -> Bool {
-    let defaults = UserDefaults.standard
-    guard let cacheTimestamp = defaults.object(forKey: Self.cacheTimestampKey) as? Date else {
-      return false
-    }
-
-    let elapsed = Date().timeIntervalSince(cacheTimestamp)
-    return elapsed < Self.cacheLifetimeSeconds
+  private struct ReleasesCache: Codable {
+    let etag: String
+    let releases: [Release]
   }
 
-  private func updateCacheTimestamp() {
-    UserDefaults.standard.set(Date(), forKey: Self.cacheTimestampKey)
+  private static var cachedReleasesURL: URL {
+    FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("github_releases.json")
   }
 
   private func convertIssueReferencesToLinks(_ text: String) -> String {
@@ -149,134 +145,165 @@ class ReleaseNotesViewModel {
     return result
   }
 
-  private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
-    let url = Self.baseUrl.appending(path: "md").appending(path: "v\(version.version).md")
-    let request = URLRequest(url: url)
-    Logger.shared.debug(
-      "Loading release notes for AppStore config from \(request.url!, privacy: .public)")
-
-    do {
-      let (data, response) = try await URLSession.shared.getData(for: request)
-      if let response = response as? HTTPURLResponse, response.statusCode != 200 {
-        throw ReleaseNotesError(version: appVersion)
-      } else {
-        status = .content(MarkdownContent(String(decoding: data, as: UTF8.self)))
-      }
-    }
-  }
-
-  private func loadTestFlightReleaseNotes(for version: AppVersion) async throws {
+  private func fetchAllReleases() async throws -> [Release] {
     guard
       let url = URL(
-        string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100"
+        string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=250"
       )
     else {
       throw ReleaseNotesError(version: appVersion)
     }
 
     var request = URLRequest(url: url)
-    // Use cached data if it's still fresh, otherwise reload from network
-    request.cachePolicy =
-      shouldUseCachedData() ? .returnCacheDataElseLoad : .reloadIgnoringLocalCacheData
+    request.cachePolicy = .reloadIgnoringLocalCacheData
     request.timeoutInterval = 30
 
-    // Add GitHub token if available
+    let existingCache = try? JSONDecoder().decode(
+      ReleasesCache.self, from: Data(contentsOf: Self.cachedReleasesURL))
+
+    if let etag = existingCache?.etag {
+      request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+      Logger.shared.debug("Sending If-None-Match: \(etag)")
+    }
+
     if let token = Self.githubApiToken {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-      Logger.shared.debug("Using GitHub API token for authenticated request")
-    } else {
-      Logger.shared.debug("Using unauthenticated GitHub API request")
     }
 
-    Logger.shared.debug(
-      "Loading release notes for TestFlight config from \(url, privacy: .public)")
+    Logger.shared.debug("Fetching GitHub releases from \(url, privacy: .public)")
+
     do {
       let (data, response) = try await URLSession.shared.getData(for: request)
-      guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
+      guard let httpResponse = response as? HTTPURLResponse else {
         throw ReleaseNotesError(version: appVersion)
       }
 
-      struct Release: Decodable {
-        let name: String
-        let body: String
-        let tag_name: String
-        let prerelease: Bool
-        let published_at: String
-        let html_url: String
-      }
-
-      let releases = try JSONDecoder().decode([Release].self, from: data)
-
-      // Filter for pre-releases matching the current version with non-empty release notes
-      let versionPrefix = "builds/\(version.version)/"
-      let matchingReleases = releases.filter { release in
-        release.prerelease && release.tag_name.hasPrefix(versionPrefix)
-          && !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-      }
-
-      // Parse and sort by build number (descending)
-      let sortedReleases =
-        matchingReleases
-        .compactMap { release -> (Release, UInt)? in
-          // Extract build number from tag_name (format: "builds/{version}/{build}")
-          let components = release.tag_name.split(separator: "/")
-          guard components.count == 3,
-            let buildNumber = UInt(components[2])
-          else {
-            Logger.shared.warning("Invalid tag format: \(release.tag_name)")
-            return nil
-          }
-          guard buildNumber <= version.build else {
-            Logger.shared.debug(
-              "Skipping release \(release.tag_name) newer than current build \(version.build)")
-            return nil
-          }
-          return (release, buildNumber)
+      switch httpResponse.status {
+      case .ok:
+        let releases = try JSONDecoder().decode([Release].self, from: data)
+        if let etag = httpResponse.value(forHTTPHeaderField: "ETag") {
+          let cache = ReleasesCache(etag: etag, releases: releases)
+          try? JSONEncoder().encode(cache).write(to: Self.cachedReleasesURL)
+          Logger.shared.debug("Stored new ETag: \(etag)")
         }
-        .sorted { $0.1 > $1.1 }  // Sort by build number descending
-        .map { $0.0 }  // Extract just the Release objects
-
-      // Check if we have any matching releases
-      guard !sortedReleases.isEmpty else {
+        return releases
+      case .notModified:
+        Logger.shared.debug("GitHub returned 304, using disk-cached releases")
+        guard let cached = existingCache?.releases else {
+          throw ReleaseNotesError(version: appVersion)
+        }
+        return cached
+      default:
         throw ReleaseNotesError(version: appVersion)
       }
-
-      // Generate combined markdown content
-      status = .content(
-        MarkdownContent {
-          for release in sortedReleases {
-            Heading(.level2) {
-              if let url = URL(string: release.html_url) {
-                InlineLink(release.name, destination: url)
-              } else {
-                release.name
-              }
-            }
-
-            Paragraph {
-              Code(release.tag_name)
-            }
-
-            MarkdownContent {
-              convertIssueReferencesToLinks(release.body)
-            }
-          }
-        })
-
-      // Update cache timestamp after successful load
-      updateCacheTimestamp()
     } catch {
-      Logger.shared.error("Error loading TestFlight release notes: \(error)")
+      Logger.shared.error("Error fetching GitHub releases: \(error)")
       throw error
     }
+  }
+
+  private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
+    let releases = try await fetchAllReleases()
+
+    let matchingReleases =
+      releases
+      .filter { release in
+        guard !release.prerelease,
+          !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+          let tagVersion = Version(release.tag_name)
+        else { return false }
+        return tagVersion <= version.version
+      }
+      .compactMap { release -> (Release, Version)? in
+        guard let tagVersion = Version(release.tag_name) else {
+          return nil
+        }
+        return (release, tagVersion)
+      }
+      .sorted { $0.1 > $1.1 }
+      .map { $0.0 }
+
+    guard !matchingReleases.isEmpty else {
+      throw ReleaseNotesError(version: appVersion)
+    }
+
+    status = .content(
+      MarkdownContent {
+        for release in matchingReleases {
+          Heading(.level2) {
+            if let url = URL(string: release.html_url) {
+              InlineLink(release.name, destination: url)
+            } else {
+              release.name
+            }
+          }
+
+          MarkdownContent {
+            convertIssueReferencesToLinks(release.body)
+          }
+        }
+      })
+  }
+
+  private func loadTestFlightReleaseNotes(for version: AppVersion) async throws {
+    let releases = try await fetchAllReleases()
+
+    let versionPrefix = "builds/\(version.version)/"
+    let matchingReleases = releases.filter { release in
+      release.prerelease && release.tag_name.hasPrefix(versionPrefix)
+        && !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    let sortedReleases =
+      matchingReleases
+      .compactMap { release -> (Release, UInt)? in
+        let components = release.tag_name.split(separator: "/")
+        guard components.count == 3,
+          let buildNumber = UInt(components[2])
+        else {
+          Logger.shared.warning("Invalid tag format: \(release.tag_name)")
+          return nil
+        }
+        guard buildNumber <= version.build else {
+          Logger.shared.debug(
+            "Skipping release \(release.tag_name) newer than current build \(version.build)")
+          return nil
+        }
+        return (release, buildNumber)
+      }
+      .sorted { $0.1 > $1.1 }
+      .map { $0.0 }
+
+    guard !sortedReleases.isEmpty else {
+      throw ReleaseNotesError(version: appVersion)
+    }
+
+    status = .content(
+      MarkdownContent {
+        for release in sortedReleases {
+          Heading(.level2) {
+            if let url = URL(string: release.html_url) {
+              InlineLink(release.name, destination: url)
+            } else {
+              release.name
+            }
+          }
+
+          Paragraph {
+            Code(release.tag_name)
+          }
+
+          MarkdownContent {
+            convertIssueReferencesToLinks(release.body)
+          }
+        }
+      })
   }
 
   func loadReleaseNotes() async {
     guard let version = appVersion else {
       return
     }
-
-    clearCacheIfNeeded()
 
     do {
       switch appConfiguration {
@@ -313,30 +340,36 @@ private struct ReleaseNotesBareView: View {
   var body: some View {
     NavigationStack {
       ScrollView(.vertical) {
-        switch model.status {
-        case .none:
-          EmptyView()
-        case .content(let content):
-          Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-        case .error(let error):
-          VStack {
-            Text("😵")
-              .font(.title)
-              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            if let errorDescription = (error as? any LocalizedError)?.errorDescription {
-              Text("\(errorDescription)")
-            } else {
-              Text("\(error.localizedDescription)")
+        VStack {
+          switch model.status {
+          case .none:
+            ProgressView()
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .padding(.top, 60)
+              .transition(.opacity)
+          case .content(let content):
+            Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding()
+          case .error(let error):
+            VStack {
+              Text("😵")
+                .font(.title)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+              if let errorDescription = (error as? any LocalizedError)?.errorDescription {
+                Text("\(errorDescription)")
+              } else {
+                Text("\(error.localizedDescription)")
+              }
             }
+            .multilineTextAlignment(.center)
+            .padding()
           }
-          .multilineTextAlignment(.center)
-          .padding()
         }
+        .animation(.easeInOut, value: model.status)
       }
       .refreshable {
-        await Task { await model.loadReleaseNotes() }.value
+        await model.loadReleaseNotes()
       }
       .navigationTitle(title)
 
@@ -434,5 +467,5 @@ private struct HelperView: View {
 }
 
 #Preview("AppStore") {
-  HelperView(version: AppVersion(version: "1.7.1", build: "142"), appConfiguration: .AppStore)
+  HelperView(version: AppVersion(version: "1.9.0", build: "179"), appConfiguration: .AppStore)
 }

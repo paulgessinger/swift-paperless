@@ -23,6 +23,18 @@ struct VersionTests {
   }
 
   @Test
+  func constructFromStringWithVPrefix() {
+    #expect(Version("v1.2.3") == .init(major: 1, minor: 2, patch: 3))
+    #expect(Version("V1.0.0") == .init(major: 1, minor: 0, patch: 0))
+    #expect(Version("v0.9.42") == .init(major: 0, minor: 9, patch: 42))
+    #expect(Version("v10.20.30") == .init(major: 10, minor: 20, patch: 30))
+    #expect(Version("v1.2.3") == Version("1.2.3"))
+    #expect(Version("v1.2.3.4") == nil)
+    #expect(Version("v") == nil)
+    #expect(Version("v.1.2") == nil)
+  }
+
+  @Test
   func convertToString() {
     #expect("\(Version(1, 2, 3))" == "1.2.3")
 
@@ -102,6 +114,10 @@ struct VersionTests {
     let appVersion3 = AppVersion(version: "1.2.3", build: "42")
     #expect(appVersion3?.version == version)
     #expect(appVersion3?.build == 42)
+
+    let appVersion4 = AppVersion(version: "v1.2.3", build: "42")
+    #expect(appVersion4?.version == version)
+    #expect(appVersion4?.build == 42)
   }
 
   @Test
