@@ -13,7 +13,11 @@ public
   let patch: UInt
 
   public init?(_ value: String) {
-    let components = value.components(separatedBy: ".")
+    let trimmed =
+      value.hasPrefix("v") || value.hasPrefix("V")
+      ? String(value.dropFirst())
+      : value
+    let components = trimmed.components(separatedBy: ".")
     guard components.count == 3 else {
       return nil
     }
