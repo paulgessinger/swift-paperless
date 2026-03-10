@@ -212,16 +212,19 @@ class ReleaseNotesViewModel {
   private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
     let releases = try await fetchAllReleases()
 
-    let matchingReleases = releases
+    let matchingReleases =
+      releases
       .filter { release in
         guard !release.prerelease,
           !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-          let tagVersion = Version(release.tag_name.trimmingPrefix("v"))
+          let tagVersion = Version(release.tag_name)
         else { return false }
         return tagVersion <= version.version
       }
       .compactMap { release -> (Release, Version)? in
-        guard let tagVersion = Version(release.tag_name.trimmingPrefix("v")) else { return nil }
+        guard let tagVersion = Version(release.tag_name) else {
+          return nil
+        }
         return (release, tagVersion)
       }
       .sorted { $0.1 > $1.1 }
