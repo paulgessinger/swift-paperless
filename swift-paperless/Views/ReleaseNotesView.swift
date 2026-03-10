@@ -26,10 +26,19 @@ private struct ReleaseNotesError: LocalizedError {
 class ReleaseNotesViewModel {
   var showReleaseNotes = false
 
-  enum Status {
+  enum Status: Equatable {
     case none
     case content(MarkdownContent)
     case error(any Error)
+
+    static func == (lhs: Status, rhs: Status) -> Bool {
+      switch (lhs, rhs) {
+      case (.none, .none): true
+      case (.content(let a), .content(let b)): a == b
+      case (.error, .error): true
+      default: false
+      }
+    }
   }
 
   private(set) var status: Status = .none
@@ -136,23 +145,7 @@ class ReleaseNotesViewModel {
     return result
   }
 
-  private func loadAppStoreReleaseNotes(for version: AppVersion) async throws {
-    let url = Self.baseUrl.appending(path: "md").appending(path: "v\(version.version).md")
-    let request = URLRequest(url: url)
-    Logger.shared.debug(
-      "Loading release notes for AppStore config from \(request.url!, privacy: .public)")
-
-    do {
-      let (data, response) = try await URLSession.shared.getData(for: request)
-      if let response = response as? HTTPURLResponse, response.statusCode != 200 {
-        throw ReleaseNotesError(version: appVersion)
-      } else {
-        status = .content(MarkdownContent(String(decoding: data, as: UTF8.self)))
-      }
-    }
-  }
-
-  private func loadTestFlightReleaseNotes(for version: AppVersion) async throws {
+  private func fetchAllReleases() async throws -> [Release] {
     guard
       let url = URL(
         string: "\(Self.githubUrl)/repos/\(Self.githubRepo)/releases?per_page=100"
@@ -347,27 +340,33 @@ private struct ReleaseNotesBareView: View {
   var body: some View {
     NavigationStack {
       ScrollView(.vertical) {
-        switch model.status {
-        case .none:
-          EmptyView()
-        case .content(let content):
-          Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-        case .error(let error):
-          VStack {
-            Text("😵")
-              .font(.title)
-              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            if let errorDescription = (error as? any LocalizedError)?.errorDescription {
-              Text("\(errorDescription)")
-            } else {
-              Text("\(error.localizedDescription)")
+        VStack {
+          switch model.status {
+          case .none:
+            ProgressView()
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .padding(.top, 60)
+              .transition(.opacity)
+          case .content(let content):
+            Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding()
+          case .error(let error):
+            VStack {
+              Text("😵")
+                .font(.title)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+              if let errorDescription = (error as? any LocalizedError)?.errorDescription {
+                Text("\(errorDescription)")
+              } else {
+                Text("\(error.localizedDescription)")
+              }
             }
+            .multilineTextAlignment(.center)
+            .padding()
           }
-          .multilineTextAlignment(.center)
-          .padding()
         }
+        .animation(.easeInOut, value: model.status)
       }
       .refreshable {
         await Task { await model.loadReleaseNotes() }.value
@@ -468,5 +467,5 @@ private struct HelperView: View {
 }
 
 #Preview("AppStore") {
-  HelperView(version: AppVersion(version: "1.7.1", build: "142"), appConfiguration: .AppStore)
+  HelperView(version: AppVersion(version: "1.9.0", build: "179"), appConfiguration: .AppStore)
 }
