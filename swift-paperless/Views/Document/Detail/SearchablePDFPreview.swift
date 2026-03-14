@@ -157,7 +157,9 @@ struct SearchablePDFPreview: View {
           } label: {
             Label(localized: .localizable(.done), systemImage: "checkmark")
               .labelStyle(.iconOnly)
-              .padding()
+              .font(.title2)
+              .bold()
+              .padding(13)
               .foregroundStyle(.white)
           }
           .frame(maxHeight: .infinity)
@@ -217,7 +219,6 @@ struct SearchablePDFPreview: View {
             }
             .disabled(matches.isEmpty)
           }
-          //          .padding()
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.interactive())
         }
@@ -232,7 +233,9 @@ struct SearchablePDFPreview: View {
         } label: {
           Label(localized: .localizable(.search), systemImage: "magnifyingglass")
             .labelStyle(.iconOnly)
-            .padding()
+            .font(.title2)
+            .bold()
+            .padding(13)
         }
         .glassEffect(.regular.interactive(), in: Circle())
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -390,6 +393,8 @@ struct SearchablePDFPreview: View {
       // Avoid leaking search state when this sheet is dismissed and re-presented.
       setSearchMode(false)
     }
+
+    .interactiveDismissDisabled(isSearchMode)
   }
 
   private func setSearchMode(_ enabled: Bool) {
