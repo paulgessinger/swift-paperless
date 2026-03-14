@@ -20,6 +20,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showEditSheet = false
   @State private var showMetadataSheet = false
   @State private var showNotesSheet = false
+  @State private var showShareLinkSheet = false
 
   @State private var showPreview = false
   @State private var shadowDelay: Double? = nil
@@ -116,7 +117,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   }
 
   private struct BottomBarButton: View {
-    let label: LocalizedStringKey
+    let label: LocalizedStringResource
     let image: String
     let action: () -> Void
     let transitionID: TransitionID
@@ -124,10 +125,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     var body: some View {
       Button(action: action) {
-        Image(systemName: image)
-          .imageScale(.large)
-          .accessibilityLabel(Text(label))
-          .padding(10)
+        Label(localized: label, systemImage: image)
+          .font(.title2)
+          .labelStyle(.iconOnly)
+          .padding(13)
           .backport.matchedTransitionSource(id: transitionID, in: namespace)
           .backport.glassEffect(.regular.interactive())
       }
@@ -156,8 +157,57 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           namespace: namespace
         )
       }
+      .apply {
+        if #unavailable(iOS 26.0) {
+          $0.background {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+              .fill(.thinMaterial)
+          }
+        } else {
+          $0
+        }
+      }
       .frame(maxWidth: .infinity, alignment: .trailing)
       .padding()
+    }
+  }
+
+  @ViewBuilder
+  private var shareMenuContent: some View {
+    Button {
+      showShareLinkSheet = true
+    } label: {
+      Label(localized: .localizable(.shareLink), systemImage: "link")
+    }
+
+    if let url = viewModel.documentUrl {
+      ShareLink(item: url) {
+        Label(localized: .localizable(.documentLink), systemImage: "safari")
+      }
+    }
+
+    Menu {
+      let deepLinks = viewModel.deepLinks
+
+      if let url = deepLinks.withoutServer?.url {
+        ShareLink(item: url) {
+          Text(.localizable(.documentDeepLinkWithoutBackend))
+        }
+      }
+
+      if let url = deepLinks.withServer?.url {
+        ShareLink(item: url) {
+          Text(.localizable(.documentDeepLinkWithBackend))
+        }
+      }
+    } label: {
+      Label(localized: .localizable(.documentDeepLink), systemImage: "app")
+    }
+
+    if case .loaded(url: let url, document: _) = viewModel.download {
+      ShareLink(item: url) {
+        Label(localized: .localizable(.shareSheet), systemImage: "document")
+      }
     }
   }
 
@@ -195,6 +245,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
     .backport.scrollEdgeEffectStyle(.hard, for: .bottom)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          shareMenuContent
+        } label: {
+          Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+            .labelStyle(.iconOnly)
+        }
+      }
+    }
 
     .apply {
       if #available(iOS 26.0, *) {
@@ -226,6 +286,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .backport.navigationTransitionZoom(
           sourceID: TransitionID.bottomBar(.notes), in: namespace)
     }
+    .sheet(isPresented: $showShareLinkSheet) {
+      ShareLinkView(document: viewModel.document)
+    }
     .sheet(
       isPresented: $showPreview,
       onDismiss: {
@@ -244,6 +307,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             }
           )
           .ignoresSafeArea(.container)
+          .navigationBarTitleDisplayMode(.inline)
+          .navigationTitle(viewModel.document.title)
         }
         .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
       }
