@@ -178,7 +178,6 @@
 				Login/StageSelectionView.swift,
 				Login/UrlEntryView.swift,
 				Login/UrlError.swift,
-				PermissionsEditView.swift,
 				ReleaseNotesView.swift,
 				Settings/DebugMenuView.swift,
 				Settings/LibrariesView.swift,

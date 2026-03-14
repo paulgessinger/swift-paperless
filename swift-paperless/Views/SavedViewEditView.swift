@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Networking
 import SwiftUI
 import os
 
@@ -15,7 +16,7 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
 
   private var saveLabel: String
 
-  private var editable: Bool { onSave != nil }
+  private var editable: Bool { onSave != nil && savedView.userCanChange }
 
   private var valid: Bool {
     !savedView.name.isEmpty && editable
@@ -82,6 +83,16 @@ struct SavedViewEditView<Element>: View where Element: SavedViewProtocol {
         }
       }
       .disabled(!editable)
+
+      if store.repository.supports(feature: .savedViewPermissions) {
+        Section {
+          NavigationLink(.permissions(.title)) {
+            PermissionsEditView(object: $savedView)
+              .disabled(!editable)
+          }
+        }
+        .disabled(!editable)
+      }
     }
 
     .toolbar {
