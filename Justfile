@@ -13,6 +13,20 @@ alias sb := set_build
 set_build number:
   uv run bump.py build swift-paperless.xcodeproj/project.pbxproj {{number}}
 
+get-version:
+  @grep -m1 'MARKETING_VERSION' swift-paperless.xcodeproj/project.pbxproj | sed 's/.*= //;s/;//'
+
+get-build:
+  @grep -m1 'CURRENT_PROJECT_VERSION' swift-paperless.xcodeproj/project.pbxproj | sed 's/.*= //;s/;//'
+
+tag:
+  #!/bin/bash
+  version=$(just get-version)
+  number=$(just get-build)
+  tag="builds/v$version/$number"
+  git tag $tag
+  echo $tag
+
 beta:
   bundle exec fastlane beta
 
