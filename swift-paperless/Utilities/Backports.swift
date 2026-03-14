@@ -24,11 +24,37 @@ extension ToolbarContent {
 
 @MainActor
 extension Backport where Content: View {
-  public enum GlassEffectStyle: Sendable {
-    case clear
-    case identity
-    case regular
+  public struct GlassEffectStyle: Sendable {
+    private enum Base: Sendable {
+      case clear
+      case identity
+      case regular
+    }
 
+    private let base: Base
+    private let isInteractive: Bool
+
+    private init(base: Base, isInteractive: Bool = false) {
+      self.base = base
+      self.isInteractive = isInteractive
+    }
+
+    public static var clear: Self { .init(base: .clear) }
+    public static var identity: Self { .init(base: .identity) }
+    public static var regular: Self { .init(base: .regular) }
+
+    public func interactive() -> Self {
+      .init(base: base, isInteractive: true)
+    }
+  }
+
+  public enum ScrollEdgeEffectStyle: Sendable {
+    case hard
+  }
+
+  public enum ScrollEdge: Sendable {
+    case top
+    case bottom
   }
 
   @ViewBuilder
@@ -67,6 +93,17 @@ extension Backport where Content: View {
   }
 
   @ViewBuilder
+  public func scrollEdgeEffectStyle(_ style: ScrollEdgeEffectStyle, for edge: ScrollEdge)
+    -> some View
+  {
+    if #available(iOS 26.0, *) {
+      content.scrollEdgeEffectStyle(style.scrollEdgeEffectStyle, for: edge.edgeSet)
+    } else {
+      content
+    }
+  }
+
+  @ViewBuilder
   public func navigationTransitionZoom(sourceID: some Hashable, in namespace: Namespace.ID)
     -> some View
   {
@@ -95,13 +132,53 @@ extension Backport where Content: View {
 @available(iOS 26.0, *)
 extension Backport.GlassEffectStyle {
   var glass: Glass {
+    let glass: Glass =
+      switch base {
+      case .clear:
+        .clear
+      case .identity:
+        .identity
+      case .regular:
+        .regular
+      }
+
+    return isInteractive ? glass.interactive() : glass
+  }
+}
+
+@available(iOS 26.0, *)
+extension Backport.ScrollEdgeEffectStyle {
+  var scrollEdgeEffectStyle: SwiftUI.ScrollEdgeEffectStyle {
     switch self {
-    case .clear:
-      .clear
-    case .identity:
-      .identity
-    case .regular:
-      .regular
+    case .hard:
+      .hard
+    }
+  }
+}
+
+@available(iOS 26.0, *)
+extension Backport.ScrollEdge {
+  var edgeSet: Edge.Set {
+    switch self {
+    case .top:
+      .top
+    case .bottom:
+      .bottom
+    }
+  }
+}
+
+public struct GlassEffectContainerCompat<Content: View>: View {
+  @ViewBuilder
+  let content: () -> Content
+
+  public var body: some View {
+    if #available(iOS 26.0, *) {
+      SwiftUI.GlassEffectContainer {
+        content()
+      }
+    } else {
+      content()
     }
   }
 }
