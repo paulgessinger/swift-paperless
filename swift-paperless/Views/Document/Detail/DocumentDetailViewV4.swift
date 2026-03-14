@@ -28,6 +28,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   @Namespace private var namespace
 
+  private enum TransitionID: Hashable {
+    case doc
+    case bottomBar(BottomBarItem)
+
+    enum BottomBarItem: Hashable {
+      case metadata
+      case notes
+    }
+  }
+
   init(
     store: DocumentStore,
     connection: Connection?,
@@ -53,21 +63,21 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
       .buttonStyle(.borderedProminent)
 
-      Button {
-        showMetadataSheet = true
-      } label: {
-        Label(localized: .documentMetadata(.metadata), systemImage: "info.circle")
-      }
-      .buttonStyle(.bordered)
-
-      if viewModel.store.permissions.test(.view, for: .note) {
-        Button {
-          showNotesSheet = true
-        } label: {
-          Label(localized: .documentMetadata(.notes), systemImage: "note.text")
-        }
-        .buttonStyle(.bordered)
-      }
+      //      Button {
+      //        showMetadataSheet = true
+      //      } label: {
+      //        Label(localized: .documentMetadata(.metadata), systemImage: "info.circle")
+      //      }
+      //      .buttonStyle(.bordered)
+      //
+      //      if viewModel.store.permissions.test(.view, for: .note) {
+      //        Button {
+      //          showNotesSheet = true
+      //        } label: {
+      //          Label(localized: .documentMetadata(.notes), systemImage: "note.text")
+      //        }
+      //        .buttonStyle(.bordered)
+      //      }
     }
   }
 
@@ -105,6 +115,52 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
+  private struct BottomBarButton: View {
+    let label: LocalizedStringKey
+    let image: String
+    let action: () -> Void
+    let transitionID: TransitionID
+    let namespace: Namespace.ID
+
+    var body: some View {
+      Button(action: action) {
+        Image(systemName: image)
+          .imageScale(.large)
+          .accessibilityLabel(Text(label))
+          .padding(10)
+          .backport.matchedTransitionSource(id: transitionID, in: namespace)
+          .backport.glassEffect(.regular.interactive())
+      }
+      .foregroundStyle(.primary)
+    }
+  }
+
+  private var metadataBar: some View {
+    GlassEffectContainerCompat {
+      HStack {
+        BottomBarButton(
+          label: .documentMetadata(.metadata), image: "info.circle",
+          action: {
+            showMetadataSheet = true
+          },
+          transitionID: .bottomBar(.metadata),
+          namespace: namespace
+        )
+
+        BottomBarButton(
+          label: .documentMetadata(.notes), image: "note.text",
+          action: {
+            showNotesSheet = true
+          },
+          transitionID: .bottomBar(.notes),
+          namespace: namespace
+        )
+      }
+      .frame(maxWidth: .infinity, alignment: .trailing)
+      .padding()
+    }
+  }
+
   var body: some View {
     @Bindable var viewModel = viewModel
 
@@ -112,7 +168,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(document: viewModel.document)
           .frame(maxWidth: .infinity)
-          .backport.matchedTransitionSource(id: "doc", in: namespace)
+          .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
           .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
           .shadow(color: Color(.imageShadow), radius: 15)
 
@@ -138,6 +194,20 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
+    .backport.scrollEdgeEffectStyle(.hard, for: .bottom)
+
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.safeAreaInset(edge: .bottom) {
+          metadataBar
+        }
+      } else {
+        $0.safeAreaInset(edge: .bottom) {
+          metadataBar
+        }
+      }
+    }
+
     .sheet(isPresented: $showEditSheet) {
       DocumentEditView(store: store, document: $viewModel.document, navPath: navPath)
         .environmentObject(errorController)
@@ -146,11 +216,15 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
         .environmentObject(store)
         .environmentObject(errorController)
+        .backport.navigationTransitionZoom(
+          sourceID: TransitionID.bottomBar(.metadata), in: namespace)
     }
     .sheet(isPresented: $showNotesSheet) {
       DocumentNoteView(document: $viewModel.document)
         .environmentObject(store)
         .environmentObject(errorController)
+        .backport.navigationTransitionZoom(
+          sourceID: TransitionID.bottomBar(.notes), in: namespace)
     }
     .sheet(
       isPresented: $showPreview,
@@ -171,7 +245,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           )
           .ignoresSafeArea(.container)
         }
-        .backport.navigationTransitionZoom(sourceID: "doc", in: namespace)
+        .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
       }
     }
 
