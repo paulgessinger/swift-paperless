@@ -48,6 +48,15 @@ extension Backport where Content: View {
     }
   }
 
+  public enum ScrollEdgeEffectStyle: Sendable {
+    case hard
+  }
+
+  public enum ScrollEdge: Sendable {
+    case top
+    case bottom
+  }
+
   @ViewBuilder
   public func glassProminentButtonStyle() -> some View {
     glassProminentButtonStyle(or: .borderedProminent)
@@ -78,6 +87,17 @@ extension Backport where Content: View {
   ) -> some View {
     if #available(iOS 26.0, *) {
       content.glassEffect(style.glass, in: shape)
+    } else {
+      content
+    }
+  }
+
+  @ViewBuilder
+  public func scrollEdgeEffectStyle(_ style: ScrollEdgeEffectStyle, for edge: ScrollEdge)
+    -> some View
+  {
+    if #available(iOS 26.0, *) {
+      content.scrollEdgeEffectStyle(style.scrollEdgeEffectStyle, for: edge.edgeSet)
     } else {
       content
     }
@@ -123,5 +143,42 @@ extension Backport.GlassEffectStyle {
       }
 
     return isInteractive ? glass.interactive() : glass
+  }
+}
+
+@available(iOS 26.0, *)
+extension Backport.ScrollEdgeEffectStyle {
+  var scrollEdgeEffectStyle: SwiftUI.ScrollEdgeEffectStyle {
+    switch self {
+    case .hard:
+      .hard
+    }
+  }
+}
+
+@available(iOS 26.0, *)
+extension Backport.ScrollEdge {
+  var edgeSet: Edge.Set {
+    switch self {
+    case .top:
+      .top
+    case .bottom:
+      .bottom
+    }
+  }
+}
+
+public struct GlassEffectContainerCompat<Content: View>: View {
+  @ViewBuilder
+  let content: () -> Content
+
+  public var body: some View {
+    if #available(iOS 26.0, *) {
+      SwiftUI.GlassEffectContainer {
+        content()
+      }
+    } else {
+      content()
+    }
   }
 }
