@@ -24,11 +24,28 @@ extension ToolbarContent {
 
 @MainActor
 extension Backport where Content: View {
-  public enum GlassEffectStyle: Sendable {
-    case clear
-    case identity
-    case regular
+  public struct GlassEffectStyle: Sendable {
+    private enum Base: Sendable {
+      case clear
+      case identity
+      case regular
+    }
 
+    private let base: Base
+    private let isInteractive: Bool
+
+    private init(base: Base, isInteractive: Bool = false) {
+      self.base = base
+      self.isInteractive = isInteractive
+    }
+
+    public static var clear: Self { .init(base: .clear) }
+    public static var identity: Self { .init(base: .identity) }
+    public static var regular: Self { .init(base: .regular) }
+
+    public func interactive() -> Self {
+      .init(base: base, isInteractive: true)
+    }
   }
 
   @ViewBuilder
@@ -95,13 +112,16 @@ extension Backport where Content: View {
 @available(iOS 26.0, *)
 extension Backport.GlassEffectStyle {
   var glass: Glass {
-    switch self {
-    case .clear:
-      .clear
-    case .identity:
-      .identity
-    case .regular:
-      .regular
-    }
+    let glass: Glass =
+      switch base {
+      case .clear:
+        .clear
+      case .identity:
+        .identity
+      case .regular:
+        .regular
+      }
+
+    return isInteractive ? glass.interactive() : glass
   }
 }
