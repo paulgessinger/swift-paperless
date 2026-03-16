@@ -1,0 +1,1 @@
+- Ready for saved view permissions in the upcoming Paperless-ngx v3

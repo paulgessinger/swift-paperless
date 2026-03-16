@@ -181,5 +181,41 @@ struct SavedViewTest {
     #expect(first.sortField == .other("custom_field_1"))
     #expect(first.sortOrder == .descending)
     #expect(first.filterRules.count == 1)
+    #expect(first.owner == .user(4))
+    #expect(first.userCanChange == true)
+  }
+
+  @Test func testDecodingOwnerNull() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "Inbox",
+        "sort_field": null,
+        "sort_reverse": false,
+        "filter_rules": [],
+        "owner": null,
+        "user_can_change": false
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(SavedView.self, from: input)
+    #expect(result.owner == .unset)
+    #expect(result.userCanChange == false)
+  }
+
+  @Test func testDecodingOwnerAbsent() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "Inbox",
+        "sort_field": null,
+        "sort_reverse": false,
+        "filter_rules": []
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(SavedView.self, from: input)
+    #expect(result.owner == .unset)
+    #expect(result.userCanChange == true)
   }
 }
