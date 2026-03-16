@@ -11,6 +11,180 @@ import Flow
 import Networking
 import SwiftUI
 
+extension Common.SchemeToken where Value == Color {
+  fileprivate static var editButtonColor: Self {
+    .init(light: Color(white: 0.3), dark: Color(white: 0.5))
+  }
+
+  fileprivate static var backgroundColor: Self {
+    .init(light: Color(white: 0.97), dark: Color(white: 0.2))
+  }
+}
+
+private enum TransitionID: Hashable {
+  case doc
+  case tags
+  case date
+  case asn
+  case correspondent
+  case documentType
+  case storagePath
+  case owner
+  case metadata
+  case notes
+}
+
+private struct EditableAspect: View {
+  let label: String?
+  let systemImage: String
+  let transitionID: TransitionID?
+  let namespace: Namespace.ID?
+  let action: (() -> Void)?
+
+  @ScaledMetric(relativeTo: .body)
+  private var fontSizeRaw = 15
+
+  private var fontSize: CGFloat {
+    min(fontSizeRaw, 20)
+  }
+
+  private var pillPadding: CGFloat {
+    1 + fontSize / 6
+  }
+
+  private var iconPadding: CGFloat {
+    2 + fontSize / 6
+  }
+
+  @SchemeValue(.backgroundColor)
+  private var backgroundColor
+
+  @SchemeValue(light: Color(white: 0.9), dark: Color(white: 0.35))
+  private var iconBackgroundColor: Color
+
+  @SchemeValue(.editButtonColor)
+  private var editButtonColor
+
+  init(
+    localized: LocalizedStringResource, systemImage: String, action: (() -> Void)? = nil,
+    transitionID: TransitionID? = nil,
+    namespace: Namespace.ID? = nil
+  ) {
+    self.label = String(localized: localized)
+    self.systemImage = systemImage
+    self.action = action
+    self.transitionID = transitionID
+    self.namespace = namespace
+  }
+
+  init(
+    _ label: String?, systemImage: String, action: (() -> Void)? = nil,
+    transitionID: TransitionID? = nil,
+    namespace: Namespace.ID? = nil
+  ) {
+    self.label = label
+    self.systemImage = systemImage
+    self.action = action
+    self.transitionID = transitionID
+    self.namespace = namespace
+  }
+
+  var body: some View {
+    Button {
+      action?()
+    } label: {
+      HStack {
+        Image(systemName: systemImage)
+          .resizable()
+          .scaledToFit()
+          .frame(width: fontSize, height: fontSize)
+          .padding(iconPadding)
+          .background(Circle().fill(iconBackgroundColor))
+          .padding(.vertical, pillPadding)
+          .padding(.leading, pillPadding)
+        Text(label ?? String(localized: .permissions(.private)))
+        Image(systemName: "pencil")
+          .foregroundStyle(editButtonColor)
+          .padding(.trailing, 2 + fontSize / 2)
+      }
+      .font(.system(size: fontSize))
+      .background {
+        Capsule()
+          .fill(backgroundColor)
+      }
+      .dynamicTypeSize(...DynamicTypeSize.large)
+      .apply {
+        if let transitionID, let namespace {
+          $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
+        } else {
+          $0
+        }
+      }
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+private struct DocumentTagsSection: View {
+  @SchemeValue(.editButtonColor)
+  private var editButtonColor
+
+  @SchemeValue(.backgroundColor)
+  private var backgroundColor
+
+  @SchemeValue(light: Color(white: 0.9), dark: Color(white: 0.3))
+  private var editButtonBackground
+
+  let tags: [Tag?]
+  let action: (() -> Void)?
+  let transitionID: TransitionID?
+  let namespace: Namespace.ID?
+
+  var body: some View {
+    HStack(alignment: .top) {
+      Button {
+        action?()
+      } label: {
+        TagsView(
+          tags: tags, action: nil,
+          content: {
+            Label(.localizable(.edit), systemImage: "pencil")
+              .foregroundStyle(editButtonColor)
+              .apply {
+                if tags.isEmpty {
+                  $0.labelStyle(.titleAndIcon)
+                    .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                } else {
+                  $0.labelStyle(.iconOnly)
+                    .padding(5)
+                }
+              }
+              .background {
+                if tags.isEmpty {
+                  Capsule()
+                    .fill(backgroundColor)
+                } else {
+                  Circle()
+                    .fill(backgroundColor)
+                }
+              }
+          }
+        )
+      }
+      .buttonStyle(.plain)
+      .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .dynamicTypeSize(...DynamicTypeSize.large)
+    .apply {
+      if let transitionID, let namespace {
+        $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
+      } else {
+        $0
+      }
+    }
+  }
+}
+
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var viewModel: DocumentDetailModel
@@ -22,22 +196,20 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showNotesSheet = false
   @State private var showShareLinkSheet = false
 
+  @State private var showTagsSheet = false
+  @State private var showAsnSheet = false
+  @State private var showCorrespondentSheet = false
+  @State private var showDocumentTypeSheet = false
+  @State private var showDateSheet = false
+  @State private var showStoragePathSheet = false
+  @State private var showOwnerSheet = false
+
   @State private var showPreview = false
   @State private var shadowDelay: Double? = nil
 
   var navPath: Binding<[NavigationState]>? = nil
 
   @Namespace private var namespace
-
-  private enum TransitionID: Hashable {
-    case doc
-    case bottomBar(BottomBarItem)
-
-    enum BottomBarItem: Hashable {
-      case metadata
-      case notes
-    }
-  }
 
   init(
     store: DocumentStore,
@@ -63,22 +235,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         Label(localized: .localizable(.edit), systemImage: "square.and.pencil")
       }
       .buttonStyle(.borderedProminent)
-
-      //      Button {
-      //        showMetadataSheet = true
-      //      } label: {
-      //        Label(localized: .documentMetadata(.metadata), systemImage: "info.circle")
-      //      }
-      //      .buttonStyle(.bordered)
-      //
-      //      if viewModel.store.permissions.test(.view, for: .note) {
-      //        Button {
-      //          showNotesSheet = true
-      //        } label: {
-      //          Label(localized: .documentMetadata(.notes), systemImage: "note.text")
-      //        }
-      //        .buttonStyle(.bordered)
-      //      }
     }
   }
 
@@ -86,32 +242,73 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let document = viewModel.document
     return HFlow(itemSpacing: 12) {
       if let asn = document.asn {
-        DocumentCellAspect(localized: .localizable(.documentAsn(asn)), systemImage: "qrcode")
+        EditableAspect(
+          localized: .localizable(.documentAsn(asn)),
+          systemImage: "qrcode",
+          action: {
+            showAsnSheet = true
+          },
+          transitionID: .asn,
+          namespace: namespace
+        )
       }
 
       if let id = document.correspondent {
-        DocumentCellAspect(store.correspondents[id]?.name, systemImage: "person")
-      }
-
-      if let pageCount = document.pageCount {
-        DocumentCellAspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
+        EditableAspect(
+          store.correspondents[id]?.name,
+          systemImage: "person.fill",
+          action: {
+            showCorrespondentSheet = true
+          },
+          transitionID: .correspondent,
+          namespace: namespace
+        )
       }
 
       if let id = document.documentType {
-        DocumentCellAspect(store.documentTypes[id]?.name, systemImage: "doc")
+        EditableAspect(
+          store.documentTypes[id]?.name,
+          systemImage: "doc.fill",
+          action: {
+            showDocumentTypeSheet = true
+          },
+          transitionID: .documentType,
+          namespace: namespace
+        )
       }
 
-      DocumentCellAspect(
+      EditableAspect(
         DocumentCell.dateFormatter.string(from: document.created),
-        systemImage: "calendar"
+        systemImage: "calendar",
+        action: {
+          showDateSheet = true
+        },
+        transitionID: .date,
+        namespace: namespace
       )
 
       if let id = document.storagePath {
-        DocumentCellAspect(store.storagePaths[id]?.name, systemImage: "archivebox")
+        EditableAspect(
+          store.storagePaths[id]?.name,
+          systemImage: "archivebox.fill",
+          action: {
+            showStoragePathSheet = true
+          },
+          transitionID: .storagePath,
+          namespace: namespace
+        )
       }
 
       if case .user(let id) = document.owner {
-        DocumentCellAspect(store.users[id]?.username, systemImage: "person.badge.key")
+        EditableAspect(
+          store.users[id]?.username,
+          systemImage: "person.badge.key.fill",
+          action: {
+            showOwnerSheet = true
+          },
+          transitionID: .owner,
+          namespace: namespace
+        )
       }
     }
   }
@@ -128,7 +325,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         Label(localized: label, systemImage: image)
           .font(.title2)
           .labelStyle(.iconOnly)
-          .padding(13)
+          .padding(10)
           .backport.matchedTransitionSource(id: transitionID, in: namespace)
           .backport.glassEffect(.regular.interactive())
       }
@@ -144,7 +341,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           action: {
             showMetadataSheet = true
           },
-          transitionID: .bottomBar(.metadata),
+          transitionID: .metadata,
           namespace: namespace
         )
 
@@ -153,7 +350,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           action: {
             showNotesSheet = true
           },
-          transitionID: .bottomBar(.notes),
+          transitionID: .notes,
           namespace: namespace
         )
       }
@@ -211,32 +408,58 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
+  private var previewEnabled: Bool {
+    switch viewModel.download {
+    case .loaded:
+      return true
+    default:
+      return false
+    }
+  }
+
   var body: some View {
     @Bindable var viewModel = viewModel
 
     ScrollView(.vertical) {
       VStack(alignment: .leading, spacing: 16) {
-        DocumentPreview(document: viewModel.document)
-          .frame(maxWidth: .infinity)
-          .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
-          .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
-          .shadow(color: Color(.imageShadow), radius: 15)
+        Button {
+          guard previewEnabled else { return }
+          showPreview = true
+        } label: {
+          DocumentPreview(document: viewModel.document)
+            .frame(maxWidth: .infinity)
+            .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
+            .accessibilityLabel(.localizable(.documentOpen))
+        }
+        .disabled(!previewEnabled)
 
-          .onTapGesture {
-            guard case .loaded = viewModel.download else { return }
-            showPreview = true
+        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .shadow(color: Color(.imageShadow), radius: 15)
+
+        VStack(alignment: .leading, spacing: 0) {
+          Text(viewModel.document.title)
+            .font(.title)
+            .fontWeight(.semibold)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          if let pageCount = viewModel.document.pageCount {
+            Label(.localizable(.pages(pageCount)), systemImage: "book.pages.fill")
+              .font(.footnote)
+              .italic()
           }
 
-        Text(viewModel.document.title)
-          .font(.title2)
-          .fontWeight(.semibold)
-          .frame(maxWidth: .infinity, alignment: .leading)
+        }
 
         detailAspects
-          .frame(maxWidth: .infinity, alignment: .leading)
 
-        TagsView(tags: viewModel.document.tags.compactMap { store.tags[$0] })
-          .frame(maxWidth: .infinity, alignment: .leading)
+        DocumentTagsSection(
+          tags: viewModel.document.tags.map { store.tags[$0] },
+          action: {
+            showTagsSheet = true
+          },
+          transitionID: .tags,
+          namespace: namespace
+        )
 
         metadataActions
       }
@@ -244,7 +467,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
-    .backport.scrollEdgeEffectStyle(.hard, for: .bottom)
+
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
@@ -268,23 +491,124 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    .sheet(isPresented: $showEditSheet) {
-      DocumentEditView(store: store, document: $viewModel.document, navPath: navPath)
-        .environmentObject(errorController)
+    .sheet(isPresented: $showTagsSheet) {
+      NavigationStack {
+        Text("Tags")
+          .navigationTitle("Tags")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.tags, in: namespace)
+      .presentationDetents([.medium])
     }
+
+    .sheet(isPresented: $showAsnSheet) {
+      NavigationStack {
+        Text("ASN")
+          .navigationTitle("ASN")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.asn, in: namespace)
+      .presentationDetents([.medium])
+    }
+
+    .sheet(isPresented: $showCorrespondentSheet) {
+      NavigationStack {
+        Text("Correspondent")
+          .navigationTitle("Correspondent")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.correspondent, in: namespace)
+      .presentationDetents([.medium])
+    }
+
+    .sheet(isPresented: $showDocumentTypeSheet) {
+      NavigationStack {
+        Text("Document Type")
+          .navigationTitle("Document Type")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.documentType, in: namespace)
+      .presentationDetents([.medium])
+    }
+
+    .sheet(isPresented: $showDateSheet) {
+      NavigationStack {
+        Text("Date")
+          .navigationTitle("Date")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.date, in: namespace)
+      .presentationDetents([.medium])
+    }
+
+    .sheet(isPresented: $showStoragePathSheet) {
+      NavigationStack {
+        Text("Storage Path")
+          .navigationTitle("Storage Path")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.storagePath, in: namespace)
+      .presentationDetents([.medium])
+    }
+
+    .sheet(isPresented: $showOwnerSheet) {
+      NavigationStack {
+        Text("Owner")
+          .navigationTitle("Owner")
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              CancelIconButton()
+            }
+          }
+      }
+      .backport.navigationTransitionZoom(sourceID: TransitionID.owner, in: namespace)
+      .presentationDetents([.medium])
+    }
+
     .sheet(isPresented: $showMetadataSheet) {
       DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
         .environmentObject(store)
         .environmentObject(errorController)
         .backport.navigationTransitionZoom(
-          sourceID: TransitionID.bottomBar(.metadata), in: namespace)
+          sourceID: TransitionID.metadata, in: namespace)
     }
     .sheet(isPresented: $showNotesSheet) {
       DocumentNoteView(document: $viewModel.document)
         .environmentObject(store)
         .environmentObject(errorController)
         .backport.navigationTransitionZoom(
-          sourceID: TransitionID.bottomBar(.notes), in: namespace)
+          sourceID: TransitionID.notes, in: namespace)
     }
     .sheet(isPresented: $showShareLinkSheet) {
       ShareLinkView(document: viewModel.document)
@@ -322,6 +646,42 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 }
 
 // MARK: - Previews
+
+extension Tag {
+  fileprivate init(name: String, color: Color) {
+    self.init(
+      id: 0, isInboxTag: false, name: name, slug: "", color: color.hex, match: "",
+      matchingAlgorithm: .auto, isInsensitive: true)
+  }
+}
+
+#Preview("EditableAspect", traits: .sizeThatFitsLayout) {
+  VStack(alignment: .leading, spacing: 12) {
+    EditableAspect(localized: .localizable(.documentAsn(42)), systemImage: "qrcode")
+    EditableAspect("Preview Correspondent", systemImage: "person.fill")
+    EditableAspect("Preview Type", systemImage: "doc.fill")
+    EditableAspect(nil, systemImage: "person.badge.key.fill")
+
+    DocumentTagsSection(
+      tags: [
+        Tag(name: "Inbox", color: Color.purple),
+        Tag(name: "Bank", color: Color.blue),
+        Tag(name: "Travel Document", color: Color.green),
+        Tag(name: "Short", color: Color.green),
+        Tag(name: "Important", color: Color.red),
+        Tag(name: "Book", color: Color.yellow),
+        Tag(
+          name: "I am a very long tag name that will not fit in most places in the UI",
+          color: Color.red),
+        nil,
+      ],
+      action: nil,
+      transitionID: nil,
+      namespace: nil
+    )
+  }
+  .padding()
+}
 
 private struct DocumentDetailViewV4PreviewHelper: View {
   @StateObject private var store = DocumentStore(repository: TransientRepository())
@@ -362,11 +722,43 @@ private struct DocumentDetailViewV4PreviewHelper: View {
         repository.addUser(User(id: 1, isSuperUser: true, username: "preview", groups: []))
         try repository.login(userId: 1)
 
+        let correspondent = try await repository.create(
+          correspondent: ProtoCorrespondent(name: "Some bank")
+        )
+        let documentType = try await repository.create(
+          documentType: ProtoDocumentType(name: "Preview Type")
+        )
+        let storagePath = try await repository.create(
+          storagePath: ProtoStoragePath(name: "Preview Storage")
+        )
+        let inboxTag = try await repository.create(
+          tag: ProtoTag(name: "Inbox", color: Color.blue.hex))
+        let financeTag = try await repository.create(
+          tag: ProtoTag(name: "Finance", color: Color.green.hex)
+        )
+        let urgentTag = try await repository.create(
+          tag: ProtoTag(name: "Urgent", color: Color.red.hex))
+        let taxesTag = try await repository.create(
+          tag: ProtoTag(name: "Taxes", color: Color.orange.hex))
+        let personalTag = try await repository.create(
+          tag: ProtoTag(name: "Personal", color: Color.purple.hex)
+        )
+        let archiveTag = try await repository.create(
+          tag: ProtoTag(name: "Archive", color: Color.gray.hex))
+
         try await repository.create(
           document: ProtoDocument(
             title: "Preview document",
+            // title:
+            //   "Preview document which has a title that is very long and also needs to be handled without completely breaking the layout",
             asn: 42,
-            created: .now
+            documentType: documentType.id,
+            correspondent: correspondent.id,
+            tags: [
+              inboxTag.id, financeTag.id, urgentTag.id, taxesTag.id, personalTag.id, archiveTag.id,
+            ],
+            created: Calendar.current.date(byAdding: .day, value: -10, to: .now) ?? .now,
+            storagePath: storagePath.id
           ),
           url: #URL(
             "https://github.com/paulgessinger/swift-paperless/raw/refs/heads/main/Preview%20PDFs/street.pdf"
@@ -375,7 +767,13 @@ private struct DocumentDetailViewV4PreviewHelper: View {
 
         try await store.fetchAll()
         let documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
-        document = documents.first(where: { $0.id == documentId }) ?? documents.first
+        let firstDocument = documents.first
+        if var firstDocument {
+          firstDocument.owner = .user(1)
+          firstDocument.pageCount = 12
+          firstDocument.tags.append(666)
+          document = try await repository.update(document: firstDocument)
+        }
       } catch {
         print(error)
       }

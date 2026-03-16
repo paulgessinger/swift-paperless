@@ -31,34 +31,31 @@ struct TagView: View {
   }
 
   var body: some View {
-    Group {
-      Text(tag.name)
-        .lineLimit(1)
-        .font(.body)
-        .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
-        .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-        .background(tag.color.color)
-        .foregroundColor(tag.textColor.color)
-        .clipShape(Capsule())
-        .italic(inputTag == nil)
-        .unredacted()
-    }
+    Text(tag.name)
+      .lineLimit(1)
+      .font(.body)
+      .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
+      .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+      .background(tag.color.color)
+      .foregroundColor(tag.textColor.color)
+      .clipShape(Capsule())
+      .italic(inputTag == nil)
+      .unredacted()
   }
 }
 
-struct TagsView: View {
-  var tags: [Tag?]
-  var action: ((Tag) -> Void)?
+struct TagsView<Content: View>: View {
+  let tags: [Tag?]
+  let action: ((Tag) -> Void)?
+
+  let content: () -> Content
 
   @Environment(\.redactionReasons) var redactionReasons
 
-  init(tags: [Tag?], action: ((Tag) -> Void)? = nil) {
+  init(tags: [Tag?], action: ((Tag) -> Void)?, @ViewBuilder content: @escaping () -> Content) {
     self.tags = tags
     self.action = action
-  }
-
-  init() {
-    tags = []
+    self.content = content
   }
 
   var body: some View {
@@ -80,8 +77,25 @@ struct TagsView: View {
             }
           }
         }
+
+        content()
       }
+
     }
+  }
+}
+
+extension TagsView where Content == EmptyView {
+  init(tags: [Tag?], action: ((Tag) -> Void)? = nil) {
+    self.tags = tags
+    self.action = action
+    self.content = { EmptyView() }
+  }
+
+  init() {
+    tags = []
+    action = nil
+    content = { EmptyView() }
   }
 }
 
