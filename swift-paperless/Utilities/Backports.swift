@@ -50,6 +50,8 @@ extension Backport where Content: View {
 
   public enum ScrollEdgeEffectStyle: Sendable {
     case hard
+    case soft
+    case automatic
   }
 
   public enum ScrollEdge: Sendable {
@@ -152,6 +154,10 @@ extension Backport.ScrollEdgeEffectStyle {
     switch self {
     case .hard:
       .hard
+    case .soft:
+      .soft
+    case .automatic:
+      .automatic
     }
   }
 }
