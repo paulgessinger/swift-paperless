@@ -234,7 +234,7 @@ struct SearchablePDFPreview: View {
           Label(localized: .localizable(.search), systemImage: "magnifyingglass")
             .labelStyle(.iconOnly)
             .font(.title2)
-            .bold()
+            .fontWeight(.semibold)
             .padding(13)
         }
         .glassEffect(.regular.interactive(), in: Circle())

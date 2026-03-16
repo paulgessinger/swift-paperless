@@ -4788,6 +4788,17 @@
         }
       }
     },
+    "documentOpen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show full document"
+          }
+        }
+      }
+    },
     "documents" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4996,6 +5007,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Doküman görüntülemek için izniniz yok. Lütfen yöneticinizle iletişime geçin."
+          }
+        }
+      }
+    },
+    "documentTagsEditButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit tags"
           }
         }
       }
