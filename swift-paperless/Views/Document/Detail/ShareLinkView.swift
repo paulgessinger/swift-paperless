@@ -122,6 +122,8 @@ struct ShareLinkView: View {
 
       .animation(.spring, value: shareLinks)
 
+      .scrollBounceBehavior(.basedOnSize)
+
       .refreshable {
         await Task {
           await load()

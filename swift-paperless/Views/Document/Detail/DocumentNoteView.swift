@@ -59,21 +59,14 @@ private struct CreateNoteView: View {
 
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button(.localizable(.cancel), role: .cancel) {
-            dismiss()
-          }
+          CancelIconButton()
         }
 
         ToolbarItem(placement: .confirmationAction) {
-          if !saving {
-            Button(.localizable(.add)) {
-              Task { await saveNote() }
-            }
-            .bold()
-            .disabled(noteText.isEmpty)
-          } else {
-            ProgressView()
-          }
+          SaveButton(action: {
+            Task { await saveNote() }
+          })
+          .disabled(noteText.isEmpty || saving)
         }
       }
 
@@ -123,48 +116,58 @@ struct DocumentNoteView: View {
 
   var body: some View {
     NavigationStack {
-      List {
-        Section {
-          ForEach(notes) { note in
-            VStack(alignment: .leading) {
-              HStack {
-                Text(note.created, style: .date)
-                if let user = note.user, !user.username.isEmpty {
-                  Spacer()
-                  Text(user.username)
+      VStack {
+        if notes.isEmpty {
+          Form {
+            ContentUnavailableView {
+              Label(
+                LocalizedStringResource("notesEmptyTitle", table: "DocumentMetadata"),
+                systemImage: "note.text"
+              )
+            } description: {
+              Text(LocalizedStringResource("notesEmptyDescription", table: "DocumentMetadata"))
+            } actions: {
+              Button(.localizable(.add)) {
+                adding = true
+              }
+              .disabled(!store.permissions.test(.add, for: .note))
+            }
+          }
+        } else {
+          List {
+            Section {
+              ForEach(notes) { note in
+                VStack(alignment: .leading) {
+                  HStack {
+                    Text(note.created, style: .date)
+                    if let user = note.user, !user.username.isEmpty {
+                      Spacer()
+                      Text(user.username)
+                    }
+                  }
+                  .font(.caption)
+                  Text(note.note)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                .if(store.permissions.test(.delete, for: .note)) {
+                  $0.swipeActions(edge: .trailing) {
+                    Button(
+                      .localizable(.delete), role: .destructive,
+                      action: { delete(note) })
+                  }
                 }
               }
-              .font(.caption)
-              Text(note.note)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            .if(store.permissions.test(.delete, for: .note)) {
-              $0.swipeActions(edge: .trailing) {
-                Button(
-                  .localizable(.delete), role: .destructive,
-                  action: { delete(note) })
-              }
             }
           }
-        }
-
-        Section {
-          Button {
-            adding = true
-          } label: {
-            Label(.localizable(.add), systemImage: "plus.circle.fill")
-              .frame(maxWidth: .infinity, alignment: .center)
-              .bold()
-          }
-          .buttonStyle(.borderless)
-          .disabled(!store.permissions.test(.add, for: .note))
         }
       }
       .animation(.spring, value: document)
 
       .navigationBarTitleDisplayMode(.inline)
       .navigationTitle(.documentMetadata(.notes))
+
+      .scrollBounceBehavior(.basedOnSize)
 
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
