@@ -492,18 +492,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .sheet(isPresented: $showTagsSheet) {
-      NavigationStack {
-        Text("Tags")
-          .navigationTitle("Tags")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
-            }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.tags, in: namespace)
-      .presentationDetents([.medium])
+      TagsEditSheet(viewModel: viewModel)
+        .backport.navigationTransitionZoom(sourceID: TransitionID.tags, in: namespace)
     }
 
     .sheet(isPresented: $showAsnSheet) {
@@ -641,6 +631,136 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .task {
       await viewModel.loadDocument()
       await viewModel.loadMetadata()
+    }
+  }
+}
+
+private struct TagsEditSheet: View {
+  @Bindable var viewModel: DocumentDetailModel
+
+  @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var errorController: ErrorController
+
+  @Environment(\.dismiss) private var dismiss
+
+  @State private var tagIds: [UInt] = []
+  @State private var searchText = ""
+  @State private var saving = false
+
+  @Namespace private var tagNamespace
+
+  private var availableTags: [Tag] {
+    let search = searchText.lowercased()
+    return store.tags.values
+      .filter { !tagIds.contains($0.id) }
+      .filter { search.isEmpty || $0.name.lowercased().contains(search) }
+      .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  }
+
+  private func save() {
+    Task {
+      do {
+        saving = true
+        var document = viewModel.document
+        document.tags = tagIds
+        let updated = try await store.updateDocument(document)
+        viewModel.document = updated
+        saving = false
+        dismiss()
+      } catch {
+        saving = false
+        errorController.push(error: error)
+      }
+    }
+  }
+  
+  let animation = Animation.spring(duration: 0.2)
+
+  var body: some View {
+    NavigationStack {
+      List {
+        Section {
+          HFlow {
+            ForEach(tagIds, id: \.self) { tagId in
+              if let tag = store.tags[tagId] {
+                Button {
+                  withAnimation(animation) {
+                    tagIds.removeAll { $0 == tagId }
+                  }
+                } label: {
+                  HStack(spacing: 4) {
+                    Text(tag.name)
+                    Image(systemName: "xmark")
+                      .font(.caption2)
+                      .fontWeight(.bold)
+                  }
+                  .fixedSize()
+                  .font(.body)
+                  .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 6))
+                  .background(tag.color.color)
+                  .foregroundColor(tag.textColor.color)
+                  .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .matchedGeometryEffect(id: tagId, in: tagNamespace)
+              }
+            }
+          }
+          .frame(minHeight: 60, alignment: .topLeading)
+        }
+        .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+        .listSectionSpacing(.compact)
+
+        Section {
+          ForEach(availableTags) { tag in
+            Button {
+              withAnimation(animation) {
+                tagIds.append(tag.id)
+              }
+            } label: {
+              HStack {
+                TagView(tag: tag)
+                  .fixedSize()
+                  .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                Spacer()
+                Image(systemName: "plus")
+                  .foregroundStyle(.secondary)
+              }
+              .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+          }
+        } header: {
+          if tagIds.isEmpty && searchText.isEmpty {
+            Text(.localizable(.tags))
+          }
+        }
+      }
+      
+      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+      .navigationTitle(.localizable(.tags))
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          if saving {
+            ProgressView()
+          } else {
+            SaveButton {
+              save()
+            }
+            .fontWeight(.bold)
+            .disabled(tagIds == viewModel.document.tags)
+          }
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
+    .interactiveDismissDisabled(tagIds != viewModel.document.tags)
+    .onAppear {
+      tagIds = viewModel.document.tags
     }
   }
 }
