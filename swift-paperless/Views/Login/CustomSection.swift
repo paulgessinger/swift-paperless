@@ -40,7 +40,7 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
   private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
     let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
     return ZStack {
-      shape.fill(.background.tertiary)
+      shape.fill(.background.secondary)
         .opacity(backgroundStyle == .solid ? 1 : 0)
       shape.fill(.thickMaterial)
         .opacity(backgroundStyle == .translucent ? 1 : 0)

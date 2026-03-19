@@ -732,15 +732,6 @@ private struct TagsEditSheet: View {
         }
       }
       .scrollBounceBehavior(.basedOnSize)
-      //      .apply {
-      //        if isTranslucent {
-      //          $0
-      //        } else {
-      //          $0.modifier(BackgroundColorModifier())
-      //        }
-      //      }
-      //      .customSectionBackgroundStyle(isTranslucent ? .translucent : .solid)
-      .animation(.default, value: isTranslucent)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.tags))
       .navigationBarTitleDisplayMode(.inline)
@@ -762,9 +753,6 @@ private struct TagsEditSheet: View {
       }
     }
     .presentationDetents([.medium, .large], selection: $selectedDetent)
-    .presentationBackground(
-      isTranslucent ? AnyShapeStyle(.clear) : AnyShapeStyle(Color(.systemGroupedBackground))
-    )
     .interactiveDismissDisabled(tagIds != viewModel.document.tags)
     .onAppear {
       tagIds = viewModel.document.tags
