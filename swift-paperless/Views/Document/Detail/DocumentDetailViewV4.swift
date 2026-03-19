@@ -40,6 +40,8 @@ private struct EditableAspect: View {
   let transitionID: TransitionID?
   let namespace: Namespace.ID?
   let action: (() -> Void)?
+  let showPrivateFallback: Bool
+  let accessibilityLabel: String?
 
   @ScaledMetric(relativeTo: .body)
   private var fontSizeRaw = 15
@@ -68,25 +70,47 @@ private struct EditableAspect: View {
   init(
     localized: LocalizedStringResource, systemImage: String, action: (() -> Void)? = nil,
     transitionID: TransitionID? = nil,
-    namespace: Namespace.ID? = nil
+    namespace: Namespace.ID? = nil,
+    showPrivateFallback: Bool = true,
+    accessibilityLabel: String? = nil
   ) {
     self.label = String(localized: localized)
     self.systemImage = systemImage
     self.action = action
     self.transitionID = transitionID
     self.namespace = namespace
+    self.showPrivateFallback = showPrivateFallback
+    self.accessibilityLabel = accessibilityLabel
   }
 
   init(
     _ label: String?, systemImage: String, action: (() -> Void)? = nil,
     transitionID: TransitionID? = nil,
-    namespace: Namespace.ID? = nil
+    namespace: Namespace.ID? = nil,
+    showPrivateFallback: Bool = true,
+    accessibilityLabel: String? = nil
   ) {
     self.label = label
     self.systemImage = systemImage
     self.action = action
     self.transitionID = transitionID
     self.namespace = namespace
+    self.showPrivateFallback = showPrivateFallback
+    self.accessibilityLabel = accessibilityLabel
+  }
+
+  private var displayLabel: String? {
+    if let label {
+      return label
+    }
+    if showPrivateFallback {
+      return String(localized: .permissions(.private))
+    }
+    return nil
+  }
+
+  private var computedAccessibilityLabel: String? {
+    accessibilityLabel ?? displayLabel
   }
 
   var body: some View {
@@ -102,7 +126,10 @@ private struct EditableAspect: View {
           .background(Circle().fill(iconBackgroundColor))
           .padding(.vertical, pillPadding)
           .padding(.leading, pillPadding)
-        Text(label ?? String(localized: .permissions(.private)))
+        if let displayLabel {
+          Text(displayLabel)
+            .italic(label == nil && showPrivateFallback)
+        }
         Image(systemName: "pencil")
           .foregroundStyle(editButtonColor)
           .padding(.trailing, 2 + fontSize / 2)
@@ -121,6 +148,7 @@ private struct EditableAspect: View {
         }
       }
     }
+    .accessibilityLabel(computedAccessibilityLabel ?? "")
     .buttonStyle(.plain)
   }
 }
@@ -185,6 +213,133 @@ private struct DocumentTagsSection: View {
   }
 }
 
+private struct CorrespondentEditSheet: View {
+  @Bindable var viewModel: DocumentDetailModel
+
+  @EnvironmentObject private var store: DocumentStore
+  @EnvironmentObject private var errorController: ErrorController
+  @Environment(\.dismiss) private var dismiss
+
+  @State private var searchText = ""
+  @State private var saving = false
+
+  private var correspondents: [Correspondent] {
+    let search = searchText.lowercased()
+    return store.correspondents.values
+      .filter { search.isEmpty || $0.name.lowercased().contains(search) }
+      .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  }
+
+  private var selectedCorrespondent: Correspondent? {
+    viewModel.document.correspondent.flatMap { store.correspondents[$0] }
+  }
+
+  private func select(correspondent: UInt?) {
+    guard !saving else { return }
+    guard viewModel.document.correspondent != correspondent else {
+      dismiss()
+      return
+    }
+
+    Task {
+      do {
+        saving = true
+        var document = viewModel.document
+        document.correspondent = correspondent
+        let updated = try await store.updateDocument(document)
+        viewModel.document = updated
+        saving = false
+        dismiss()
+      } catch {
+        saving = false
+        errorController.push(error: error)
+      }
+    }
+  }
+
+  private func row(_ label: String, id: UInt?) -> some View {
+    Button {
+      select(correspondent: id)
+    } label: {
+      HStack {
+        Text(label)
+          .foregroundStyle(.primary)
+        Spacer()
+        if viewModel.document.correspondent == id {
+          Label(String(localized: .localizable(.elementIsSelected)), systemImage: "checkmark")
+            .labelStyle(.iconOnly)
+        }
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .disabled(saving)
+  }
+
+  var body: some View {
+    NavigationStack {
+      ScrollView(.vertical) {
+        VStack(spacing: 0) {
+          CustomSection {
+            HStack {
+              if let selectedCorrespondent {
+                Text(selectedCorrespondent.name)
+                  .foregroundStyle(.primary)
+              } else {
+                Text(.localizable(.correspondentNotAssignedPicker))
+                  .foregroundStyle(.secondary)
+              }
+              Spacer()
+              if selectedCorrespondent != nil {
+                Button(role: .destructive) {
+                  select(correspondent: nil)
+                } label: {
+                  Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .disabled(saving)
+              }
+            }
+          } header: {
+            Text(.localizable(.selected))
+          }
+
+          CustomSection {
+            VStack(spacing: 0) {
+              ForEach(Array(correspondents.enumerated()), id: \.element.id) {
+                index, correspondent in
+                row(correspondent.name, id: correspondent.id)
+
+                if index < correspondents.count - 1 {
+                  Divider()
+                }
+              }
+            }
+          } header: {
+            Text(.localizable(.correspondents))
+          }
+        }
+      }
+      .scrollBounceBehavior(.basedOnSize)
+      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+      .navigationTitle(.localizable(.correspondent))
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          if saving {
+            ProgressView()
+          }
+        }
+      }
+    }
+    .interactiveDismissDisabled(saving)
+  }
+}
+
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var viewModel: DocumentDetailModel
@@ -242,29 +397,31 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         )
       }
 
-      if let id = document.correspondent {
-        EditableAspect(
-          store.correspondents[id]?.name,
-          systemImage: "person.fill",
-          action: {
-            showCorrespondentSheet = true
-          },
-          transitionID: .correspondent,
-          namespace: namespace
-        )
-      }
+      EditableAspect(
+        document.correspondent.flatMap { store.correspondents[$0]?.name },
+        systemImage: "person.fill",
+        action: {
+          showCorrespondentSheet = true
+        },
+        transitionID: .correspondent,
+        namespace: namespace,
+        showPrivateFallback: false,
+        accessibilityLabel: document.correspondent == nil
+          ? String(localized: .localizable(.correspondentNotAssignedPicker)) : nil
+      )
 
-      if let id = document.documentType {
-        EditableAspect(
-          store.documentTypes[id]?.name,
-          systemImage: "doc.fill",
-          action: {
-            showDocumentTypeSheet = true
-          },
-          transitionID: .documentType,
-          namespace: namespace
-        )
-      }
+      EditableAspect(
+        document.documentType.flatMap { store.documentTypes[$0]?.name },
+        systemImage: "doc.fill",
+        action: {
+          showDocumentTypeSheet = true
+        },
+        transitionID: .documentType,
+        namespace: namespace,
+        showPrivateFallback: false,
+        accessibilityLabel: document.documentType == nil
+          ? String(localized: .localizable(.documentTypeNotAssignedPicker)) : nil
+      )
 
       EditableAspect(
         DocumentCell.dateFormatter.string(from: document.created),
@@ -276,17 +433,18 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace
       )
 
-      if let id = document.storagePath {
-        EditableAspect(
-          store.storagePaths[id]?.name,
-          systemImage: "archivebox.fill",
-          action: {
-            showStoragePathSheet = true
-          },
-          transitionID: .storagePath,
-          namespace: namespace
-        )
-      }
+      EditableAspect(
+        document.storagePath.flatMap { store.storagePaths[$0]?.name },
+        systemImage: "archivebox.fill",
+        action: {
+          showStoragePathSheet = true
+        },
+        transitionID: .storagePath,
+        namespace: namespace,
+        showPrivateFallback: false,
+        accessibilityLabel: document.storagePath == nil
+          ? String(localized: .localizable(.storagePathNotAssignedPicker)) : nil
+      )
 
       if case .user(let id) = document.owner {
         EditableAspect(
@@ -448,6 +606,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         }
 
         detailAspects
+          .animation(.spring(duration: 0.25), value: viewModel.document)
 
         DocumentTagsSection(
           tags: viewModel.document.tags.map { store.tags[$0] },
@@ -515,18 +674,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .sheet(isPresented: $showCorrespondentSheet) {
-      NavigationStack {
-        Text("Correspondent")
-          .navigationTitle("Correspondent")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
-            }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.correspondent, in: namespace)
-      .presentationDetents([.medium])
+      CorrespondentEditSheet(viewModel: viewModel)
+        .backport.navigationTransitionZoom(sourceID: TransitionID.correspondent, in: namespace)
+        .presentationDetents([.medium, .large])
     }
 
     .sheet(isPresented: $showDocumentTypeSheet) {
