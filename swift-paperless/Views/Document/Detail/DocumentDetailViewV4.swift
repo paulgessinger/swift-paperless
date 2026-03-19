@@ -417,6 +417,21 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         } label: {
           DocumentPreview(document: viewModel.document)
             .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottomTrailing) {
+              if let pageCount = viewModel.document.pageCount {
+                HStack(spacing: 4) {
+                  Image(systemName: "book.pages.fill")
+                  Text("\(pageCount)")
+                }
+                .font(.footnote)
+                .fontWeight(.semibold)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                // .background(.ultraThinMaterial, in: Capsule())
+                .backport.glassEffect(.regular.interactive())
+                .padding(10)
+              }
+            }
             .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
             .accessibilityLabel(.localizable(.documentOpen))
         }
@@ -430,13 +445,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .font(.title)
             .fontWeight(.semibold)
             .frame(maxWidth: .infinity, alignment: .leading)
-
-          if let pageCount = viewModel.document.pageCount {
-            Label(.localizable(.pages(pageCount)), systemImage: "book.pages.fill")
-              .font(.footnote)
-              .italic()
-          }
-
         }
 
         detailAspects
