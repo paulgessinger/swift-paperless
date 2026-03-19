@@ -11,7 +11,7 @@ import SwiftUI
 
 // MARK: - Tag Management
 
-extension TagView: RowViewProtocol {
+extension TagView: RowViewProtocol where Trailing == EmptyView {
   typealias Element = Tag
 
   @MainActor
@@ -63,7 +63,7 @@ struct TagManager: ManagerProtocol {
 
   static var elementName: KeyPath<Tag, String> { \.name }
 
-  typealias RowView = TagView
+  typealias RowView = TagView<EmptyView>
   typealias EditView = TagEditView<Tag>
   typealias CreateView = TagEditView<ProtoTag>
 }
