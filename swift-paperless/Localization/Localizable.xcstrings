@@ -7310,6 +7310,17 @@
         }
       }
     },
+    "noTagsSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tags selected"
+          }
+        }
+      }
+    },
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {

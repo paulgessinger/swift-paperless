@@ -9,13 +9,20 @@ import DataModel
 import Networking
 import SwiftUI
 
-struct TagView: View {
+struct TagView<Trailing: View>: View {
   @Environment(\.redactionReasons) var redactionReasons
 
   var inputTag: Tag?
+  var trailing: Trailing
 
-  init(tag: Tag? = nil) {
+  init(tag: Tag? = nil) where Trailing == EmptyView {
     inputTag = tag
+    trailing = EmptyView()
+  }
+
+  init(tag: Tag? = nil, @ViewBuilder trailing: () -> Trailing) {
+    inputTag = tag
+    self.trailing = trailing()
   }
 
   private var tag: Tag {
@@ -31,16 +38,21 @@ struct TagView: View {
   }
 
   var body: some View {
-    Text(tag.name)
-      .lineLimit(1)
-      .font(.body)
-      .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
-      .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-      .background(tag.color.color)
-      .foregroundColor(tag.textColor.color)
-      .clipShape(Capsule())
-      .italic(inputTag == nil)
-      .unredacted()
+    HStack(spacing: 4) {
+      Text(tag.name)
+        .lineLimit(1)
+        .font(.body)
+        .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
+      trailing
+    }
+    .padding(
+      EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: Trailing.self == EmptyView.self ? 8 : 6)
+    )
+    .background(tag.color.color)
+    .foregroundColor(tag.textColor.color)
+    .clipShape(Capsule())
+    .italic(inputTag == nil)
+    .unredacted()
   }
 }
 

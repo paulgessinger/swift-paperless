@@ -227,17 +227,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     self.navPath = navPath
   }
 
-  private var metadataActions: some View {
-    HStack(spacing: 12) {
-      Button {
-        showEditSheet = true
-      } label: {
-        Label(localized: .localizable(.edit), systemImage: "square.and.pencil")
-      }
-      .buttonStyle(.borderedProminent)
-    }
-  }
-
   private var detailAspects: some View {
     let document = viewModel.document
     return HFlow(itemSpacing: 12) {
@@ -460,8 +449,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           transitionID: .tags,
           namespace: namespace
         )
-
-        metadataActions
       }
       .padding()
     }
@@ -646,8 +633,13 @@ private struct TagsEditSheet: View {
   @State private var tagIds: [UInt] = []
   @State private var searchText = ""
   @State private var saving = false
+  @State private var selectedDetent: PresentationDetent = .medium
 
   @Namespace private var tagNamespace
+
+  private var isTranslucent: Bool {
+    selectedDetent == .medium
+  }
 
   private var availableTags: [Tag] {
     let search = searchText.lowercased()
@@ -673,70 +665,82 @@ private struct TagsEditSheet: View {
       }
     }
   }
-  
+
   let animation = Animation.spring(duration: 0.2)
 
   var body: some View {
     NavigationStack {
-      List {
-        Section {
-          HFlow {
-            ForEach(tagIds, id: \.self) { tagId in
-              if let tag = store.tags[tagId] {
+      ScrollView(.vertical) {
+        CustomSection {
+          if tagIds.isEmpty {
+            Text(.localizable(.noTagsSelected))
+              .foregroundStyle(.secondary)
+              .padding(.vertical, 8)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          } else {
+            HFlow {
+              ForEach(tagIds, id: \.self) { tagId in
                 Button {
                   withAnimation(animation) {
                     tagIds.removeAll { $0 == tagId }
                   }
                 } label: {
-                  HStack(spacing: 4) {
-                    Text(tag.name)
+                  TagView(tag: store.tags[tagId]) {
                     Image(systemName: "xmark")
                       .font(.caption2)
                       .fontWeight(.bold)
                   }
                   .fixedSize()
-                  .font(.body)
-                  .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 6))
-                  .background(tag.color.color)
-                  .foregroundColor(tag.textColor.color)
-                  .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .matchedGeometryEffect(id: tagId, in: tagNamespace)
               }
             }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
           }
-          .frame(minHeight: 60, alignment: .topLeading)
         }
-        .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
-        .listSectionSpacing(.compact)
 
-        Section {
-          ForEach(availableTags) { tag in
-            Button {
-              withAnimation(animation) {
-                tagIds.append(tag.id)
+        if !availableTags.isEmpty {
+          CustomSection {
+            VStack(spacing: 0) {
+              ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
+                Button {
+                  withAnimation(animation) {
+                    tagIds.append(tag.id)
+                  }
+                } label: {
+                  HStack {
+                    TagView(tag: tag)
+                      .fixedSize()
+                      .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                    Spacer()
+                    Image(systemName: "plus")
+                      .foregroundStyle(.secondary)
+                  }
+                  .padding(.vertical, 8)
+                  .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                if index < availableTags.count - 1 {
+                  Divider()
+                }
               }
-            } label: {
-              HStack {
-                TagView(tag: tag)
-                  .fixedSize()
-                  .matchedGeometryEffect(id: tag.id, in: tagNamespace)
-                Spacer()
-                Image(systemName: "plus")
-                  .foregroundStyle(.secondary)
-              }
-              .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-          }
-        } header: {
-          if tagIds.isEmpty && searchText.isEmpty {
-            Text(.localizable(.tags))
           }
         }
       }
-      
+      .scrollBounceBehavior(.basedOnSize)
+      //      .apply {
+      //        if isTranslucent {
+      //          $0
+      //        } else {
+      //          $0.modifier(BackgroundColorModifier())
+      //        }
+      //      }
+      //      .customSectionBackgroundStyle(isTranslucent ? .translucent : .solid)
+      .animation(.default, value: isTranslucent)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.tags))
       .navigationBarTitleDisplayMode(.inline)
@@ -757,7 +761,10 @@ private struct TagsEditSheet: View {
         }
       }
     }
-    .presentationDetents([.medium, .large])
+    .presentationDetents([.medium, .large], selection: $selectedDetent)
+    .presentationBackground(
+      isTranslucent ? AnyShapeStyle(.clear) : AnyShapeStyle(Color(.systemGroupedBackground))
+    )
     .interactiveDismissDisabled(tagIds != viewModel.document.tags)
     .onAppear {
       tagIds = viewModel.document.tags

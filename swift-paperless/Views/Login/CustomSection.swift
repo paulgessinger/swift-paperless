@@ -7,12 +7,45 @@
 
 import SwiftUI
 
+enum CustomSectionBackgroundStyle {
+  case solid
+  case translucent
+}
+
+private struct CustomSectionBackgroundStyleKey: EnvironmentKey {
+  static let defaultValue: CustomSectionBackgroundStyle = .solid
+}
+
+extension EnvironmentValues {
+  var customSectionBackgroundStyle: CustomSectionBackgroundStyle {
+    get { self[CustomSectionBackgroundStyleKey.self] }
+    set { self[CustomSectionBackgroundStyleKey.self] = newValue }
+  }
+}
+
+extension View {
+  func customSectionBackgroundStyle(_ style: CustomSectionBackgroundStyle) -> some View {
+    environment(\.customSectionBackgroundStyle, style)
+  }
+}
+
 struct CustomSection<Content: View, Footer: View, Header: View>: View {
   var content: () -> Content
   var header: (() -> Header)? = nil
   var footer: (() -> Footer)? = nil
 
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.customSectionBackgroundStyle) private var backgroundStyle
+
+  private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
+    let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
+    return ZStack {
+      shape.fill(.background.tertiary)
+        .opacity(backgroundStyle == .solid ? 1 : 0)
+      shape.fill(.thickMaterial)
+        .opacity(backgroundStyle == .translucent ? 1 : 0)
+    }
+  }
 
   var body: some View {
     VStack(spacing: 4) {
@@ -39,14 +72,12 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
             $0
               .padding(.vertical, 5)
               .background(
-                RoundedRectangle(cornerRadius: 23, style: .continuous)
-                  .fill(.background.tertiary)
+                sectionBackground(cornerRadius: 23, style: .continuous)
               )
           } else {
             $0
               .background(
-                RoundedRectangle(cornerRadius: 10, style: .circular)
-                  .fill(.background.tertiary)
+                sectionBackground(cornerRadius: 10, style: .circular)
               )
           }
         }
