@@ -488,7 +488,15 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     .sheet(isPresented: $showTagsSheet) {
       TagsEditSheet(viewModel: viewModel)
-        .backport.navigationTransitionZoom(sourceID: TransitionID.tags, in: namespace)
+        .apply {
+          if #available(iOS 26.0, *) {
+            // On iOS 18, zoom transition presentation forces fullscreen and breaks
+            // sheet detent interaction for this flow, so we only enable it on iOS 26+.
+            $0.navigationTransition(.zoom(sourceID: TransitionID.tags, in: namespace))
+          } else {
+            $0
+          }
+        }
     }
 
     .sheet(isPresented: $showAsnSheet) {
