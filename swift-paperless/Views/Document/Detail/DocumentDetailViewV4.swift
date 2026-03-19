@@ -634,11 +634,40 @@ private struct TagsEditSheet: View {
   @State private var searchText = ""
   @State private var saving = false
   @State private var selectedDetent: PresentationDetent = .medium
+  @State private var showCreateTag = false
 
   @Namespace private var tagNamespace
 
+  private struct CreateTagView: View {
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.dismiss) private var dismiss
+
+    let onCreated: (Tag) -> Void
+
+    var body: some View {
+      TagEditView<ProtoTag>(onSave: { value in
+        Task {
+          do {
+            let tag = try await store.create(tag: value)
+            onCreated(tag)
+            dismiss()
+          } catch {
+            errorController.push(error: error)
+          }
+        }
+      })
+      .navigationTitle(Text(.localizable(.tagCreateTitle)))
+      .navigationBarTitleDisplayMode(.inline)
+    }
+  }
+
   private var isTranslucent: Bool {
     selectedDetent == .medium
+  }
+
+  private var interactiveDismissDisabled: Bool {
+    showCreateTag || tagIds != viewModel.document.tags
   }
 
   private var availableTags: [Tag] {
@@ -739,6 +768,14 @@ private struct TagsEditSheet: View {
         ToolbarItem(placement: .cancellationAction) {
           CancelIconButton()
         }
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            showCreateTag = true
+          } label: {
+            Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
+          }
+          .disabled(!store.permissions.test(.add, for: .tag))
+        }
         ToolbarItem(placement: .confirmationAction) {
           if saving {
             ProgressView()
@@ -751,9 +788,19 @@ private struct TagsEditSheet: View {
           }
         }
       }
+      .navigationDestination(isPresented: $showCreateTag) {
+        CreateTagView(onCreated: { tag in
+          withAnimation(animation) {
+            tagIds.append(tag.id)
+          }
+        })
+        .onDisappear {
+          showCreateTag = false
+        }
+      }
     }
     .presentationDetents([.medium, .large], selection: $selectedDetent)
-    .interactiveDismissDisabled(tagIds != viewModel.document.tags)
+    .interactiveDismissDisabled(interactiveDismissDisabled)
     .onAppear {
       tagIds = viewModel.document.tags
     }
