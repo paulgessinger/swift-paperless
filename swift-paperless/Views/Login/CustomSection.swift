@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Common
 
 enum CustomSectionBackgroundStyle {
   case solid
@@ -36,11 +37,16 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
 
   @Environment(\.colorScheme) private var colorScheme
   @Environment(\.customSectionBackgroundStyle) private var backgroundStyle
+  
+  @SchemeValue(light: Color(uiColor: .systemBackground),
+               dark: Color(uiColor: .secondarySystemBackground))
+  private var solidBackgroundColor
+  
 
   private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
     let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
     return ZStack {
-      shape.fill(Color(uiColor: .secondarySystemGroupedBackground))
+      shape.fill(solidBackgroundColor)
         .opacity(backgroundStyle == .solid ? 1 : 0)
       shape.fill(.thickMaterial)
         .opacity(backgroundStyle == .translucent ? 1 : 0)
