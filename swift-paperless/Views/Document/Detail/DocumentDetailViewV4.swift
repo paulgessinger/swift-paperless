@@ -222,6 +222,7 @@ private struct CorrespondentEditSheet: View {
 
   @State private var searchText = ""
   @State private var saving = false
+  @State private var selectedDetent: PresentationDetent = .medium
 
   private var correspondents: [Correspondent] {
     let search = searchText.lowercased()
@@ -246,7 +247,11 @@ private struct CorrespondentEditSheet: View {
         saving = true
         var document = viewModel.document
         document.correspondent = correspondent
-        let updated = try await store.updateDocument(document)
+        async let updatedDocument = store.updateDocument(document)
+        async let delay: () = Task.sleep(for: .seconds(0.3))
+
+        let updated = try await updatedDocument
+        try await delay
         viewModel.document = updated
         saving = false
         dismiss()
@@ -281,25 +286,24 @@ private struct CorrespondentEditSheet: View {
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
-            HStack {
-              if let selectedCorrespondent {
-                Text(selectedCorrespondent.name)
-                  .foregroundStyle(.primary)
-              } else {
-                Text(.localizable(.correspondentNotAssignedPicker))
-                  .foregroundStyle(.secondary)
-              }
-              Spacer()
-              if selectedCorrespondent != nil {
-                Button(role: .destructive) {
-                  select(correspondent: nil)
-                } label: {
+            if let selectedCorrespondent {
+              Button {
+                select(correspondent: nil)
+              } label: {
+                HStack {
+                  Text(selectedCorrespondent.name)
+                    .foregroundStyle(.primary)
+                  Spacer()
                   Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
-                .disabled(saving)
+                .contentShape(Rectangle())
               }
+              .buttonStyle(.plain)
+              .disabled(saving)
+            } else {
+              Text(.localizable(.correspondentNotAssignedPicker))
+                .foregroundStyle(.secondary)
             }
           } header: {
             Text(.localizable(.selected))
@@ -321,6 +325,7 @@ private struct CorrespondentEditSheet: View {
           }
         }
       }
+      .customSectionBackgroundStyle(selectedDetent == .large ? .solid : .translucent)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.correspondent))
@@ -336,7 +341,20 @@ private struct CorrespondentEditSheet: View {
         }
       }
     }
+    .presentationDetents([.medium, .large], selection: $selectedDetent)
     .interactiveDismissDisabled(saving)
+    .apply {
+      if #available(iOS 26.0, *) {
+        if selectedDetent == .large {
+           $0.presentationBackground(Color(.systemGroupedBackground))
+//          $0.presentationBackground(.red)
+        } else {
+          $0
+        }
+      } else {
+        $0
+      }
+    }
   }
 }
 
@@ -676,7 +694,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .sheet(isPresented: $showCorrespondentSheet) {
       CorrespondentEditSheet(viewModel: viewModel)
         .backport.navigationTransitionZoom(sourceID: TransitionID.correspondent, in: namespace)
-        .presentationDetents([.medium, .large])
     }
 
     .sheet(isPresented: $showDocumentTypeSheet) {
@@ -828,10 +845,6 @@ private struct TagsEditSheet: View {
     }
   }
 
-  private var isTranslucent: Bool {
-    selectedDetent == .medium
-  }
-
   private var interactiveDismissDisabled: Bool {
     showCreateTag || tagIds != viewModel.document.tags
   }
@@ -926,6 +939,7 @@ private struct TagsEditSheet: View {
           }
         }
       }
+      .customSectionBackgroundStyle(selectedDetent == .large ? .solid : .translucent)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.tags))
@@ -967,6 +981,17 @@ private struct TagsEditSheet: View {
     }
     .presentationDetents([.medium, .large], selection: $selectedDetent)
     .interactiveDismissDisabled(interactiveDismissDisabled)
+    .apply {
+      if #available(iOS 26.0, *) {
+        if selectedDetent == .large {
+          $0.presentationBackground(Color(.systemGroupedBackground))
+        } else {
+          $0
+        }
+      } else {
+        $0
+      }
+    }
     .onAppear {
       tagIds = viewModel.document.tags
     }
