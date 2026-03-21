@@ -5,8 +5,8 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
-import SwiftUI
 import Common
+import SwiftUI
 
 enum CustomSectionBackgroundStyle {
   case solid
@@ -37,11 +37,11 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
 
   @Environment(\.colorScheme) private var colorScheme
   @Environment(\.customSectionBackgroundStyle) private var backgroundStyle
-  
-  @SchemeValue(light: Color(uiColor: .systemBackground),
-               dark: Color(uiColor: .secondarySystemBackground))
+
+  @SchemeValue(
+    light: Color(uiColor: .systemBackground),
+    dark: Color(uiColor: .secondarySystemBackground))
   private var solidBackgroundColor
-  
 
   private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
     let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
