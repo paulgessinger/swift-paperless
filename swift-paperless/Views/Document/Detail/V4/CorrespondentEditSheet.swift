@@ -39,12 +39,13 @@ struct CorrespondentEditSheet: View {
       return
     }
 
+    let previous = viewModel.document.correspondent
+    viewModel.document.correspondent = correspondent
+
     Task {
       do {
         saving = true
-        var document = viewModel.document
-        document.correspondent = correspondent
-        async let updatedDocument = store.updateDocument(document)
+        async let updatedDocument = store.updateDocument(viewModel.document)
         async let delay: () = Task.sleep(for: .seconds(0.3))
 
         let updated = try await updatedDocument
@@ -53,6 +54,7 @@ struct CorrespondentEditSheet: View {
         saving = false
         dismiss()
       } catch {
+        viewModel.document.correspondent = previous
         saving = false
         errorController.push(error: error)
       }
@@ -72,6 +74,7 @@ struct CorrespondentEditSheet: View {
             .labelStyle(.iconOnly)
         }
       }
+      .padding(.vertical, 8)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
@@ -94,6 +97,7 @@ struct CorrespondentEditSheet: View {
                   Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 8)
                 .contentShape(Rectangle())
               }
               .buttonStyle(.plain)
