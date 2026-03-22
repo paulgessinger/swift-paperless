@@ -16,9 +16,10 @@ struct CorrespondentEditSheet: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.dismiss) private var dismiss
 
+  @Environment(\.sheetDetent) private var sheetDetent
+
   @State private var searchText = ""
   @State private var saving = false
-  @State private var selectedDetent: PresentationDetent = .medium
 
   private var correspondents: [Correspondent] {
     let search = searchText.lowercased()
@@ -121,7 +122,7 @@ struct CorrespondentEditSheet: View {
           }
         }
       }
-      .customSectionBackgroundStyle(selectedDetent == .large ? .solid : .translucent)
+      .customSectionBackgroundStyle(sheetDetent == .large ? .solid : .translucent)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.correspondent))
@@ -137,18 +138,7 @@ struct CorrespondentEditSheet: View {
         }
       }
     }
-    .presentationDetents([.medium, .large], selection: $selectedDetent)
+    .adaptiveSheetPresentation()
     .interactiveDismissDisabled(saving)
-    .apply {
-      if #available(iOS 26.0, *) {
-        if selectedDetent == .large {
-          $0.presentationBackground(Color(.systemGroupedBackground))
-        } else {
-          $0
-        }
-      } else {
-        $0
-      }
-    }
   }
 }

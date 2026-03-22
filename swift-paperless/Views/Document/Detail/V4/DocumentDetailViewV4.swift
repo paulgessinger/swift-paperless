@@ -11,25 +11,28 @@ import Flow
 import Networking
 import SwiftUI
 
+private enum ActiveSheet: Identifiable, Hashable {
+  case tags
+  case asn
+  case correspondent
+  case documentType
+  case date
+  case storagePath
+  case owner
+  case metadata
+  case notes
+  case shareLink
+
+  var id: Self { self }
+}
+
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var viewModel: DocumentDetailModel
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var errorController: ErrorController
 
-  @State private var showEditSheet = false
-  @State private var showMetadataSheet = false
-  @State private var showNotesSheet = false
-  @State private var showShareLinkSheet = false
-
-  @State private var showTagsSheet = false
-  @State private var showAsnSheet = false
-  @State private var showCorrespondentSheet = false
-  @State private var showDocumentTypeSheet = false
-  @State private var showDateSheet = false
-  @State private var showStoragePathSheet = false
-  @State private var showOwnerSheet = false
-
+  @State private var activeSheet: ActiveSheet? = nil
   @State private var showPreview = false
   @State private var shadowDelay: Double? = nil
 
@@ -61,7 +64,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           localized: .localizable(.documentAsn(asn)),
           systemImage: "qrcode",
           action: {
-            showAsnSheet = true
+            activeSheet = .asn
           },
           transitionID: .asn,
           namespace: namespace
@@ -72,7 +75,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         document.correspondent.flatMap { store.correspondents[$0]?.name },
         systemImage: "person.fill",
         action: {
-          showCorrespondentSheet = true
+          activeSheet = .correspondent
         },
         transitionID: .correspondent,
         namespace: namespace,
@@ -85,7 +88,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         document.documentType.flatMap { store.documentTypes[$0]?.name },
         systemImage: "doc.fill",
         action: {
-          showDocumentTypeSheet = true
+          activeSheet = .documentType
         },
         transitionID: .documentType,
         namespace: namespace,
@@ -98,7 +101,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         DocumentCell.dateFormatter.string(from: document.created),
         systemImage: "calendar",
         action: {
-          showDateSheet = true
+          activeSheet = .date
         },
         transitionID: .date,
         namespace: namespace
@@ -108,7 +111,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         document.storagePath.flatMap { store.storagePaths[$0]?.name },
         systemImage: "archivebox.fill",
         action: {
-          showStoragePathSheet = true
+          activeSheet = .storagePath
         },
         transitionID: .storagePath,
         namespace: namespace,
@@ -122,7 +125,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           store.users[id]?.username,
           systemImage: "person.badge.key.fill",
           action: {
-            showOwnerSheet = true
+            activeSheet = .owner
           },
           transitionID: .owner,
           namespace: namespace
@@ -157,7 +160,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         BottomBarButton(
           label: .documentMetadata(.metadata), image: "info.circle",
           action: {
-            showMetadataSheet = true
+            activeSheet = .metadata
           },
           transitionID: .metadata,
           namespace: namespace
@@ -166,7 +169,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         BottomBarButton(
           label: .documentMetadata(.notes), image: "note.text",
           action: {
-            showNotesSheet = true
+            activeSheet = .notes
           },
           transitionID: .notes,
           namespace: namespace
@@ -190,7 +193,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @ViewBuilder
   private var shareMenuContent: some View {
     Button {
-      showShareLinkSheet = true
+      activeSheet = .shareLink
     } label: {
       Label(localized: .localizable(.shareLink), systemImage: "link")
     }
@@ -282,7 +285,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         DocumentTagsSection(
           tags: viewModel.document.tags.map { store.tags[$0] },
           action: {
-            showTagsSheet = true
+            activeSheet = .tags
           },
           transitionID: .tags,
           namespace: namespace
@@ -316,116 +319,103 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    .sheet(isPresented: $showTagsSheet) {
-      TagsEditSheet(viewModel: viewModel)
-        .apply {
-          if #available(iOS 26.0, *) {
-            // On iOS 18, zoom transition presentation forces fullscreen and breaks
-            // sheet detent interaction for this flow, so we only enable it on iOS 26+.
-            $0.navigationTransition(.zoom(sourceID: TransitionID.tags, in: namespace))
-          } else {
-            $0
-          }
+    .sheet(item: $activeSheet) { sheet in
+      switch sheet {
+      case .tags:
+        TagsEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+
+      case .asn:
+        NavigationStack {
+          Text("ASN")
+            .navigationTitle("ASN")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                CancelIconButton()
+              }
+            }
         }
-    }
+        .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
+        .presentationDetents([.medium])
 
-    .sheet(isPresented: $showAsnSheet) {
-      NavigationStack {
-        Text("ASN")
-          .navigationTitle("ASN")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
+      case .correspondent:
+        CorrespondentEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
+
+      case .documentType:
+        NavigationStack {
+          Text("Document Type")
+            .navigationTitle("Document Type")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                CancelIconButton()
+              }
             }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.asn, in: namespace)
-      .presentationDetents([.medium])
-    }
+        }
+        .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
+        .presentationDetents([.medium])
 
-    .sheet(isPresented: $showCorrespondentSheet) {
-      CorrespondentEditSheet(viewModel: viewModel)
-        .backport.navigationTransitionZoom(sourceID: TransitionID.correspondent, in: namespace)
-    }
-
-    .sheet(isPresented: $showDocumentTypeSheet) {
-      NavigationStack {
-        Text("Document Type")
-          .navigationTitle("Document Type")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
+      case .date:
+        NavigationStack {
+          Text("Date")
+            .navigationTitle("Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                CancelIconButton()
+              }
             }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.documentType, in: namespace)
-      .presentationDetents([.medium])
-    }
+        }
+        .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
+        .presentationDetents([.medium])
 
-    .sheet(isPresented: $showDateSheet) {
-      NavigationStack {
-        Text("Date")
-          .navigationTitle("Date")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
+      case .storagePath:
+        NavigationStack {
+          Text("Storage Path")
+            .navigationTitle("Storage Path")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                CancelIconButton()
+              }
             }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.date, in: namespace)
-      .presentationDetents([.medium])
-    }
+        }
+        .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
+        .presentationDetents([.medium])
 
-    .sheet(isPresented: $showStoragePathSheet) {
-      NavigationStack {
-        Text("Storage Path")
-          .navigationTitle("Storage Path")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
+      case .owner:
+        NavigationStack {
+          Text("Owner")
+            .navigationTitle("Owner")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                CancelIconButton()
+              }
             }
-          }
+        }
+        .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
+        .presentationDetents([.medium])
+
+      case .metadata:
+        DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
+          .environmentObject(store)
+          .environmentObject(errorController)
+          .sheetZoomTransition(sourceID: TransitionID.metadata, in: namespace)
+
+      case .notes:
+        DocumentNoteView(document: $viewModel.document)
+          .environmentObject(store)
+          .environmentObject(errorController)
+          .sheetZoomTransition(sourceID: TransitionID.notes, in: namespace)
+
+      case .shareLink:
+        ShareLinkView(document: viewModel.document)
       }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.storagePath, in: namespace)
-      .presentationDetents([.medium])
     }
 
-    .sheet(isPresented: $showOwnerSheet) {
-      NavigationStack {
-        Text("Owner")
-          .navigationTitle("Owner")
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              CancelIconButton()
-            }
-          }
-      }
-      .backport.navigationTransitionZoom(sourceID: TransitionID.owner, in: namespace)
-      .presentationDetents([.medium])
-    }
-
-    .sheet(isPresented: $showMetadataSheet) {
-      DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
-        .environmentObject(store)
-        .environmentObject(errorController)
-        .backport.navigationTransitionZoom(
-          sourceID: TransitionID.metadata, in: namespace)
-    }
-    .sheet(isPresented: $showNotesSheet) {
-      DocumentNoteView(document: $viewModel.document)
-        .environmentObject(store)
-        .environmentObject(errorController)
-        .backport.navigationTransitionZoom(
-          sourceID: TransitionID.notes, in: namespace)
-    }
-    .sheet(isPresented: $showShareLinkSheet) {
-      ShareLinkView(document: viewModel.document)
-    }
     .sheet(
       isPresented: $showPreview,
       onDismiss: {
@@ -447,13 +437,31 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .navigationBarTitleDisplayMode(.inline)
           .navigationTitle(viewModel.document.title)
         }
-        .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
+        .sheetZoomTransition(sourceID: TransitionID.doc, in: namespace)
       }
     }
 
     .task {
       await viewModel.loadDocument()
       await viewModel.loadMetadata()
+    }
+  }
+}
+
+// MARK: - Helpers
+
+extension View {
+  /// Applies `.zoom` navigation transition only on iOS 26+.
+  /// On iOS 18, the zoom transition forces full-screen presentation which breaks sheet detent interaction.
+  fileprivate func sheetZoomTransition(sourceID: some Hashable, in namespace: Namespace.ID)
+    -> some View
+  {
+    apply {
+      if #available(iOS 26.0, *) {
+        $0.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+      } else {
+        $0
+      }
     }
   }
 }

@@ -18,10 +18,11 @@ struct TagsEditSheet: View {
 
   @Environment(\.dismiss) private var dismiss
 
+  @Environment(\.sheetDetent) private var sheetDetent
+
   @State private var tagIds: [UInt] = []
   @State private var searchText = ""
   @State private var saving = false
-  @State private var selectedDetent: PresentationDetent = .medium
   @State private var showCreateTag = false
 
   @Namespace private var tagNamespace
@@ -144,7 +145,7 @@ struct TagsEditSheet: View {
           }
         }
       }
-      .customSectionBackgroundStyle(selectedDetent == .large ? .solid : .translucent)
+      .customSectionBackgroundStyle(sheetDetent == .large ? .solid : .translucent)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.tags))
@@ -184,19 +185,8 @@ struct TagsEditSheet: View {
         }
       }
     }
-    .presentationDetents([.medium, .large], selection: $selectedDetent)
+    .adaptiveSheetPresentation()
     .interactiveDismissDisabled(interactiveDismissDisabled)
-    .apply {
-      if #available(iOS 26.0, *) {
-        if selectedDetent == .large {
-          $0.presentationBackground(Color(.systemGroupedBackground))
-        } else {
-          $0
-        }
-      } else {
-        $0
-      }
-    }
     .onAppear {
       tagIds = viewModel.document.tags
     }
