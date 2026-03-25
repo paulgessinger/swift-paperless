@@ -14,8 +14,12 @@ extension RequestError: PresentableError {
   var presentation: some View {
     switch self {
     case .unsupportedVersion:
-      Text(.localizable(.requestErrorUnsupportedVersion(ApiRepository.minimumApiVersion)))
-        .bold()
+      Text(
+        .localizable(
+          .requestErrorUnsupportedVersion(
+            ApiRepository.minimumApiVersion, ApiRepository.maximumApiVersion))
+      )
+      .bold()
 
     case .unexpectedStatusCode(let code, let details):
       Text(.localizable(.requestErrorUnexpectedStatusCode(code.description)))

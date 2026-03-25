@@ -8942,49 +8942,49 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backend'en understøtter ikke den mindste API-version `%u`, som denne version af appen kræver."
+            "value" : "Backend'en understøtter ikke det krævede API-versioninterval `%u`-`%u` som denne version af appen kræver."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Backend unterstützt nicht die minimale API-Version `%u`, die diese Version der App benötigt."
+            "value" : "Das Backend unterstützt nicht die erforderliche API-Version `%u`-`%u`, die diese Version der App benötigt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The backend does not support the minimum API version `%u` that this version of the app requires."
+            "value" : "The backend does not support the required API version range `%u`-`%u`."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le serveur ne supporte pas la version minimale de l'API `%u` que cette version de l'application requiert."
+            "value" : "Le serveur ne supporte pas la plage de versions de l'API requise `%u`-`%u`."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il backend non supporta la versione minima dell'API `%u` richiesta da questa versione dell'applicazione."
+            "value" : "Il backend non supporta l'intervallo di versioni dell'API richiesto `%u`-`%u`."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De backend ondersteunt de minimale API versie `%u` niet die deze versie van de app vereist."
+            "value" : "De backend ondersteunt de vereiste API-versie range `%u`-`%u` niet."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serwer nie obsługuje wersji API `%u`, której wymaga ta wersja aplikacji."
+            "value" : "Serwer nie obsługuje wymaganego zakresu wersji API `%u`-`%u`."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arka yüz, uygulamanın bu sürümünün gerektirdiği minimum API sürümünü (`%u`) desteklemiyor."
+            "value" : "Arka yüz, uygulamanın bu sürümünün gerektirdiği API sürüm aralığını (`%u`-`%u`) desteklemiyor."
           }
         }
       }
