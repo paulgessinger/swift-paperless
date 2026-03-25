@@ -65,7 +65,7 @@ public class ApiRepository {
     public let backendVersion: Version?
 
   public var effectiveApiVersion: UInt {
-    min(Self.maximumApiVersion, max(Self.minimumApiVersion, apiVersion ?? Self.minimumApiVersion))
+    min(Self.maximumApiVersion, apiVersion ?? Self.maximumApiVersion)
   }
 
   public init(connection: Connection, mode: Mode) async {

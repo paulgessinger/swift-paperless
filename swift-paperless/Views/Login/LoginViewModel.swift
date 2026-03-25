@@ -192,6 +192,59 @@ class LoginViewModel {
     }
   }
 
+  private enum ApiVersionProbeResult {
+    case accepted(UInt)
+    case unsupportedVersion(detail: String?)
+    case unexpectedStatusCode(status: HTTPStatusCode, detail: String?)
+    case invalidResponse
+  }
+
+  private func probeAcceptedApiVersion(
+    using session: URLSession,
+    requestBase: URLRequest
+  ) async throws -> ApiVersionProbeResult {
+    var lastUnsupportedDetail: String?
+
+    for apiVersionInt in stride(
+      from: Int(ApiRepository.maximumApiVersion),
+      through: Int(ApiRepository.minimumApiVersion),
+      by: -1
+    ) {
+      var request = requestBase
+      let apiVersion = UInt(apiVersionInt)
+      request.setValue(
+        "application/json; version=\(apiVersion)", forHTTPHeaderField: "Accept")
+      Logger.api.info("Checking API with version=\(apiVersion, privacy: .public)")
+      Logger.api.debug("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
+
+      let (data, response) = try await session.getData(for: request)
+
+      guard
+        let httpResponse = response as? HTTPURLResponse,
+        let status = httpResponse.status
+      else {
+        return .invalidResponse
+      }
+
+      // As per https://github.com/paperless-ngx/paperless-ngx/pull/8948#issuecomment-2661515625,
+      // a 405 indicates the version is ok, but the method is not allowed.
+      if status == .methodNotAllowed {
+        return .accepted(apiVersion)
+      }
+
+      let detail = decodeDetails(data)
+
+      switch status {
+      case .notAcceptable:
+        lastUnsupportedDetail = detail
+      default:
+        return .unexpectedStatusCode(status: status, detail: detail)
+      }
+    }
+
+    return .unsupportedVersion(detail: lastUnsupportedDetail)
+  }
+
   func checkUrl(string value: String) async {
     Logger.shared.notice("Checking backend URL \(value)")
     guard !value.isEmpty else {
@@ -214,10 +267,6 @@ class LoginViewModel {
     var request = URLRequest(url: tokenUrl)
     extraHeaders.apply(toRequest: &request)
     request.timeoutInterval = 15
-    request.setValue(
-      "application/json; version=\(ApiRepository.minimumApiVersion)", forHTTPHeaderField: "Accept")
-
-    Logger.api.info("Headers for check request: \(request.allHTTPHeaderFields ?? [:])")
 
     do {
       Logger.shared.info("Checking valid-looking URL \(apiUrl)")
@@ -229,36 +278,33 @@ class LoginViewModel {
         configuration: .default,
         delegate: PaperlessURLSessionDelegate(identity: selectedIdentity),
         delegateQueue: nil)
+      let probeResult = try await probeAcceptedApiVersion(using: session, requestBase: request)
 
-      let (data, response) = try await session.getData(for: request)
+      switch probeResult {
+      case .accepted(let apiVersion):
+        Logger.api.info("Detected backend API version: \(apiVersion)")
+        loginState = .valid
+        await makeOIDCClient()
 
-      guard let httpResponse = response as? HTTPURLResponse, let status = httpResponse.status else {
-        loginState = .error(.request(.invalidResponse))
-        return
-      }
+      case .unsupportedVersion(let lastUnsupportedDetail):
+        Logger.shared.warning(
+          "Backend did not accept any API version in [\(ApiRepository.minimumApiVersion), \(ApiRepository.maximumApiVersion)]\(lastUnsupportedDetail.map { ", last detail: \($0)" } ?? "")"
+        )
+        loginState = .error(.request(.unsupportedVersion))
 
-      // As per https://github.com/paperless-ngx/paperless-ngx/pull/8948#issuecomment-2661515625, a 405 indicates the version is ok, but the method is not allowed
-      guard status == .methodNotAllowed else {
-        let detail = decodeDetails(data)
+      case .unexpectedStatusCode(let status, let detail):
         Logger.shared.warning(
           "Checking API status was not 200 but \(status.rawValue, privacy: .public), detail: \(detail ?? "no detail", privacy: .public)"
         )
-        switch status {
-        case .notAcceptable:
-          loginState = .error(.request(.unsupportedVersion))
-        default:
-          loginState = .error(
-            .request(
-              .unexpectedStatusCode(
-                code: status,
-                detail: detail)))
-        }
-        return
+        loginState = .error(
+          .request(
+            .unexpectedStatusCode(
+              code: status,
+              detail: detail)))
+
+      case .invalidResponse:
+        loginState = .error(.request(.invalidResponse))
       }
-
-      loginState = .valid
-
-      await makeOIDCClient()
     } catch let error where error.isCancellationError {
       // do nothing
       return
