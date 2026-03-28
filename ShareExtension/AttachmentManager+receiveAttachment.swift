@@ -83,7 +83,7 @@ extension AttachmentManager {
     }
   }
 
-  func receive(attachments: [NSItemProvider]) {
+  func receive(attachments: sending [NSItemProvider]) {
     Logger.shared.info("Receiving \(attachments.count) attachments")
 
     guard !attachments.isEmpty else {
@@ -91,8 +91,9 @@ extension AttachmentManager {
       return
     }
 
+    let items = attachments
     Task { @MainActor in
-      for (idx, attachment) in attachments.enumerated() {
+      for (idx, attachment) in items.enumerated() {
         Logger.shared.info("- #\(idx) ~> \(String(describing: attachment), privacy: .public)")
         if attachment.hasItemConformingToTypeIdentifier("com.adobe.pdf") {
           Logger.shared.info("Attachment has type PDF")
