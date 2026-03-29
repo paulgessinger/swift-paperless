@@ -1,5 +1,5 @@
 {
-  "originHash" : "386a8bfcedacb95078e51ee68c7c5ca764caa98f17222a40f72f4b20fc9f6c28",
+  "originHash" : "226f96c02dbb066cb588bcd4950ab2b31c9794b4301fbe22014ccf04a85a2b6b",
   "pins" : [
     {
       "identity" : "bezelkit",
@@ -125,15 +125,6 @@
       "state" : {
         "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
         "version" : "602.0.0"
-      }
-    },
-    {
-      "identity" : "swiftui-flow",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tevelee/SwiftUI-Flow",
-      "state" : {
-        "revision" : "6dc1e0b452432976c27221d28de136fbb6cee56a",
-        "version" : "3.1.0"
       }
     },
     {

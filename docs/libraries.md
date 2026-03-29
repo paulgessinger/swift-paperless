@@ -12,10 +12,6 @@ Swift Paperless uses the following third-party libraries for various features:
 [GitHub](https://github.com/apple/swift-collections)
 *Apache-2.0 license*
 
-## SwiftUI Flow Layout
-[GitHub](https://github.com/tevelee/SwiftUI-Flow)
-*MIT license*
-
 ## Semaphore
 [GitHub](https://github.com/groue/Semaphore)
 *MIT license*
