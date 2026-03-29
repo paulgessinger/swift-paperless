@@ -55,7 +55,9 @@ extension RequestError: DisplayableError {
 
     case .unsupportedVersion:
       raw = String(
-        localized: .localizable(.requestErrorUnsupportedVersion(ApiRepository.minimumApiVersion)))
+        localized: .localizable(
+          .requestErrorUnsupportedVersion(
+            ApiRepository.minimumApiVersion, ApiRepository.maximumApiVersion)))
 
     case .localNetworkDenied:
       raw = String(localized: .localizable(.requestErrorLocalNetworkDenied))
