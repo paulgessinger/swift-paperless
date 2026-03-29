@@ -95,6 +95,19 @@ extension Backport where Content: View {
   }
 
   @ViewBuilder
+  public func glassEffect<S: ShapeStyle>(
+    _ style: GlassEffectStyle = .regular,
+    in shape: some Shape = Capsule(),
+    orFill: S = Color.clear
+  ) -> some View {
+    if #available(iOS 26.0, *) {
+      content.glassEffect(style.glass, in: shape)
+    } else {
+      content.background(shape.fill(orFill))
+    }
+  }
+
+  @ViewBuilder
   public func scrollEdgeEffectStyle(_ style: ScrollEdgeEffectStyle, for edge: ScrollEdge)
     -> some View
   {
