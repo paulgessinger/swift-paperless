@@ -258,8 +258,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
                 .fontWeight(.semibold)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
-                // .background(.ultraThinMaterial, in: Capsule())
-                .backport.glassEffect(.regular.interactive())
+                .backport.glassEffect(
+                  .regular.interactive(), in: Capsule(), orFill: .ultraThinMaterial
+                )
                 .padding(10)
               }
             }
@@ -442,7 +443,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .navigationBarTitleDisplayMode(.inline)
           .navigationTitle(viewModel.document.title)
         }
-        .sheetZoomTransition(sourceID: TransitionID.doc, in: namespace)
+        // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
+        .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
       }
     }
 
