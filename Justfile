@@ -30,7 +30,7 @@ tag:
 beta:
   bundle exec fastlane beta
 
-default_os := '26.4'
+default_os := '26.3'
 default_device := 'iPhone 17 Pro'
 build os=default_os device=default_device:
   #!/bin/bash

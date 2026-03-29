@@ -21,7 +21,7 @@ jobs:
       matrix:
         include:
           - macos: macos-26
-            ios: "26.4"
+            ios: "26.3"
             xcode: default
       fail-fast: false
     name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
