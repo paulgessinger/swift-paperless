@@ -34,15 +34,21 @@ SKIP_HEADERS = {
 }
 
 
-def make_app(upstream_url: str, delay: float, match: re.Pattern[str] | None) -> aiohttp.web.Application:
+def make_app(
+    upstream_url: str, delay: float, match: re.Pattern[str] | None
+) -> aiohttp.web.Application:
     async def handle(request: aiohttp.web.Request) -> aiohttp.web.StreamResponse:
-        should_delay = delay > 0 and (match is None or match.search(str(request.rel_url)))
+        should_delay = delay > 0 and (
+            match is None or match.search(str(request.rel_url))
+        )
         if should_delay:
             await asyncio.sleep(delay)
 
         target = upstream_url.rstrip("/") + str(request.rel_url)
 
-        headers = {k: v for k, v in request.headers.items() if k.lower() not in SKIP_HEADERS}
+        headers = {
+            k: v for k, v in request.headers.items() if k.lower() not in SKIP_HEADERS
+        }
         # Ask upstream not to compress so we can pass bytes through unchanged
         headers["Accept-Encoding"] = "identity"
 
@@ -56,10 +62,16 @@ def make_app(upstream_url: str, delay: float, match: re.Pattern[str] | None) -> 
             ) as upstream:
                 delayed_tag = f" [delayed {delay}s]" if should_delay else " [no delay]"
                 user_agent = request.headers.get("User-Agent", "(none)")
-                print(f"{request.method} {request.rel_url} -> {upstream.status}{delayed_tag} | User-Agent: {user_agent}")
+                print(
+                    f"{request.method} {request.rel_url} -> {upstream.status}{delayed_tag} | User-Agent: {user_agent}"
+                )
                 response = aiohttp.web.StreamResponse(
                     status=upstream.status,
-                    headers={k: v for k, v in upstream.headers.items() if k.lower() not in SKIP_HEADERS},
+                    headers={
+                        k: v
+                        for k, v in upstream.headers.items()
+                        if k.lower() not in SKIP_HEADERS
+                    },
                 )
                 await response.prepare(request)
                 async for chunk in upstream.content.iter_any():
@@ -73,10 +85,26 @@ def make_app(upstream_url: str, delay: float, match: re.Pattern[str] | None) -> 
 
 
 def main(
-    upstream: Annotated[str, typer.Option("--upstream", "-u", help="Upstream server URL.")] = "http://localhost:8000",
-    port: Annotated[int, typer.Option("--port", "-p", help="Port to listen on.")] = 8888,
-    delay: Annotated[float, typer.Option("--delay", "-d", help="Delay in seconds before forwarding each request.")] = 2.0,
-    match: Annotated[str | None, typer.Option("--match", "-m", help="Regex to match against request path; only matching requests are delayed.")] = None,
+    upstream: Annotated[
+        str, typer.Option("--upstream", "-u", help="Upstream server URL.")
+    ] = "http://localhost:8000",
+    port: Annotated[
+        int, typer.Option("--port", "-p", help="Port to listen on.")
+    ] = 8888,
+    delay: Annotated[
+        float,
+        typer.Option(
+            "--delay", "-d", help="Delay in seconds before forwarding each request."
+        ),
+    ] = 2.0,
+    match: Annotated[
+        str | None,
+        typer.Option(
+            "--match",
+            "-m",
+            help="Regex to match against request path; only matching requests are delayed.",
+        ),
+    ] = None,
 ) -> None:
     """Reverse proxy that adds a configurable delay to requests."""
     compiled = re.compile(match) if match else None
