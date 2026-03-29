@@ -8,25 +8,41 @@
 import Common
 import SwiftUI
 
-enum CustomSectionBackgroundStyle {
-  case solid
-  case translucent
-}
-
-private struct CustomSectionBackgroundStyleKey: EnvironmentKey {
-  static let defaultValue: CustomSectionBackgroundStyle = .solid
+private struct CustomSectionBackgroundKey: EnvironmentKey {
+  static let defaultValue: AnyShapeStyle? = nil
 }
 
 extension EnvironmentValues {
-  var customSectionBackgroundStyle: CustomSectionBackgroundStyle {
-    get { self[CustomSectionBackgroundStyleKey.self] }
-    set { self[CustomSectionBackgroundStyleKey.self] = newValue }
+  var customSectionBackground: AnyShapeStyle? {
+    get { self[CustomSectionBackgroundKey.self] }
+    set { self[CustomSectionBackgroundKey.self] = newValue }
   }
 }
 
 extension View {
-  func customSectionBackgroundStyle(_ style: CustomSectionBackgroundStyle) -> some View {
-    environment(\.customSectionBackgroundStyle, style)
+  func customSectionBackground<S: ShapeStyle>(_ style: S) -> some View {
+    environment(\.customSectionBackground, AnyShapeStyle(style))
+  }
+
+  func customSectionBackground(_ style: AnyShapeStyle?) -> some View {
+    environment(\.customSectionBackground, style)
+  }
+}
+
+struct CustomSectionRow<Content: View>: View {
+  let content: () -> Content
+
+  @ScaledMetric(relativeTo: .body) private var rowVerticalPadding = 8.0
+
+  init(@ViewBuilder content: @escaping () -> Content) {
+    self.content = content
+  }
+
+  var body: some View {
+    content()
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .padding(.vertical, rowVerticalPadding)
   }
 }
 
@@ -35,22 +51,20 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
   var header: (() -> Header)? = nil
   var footer: (() -> Footer)? = nil
 
-  @Environment(\.colorScheme) private var colorScheme
-  @Environment(\.customSectionBackgroundStyle) private var backgroundStyle
+  @Environment(\.customSectionBackground) private var backgroundStyle
 
   @SchemeValue(
     light: Color(uiColor: .systemBackground),
     dark: Color(uiColor: .secondarySystemBackground))
   private var solidBackgroundColor
 
+  private var backgroundFill: AnyShapeStyle {
+    backgroundStyle ?? AnyShapeStyle(solidBackgroundColor)
+  }
+
   private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
     let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
-    return ZStack {
-      shape.fill(solidBackgroundColor)
-        .opacity(backgroundStyle == .solid ? 1 : 0)
-      shape.fill(.thickMaterial)
-        .opacity(backgroundStyle == .translucent ? 1 : 0)
-    }
+    return shape.fill(backgroundFill)
   }
 
   var body: some View {
@@ -150,11 +164,22 @@ extension CustomSection where Header == EmptyView {
       }
 
       CustomSection {
-        VStack {
-          Text("GO IDENTITY!")
-          Text("Right")
-          Text("Right")
-          Text("Right")
+        VStack(spacing: 0) {
+          CustomSectionRow {
+            Text("GO IDENTITY!")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
         }
       } header: {
         Text("head")
@@ -177,11 +202,22 @@ extension CustomSection where Header == EmptyView {
       }
 
       Section {
-        VStack {
-          Text("GO IDENTITY!")
-          Text("Right")
-          Text("Right")
-          Text("Right")
+        VStack(spacing: 0) {
+          CustomSectionRow {
+            Text("GO IDENTITY!")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
         }
       } header: {
         Text("head")

@@ -330,6 +330,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .tags:
         TagsEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+          .presentationDetents([.medium, .large])
 
       case .asn:
         NavigationStack {
@@ -348,6 +349,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .correspondent:
         CorrespondentEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
+          .presentationDetents([.medium, .large])
 
       case .documentType:
         NavigationStack {

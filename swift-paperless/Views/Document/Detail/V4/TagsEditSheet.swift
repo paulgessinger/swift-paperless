@@ -17,13 +17,10 @@ struct TagsEditSheet: View {
 
   @Environment(\.dismiss) private var dismiss
 
-  @Environment(\.sheetDetent) private var sheetDetent
-
   @State private var tagIds: [UInt] = []
   @State private var searchText = ""
   @State private var saving = false
   @State private var showCreateTag = false
-
   @Namespace private var tagNamespace
 
   private struct CreateTagView: View {
@@ -84,67 +81,75 @@ struct TagsEditSheet: View {
   var body: some View {
     NavigationStack {
       ScrollView(.vertical) {
-        CustomSection {
-          if tagIds.isEmpty {
-            Text(.localizable(.noTagsSelected))
-              .foregroundStyle(.secondary)
-              .padding(.vertical, 8)
-              .frame(maxWidth: .infinity, alignment: .leading)
-          } else {
-            HFlow {
-              ForEach(tagIds, id: \.self) { tagId in
-                Button {
-                  withAnimation(animation) {
-                    tagIds.removeAll { $0 == tagId }
-                  }
-                } label: {
-                  TagView(tag: store.tags[tagId]) {
-                    Image(systemName: "xmark")
-                      .font(.caption2)
-                      .fontWeight(.bold)
-                  }
-                  .fixedSize()
+        VStack(spacing: 0) {
+          CustomSection {
+            VStack(alignment: .leading, spacing: 8) {
+              if tagIds.isEmpty {
+                CustomSectionRow {
+                  Text(.localizable(.noTagsSelected))
+                    .foregroundStyle(.secondary)
+                    .transition(.opacity)
                 }
-                .buttonStyle(.plain)
-                .matchedGeometryEffect(id: tagId, in: tagNamespace)
+              }
+
+              CustomSectionRow {
+                HFlow {
+                  ForEach(tagIds, id: \.self) { tagId in
+                    Button {
+                      withAnimation(animation) {
+                        tagIds.removeAll { $0 == tagId }
+                      }
+                    } label: {
+                      TagView(tag: store.tags[tagId]) {
+                        Image(systemName: "xmark")
+                          .font(.caption2)
+                          .fontWeight(.bold)
+                      }
+                      .fixedSize()
+                      .matchedGeometryEffect(id: tagId, in: tagNamespace)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                  }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
               }
             }
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
           }
-        }
 
-        if !availableTags.isEmpty {
-          CustomSection {
-            VStack(spacing: 0) {
-              ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
-                Button {
-                  withAnimation(animation) {
-                    tagIds.append(tag.id)
+          if !availableTags.isEmpty {
+            CustomSection {
+              VStack(spacing: 0) {
+                ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
+                  Button {
+                    withAnimation(animation) {
+                      tagIds.append(tag.id)
+                    }
+                  } label: {
+                    CustomSectionRow {
+                      HStack {
+                        TagView(tag: tag)
+                          .fixedSize()
+                          .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                        Spacer()
+                        Image(systemName: "plus")
+                          .foregroundStyle(.secondary)
+                      }
+                    }
                   }
-                } label: {
-                  HStack {
-                    TagView(tag: tag)
-                      .fixedSize()
-                      .matchedGeometryEffect(id: tag.id, in: tagNamespace)
-                    Spacer()
-                    Image(systemName: "plus")
-                      .foregroundStyle(.secondary)
-                  }
-                  .padding(.vertical, 8)
-                  .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                  .buttonStyle(.plain)
+                  .transition(.opacity)
 
-                if index < availableTags.count - 1 {
-                  Divider()
+                  if index < availableTags.count - 1 {
+                    Divider()
+                  }
                 }
               }
             }
           }
         }
       }
-      .customSectionBackgroundStyle(sheetDetent == .large ? .solid : .translucent)
+      .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.tags))
@@ -184,7 +189,6 @@ struct TagsEditSheet: View {
         }
       }
     }
-    .adaptiveSheetPresentation()
     .interactiveDismissDisabled(interactiveDismissDisabled)
     .onAppear {
       tagIds = viewModel.document.tags

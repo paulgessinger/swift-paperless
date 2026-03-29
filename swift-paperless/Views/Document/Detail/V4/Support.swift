@@ -9,52 +9,6 @@ import Common
 import DataModel
 import SwiftUI
 
-// MARK: - Adaptive sheet presentation (DocumentDetailViewV4)
-
-private struct SheetDetentKey: EnvironmentKey {
-  static let defaultValue: PresentationDetent = .medium
-}
-
-extension EnvironmentValues {
-  var sheetDetent: PresentationDetent {
-    get { self[SheetDetentKey.self] }
-    set { self[SheetDetentKey.self] = newValue }
-  }
-}
-
-/// Manages `[.medium, .large]` detents, injects the current detent into the environment,
-/// and applies a solid `presentationBackground` on iOS 26+ when expanded to `.large`.
-private struct AdaptiveSheetModifier: ViewModifier {
-  @State private var selectedDetent: PresentationDetent = .medium
-
-  func body(content: Content) -> some View {
-    content
-      .environment(\.sheetDetent, selectedDetent)
-      .presentationDetents([.medium, .large], selection: $selectedDetent)
-      .apply {
-        if #available(iOS 26.0, *) {
-          if selectedDetent == .large {
-            $0.presentationBackground(Color(.systemGroupedBackground))
-          } else {
-            $0
-          }
-        } else {
-          $0
-        }
-      }
-  }
-}
-
-extension View {
-  /// Applies `[.medium, .large]` presentation detents and adaptive background behavior.
-  /// Sheet content can read `@Environment(\.sheetDetent)` to react to the current detent.
-  func adaptiveSheetPresentation() -> some View {
-    modifier(AdaptiveSheetModifier())
-  }
-}
-
-// MARK: -
-
 extension Common.SchemeToken where Value == Color {
   fileprivate static var editButtonColor: Self {
     .init(light: Color(white: 0.3), dark: Color(white: 0.5))
