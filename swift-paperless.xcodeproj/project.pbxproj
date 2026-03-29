@@ -379,7 +379,6 @@
 			);
 			name = ShareExtension;
 			packageProductDependencies = (
-				7A4AA90229BE048800D845A2 /* Flow */,
 				7A4AA91929BE730B00D845A2 /* Semaphore */,
 				7AB060DA29C62395004E6C63 /* AsyncAlgorithms */,
 				7A1C32C42A5EB08D00C18B44 /* NukeUI */,
@@ -419,7 +418,6 @@
 			name = "swift-paperless";
 			packageProductDependencies = (
 				7A5C138929AA7E2F00D71F51 /* Semaphore */,
-				7A68F0B229B4B94B00878223 /* Flow */,
 				7AB060D829C5BEE5004E6C63 /* AsyncAlgorithms */,
 				7A1C32BE2A5EAF1A00C18B44 /* Nuke */,
 				7A1C32C02A5EAF1A00C18B44 /* NukeExtensions */,
@@ -523,7 +521,6 @@
 			packageReferences = (
 				7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */,
 				7A9AA03829AD39F300A55529 /* XCRemoteSwiftPackageReference "swift-collections" */,
-				7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 				7AB060D729C5BEE4004E6C63 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				7A1C32BD2A5EAF1A00C18B44 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */,
@@ -1147,14 +1144,6 @@
 				minimumVersion = 0.1.0;
 			};
 		};
-		7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.1.0;
-			};
-		};
 		7A6AA3432C1EDEBE007A1866 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui.git";
@@ -1224,11 +1213,6 @@
 			package = 7A2E12102B14BBBF00E7704A /* XCRemoteSwiftPackageReference "xcstrings-tool-plugin" */;
 			productName = "plugin:XCStringsToolPlugin";
 		};
-		7A4AA90229BE048800D845A2 /* Flow */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
-			productName = Flow;
-		};
 		7A4AA91929BE730B00D845A2 /* Semaphore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
@@ -1260,11 +1244,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7A5C138829AA7E2F00D71F51 /* XCRemoteSwiftPackageReference "Semaphore" */;
 			productName = Semaphore;
-		};
-		7A68F0B229B4B94B00878223 /* Flow */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7A68F0B129B4B94B00878223 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
-			productName = Flow;
 		};
 		7A6AA3442C1EDEBE007A1866 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
