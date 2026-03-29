@@ -293,6 +293,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
       .padding()
     }
+    .refreshable {
+      let model = viewModel
+      async let document = model.loadDocument()
+      async let metadata = model.loadMetadata()
+      _ = await (document, metadata)
+    }
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
 
