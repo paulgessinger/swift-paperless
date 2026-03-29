@@ -16,14 +16,13 @@ struct CorrespondentEditSheet: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.dismiss) private var dismiss
 
-  @Environment(\.sheetDetent) private var sheetDetent
-
   @State private var searchText = ""
   @State private var saving = false
 
   private var correspondents: [Correspondent] {
     let search = searchText.lowercased()
     return store.correspondents.values
+      .filter { $0.id != viewModel.document.correspondent }
       .filter { search.isEmpty || $0.name.lowercased().contains(search) }
       .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
   }
@@ -65,19 +64,19 @@ struct CorrespondentEditSheet: View {
     Button {
       select(correspondent: id)
     } label: {
-      HStack {
-        Text(label)
-          .foregroundStyle(.primary)
-        Spacer()
-        if viewModel.document.correspondent == id {
-          Label(String(localized: .localizable(.elementIsSelected)), systemImage: "checkmark")
-            .labelStyle(.iconOnly)
+      CustomSectionRow {
+        HStack {
+          Text(label)
+            .foregroundStyle(.primary)
+          Spacer()
+          if viewModel.document.correspondent == id {
+            Label(String(localized: .localizable(.elementIsSelected)), systemImage: "checkmark")
+              .labelStyle(.iconOnly)
+          }
         }
       }
-      .padding(.vertical, 8)
-      .contentShape(Rectangle())
     }
-    .buttonStyle(.plain)
+    .buttonStyle(.borderless)
     .disabled(saving)
   }
 
@@ -90,21 +89,23 @@ struct CorrespondentEditSheet: View {
               Button {
                 select(correspondent: nil)
               } label: {
-                HStack {
-                  Text(selectedCorrespondent.name)
-                    .foregroundStyle(.primary)
-                  Spacer()
-                  Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
+                CustomSectionRow {
+                  HStack {
+                    Text(selectedCorrespondent.name)
+                      .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                      .foregroundStyle(.secondary)
+                  }
                 }
-                .padding(.vertical, 8)
-                .contentShape(Rectangle())
               }
               .buttonStyle(.plain)
               .disabled(saving)
             } else {
-              Text(.localizable(.correspondentNotAssignedPicker))
-                .foregroundStyle(.secondary)
+              CustomSectionRow {
+                Text(.localizable(.correspondentNotAssignedPicker))
+                  .foregroundStyle(.secondary)
+              }
             }
           } header: {
             Text(.localizable(.selected))
@@ -112,8 +113,7 @@ struct CorrespondentEditSheet: View {
 
           CustomSection {
             VStack(spacing: 0) {
-              ForEach(Array(correspondents.enumerated()), id: \.element.id) {
-                index, correspondent in
+              ForEach(Array(correspondents.enumerated()), id: \.element.id) { index, correspondent in
                 row(correspondent.name, id: correspondent.id)
 
                 if index < correspondents.count - 1 {
@@ -126,7 +126,7 @@ struct CorrespondentEditSheet: View {
           }
         }
       }
-      .customSectionBackgroundStyle(sheetDetent == .large ? .solid : .translucent)
+      .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
       .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
       .navigationTitle(.localizable(.correspondent))
@@ -142,7 +142,6 @@ struct CorrespondentEditSheet: View {
         }
       }
     }
-    .adaptiveSheetPresentation()
     .interactiveDismissDisabled(saving)
   }
 }
