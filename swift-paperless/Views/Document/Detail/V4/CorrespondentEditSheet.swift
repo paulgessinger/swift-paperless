@@ -18,6 +18,13 @@ struct CorrespondentEditSheet: View {
 
   @State private var searchText = ""
   @State private var saving = false
+  @Namespace private var correspondentNamespace
+
+  private let animation = Animation.spring(duration: 0.2)
+  private static let selectedRowTransition = AnyTransition.asymmetric(
+    insertion: .move(edge: .bottom).combined(with: .opacity),
+    removal: .move(edge: .bottom).combined(with: .opacity)
+  )
 
   private var correspondents: [Correspondent] {
     let search = searchText.lowercased()
@@ -31,6 +38,19 @@ struct CorrespondentEditSheet: View {
     viewModel.document.correspondent.flatMap { store.correspondents[$0] }
   }
 
+  @ViewBuilder
+  private func correspondentLabel(_ correspondent: Correspondent, selected: Bool) -> some View {
+    HStack {
+      Text(correspondent.name)
+        .foregroundStyle(.primary)
+      Spacer()
+      if selected {
+        Image(systemName: "xmark.circle.fill")
+          .foregroundStyle(.secondary)
+      }
+    }
+  }
+
   private func select(correspondent: UInt?) {
     guard !saving else { return }
     guard viewModel.document.correspondent != correspondent else {
@@ -39,19 +59,23 @@ struct CorrespondentEditSheet: View {
     }
 
     let previous = viewModel.document.correspondent
+    Haptics.shared.impact(style: .light)
+
     viewModel.document.correspondent = correspondent
 
     Task {
       do {
         saving = true
         async let updatedDocument = store.updateDocument(viewModel.document)
-        async let delay: () = Task.sleep(for: .seconds(0.3))
+        async let delay: () = Task.sleep(for: .seconds(0.5))
 
         let updated = try await updatedDocument
         try await delay
         viewModel.document = updated
         saving = false
-        dismiss()
+        if correspondent != nil {
+          dismiss()
+        }
       } catch {
         viewModel.document.correspondent = previous
         saving = false
@@ -60,24 +84,18 @@ struct CorrespondentEditSheet: View {
     }
   }
 
-  private func row(_ label: String, id: UInt?) -> some View {
+  private func row(_ correspondent: Correspondent) -> some View {
     Button {
-      select(correspondent: id)
+      select(correspondent: correspondent.id)
     } label: {
       CustomSectionRow {
-        HStack {
-          Text(label)
-            .foregroundStyle(.primary)
-          Spacer()
-          if viewModel.document.correspondent == id {
-            Label(String(localized: .localizable(.elementIsSelected)), systemImage: "checkmark")
-              .labelStyle(.iconOnly)
-          }
-        }
+        correspondentLabel(correspondent, selected: false)
       }
     }
     .buttonStyle(.borderless)
-    .disabled(saving)
+    .allowsHitTesting(!saving)
+    .id(correspondent.id)
+    .transition(Self.selectedRowTransition)
   }
 
   var body: some View {
@@ -85,45 +103,53 @@ struct CorrespondentEditSheet: View {
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
-            if let selectedCorrespondent {
-              Button {
-                select(correspondent: nil)
-              } label: {
-                CustomSectionRow {
-                  HStack {
-                    Text(selectedCorrespondent.name)
-                      .foregroundStyle(.primary)
-                    Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                      .foregroundStyle(.secondary)
+            VStack {
+
+              if let selectedCorrespondent {
+                Button {
+                  select(correspondent: nil)
+                } label: {
+                  CustomSectionRow {
+                    correspondentLabel(selectedCorrespondent, selected: true)
                   }
                 }
-              }
-              .buttonStyle(.plain)
-              .disabled(saving)
-            } else {
-              CustomSectionRow {
-                Text(.localizable(.correspondentNotAssignedPicker))
-                  .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+                .allowsHitTesting(!saving)
+                .transition(Self.selectedRowTransition)
+                .id(selectedCorrespondent.id)
+              } else {
+                CustomSectionRow {
+                  Text(.localizable(.correspondentNotAssignedPicker))
+                    .foregroundStyle(.secondary)
+                }
+                .transition(Self.selectedRowTransition)
               }
             }
+            .animation(animation, value: viewModel.document.correspondent)
           } header: {
             Text(.localizable(.selected))
           }
 
-          CustomSection {
-            VStack(spacing: 0) {
-              ForEach(Array(correspondents.enumerated()), id: \.element.id) { index, correspondent in
-                row(correspondent.name, id: correspondent.id)
+          VStack(spacing: 0) {
+            if !correspondents.isEmpty {
+              CustomSection {
+                VStack(spacing: 0) {
+                  ForEach(Array(correspondents.enumerated()), id: \.element.id) {
+                    index, correspondent in
+                    row(correspondent)
 
-                if index < correspondents.count - 1 {
-                  Divider()
+                    if index < correspondents.count - 1 {
+                      Divider()
+                    }
+                  }
                 }
+                .animation(animation, value: viewModel.document.correspondent)
+              } header: {
+                Text(.localizable(.correspondents))
               }
             }
-          } header: {
-            Text(.localizable(.correspondents))
           }
+          .animation(animation, value: correspondents.isEmpty)
         }
       }
       .customSectionBackground(.thickMaterial)
@@ -143,5 +169,8 @@ struct CorrespondentEditSheet: View {
       }
     }
     .interactiveDismissDisabled(saving)
+    .onAppear {
+      Haptics.shared.prepare()
+    }
   }
 }
