@@ -259,7 +259,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
                 .backport.glassEffect(
-                  .regular.interactive(), in: Capsule(), orFill: .ultraThinMaterial
+                  .regular, in: Capsule(), orFill: .ultraThinMaterial
                 )
                 .padding(10)
               }

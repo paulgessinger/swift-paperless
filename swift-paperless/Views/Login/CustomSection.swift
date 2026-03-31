@@ -32,7 +32,7 @@ extension View {
 struct CustomSectionRow<Content: View>: View {
   let content: () -> Content
 
-  @ScaledMetric(relativeTo: .body) private var rowVerticalPadding = 8.0
+  @ScaledMetric(relativeTo: .body) private var rowVerticalPadding = 12.0
 
   init(@ViewBuilder content: @escaping () -> Content) {
     self.content = content
@@ -45,7 +45,6 @@ struct CustomSectionRow<Content: View>: View {
       .padding(.vertical, rowVerticalPadding)
   }
 }
-
 struct CustomSection<Content: View, Footer: View, Header: View>: View {
   var content: () -> Content
   var header: (() -> Header)? = nil
@@ -202,23 +201,9 @@ extension CustomSection where Header == EmptyView {
       }
 
       Section {
-        VStack(spacing: 0) {
-          CustomSectionRow {
-            Text("GO IDENTITY!")
-          }
-          Divider()
-          CustomSectionRow {
-            Text("Right")
-          }
-          Divider()
-          CustomSectionRow {
-            Text("Right")
-          }
-          Divider()
-          CustomSectionRow {
-            Text("Right")
-          }
-        }
+        Text("GO IDENTITY!")
+        Text("Right")
+        Text("Right")
       } header: {
         Text("head")
       } footer: {
