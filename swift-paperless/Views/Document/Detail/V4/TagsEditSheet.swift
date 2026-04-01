@@ -94,9 +94,7 @@ struct TagsEditSheet: View {
                   HFlow {
                     ForEach(tagIds, id: \.self) { tagId in
                       Button {
-                        withAnimation(animation) {
-                          tagIds.removeAll { $0 == tagId }
-                        }
+                        tagIds.removeAll { $0 == tagId }
                       } label: {
                         TagView(tag: store.tags[tagId]) {
                           Image(systemName: "xmark")
@@ -114,38 +112,41 @@ struct TagsEditSheet: View {
                 }
               }
             }
+            .animation(animation, value: tagIds)
           }
 
-          if !availableTags.isEmpty {
-            CustomSection {
-              VStack(spacing: 0) {
-                ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
-                  Button {
-                    withAnimation(animation) {
+          VStack(spacing: 0) {
+            if !availableTags.isEmpty {
+              CustomSection {
+                VStack(spacing: 0) {
+                  ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
+                    Button {
                       tagIds.append(tag.id)
-                    }
-                  } label: {
-                    CustomSectionRow {
-                      HStack {
-                        TagView(tag: tag)
-                          .fixedSize()
-                          .matchedGeometryEffect(id: tag.id, in: tagNamespace)
-                        Spacer()
-                        Image(systemName: "plus")
-                          .foregroundStyle(.secondary)
+                    } label: {
+                      CustomSectionRow {
+                        HStack {
+                          TagView(tag: tag)
+                            .fixedSize()
+                            .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                          Spacer()
+                          Image(systemName: "plus")
+                            .foregroundStyle(.secondary)
+                        }
                       }
                     }
-                  }
-                  .buttonStyle(.plain)
-                  .transition(.opacity)
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
 
-                  if index < availableTags.count - 1 {
-                    Divider()
+                    if index < availableTags.count - 1 {
+                      Divider()
+                    }
                   }
                 }
+                .animation(animation, value: tagIds)
               }
             }
           }
+          .animation(animation, value: availableTags.isEmpty)
         }
       }
       .customSectionBackground(.thickMaterial)
@@ -160,9 +161,7 @@ struct TagsEditSheet: View {
         ToolbarItem(placement: .topBarTrailing) {
           NavigationLink {
             CreateTagView(onCreated: { tag in
-              withAnimation(animation) {
-                tagIds.append(tag.id)
-              }
+              tagIds.append(tag.id)
             })
           } label: {
             Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
