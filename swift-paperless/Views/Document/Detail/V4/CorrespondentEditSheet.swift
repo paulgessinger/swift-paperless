@@ -18,6 +18,7 @@ struct CorrespondentEditSheet: View {
 
   @State private var searchText = ""
   @State private var saving = false
+  @State private var showCreateSheet = false
   @Namespace private var correspondentNamespace
 
   private struct CreateCorrespondentView: View {
@@ -41,6 +42,11 @@ struct CorrespondentEditSheet: View {
       })
       .navigationTitle(Text(.localizable(.correspondentCreateTitle)))
       .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+      }
     }
   }
 
@@ -133,7 +139,6 @@ struct CorrespondentEditSheet: View {
         VStack(spacing: 0) {
           CustomSection {
             VStack {
-
               if let selectedCorrespondent {
                 Button {
                   select(correspondent: nil)
@@ -191,10 +196,8 @@ struct CorrespondentEditSheet: View {
           CancelIconButton()
         }
         ToolbarItem(placement: .topBarTrailing) {
-          NavigationLink {
-            CreateCorrespondentView(onCreated: { correspondent in
-              select(correspondent: correspondent.id)
-            })
+          Button {
+            showCreateSheet = true
           } label: {
             Label(String(localized: .localizable(.add)), systemImage: "plus")
           }
@@ -205,6 +208,13 @@ struct CorrespondentEditSheet: View {
             ProgressView()
           }
         }
+      }
+    }
+    .sheet(isPresented: $showCreateSheet) {
+      NavigationStack {
+        CreateCorrespondentView(onCreated: { correspondent in
+          select(correspondent: correspondent.id)
+        })
       }
     }
     .interactiveDismissDisabled(saving)
