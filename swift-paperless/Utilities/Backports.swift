@@ -50,6 +50,8 @@ extension Backport where Content: View {
 
   public enum ScrollEdgeEffectStyle: Sendable {
     case hard
+    case soft
+    case automatic
   }
 
   public enum ScrollEdge: Sendable {
@@ -89,6 +91,19 @@ extension Backport where Content: View {
       content.glassEffect(style.glass, in: shape)
     } else {
       content
+    }
+  }
+
+  @ViewBuilder
+  public func glassEffect<S: ShapeStyle>(
+    _ style: GlassEffectStyle = .regular,
+    in shape: some Shape = Capsule(),
+    orFill: S = Color.clear
+  ) -> some View {
+    if #available(iOS 26.0, *) {
+      content.glassEffect(style.glass, in: shape)
+    } else {
+      content.background(shape.fill(orFill))
     }
   }
 
@@ -152,6 +167,10 @@ extension Backport.ScrollEdgeEffectStyle {
     switch self {
     case .hard:
       .hard
+    case .soft:
+      .soft
+    case .automatic:
+      .automatic
     }
   }
 }
