@@ -20,6 +20,30 @@ struct CorrespondentEditSheet: View {
   @State private var saving = false
   @Namespace private var correspondentNamespace
 
+  private struct CreateCorrespondentView: View {
+    @EnvironmentObject private var store: DocumentStore
+    @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.dismiss) private var dismiss
+
+    let onCreated: (Correspondent) -> Void
+
+    var body: some View {
+      CorrespondentEditView<ProtoCorrespondent>(onSave: { value in
+        Task {
+          do {
+            let correspondent = try await store.create(correspondent: value)
+            onCreated(correspondent)
+            dismiss()
+          } catch {
+            errorController.push(error: error)
+          }
+        }
+      })
+      .navigationTitle(Text(.localizable(.correspondentCreateTitle)))
+      .navigationBarTitleDisplayMode(.inline)
+    }
+  }
+
   private let animation = Animation.spring(duration: 0.2)
   private static let selectedRowTransition = AnyTransition.asymmetric(
     insertion: .move(edge: .bottom).combined(with: .opacity),
@@ -66,6 +90,7 @@ struct CorrespondentEditSheet: View {
     Task {
       do {
         saving = true
+        try await Task.sleep(for: .seconds(0.1))
         async let updatedDocument = store.updateDocument(viewModel.document)
         async let delay: () = Task.sleep(for: .seconds(0.5))
 
@@ -95,7 +120,11 @@ struct CorrespondentEditSheet: View {
     .buttonStyle(.borderless)
     .allowsHitTesting(!saving)
     .id(correspondent.id)
-    .transition(Self.selectedRowTransition)
+    .transition(
+      .asymmetric(
+        insertion: .move(edge: .top).combined(with: .opacity),
+        removal: .move(edge: .top).combined(with: .opacity))
+    )
   }
 
   var body: some View {
@@ -160,6 +189,16 @@ struct CorrespondentEditSheet: View {
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           CancelIconButton()
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          NavigationLink {
+            CreateCorrespondentView(onCreated: { correspondent in
+              select(correspondent: correspondent.id)
+            })
+          } label: {
+            Label(String(localized: .localizable(.add)), systemImage: "plus")
+          }
+          .disabled(!store.permissions.test(.add, for: .correspondent))
         }
         ToolbarItem(placement: .confirmationAction) {
           if saving {
