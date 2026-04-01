@@ -30,6 +30,7 @@ enum TransitionID: Hashable {
   case owner
   case metadata
   case notes
+  case title
 }
 
 struct EditableAspect: View {
@@ -198,6 +199,97 @@ struct DocumentTagsSection: View {
         $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
       } else {
         $0
+      }
+    }
+  }
+}
+
+struct DocumentTitleView: View {
+  let title: String
+  let transitionID: TransitionID?
+  let namespace: Namespace.ID?
+  let action: () -> Void
+
+  private let lineLimit = 3
+
+  @State private var isExpanded = false
+  @State private var isTruncated = false
+
+  @SchemeValue(.editButtonColor)
+  private var editButtonColor
+
+  @SchemeValue(.backgroundColor)
+  private var backgroundColor
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      HStack(alignment: .top, spacing: 8) {
+        Button(action: action) {
+          Text(title)
+            .font(.title)
+            .fontWeight(.semibold)
+            .lineLimit(isExpanded ? nil : lineLimit)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+              GeometryReader { displayedProxy in
+                Text(title)
+                  .font(.title)
+                  .fontWeight(.semibold)
+                  .fixedSize(horizontal: false, vertical: true)
+                  .frame(width: displayedProxy.size.width, alignment: .leading)
+                  .hidden()
+                  .background(
+                    GeometryReader { fullProxy in
+                      Color.clear.onAppear {
+                        isTruncated = fullProxy.size.height > displayedProxy.size.height + 1
+                      }
+                      .onChange(of: title) {
+                        isTruncated = fullProxy.size.height > displayedProxy.size.height + 1
+                      }
+                    }
+                  )
+              }
+            )
+        }
+        .foregroundStyle(.primary)
+        .buttonStyle(.plain)
+        .apply {
+          if let transitionID, let namespace {
+            $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
+          } else {
+            $0
+          }
+        }
+
+        Button(action: action) {
+          Image(systemName: "pencil")
+            .foregroundStyle(editButtonColor)
+            .font(.callout)
+            .padding(6)
+            .background(Circle().fill(backgroundColor))
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 3)
+      }
+
+      if isTruncated || isExpanded {
+        Button {
+          withAnimation(.spring(duration: 0.15)) {
+            isExpanded.toggle()
+          }
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "chevron.down")
+              .rotationEffect(isExpanded ? .degrees(180) : .zero)
+            Text(.localizable(.more))
+          }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
       }
     }
   }

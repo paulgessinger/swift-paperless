@@ -11,6 +11,7 @@ import Networking
 import SwiftUI
 
 private enum ActiveSheet: Identifiable, Hashable {
+  case title
   case tags
   case asn
   case correspondent
@@ -272,12 +273,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
         .shadow(color: Color(.imageShadow), radius: 15)
 
-        VStack(alignment: .leading, spacing: 0) {
-          Text(viewModel.document.title)
-            .font(.title)
-            .fontWeight(.semibold)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        DocumentTitleView(
+          title: viewModel.document.title,
+          transitionID: .title,
+          namespace: namespace,
+          action: { activeSheet = .title }
+        )
 
         detailAspects
           .animation(.spring(duration: 0.25), value: viewModel.document)
@@ -327,6 +328,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
+      case .title:
+        TitleEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
+
       case .tags:
         TagsEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
