@@ -20,7 +20,6 @@ struct TagsEditSheet: View {
   @State private var tagIds: [UInt] = []
   @State private var searchText = ""
   @State private var saving = false
-  @State private var showCreateTag = false
   @Namespace private var tagNamespace
 
   private struct CreateTagView: View {
@@ -48,7 +47,7 @@ struct TagsEditSheet: View {
   }
 
   private var interactiveDismissDisabled: Bool {
-    showCreateTag || tagIds != viewModel.document.tags
+    tagIds != viewModel.document.tags
   }
 
   private var availableTags: [Tag] {
@@ -90,29 +89,29 @@ struct TagsEditSheet: View {
                     .foregroundStyle(.secondary)
                     .transition(.opacity)
                 }
-              }
-
-              CustomSectionRow {
-                HFlow {
-                  ForEach(tagIds, id: \.self) { tagId in
-                    Button {
-                      withAnimation(animation) {
-                        tagIds.removeAll { $0 == tagId }
+              } else {
+                CustomSectionRow {
+                  HFlow {
+                    ForEach(tagIds, id: \.self) { tagId in
+                      Button {
+                        withAnimation(animation) {
+                          tagIds.removeAll { $0 == tagId }
+                        }
+                      } label: {
+                        TagView(tag: store.tags[tagId]) {
+                          Image(systemName: "xmark")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                        }
+                        .fixedSize()
+                        .matchedGeometryEffect(id: tagId, in: tagNamespace)
                       }
-                    } label: {
-                      TagView(tag: store.tags[tagId]) {
-                        Image(systemName: "xmark")
-                          .font(.caption2)
-                          .fontWeight(.bold)
-                      }
-                      .fixedSize()
-                      .matchedGeometryEffect(id: tagId, in: tagNamespace)
+                      .buttonStyle(.plain)
+                      .transition(.opacity)
                     }
-                    .buttonStyle(.plain)
-                    .transition(.opacity)
                   }
+                  .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
               }
             }
           }
@@ -159,8 +158,12 @@ struct TagsEditSheet: View {
           CancelIconButton()
         }
         ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            showCreateTag = true
+          NavigationLink {
+            CreateTagView(onCreated: { tag in
+              withAnimation(animation) {
+                tagIds.append(tag.id)
+              }
+            })
           } label: {
             Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
           }
@@ -176,16 +179,6 @@ struct TagsEditSheet: View {
             .fontWeight(.bold)
             .disabled(tagIds == viewModel.document.tags)
           }
-        }
-      }
-      .navigationDestination(isPresented: $showCreateTag) {
-        CreateTagView(onCreated: { tag in
-          withAnimation(animation) {
-            tagIds.append(tag.id)
-          }
-        })
-        .onDisappear {
-          showCreateTag = false
         }
       }
     }

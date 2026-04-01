@@ -174,25 +174,17 @@ struct DocumentTagsSection: View {
         TagsView(
           tags: tags, action: nil,
           content: {
+            if tags.isEmpty {
+              Text(.localizable(.createDocumentNoTags))
+                .foregroundStyle(.secondary)
+            }
             Label(.localizable(.edit), systemImage: "pencil")
               .foregroundStyle(editButtonColor)
-              .apply {
-                if tags.isEmpty {
-                  $0.labelStyle(.titleAndIcon)
-                    .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                } else {
-                  $0.labelStyle(.iconOnly)
-                    .padding(5)
-                }
-              }
+              .labelStyle(.iconOnly)
+              .padding(5)
               .background {
-                if tags.isEmpty {
-                  Capsule()
-                    .fill(backgroundColor)
-                } else {
-                  Circle()
-                    .fill(backgroundColor)
-                }
+                Circle()
+                  .fill(backgroundColor)
               }
           }
         )
