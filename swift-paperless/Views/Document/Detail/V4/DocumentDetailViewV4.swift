@@ -357,18 +357,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .presentationDetents([.medium, .large])
 
       case .documentType:
-        NavigationStack {
-          Text("Document Type")
-            .navigationTitle("Document Type")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
-                CancelIconButton()
-              }
-            }
-        }
-        .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
-        .presentationDetents([.medium])
+        DocumentTypeEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
+          .presentationDetents([.medium, .large])
 
       case .date:
         NavigationStack {
