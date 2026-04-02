@@ -168,6 +168,8 @@
 				Document/Detail/SearchablePDFPreview.swift,
 				Document/Detail/V4/CorrespondentEditSheet.swift,
 				Document/Detail/V4/DocumentDetailViewV4.swift,
+				Document/Detail/V4/DocumentTypeEditSheet.swift,
+				Document/Detail/V4/SingleSelectPickerSheet.swift,
 				Document/Detail/V4/Support.swift,
 				Document/Detail/V4/TagsEditSheet.swift,
 				Document/Detail/V4/TitleEditSheet.swift,
