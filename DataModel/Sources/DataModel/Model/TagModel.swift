@@ -7,7 +7,6 @@
 
 import Common
 import Foundation
-import MetaCodable
 import SwiftUI
 
 public protocol TagProtocol:
@@ -38,30 +37,38 @@ private var placeholderColor: Color {
   #endif
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct ProtoTag: TagProtocol, MatchingModel {
-  @Default(false)
   public var isInboxTag: Bool
-
-  @Default("")
   public var name: String
-
-  @Default("")
   public var slug: String
-
-  @Default(Color.gray.hex)
   public var color: HexColor
-
-  @Default("")
   public var match: String
-
-  @Default(MatchingAlgorithm.auto)
   public var matchingAlgorithm: MatchingAlgorithm
-
-  @Default(true)
   public var isInsensitive: Bool
+  public var owner: Owner
+  public var permissions: Permissions?
+
+  public init(
+    isInboxTag: Bool = false,
+    name: String = "",
+    slug: String = "",
+    color: HexColor = Color.gray.hex,
+    match: String = "",
+    matchingAlgorithm: MatchingAlgorithm = .auto,
+    isInsensitive: Bool = true,
+    owner: Owner = .unset,
+    permissions: Permissions? = nil
+  ) {
+    self.isInboxTag = isInboxTag
+    self.name = name
+    self.slug = slug
+    self.color = color
+    self.match = match
+    self.matchingAlgorithm = matchingAlgorithm
+    self.isInsensitive = isInsensitive
+    self.owner = owner
+    self.permissions = permissions
+  }
 
   public static func placeholder(_ length: Int) -> Self {
     let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -73,28 +80,10 @@ public struct ProtoTag: TagProtocol, MatchingModel {
       color: placeholderColor.hex
     )
   }
-
-  // For PermissionsModel conformance
-  @Default(Owner.unset)
-  public var owner: Owner
-
-  // Presence of this depends on the endpoint
-  @IgnoreEncoding
-  public var permissions: Permissions? {
-    didSet {
-      setPermissions = permissions
-    }
-  }
-
-  // The API wants this extra key for writing perms
-  public var setPermissions: Permissions?
 }
 
 extension ProtoTag: PermissionsModel {}
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, Hashable, Sendable {
   public var id: UInt
   public var isInboxTag: Bool
@@ -104,6 +93,26 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
   public var match: String
   public var matchingAlgorithm: MatchingAlgorithm
   public var isInsensitive: Bool
+
+  public init(
+    id: UInt,
+    isInboxTag: Bool,
+    name: String,
+    slug: String,
+    color: HexColor,
+    match: String,
+    matchingAlgorithm: MatchingAlgorithm,
+    isInsensitive: Bool
+  ) {
+    self.id = id
+    self.isInboxTag = isInboxTag
+    self.name = name
+    self.slug = slug
+    self.color = color
+    self.match = match
+    self.matchingAlgorithm = matchingAlgorithm
+    self.isInsensitive = isInsensitive
+  }
 
   public static func placeholder(_ length: Int) -> Self {
     let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
