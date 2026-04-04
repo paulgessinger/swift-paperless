@@ -381,18 +381,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .presentationDetents([.medium, .large])
 
       case .owner:
-        NavigationStack {
-          Text("Owner")
-            .navigationTitle("Owner")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
-                CancelIconButton()
-              }
-            }
-        }
-        .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
-        .presentationDetents([.medium])
+        OwnerEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
+          .presentationDetents([.medium, .large])
 
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
