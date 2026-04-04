@@ -26,6 +26,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
 
   @State private var searchText = ""
   @State private var saving = false
+  @State private var showCreate = false
 
   private let animation = Animation.spring(duration: 0.2)
   private static var selectedRowTransition: AnyTransition {
@@ -176,14 +177,9 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          CancelIconButton()
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-          NavigationLink {
-            createView { item in
-              select(id: item.id)
-            }
+        ToolbarItem(placement: .topBarLeading) {
+          Button {
+            showCreate = true
           } label: {
             Label(String(localized: .localizable(.add)), systemImage: "plus")
           }
@@ -192,11 +188,24 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         ToolbarItem(placement: .confirmationAction) {
           if saving {
             ProgressView()
+          } else {
+            Button {
+              dismiss()
+            } label: {
+              Image(systemName: "checkmark")
+            }
           }
         }
       }
     }
     .interactiveDismissDisabled(saving)
+    .sheet(isPresented: $showCreate) {
+      NavigationStack {
+        createView { item in
+          select(id: item.id)
+        }
+      }
+    }
     .onAppear {
       Haptics.shared.prepare()
     }
