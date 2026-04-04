@@ -376,18 +376,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .presentationDetents([.medium])
 
       case .storagePath:
-        NavigationStack {
-          Text("Storage Path")
-            .navigationTitle("Storage Path")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
-                CancelIconButton()
-              }
-            }
-        }
-        .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
-        .presentationDetents([.medium])
+        StoragePathEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
+          .presentationDetents([.medium, .large])
 
       case .owner:
         NavigationStack {
