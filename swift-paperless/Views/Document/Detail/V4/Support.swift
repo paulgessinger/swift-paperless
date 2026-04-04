@@ -288,6 +288,7 @@ struct DocumentTitleView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.vertical, 6)
           .contentShape(Rectangle())
+          .offset(y: -5)
         }
         .buttonStyle(.plain)
       }
