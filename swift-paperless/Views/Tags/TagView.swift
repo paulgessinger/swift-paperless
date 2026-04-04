@@ -9,13 +9,20 @@ import DataModel
 import Networking
 import SwiftUI
 
-struct TagView: View {
+struct TagView<Trailing: View>: View {
   @Environment(\.redactionReasons) var redactionReasons
 
   var inputTag: Tag?
+  var trailing: Trailing
 
-  init(tag: Tag? = nil) {
+  init(tag: Tag? = nil) where Trailing == EmptyView {
     inputTag = tag
+    trailing = EmptyView()
+  }
+
+  init(tag: Tag? = nil, @ViewBuilder trailing: () -> Trailing) {
+    inputTag = tag
+    self.trailing = trailing()
   }
 
   private var tag: Tag {
@@ -31,34 +38,36 @@ struct TagView: View {
   }
 
   var body: some View {
-    Group {
+    HStack(spacing: 4) {
       Text(tag.name)
         .lineLimit(1)
         .font(.body)
         .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
-        .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-        .background(tag.color.color)
-        .foregroundColor(tag.textColor.color)
-        .clipShape(Capsule())
-        .italic(inputTag == nil)
-        .unredacted()
+      trailing
     }
+    .padding(
+      EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: Trailing.self == EmptyView.self ? 8 : 6)
+    )
+    .background(tag.color.color)
+    .foregroundColor(tag.textColor.color)
+    .clipShape(Capsule())
+    .italic(inputTag == nil)
+    .unredacted()
   }
 }
 
-struct TagsView: View {
-  var tags: [Tag?]
-  var action: ((Tag) -> Void)?
+struct TagsView<Content: View>: View {
+  let tags: [Tag?]
+  let action: ((Tag) -> Void)?
+
+  let content: () -> Content
 
   @Environment(\.redactionReasons) var redactionReasons
 
-  init(tags: [Tag?], action: ((Tag) -> Void)? = nil) {
+  init(tags: [Tag?], action: ((Tag) -> Void)?, @ViewBuilder content: @escaping () -> Content) {
     self.tags = tags
     self.action = action
-  }
-
-  init() {
-    tags = []
+    self.content = content
   }
 
   var body: some View {
@@ -80,8 +89,25 @@ struct TagsView: View {
             }
           }
         }
+
+        content()
       }
+
     }
+  }
+}
+
+extension TagsView where Content == EmptyView {
+  init(tags: [Tag?], action: ((Tag) -> Void)? = nil) {
+    self.tags = tags
+    self.action = action
+    self.content = { EmptyView() }
+  }
+
+  init() {
+    tags = []
+    action = nil
+    content = { EmptyView() }
   }
 }
 

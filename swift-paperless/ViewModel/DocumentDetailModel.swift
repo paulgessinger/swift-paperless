@@ -8,13 +8,14 @@
 import DataModel
 import Foundation
 import Networking
+import PDFKit
 import SwiftUI
 import os
 
 enum DocumentDownloadState: Equatable {
   case initial
   case loading
-  case loaded(URL)
+  case loaded(url: URL, document: PDFDocument)
   case error
 
   static func == (lhs: DocumentDownloadState, rhs: DocumentDownloadState) -> Bool {
@@ -86,7 +87,12 @@ class DocumentDetailModel {
           break
         }
 
-        download = .loaded(url)
+        guard let pdfDocument = PDFDocument(url: url) else {
+          download = .error
+          break
+        }
+
+        download = .loaded(url: url, document: pdfDocument)
         setLoading.cancel()
       } catch is CancellationError {
       } catch {
