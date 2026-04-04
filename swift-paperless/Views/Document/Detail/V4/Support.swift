@@ -222,7 +222,7 @@ struct DocumentTitleView: View {
   private var backgroundColor
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top, spacing: 8) {
         Button(action: action) {
           Text(title)
@@ -283,11 +283,11 @@ struct DocumentTitleView: View {
               .rotationEffect(isExpanded ? .degrees(180) : .zero)
             Text(.localizable(.more))
           }
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.vertical, 6)
+          .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
       }
