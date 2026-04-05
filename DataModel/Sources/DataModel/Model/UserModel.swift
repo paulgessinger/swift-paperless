@@ -21,6 +21,10 @@ public struct User: Model, Identifiable, Equatable, Sendable {
   public var groups: [UInt]
 }
 
+extension User: Named {
+  public var name: String { username }
+}
+
 extension User {
   public func canChange(_ resource: some PermissionsModel) -> Bool {
     if isSuperUser {

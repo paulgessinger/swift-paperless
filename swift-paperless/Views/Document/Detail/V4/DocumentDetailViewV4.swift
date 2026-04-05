@@ -56,81 +56,67 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     self.navPath = navPath
   }
 
+  private func aspectLabel<T: Named>(id: UInt?, in collection: [UInt: T]) -> AspectLabel {
+    guard let id else { return .notAssigned }
+    guard let item = collection[id] else { return .private }
+    return .text(item.name)
+  }
+
   private var detailAspects: some View {
     let document = viewModel.document
     return HFlow(itemSpacing: 12) {
       if let asn = document.asn {
         EditableAspect(
-          localized: .localizable(.documentAsn(asn)),
+          label: .text(String(localized: .localizable(.documentAsn(asn)))),
           systemImage: "qrcode",
-          action: {
-            activeSheet = .asn
-          },
+          action: { activeSheet = .asn },
           transitionID: .asn,
           namespace: namespace
         )
       }
 
       EditableAspect(
-        document.correspondent.flatMap { store.correspondents[$0]?.name },
+        label: aspectLabel(id: document.correspondent, in: store.correspondents),
         systemImage: "person.fill",
-        action: {
-          activeSheet = .correspondent
-        },
+        action: { activeSheet = .correspondent },
         transitionID: .correspondent,
-        namespace: namespace,
-        showPrivateFallback: false,
-        accessibilityLabel: document.correspondent == nil
-          ? String(localized: .localizable(.correspondentNotAssignedPicker)) : nil
+        namespace: namespace
       )
 
       EditableAspect(
-        document.documentType.flatMap { store.documentTypes[$0]?.name },
+        label: aspectLabel(id: document.documentType, in: store.documentTypes),
         systemImage: "doc.fill",
-        action: {
-          activeSheet = .documentType
-        },
+        action: { activeSheet = .documentType },
         transitionID: .documentType,
-        namespace: namespace,
-        showPrivateFallback: false,
-        accessibilityLabel: document.documentType == nil
-          ? String(localized: .localizable(.documentTypeNotAssignedPicker)) : nil
+        namespace: namespace
       )
 
       EditableAspect(
-        DocumentCell.dateFormatter.string(from: document.created),
+        label: .text(DocumentCell.dateFormatter.string(from: document.created)),
         systemImage: "calendar",
-        action: {
-          activeSheet = .date
-        },
+        action: { activeSheet = .date },
         transitionID: .date,
         namespace: namespace
       )
 
       EditableAspect(
-        document.storagePath.flatMap { store.storagePaths[$0]?.name },
+        label: aspectLabel(id: document.storagePath, in: store.storagePaths),
         systemImage: "archivebox.fill",
-        action: {
-          activeSheet = .storagePath
-        },
+        action: { activeSheet = .storagePath },
         transitionID: .storagePath,
-        namespace: namespace,
-        showPrivateFallback: false,
-        accessibilityLabel: document.storagePath == nil
-          ? String(localized: .localizable(.storagePathNotAssignedPicker)) : nil
+        namespace: namespace
       )
 
-      if case .user(let id) = document.owner {
-        EditableAspect(
-          store.users[id]?.username,
-          systemImage: "person.badge.key.fill",
-          action: {
-            activeSheet = .owner
-          },
-          transitionID: .owner,
-          namespace: namespace
-        )
-      }
+      EditableAspect(
+        label: aspectLabel(
+          id: { if case .user(let id) = document.owner { return id } else { return nil } }(),
+          in: store.users
+        ),
+        systemImage: "person.badge.key.fill",
+        action: { activeSheet = .owner },
+        transitionID: .owner,
+        namespace: namespace
+      )
     }
   }
 
@@ -465,10 +451,11 @@ extension Tag {
 
 #Preview("EditableAspect", traits: .sizeThatFitsLayout) {
   VStack(alignment: .leading, spacing: 12) {
-    EditableAspect(localized: .localizable(.documentAsn(42)), systemImage: "qrcode")
-    EditableAspect("Preview Correspondent", systemImage: "person.fill")
-    EditableAspect("Preview Type", systemImage: "doc.fill")
-    EditableAspect(nil, systemImage: "person.badge.key.fill")
+    EditableAspect(label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
+    EditableAspect(label: .text("Preview Correspondent"), systemImage: "person.fill")
+    EditableAspect(label: .text("Preview Type"), systemImage: "doc.fill")
+    EditableAspect(label: .notAssigned, systemImage: "person.badge.key.fill")
+    EditableAspect(label: .private, systemImage: "person.badge.key.fill")
 
     DocumentTagsSection(
       tags: [

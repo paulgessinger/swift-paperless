@@ -33,14 +33,31 @@ enum TransitionID: Hashable {
   case title
 }
 
+enum AspectLabel {
+  case text(String)
+  case notAssigned
+  case `private`
+
+  var displayText: String? {
+    switch self {
+    case .text(let value): value
+    case .private: String(localized: .permissions(.private))
+    case .notAssigned: nil
+    }
+  }
+
+  var isPrivate: Bool {
+    if case .private = self { return true }
+    return false
+  }
+}
+
 struct EditableAspect: View {
-  let label: String?
+  let label: AspectLabel
   let systemImage: String
   let transitionID: TransitionID?
   let namespace: Namespace.ID?
   let action: (() -> Void)?
-  let showPrivateFallback: Bool
-  let accessibilityLabel: String?
 
   @ScaledMetric(relativeTo: .body)
   private var fontSizeRaw = 15
@@ -67,49 +84,17 @@ struct EditableAspect: View {
   private var editButtonColor
 
   init(
-    localized: LocalizedStringResource, systemImage: String, action: (() -> Void)? = nil,
+    label: AspectLabel,
+    systemImage: String,
+    action: (() -> Void)? = nil,
     transitionID: TransitionID? = nil,
-    namespace: Namespace.ID? = nil,
-    showPrivateFallback: Bool = true,
-    accessibilityLabel: String? = nil
-  ) {
-    self.label = String(localized: localized)
-    self.systemImage = systemImage
-    self.action = action
-    self.transitionID = transitionID
-    self.namespace = namespace
-    self.showPrivateFallback = showPrivateFallback
-    self.accessibilityLabel = accessibilityLabel
-  }
-
-  init(
-    _ label: String?, systemImage: String, action: (() -> Void)? = nil,
-    transitionID: TransitionID? = nil,
-    namespace: Namespace.ID? = nil,
-    showPrivateFallback: Bool = true,
-    accessibilityLabel: String? = nil
+    namespace: Namespace.ID? = nil
   ) {
     self.label = label
     self.systemImage = systemImage
     self.action = action
     self.transitionID = transitionID
     self.namespace = namespace
-    self.showPrivateFallback = showPrivateFallback
-    self.accessibilityLabel = accessibilityLabel
-  }
-
-  private var displayLabel: String? {
-    if let label {
-      return label
-    }
-    if showPrivateFallback {
-      return String(localized: .permissions(.private))
-    }
-    return nil
-  }
-
-  private var computedAccessibilityLabel: String? {
-    accessibilityLabel ?? displayLabel
   }
 
   var body: some View {
@@ -125,9 +110,9 @@ struct EditableAspect: View {
           .background(Circle().fill(iconBackgroundColor))
           .padding(.vertical, pillPadding)
           .padding(.leading, pillPadding)
-        if let displayLabel {
-          Text(displayLabel)
-            .italic(label == nil && showPrivateFallback)
+        if let text = label.displayText {
+          Text(text)
+            .italic(label.isPrivate)
         }
         Image(systemName: "pencil")
           .foregroundStyle(editButtonColor)
@@ -147,7 +132,7 @@ struct EditableAspect: View {
         }
       }
     }
-    .accessibilityLabel(computedAccessibilityLabel ?? "")
+    .accessibilityLabel(label.displayText ?? "")
     .buttonStyle(.plain)
   }
 }
