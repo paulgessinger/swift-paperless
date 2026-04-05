@@ -22,6 +22,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   let listSectionTitle: LocalizedStringResource
   let notAssignedLabel: LocalizedStringResource
   let canCreate: Bool
+  let suggestions: [UInt]
   @ViewBuilder let createView: (@escaping (Item) -> Void) -> CreateView
 
   @State private var searchText = ""
@@ -45,6 +46,14 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   private var items: [Item] {
     let selectedId = viewModel.document[keyPath: keyPath]
     return allItems().filter { $0.id != selectedId }
+  }
+
+  private var suggestedItems: [Item] {
+    let selectedId = viewModel.document[keyPath: keyPath]
+    let allItemsList = allItems()
+    return suggestions
+      .filter { $0 != selectedId }
+      .compactMap { id in allItemsList.first { $0.id == id } }
   }
 
   private var filteredItems: [Item] {
@@ -83,12 +92,11 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       do {
         saving = true
         try await Task.sleep(for: .seconds(0.1))
-        async let updatedDocument = store.updateDocument(viewModel.document)
+        async let update: Void = viewModel.updateDocument()
         async let delay: () = Task.sleep(for: .seconds(0.5))
 
-        let updated = try await updatedDocument
+        try await update
         try await delay
-        viewModel.document = updated
         saving = false
         if id != nil {
           dismiss()
@@ -149,6 +157,16 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
             .animation(animation, value: viewModel.document[keyPath: keyPath])
           } header: {
             Text(.localizable(.selected))
+          }
+
+          if !suggestedItems.isEmpty {
+            SuggestionsSection {
+              ForEach(suggestedItems, id: \.id) { item in
+                SuggestionPill(text: item.name) {
+                  select(id: item.id)
+                }
+              }
+            }
           }
 
           VStack(spacing: 0) {

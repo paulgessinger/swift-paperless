@@ -420,6 +420,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .task {
       await viewModel.loadDocument()
       await viewModel.loadMetadata()
+      try? await viewModel.loadSuggestions()
     }
   }
 }
@@ -524,14 +525,20 @@ private struct DocumentDetailViewV4PreviewHelper: View {
         let correspondent = try await repository.create(
           correspondent: ProtoCorrespondent(name: "Some bank")
         )
-        _ = try await repository.create(
+        let healthInsurance = try await repository.create(
           correspondent: ProtoCorrespondent(name: "Health Insurance Co.")
         )
         let documentType = try await repository.create(
           documentType: ProtoDocumentType(name: "Preview Type")
         )
+        let invoiceType = try await repository.create(
+          documentType: ProtoDocumentType(name: "Invoice")
+        )
         let storagePath = try await repository.create(
           storagePath: ProtoStoragePath(name: "Preview Storage")
+        )
+        let archivePath = try await repository.create(
+          storagePath: ProtoStoragePath(name: "Archive/2026")
         )
         let inboxTag = try await repository.create(
           tag: ProtoTag(name: "Inbox", color: Color.blue.hex))
@@ -575,6 +582,20 @@ private struct DocumentDetailViewV4PreviewHelper: View {
           firstDocument.pageCount = 12
           firstDocument.tags.append(666)
           document = try await repository.update(document: firstDocument)
+
+          repository.setSuggestions(
+            Suggestions(
+              correspondents: [healthInsurance.id],
+              tags: [financeTag.id, archiveTag.id],
+              documentTypes: [invoiceType.id],
+              storagePaths: [archivePath.id],
+              dates: [
+                Calendar.current.date(byAdding: .day, value: -3, to: .now) ?? .now,
+                Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now,
+              ]
+            ),
+            for: firstDocument.id
+          )
         }
       } catch {
         print(error)

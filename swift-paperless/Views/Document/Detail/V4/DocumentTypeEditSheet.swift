@@ -47,6 +47,7 @@ struct DocumentTypeEditSheet: View {
       listSectionTitle: .localizable(.documentTypes),
       notAssignedLabel: .localizable(.documentTypeNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .documentType),
+      suggestions: viewModel.suggestions.documentTypes,
       createView: { onCreated in
         CreateDocumentTypeView(onCreated: onCreated)
       }

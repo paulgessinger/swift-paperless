@@ -33,8 +33,8 @@ struct OwnerEditSheet: View {
     Task {
       do {
         saving = true
-        let updated = try await store.updateDocument(document)
-        viewModel.document = updated
+        viewModel.document = document
+        try await viewModel.updateDocument()
         saving = false
         dismiss()
       } catch {

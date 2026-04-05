@@ -19,6 +19,12 @@ struct DateEditSheet: View {
   @State private var date: Date
   @State private var saving = false
 
+  private var suggestedDates: [Date] {
+    (viewModel.suggestions.dates).filter {
+      !Calendar.current.isDate($0, inSameDayAs: date)
+    }
+  }
+
   init(viewModel: DocumentDetailModel) {
     self.viewModel = viewModel
     _date = State(initialValue: viewModel.document.created)
@@ -28,10 +34,8 @@ struct DateEditSheet: View {
     Task {
       do {
         saving = true
-        var document = viewModel.document
-        document.created = date
-        let updated = try await store.updateDocument(document)
-        viewModel.document = updated
+        viewModel.document.created = date
+        try await viewModel.updateDocument()
         saving = false
         dismiss()
       } catch {
@@ -51,6 +55,16 @@ struct DateEditSheet: View {
               selection: $date,
               displayedComponents: .date
             )
+          }
+        }
+
+        if !suggestedDates.isEmpty {
+          SuggestionsSection {
+            ForEach(suggestedDates, id: \.self) { suggestedDate in
+              SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted)) {
+                date = suggestedDate
+              }
+            }
           }
         }
       }

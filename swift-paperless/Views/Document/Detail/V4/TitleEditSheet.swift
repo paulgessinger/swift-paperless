@@ -22,16 +22,16 @@ struct TitleEditSheet: View {
 
   private func save() {
     Task {
+      let origTitle = viewModel.document.title
       do {
         saving = true
-        var document = viewModel.document
-        document.title = title
-        let updated = try await store.updateDocument(document)
-        viewModel.document = updated
+        viewModel.document.title = title
+        try await viewModel.updateDocument()
         saving = false
         dismiss()
       } catch {
         saving = false
+        viewModel.document.title = origTitle
         errorController.push(error: error)
       }
     }

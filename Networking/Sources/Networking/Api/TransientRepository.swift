@@ -24,6 +24,8 @@ public class TransientRepository {
 
   private var customFields: [UInt: CustomField]
 
+  private var suggestionsByDocument: [UInt: Suggestions]
+
   private var shareLinks: [UInt: DataModel.ShareLink]
 
   private var permissions: UserPermissions = .full
@@ -44,6 +46,7 @@ public class TransientRepository {
     savedViews = [:]
     customFields = [:]
     notesByDocument = [:]
+    suggestionsByDocument = [:]
     shareLinks = [:]
     trashedDocuments = [:]
     documentPDFData = [:]
@@ -557,8 +560,12 @@ extension TransientRepository: Repository {
     var delegate: (any URLSessionDelegate)?
   { nil }
 
-  public func suggestions(documentId _: UInt) async throws -> Suggestions {
-    Suggestions(correspondents: [], tags: [], documentTypes: [], storagePaths: [], dates: [])
+  public func setSuggestions(_ suggestions: Suggestions, for documentId: UInt) {
+    suggestionsByDocument[documentId] = suggestions
+  }
+
+  public func suggestions(documentId: UInt) async throws -> Suggestions {
+    suggestionsByDocument[documentId] ?? Suggestions()
   }
 
   // MARK: - Share links

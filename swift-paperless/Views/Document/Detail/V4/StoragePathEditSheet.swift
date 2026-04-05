@@ -47,6 +47,7 @@ struct StoragePathEditSheet: View {
       listSectionTitle: .localizable(.storagePaths),
       notAssignedLabel: .localizable(.storagePathNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .storagePath),
+      suggestions: viewModel.suggestions.storagePaths,
       createView: { onCreated in
         CreateStoragePathView(onCreated: onCreated)
       }

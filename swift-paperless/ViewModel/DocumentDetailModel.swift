@@ -42,7 +42,7 @@ class DocumentDetailModel {
   var document: Document
 
   // Not fully used by the edit model yet (I think we're loading suggestions twice right now)
-  var suggestions: Suggestions?
+  var suggestions = Suggestions()
 
   var metadata: Metadata?
 
@@ -118,6 +118,12 @@ class DocumentDetailModel {
     suggestions = try await store.repository.suggestions(documentId: document.id)
   }
 
+  func updateDocument() async throws {
+    let updated = try await store.updateDocument(document)
+    self.document = updated
+    try await loadSuggestions()
+  }
+
   var userCanChange: Bool {
     store.userCanChange(document: document)
   }
@@ -131,6 +137,7 @@ class DocumentDetailModel {
     return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
 
+  // @TODO: This is awkward, can we get rid of the connection member
   var deepLinks: (withServer: Route?, withoutServer: Route?) {
     let withServer: Route? = (store.repository as? ApiRepository).flatMap {
       let serverURL = $0.connection.url

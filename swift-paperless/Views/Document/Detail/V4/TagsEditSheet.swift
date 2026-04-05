@@ -50,6 +50,12 @@ struct TagsEditSheet: View {
     tagIds != viewModel.document.tags
   }
 
+  private var suggestedTags: [Tag] {
+    (viewModel.suggestions.tags)
+      .filter { !tagIds.contains($0) }
+      .compactMap { store.tags[$0] }
+  }
+
   private var availableTags: [Tag] {
     let search = searchText.lowercased()
     return store.tags.values
@@ -62,10 +68,8 @@ struct TagsEditSheet: View {
     Task {
       do {
         saving = true
-        var document = viewModel.document
-        document.tags = tagIds
-        let updated = try await store.updateDocument(document)
-        viewModel.document = updated
+        viewModel.document.tags = tagIds
+        try await viewModel.updateDocument()
         saving = false
         dismiss()
       } catch {
@@ -113,6 +117,18 @@ struct TagsEditSheet: View {
               }
             }
             .animation(animation, value: tagIds)
+          }
+
+          if !suggestedTags.isEmpty {
+            SuggestionsSection {
+              ForEach(suggestedTags, id: \.id) { tag in
+                TagView(tag: tag)
+                  .fixedSize()
+                  .onTapGesture {
+                    tagIds.append(tag.id)
+                  }
+              }
+            }
           }
 
           VStack(spacing: 0) {

@@ -280,3 +280,40 @@ struct DocumentTitleView: View {
     }
   }
 }
+
+// MARK: - Suggestions
+
+struct SuggestionPill: View {
+  let text: String
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Text(text)
+        .font(.footnote)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Capsule().fill(.accent.opacity(0.15)))
+        .foregroundStyle(.accent)
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+struct SuggestionsSection<Content: View>: View {
+  @ViewBuilder let content: () -> Content
+
+  var body: some View {
+    CustomSection {
+      CustomSectionRow {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: 8) {
+            content()
+          }
+        }
+      }
+    } header: {
+      Text("Suggestions")
+    }
+  }
+}

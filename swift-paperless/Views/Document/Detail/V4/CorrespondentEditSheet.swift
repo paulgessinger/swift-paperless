@@ -47,6 +47,7 @@ struct CorrespondentEditSheet: View {
       listSectionTitle: .localizable(.correspondents),
       notAssignedLabel: .localizable(.correspondentNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .correspondent),
+      suggestions: viewModel.suggestions.correspondents,
       createView: { onCreated in
         CreateCorrespondentView(onCreated: onCreated)
       }
