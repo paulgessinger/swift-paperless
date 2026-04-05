@@ -204,6 +204,11 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         createView { item in
           select(id: item.id)
         }
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            CancelIconButton()
+          }
+        }
       }
     }
     .onAppear {
