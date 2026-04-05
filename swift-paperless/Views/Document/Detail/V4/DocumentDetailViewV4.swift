@@ -123,7 +123,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace
       )
 
-      dateAspect(document: document)
+      EditableAspect(
+        label: .text(DocumentCell.dateFormatter.string(from: document.created)),
+        systemImage: "calendar",
+        action: { activeSheet = .date },
+        transitionID: .date,
+        namespace: namespace
+      )
 
       EditableAspect(
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
@@ -152,20 +158,28 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let action: () -> Void
     let transitionID: TransitionID
     let namespace: Namespace.ID
+    let badge: String?
 
     var body: some View {
       Button(action: action) {
-        Label(localized: label, systemImage: image)
-          .font(.title2)
-          .labelStyle(.iconOnly)
-          .padding(10)
-          .backport.matchedTransitionSource(id: transitionID, in: namespace)
-          .backport.glassEffect(.regular.interactive())
+        HStack {
+          Label(localized: label, systemImage: image)
+            .font(.title2)
+            .labelStyle(.iconOnly)
+          
+          if let badge {
+            Text(badge)
+          }
+        }
+        .padding(10)
+        .backport.matchedTransitionSource(id: transitionID, in: namespace)
+        .backport.glassEffect(.regular.interactive())
       }
       .foregroundStyle(.primary)
     }
   }
 
+  @ViewBuilder
   private var metadataBar: some View {
     GlassEffectContainerCompat {
       HStack {
@@ -175,7 +189,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             activeSheet = .metadata
           },
           transitionID: .metadata,
-          namespace: namespace
+          namespace: namespace,
+          badge: nil
         )
 
         BottomBarButton(
@@ -184,7 +199,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             activeSheet = .notes
           },
           transitionID: .notes,
-          namespace: namespace
+          namespace: namespace,
+          badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
         )
       }
       .apply {
