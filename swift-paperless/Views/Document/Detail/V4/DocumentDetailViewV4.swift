@@ -16,7 +16,6 @@ private enum ActiveSheet: Identifiable, Hashable {
   case asn
   case correspondent
   case documentType
-  case date
   case storagePath
   case owner
   case metadata
@@ -62,6 +61,39 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     return .text(item.name)
   }
 
+  private func dateAspect(document: Document) -> some View {
+    EditableAspect(
+      label: .text(DocumentCell.dateFormatter.string(from: document.created)),
+      systemImage: "calendar",
+      transitionID: .date,
+      namespace: namespace
+    )
+    .overlay {
+      DatePicker(
+        "",
+        selection: Binding(
+          get: { viewModel.document.created },
+          set: { newDate in
+            let previous = viewModel.document.created
+            viewModel.document.created = newDate
+            Task {
+              do {
+                let updated = try await store.updateDocument(viewModel.document)
+                viewModel.document = updated
+              } catch {
+                viewModel.document.created = previous
+                errorController.push(error: error)
+              }
+            }
+          }
+        ),
+        displayedComponents: .date
+      )
+      .labelsHidden()
+      .blendMode(.destinationOver)
+    }
+  }
+
   private var detailAspects: some View {
     let document = viewModel.document
     return HFlow(itemSpacing: 12) {
@@ -91,13 +123,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace
       )
 
-      EditableAspect(
-        label: .text(DocumentCell.dateFormatter.string(from: document.created)),
-        systemImage: "calendar",
-        action: { activeSheet = .date },
-        transitionID: .date,
-        namespace: namespace
-      )
+      dateAspect(document: document)
 
       EditableAspect(
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
@@ -346,20 +372,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         DocumentTypeEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
           .presentationDetents([.medium, .large])
-
-      case .date:
-        NavigationStack {
-          Text("Date")
-            .navigationTitle("Date")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
-                CancelIconButton()
-              }
-            }
-        }
-        .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
-        .presentationDetents([.medium])
 
       case .storagePath:
         StoragePathEditSheet(viewModel: viewModel)
