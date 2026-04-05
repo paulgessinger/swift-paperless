@@ -16,6 +16,7 @@ private enum ActiveSheet: Identifiable, Hashable {
   case asn
   case correspondent
   case documentType
+  case date
   case storagePath
   case owner
   case metadata
@@ -59,39 +60,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     guard let id else { return .notAssigned }
     guard let item = collection[id] else { return .private }
     return .text(item.name)
-  }
-
-  private func dateAspect(document: Document) -> some View {
-    EditableAspect(
-      label: .text(DocumentCell.dateFormatter.string(from: document.created)),
-      systemImage: "calendar",
-      transitionID: .date,
-      namespace: namespace
-    )
-    .overlay {
-      DatePicker(
-        "",
-        selection: Binding(
-          get: { viewModel.document.created },
-          set: { newDate in
-            let previous = viewModel.document.created
-            viewModel.document.created = newDate
-            Task {
-              do {
-                let updated = try await store.updateDocument(viewModel.document)
-                viewModel.document = updated
-              } catch {
-                viewModel.document.created = previous
-                errorController.push(error: error)
-              }
-            }
-          }
-        ),
-        displayedComponents: .date
-      )
-      .labelsHidden()
-      .blendMode(.destinationOver)
-    }
   }
 
   private var detailAspects: some View {
@@ -166,7 +134,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           Label(localized: label, systemImage: image)
             .font(.title2)
             .labelStyle(.iconOnly)
-          
+
           if let badge {
             Text(badge)
           }
@@ -249,6 +217,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     } label: {
       Label(localized: .localizable(.documentDeepLink), systemImage: "app")
     }
+
+    Divider()
 
     if case .loaded(url: let url, document: _) = viewModel.download {
       ShareLink(item: url) {
@@ -389,6 +359,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
           .presentationDetents([.medium, .large])
 
+      case .date:
+        DateEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
+          .presentationDetents([.medium])
+
       case .storagePath:
         StoragePathEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
@@ -479,7 +454,8 @@ extension Tag {
 
 #Preview("EditableAspect", traits: .sizeThatFitsLayout) {
   VStack(alignment: .leading, spacing: 12) {
-    EditableAspect(label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
+    EditableAspect(
+      label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
     EditableAspect(label: .text("Preview Correspondent"), systemImage: "person.fill")
     EditableAspect(label: .text("Preview Type"), systemImage: "doc.fill")
     EditableAspect(label: .notAssigned, systemImage: "person.badge.key.fill")
