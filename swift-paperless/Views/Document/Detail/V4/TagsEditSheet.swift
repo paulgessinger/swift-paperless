@@ -20,6 +20,7 @@ struct TagsEditSheet: View {
   @State private var tagIds: [UInt] = []
   @State private var searchText = ""
   @State private var saving = false
+  @State private var showCreateTag = false
   @Namespace private var tagNamespace
 
   private struct CreateTagView: View {
@@ -86,7 +87,7 @@ struct TagsEditSheet: View {
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
               if tagIds.isEmpty {
                 CustomSectionRow {
                   Text(.localizable(.noTagsSelected))
@@ -115,21 +116,25 @@ struct TagsEditSheet: View {
                   .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
               }
-            }
-            .animation(animation, value: tagIds)
-          }
-
-          if !suggestedTags.isEmpty {
-            SuggestionsSection {
-              ForEach(suggestedTags, id: \.id) { tag in
-                TagView(tag: tag)
-                  .fixedSize()
-                  .onTapGesture {
-                    tagIds.append(tag.id)
+            
+            if !suggestedTags.isEmpty {
+              Divider()
+              CustomSectionRow {
+                HFlow {
+                  ForEach(suggestedTags, id: \.id) { tag in
+                    TagView(tag: tag)
+                      .fixedSize()
+                      .onTapGesture {
+                        tagIds.append(tag.id)
+                      }
                   }
+                }
               }
             }
           }
+          }
+          .animation(animation, value: tagIds)
+
 
           VStack(spacing: 0) {
             if !availableTags.isEmpty {
@@ -145,7 +150,7 @@ struct TagsEditSheet: View {
                             .fixedSize()
                             .matchedGeometryEffect(id: tag.id, in: tagNamespace)
                           Spacer()
-                          Image(systemName: "plus")
+                          Image(systemName: "plus.circle.fill")
                             .foregroundStyle(.secondary)
                         }
                       }
@@ -175,10 +180,8 @@ struct TagsEditSheet: View {
           CancelIconButton()
         }
         ToolbarItem(placement: .topBarTrailing) {
-          NavigationLink {
-            CreateTagView(onCreated: { tag in
-              tagIds.append(tag.id)
-            })
+          Button {
+            showCreateTag = true
           } label: {
             Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
           }
@@ -198,6 +201,18 @@ struct TagsEditSheet: View {
       }
     }
     .interactiveDismissDisabled(interactiveDismissDisabled)
+    .sheet(isPresented: $showCreateTag) {
+      NavigationStack {
+        CreateTagView(onCreated: { tag in
+          tagIds.append(tag.id)
+        })
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            CancelIconButton()
+          }
+        }
+      }
+    }
     .onAppear {
       tagIds = viewModel.document.tags
     }

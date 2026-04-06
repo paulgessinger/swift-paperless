@@ -299,21 +299,3 @@ struct SuggestionPill: View {
     .buttonStyle(.plain)
   }
 }
-
-struct SuggestionsSection<Content: View>: View {
-  @ViewBuilder let content: () -> Content
-
-  var body: some View {
-    CustomSection {
-      CustomSectionRow {
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: 8) {
-            content()
-          }
-        }
-      }
-    } header: {
-      Text("Suggestions")
-    }
-  }
-}

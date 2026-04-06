@@ -49,20 +49,25 @@ struct DateEditSheet: View {
     NavigationStack {
       ScrollView(.vertical) {
         CustomSection {
-          CustomSectionRow {
-            DatePicker(
-              String(localized: .localizable(.documentEditCreatedDateLabel)),
-              selection: $date,
-              displayedComponents: .date
-            )
-          }
-        }
-
-        if !suggestedDates.isEmpty {
-          SuggestionsSection {
-            ForEach(suggestedDates, id: \.self) { suggestedDate in
-              SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted)) {
-                date = suggestedDate
+          VStack(alignment: .leading, spacing: 0) {
+            CustomSectionRow {
+              DatePicker(
+                String(localized: .localizable(.documentEditCreatedDateLabel)),
+                selection: $date,
+                displayedComponents: .date
+              )
+            }
+            
+            if !suggestedDates.isEmpty {
+              Divider()
+              CustomSectionRow {
+                HFlow {
+                  ForEach(suggestedDates, id: \.self) { suggestedDate in
+                    SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted)) {
+                      date = suggestedDate
+                    }
+                  }
+                }
               }
             }
           }

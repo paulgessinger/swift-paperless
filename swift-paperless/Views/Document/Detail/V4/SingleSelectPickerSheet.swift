@@ -133,7 +133,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
-            VStack {
+            VStack(alignment: .leading, spacing: 0) {
               if let selectedItem {
                 Button {
                   select(id: nil)
@@ -153,20 +153,23 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                 }
                 .transition(Self.selectedRowTransition)
               }
+              
+              if !suggestedItems.isEmpty {
+                Divider()
+                CustomSectionRow {
+                  HFlow {
+                    ForEach(suggestedItems, id: \.id) { item in
+                      SuggestionPill(text: item.name) {
+                        select(id: item.id)
+                      }
+                    }
+                  }
+                }
+              }
             }
             .animation(animation, value: viewModel.document[keyPath: keyPath])
           } header: {
             Text(.localizable(.selected))
-          }
-
-          if !suggestedItems.isEmpty {
-            SuggestionsSection {
-              ForEach(suggestedItems, id: \.id) { item in
-                SuggestionPill(text: item.name) {
-                  select(id: item.id)
-                }
-              }
-            }
           }
 
           VStack(spacing: 0) {
