@@ -11,20 +11,26 @@ struct PreferencesView: View {
 
   var body: some View {
     Form {
-      Section {
-        Toggle(
-          String(localized: .settings(.documentDeleteConfirmationLabel)),
-          isOn: $appSettings.documentDeleteConfirmation)
-      } footer: {
-        Text(.settings(.documentDeleteConfirmationLabelDescription))
+      // We don't consult this setting anymore from V4, so don't show it either
+      if !AppFeatures.enabled(.documentDetailViewV4) {
+        Section {
+          Toggle(
+            String(localized: .settings(.documentDeleteConfirmationLabel)),
+            isOn: $appSettings.documentDeleteConfirmation)
+        } footer: {
+          Text(.settings(.documentDeleteConfirmationLabelDescription))
+        }
       }
 
-      Section {
-        Toggle(
-          String(localized: .settings(.showDocumentDetailPropertyBar)),
-          isOn: $appSettings.showDocumentDetailPropertyBar)
-      } footer: {
-        Text(.settings(.showDocumentDetailPropertyBarDescription))
+      // Doesn't apply anymore
+      if !AppFeatures.enabled(.documentDetailViewV4) {
+        Section {
+          Toggle(
+            String(localized: .settings(.showDocumentDetailPropertyBar)),
+            isOn: $appSettings.showDocumentDetailPropertyBar)
+        } footer: {
+          Text(.settings(.showDocumentDetailPropertyBarDescription))
+        }
       }
 
       if let biometricName = BiometricLockManager.biometricName {
