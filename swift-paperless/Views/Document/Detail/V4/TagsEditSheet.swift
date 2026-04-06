@@ -80,6 +80,18 @@ struct TagsEditSheet: View {
     }
   }
 
+  private func add(_ tag: UInt) {
+    withAnimation(animation) {
+      tagIds.append(tag)
+    }
+  }
+
+  private func remove(_ tag: UInt) {
+    withAnimation(animation) {
+      tagIds.removeAll { $0 == tag }
+    }
+  }
+
   let animation = Animation.spring(duration: 0.2)
 
   var body: some View {
@@ -99,7 +111,7 @@ struct TagsEditSheet: View {
                   HFlow {
                     ForEach(tagIds, id: \.self) { tagId in
                       Button {
-                        tagIds.removeAll { $0 == tagId }
+                        remove(tagId)
                       } label: {
                         TagView(tag: store.tags[tagId]) {
                           Image(systemName: "xmark")
@@ -116,25 +128,26 @@ struct TagsEditSheet: View {
                   .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
               }
-            
-            if !suggestedTags.isEmpty {
-              Divider()
-              CustomSectionRow {
-                HFlow {
-                  ForEach(suggestedTags, id: \.id) { tag in
-                    TagView(tag: tag)
-                      .fixedSize()
-                      .onTapGesture {
-                        tagIds.append(tag.id)
+
+              if !suggestedTags.isEmpty {
+                Divider()
+                CustomSectionRow {
+                  HFlow {
+                    ForEach(suggestedTags, id: \.id) { tag in
+                      Button {
+                        add(tag.id)
+                      } label: {
+                        TagView(tag: tag)
+                          .fixedSize()
                       }
+                      .buttonStyle(.plain)
+                    }
                   }
                 }
               }
             }
           }
-          }
-          .animation(animation, value: tagIds)
-
+          //          .animation(animation, value: tagIds)
 
           VStack(spacing: 0) {
             if !availableTags.isEmpty {
@@ -142,7 +155,7 @@ struct TagsEditSheet: View {
                 VStack(spacing: 0) {
                   ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
                     Button {
-                      tagIds.append(tag.id)
+                      add(tag.id)
                     } label: {
                       CustomSectionRow {
                         HStack {
@@ -163,7 +176,7 @@ struct TagsEditSheet: View {
                     }
                   }
                 }
-                .animation(animation, value: tagIds)
+                //                .animation(animation, value: tagIds)
               }
             }
           }

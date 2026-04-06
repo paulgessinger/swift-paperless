@@ -251,7 +251,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
               if let pageCount = viewModel.document.pageCount {
                 HStack(spacing: 4) {
                   Image(systemName: "book.pages.fill")
-                  Text("\(pageCount)")
+                  Text(.localizable(.pages(pageCount)))
                 }
                 .font(.footnote)
                 .fontWeight(.semibold)
