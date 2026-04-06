@@ -130,18 +130,15 @@ struct TagsEditSheet: View {
               }
 
               if !suggestedTags.isEmpty {
-                Divider()
-                CustomSectionRow {
-                  HFlow {
-                    ForEach(suggestedTags, id: \.id) { tag in
-                      Button {
-                        add(tag.id)
-                      } label: {
-                        TagView(tag: tag)
-                          .fixedSize()
-                      }
-                      .buttonStyle(.plain)
+                SuggestionsRow {
+                  ForEach(suggestedTags, id: \.id) { tag in
+                    Button {
+                      add(tag.id)
+                    } label: {
+                      TagView(tag: tag)
+                        .fixedSize()
                     }
+                    .buttonStyle(.plain)
                   }
                 }
               }

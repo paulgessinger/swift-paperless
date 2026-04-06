@@ -57,15 +57,13 @@ struct DateEditSheet: View {
                 displayedComponents: .date
               )
             }
-            
+
             if !suggestedDates.isEmpty {
-              Divider()
-              CustomSectionRow {
-                HFlow {
-                  ForEach(suggestedDates, id: \.self) { suggestedDate in
-                    SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted)) {
-                      date = suggestedDate
-                    }
+              SuggestionsRow {
+                ForEach(suggestedDates, id: \.self) { suggestedDate in
+                  SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted))
+                  {
+                    date = suggestedDate
                   }
                 }
               }

@@ -51,7 +51,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   private var suggestedItems: [Item] {
     let selectedId = viewModel.document[keyPath: keyPath]
     let allItemsList = allItems()
-    return suggestions
+    return
+      suggestions
       .filter { $0 != selectedId }
       .compactMap { id in allItemsList.first { $0.id == id } }
   }
@@ -153,15 +154,12 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                 }
                 .transition(Self.selectedRowTransition)
               }
-              
+
               if !suggestedItems.isEmpty {
-                Divider()
-                CustomSectionRow {
-                  HFlow {
-                    ForEach(suggestedItems, id: \.id) { item in
-                      SuggestionPill(text: item.name) {
-                        select(id: item.id)
-                      }
+                SuggestionsRow {
+                  ForEach(suggestedItems, id: \.id) { item in
+                    SuggestionPill(text: item.name) {
+                      select(id: item.id)
                     }
                   }
                 }
