@@ -852,6 +852,18 @@
         }
       }
     },
+    "asnNext" : {
+      "comment" : "Next available ASN suggestion, shown as a pill in the ASN edit sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: #%u"
+          }
+        }
+      }
+    },
     "asnPlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -64,16 +64,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   private var detailAspects: some View {
     let document = viewModel.document
+    let asnLabel: AspectLabel =
+      document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
     return HFlow(itemSpacing: 12) {
-      if let asn = document.asn {
-        EditableAspect(
-          label: .text(String(localized: .localizable(.documentAsn(asn)))),
-          systemImage: "qrcode",
-          action: { activeSheet = .asn },
-          transitionID: .asn,
-          namespace: namespace
-        )
-      }
+      EditableAspect(
+        label: asnLabel,
+        systemImage: "qrcode",
+        action: { activeSheet = .asn },
+        transitionID: .asn,
+        namespace: namespace
+      )
 
       EditableAspect(
         label: aspectLabel(id: document.correspondent, in: store.correspondents),
@@ -336,18 +336,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .presentationDetents([.medium, .large])
 
       case .asn:
-        NavigationStack {
-          Text("ASN")
-            .navigationTitle("ASN")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
-                CancelIconButton()
-              }
-            }
-        }
-        .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
-        .presentationDetents([.medium])
+        AsnEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
+          .presentationDetents([.medium])
 
       case .correspondent:
         CorrespondentEditSheet(viewModel: viewModel)
