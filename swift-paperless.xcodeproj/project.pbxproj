@@ -168,6 +168,7 @@
 				Document/Detail/SearchablePDFPreview.swift,
 				Document/Detail/V4/AsnEditSheet.swift,
 				Document/Detail/V4/CorrespondentEditSheet.swift,
+				Document/Detail/V4/CustomFieldsEditSheet.swift,
 				Document/Detail/V4/DateEditSheet.swift,
 				Document/Detail/V4/DocumentDetailViewV4.swift,
 				Document/Detail/V4/DocumentTypeEditSheet.swift,

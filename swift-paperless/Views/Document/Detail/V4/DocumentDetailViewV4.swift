@@ -19,6 +19,7 @@ private enum ActiveSheet: Identifiable, Hashable {
   case date
   case storagePath
   case owner
+  case customFields
   case metadata
   case notes
   case shareLink
@@ -135,6 +136,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "person.badge.key.fill",
         action: { activeSheet = .owner },
         transitionID: .owner,
+        namespace: namespace
+      )
+
+      EditableAspect(
+        label: .text(String(localized: .customFields(.title))),
+        systemImage: "list.bullet.rectangle.fill",
+        action: { activeSheet = .customFields },
+        transitionID: .customFields,
         namespace: namespace
       )
     }
@@ -440,6 +449,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         OwnerEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
           .presentationDetents([.medium, .large])
+
+      case .customFields:
+        CustomFieldsEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
 
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)

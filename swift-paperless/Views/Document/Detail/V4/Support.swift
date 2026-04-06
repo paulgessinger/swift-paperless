@@ -31,6 +31,7 @@ enum TransitionID: Hashable {
   case metadata
   case notes
   case title
+  case customFields
 }
 
 enum AspectLabel {
