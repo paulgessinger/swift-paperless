@@ -206,20 +206,22 @@ struct DocumentTitleView: View {
   @SchemeValue(.backgroundColor)
   private var backgroundColor
 
+  private var titleText: Text {
+    Text(title)
+      .font(.title2)
+      .fontWeight(.semibold)
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top, spacing: 8) {
         Button(action: action) {
-          Text(title)
-            .font(.title)
-            .fontWeight(.semibold)
+          titleText
             .lineLimit(isExpanded ? nil : lineLimit)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
               GeometryReader { displayedProxy in
-                Text(title)
-                  .font(.title)
-                  .fontWeight(.semibold)
+                titleText
                   .fixedSize(horizontal: false, vertical: true)
                   .frame(width: displayedProxy.size.width, alignment: .leading)
                   .hidden()
