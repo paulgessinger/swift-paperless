@@ -35,6 +35,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var activeSheet: ActiveSheet? = nil
   @State private var showPreview = false
   @State private var shadowDelay: Double? = nil
+  @State private var showDeleteConfirmation = false
+  @State private var deleted = false
+
+  @ObservedObject private var appSettings = AppSettings.shared
 
   var navPath: Binding<[NavigationState]>? = nil
 
@@ -54,6 +58,22 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
     )
     self.navPath = navPath
+  }
+
+  private func deleteDocument() {
+    Task { @MainActor in
+      do {
+        try await store.deleteDocument(viewModel.document)
+        deleted = true
+        Haptics.shared.impact(style: .rigid)
+        try await Task.sleep(for: .seconds(0.2))
+        if let navPath {
+          navPath.wrappedValue = []
+        }
+      } catch {
+        errorController.push(error: error)
+      }
+    }
   }
 
   private func aspectLabel<T: Named>(id: UInt?, in collection: [UInt: T]) -> AspectLabel {
@@ -120,13 +140,34 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
-  private struct BottomBarButton: View {
+  private struct BottomBarButton<S: ShapeStyle>: View {
     let label: LocalizedStringResource
     let image: String
     let action: () -> Void
-    let transitionID: TransitionID
-    let namespace: Namespace.ID
+    let transitionID: TransitionID?
+    let namespace: Namespace.ID?
     let badge: String?
+    let style: S
+
+    @ScaledMetric(relativeTo: .title2) private var iconSize = 24
+
+    init(
+      label: LocalizedStringResource,
+      image: String,
+      action: @escaping () -> Void,
+      transitionID: TransitionID? = nil,
+      namespace: Namespace.ID? = nil,
+      badge: String? = nil,
+      style: S = .primary
+    ) {
+      self.label = label
+      self.image = image
+      self.action = action
+      self.transitionID = transitionID
+      self.namespace = namespace
+      self.badge = badge
+      self.style = style
+    }
 
     var body: some View {
       Button(action: action) {
@@ -134,16 +175,23 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           Label(localized: label, systemImage: image)
             .font(.title2)
             .labelStyle(.iconOnly)
+            .frame(width: iconSize, height: iconSize)
 
           if let badge {
             Text(badge)
           }
         }
         .padding(10)
-        .backport.matchedTransitionSource(id: transitionID, in: namespace)
+        .apply {
+          if let transitionID, let namespace {
+            $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
+          } else {
+            $0
+          }
+        }
         .backport.glassEffect(.regular.interactive())
       }
-      .foregroundStyle(.primary)
+      .foregroundStyle(style)
     }
   }
 
@@ -170,6 +218,34 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           namespace: namespace,
           badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
         )
+
+        if store.permissions.test(.delete, for: .document),
+          store.userCanDelete(document: viewModel.document)
+        {
+          BottomBarButton(
+            label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+            image: deleted ? "checkmark.circle.fill" : "trash",
+            action: {
+              if appSettings.documentDeleteConfirmation {
+                showDeleteConfirmation = true
+              } else {
+                deleteDocument()
+              }
+            },
+            style: .red
+          )
+          .contentTransition(.symbolEffect)
+          .confirmationDialog(
+            String(localized: .localizable(.confirmationPromptTitle)),
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+          ) {
+            Button(String(localized: .localizable(.delete)), role: .destructive) {
+              deleteDocument()
+            }
+            Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+          }
+        }
       }
       .apply {
         if #unavailable(iOS 26.0) {
@@ -181,9 +257,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           $0
         }
       }
-      .frame(maxWidth: .infinity, alignment: .trailing)
-      .padding()
     }
+    .frame(maxWidth: .infinity, alignment: .trailing)
+    .padding()
   }
 
   @ViewBuilder
