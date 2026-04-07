@@ -41,7 +41,7 @@ struct DocumentTypeEditSheet: View {
   var body: some View {
     SingleSelectPickerSheet(
       viewModel: viewModel,
-      allItems: { Array(store.documentTypes.values) },
+      storeKeyPath: \.documentTypes,
       keyPath: \.documentType,
       navigationTitle: .localizable(.documentType),
       listSectionTitle: .localizable(.documentTypes),

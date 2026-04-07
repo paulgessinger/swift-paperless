@@ -41,7 +41,7 @@ struct StoragePathEditSheet: View {
   var body: some View {
     SingleSelectPickerSheet(
       viewModel: viewModel,
-      allItems: { Array(store.storagePaths.values) },
+      storeKeyPath: \.storagePaths,
       keyPath: \.storagePath,
       navigationTitle: .localizable(.storagePath),
       listSectionTitle: .localizable(.storagePaths),

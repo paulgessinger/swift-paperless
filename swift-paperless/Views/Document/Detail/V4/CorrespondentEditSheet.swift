@@ -41,7 +41,7 @@ struct CorrespondentEditSheet: View {
   var body: some View {
     SingleSelectPickerSheet(
       viewModel: viewModel,
-      allItems: { Array(store.correspondents.values) },
+      storeKeyPath: \.correspondents,
       keyPath: \.correspondent,
       navigationTitle: .localizable(.correspondent),
       listSectionTitle: .localizable(.correspondents),

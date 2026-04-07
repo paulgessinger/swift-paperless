@@ -16,7 +16,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.dismiss) private var dismiss
 
-  let allItems: () -> [Item]
+  let storeKeyPath: KeyPath<DocumentStore, [UInt: Item]>
   let keyPath: WritableKeyPath<Document, UInt?>
   let navigationTitle: LocalizedStringResource
   let listSectionTitle: LocalizedStringResource
@@ -43,34 +43,32 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     case item(Item)
   }
 
+  private var allItems: [UInt: Item] {
+    store[keyPath: storeKeyPath]
+  }
+
   private var selection: Selection {
     guard let id = viewModel.document[keyPath: keyPath] else {
       return .notAssigned
     }
-    guard let item = allItems().first(where: { $0.id == id }) else {
+    guard let item = allItems[id] else {
       return .private
     }
     return .item(item)
   }
 
-  private var items: [Item] {
-    let selectedId = viewModel.document[keyPath: keyPath]
-    return allItems().filter { $0.id != selectedId }
-  }
-
   private var suggestedItems: [Item] {
     let selectedId = viewModel.document[keyPath: keyPath]
-    let allItemsList = allItems()
-    return
-      suggestions
+    return suggestions
       .filter { $0 != selectedId }
-      .compactMap { id in allItemsList.first { $0.id == id } }
+      .compactMap { allItems[$0] }
   }
 
   private var filteredItems: [Item] {
+    let selectedId = viewModel.document[keyPath: keyPath]
     let search = searchText.lowercased()
-    return
-      items
+    return allItems.values
+      .filter { $0.id != selectedId }
       .filter { search.isEmpty || $0.name.lowercased().contains(search) }
       .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
   }
