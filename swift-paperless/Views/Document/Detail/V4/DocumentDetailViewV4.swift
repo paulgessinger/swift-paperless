@@ -85,6 +85,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   private var detailAspects: some View {
     let document = viewModel.document
+    let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
       document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
     return HFlow(itemSpacing: 12) {
@@ -93,7 +94,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "qrcode",
         action: { activeSheet = .asn },
         transitionID: .asn,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -101,7 +103,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "person.fill",
         action: { activeSheet = .correspondent },
         transitionID: .correspondent,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -109,7 +112,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "doc.fill",
         action: { activeSheet = .documentType },
         transitionID: .documentType,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -117,7 +121,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "calendar",
         action: { activeSheet = .date },
         transitionID: .date,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -125,7 +130,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "archivebox.fill",
         action: { activeSheet = .storagePath },
         transitionID: .storagePath,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -136,7 +142,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "person.badge.key.fill",
         action: { activeSheet = .owner },
         transitionID: .owner,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
 
       EditableAspect(
@@ -144,7 +151,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         systemImage: "list.bullet.rectangle.fill",
         action: { activeSheet = .customFields },
         transitionID: .customFields,
-        namespace: namespace
+        namespace: namespace,
+        enabled: canChange
       )
     }
   }
@@ -228,32 +236,33 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
         )
 
-        if store.permissions.test(.delete, for: .document),
-          store.userCanDelete(document: viewModel.document)
-        {
-          BottomBarButton(
-            label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
-            image: deleted ? "checkmark.circle.fill" : "trash",
-            action: {
-              if appSettings.documentDeleteConfirmation {
-                showDeleteConfirmation = true
-              } else {
-                deleteDocument()
-              }
-            },
-            style: .red
-          )
-          .contentTransition(.symbolEffect)
-          .confirmationDialog(
-            String(localized: .localizable(.confirmationPromptTitle)),
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-          ) {
-            Button(String(localized: .localizable(.delete)), role: .destructive) {
+        let canDelete = store.permissions.test(.delete, for: .document)
+          && store.userCanDelete(document: viewModel.document)
+
+        BottomBarButton(
+          label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+          image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
+          action: {
+            if appSettings.documentDeleteConfirmation {
+              showDeleteConfirmation = true
+            } else {
               deleteDocument()
             }
-            Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+          },
+          style: canDelete ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
+        )
+        .contentTransition(.symbolEffect)
+        .disabled(!canDelete)
+        .opacity(1)
+        .confirmationDialog(
+          String(localized: .localizable(.confirmationPromptTitle)),
+          isPresented: $showDeleteConfirmation,
+          titleVisibility: .visible
+        ) {
+          Button(String(localized: .localizable(.delete)), role: .destructive) {
+            deleteDocument()
           }
+          Button(String(localized: .localizable(.cancel)), role: .cancel) {}
         }
       }
       .apply {
@@ -360,7 +369,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           title: viewModel.document.title,
           transitionID: .title,
           namespace: namespace,
-          action: { activeSheet = .title }
+          action: { activeSheet = .title },
+          enabled: store.userCanChange(document: viewModel.document)
         )
 
         detailAspects
@@ -372,7 +382,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             activeSheet = .tags
           },
           transitionID: .tags,
-          namespace: namespace
+          namespace: namespace,
+          enabled: store.userCanChange(document: viewModel.document)
         )
       }
       .padding()

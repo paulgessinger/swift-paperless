@@ -59,6 +59,7 @@ struct EditableAspect: View {
   let transitionID: TransitionID?
   let namespace: Namespace.ID?
   let action: (() -> Void)?
+  let enabled: Bool
 
   @ScaledMetric(relativeTo: .body)
   private var fontSizeRaw = 15
@@ -89,13 +90,15 @@ struct EditableAspect: View {
     systemImage: String,
     action: (() -> Void)? = nil,
     transitionID: TransitionID? = nil,
-    namespace: Namespace.ID? = nil
+    namespace: Namespace.ID? = nil,
+    enabled: Bool = true
   ) {
     self.label = label
     self.systemImage = systemImage
     self.action = action
     self.transitionID = transitionID
     self.namespace = namespace
+    self.enabled = enabled
   }
 
   var body: some View {
@@ -115,7 +118,7 @@ struct EditableAspect: View {
           Text(text)
             .italic(label.isPrivate)
         }
-        Image(systemName: "pencil")
+        Image(systemName: enabled ? "pencil" : "lock.fill")
           .foregroundStyle(editButtonColor)
           .padding(.trailing, 2 + fontSize / 2)
       }
@@ -135,6 +138,8 @@ struct EditableAspect: View {
     }
     .accessibilityLabel(label.displayText ?? "")
     .buttonStyle(.plain)
+    .disabled(!enabled)
+    .opacity(1)
   }
 }
 
@@ -152,6 +157,7 @@ struct DocumentTagsSection: View {
   let action: (() -> Void)?
   let transitionID: TransitionID?
   let namespace: Namespace.ID?
+  var enabled: Bool = true
 
   var body: some View {
     HStack(alignment: .top) {
@@ -165,7 +171,7 @@ struct DocumentTagsSection: View {
               Text(.localizable(.createDocumentNoTags))
                 .foregroundStyle(.secondary)
             }
-            Label(.localizable(.edit), systemImage: "pencil")
+            Label(.localizable(.edit), systemImage: enabled ? "pencil" : "lock.fill")
               .foregroundStyle(editButtonColor)
               .labelStyle(.iconOnly)
               .padding(5)
@@ -177,6 +183,8 @@ struct DocumentTagsSection: View {
         )
       }
       .buttonStyle(.plain)
+      .disabled(!enabled)
+      .opacity(1)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .dynamicTypeSize(...DynamicTypeSize.large)
@@ -195,6 +203,7 @@ struct DocumentTitleView: View {
   let transitionID: TransitionID?
   let namespace: Namespace.ID?
   let action: () -> Void
+  var enabled: Bool = true
 
   private let lineLimit = 3
 
@@ -241,6 +250,8 @@ struct DocumentTitleView: View {
         }
         .foregroundStyle(.primary)
         .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(1)
         .apply {
           if let transitionID, let namespace {
             $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
@@ -249,15 +260,17 @@ struct DocumentTitleView: View {
           }
         }
 
-        Button(action: action) {
-          Image(systemName: "pencil")
-            .foregroundStyle(editButtonColor)
-            .font(.callout)
-            .padding(6)
-            .background(Circle().fill(backgroundColor))
+        if enabled {
+          Button(action: action) {
+            Image(systemName: "pencil")
+              .foregroundStyle(editButtonColor)
+              .font(.callout)
+              .padding(6)
+              .background(Circle().fill(backgroundColor))
+          }
+          .buttonStyle(.plain)
+          .padding(.top, 3)
         }
-        .buttonStyle(.plain)
-        .padding(.top, 3)
       }
 
       if isTruncated || isExpanded {

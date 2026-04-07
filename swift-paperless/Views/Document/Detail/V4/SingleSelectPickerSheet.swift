@@ -37,10 +37,20 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     )
   }
 
-  private var selectedItem: Item? {
-    viewModel.document[keyPath: keyPath].flatMap { id in
-      allItems().first { $0.id == id }
+  private enum Selection {
+    case notAssigned
+    case `private`
+    case item(Item)
+  }
+
+  private var selection: Selection {
+    guard let id = viewModel.document[keyPath: keyPath] else {
+      return .notAssigned
     }
+    guard let item = allItems().first(where: { $0.id == id }) else {
+      return .private
+    }
+    return .item(item)
   }
 
   private var items: [Item] {
@@ -135,7 +145,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         VStack(spacing: 0) {
           CustomSection {
             VStack(alignment: .leading, spacing: 0) {
-              if let selectedItem {
+              switch selection {
+              case .item(let selectedItem):
                 Button {
                   select(id: nil)
                 } label: {
@@ -147,7 +158,25 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                 .allowsHitTesting(!saving)
                 .transition(Self.selectedRowTransition)
                 .id(selectedItem.id)
-              } else {
+              case .private:
+                Button {
+                  select(id: nil)
+                } label: {
+                  CustomSectionRow {
+                    HStack {
+                      Text(.permissions(.private))
+                        .italic()
+                        .foregroundStyle(.secondary)
+                      Spacer()
+                      Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                    }
+                  }
+                }
+                .buttonStyle(.plain)
+                .allowsHitTesting(!saving)
+                .transition(Self.selectedRowTransition)
+              case .notAssigned:
                 CustomSectionRow {
                   Text(notAssignedLabel)
                     .foregroundStyle(.secondary)
