@@ -98,6 +98,14 @@ struct ShareLinkView: View {
     }
   }
 
+  private var canAdd: Bool {
+    store.permissions.test(.add, for: .shareLink)
+  }
+
+  private var canDelete: Bool {
+    store.permissions.test(.delete, for: .shareLink)
+  }
+
   var body: some View {
     NavigationStack {
       Form {
@@ -105,7 +113,7 @@ struct ShareLinkView: View {
           ContentUnavailableView(.shareLink(.noShareLinksTitle), systemImage: "link")
         } else {
           ForEach(shareLinks) { row($0) }
-            .onDelete(perform: delete)
+            .onDelete(perform: canDelete ? { delete(at: $0) } : nil)
         }
       }
       .toolbar {
@@ -117,6 +125,7 @@ struct ShareLinkView: View {
           Button(.localizable(.add), systemImage: "plus") {
             showCreate = true
           }
+          .disabled(!canAdd)
         }
       }
 

@@ -166,6 +166,7 @@
 				Document/Detail/DocumentDetailViewV3.swift,
 				Document/Detail/DocumentMetadataView.swift,
 				Document/Detail/SearchablePDFPreview.swift,
+				Document/Detail/ShareLinkView.swift,
 				Document/Detail/V4/AsnEditSheet.swift,
 				Document/Detail/V4/CorrespondentEditSheet.swift,
 				Document/Detail/V4/CustomFieldsEditSheet.swift,
