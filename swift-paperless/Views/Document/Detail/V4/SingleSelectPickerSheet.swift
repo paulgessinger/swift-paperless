@@ -59,7 +59,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
 
   private var suggestedItems: [Item] {
     let selectedId = viewModel.document[keyPath: keyPath]
-    return suggestions
+    return
+      suggestions
       .filter { $0 != selectedId }
       .compactMap { allItems[$0] }
   }
