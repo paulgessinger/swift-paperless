@@ -72,7 +72,7 @@ struct TagsView<Content: View>: View {
 
   var body: some View {
     HStack {
-      HFlow {
+      HFlow(verticalAlignment: .center) {
         if redactionReasons.contains(.placeholder) {
           ForEach([4, 6, 5], id: \.self) { v in
             TagView(tag: Tag.placeholder(v))

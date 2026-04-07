@@ -236,8 +236,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
         )
 
-        let canDelete = store.permissions.test(.delete, for: .document)
-          && store.userCanDelete(document: viewModel.document)
+        let canDelete = store.userCanDelete(document: viewModel.document)
 
         BottomBarButton(
           label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),

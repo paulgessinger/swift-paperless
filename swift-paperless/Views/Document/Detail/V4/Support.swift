@@ -138,8 +138,7 @@ struct EditableAspect: View {
     }
     .accessibilityLabel(label.displayText ?? "")
     .buttonStyle(.plain)
-    .disabled(!enabled)
-    .opacity(1)
+    .allowsHitTesting(enabled)
   }
 }
 
@@ -152,6 +151,8 @@ struct DocumentTagsSection: View {
 
   @SchemeValue(light: Color(white: 0.9), dark: Color(white: 0.3))
   private var editButtonBackground
+
+  @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 14
 
   let tags: [Tag?]
   let action: (() -> Void)?
@@ -171,20 +172,18 @@ struct DocumentTagsSection: View {
               Text(.localizable(.createDocumentNoTags))
                 .foregroundStyle(.secondary)
             }
-            Label(.localizable(.edit), systemImage: enabled ? "pencil" : "lock.fill")
+            Image(systemName: enabled ? "pencil" : "lock.fill")
+              .resizable()
+              .scaledToFit()
+              .frame(width: iconSize, height: iconSize)
               .foregroundStyle(editButtonColor)
-              .labelStyle(.iconOnly)
-              .padding(5)
-              .background {
-                Circle()
-                  .fill(backgroundColor)
-              }
+              .padding(iconSize / 3 + 2)
+              .background(Circle().fill(backgroundColor))
           }
         )
       }
       .buttonStyle(.plain)
-      .disabled(!enabled)
-      .opacity(1)
+      .allowsHitTesting(enabled)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .dynamicTypeSize(...DynamicTypeSize.large)
@@ -250,8 +249,7 @@ struct DocumentTitleView: View {
         }
         .foregroundStyle(.primary)
         .buttonStyle(.plain)
-        .disabled(!enabled)
-        .opacity(1)
+        .allowsHitTesting(enabled)
         .apply {
           if let transitionID, let namespace {
             $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
@@ -270,6 +268,13 @@ struct DocumentTitleView: View {
           }
           .buttonStyle(.plain)
           .padding(.top, 3)
+        } else {
+          Image(systemName: "lock.fill")
+            .foregroundStyle(editButtonColor)
+            .font(.callout)
+            .padding(6)
+            .background(Circle().fill(backgroundColor))
+            .padding(.top, 3)
         }
       }
 
