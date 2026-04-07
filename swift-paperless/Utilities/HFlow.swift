@@ -7,9 +7,16 @@
 
 import SwiftUI
 
-private struct NativeHFlowLayout: Layout {
+struct HFlow: Layout {
+  enum VerticalAlignment {
+    case top
+    case center
+    case bottom
+  }
+
   var itemSpacing: CGFloat?
   var rowSpacing: CGFloat?
+  var verticalAlignment: VerticalAlignment = .top
 
   private struct Row {
     struct Item {
@@ -130,36 +137,20 @@ private struct NativeHFlowLayout: Layout {
 
     for row in rows {
       for item in row.items {
+        let itemY: CGFloat =
+          switch verticalAlignment {
+          case .top: y
+          case .center: y + (row.height - item.size.height) / 2
+          case .bottom: y + (row.height - item.size.height)
+          }
         subviews[item.index].place(
-          at: CGPoint(x: bounds.minX + item.x, y: y),
+          at: CGPoint(x: bounds.minX + item.x, y: itemY),
           anchor: .topLeading,
           proposal: ProposedViewSize(width: item.size.width, height: item.size.height)
         )
       }
 
       y += row.height + rowSpacing
-    }
-  }
-}
-
-struct HFlow<Content: View>: View {
-  private let itemSpacing: CGFloat?
-  private let rowSpacing: CGFloat?
-  private let content: Content
-
-  init(
-    itemSpacing: CGFloat? = nil,
-    rowSpacing: CGFloat? = nil,
-    @ViewBuilder content: () -> Content
-  ) {
-    self.itemSpacing = itemSpacing
-    self.rowSpacing = rowSpacing
-    self.content = content()
-  }
-
-  var body: some View {
-    NativeHFlowLayout(itemSpacing: itemSpacing, rowSpacing: rowSpacing) {
-      content
     }
   }
 }
