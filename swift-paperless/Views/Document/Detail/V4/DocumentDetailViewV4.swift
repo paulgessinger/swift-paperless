@@ -340,10 +340,21 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     Divider()
 
-    if case .loaded(url: let url, document: _) = viewModel.download {
-      ShareLink(item: url) {
-        Label(localized: .localizable(.shareSheet), systemImage: "document")
+    let archiveURL: URL? = if case .loaded(url: let url, document: _) = viewModel.download { url } else { nil }
+    let originalURL: URL? = if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
+
+    Menu {
+      ShareLink(item: archiveURL ?? URL(filePath: "/")) {
+        Label(localized: .localizable(.shareArchive), systemImage: "doc.zipper")
       }
+      .disabled(archiveURL == nil)
+
+      ShareLink(item: originalURL ?? URL(filePath: "/")) {
+        Label(localized: .localizable(.shareOriginal), systemImage: "doc")
+      }
+      .disabled(originalURL == nil)
+    } label: {
+      Label(localized: .localizable(.shareDocument), systemImage: "square.and.arrow.up")
     }
   }
 

@@ -78,6 +78,7 @@ private final class IntegratedDocumentPreviewModel {
         guard
           let url = try await store.repository.download(
             documentID: document.id,
+            original: false,
             progress: { @Sendable value in
               Task { @MainActor in
                 self.hasReceivedProgress = true

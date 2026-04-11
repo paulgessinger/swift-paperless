@@ -34,6 +34,15 @@ class DocumentDetailModel {
   var download: DocumentDownloadState = .initial
   var downloadProgress: Double = 0.0
 
+  enum OriginalDownloadState {
+    case initial
+    case loading
+    case loaded(url: URL)
+    case error
+  }
+
+  var originalDownload: OriginalDownloadState = .initial
+
   @ObservationIgnored
   var store: DocumentStore
   @ObservationIgnored
@@ -77,6 +86,7 @@ class DocumentDetailModel {
         guard
           let url = try await store.repository.download(
             documentID: document.id,
+            original: false,
             progress: { @Sendable value in
               Task { @MainActor in
                 self.downloadProgress = value
@@ -94,6 +104,9 @@ class DocumentDetailModel {
 
         download = .loaded(url: url, document: pdfDocument)
         setLoading.cancel()
+
+        // Start downloading the original in the background
+        Task { await downloadOriginal() }
       } catch is CancellationError {
       } catch {
         download = .error
@@ -111,6 +124,22 @@ class DocumentDetailModel {
       }
     } catch {
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
+    }
+  }
+
+  func downloadOriginal() async {
+    guard case .initial = originalDownload else { return }
+    originalDownload = .loading
+    do {
+      guard let url = try await store.repository.download(documentID: document.id, original: true)
+      else {
+        originalDownload = .error
+        return
+      }
+      originalDownload = .loaded(url: url)
+    } catch {
+      originalDownload = .error
+      Logger.shared.error("Error downloading original document: \(error)")
     }
   }
 

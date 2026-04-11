@@ -171,8 +171,12 @@ extension Endpoint {
     Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
   }
 
-  public static func download(documentId: UInt) -> Endpoint {
-    Endpoint(path: "/api/documents/\(documentId)/download", queryItems: [])
+  public static func download(documentId: UInt, original: Bool = false) -> Endpoint {
+    var queryItems: [URLQueryItem] = []
+    if original {
+      queryItems.append(URLQueryItem(name: "original", value: "true"))
+    }
+    return Endpoint(path: "/api/documents/\(documentId)/download", queryItems: queryItems)
   }
 
   public static func suggestions(documentId: UInt) -> Endpoint {

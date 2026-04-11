@@ -489,7 +489,7 @@ extension TransientRepository: Repository {
     return notes
   }
 
-  public func download(documentID: UInt, progress: (@Sendable (Double) -> Void)? = nil)
+  public func download(documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil)
     async throws -> URL?
   {
     // Simulate download progress

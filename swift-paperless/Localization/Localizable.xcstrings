@@ -10363,6 +10363,28 @@
         }
       }
     },
+    "shareArchive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived Document"
+          }
+        }
+      }
+    },
+    "shareDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Document"
+          }
+        }
+      }
+    },
     "shareLink" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10412,6 +10434,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bağlantıyı paylaş"
+          }
+        }
+      }
+    },
+    "shareOriginal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original Document"
           }
         }
       }
