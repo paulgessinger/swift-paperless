@@ -461,7 +461,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .asn:
         AsnEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
-          .presentationDetents([.medium])
+          .presentationDetents([.fraction(0.25), .medium])
 
       case .correspondent:
         CorrespondentEditSheet(viewModel: viewModel)
@@ -476,7 +476,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .date:
         DateEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
-          .presentationDetents([.medium])
+          .presentationDetents([.fraction(0.25), .medium])
 
       case .storagePath:
         StoragePathEditSheet(viewModel: viewModel)
