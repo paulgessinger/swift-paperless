@@ -157,6 +157,32 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
+  @ViewBuilder
+  private var readOnlyExplanation: some View {
+    let document = viewModel.document
+    if !store.userCanChange(document: document) {
+      let reason: LocalizedStringResource = if !store.permissions.test(.change, for: .document) {
+        .localizable(.documentReadOnlyNoGlobalPermission)
+      } else if case .user(let ownerId) = document.owner, let owner = store.users[ownerId] {
+        .localizable(.documentReadOnlyOwnedBy(owner.username))
+      } else {
+        .localizable(.documentReadOnlyNotOwner)
+      }
+
+      Label {
+        Text(reason)
+      } icon: {
+        Image(systemName: "lock.fill")
+          .foregroundStyle(.secondary)
+      }
+      .font(.footnote)
+      .foregroundStyle(.secondary)
+      .padding(12)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+  }
+
   private struct BottomBarButton<S: ShapeStyle>: View {
     let label: LocalizedStringResource
     let image: String
@@ -371,6 +397,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           action: { activeSheet = .title },
           enabled: store.userCanChange(document: viewModel.document)
         )
+
+        readOnlyExplanation
 
         detailAspects
           .animation(.spring(duration: 0.25), value: viewModel.document)
