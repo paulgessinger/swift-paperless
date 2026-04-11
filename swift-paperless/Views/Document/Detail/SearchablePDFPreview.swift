@@ -13,9 +13,9 @@ struct SearchablePDFPreview: View {
     let bottomContentInset: CGFloat
     let initialPage: Int
     @Binding var pdfView: PDFKit.PDFView?
-    var onPageChange: ((Int) -> Void)?
+    var onPageChange: (@MainActor @Sendable (Int) -> Void)?
 
-    final class Coordinator {
+    final class Coordinator: @unchecked Sendable {
       // Initial top-alignment should run once per loaded document.
       var didApplyInitialTopAlignment = false
       var didNavigateToInitialPage = false
@@ -41,29 +41,32 @@ struct SearchablePDFPreview: View {
 
       if let scrollView = findScrollView(in: view) {
         let onPageChange = onPageChange
-        context.coordinator.scrollObservation = scrollView.observe(
+        let coordinator = context.coordinator
+        coordinator.scrollObservation = scrollView.observe(
           \.contentOffset, options: [.new]
-        ) { [weak view] scrollView, _ in
-          guard let view, let document = view.document else { return }
+        ) { [weak view] _, _ in
+          MainActor.assumeIsolated {
+            guard let view, let document = view.document else { return }
 
-          let pageIndex: Int
-          let offset = scrollView.contentOffset.y + scrollView.contentInset.top
-          let maxOffset = scrollView.contentSize.height - scrollView.bounds.height
-            + scrollView.contentInset.top + scrollView.contentInset.bottom
+            // Use the center of the visible rect to determine the current page
+            let visibleCenter = CGPoint(
+              x: view.bounds.midX,
+              y: view.bounds.midY
+            )
 
-          if offset <= 0 {
-            pageIndex = 0
-          } else if offset >= maxOffset {
-            pageIndex = document.pageCount - 1
-          } else if let current = view.currentPage {
-            pageIndex = document.index(for: current)
-          } else {
-            return
+            let pageIndex: Int
+            if let page = view.page(for: visibleCenter, nearest: true) {
+              pageIndex = document.index(for: page)
+            } else if let current = view.currentPage {
+              pageIndex = document.index(for: current)
+            } else {
+              return
+            }
+
+            guard pageIndex != coordinator.lastReportedPage else { return }
+            coordinator.lastReportedPage = pageIndex
+            onPageChange?(pageIndex)
           }
-
-          guard pageIndex != context.coordinator.lastReportedPage else { return }
-          context.coordinator.lastReportedPage = pageIndex
-          onPageChange?(pageIndex)
         }
       }
 
@@ -134,6 +137,8 @@ struct SearchablePDFPreview: View {
         let page = document.page(at: initialPage)
       {
         pdfView.go(to: page)
+        // Adjust offset so the page starts below the top bar, not under it
+        scrollView.contentOffset.y -= topInset
         coordinator.didNavigateToInitialPage = true
       }
     }
@@ -443,7 +448,7 @@ struct SearchablePDFPreview: View {
       bottomContentInset: max(bottomBarHeight, 44) + 0,
       initialPage: currentPage,
       pdfView: $pdfView,
-      onPageChange: { currentPage = $0 }
+      onPageChange: { @MainActor page in currentPage = page }
     )
     .ignoresSafeArea(.container, edges: .bottom)
     .safeAreaInset(edge: .bottom, spacing: 0) {
