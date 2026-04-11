@@ -25,7 +25,7 @@ struct TitleEditSheet: View {
       let origTitle = viewModel.document.title
       do {
         saving = true
-        viewModel.document.title = title
+        viewModel.document.title = title.trimmingCharacters(in: .whitespaces)
         try await viewModel.updateDocument()
         saving = false
         dismiss()
