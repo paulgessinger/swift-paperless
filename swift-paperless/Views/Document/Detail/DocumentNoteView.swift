@@ -139,11 +139,6 @@ struct DocumentNoteView: View {
               )
             } description: {
               Text(LocalizedStringResource("notesEmptyDescription", table: "DocumentMetadata"))
-            } actions: {
-              Button(.localizable(.add)) {
-                adding = true
-              }
-              .disabled(!store.permissions.test(.add, for: .note))
             }
           }
         } else {
