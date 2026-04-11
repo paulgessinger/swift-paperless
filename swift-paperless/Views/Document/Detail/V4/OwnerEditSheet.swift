@@ -8,6 +8,7 @@
 import DataModel
 import Networking
 import SwiftUI
+import os
 
 struct OwnerEditSheet: View {
   @Bindable var viewModel: DocumentDetailModel
@@ -30,6 +31,14 @@ struct OwnerEditSheet: View {
   }
 
   private func save() {
+    var expectedVisibilityChange = false
+    var expectedEditabilityChange = false
+
+    if let user = store.currentUser {
+      expectedVisibilityChange = user.canView(viewModel.document) && !user.canView(document)
+      expectedEditabilityChange = user.canChange(viewModel.document) && !user.canChange(document)
+    }
+
     Task {
       do {
         saving = true
@@ -37,8 +46,31 @@ struct OwnerEditSheet: View {
         try await viewModel.updateDocument()
         saving = false
         dismiss()
+      } catch let RequestError.unexpectedStatusCode(code, detail) where code == .notFound {
+        if expectedVisibilityChange {
+          Logger.shared.info("Document update resulted in \(code.rawValue, privacy: .public) as expected due to permission change")
+          viewModel.document = document
+          dismiss()
+        } else {
+          let error = RequestError.unexpectedStatusCode(code: code, detail: detail)
+          Logger.shared.error("Error updating document: \(error)")
+          errorController.push(error: error)
+        }
+        saving = false
+      } catch let RequestError.forbidden(body) {
+        if expectedEditabilityChange {
+          Logger.shared.info("Document update resulted in forbidden as expected due to permission change")
+          viewModel.document = document
+          dismiss()
+        } else {
+          let error = RequestError.forbidden(detail: body)
+          Logger.shared.error("Error updating document: \(error)")
+          errorController.push(error: error)
+        }
+        saving = false
       } catch {
         saving = false
+        Logger.shared.error("Error updating document: \(error)")
         errorController.push(error: error)
       }
     }
