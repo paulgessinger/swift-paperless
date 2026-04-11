@@ -11,18 +11,23 @@ struct SearchablePDFPreview: View {
   private struct SearchablePDFView: UIViewRepresentable {
     let document: PDFDocument
     let bottomContentInset: CGFloat
+    let initialPage: Int
     @Binding var pdfView: PDFKit.PDFView?
+    var onPageChange: ((Int) -> Void)?
 
     final class Coordinator {
       // Initial top-alignment should run once per loaded document.
       var didApplyInitialTopAlignment = false
+      var didNavigateToInitialPage = false
+      var scrollObservation: NSKeyValueObservation?
+      var lastReportedPage: Int?
     }
 
     func makeCoordinator() -> Coordinator {
       Coordinator()
     }
 
-    func makeUIView(context _: Context) -> PDFKit.PDFView {
+    func makeUIView(context: Context) -> PDFKit.PDFView {
       let view = PDFKit.PDFView()
       // Keep PDFKit defaults close to the native viewer behavior.
       view.document = document
@@ -33,6 +38,35 @@ struct SearchablePDFPreview: View {
       view.backgroundColor = .secondarySystemBackground
       view.isUserInteractionEnabled = true
       pdfView = view
+
+      if let scrollView = findScrollView(in: view) {
+        let onPageChange = onPageChange
+        context.coordinator.scrollObservation = scrollView.observe(
+          \.contentOffset, options: [.new]
+        ) { [weak view] scrollView, _ in
+          guard let view, let document = view.document else { return }
+
+          let pageIndex: Int
+          let offset = scrollView.contentOffset.y + scrollView.contentInset.top
+          let maxOffset = scrollView.contentSize.height - scrollView.bounds.height
+            + scrollView.contentInset.top + scrollView.contentInset.bottom
+
+          if offset <= 0 {
+            pageIndex = 0
+          } else if offset >= maxOffset {
+            pageIndex = document.pageCount - 1
+          } else if let current = view.currentPage {
+            pageIndex = document.index(for: current)
+          } else {
+            return
+          }
+
+          guard pageIndex != context.coordinator.lastReportedPage else { return }
+          context.coordinator.lastReportedPage = pageIndex
+          onPageChange?(pageIndex)
+        }
+      }
+
       return view
     }
 
@@ -95,6 +129,13 @@ struct SearchablePDFPreview: View {
       )
 
       coordinator.didApplyInitialTopAlignment = true
+
+      if !coordinator.didNavigateToInitialPage, initialPage > 0,
+        let page = document.page(at: initialPage)
+      {
+        pdfView.go(to: page)
+        coordinator.didNavigateToInitialPage = true
+      }
     }
 
     private func findScrollView(in view: UIView) -> UIScrollView? {
@@ -112,6 +153,7 @@ struct SearchablePDFPreview: View {
 
   let document: PDFDocument
   let onButtonDismiss: () -> Void
+  @Binding var currentPage: Int
 
   @Environment(\.dismiss) private var dismiss
   @FocusState private var isSearchFieldFocused: Bool
@@ -227,18 +269,32 @@ struct SearchablePDFPreview: View {
         .fixedSize(horizontal: false, vertical: true)
 
       } else {
-        Button {
-          setSearchMode(true)
-          isSearchFieldFocused = true
-        } label: {
-          Label(localized: .localizable(.search), systemImage: "magnifyingglass")
-            .labelStyle(.iconOnly)
-            .font(.title2)
-            .fontWeight(.semibold)
-            .padding(13)
+        HStack {
+          Button {
+            setSearchMode(true)
+            isSearchFieldFocused = true
+          } label: {
+            Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+              .labelStyle(.iconOnly)
+              .font(.title2)
+              .fontWeight(.semibold)
+              .padding(13)
+          }
+          .glassEffect(.regular.interactive(), in: Circle())
+
+          Spacer()
+
+          if document.pageCount > 1 {
+            Text(.localizable(.pageIndicator(currentPage + 1, document.pageCount)))
+              .font(.footnote.monospacedDigit())
+              .fontWeight(.semibold)
+              .padding(.horizontal, 10)
+              .padding(.vertical, 8)
+              .glassEffect(.regular, in: Capsule())
+              .contentTransition(.numericText())
+              .animation(.default, value: currentPage)
+          }
         }
-        .glassEffect(.regular.interactive(), in: Circle())
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(34)
       }
     }
@@ -330,15 +386,29 @@ struct SearchablePDFPreview: View {
       } else {
         // Compact bar with search icon only
         VStack(spacing: 0) {
-          Button {
-            setSearchMode(true)
-            isSearchFieldFocused = true
-          } label: {
-            Image(systemName: "magnifyingglass")
-              .font(.title2)
-              .foregroundStyle(.accent)
+          HStack {
+            Button {
+              setSearchMode(true)
+              isSearchFieldFocused = true
+            } label: {
+              Image(systemName: "magnifyingglass")
+                .font(.title2)
+                .foregroundStyle(.accent)
+            }
+
+            Spacer()
+
+            if document.pageCount > 1 {
+              Text(.localizable(.pageIndicator(currentPage + 1, document.pageCount)))
+                .font(.footnote.monospacedDigit())
+                .fontWeight(.semibold)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: Capsule())
+                .contentTransition(.numericText())
+                .animation(.default, value: currentPage)
+            }
           }
-          .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal, 24)
           .padding(.top, 24)
           .padding(.bottom, 16)
@@ -371,7 +441,9 @@ struct SearchablePDFPreview: View {
     SearchablePDFView(
       document: document,
       bottomContentInset: max(bottomBarHeight, 44) + 0,
-      pdfView: $pdfView
+      initialPage: currentPage,
+      pdfView: $pdfView,
+      onPageChange: { currentPage = $0 }
     )
     .ignoresSafeArea(.container, edges: .bottom)
     .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -523,7 +595,8 @@ extension View {
   NavigationStack {
     SearchablePDFPreview(
       document: SearchablePDFPreviewPreviewData.document,
-      onButtonDismiss: {}
+      onButtonDismiss: {},
+      currentPage: .constant(0)
     )
     .ignoresSafeArea()
   }

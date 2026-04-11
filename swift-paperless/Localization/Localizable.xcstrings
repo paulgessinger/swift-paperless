@@ -8069,6 +8069,17 @@
         }
       }
     },
+    "pageIndicator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld"
+          }
+        }
+      }
+    },
     "pages" : {
       "extractionState" : "manual",
       "localizations" : {

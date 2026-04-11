@@ -8,13 +8,14 @@
 import DataModel
 import Nuke
 import NukeUI
+import PDFKit
 import SwiftUI
 import os
 
 private enum DownloadState: Equatable {
   case initial
   case loading
-  case loaded(PDFThumbnail)
+  case loaded(PDFDocument)
   case error
 
   static func == (lhs: DownloadState, rhs: DownloadState) -> Bool {
@@ -29,9 +30,10 @@ private enum DownloadState: Equatable {
 
 struct DocumentPreview: View {
   var document: Document
+  @Binding var currentPage: Int
 
   var body: some View {
-    IntegratedDocumentPreview(document: document)
+    IntegratedDocumentPreview(document: document, currentPage: $currentPage)
       .frame(minWidth: 200, minHeight: 200)
   }
 }
@@ -84,11 +86,11 @@ private final class IntegratedDocumentPreviewModel {
           return
         }
 
-        guard let view = PDFThumbnail(file: url) else {
+        guard let pdfDocument = PDFDocument(url: url) else {
           download = .error
           return
         }
-        download = .loaded(view)
+        download = .loaded(pdfDocument)
       } catch {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
@@ -100,12 +102,97 @@ private final class IntegratedDocumentPreviewModel {
   }
 }
 
+private struct PDFPageView: View {
+  let document: PDFDocument
+  let pageIndex: Int
+  let aspectRatio: CGFloat
+
+  var body: some View {
+    PDFKitView(
+      document: document,
+      displayMode: .singlePage,
+      pageShadows: false,
+      autoScales: true,
+      userInteraction: false,
+      displayPageBreaks: false,
+      pageBreakMargins: .zero,
+      pageIndex: pageIndex
+    )
+    .aspectRatio(aspectRatio, contentMode: .fill)
+  }
+}
+
+private struct PDFPagingPreview: View {
+  let document: PDFDocument
+  @Binding var currentPage: Int
+
+  @State private var scrolledPage: Int? = 0
+
+  private var pageCount: Int {
+    document.pageCount
+  }
+
+  private func aspectRatio(for pageIndex: Int) -> CGFloat {
+    guard let page = document.page(at: pageIndex) else { return 1.0 }
+    let size = page.bounds(for: .trimBox).size
+    return size.width / size.height
+  }
+
+  private var firstPageAspectRatio: CGFloat {
+    aspectRatio(for: 0)
+  }
+
+  var body: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      LazyHStack(spacing: 0) {
+        ForEach(0..<pageCount, id: \.self) { index in
+          PDFPageView(
+            document: document,
+            pageIndex: index,
+            aspectRatio: aspectRatio(for: index)
+          )
+          .containerRelativeFrame(.horizontal)
+        }
+      }
+      .scrollTargetLayout()
+    }
+    .scrollTargetBehavior(.viewAligned)
+    .scrollPosition(id: $scrolledPage)
+    .aspectRatio(firstPageAspectRatio, contentMode: .fit)
+    .onChange(of: scrolledPage) { _, newValue in
+      if let newValue {
+        currentPage = newValue
+      }
+    }
+    .onChange(of: currentPage) { _, newValue in
+      if scrolledPage != newValue {
+        scrolledPage = newValue
+      }
+    }
+    .overlay(alignment: .bottom) {
+      if pageCount > 1 {
+        Text(.localizable(.pageIndicator((scrolledPage ?? 0) + 1, pageCount)))
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 4)
+          .backport.glassEffect(
+            .regular, in: Capsule(), orFill: .ultraThinMaterial
+          )
+          .padding(.bottom, 8)
+      }
+    }
+    .background(.white)
+  }
+}
+
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
   @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   @State private var showLoadingOverlay = false
   var document: Document
+  @Binding var currentPage: Int
 
   @StateObject private var image = FetchImage()
 
@@ -127,9 +214,8 @@ private struct IntegratedDocumentPreview: View {
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
 
-      case .loaded(let view):
-        view
-          .background(.white)
+      case .loaded(let pdfDocument):
+        PDFPagingPreview(document: pdfDocument, currentPage: $currentPage)
       }
     }
 
@@ -212,11 +298,22 @@ struct PopupDocumentPreview: View {
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
 
-      case .loaded(let view):
-        view.image?
-          .resizable()
-          .scaledToFit()
+      case .loaded(let pdfDocument):
+        if let page = pdfDocument.page(at: 0) {
+          let size = page.bounds(for: .trimBox).size
+          PDFKitView(
+            document: pdfDocument,
+            displayMode: .singlePage,
+            pageShadows: false,
+            autoScales: true,
+            userInteraction: false,
+            displayPageBreaks: false,
+            pageBreakMargins: .zero,
+            pageIndex: 0
+          )
+          .aspectRatio(size.width / size.height, contentMode: .fill)
           .background(.white)
+        }
       }
     }
 

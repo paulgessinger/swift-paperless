@@ -35,6 +35,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   @State private var activeSheet: ActiveSheet? = nil
   @State private var showPreview = false
+  @State private var previewPage = 0
   @State private var shadowDelay: Double? = nil
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
@@ -364,24 +365,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           guard previewEnabled else { return }
           showPreview = true
         } label: {
-          DocumentPreview(document: viewModel.document)
+          DocumentPreview(document: viewModel.document, currentPage: $previewPage)
             .frame(maxWidth: .infinity)
-            .overlay(alignment: .bottomTrailing) {
-              if let pageCount = viewModel.document.pageCount {
-                HStack(spacing: 4) {
-                  Image(systemName: "book.pages.fill")
-                  Text(.localizable(.pages(pageCount)))
-                }
-                .font(.footnote)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .backport.glassEffect(
-                  .regular, in: Capsule(), orFill: .ultraThinMaterial
-                )
-                .padding(10)
-              }
-            }
             .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
             .accessibilityLabel(.localizable(.documentOpen))
         }
@@ -524,7 +509,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             document: document,
             onButtonDismiss: {
               shadowDelay = 0.2
-            }
+            },
+            currentPage: $previewPage
           )
           .ignoresSafeArea(.container)
           .navigationBarTitleDisplayMode(.inline)
