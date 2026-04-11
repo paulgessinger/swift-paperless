@@ -173,19 +173,17 @@ private struct PDFPagingPreview: View {
       }
     }
     .overlay(alignment: .bottom) {
-      if pageCount > 1 {
-        Text(.localizable(.pageIndicator((scrolledPage ?? 0) + 1, pageCount)))
-          .font(.caption2)
-          .fontWeight(.semibold)
-          .padding(.horizontal, 8)
-          .padding(.vertical, 4)
-          .backport.glassEffect(
-            .regular, in: Capsule(), orFill: .ultraThinMaterial
-          )
-          .contentTransition(.numericText())
-          .animation(.default, value: scrolledPage)
-          .padding(.bottom, 8)
-      }
+      Text(.localizable(.pageIndicator((scrolledPage ?? 0) + 1, pageCount)))
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .backport.glassEffect(
+          .regular, in: Capsule(), orFill: .ultraThinMaterial
+        )
+        .contentTransition(.numericText())
+        .animation(.default, value: scrolledPage)
+        .padding(8)
     }
     .background(.white)
   }
