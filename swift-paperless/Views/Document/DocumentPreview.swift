@@ -30,11 +30,14 @@ private enum DownloadState: Equatable {
 
 struct DocumentPreview: View {
   var document: Document
+  var downloadState: DocumentDownloadState
   @Binding var currentPage: Int
 
   var body: some View {
-    IntegratedDocumentPreview(document: document, currentPage: $currentPage)
-      .frame(minWidth: 200, minHeight: 200)
+    IntegratedDocumentPreview(
+      document: document, downloadState: downloadState, currentPage: $currentPage
+    )
+    .frame(minWidth: 200, minHeight: 200)
   }
 }
 
@@ -179,6 +182,8 @@ private struct PDFPagingPreview: View {
           .backport.glassEffect(
             .regular, in: Capsule(), orFill: .ultraThinMaterial
           )
+          .contentTransition(.numericText())
+          .animation(.default, value: scrolledPage)
           .padding(.bottom, 8)
       }
     }
@@ -189,9 +194,9 @@ private struct PDFPagingPreview: View {
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
   @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
-  @State private var viewModel = IntegratedDocumentPreviewModel()
   @State private var showLoadingOverlay = false
   var document: Document
+  var downloadState: DocumentDownloadState
   @Binding var currentPage: Int
 
   @StateObject private var image = FetchImage()
@@ -201,7 +206,7 @@ private struct IntegratedDocumentPreview: View {
   var body: some View {
     ZStack {
 
-      switch viewModel.download {
+      switch downloadState {
       case .initial, .loading:
         image.image?
           .resizable()
@@ -214,7 +219,7 @@ private struct IntegratedDocumentPreview: View {
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
 
-      case .loaded(let pdfDocument):
+      case .loaded(url: _, document: let pdfDocument):
         PDFPagingPreview(document: pdfDocument, currentPage: $currentPage)
       }
     }
@@ -224,12 +229,8 @@ private struct IntegratedDocumentPreview: View {
         VStack {
           Text(.localizable(.loading))
             .foregroundStyle(.primary)
-          LinearProgressBar(
-            mode: viewModel.hasReceivedProgress
-              ? .determinate(viewModel.downloadProgress)
-              : .indeterminate
-          )
-          .frame(width: 100)
+          LinearProgressBar(mode: .indeterminate)
+            .frame(width: 100)
         }
         .padding()
         .apply {
@@ -248,22 +249,25 @@ private struct IntegratedDocumentPreview: View {
       }
     }
     .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
-    .animation(.easeOut(duration: 0.8), value: viewModel.download)
-    .animation(.easeInOut(duration: 0.2), value: viewModel.hasReceivedProgress)
+    .animation(.easeOut(duration: 0.8), value: downloadState)
 
     .task {
-      await viewModel.loadDocument(
-        store: store,
-        document: document,
-        pipeline: imagePipelineProvider.pipeline,
-        image: image)
+      image.transaction = Transaction(animation: .linear(duration: 0.1))
+      image.pipeline = imagePipelineProvider.pipeline
+      do {
+        try image.load(
+          ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
+        )
+      } catch {
+        Logger.shared.error("Error loading document thumbnail: \(error)")
+      }
     }
-    .onChange(of: viewModel.download) { _, newState in
+    .onChange(of: downloadState) { _, newState in
       if case .loading = newState {
         Task {
           try? await Task.sleep(for: Self.loadingOverlayDelay)
           guard !Task.isCancelled else { return }
-          if case .loading = viewModel.download {
+          if case .loading = downloadState {
             showLoadingOverlay = true
           }
         }

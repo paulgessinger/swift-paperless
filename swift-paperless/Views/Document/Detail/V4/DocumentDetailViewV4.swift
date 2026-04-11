@@ -365,7 +365,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           guard previewEnabled else { return }
           showPreview = true
         } label: {
-          DocumentPreview(document: viewModel.document, currentPage: $previewPage)
+          DocumentPreview(
+            document: viewModel.document,
+            downloadState: viewModel.download,
+            currentPage: $previewPage
+          )
             .frame(maxWidth: .infinity)
             .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
             .accessibilityLabel(.localizable(.documentOpen))

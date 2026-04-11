@@ -181,6 +181,7 @@
 				Document/Detail/V4/TitleEditSheet.swift,
 				Document/DocumentEditView.swift,
 				Document/DocumentList.swift,
+				Document/DocumentPreview.swift,
 				Document/DocumentView.swift,
 				Document/FilterAssembly.swift,
 				Document/FilterAssemblyiOS18.swift,
