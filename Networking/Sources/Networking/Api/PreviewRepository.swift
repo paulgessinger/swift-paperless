@@ -275,7 +275,9 @@ public class PreviewRepository: Repository {
   public func delete(document _: Document) async throws {}
   public func create(document _: ProtoDocument, file _: URL, filename _: String) async throws {}
 
-  public func download(documentID _: UInt, original _: Bool = false, progress: (@Sendable (Double) -> Void)? = nil)
+  public func download(
+    documentID _: UInt, original _: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
+  )
     async throws -> URL?
   {
     var elapsed = 0.0

@@ -48,7 +48,9 @@ struct OwnerEditSheet: View {
         dismiss()
       } catch let RequestError.unexpectedStatusCode(code, detail) where code == .notFound {
         if expectedVisibilityChange {
-          Logger.shared.info("Document update resulted in \(code.rawValue, privacy: .public) as expected due to permission change")
+          Logger.shared.info(
+            "Document update resulted in \(code.rawValue, privacy: .public) as expected due to permission change"
+          )
           viewModel.document = document
           dismiss()
         } else {
@@ -59,7 +61,8 @@ struct OwnerEditSheet: View {
         saving = false
       } catch let RequestError.forbidden(body) {
         if expectedEditabilityChange {
-          Logger.shared.info("Document update resulted in forbidden as expected due to permission change")
+          Logger.shared.info(
+            "Document update resulted in forbidden as expected due to permission change")
           viewModel.document = document
           dismiss()
         } else {

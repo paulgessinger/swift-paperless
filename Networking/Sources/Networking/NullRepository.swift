@@ -21,7 +21,9 @@ public class NullRepository: Repository {
     throw NotImplemented()
   }
 
-  public func download(documentID _: UInt, original _: Bool = false, progress _: (@Sendable (Double) -> Void)? = nil)
+  public func download(
+    documentID _: UInt, original _: Bool = false, progress _: (@Sendable (Double) -> Void)? = nil
+  )
     async throws -> URL?
   { nil }
 

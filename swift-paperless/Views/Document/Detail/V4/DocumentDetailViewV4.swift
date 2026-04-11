@@ -162,13 +162,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   private var readOnlyExplanation: some View {
     let document = viewModel.document
     if !store.userCanChange(document: document) {
-      let reason: LocalizedStringResource = if !store.permissions.test(.change, for: .document) {
-        .localizable(.documentReadOnlyNoGlobalPermission)
-      } else if case .user(let ownerId) = document.owner, let owner = store.users[ownerId] {
-        .localizable(.documentReadOnlyOwnedBy(owner.username))
-      } else {
-        .localizable(.documentReadOnlyNotOwner)
-      }
+      let reason: LocalizedStringResource =
+        if !store.permissions.test(.change, for: .document) {
+          .localizable(.documentReadOnlyNoGlobalPermission)
+        } else if case .user(let ownerId) = document.owner, let owner = store.users[ownerId] {
+          .localizable(.documentReadOnlyOwnedBy(owner.username))
+        } else {
+          .localizable(.documentReadOnlyNotOwner)
+        }
 
       Label {
         Text(reason)
@@ -340,8 +341,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     Divider()
 
-    let archiveURL: URL? = if case .loaded(url: let url, document: _) = viewModel.download { url } else { nil }
-    let originalURL: URL? = if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
+    let archiveURL: URL? =
+      if case .loaded(url: let url, document: _) = viewModel.download { url } else { nil }
+    let originalURL: URL? =
+      if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
 
     Menu {
       ShareLink(item: archiveURL ?? URL(filePath: "/")) {
@@ -381,9 +384,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             downloadState: viewModel.download,
             currentPage: $previewPage
           )
-            .frame(maxWidth: .infinity)
-            .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
-            .accessibilityLabel(.localizable(.documentOpen))
+          .frame(maxWidth: .infinity)
+          .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
+          .accessibilityLabel(.localizable(.documentOpen))
         }
         .disabled(!previewEnabled)
 

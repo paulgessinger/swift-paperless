@@ -118,7 +118,8 @@ public protocol Repository: Sendable {
 
   func download(documentID: UInt) async throws -> URL?
 
-  func download(documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?) async throws -> URL?
+  func download(documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?)
+    async throws -> URL?
 
   func suggestions(documentId: UInt) async throws -> Suggestions
 
