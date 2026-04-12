@@ -26,8 +26,35 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   @ViewBuilder let createView: (@escaping (Item) -> Void) -> CreateView
 
   @State private var searchText = ""
+  @State private var searchIsActive: Bool
+  @State private var selectedDetent: PresentationDetent
   @State private var saving = false
   @State private var showCreate = false
+
+  init(
+    viewModel: DocumentDetailModel,
+    storeKeyPath: KeyPath<DocumentStore, [UInt: Item]>,
+    keyPath: WritableKeyPath<Document, UInt?>,
+    navigationTitle: LocalizedStringResource,
+    listSectionTitle: LocalizedStringResource,
+    notAssignedLabel: LocalizedStringResource,
+    canCreate: Bool,
+    suggestions: [UInt],
+    @ViewBuilder createView: @escaping (@escaping (Item) -> Void) -> CreateView
+  ) {
+    self.viewModel = viewModel
+    self.storeKeyPath = storeKeyPath
+    self.keyPath = keyPath
+    self.navigationTitle = navigationTitle
+    self.listSectionTitle = listSectionTitle
+    self.notAssignedLabel = notAssignedLabel
+    self.canCreate = canCreate
+    self.suggestions = suggestions
+    self.createView = createView
+    let nothingSelected = viewModel.document[keyPath: keyPath] == nil
+    _searchIsActive = State(initialValue: nothingSelected)
+    _selectedDetent = State(initialValue: nothingSelected ? .large : .medium)
+  }
 
   private let animation = Animation.spring(duration: 0.2)
   private static var selectedRowTransition: AnyTransition {
@@ -220,7 +247,10 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       }
       .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
-      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+      .searchable(
+        text: $searchText, isPresented: $searchIsActive,
+        placement: .navigationBarDrawer(displayMode: .always)
+      )
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -258,6 +288,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         }
       }
     }
+    .presentationDetents([.medium, .large], selection: $selectedDetent)
     .onAppear {
       Haptics.shared.prepare()
     }
