@@ -459,7 +459,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .tags:
         TagsEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
-          .presentationDetents([.medium, .large])
 
       case .asn:
         AsnEditSheet(viewModel: viewModel)
@@ -469,12 +468,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .correspondent:
         CorrespondentEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
-          .presentationDetents([.medium, .large])
 
       case .documentType:
         DocumentTypeEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
-          .presentationDetents([.medium, .large])
 
       case .date:
         DateEditSheet(viewModel: viewModel)
@@ -484,7 +481,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       case .storagePath:
         StoragePathEditSheet(viewModel: viewModel)
           .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
-          .presentationDetents([.medium, .large])
 
       case .owner:
         OwnerEditSheet(viewModel: viewModel)

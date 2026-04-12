@@ -17,11 +17,21 @@ struct TagsEditSheet: View {
 
   @Environment(\.dismiss) private var dismiss
 
-  @State private var tagIds: [UInt] = []
+  @State private var tagIds: [UInt]
   @State private var searchText = ""
+  @State private var searchIsActive: Bool
+  @State private var selectedDetent: PresentationDetent
   @State private var saving = false
   @State private var showCreateTag = false
   @Namespace private var tagNamespace
+
+  init(viewModel: DocumentDetailModel) {
+    self.viewModel = viewModel
+    let noTags = viewModel.document.tags.isEmpty
+    _tagIds = State(initialValue: viewModel.document.tags)
+    _searchIsActive = State(initialValue: noTags)
+    _selectedDetent = State(initialValue: noTags ? .large : .medium)
+  }
 
   private struct CreateTagView: View {
     @EnvironmentObject private var store: DocumentStore
@@ -180,7 +190,10 @@ struct TagsEditSheet: View {
       }
       .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
-      .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+      .searchable(
+        text: $searchText, isPresented: $searchIsActive,
+        placement: .navigationBarDrawer(displayMode: .always)
+      )
       .navigationTitle(.localizable(.tags))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -208,6 +221,7 @@ struct TagsEditSheet: View {
         }
       }
     }
+    .presentationDetents([.medium, .large], selection: $selectedDetent)
     .interactiveDismissDisabled(interactiveDismissDisabled)
     .sheet(isPresented: $showCreateTag) {
       NavigationStack {
@@ -220,9 +234,6 @@ struct TagsEditSheet: View {
           }
         }
       }
-    }
-    .onAppear {
-      tagIds = viewModel.document.tags
     }
   }
 }
