@@ -9,6 +9,7 @@ import Combine
 import DataModel
 import Foundation
 import Networking
+import Nuke
 import Semaphore
 import SwiftUI
 import os
@@ -63,12 +64,15 @@ final class DocumentStore: ObservableObject, Sendable {
 
   private(set) var repository: any Repository
 
+  @Published private(set) var imagePipeline: ImagePipeline
+
   private var taskUpdateTask: Task<Void, Never>?
 
   // MARK: Methods
 
   init(repository: some Repository) {
     self.repository = repository
+    self.imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
   }
 
   deinit {
@@ -138,10 +142,24 @@ final class DocumentStore: ObservableObject, Sendable {
 
   func set(repository: some Repository, reload: Bool = true) {
     self.repository = repository
+    imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     if reload {
       eventPublisher.send(.repositoryChanged)
       clear()
     }
+  }
+
+  private static func makeImagePipeline(delegate: (any URLSessionDelegate)?) -> ImagePipeline {
+    let dataLoader = DataLoader()
+    if let delegate {
+      dataLoader.delegate = delegate
+    }
+    return ImagePipeline(configuration: .init(dataLoader: dataLoader))
+  }
+
+  func preloadThumbnail(for document: Document) {
+    guard let urlRequest = try? repository.thumbnailRequest(document: document) else { return }
+    imagePipeline.loadImage(with: ImageRequest(urlRequest: urlRequest, priority: .high)) { _ in }
   }
 
   func updateDocument(_ document: Document) async throws -> Document {

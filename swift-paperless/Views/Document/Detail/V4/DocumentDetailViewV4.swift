@@ -635,7 +635,6 @@ private struct DocumentDetailViewV4PreviewHelper: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environment(RouteManager.shared)
-    .environment(ImagePipelineProvider())
     .task {
       do {
         guard let repository = store.repository as? TransientRepository else {

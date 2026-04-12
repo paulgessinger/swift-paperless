@@ -20,7 +20,6 @@ struct MainView: View {
   @State private var showSettings = false
 
   @StateObject private var manager = ConnectionManager()
-  @State private var imagePipelineProvider = ImagePipelineProvider()
 
   @StateObject private var errorController: ErrorController
 
@@ -147,7 +146,6 @@ struct MainView: View {
         await sleep(.seconds(0.3))
         await store.set(
           repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-        imagePipelineProvider.update(delegate: store.repository.delegate)
         storeReady = true
         try? await store.fetchAll()
         store.startTaskPolling()
@@ -156,7 +154,6 @@ struct MainView: View {
       } else {
         store = await DocumentStore(
           repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
-        imagePipelineProvider.update(delegate: store!.repository.delegate)
         storeReady = true
         try? await store!.fetchAll()
         store!.startTaskPolling()
@@ -164,7 +161,6 @@ struct MainView: View {
       }
       showLoginScreen = false
     } else {
-      imagePipelineProvider.update(delegate: nil)
       storeReady = false
       Logger.shared.trace("App does not have any active connection, show login screen")
       showLoginScreen = true
@@ -220,7 +216,6 @@ struct MainView: View {
 
     .environmentObject(errorController)
     .environmentObject(biometricLockManager)
-    .environment(imagePipelineProvider)
 
     .fullScreenCover(isPresented: $showLoginScreen) {
       LoginView(connectionManager: manager)

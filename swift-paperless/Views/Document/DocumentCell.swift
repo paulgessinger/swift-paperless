@@ -17,7 +17,6 @@ struct DocumentPreviewImage: View {
   var store: DocumentStore
   var document: Document
 
-  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @StateObject private var image = FetchImage()
 
   var body: some View {
@@ -30,16 +29,13 @@ struct DocumentPreviewImage: View {
     .task {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       do {
-        image.pipeline = imagePipelineProvider.pipeline
+        image.pipeline = store.imagePipeline
         try image.load(
           ImageRequest(
             urlRequest: store.repository.thumbnailRequest(document: document),
             processors: [.resize(width: 130)]))
 
-        imagePipelineProvider.pipeline.loadImage(
-          with:
-            ImageRequest(urlRequest: try store.repository.thumbnailRequest(document: document))
-        ) { _ in }
+        store.preloadThumbnail(for: document)
       } catch {
         Logger.shared.error("Error loading document thumbnail for cell: \(error)")
       }
@@ -230,5 +226,4 @@ struct DocumentCell: View {
       try await store.fetchAll()
     } catch { print(error) }
   }
-  .environment(ImagePipelineProvider())
 }

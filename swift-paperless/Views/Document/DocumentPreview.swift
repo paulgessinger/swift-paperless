@@ -192,7 +192,6 @@ private struct PDFPagingPreview: View {
 
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
-  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var showLoadingOverlay = false
   var document: Document
   var downloadState: DocumentDownloadState
@@ -252,7 +251,7 @@ private struct IntegratedDocumentPreview: View {
 
     .task {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
-      image.pipeline = imagePipelineProvider.pipeline
+      image.pipeline = store.imagePipeline
       do {
         try image.load(
           ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
@@ -279,7 +278,6 @@ private struct IntegratedDocumentPreview: View {
 
 struct PopupDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
-  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 
@@ -327,7 +325,7 @@ struct PopupDocumentPreview: View {
       await viewModel.loadDocument(
         store: store,
         document: document,
-        pipeline: imagePipelineProvider.pipeline,
+        pipeline: store.imagePipeline,
         image: image)
     }
   }

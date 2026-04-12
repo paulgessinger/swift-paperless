@@ -19,7 +19,6 @@ class DocumentListViewModel {
   private var store: DocumentStore
   private var filterState: FilterState
   private var errorController: ErrorController
-  private let imagePipelineProvider: ImagePipelineProvider
 
   var documents: [Document] = []
   var ready = false
@@ -40,14 +39,12 @@ class DocumentListViewModel {
   init(
     store: DocumentStore,
     filterState: FilterState,
-    errorController: ErrorController,
-    imagePipelineProvider: ImagePipelineProvider
+    errorController: ErrorController
   ) {
     self.store = store
     self.filterState = filterState
     self.errorController = errorController
-    self.imagePipelineProvider = imagePipelineProvider
-    let prefetchPipeline = imagePipelineProvider.pipeline
+    let prefetchPipeline = store.imagePipeline
     self.prefetchPipeline = prefetchPipeline
     imagePrefetcher = ImagePrefetcher(pipeline: prefetchPipeline)
 
@@ -57,7 +54,7 @@ class DocumentListViewModel {
   }
 
   private func updatePrefetcherIfNeeded() {
-    let pipeline = imagePipelineProvider.pipeline
+    let pipeline = store.imagePipeline
     guard pipeline !== prefetchPipeline else { return }
 
     imagePrefetcher.stopPrefetching()

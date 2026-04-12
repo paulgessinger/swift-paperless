@@ -53,8 +53,7 @@ struct DocumentList: View {
 
   init(
     store: DocumentStore, navPath: Binding<[NavigationState]>, filterModel: FilterModel,
-    errorController: ErrorController,
-    imagePipelineProvider: ImagePipelineProvider
+    errorController: ErrorController
   ) {
     self.store = store
     _navPath = navPath
@@ -63,8 +62,7 @@ struct DocumentList: View {
       initialValue: DocumentListViewModel(
         store: store,
         filterState: filterModel.filterState,
-        errorController: errorController,
-        imagePipelineProvider: imagePipelineProvider))
+        errorController: errorController))
   }
 
   struct Cell: View {
@@ -76,7 +74,6 @@ struct DocumentList: View {
     var viewModel: DocumentListViewModel
 
     @EnvironmentObject private var errorController: ErrorController
-    @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
     private var userCanChange: Bool {
       store.userCanChange(document: document)
@@ -101,14 +98,6 @@ struct DocumentList: View {
       }
     }
 
-    private func preloadThumbnail(for document: Document) {
-      guard let urlRequest = try? store.repository.thumbnailRequest(document: document) else {
-        return
-      }
-      let request = ImageRequest(urlRequest: urlRequest, priority: .high)
-      imagePipelineProvider.pipeline.loadImage(with: request) { _ in }
-    }
-
     var body: some View {
       DocumentCell(document: document, store: store)
         .contentShape(Rectangle())
@@ -116,7 +105,7 @@ struct DocumentList: View {
         .padding(.horizontal)
         .padding(.vertical)
         .onTapGesture {
-          preloadThumbnail(for: document)
+          store.preloadThumbnail(for: document)
           navPath.append(NavigationState.detail(document: document))
         }
 
@@ -144,7 +133,7 @@ struct DocumentList: View {
 
         .contextMenu {
           Button {
-            preloadThumbnail(for: document)
+            store.preloadThumbnail(for: document)
             navPath.append(NavigationState.detail(document: document))
           } label: {
             Label(String(localized: .localizable(.edit)), systemImage: "pencil")
@@ -169,7 +158,6 @@ struct DocumentList: View {
         } preview: {
           PopupDocumentPreview(document: document)
             .environmentObject(store)
-            .environment(imagePipelineProvider)
         }
 
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
