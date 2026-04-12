@@ -18,7 +18,7 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
     {
       Logger.networking.info(
         "URLSessionDelegate initializing with identity: \(pName, privacy: .public)")
-      credential = URLCredential(identity: identity, certificates: nil, persistence: .none)
+      credential = Self.makeCredential(identity: identity)
     } else {
       Logger.networking.info("URLSessionDelegate initializing without identity")
       credential = nil
@@ -27,10 +27,25 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
 
   public init(identity: TLSIdentity?) {
     if let identity {
-      credential = URLCredential(identity: identity.identity, certificates: nil, persistence: .none)
+      credential = Self.makeCredential(identity: identity.identity)
     } else {
       credential = nil
     }
+  }
+
+  private static func makeCredential(identity: SecIdentity) -> URLCredential {
+    var leafCertificate: SecCertificate?
+    let status = SecIdentityCopyCertificate(identity, &leafCertificate)
+
+    if status == errSecSuccess, let cert = leafCertificate {
+      // Include the leaf certificate so TLS client-auth always sends a non-empty certificate list.
+      return URLCredential(identity: identity, certificates: [cert], persistence: .none)
+    }
+
+    Logger.networking.warning(
+      "Failed to extract leaf certificate from identity (\(status, privacy: .public)); using identity without certificates"
+    )
+    return URLCredential(identity: identity, certificates: nil, persistence: .none)
   }
 
   public func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (
