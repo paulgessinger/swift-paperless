@@ -144,7 +144,6 @@ struct TagsEditSheet: View {
               }
             }
           }
-          //          .animation(animation, value: tagIds)
 
           VStack(spacing: 0) {
             if !availableTags.isEmpty {
@@ -173,7 +172,6 @@ struct TagsEditSheet: View {
                     }
                   }
                 }
-                //                .animation(animation, value: tagIds)
               }
             }
           }

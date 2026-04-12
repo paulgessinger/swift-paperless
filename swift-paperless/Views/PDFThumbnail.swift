@@ -1,5 +1,5 @@
 //
-//  PDFView.swift
+//  PDFThumbnail.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 06.08.23.
@@ -51,7 +51,7 @@ struct PDFThumbnail: View {
   }
 }
 
-struct PDFView_Previews: PreviewProvider {
+struct PDFThumbnail_Previews: PreviewProvider {
   static var previews: some View {
     NavigationStack {
       VStack {

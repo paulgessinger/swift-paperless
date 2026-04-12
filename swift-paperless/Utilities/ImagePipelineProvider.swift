@@ -10,6 +10,10 @@ import Networking
 import Nuke
 import Observation
 
+// @TODO: Simplify — the only thing that changes between connections is the URLSessionDelegate.
+// Consider storing the delegate directly and making `pipeline` computed, or moving pipeline ownership
+// into DocumentStore/repository (which already knows the delegate) so views don't carry a separate provider.
+
 @MainActor
 @Observable
 final class ImagePipelineProvider {

@@ -166,7 +166,8 @@ class DocumentDetailModel {
     return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
 
-  // @TODO: This is awkward, can we get rid of the connection member
+  // @TODO: Extract `private var serverURL: URL?` from `(store.repository as? ApiRepository)?.connection.url`,
+  // use it in both `documentUrl` and `deepLinks`, then drop the `connection` property and propagation through init/protocol/view.
   var deepLinks: (withServer: Route?, withoutServer: Route?) {
     let withServer: Route? = (store.repository as? ApiRepository).flatMap {
       let serverURL = $0.connection.url
