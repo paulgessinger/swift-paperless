@@ -5,14 +5,66 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import Common
 import SwiftUI
 
+private struct CustomSectionBackgroundKey: EnvironmentKey {
+  static let defaultValue: AnyShapeStyle? = nil
+}
+
+extension EnvironmentValues {
+  var customSectionBackground: AnyShapeStyle? {
+    get { self[CustomSectionBackgroundKey.self] }
+    set { self[CustomSectionBackgroundKey.self] = newValue }
+  }
+}
+
+extension View {
+  func customSectionBackground<S: ShapeStyle>(_ style: S) -> some View {
+    environment(\.customSectionBackground, AnyShapeStyle(style))
+  }
+
+  func customSectionBackground(_ style: AnyShapeStyle?) -> some View {
+    environment(\.customSectionBackground, style)
+  }
+}
+
+struct CustomSectionRow<Content: View>: View {
+  let content: () -> Content
+
+  @ScaledMetric(relativeTo: .body) private var rowVerticalPadding = 12.0
+
+  init(@ViewBuilder content: @escaping () -> Content) {
+    self.content = content
+  }
+
+  var body: some View {
+    content()
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .padding(.vertical, rowVerticalPadding)
+  }
+}
 struct CustomSection<Content: View, Footer: View, Header: View>: View {
   var content: () -> Content
   var header: (() -> Header)? = nil
   var footer: (() -> Footer)? = nil
 
-  @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.customSectionBackground) private var backgroundStyle
+
+  @SchemeValue(
+    light: Color(uiColor: .systemBackground),
+    dark: Color(uiColor: .secondarySystemBackground))
+  private var solidBackgroundColor
+
+  private var backgroundFill: AnyShapeStyle {
+    backgroundStyle ?? AnyShapeStyle(solidBackgroundColor)
+  }
+
+  private func sectionBackground(cornerRadius: CGFloat, style: RoundedCornerStyle) -> some View {
+    let shape = RoundedRectangle(cornerRadius: cornerRadius, style: style)
+    return shape.fill(backgroundFill)
+  }
 
   var body: some View {
     VStack(spacing: 4) {
@@ -39,14 +91,12 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
             $0
               .padding(.vertical, 5)
               .background(
-                RoundedRectangle(cornerRadius: 23, style: .continuous)
-                  .fill(.background.tertiary)
+                sectionBackground(cornerRadius: 23, style: .continuous)
               )
           } else {
             $0
               .background(
-                RoundedRectangle(cornerRadius: 10, style: .circular)
-                  .fill(.background.tertiary)
+                sectionBackground(cornerRadius: 10, style: .circular)
               )
           }
         }
@@ -113,11 +163,22 @@ extension CustomSection where Header == EmptyView {
       }
 
       CustomSection {
-        VStack {
-          Text("GO IDENTITY!")
-          Text("Right")
-          Text("Right")
-          Text("Right")
+        VStack(spacing: 0) {
+          CustomSectionRow {
+            Text("GO IDENTITY!")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
+          Divider()
+          CustomSectionRow {
+            Text("Right")
+          }
         }
       } header: {
         Text("head")
@@ -140,12 +201,9 @@ extension CustomSection where Header == EmptyView {
       }
 
       Section {
-        VStack {
-          Text("GO IDENTITY!")
-          Text("Right")
-          Text("Right")
-          Text("Right")
-        }
+        Text("GO IDENTITY!")
+        Text("Right")
+        Text("Right")
       } header: {
         Text("head")
       } footer: {

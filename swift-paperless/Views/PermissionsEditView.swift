@@ -65,6 +65,14 @@ where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel {
     object.permissions = newPerms
   }
 
+  private func label(for element: T) -> Text {
+    if let currentUser = store.currentUser, element.id == currentUser.id, T.self == User.self {
+      Text(.permissions(.userYouLabel(element[keyPath: name])))
+    } else {
+      Text(element[keyPath: name])
+    }
+  }
+
   private func row(_ element: T) -> some View {
     Button {
       if selected.contains(element.id) {
@@ -76,7 +84,7 @@ where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel {
       }
     } label: {
       HStack {
-        Text(element[keyPath: name])
+        label(for: element)
           .frame(maxWidth: .infinity, alignment: .leading)
           .foregroundStyle(.primary)
 

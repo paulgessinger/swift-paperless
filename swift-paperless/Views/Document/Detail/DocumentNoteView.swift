@@ -33,6 +33,7 @@ private struct CreateNoteView: View {
       try await store.addNote(to: document, note: note)
       // We have no way to only get the new note here
       notes = try await store.notes(for: document)
+      document.notes.count = notes.count
       Haptics.shared.notification(.success)
       dismiss()
     } catch {
@@ -98,6 +99,7 @@ struct DocumentNoteView: View {
       do {
         try await store.deleteNote(from: document, id: note.id)
         notes = notes.filter { $0.id != note.id }
+        document.notes.count = notes.count
       } catch let error where !error.isCancellationError {
         Logger.shared.error("Error deleting note from document: \(error)")
         errorController.push(error: error)
@@ -114,10 +116,21 @@ struct DocumentNoteView: View {
     }
   }
 
+  private var canViewNotes: Bool {
+    store.permissions.test(.view, for: .note)
+  }
+
   var body: some View {
     NavigationStack {
       VStack {
-        if notes.isEmpty {
+        if !canViewNotes {
+          Form {
+            ContentUnavailableView(
+              String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+              systemImage: "lock.fill",
+              description: Text(.permissions(.noViewPermissionsNotes)))
+          }
+        } else if notes.isEmpty {
           Form {
             ContentUnavailableView {
               Label(
@@ -126,11 +139,6 @@ struct DocumentNoteView: View {
               )
             } description: {
               Text(LocalizedStringResource("notesEmptyDescription", table: "DocumentMetadata"))
-            } actions: {
-              Button(.localizable(.add)) {
-                adding = true
-              }
-              .disabled(!store.permissions.test(.add, for: .note))
             }
           }
         } else {
@@ -174,13 +182,15 @@ struct DocumentNoteView: View {
           CancelIconButton()
         }
 
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            adding = true
-          } label: {
-            Label(.localizable(.add), systemImage: "plus")
+        if canViewNotes {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              adding = true
+            } label: {
+              Label(.localizable(.add), systemImage: "plus")
+            }
+            .disabled(!store.permissions.test(.add, for: .note))
           }
-          .disabled(!store.permissions.test(.add, for: .note))
         }
       }
 
@@ -196,6 +206,7 @@ struct DocumentNoteView: View {
     .errorOverlay(errorController: errorController, offset: 20)
 
     .task {
+      guard canViewNotes else { return }
       await loadNotes()
     }
   }

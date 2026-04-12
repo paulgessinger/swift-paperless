@@ -31,11 +31,7 @@ extension TagProtocol {
 }
 
 private var placeholderColor: Color {
-  #if canImport(UIKit)
-    Color(uiColor: UIColor.systemGroupedBackground)
-  #else
-    .gray
-  #endif
+  Color(white: 0.5)
 }
 
 @Codable
@@ -124,4 +120,5 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
   public func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }
+
 }

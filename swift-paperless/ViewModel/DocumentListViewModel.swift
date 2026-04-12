@@ -19,6 +19,7 @@ class DocumentListViewModel {
   private var store: DocumentStore
   private var filterState: FilterState
   private var errorController: ErrorController
+  private let imagePipelineProvider: ImagePipelineProvider
 
   var documents: [Document] = []
   var ready = false
@@ -31,23 +32,37 @@ class DocumentListViewModel {
   private var initialBatchSize: UInt = 250
   private var batchSize: UInt = 250
   private var fetchMargin = 10
+  private let highPriorityPrefetchCount = 10
 
   private var imagePrefetcher: ImagePrefetcher
+  private var prefetchPipeline: ImagePipeline
 
-  init(store: DocumentStore, filterState: FilterState, errorController: ErrorController) {
+  init(
+    store: DocumentStore,
+    filterState: FilterState,
+    errorController: ErrorController,
+    imagePipelineProvider: ImagePipelineProvider
+  ) {
     self.store = store
     self.filterState = filterState
     self.errorController = errorController
+    self.imagePipelineProvider = imagePipelineProvider
+    let prefetchPipeline = imagePipelineProvider.pipeline
+    self.prefetchPipeline = prefetchPipeline
+    imagePrefetcher = ImagePrefetcher(pipeline: prefetchPipeline)
 
-    let dataloader = DataLoader()
-
-    if let delegate = store.repository.delegate {
-      dataloader.delegate = delegate
+    imagePrefetcher.didComplete = {
+      Logger.shared.debug("Thumbnail prefetching completed")
     }
+  }
 
-    imagePrefetcher = ImagePrefetcher(
-      pipeline: ImagePipeline(configuration: .init(dataLoader: dataloader)))
+  private func updatePrefetcherIfNeeded() {
+    let pipeline = imagePipelineProvider.pipeline
+    guard pipeline !== prefetchPipeline else { return }
 
+    imagePrefetcher.stopPrefetching()
+    prefetchPipeline = pipeline
+    imagePrefetcher = ImagePrefetcher(pipeline: pipeline)
     imagePrefetcher.didComplete = {
       Logger.shared.debug("Thumbnail prefetching completed")
     }
@@ -81,12 +96,27 @@ class DocumentListViewModel {
       try ensurePermissions()
       let batch = try await source!.fetch(limit: initialBatchSize)
 
-      let requests =
+      let requests: [ImageRequest] =
         try batch
-        .map { try store.repository.thumbnailRequest(document: $0) }
-        .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+        .enumerated()
+        .map { index, document in
+          let urlRequest = try store.repository.thumbnailRequest(document: document)
+          let fullPriority: ImageRequest.Priority =
+            index < highPriorityPrefetchCount ? .high : .normal
+          return [
+            ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+            ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
+          ]
+        }
+        .flatMap { $0 }
+
+      //      let requests =
+      //    try batch
+      //    .map { try store.repository.thumbnailRequest(document: $0) }
+      //    .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+      updatePrefetcherIfNeeded()
       imagePrefetcher.startPrefetching(with: requests)
 
       documents = batch
@@ -104,6 +134,7 @@ class DocumentListViewModel {
     if exhausted { return }
     if currentIndex >= documents.count - fetchMargin {
       let repository = store.repository
+      let highPriorityCount = highPriorityPrefetchCount
       Task.detached {
         do {
           Logger.shared.info("Fetching additional documents")
@@ -121,10 +152,20 @@ class DocumentListViewModel {
 
           let requests =
             try batch
-            .map { try repository.thumbnailRequest(document: $0) }
-            .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+            .enumerated()
+            .map { index, document in
+              let urlRequest = try repository.thumbnailRequest(document: document)
+              let fullPriority: ImageRequest.Priority =
+                index < highPriorityCount ? .high : .normal
+              return [
+                ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+                ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
+              ]
+            }
+            .flatMap { $0 }
 
           Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+          await self.updatePrefetcherIfNeeded()
           await self.imagePrefetcher.startPrefetching(with: requests)
 
           await MainActor.run {
@@ -153,10 +194,20 @@ class DocumentListViewModel {
 
       let requests =
         try batch
-        .map { try self.store.repository.thumbnailRequest(document: $0) }
-        .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+        .enumerated()
+        .map { index, document in
+          let urlRequest = try self.store.repository.thumbnailRequest(document: document)
+          let fullPriority: ImageRequest.Priority =
+            index < highPriorityPrefetchCount ? .high : .normal
+          return [
+            ImageRequest(urlRequest: urlRequest, priority: fullPriority),
+            ImageRequest(urlRequest: urlRequest, processors: [.resize(width: 130)]),
+          ]
+        }
+        .flatMap { $0 }
 
       Logger.shared.debug("Prefetching \(requests.count) thumbnail images")
+      updatePrefetcherIfNeeded()
       imagePrefetcher.startPrefetching(with: requests)
 
       return batch

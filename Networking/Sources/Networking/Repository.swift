@@ -118,7 +118,8 @@ public protocol Repository: Sendable {
 
   func download(documentID: UInt) async throws -> URL?
 
-  func download(documentID: UInt, progress: (@Sendable (Double) -> Void)?) async throws -> URL?
+  func download(documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?)
+    async throws -> URL?
 
   func suggestions(documentId: UInt) async throws -> Suggestions
 
@@ -173,7 +174,11 @@ public protocol Repository: Sendable {
 
 extension Repository {
   public func download(documentID: UInt) async throws -> URL? {
-    try await download(documentID: documentID, progress: nil)
+    try await download(documentID: documentID, original: false, progress: nil)
+  }
+
+  public func download(documentID: UInt, original: Bool) async throws -> URL? {
+    try await download(documentID: documentID, original: original, progress: nil)
   }
 
   // Helper method documents with a title search

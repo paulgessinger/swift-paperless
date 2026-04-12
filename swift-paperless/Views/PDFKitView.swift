@@ -23,7 +23,7 @@ struct PDFKitView: UIViewRepresentable {
   var maxScaleFactor: CGFloat?
   var scaleFactor: CGFloat?
 
-  //    @Binding private(set) var aspectRatio: CGFloat!
+  var pageIndex: Int?
 
   func updateUIView(_: PDFKit.PDFView, context _: Context) {}
 
@@ -50,13 +50,10 @@ struct PDFKitView: UIViewRepresentable {
     if let scaleFactor {
       view.scaleFactor = scaleFactor
     }
-    //        view.autoresizesSubviews = true
-    //        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    //        view.maxScaleFactor = 4.0
-    //        view.minScaleFactor = 0.1
 
-    //        view.setNeedsLayout()
-    //        view.layoutIfNeeded()
+    if let pageIndex, let page = document.page(at: pageIndex) {
+      view.go(to: page)
+    }
 
     return view
   }

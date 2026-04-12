@@ -852,6 +852,18 @@
         }
       }
     },
+    "asnNext" : {
+      "comment" : "Next available ASN suggestion, shown as a pill in the ASN edit sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: #%u"
+          }
+        }
+      }
+    },
     "asnPlaceholder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4788,6 +4800,61 @@
         }
       }
     },
+    "documentOpen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show full document"
+          }
+        }
+      }
+    },
+    "documentReadOnlyNoGlobalPermission" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your user account does not have permission to edit documents."
+          }
+        }
+      }
+    },
+    "documentReadOnlyNotOwner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This document is owned by another user and you have not been granted edit access."
+          }
+        }
+      }
+    },
+    "documentReadOnlyOwnedBy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This document is owned by *%@* and you have not been granted edit access."
+          }
+        }
+      }
+    },
+    "documentReadOnlyTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read-Only"
+          }
+        }
+      }
+    },
     "documents" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4996,6 +5063,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Doküman görüntülemek için izniniz yok. Lütfen yöneticinizle iletişime geçin."
+          }
+        }
+      }
+    },
+    "documentTagsEditButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit tags"
           }
         }
       }
@@ -7288,6 +7366,17 @@
         }
       }
     },
+    "noTagsSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tags selected"
+          }
+        }
+      }
+    },
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7976,6 +8065,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sahipsiz"
+          }
+        }
+      }
+    },
+    "pageIndicator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld"
           }
         }
       }
@@ -10263,6 +10363,28 @@
         }
       }
     },
+    "shareArchive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived Document"
+          }
+        }
+      }
+    },
+    "shareDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Document"
+          }
+        }
+      }
+    },
     "shareLink" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10312,6 +10434,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bağlantıyı paylaş"
+          }
+        }
+      }
+    },
+    "shareOriginal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original Document"
           }
         }
       }

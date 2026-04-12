@@ -6,14 +6,16 @@
 //
 
 import DataModel
+import Nuke
 import NukeUI
+import PDFKit
 import SwiftUI
 import os
 
 private enum DownloadState: Equatable {
   case initial
   case loading
-  case loaded(PDFThumbnail)
+  case loaded(PDFDocument)
   case error
 
   static func == (lhs: DownloadState, rhs: DownloadState) -> Bool {
@@ -27,27 +29,42 @@ private enum DownloadState: Equatable {
 }
 
 struct DocumentPreview: View {
-  @State private var download = DownloadState.initial
   var document: Document
+  var downloadState: DocumentDownloadState
+  @Binding var currentPage: Int
 
   var body: some View {
-    IntegratedDocumentPreview(download: $download, document: document)
-      .frame(minWidth: 200, minHeight: 200)
+    IntegratedDocumentPreview(
+      document: document, downloadState: downloadState, currentPage: $currentPage
+    )
+    .frame(minWidth: 200, minHeight: 200)
   }
 }
 
-private struct IntegratedDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
-  @Binding var download: DownloadState
-  var document: Document
+@MainActor
+@Observable
+private final class IntegratedDocumentPreviewModel {
+  var download: DownloadState = .initial
+  var downloadProgress: Double = 0.0
+  var hasReceivedProgress = false
 
-  @StateObject private var image = FetchImage()
+  func loadDocument(
+    store: DocumentStore,
+    document: Document,
+    pipeline: ImagePipeline,
+    image: FetchImage
+  ) async {
 
-  private func loadDocument() async {
+    // @TODO: If we have a cache hit on the downloaded PDF, skip the blurred thumbnail
+
     image.transaction = Transaction(animation: .linear(duration: 0.1))
+
+    image.pipeline = pipeline
+
     do {
       try image.load(
-        ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document)))
+        ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
+      )
     } catch {
       Logger.shared.error("Error loading document thumbnail: \(error)")
     }
@@ -55,69 +72,263 @@ private struct IntegratedDocumentPreview: View {
     switch download {
     case .initial:
       download = .loading
+      hasReceivedProgress = false
+      downloadProgress = 0
       do {
-        guard let url = try await store.repository.download(documentID: document.id) else {
+        guard
+          let url = try await store.repository.download(
+            documentID: document.id,
+            original: false,
+            progress: { @Sendable value in
+              Task { @MainActor in
+                self.hasReceivedProgress = true
+                self.downloadProgress = value
+              }
+            })
+        else {
           download = .error
           return
         }
 
-        guard let view = PDFThumbnail(file: url) else {
+        guard let pdfDocument = PDFDocument(url: url) else {
           download = .error
           return
         }
-        download = .loaded(view)
-
+        download = .loaded(pdfDocument)
       } catch {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
-        return
       }
 
     default:
       break
     }
   }
+}
 
-  private var isLoaded: Bool {
-    if case .loaded = download {
-      return true
-    }
-    return false
+private struct PDFPageView: View {
+  let document: PDFDocument
+  let pageIndex: Int
+  let aspectRatio: CGFloat
+
+  var body: some View {
+    PDFKitView(
+      document: document,
+      displayMode: .singlePage,
+      pageShadows: false,
+      autoScales: true,
+      userInteraction: false,
+      displayPageBreaks: false,
+      pageBreakMargins: .zero,
+      pageIndex: pageIndex
+    )
+    .aspectRatio(aspectRatio, contentMode: .fill)
+  }
+}
+
+private struct PDFPagingPreview: View {
+  let document: PDFDocument
+  @Binding var currentPage: Int
+
+  @State private var scrolledPage: Int? = 0
+
+  private var pageCount: Int {
+    document.pageCount
+  }
+
+  private func aspectRatio(for pageIndex: Int) -> CGFloat {
+    guard let page = document.page(at: pageIndex) else { return 1.0 }
+    let size = page.bounds(for: .trimBox).size
+    return size.width / size.height
+  }
+
+  private var firstPageAspectRatio: CGFloat {
+    aspectRatio(for: 0)
   }
 
   var body: some View {
-    ZStack {
-      image.image?
-        .resizable()
-        .scaledToFit()
-        .blur(radius: 10)
+    ScrollView(.horizontal, showsIndicators: false) {
+      LazyHStack(spacing: 0) {
+        ForEach(0..<pageCount, id: \.self) { index in
+          PDFPageView(
+            document: document,
+            pageIndex: index,
+            aspectRatio: aspectRatio(for: index)
+          )
+          .containerRelativeFrame(.horizontal)
+        }
+      }
+      .scrollTargetLayout()
+    }
+    .scrollTargetBehavior(.viewAligned)
+    .scrollPosition(id: $scrolledPage)
+    .aspectRatio(firstPageAspectRatio, contentMode: .fit)
+    .onChange(of: scrolledPage) { _, newValue in
+      if let newValue {
+        currentPage = newValue
+      }
+    }
+    .onChange(of: currentPage) { _, newValue in
+      if scrolledPage != newValue {
+        scrolledPage = newValue
+      }
+    }
+    .overlay(alignment: .bottom) {
+      Text(.localizable(.pageIndicator((scrolledPage ?? 0) + 1, pageCount)))
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .backport.glassEffect(
+          .regular, in: Capsule(), orFill: .ultraThinMaterial
+        )
+        .contentTransition(.numericText())
+        .animation(.default, value: scrolledPage)
+        .padding(8)
+    }
+    .background(.white)
+  }
+}
 
-      switch download {
+private struct IntegratedDocumentPreview: View {
+  @EnvironmentObject private var store: DocumentStore
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
+  @State private var showLoadingOverlay = false
+  var document: Document
+  var downloadState: DocumentDownloadState
+  @Binding var currentPage: Int
+
+  @StateObject private var image = FetchImage()
+
+  private static let loadingOverlayDelay: Duration = .seconds(0.5)
+
+  var body: some View {
+    ZStack {
+
+      switch downloadState {
+      case .initial, .loading:
+        image.image?
+          .resizable()
+          .scaledToFit()
+          .blur(radius: 5, opaque: true)
+
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
           .labelStyle(.iconOnly)
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
 
-      case .loaded(let view):
-        view
-          .background(.white)
+      case .loaded(url: _, document: let pdfDocument):
+        PDFPagingPreview(document: pdfDocument, currentPage: $currentPage)
+      }
+    }
 
-      default:
-        EmptyView()
+    .overlay {
+      if showLoadingOverlay {
+        VStack {
+          Text(.localizable(.loading))
+            .foregroundStyle(.primary)
+          LinearProgressBar(mode: .indeterminate)
+            .frame(width: 100)
+        }
+        .padding()
+        .apply {
+          if #available(iOS 26.0, *) {
+            $0
+              .padding(.horizontal, 20)
+              .glassEffect()
+          } else {
+            $0.background(
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.thinMaterial)
+            )
+          }
+        }
+        .transition(.opacity)
+      }
+    }
+    .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
+    .animation(.easeOut(duration: 0.8), value: downloadState)
+
+    .task {
+      image.transaction = Transaction(animation: .linear(duration: 0.1))
+      image.pipeline = imagePipelineProvider.pipeline
+      do {
+        try image.load(
+          ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
+        )
+      } catch {
+        Logger.shared.error("Error loading document thumbnail: \(error)")
+      }
+    }
+    .onChange(of: downloadState) { _, newState in
+      if case .loading = newState {
+        Task {
+          try? await Task.sleep(for: Self.loadingOverlayDelay)
+          guard !Task.isCancelled else { return }
+          if case .loading = downloadState {
+            showLoadingOverlay = true
+          }
+        }
+      } else {
+        showLoadingOverlay = false
+      }
+    }
+  }
+}
+
+struct PopupDocumentPreview: View {
+  @EnvironmentObject private var store: DocumentStore
+  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
+  @State private var viewModel = IntegratedDocumentPreviewModel()
+  var document: Document
+
+  @StateObject private var image = FetchImage()
+
+  var body: some View {
+    ZStack {
+
+      switch viewModel.download {
+      case .initial, .loading:
+        image.image?
+          .resizable()
+          .scaledToFit()
+          .blur(radius: 10)
+
+      case .error:
+        Label("Unable to load preview", systemImage: "eye.slash")
+          .labelStyle(.iconOnly)
+          .imageScale(.large)
+          .frame(maxWidth: .infinity, alignment: .center)
+
+      case .loaded(let pdfDocument):
+        if let page = pdfDocument.page(at: 0) {
+          let size = page.bounds(for: .trimBox).size
+          PDFKitView(
+            document: pdfDocument,
+            displayMode: .singlePage,
+            pageShadows: false,
+            autoScales: true,
+            userInteraction: false,
+            displayPageBreaks: false,
+            pageBreakMargins: .zero,
+            pageIndex: 0
+          )
+          .aspectRatio(size.width / size.height, contentMode: .fill)
+          .background(.white)
+        }
       }
     }
 
     .transition(.opacity)
-    .animation(.easeOut(duration: 0.8), value: download)
-    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-    .overlay(
-      RoundedRectangle(cornerRadius: 15, style: .continuous)
-        .stroke(.gray, lineWidth: 0.33)
-    )
-    .shadow(color: Color(.imageShadow), radius: 15)
+    .animation(.easeOut(duration: 0.8), value: viewModel.download)
+
     .task {
-      await loadDocument()
+      await viewModel.loadDocument(
+        store: store,
+        document: document,
+        pipeline: imagePipelineProvider.pipeline,
+        image: image)
     }
   }
 }

@@ -8,13 +8,14 @@
 import DataModel
 import Foundation
 import Networking
+import PDFKit
 import SwiftUI
 import os
 
 enum DocumentDownloadState: Equatable {
   case initial
   case loading
-  case loaded(URL)
+  case loaded(url: URL, document: PDFDocument)
   case error
 
   static func == (lhs: DocumentDownloadState, rhs: DocumentDownloadState) -> Bool {
@@ -33,6 +34,15 @@ class DocumentDetailModel {
   var download: DocumentDownloadState = .initial
   var downloadProgress: Double = 0.0
 
+  enum OriginalDownloadState {
+    case initial
+    case loading
+    case loaded(url: URL)
+    case error
+  }
+
+  var originalDownload: OriginalDownloadState = .initial
+
   @ObservationIgnored
   var store: DocumentStore
   @ObservationIgnored
@@ -41,7 +51,7 @@ class DocumentDetailModel {
   var document: Document
 
   // Not fully used by the edit model yet (I think we're loading suggestions twice right now)
-  var suggestions: Suggestions?
+  var suggestions = Suggestions()
 
   var metadata: Metadata?
 
@@ -76,6 +86,7 @@ class DocumentDetailModel {
         guard
           let url = try await store.repository.download(
             documentID: document.id,
+            original: false,
             progress: { @Sendable value in
               Task { @MainActor in
                 self.downloadProgress = value
@@ -86,8 +97,16 @@ class DocumentDetailModel {
           break
         }
 
-        download = .loaded(url)
+        guard let pdfDocument = PDFDocument(url: url) else {
+          download = .error
+          break
+        }
+
+        download = .loaded(url: url, document: pdfDocument)
         setLoading.cancel()
+
+        // Start downloading the original in the background
+        Task { await downloadOriginal() }
       } catch is CancellationError {
       } catch {
         download = .error
@@ -108,8 +127,30 @@ class DocumentDetailModel {
     }
   }
 
+  func downloadOriginal() async {
+    guard case .initial = originalDownload else { return }
+    originalDownload = .loading
+    do {
+      guard let url = try await store.repository.download(documentID: document.id, original: true)
+      else {
+        originalDownload = .error
+        return
+      }
+      originalDownload = .loaded(url: url)
+    } catch {
+      originalDownload = .error
+      Logger.shared.error("Error downloading original document: \(error)")
+    }
+  }
+
   func loadSuggestions() async throws {
     suggestions = try await store.repository.suggestions(documentId: document.id)
+  }
+
+  func updateDocument() async throws {
+    let updated = try await store.updateDocument(document)
+    self.document = updated
+    try await loadSuggestions()
   }
 
   var userCanChange: Bool {
@@ -125,6 +166,8 @@ class DocumentDetailModel {
     return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
 
+  // @TODO: Extract `private var serverURL: URL?` from `(store.repository as? ApiRepository)?.connection.url`,
+  // use it in both `documentUrl` and `deepLinks`, then drop the `connection` property and propagation through init/protocol/view.
   var deepLinks: (withServer: Route?, withoutServer: Route?) {
     let withServer: Route? = (store.repository as? ApiRepository).flatMap {
       let serverURL = $0.connection.url

@@ -134,7 +134,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
   public typealias Note = DocumentNote
 
   @IgnoreEncoding
-  public private(set) var notes: NotesPayload = .init()
+  public var notes: NotesPayload = .init()
 
   @Default(ifMissing: CustomFieldRawEntryList())
   public var customFields: CustomFieldRawEntryList

@@ -410,6 +410,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   private struct LoadingView: View {
     @Bindable var viewModel: DocumentDetailModel
+    @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
     @StateObject private var image = FetchImage()
 
@@ -455,6 +456,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
       .task {
         do {
+          image.pipeline = imagePipelineProvider.pipeline
           try image.load(
             ImageRequest(
               urlRequest: viewModel.store.repository.thumbnailRequest(document: viewModel.document))
@@ -560,7 +562,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   var body: some View {
     GeometryReader { geoOuter in
       ZStack(alignment: .center) {
-        if case .loaded(let url) = viewModel.download {
+        if case .loaded(url: let url, document: _) = viewModel.download {
           WebView(
             url: url,
             topPadding: $topPadding,
@@ -678,7 +680,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
                 Label(localized: .localizable(.documentDeepLink), systemImage: "app")
               }
 
-              if case .loaded(let url) = viewModel.download {
+              if case .loaded(url: let url, document: _) = viewModel.download {
                 ShareLink(item: url) {
                   Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.down")
                 }

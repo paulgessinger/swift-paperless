@@ -509,12 +509,14 @@ extension ApiRepository: Repository {
         url: url(.documents(page: 1, filter: filter))))
   }
 
-  public func download(documentID: UInt, progress: (@Sendable (Double) -> Void)? = nil) async throws
+  public func download(
+    documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws
     -> URL?
   {
-    Logger.networking.notice("Downloading document")
+    Logger.networking.notice("Downloading document (original: \(original))")
     do {
-      let request = try request(.download(documentId: documentID))
+      let request = try request(.download(documentId: documentID, original: original))
 
       let (data, response) = try await fetchData(
         for: request, code: .ok,
