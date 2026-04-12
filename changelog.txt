@@ -1,3 +1,12 @@
+1.10.0 (184)
+
+- Ready for saved view permissions in the upcoming Paperless-ngx v3
+- Document detail v4 (https://github.com/paulgessinger/swift-paperless/pull/485): redesigned detail screen with clearer metadata and sheet-based editing for tags, correspondent, document type, storage path, dates, ASN, custom fields, and owner, including attribute suggestions and trimmed titles when saving.
+    - PDF on the detail screen: horizontal paging between pages with a page indicator; full-screen preview adds in-document search and smoother scrolling.
+    - Delete documents from detail; clearer explanation when a document cannot be edited; share-link and permission handling aligned with what the server allows.
+    - Notes entry shows how many notes a document has; sharing can include the original document file.
+    - Faster hops into a document from the list by preloading thumbnails on tap and from the context menu.
+
 1.10.0 (181)
 
 - Add ability to configure the filter bar
