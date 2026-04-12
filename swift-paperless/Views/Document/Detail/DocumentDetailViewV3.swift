@@ -410,7 +410,6 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
   private struct LoadingView: View {
     @Bindable var viewModel: DocumentDetailModel
-    @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
     @StateObject private var image = FetchImage()
 
@@ -456,7 +455,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
       .task {
         do {
-          image.pipeline = imagePipelineProvider.pipeline
+          image.pipeline = viewModel.store.imagePipeline
           try image.load(
             ImageRequest(
               urlRequest: viewModel.store.repository.thumbnailRequest(document: viewModel.document))

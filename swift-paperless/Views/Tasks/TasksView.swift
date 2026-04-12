@@ -85,7 +85,6 @@ struct TaskDetailView: View {
   let task: PaperlessTask
 
   @EnvironmentObject private var store: DocumentStore
-  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
 
   private enum DocumentResult {
     case document(_: Document)
@@ -213,10 +212,7 @@ struct TaskDetailView: View {
       }
       do {
         if let document = try await store.document(id: id) {
-          if let urlRequest = try? store.repository.thumbnailRequest(document: document) {
-            let request = ImageRequest(urlRequest: urlRequest, priority: .high)
-            imagePipelineProvider.pipeline.loadImage(with: request) { _ in }
-          }
+          store.preloadThumbnail(for: document)
           withAnimation {
             self.document = .document(document)
           }
@@ -470,7 +466,6 @@ private struct PreviewHelperView<Content: View>: View {
   return PreviewHelperView {
     NavigationStack {
       TaskDetailView(task: task)
-        .environment(ImagePipelineProvider())
     }
   }
 }

@@ -55,8 +55,6 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
-  @Environment(ImagePipelineProvider.self) private var imagePipelineProvider
-
   @State private var filterModel = FilterModel()
 
   // MARK: State
@@ -149,10 +147,7 @@ struct DocumentView: View {
             return
           }
 
-          if let urlRequest = try? store.repository.thumbnailRequest(document: document) {
-            let request = ImageRequest(urlRequest: urlRequest, priority: .high)
-            imagePipelineProvider.pipeline.loadImage(with: request) { _ in }
-          }
+          store.preloadThumbnail(for: document)
           await clear()
           navPath.append(NavigationState.detail(document: document))
         }
@@ -418,8 +413,7 @@ struct DocumentView: View {
       DocumentList(
         store: store, navPath: $navPath,
         filterModel: filterModel,
-        errorController: errorController,
-        imagePipelineProvider: imagePipelineProvider
+        errorController: errorController
       )
 
       .safeAreaInset(edge: .top) {
@@ -567,7 +561,6 @@ struct DocumentView: View {
     return TasksView(navPath: navPath)
       .environmentObject(store)
       .environmentObject(errorController)
-      .environment(imagePipelineProvider)
       .errorOverlay(errorController: errorController, offset: 15)
   }
 }
@@ -584,6 +577,5 @@ struct DocumentView: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
-    .environment(ImagePipelineProvider())
     .environment(RouteManager.shared)
 }
