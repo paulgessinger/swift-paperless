@@ -385,7 +385,7 @@ final class DocumentStore: ObservableObject, Sendable {
     elements: [T],
     collection: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
   ) async
-  where T: Decodable, T: Identifiable, T.ID == UInt, T: Model {
+  where T: Identifiable, T.ID == UInt, T: Model {
     var copy = [UInt: T]()
 
     for element in elements {
@@ -398,7 +398,7 @@ final class DocumentStore: ObservableObject, Sendable {
   private func getSingleCached<T: Sendable>(
     get: (UInt) async throws -> T?, id: UInt,
     cache: ReferenceWritableKeyPath<DocumentStore, [UInt: T]>
-  ) async throws -> (Bool, T)? where T: Decodable, T: Model {
+  ) async throws -> (Bool, T)? where T: Model {
     if let element = self[keyPath: cache][id] {
       return (true, element)
     }

@@ -379,52 +379,75 @@ public class ApiRepository {
     return try await Array(sequence)
   }
 
+  private enum HttpMethod: String {
+    case post = "POST"
+    case patch = "PATCH"
+    case put = "PUT"
+  }
+
+  private func send<Response: Decodable>(
+    _ method: HttpMethod,
+    element: some Encodable,
+    endpoint: Endpoint,
+    expected: HTTPStatusCode? = nil,
+    returns: Response.Type
+  ) async throws -> Response {
+    var request = try request(endpoint)
+    request.httpMethod = method.rawValue
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(element)
+
+    do {
+      if let expected {
+        let (data, _) = try await fetchData(for: request, code: expected)
+        return try decoder.decode(returns, from: data)
+      } else {
+        return try await fetchData(for: request, as: returns)
+      }
+    } catch {
+      Logger.networking.error("Api \(method.rawValue, privacy: .public) \(returns) failed: \(error)")
+      throw error
+    }
+  }
+
   private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
     async throws -> Element where Element: Decodable
   {
-    var request = try request(endpoint)
-
-    let body = try encoder.encode(element)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = body
-
-    do {
-      let (data, _) = try await fetchData(for: request, code: .created)
-
-      let created = try decoder.decode(returns, from: data)
-      return created
-    } catch {
-      Logger.networking.error("Api create \(returns) failed: \(error)")
-      throw error
-    }
+    try await send(.post, element: element, endpoint: endpoint, expected: .created, returns: returns)
   }
 
   private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element
   where Element: Codable {
-    var request = try request(endpoint)
+    try await send(.patch, element: element, endpoint: endpoint, returns: Element.self)
+  }
 
-    let body = try encoder.encode(element)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = body
+  private func update<Response: Decodable>(
+    element: some Encodable, endpoint: Endpoint, returns: Response.Type
+  ) async throws -> Response {
+    try await send(.patch, element: element, endpoint: endpoint, returns: returns)
+  }
 
+  private func get<T: Decodable>(
+    _ type: T.Type, endpoint: Endpoint
+  ) async throws -> T? {
+    let request = try request(endpoint)
     do {
-      return try await fetchData(for: request, as: Element.self)
+      return try await fetchData(for: request, as: type)
     } catch {
-      Logger.networking.error("Api update \(Element.self) failed: \(error)")
-      throw error
+      Logger.networking.error(
+        "Error getting \(type, privacy: .public): \(error)")
+      return nil
     }
   }
 
-  private func delete<Element>(element _: Element, endpoint: Endpoint) async throws {
+  private func delete(_ type: Any.Type, endpoint: Endpoint) async throws {
     var request = try request(endpoint)
     request.httpMethod = "DELETE"
 
     do {
       _ = try await fetchData(for: request, code: .noContent)
     } catch {
-      Logger.networking.error("Api delete \(Element.self) failed: \(error)")
+      Logger.networking.error("Api delete \(type) failed: \(error)")
       throw error
     }
   }
@@ -498,7 +521,7 @@ extension ApiRepository: Repository {
 
   public func delete(document: Document) async throws {
     Logger.networking.notice("Deleting document")
-    try await delete(element: document, endpoint: .document(id: document.id))
+    try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
   public func documents(filter: FilterState) throws -> any DocumentSource {
@@ -540,21 +563,32 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func tag(id: UInt) async throws -> Tag? { try await get(Tag.self, id: id) }
+  public func tag(id: UInt) async throws -> Tag? {
+    try await get(ApiTag.self, endpoint: .tag(id: id))?.domain
+  }
 
   public func create(tag: ProtoTag) async throws -> Tag {
-    try await create(element: tag, endpoint: .createTag(), returns: Tag.self)
+    let apiTag: ApiTag = try await create(
+      element: ApiTagCreate(from: tag), endpoint: .createTag(), returns: ApiTag.self)
+    return apiTag.domain
   }
 
   public func update(tag: Tag) async throws -> Tag {
-    try await update(element: tag, endpoint: .tag(id: tag.id))
+    let apiTag: ApiTag = try await update(
+      element: ApiTagUpdate(from: tag), endpoint: .tag(id: tag.id), returns: ApiTag.self)
+    return apiTag.domain
   }
 
   public func delete(tag: Tag) async throws {
-    try await delete(element: tag, endpoint: .tag(id: tag.id))
+    try await delete(Tag.self, endpoint: .tag(id: tag.id))
   }
 
-  public func tags() async throws -> [Tag] { try await all(Tag.self) }
+  public func tags() async throws -> [Tag] {
+    let sequence = try ApiSequence<ApiTag>(
+      repository: self,
+      url: url(.tags()))
+    return try await Array(sequence).map(\.domain)
+  }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
     try await get(Correspondent.self, id: id)
@@ -574,9 +608,7 @@ extension ApiRepository: Repository {
   }
 
   public func delete(correspondent: Correspondent) async throws {
-    try await delete(
-      element: correspondent,
-      endpoint: .correspondent(id: correspondent.id))
+    try await delete(Correspondent.self, endpoint: .correspondent(id: correspondent.id))
   }
 
   public func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
@@ -599,9 +631,7 @@ extension ApiRepository: Repository {
   }
 
   public func delete(documentType: DocumentType) async throws {
-    try await delete(
-      element: documentType,
-      endpoint: .documentType(id: documentType.id))
+    try await delete(DocumentType.self, endpoint: .documentType(id: documentType.id))
   }
 
   public func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
@@ -850,7 +880,7 @@ extension ApiRepository: Repository {
   }
 
   public func delete(savedView view: SavedView) async throws {
-    try await delete(element: view, endpoint: .savedView(id: view.id))
+    try await delete(SavedView.self, endpoint: .savedView(id: view.id))
   }
 
   // MARK: Storage paths
@@ -869,7 +899,7 @@ extension ApiRepository: Repository {
   }
 
   public func delete(storagePath: StoragePath) async throws {
-    try await delete(element: storagePath, endpoint: .storagePath(id: storagePath.id))
+    try await delete(StoragePath.self, endpoint: .storagePath(id: storagePath.id))
   }
 
   // MARK: Custom fields
@@ -1046,6 +1076,6 @@ extension ApiRepository: Repository {
   }
 
   public func delete(shareLink: DataModel.ShareLink) async throws {
-    try await delete(element: shareLink, endpoint: .shareLink(id: shareLink.id))
+    try await delete(ShareLink.self, endpoint: .shareLink(id: shareLink.id))
   }
 }
