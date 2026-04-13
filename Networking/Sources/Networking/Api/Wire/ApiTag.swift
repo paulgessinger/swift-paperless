@@ -25,7 +25,7 @@ struct ApiTag: Sendable {
 }
 
 extension ApiTag {
-  func toDomain() -> Tag {
+  var domain: Tag {
     Tag(
       id: id,
       isInboxTag: isInboxTag,
