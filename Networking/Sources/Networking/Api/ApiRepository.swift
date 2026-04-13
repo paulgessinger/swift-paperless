@@ -190,17 +190,18 @@ public class ApiRepository {
   }
 
   private func fetchData(
-    for request: URLRequest, code: HTTPStatusCode = .ok,
+    for request: URLRequest, expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData
   ) async throws -> (Data, URLResponse) {
     try await Self.fetchData(
-      for: request, code: code, progress: progress, cachePolicy: cachePolicy, urlSession: urlSession
+      for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy,
+      urlSession: urlSession
     )
   }
 
   private static func fetchData(
-    for request: URLRequest, code: HTTPStatusCode = .ok,
+    for request: URLRequest, expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData,
     urlSession: URLSession
@@ -268,10 +269,10 @@ public class ApiRepository {
       throw RequestError.invalidResponse
     }
 
-    if status != code {
+    if status != expectedStatus {
       let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
       Logger.networking.error(
-        "URLResponse to \(request.httpMethod ?? "???", privacy: .public) \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(code), body: \(body, privacy: .public)"
+        "URLResponse to \(request.httpMethod ?? "???", privacy: .public) \(sanitizedUrl, privacy: .public) has status code \(response.statusCode) != \(expectedStatus), body: \(body, privacy: .public)"
       )
 
       switch status {
@@ -287,29 +288,35 @@ public class ApiRepository {
     }
 
     Logger.networking.trace(
-      "URLResponse for \(sanitizedUrl, privacy: .public) has status code \(code) as expected")
+      "URLResponse for \(sanitizedUrl, privacy: .public) has status code \(expectedStatus) as expected"
+    )
 
     return (data, response)
   }
 
-  func fetchData<T: Decodable>(for request: URLRequest, as type: T.Type, code: HTTPStatusCode = .ok)
-    async throws -> T
-  {
-    let (data, _) = try await fetchData(for: request, code: code)
+  func fetchData<T: Decodable>(
+    for request: URLRequest, as type: T.Type,
+    expectedStatus: HTTPStatusCode = .ok,
+    progress: (@Sendable (Double) -> Void)? = nil,
+    cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData
+  ) async throws -> T {
+    let (data, _) = try await fetchData(
+      for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy)
     do {
       return try decoder.decode(type, from: data)
     } catch let error as DecodingError {
-      let url = request.url!
+      let sanitizedUrl =
+        request.url.map(Self.sanitizeUrlForLog) ?? "<unknown>"
       let body = String(data: data, encoding: .utf8) ?? "[NO BODY]"
       if mode == .release {
         Logger.networking.error(
-          "Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)"
+          "Unable to decode response to \(sanitizedUrl, privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .private): \(error)"
         )
       } else {
         let desc =
           "\(error.localizedDescription), \(error.errorDescription ?? "No error description")"
         Logger.networking.error(
-          "Unable to decode response to \(Self.sanitizeUrlForLog(url), privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error) \(desc, privacy: .public)"
+          "Unable to decode response to \(sanitizedUrl, privacy: .public) as \(T.self, privacy: .public) from body \(body, privacy: .public): \(error) \(desc, privacy: .public)"
         )
 
         switch error {
@@ -338,15 +345,7 @@ public class ApiRepository {
   }
 
   private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async throws -> T? {
-    let request = try request(.single(T.self, id: id))
-
-    do {
-      return try await fetchData(for: request, as: type)
-    } catch {
-      Logger.networking.error(
-        "Error getting \(type, privacy: .public) with id \(id, privacy: .public): \(error)")
-      return nil
-    }
+    try await get(type, endpoint: .single(T.self, id: id))
   }
 
   private func all<T>(_: T.Type) async throws -> [T]
@@ -389,7 +388,7 @@ public class ApiRepository {
     _ method: HttpMethod,
     element: some Encodable,
     endpoint: Endpoint,
-    expected: HTTPStatusCode? = nil,
+    expectedStatus: HTTPStatusCode = .ok,
     returns: Response.Type
   ) async throws -> Response {
     var request = try request(endpoint)
@@ -398,12 +397,7 @@ public class ApiRepository {
     request.httpBody = try encoder.encode(element)
 
     do {
-      if let expected {
-        let (data, _) = try await fetchData(for: request, code: expected)
-        return try decoder.decode(returns, from: data)
-      } else {
-        return try await fetchData(for: request, as: returns)
-      }
+      return try await fetchData(for: request, as: returns, expectedStatus: expectedStatus)
     } catch {
       Logger.networking.error("Api \(method.rawValue, privacy: .public) \(returns) failed: \(error)")
       throw error
@@ -413,7 +407,7 @@ public class ApiRepository {
   private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
     async throws -> Element where Element: Decodable
   {
-    try await send(.post, element: element, endpoint: endpoint, expected: .created, returns: returns)
+    try await send(.post, element: element, endpoint: endpoint, expectedStatus: .created, returns: returns)
   }
 
   private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element
@@ -433,9 +427,7 @@ public class ApiRepository {
     let request = try request(endpoint)
     do {
       return try await fetchData(for: request, as: type)
-    } catch {
-      Logger.networking.error(
-        "Error getting \(type, privacy: .public): \(error)")
+    } catch RequestError.unexpectedStatusCode(code: .notFound, _) {
       return nil
     }
   }
@@ -445,7 +437,7 @@ public class ApiRepository {
     request.httpMethod = "DELETE"
 
     do {
-      _ = try await fetchData(for: request, code: .noContent)
+      _ = try await fetchData(for: request, expectedStatus: .noContent)
     } catch {
       Logger.networking.error("Api delete \(type) failed: \(error)")
       throw error
@@ -510,7 +502,7 @@ extension ApiRepository: Repository {
     mp.addTo(request: &request)
 
     do {
-      let _ = try await fetchData(for: request, code: .ok)
+      let _ = try await fetchData(for: request)
     } catch let RequestError.unexpectedStatusCode(code, _) where code == .contentTooLarge {
       throw DocumentCreateError.tooLarge
     } catch {
@@ -542,7 +534,7 @@ extension ApiRepository: Repository {
       let request = try request(.download(documentId: documentID, original: original))
 
       let (data, response) = try await fetchData(
-        for: request, code: .ok,
+        for: request,
         progress: progress)
 
       guard let suggestedFilename = response.suggestedFilename else {
@@ -646,20 +638,13 @@ extension ApiRepository: Repository {
 
     let request = try request(endpoint)
 
-    do {
-      let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
+    let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
 
-      guard decoded.count > 0, !decoded.results.isEmpty else {
-        // this means the ASN was not found
-        Logger.networking.notice("Got empty document result (ASN not found)")
-        return nil
-      }
-      return decoded.results.first
-
-    } catch {
-      Logger.networking.error("Error fetching document by ASN \(asn): \(error)")
+    guard decoded.count > 0, !decoded.results.isEmpty else {
+      Logger.networking.notice("Got empty document result (ASN not found)")
       return nil
     }
+    return decoded.results.first
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
@@ -676,7 +661,7 @@ extension ApiRepository: Repository {
   public func notes(documentId: UInt) async throws -> [Document.Note] {
     let request = try request(.notes(documentId: documentId))
     do {
-      return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
+      return try await fetchData(for: request, as: [Document.Note].self)
     } catch {
       Logger.networking.error("Error fetching notes for document \(documentId): \(error)")
       throw error
@@ -692,7 +677,7 @@ extension ApiRepository: Repository {
     request.httpBody = body
 
     do {
-      return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
+      return try await fetchData(for: request, as: [Document.Note].self)
     } catch {
       Logger.networking.error("Error creating note on document \(documentId): \(error)")
       throw error
@@ -704,7 +689,7 @@ extension ApiRepository: Repository {
     request.httpMethod = "DELETE"
 
     do {
-      return try await fetchData(for: request, as: [Document.Note].self, code: .ok)
+      return try await fetchData(for: request, as: [Document.Note].self)
     } catch {
       Logger.networking.error("Error deleting note on document \(documentId): \(error)")
       throw error
@@ -745,7 +730,7 @@ extension ApiRepository: Repository {
     request.httpBody = try encoder.encode(payload)
 
     do {
-      _ = try await fetchData(for: request, code: .ok)
+      _ = try await fetchData(for: request)
     } catch {
       Logger.networking.error("Trash action \(action.rawValue) failed: \(error)")
       throw error
@@ -760,30 +745,16 @@ extension ApiRepository: Repository {
     Logger.networking.notice("\(url)")
 
     let request = try request(endpoint)
-
-    do {
-      let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
-
-      return (decoded.results.first?.asn ?? 0) + 1
-    } catch {
-      Logger.networking.error("Error fetching document for next ASN: \(error)")
-    }
-
-    return 0
+    let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
+    return (decoded.results.first?.asn ?? 0) + 1
   }
 
   private func nextAsnDirectEndpoint() async throws -> UInt {
     Logger.networking.notice("Getting next ASN with dedicated endpoint")
     let request = try request(.nextAsn())
-
-    do {
-      let asn = try await fetchData(for: request, as: UInt.self)
-      Logger.networking.notice("Have next ASN \(asn)")
-      return asn
-    } catch {
-      Logger.networking.error("Error fetching next ASN: \(error)")
-      return 0
-    }
+    let asn = try await fetchData(for: request, as: UInt.self)
+    Logger.networking.notice("Have next ASN \(asn)")
+    return asn
   }
 
   public func nextAsn() async throws -> UInt {
@@ -856,13 +827,7 @@ extension ApiRepository: Repository {
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     Logger.networking.notice("Get suggestions")
     let request = try request(.suggestions(documentId: documentId))
-
-    do {
-      return try await fetchData(for: request, as: Suggestions.self)
-    } catch {
-      Logger.networking.error("Unable to load suggestions: \(error)")
-      return .init()
-    }
+    return try await fetchData(for: request, as: Suggestions.self)
   }
 
   // MARK: Saved views
@@ -949,7 +914,7 @@ extension ApiRepository: Repository {
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = try encoder.encode(UISettingsPayload(settings: settings))
 
-    _ = try await fetchData(for: request, code: .ok)
+    _ = try await fetchData(for: request)
   }
 
   public func tasks() async throws -> [PaperlessTask] {
@@ -987,7 +952,7 @@ extension ApiRepository: Repository {
     request.httpBody = body
 
     do {
-      _ = try await fetchData(for: request, code: .ok)
+      _ = try await fetchData(for: request)
     } catch {
       Logger.networking.error("Api acknowledge failed: \(error)")
       throw error
