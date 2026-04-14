@@ -1,1 +1,0 @@
-- Auto-focus the attribute search bars in the edit sheets when no value is set yet
