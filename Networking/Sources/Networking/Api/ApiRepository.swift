@@ -189,7 +189,7 @@ public class ApiRepository {
     #endif
   }
 
-  private func fetchData(
+  func fetchData(
     for request: URLRequest, expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData
@@ -378,73 +378,6 @@ public class ApiRepository {
     return try await Array(sequence)
   }
 
-  private enum HttpMethod: String {
-    case post = "POST"
-    case patch = "PATCH"
-    case put = "PUT"
-  }
-
-  private func send<Response: Decodable>(
-    _ method: HttpMethod,
-    element: some Encodable,
-    endpoint: Endpoint,
-    expectedStatus: HTTPStatusCode = .ok,
-    returns: Response.Type
-  ) async throws -> Response {
-    var request = try request(endpoint)
-    request.httpMethod = method.rawValue
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try encoder.encode(element)
-
-    do {
-      return try await fetchData(for: request, as: returns, expectedStatus: expectedStatus)
-    } catch {
-      Logger.networking.error(
-        "Api \(method.rawValue, privacy: .public) \(returns) failed: \(error)")
-      throw error
-    }
-  }
-
-  private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
-    async throws -> Element where Element: Decodable
-  {
-    try await send(
-      .post, element: element, endpoint: endpoint, expectedStatus: .created, returns: returns)
-  }
-
-  private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element
-  where Element: Codable {
-    try await send(.patch, element: element, endpoint: endpoint, returns: Element.self)
-  }
-
-  private func update<Response: Decodable>(
-    element: some Encodable, endpoint: Endpoint, returns: Response.Type
-  ) async throws -> Response {
-    try await send(.patch, element: element, endpoint: endpoint, returns: returns)
-  }
-
-  private func get<T: Decodable>(
-    _ type: T.Type, endpoint: Endpoint
-  ) async throws -> T? {
-    let request = try request(endpoint)
-    do {
-      return try await fetchData(for: request, as: type)
-    } catch RequestError.unexpectedStatusCode(code: .notFound, _) {
-      return nil
-    }
-  }
-
-  private func delete(_ type: Any.Type, endpoint: Endpoint) async throws {
-    var request = try request(endpoint)
-    request.httpMethod = "DELETE"
-
-    do {
-      _ = try await fetchData(for: request, expectedStatus: .noContent)
-    } catch {
-      Logger.networking.error("Api delete \(type) failed: \(error)")
-      throw error
-    }
-  }
 }
 
 extension ApiRepository: Repository {
@@ -636,11 +569,9 @@ extension ApiRepository: Repository {
     Logger.networking.notice("Getting document by ASN")
 
     let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
-    let endpoint = Endpoint.documents(page: 1, rules: [rule])
-
-    let request = try request(endpoint)
-
-    let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
+    let decoded = try await send(
+      endpoint: .documents(page: 1, rules: [rule]),
+      returns: ListResponse<Document>.self)
 
     guard decoded.count > 0, !decoded.results.isEmpty else {
       Logger.networking.notice("Got empty document result (ASN not found)")
@@ -650,52 +581,27 @@ extension ApiRepository: Repository {
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    let request = try request(.metadata(documentId: documentId))
-    do {
-      let decoded = try await fetchData(for: request, as: Metadata.self)
-      return decoded
-    } catch {
-      Logger.networking.error("Error fetching document metadata for id \(documentId): \(error)")
-      throw error
-    }
+    try await send(endpoint: .metadata(documentId: documentId), returns: Metadata.self)
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    let request = try request(.notes(documentId: documentId))
-    do {
-      return try await fetchData(for: request, as: [Document.Note].self)
-    } catch {
-      Logger.networking.error("Error fetching notes for document \(documentId): \(error)")
-      throw error
-    }
+    try await send(endpoint: .notes(documentId: documentId), returns: [Document.Note].self)
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
   {
-    var request = try request(.notes(documentId: documentId))
-    let body = try encoder.encode(note)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = body
-
-    do {
-      return try await fetchData(for: request, as: [Document.Note].self)
-    } catch {
-      Logger.networking.error("Error creating note on document \(documentId): \(error)")
-      throw error
-    }
+    try await send(
+      .post,
+      endpoint: .notes(documentId: documentId),
+      body: note,
+      returns: [Document.Note].self)
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
-    var request = try request(.note(documentId: documentId, noteId: id))
-    request.httpMethod = "DELETE"
-
-    do {
-      return try await fetchData(for: request, as: [Document.Note].self)
-    } catch {
-      Logger.networking.error("Error deleting note on document \(documentId): \(error)")
-      throw error
-    }
+    try await send(
+      .delete,
+      endpoint: .note(documentId: documentId, noteId: id),
+      returns: [Document.Note].self)
   }
 
   public func trash() async throws -> [Document] {
@@ -725,42 +631,30 @@ extension ApiRepository: Repository {
 
   private func performTrashAction(_ action: TrashAction, documents: [UInt]) async throws {
     Logger.networking.notice("Sending trash action \(action.rawValue)")
-    var request = try request(.trash())
-    let payload = TrashActionRequest(action: action, documents: documents)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try encoder.encode(payload)
-
-    do {
-      _ = try await fetchData(for: request)
-    } catch {
-      Logger.networking.error("Trash action \(action.rawValue) failed: \(error)")
-      throw error
-    }
+    try await send(
+      .post,
+      endpoint: .trash(),
+      body: TrashActionRequest(action: action, documents: documents))
   }
 
   private func nextAsnCompatibility() async throws -> UInt {
     Logger.networking.notice("Getting next ASN with legacy compatibility method")
 
-    let endpoint = Endpoint.documents(page: 1, filter: .empty, pageSize: 1)
-    let url = try url(endpoint)
-    Logger.networking.notice("\(url)")
-
-    let request = try request(endpoint)
-    let decoded = try await fetchData(for: request, as: ListResponse<Document>.self)
+    let decoded = try await send(
+      endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
+      returns: ListResponse<Document>.self)
     return (decoded.results.first?.asn ?? 0) + 1
   }
 
   private func nextAsnDirectEndpoint() async throws -> UInt {
     Logger.networking.notice("Getting next ASN with dedicated endpoint")
-    let request = try request(.nextAsn())
-    let asn = try await fetchData(for: request, as: UInt.self)
+    let asn = try await send(endpoint: .nextAsn(), returns: UInt.self)
     Logger.networking.notice("Have next ASN \(asn)")
     return asn
   }
 
   public func nextAsn() async throws -> UInt {
-    if let backendVersion, backendVersion >= Version(2, 0, 0) {
+    if supports(feature: .nextAsnEndpoint) {
       try await nextAsnDirectEndpoint()
     } else {
       try await nextAsnCompatibility()
@@ -828,8 +722,8 @@ extension ApiRepository: Repository {
 
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     Logger.networking.notice("Get suggestions")
-    let request = try request(.suggestions(documentId: documentId))
-    return try await fetchData(for: request, as: Suggestions.self)
+    return try await send(
+      endpoint: .suggestions(documentId: documentId), returns: Suggestions.self)
   }
 
   // MARK: Saved views
@@ -878,8 +772,8 @@ extension ApiRepository: Repository {
   // MARK: Server configuration
 
   public func serverConfiguration() async throws -> ServerConfiguration {
-    let request = try request(.appConfiguration())
-    let configurations = try await fetchData(for: request, as: [ServerConfiguration].self)
+    let configurations = try await send(
+      endpoint: .appConfiguration(), returns: [ServerConfiguration].self)
 
     guard let firstConfig = configurations.first else {
       Logger.networking.error("No server configuration found")
@@ -890,9 +784,7 @@ extension ApiRepository: Repository {
   }
 
   public func remoteVersion() async throws -> RemoteVersion {
-    let request = try request(.remoteVersion())
-    return try await fetchData(for: request, as: RemoteVersion.self)
-
+    try await send(endpoint: .remoteVersion(), returns: RemoteVersion.self)
   }
 
   // MARK: Others
@@ -902,8 +794,7 @@ extension ApiRepository: Repository {
   }
 
   public func uiSettings() async throws -> UISettings {
-    let request = try request(.uiSettings())
-    return try await fetchData(for: request, as: UISettings.self)
+    try await send(endpoint: .uiSettings(), returns: UISettings.self)
   }
 
   public func update(settings: UISettingsSettings) async throws {
@@ -911,12 +802,7 @@ extension ApiRepository: Repository {
       let settings: UISettingsSettings
     }
 
-    var request = try request(.uiSettings())
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try encoder.encode(UISettingsPayload(settings: settings))
-
-    _ = try await fetchData(for: request)
+    try await send(.post, endpoint: .uiSettings(), body: UISettingsPayload(settings: settings))
   }
 
   public func tasks() async throws -> [PaperlessTask] {
@@ -936,27 +822,13 @@ extension ApiRepository: Repository {
 
   public func acknowledge(tasks ids: [UInt]) async throws {
     let endpoint: Endpoint =
-      if let backendVersion, backendVersion >= Version(2, 14, 0) {
+      if supports(feature: .taskAcknowledgeEndpoint) {
         .acknowlegdeTasks()
       } else {
         .acknowlegdeTasksV1()
       }
 
-    var request = try request(endpoint)
-
-    let payload: [String: [UInt]] = ["tasks": ids]
-
-    let body = try encoder.encode(payload)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = body
-
-    do {
-      _ = try await fetchData(for: request)
-    } catch {
-      Logger.networking.error("Api acknowledge failed: \(error)")
-      throw error
-    }
+    try await send(.post, endpoint: endpoint, body: ["tasks": ids])
   }
 
   private static func loadBackendVersions(urlSession: URLSession, connection: Connection) async -> (
@@ -1026,13 +898,9 @@ extension ApiRepository: Repository {
   // MARK: - Share links
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
-    do {
-      let request = try request(.shareLinks(documentId: documentId))
-      return try await fetchData(for: request, as: [DataModel.ShareLink].self)
-    } catch {
-      Logger.networking.error("Getting share links for document \(documentId) failed: \(error)")
-      throw error
-    }
+    try await send(
+      endpoint: .shareLinks(documentId: documentId),
+      returns: [DataModel.ShareLink].self)
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {

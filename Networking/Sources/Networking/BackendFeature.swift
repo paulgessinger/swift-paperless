@@ -8,6 +8,12 @@
 import Common
 
 public enum BackendFeature {
+  // Dedicated next ASN endpoint / 2.0.0
+  case nextAsnEndpoint
+
+  // Dedicated tasks acknowledge endpoint / 2.14.0
+  case taskAcknowledgeEndpoint
+
   // https://github.com/paperless-ngx/paperless-ngx/pull/10859 / 2.19.0
   case customFieldsOnCreate
 
@@ -23,6 +29,10 @@ public enum BackendFeature {
 
   func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
+    case .nextAsnEndpoint:
+      backendVersion >= Version(2, 0, 0)
+    case .taskAcknowledgeEndpoint:
+      backendVersion >= Version(2, 14, 0)
     case .customFieldsOnCreate:
       backendVersion >= Version(2, 19, 0)
     case .dateFilterModified, .dateFilterPreviousIntervals:
