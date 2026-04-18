@@ -7,96 +7,89 @@
 
 import Common
 import DataModel
-import MetaCodable
 
 // MARK: - Wire type for reading tags from the API
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiTag: Sendable {
+struct ApiTag: Codable, Sendable {
   var id: UInt
-  var isInboxTag: Bool
+  var is_inbox_tag: Bool
   var name: String
   var slug: String
   var color: HexColor
   var match: String
-  var matchingAlgorithm: MatchingAlgorithm
-  var isInsensitive: Bool
+  var matching_algorithm: MatchingAlgorithm
+  var is_insensitive: Bool
 }
 
 extension ApiTag {
   var domain: Tag {
     Tag(
       id: id,
-      isInboxTag: isInboxTag,
+      isInboxTag: is_inbox_tag,
       name: name,
       slug: slug,
       color: color,
       match: match,
-      matchingAlgorithm: matchingAlgorithm,
-      isInsensitive: isInsensitive
+      matchingAlgorithm: matching_algorithm,
+      isInsensitive: is_insensitive
     )
   }
 }
 
 // MARK: - Wire type for creating tags
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiTagCreate: Sendable {
-  var isInboxTag: Bool
+struct ApiTagCreate: Encodable, Sendable {
+  var is_inbox_tag: Bool
   var name: String
   var slug: String
   var color: HexColor
   var match: String
-  var matchingAlgorithm: MatchingAlgorithm
-  var isInsensitive: Bool
+  var matching_algorithm: MatchingAlgorithm
+  var is_insensitive: Bool
   var owner: Owner
-  var setPermissions: Permissions?
+  var set_permissions: Permissions?
 }
 
 extension ApiTagCreate {
   init(from proto: ProtoTag) {
     self.init(
-      isInboxTag: proto.isInboxTag,
+      is_inbox_tag: proto.isInboxTag,
       name: proto.name,
       slug: proto.slug,
       color: proto.color,
       match: proto.match,
-      matchingAlgorithm: proto.matchingAlgorithm,
-      isInsensitive: proto.isInsensitive,
+      matching_algorithm: proto.matchingAlgorithm,
+      is_insensitive: proto.isInsensitive,
       owner: proto.owner,
-      setPermissions: proto.permissions
+      set_permissions: proto.permissions
     )
   }
 }
 
 // MARK: - Wire type for updating tags
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiTagUpdate: Sendable {
+struct ApiTagUpdate: Encodable, Sendable {
   var id: UInt
-  var isInboxTag: Bool
+  var is_inbox_tag: Bool
   var name: String
   var slug: String
   var color: HexColor
   var match: String
-  var matchingAlgorithm: MatchingAlgorithm
-  var isInsensitive: Bool
+  var matching_algorithm: MatchingAlgorithm
+  var is_insensitive: Bool
 }
 
 extension ApiTagUpdate {
   init(from tag: Tag) {
     self.init(
       id: tag.id,
-      isInboxTag: tag.isInboxTag,
+      is_inbox_tag: tag.isInboxTag,
       name: tag.name,
       slug: tag.slug,
       color: tag.color,
       match: tag.match,
-      matchingAlgorithm: tag.matchingAlgorithm,
-      isInsensitive: tag.isInsensitive
+      matching_algorithm: tag.matchingAlgorithm,
+      is_insensitive: tag.isInsensitive
     )
   }
 }
