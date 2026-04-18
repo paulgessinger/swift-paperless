@@ -399,7 +399,8 @@ public class ApiRepository {
     do {
       return try await fetchData(for: request, as: returns, expectedStatus: expectedStatus)
     } catch {
-      Logger.networking.error("Api \(method.rawValue, privacy: .public) \(returns) failed: \(error)")
+      Logger.networking.error(
+        "Api \(method.rawValue, privacy: .public) \(returns) failed: \(error)")
       throw error
     }
   }
@@ -407,7 +408,8 @@ public class ApiRepository {
   private func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
     async throws -> Element where Element: Decodable
   {
-    try await send(.post, element: element, endpoint: endpoint, expectedStatus: .created, returns: returns)
+    try await send(
+      .post, element: element, endpoint: endpoint, expectedStatus: .created, returns: returns)
   }
 
   private func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element
