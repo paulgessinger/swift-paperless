@@ -956,6 +956,17 @@
         }
       }
     },
+    "statusUnknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
     "statusStarted" : {
       "extractionState" : "manual",
       "localizations" : {

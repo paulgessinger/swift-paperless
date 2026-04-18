@@ -6,15 +6,15 @@
 //
 
 import Foundation
-import MetaCodable
 
-public enum TaskStatus: String, Codable, Sendable {
+public enum TaskStatus: String, Sendable {
   case PENDING
   case STARTED
   case SUCCESS
   case FAILURE
   case RETRY
   case REVOKED
+  case UNKNOWN
 }
 
 // See https://github.com/paperless-ngx/paperless-ngx/blob/4c6fdbb21fdcd3ecf81b9a0dd87487f146066e01/src/documents/models.py#L542C9-L545C65
@@ -26,9 +26,6 @@ public enum TaskName: String, Sendable {
   case indexOptimize = "index_optimize"
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
   public var id: UInt
   public var taskId: UUID
@@ -42,11 +39,37 @@ public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
   public var acknowledged: Bool
   public var relatedDocument: String?
 
+  public init(
+    id: UInt,
+    taskId: UUID,
+    taskFileName: String? = nil,
+    taskName: String? = nil,
+    dateCreated: Date? = nil,
+    dateDone: Date? = nil,
+    type: String,
+    status: TaskStatus,
+    result: String? = nil,
+    acknowledged: Bool,
+    relatedDocument: String? = nil
+  ) {
+    self.id = id
+    self.taskId = taskId
+    self.taskFileName = taskFileName
+    self.taskName = taskName
+    self.dateCreated = dateCreated
+    self.dateDone = dateDone
+    self.type = type
+    self.status = status
+    self.result = result
+    self.acknowledged = acknowledged
+    self.relatedDocument = relatedDocument
+  }
+
   public var isActive: Bool {
     switch status {
     case .PENDING, .STARTED, .RETRY:
       true
-    default:
+    case .SUCCESS, .FAILURE, .REVOKED, .UNKNOWN:
       false
     }
   }

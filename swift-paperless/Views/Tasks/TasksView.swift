@@ -26,6 +26,8 @@ extension TaskStatus {
       "clock.arrow.circlepath"
     case .REVOKED:
       "clock.badge.xmark"
+    case .UNKNOWN:
+      "questionmark.circle"
     }
   }
 
@@ -51,6 +53,9 @@ extension TaskStatus {
     case .REVOKED:
       image = "clock.badge.xmark"
       color = .yellow
+    case .UNKNOWN:
+      image = "questionmark.circle"
+      color = .secondary
     }
 
     return Label(
@@ -75,6 +80,8 @@ extension TaskStatus {
         .tasks(.statusRetry)
       case .REVOKED:
         .tasks(.statusRevoked)
+      case .UNKNOWN:
+        .tasks(.statusUnknown)
       }
 
     return String(localized: res)
