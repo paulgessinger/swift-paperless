@@ -923,7 +923,7 @@ extension ApiRepository: Repository {
     let request = try request(.tasks(name: .consumeFile, acknowledged: false))
 
     do {
-      return try await fetchData(for: request, as: [PaperlessTask].self)
+      return try await fetchData(for: request, as: [ApiTask].self).map(\.domain)
     } catch {
       Logger.networking.error("Unable to load tasks: \(error)")
       throw error
@@ -931,9 +931,7 @@ extension ApiRepository: Repository {
   }
 
   public func task(id: UInt) async throws -> PaperlessTask? {
-    let request = try request(.task(id: id))
-
-    return try await fetchData(for: request, as: PaperlessTask.self)
+    try await get(ApiTask.self, endpoint: .task(id: id))?.domain
   }
 
   public func acknowledge(tasks ids: [UInt]) async throws {
