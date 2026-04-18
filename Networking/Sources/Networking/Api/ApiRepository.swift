@@ -53,6 +53,8 @@ public class ApiRepository {
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
 
+  private let taskShape = FallbackLatch<TaskShape>()
+
   nonisolated
     private let apiVersion: UInt?
   nonisolated
@@ -813,18 +815,28 @@ extension ApiRepository: Repository {
   }
 
   public func tasks() async throws -> [PaperlessTask] {
-    let request = try request(.tasks(name: .consumeFile, acknowledged: false))
-
-    do {
-      return try await fetchData(for: request, as: [ApiTask].self).map(\.domain)
-    } catch {
-      Logger.networking.error("Unable to load tasks: \(error)")
-      throw error
+    try await send(
+      endpoint: .tasks(name: .consumeFile, acknowledged: false),
+      through: taskShape
+    ) { data in
+      Attempt(TaskShape.v10) {
+        try decoder.decode([ApiTaskV10].self, from: data).map(\.domain)
+      }
+      Attempt(TaskShape.v9) {
+        try decoder.decode([ApiTaskV9].self, from: data).map(\.domain)
+      }
     }
   }
 
   public func task(id: UInt) async throws -> PaperlessTask? {
-    try await get(ApiTask.self, endpoint: .task(id: id))?.domain
+    do {
+      return try await send(endpoint: .task(id: id), through: taskShape) { data in
+        Attempt(TaskShape.v10) { try decoder.decode(ApiTaskV10.self, from: data).domain }
+        Attempt(TaskShape.v9) { try decoder.decode(ApiTaskV9.self, from: data).domain }
+      }
+    } catch RequestError.unexpectedStatusCode(code: .notFound, _) {
+      return nil
+    }
   }
 
   public func acknowledge(tasks ids: [UInt]) async throws {

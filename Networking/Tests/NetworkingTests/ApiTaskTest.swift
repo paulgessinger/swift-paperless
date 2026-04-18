@@ -12,7 +12,7 @@ private let decoder = makeDecoder(tz: tz)
 struct ApiTaskTest {
   @Test func testDecoding() throws {
     let data = try #require(testData("Data/tasks.json"))
-    let tasks = try decoder.decode([ApiTask].self, from: data).map(\.domain)
+    let tasks = try decoder.decode([ApiTaskV9].self, from: data).map(\.domain)
 
     #expect(tasks[0].id == 3438)
     #expect(tasks[0].taskId == UUID(uuidString: "373a38ca-5f44-46f5-9466-32e55e103533"))
