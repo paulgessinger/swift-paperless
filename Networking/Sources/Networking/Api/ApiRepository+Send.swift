@@ -101,6 +101,34 @@ extension ApiRepository {
     }
   }
 
+  // Latched typed response, no body.
+  func send<Response: Sendable, Label: Sendable & Equatable>(
+    _ method: HttpMethod = .get,
+    endpoint: Endpoint,
+    through latch: FallbackLatch<Label>,
+    expectedStatus: HTTPStatusCode = .ok,
+    @AttemptsBuilder<Label, Response> attempts: @Sendable (Data) -> [Attempt<Label, Response>]
+  ) async throws -> Response {
+    let request = try buildRequest(method, endpoint: endpoint, jsonBody: nil)
+    let (data, _) = try await fetchData(for: request, expectedStatus: expectedStatus)
+    return try await latch.run(attempts(data), fallbackOn: isShapeMismatch)
+  }
+
+  // Latched typed response, with body.
+  func send<Response: Sendable, Label: Sendable & Equatable>(
+    _ method: HttpMethod,
+    endpoint: Endpoint,
+    body: some Encodable,
+    through latch: FallbackLatch<Label>,
+    expectedStatus: HTTPStatusCode = .ok,
+    @AttemptsBuilder<Label, Response> attempts: @Sendable (Data) -> [Attempt<Label, Response>]
+  ) async throws -> Response {
+    let request = try buildRequest(
+      method, endpoint: endpoint, jsonBody: encoder.encode(body))
+    let (data, _) = try await fetchData(for: request, expectedStatus: expectedStatus)
+    return try await latch.run(attempts(data), fallbackOn: isShapeMismatch)
+  }
+
   func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
     async throws -> Element where Element: Decodable
   {
