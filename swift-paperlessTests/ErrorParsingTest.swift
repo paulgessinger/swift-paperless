@@ -9,14 +9,15 @@ import DataModel
 import Testing
 
 @Test
-func testDuplicateParsing() throws {
+func testDuplicateLocalizedResult() throws {
   let task = PaperlessTask(
     id: 1, taskId: .init(),
     taskFileName: "2015-02-01 Car Garage Health Employee Data Collection Form.pdf", type: "file",
     status: .FAILURE,
     result:
       "2015-02-01 Car Garage Health Employee Data Collection Form.pdf: Not consuming 2015-02-01 Car Garage Health Employee Data Collection Form.pdf: It is a duplicate of 2015-02-01 Car Garage Health Employee Data Collection Form.pdf (#28)",
-    acknowledged: false)
+    acknowledged: false,
+    duplicateDocumentId: 28)
 
   #expect(task.localizedResult == String(localized: .tasks(.errorDuplicate(task.taskFileName!))))
 }

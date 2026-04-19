@@ -1,6 +1,17 @@
 import DataModel
 import Foundation
 
+// Matches Paperless-ngx duplicate failure messages of the form:
+//   "<file>: Not consuming <file>: It is a duplicate of <other> (#<id>)"
+// A trailing period after the closing paren has been observed in the wild.
+func parseDuplicateDocumentId(from result: String?) -> UInt? {
+  let pattern = /(.*): Not consuming (.*): It is a duplicate of (.*) \(#(\d+)\)\.?/
+  guard let result, let match = try? pattern.wholeMatch(in: result) else {
+    return nil
+  }
+  return UInt(match.4)
+}
+
 struct ApiTaskV9: Codable, Sendable {
   var id: UInt
   var task_id: UUID
@@ -28,7 +39,8 @@ extension ApiTaskV9 {
       status: TaskStatus(rawValue: status) ?? .UNKNOWN,
       result: result,
       acknowledged: acknowledged,
-      relatedDocument: related_document
+      relatedDocument: related_document,
+      duplicateDocumentId: parseDuplicateDocumentId(from: result)
     )
   }
 }
@@ -66,7 +78,8 @@ extension ApiTaskV10 {
       status: normalizedStatus,
       result: result_message,
       acknowledged: acknowledged,
-      relatedDocument: related_document_ids.first.map(String.init)
+      relatedDocument: related_document_ids.first.map(String.init),
+      duplicateDocumentId: parseDuplicateDocumentId(from: result_message)
     )
   }
 }

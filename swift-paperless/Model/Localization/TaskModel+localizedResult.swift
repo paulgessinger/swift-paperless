@@ -13,12 +13,8 @@ extension PaperlessTask {
       return nil
     }
 
-    // @TODO: More sophisticated parsing of errors
-    let fileName = taskFileName ?? String(localized: .tasks(.unknownFileName))
-
-    let duplicatePattern = /(.*): Not consuming (.*): It is a duplicate of (.*) \(#(\d*)\)/
-
-    if (try? duplicatePattern.wholeMatch(in: result)) != nil {
+    if duplicateDocumentId != nil {
+      let fileName = taskFileName ?? String(localized: .tasks(.unknownFileName))
       return String(localized: .tasks(.errorDuplicate(fileName)))
     }
 
