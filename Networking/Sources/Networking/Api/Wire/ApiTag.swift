@@ -19,6 +19,10 @@ struct ApiTag: Codable, Sendable {
   var match: String
   var matching_algorithm: MatchingAlgorithm
   var is_insensitive: Bool
+  // Introduced by paperless-ngx v2.19.0 (tag nesting, PR #10833). Missing on
+  // older backends, which decodes as nil.
+  var parent: UInt?
+  var children: [ApiTag]?
 }
 
 extension ApiTag {
@@ -31,8 +35,33 @@ extension ApiTag {
       color: color,
       match: match,
       matchingAlgorithm: matching_algorithm,
-      isInsensitive: is_insensitive
+      isInsensitive: is_insensitive,
+      parent: parent
     )
+  }
+}
+
+extension Sequence where Element == ApiTag {
+  // Flattens each element's `children` subtree (introduced in v2.19.0) and
+  // deduplicates by id (first-seen wins). Pre-v2.19 backends return a flat
+  // list with no `children`, so this is a no-op there. v2.19.0–2.19.2
+  // returned nested tags both at the root and inside their parent's
+  // `children`, so dedup is required to avoid duplicates.
+  var flattenedUnique: [ApiTag] {
+    func walk(_ tag: ApiTag, into result: inout [ApiTag], seen: inout Set<UInt>) {
+      guard seen.insert(tag.id).inserted else { return }
+      result.append(tag)
+      for child in tag.children ?? [] {
+        walk(child, into: &result, seen: &seen)
+      }
+    }
+
+    var seen = Set<UInt>()
+    var result: [ApiTag] = []
+    for tag in self {
+      walk(tag, into: &result, seen: &seen)
+    }
+    return result
   }
 }
 
@@ -77,6 +106,7 @@ struct ApiTagUpdate: Encodable, Sendable {
   var match: String
   var matching_algorithm: MatchingAlgorithm
   var is_insensitive: Bool
+  var parent: UInt?
 }
 
 extension ApiTagUpdate {
@@ -89,7 +119,8 @@ extension ApiTagUpdate {
       color: tag.color,
       match: tag.match,
       matching_algorithm: tag.matchingAlgorithm,
-      is_insensitive: tag.isInsensitive
+      is_insensitive: tag.isInsensitive,
+      parent: tag.parent
     )
   }
 }

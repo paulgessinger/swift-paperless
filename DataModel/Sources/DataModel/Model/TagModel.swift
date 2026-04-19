@@ -89,6 +89,7 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
   public var match: String
   public var matchingAlgorithm: MatchingAlgorithm
   public var isInsensitive: Bool
+  public var parent: UInt?
 
   public init(
     id: UInt,
@@ -98,7 +99,8 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
     color: HexColor,
     match: String,
     matchingAlgorithm: MatchingAlgorithm,
-    isInsensitive: Bool
+    isInsensitive: Bool,
+    parent: UInt? = nil
   ) {
     self.id = id
     self.isInboxTag = isInboxTag
@@ -108,6 +110,7 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
     self.match = match
     self.matchingAlgorithm = matchingAlgorithm
     self.isInsensitive = isInsensitive
+    self.parent = parent
   }
 
   public static func placeholder(_ length: Int) -> Self {
