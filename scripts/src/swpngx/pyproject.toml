@@ -9,6 +9,7 @@ description = "Automation tooling for Swift Paperless"
 requires-python = ">=3.10"
 dependencies = [
     "aiohttp>=3.9",
+    "jinja2",
     "numpy",
     "Pillow",
     "pydantic>=2",

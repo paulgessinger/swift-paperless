@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # dependencies = [
+#   "jinja2",
 #   "rich",
 #   "typer",
 #   "pydantic>=2",
@@ -16,10 +17,12 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import time
 from typing import Annotated
 
 import aiohttp
+from jinja2 import Environment, PackageLoader
 import typer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pypaperless import Paperless
@@ -37,6 +40,11 @@ app = typer.Typer(
     no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app"
 )
 console = Console()
+DOCKER_COMPOSE_PROJECT = "swpngx-screenshot"
+DOCKER_COMPOSE_TEMPLATE = "docker-compose.screenshot.yml.j2"
+RENDERED_DOCKER_COMPOSE_FILE = (
+    Path(tempfile.gettempdir()) / "swpngx-docker-compose.screenshot.yml"
+)
 
 
 # ============================================================================
@@ -446,9 +454,39 @@ def install_app(target: str, app_path: Path, *, dry_run: bool) -> None:
 # ============================================================================
 
 
+def render_docker_compose_file(pngx_tag: str) -> Path:
+    """Render the package Docker Compose template with the requested PNGX tag."""
+    tag = pngx_tag.strip()
+    if not tag:
+        console.log("[red]Error: --pngx-tag must not be empty")
+        raise typer.Exit(1)
+
+    env = Environment(
+        loader=PackageLoader("swpngx", "templates"),
+        autoescape=False,
+        keep_trailing_newline=True,
+    )
+    template = env.get_template(DOCKER_COMPOSE_TEMPLATE)
+    rendered = template.render(pngx_tag=tag)
+    RENDERED_DOCKER_COMPOSE_FILE.write_text(rendered, encoding="utf-8")
+    console.log(
+        f"[blue]Using Paperless-ngx image tag {tag} "
+        f"(compose: {RENDERED_DOCKER_COMPOSE_FILE})"
+    )
+    return RENDERED_DOCKER_COMPOSE_FILE
+
+
 def docker_compose_cmd(compose_file: Path, *args) -> list[str]:
     """Build docker-compose command."""
-    return ["docker", "compose", "-f", str(compose_file), *args]
+    return [
+        "docker",
+        "compose",
+        "-p",
+        DOCKER_COMPOSE_PROJECT,
+        "-f",
+        str(compose_file),
+        *args,
+    ]
 
 
 def wait_for_docker_services(url: str, timeout: int) -> None:
@@ -942,14 +980,18 @@ def setup(
     wait_timeout: Annotated[
         int, typer.Option("--wait-timeout", help="Backend readiness timeout (seconds)")
     ] = 120,
+    pngx_tag: Annotated[
+        str,
+        typer.Option(
+            "--pngx-tag",
+            help="Paperless-ngx Docker image tag for the screenshot backend",
+        ),
+    ] = "latest",
 ) -> None:
     """Setup backend: start Docker and populate with test data."""
     try:
         # 1. Manage Docker lifecycle
-        compose_file = Path("docker-compose.screenshot.yml")
-        if not compose_file.exists():
-            console.log(f"[red]Error: {compose_file} not found")
-            raise typer.Exit(1)
+        compose_file = render_docker_compose_file(pngx_tag)
 
         manage_docker_backend(compose_file, recreate, wait_timeout, url)
 
@@ -972,7 +1014,11 @@ def setup(
 
     except BackendNotReadyError:
         console.log(f"[red]Error: Backend not ready. Check Docker logs:")
-        console.log(f"[yellow]  docker compose -f docker-compose.screenshot.yml logs")
+        console.log(
+            "[yellow]  docker compose "
+            f"-p {DOCKER_COMPOSE_PROJECT} "
+            f"-f {RENDERED_DOCKER_COMPOSE_FILE} logs"
+        )
         raise typer.Exit(1)
     except AuthenticationError as e:
         console.log(f"[red]Error: {e}")

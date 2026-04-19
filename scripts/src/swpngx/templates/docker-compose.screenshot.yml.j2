@@ -1,6 +1,7 @@
 # Docker Compose configuration for screenshot automation
 # Optimized for CI/automated screenshot generation
 
+version: "3.4"
 services:
   broker:
     image: docker.io/library/redis:7
@@ -8,7 +9,7 @@ services:
       - redisdata:/data
 
   webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:{{ pngx_tag }}
     depends_on:
       - broker
     ports:

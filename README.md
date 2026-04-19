@@ -54,6 +54,8 @@ If you have any questions or need support create an issue on [GitHub](https://gi
 
 ```console
 swpngx capture setup
+# Or pin the screenshot backend:
+swpngx capture setup --pngx-tag 2.19.4
 swpngx capture capture
 swpngx frame
 fastlane deliver
