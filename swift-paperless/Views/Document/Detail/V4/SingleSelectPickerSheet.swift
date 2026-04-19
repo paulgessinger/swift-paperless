@@ -9,6 +9,8 @@ import DataModel
 import Networking
 import SwiftUI
 
+private let singleSelectPickerDisplayLimit = 200
+
 struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, CreateView: View>: View {
   @Bindable var viewModel: DocumentDetailModel
 
@@ -30,6 +32,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   @State private var selectedDetent: PresentationDetent
   @State private var saving = false
   @State private var showCreate = false
+  @State private var sortedItems: [Item] = []
 
   init(
     viewModel: DocumentDetailModel,
@@ -92,21 +95,31 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       .compactMap { allItems[$0] }
   }
 
-  private var filteredItems: [Item] {
+  private func sortedByName(_ values: some Collection<Item>) -> [Item] {
+    values.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  }
+
+  private func computeMatching() -> (items: [Item], total: Int) {
     let selectedId = viewModel.document[keyPath: keyPath]
-    let search = searchText.lowercased()
-    return allItems.values
-      .filter { $0.id != selectedId }
-      .filter { search.isEmpty || $0.name.lowercased().contains(search) }
-      .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    let search = searchText
+    var matched: [Item] = []
+    matched.reserveCapacity(sortedItems.count)
+    for item in sortedItems {
+      if item.id == selectedId { continue }
+      if !search.isEmpty, !item.name.localizedCaseInsensitiveContains(search) { continue }
+      matched.append(item)
+    }
+    let limited = Array(matched.prefix(singleSelectPickerDisplayLimit))
+    return (limited, matched.count)
   }
 
   @ViewBuilder
   private func itemLabel(_ item: Item, selected: Bool) -> some View {
-    HStack {
+    HStack(alignment: .firstTextBaseline) {
       Text(item.name)
         .foregroundStyle(.primary)
-      Spacer()
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
       if selected {
         Image(systemName: "xmark.circle.fill")
           .foregroundStyle(.secondary)
@@ -166,7 +179,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   }
 
   var body: some View {
-    NavigationStack {
+    let matching = computeMatching()
+    return NavigationStack {
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
@@ -189,11 +203,12 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                   select(id: nil)
                 } label: {
                   CustomSectionRow {
-                    HStack {
+                    HStack(alignment: .firstTextBaseline) {
                       Text(.permissions(.private))
                         .italic()
                         .foregroundStyle(.secondary)
-                      Spacer()
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                       Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                     }
@@ -206,6 +221,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                 CustomSectionRow {
                   Text(notAssignedLabel)
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .transition(Self.selectedRowTransition)
               }
@@ -225,24 +242,20 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
             Text(.localizable(.selected))
           }
 
-          VStack(spacing: 0) {
-            if !filteredItems.isEmpty {
-              CustomSection {
-                VStack(spacing: 0) {
-                  ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
-                    row(item)
-                    if index < filteredItems.count - 1 {
-                      Divider()
-                    }
+          if !matching.items.isEmpty {
+            CustomSection {
+              LazyVStack(spacing: 0) {
+                ForEach(Array(matching.items.enumerated()), id: \.element.id) { index, item in
+                  row(item)
+                  if index < matching.items.count - 1 {
+                    Divider()
                   }
                 }
-                .animation(animation, value: viewModel.document[keyPath: keyPath])
-              } header: {
-                Text(listSectionTitle)
               }
+            } header: {
+              Text(listSectionTitle)
             }
           }
-          .animation(animation, value: filteredItems.isEmpty)
         }
       }
       .customSectionBackground(.thickMaterial)
@@ -291,6 +304,12 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     .presentationDetents([.medium, .large], selection: $selectedDetent)
     .onAppear {
       Haptics.shared.prepare()
+      if sortedItems.isEmpty {
+        sortedItems = sortedByName(allItems.values)
+      }
+    }
+    .onChange(of: allItems.count) { _, _ in
+      sortedItems = sortedByName(allItems.values)
     }
   }
 }

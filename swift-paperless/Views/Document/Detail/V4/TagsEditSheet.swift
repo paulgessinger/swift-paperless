@@ -9,6 +9,8 @@ import DataModel
 import Networking
 import SwiftUI
 
+private let tagsEditDisplayLimit = 200
+
 struct TagsEditSheet: View {
   @Bindable var viewModel: DocumentDetailModel
 
@@ -23,6 +25,7 @@ struct TagsEditSheet: View {
   @State private var selectedDetent: PresentationDetent
   @State private var saving = false
   @State private var showCreateTag = false
+  @State private var sortedTags: [Tag] = []
   @Namespace private var tagNamespace
 
   init(viewModel: DocumentDetailModel) {
@@ -67,12 +70,22 @@ struct TagsEditSheet: View {
       .compactMap { store.tags[$0] }
   }
 
-  private var availableTags: [Tag] {
-    let search = searchText.lowercased()
-    return store.tags.values
-      .filter { !tagIds.contains($0.id) }
-      .filter { search.isEmpty || $0.name.lowercased().contains(search) }
-      .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  private func sortedByName(_ values: some Collection<Tag>) -> [Tag] {
+    values.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  }
+
+  private func computeAvailable() -> (tags: [Tag], total: Int) {
+    let selected = Set(tagIds)
+    let search = searchText
+    var matched: [Tag] = []
+    matched.reserveCapacity(sortedTags.count)
+    for tag in sortedTags {
+      if selected.contains(tag.id) { continue }
+      if !search.isEmpty, !tag.name.localizedCaseInsensitiveContains(search) { continue }
+      matched.append(tag)
+    }
+    let limited = Array(matched.prefix(tagsEditDisplayLimit))
+    return (limited, matched.count)
   }
 
   private func save() {
@@ -105,7 +118,8 @@ struct TagsEditSheet: View {
   let animation = Animation.spring(duration: 0.2)
 
   var body: some View {
-    NavigationStack {
+    let available = computeAvailable()
+    return NavigationStack {
       ScrollView(.vertical) {
         VStack(spacing: 0) {
           CustomSection {
@@ -155,37 +169,34 @@ struct TagsEditSheet: View {
             }
           }
 
-          VStack(spacing: 0) {
-            if !availableTags.isEmpty {
-              CustomSection {
-                VStack(spacing: 0) {
-                  ForEach(Array(availableTags.enumerated()), id: \.element.id) { index, tag in
-                    Button {
-                      add(tag.id)
-                    } label: {
-                      CustomSectionRow {
-                        HStack {
-                          TagView(tag: tag)
-                            .fixedSize()
-                            .matchedGeometryEffect(id: tag.id, in: tagNamespace)
-                          Spacer()
-                          Image(systemName: "plus.circle.fill")
-                            .foregroundStyle(.secondary)
-                        }
+          if !available.tags.isEmpty {
+            CustomSection {
+              VStack(spacing: 0) {
+                ForEach(Array(available.tags.enumerated()), id: \.element.id) { index, tag in
+                  Button {
+                    add(tag.id)
+                  } label: {
+                    CustomSectionRow {
+                      HStack {
+                        TagView(tag: tag)
+                          .fixedSize()
+                          .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                        Spacer()
+                        Image(systemName: "plus.circle.fill")
+                          .foregroundStyle(.secondary)
                       }
                     }
-                    .buttonStyle(.plain)
-                    .transition(.opacity)
+                  }
+                  .buttonStyle(.plain)
+                  .transition(.opacity)
 
-                    if index < availableTags.count - 1 {
-                      Divider()
-                    }
+                  if index < available.tags.count - 1 {
+                    Divider()
                   }
                 }
               }
             }
           }
-          .animation(animation, value: availableTags.isEmpty)
         }
       }
       .customSectionBackground(.thickMaterial)
@@ -223,6 +234,14 @@ struct TagsEditSheet: View {
     }
     .presentationDetents([.medium, .large], selection: $selectedDetent)
     .interactiveDismissDisabled(interactiveDismissDisabled)
+    .onAppear {
+      if sortedTags.isEmpty {
+        sortedTags = sortedByName(store.tags.values)
+      }
+    }
+    .onChange(of: store.tags.count) { _, _ in
+      sortedTags = sortedByName(store.tags.values)
+    }
     .sheet(isPresented: $showCreateTag) {
       NavigationStack {
         CreateTagView(onCreated: { tag in
