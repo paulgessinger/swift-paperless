@@ -117,6 +117,9 @@ struct EditableAspect: View {
         if let text = label.displayText {
           Text(text)
             .italic(label.isPrivate)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(maxWidth: 200, alignment: .leading)
         }
         Image(systemName: enabled ? "pencil" : "lock.fill")
           .foregroundStyle(editButtonColor)
@@ -312,6 +315,9 @@ struct SuggestionPill: View {
     Button(action: action) {
       Text(text)
         .font(.footnote)
+        .lineLimit(1)
+        .truncationMode(.tail)
+        .frame(maxWidth: 200, alignment: .leading)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(Capsule().fill(.accent.opacity(0.15)))

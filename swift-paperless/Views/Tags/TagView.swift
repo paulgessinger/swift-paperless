@@ -41,7 +41,9 @@ struct TagView<Trailing: View>: View {
     HStack(spacing: 4) {
       Text(tag.name)
         .lineLimit(1)
+        .truncationMode(.tail)
         .font(.body)
+        .frame(maxWidth: 200, alignment: .leading)
         .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
       trailing
     }
