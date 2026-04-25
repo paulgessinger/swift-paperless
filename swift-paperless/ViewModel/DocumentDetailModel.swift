@@ -97,7 +97,7 @@ class DocumentDetailModel {
           break
         }
 
-        guard let pdfDocument = PDFDocument(url: url) else {
+        guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
           download = .error
           break
         }
