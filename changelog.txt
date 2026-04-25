@@ -1,3 +1,7 @@
+1.10.0 (188)
+
+- Attempt to fix performance issue with PDF detail display
+
 1.10.0 (187)
 
 - Internal refactor of the networking data model. This should be transparent but please let me know if you see any unexpected errors.
