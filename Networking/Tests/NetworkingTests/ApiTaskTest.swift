@@ -51,6 +51,14 @@ struct ApiTaskTest {
     #expect(tasks[4].isActive == true)
   }
 
+  @Test func testDecodingV10Paginated() throws {
+    let data = try #require(testData("Data/tasks_v10_paginated.json"))
+    let tasks = try decoder.decode(ListResponse<ApiTaskV10>.self, from: data).results.map(\.domain)
+    #expect(tasks.count == 2)
+    #expect(tasks[0].id == 2)
+    #expect(tasks[1].id == 1)
+  }
+
   @Test func testDecodingV10() throws {
     let data = try #require(testData("Data/tasks_v10.json"))
     let tasks = try decoder.decode([ApiTaskV10].self, from: data).map(\.domain)

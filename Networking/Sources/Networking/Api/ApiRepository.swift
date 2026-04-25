@@ -820,7 +820,7 @@ extension ApiRepository: Repository {
       through: taskShape
     ) { data in
       Attempt(TaskShape.v10) {
-        try decoder.decode([ApiTaskV10].self, from: data).map(\.domain)
+        try decoder.decode(ListResponse<ApiTaskV10>.self, from: data).results.map(\.domain)
       }
       Attempt(TaskShape.v9) {
         try decoder.decode([ApiTaskV9].self, from: data).map(\.domain)
