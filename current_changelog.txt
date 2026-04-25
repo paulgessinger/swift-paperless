@@ -1,3 +1,4 @@
 - Move JSON decoding to a background branch to not block the UI
 - Fix filter rule count display not taking sorting into account
 - Add loading indicator to search bar when loading
+- Add support for the new task API endpoint coming in v3.0.0 / APIv10
