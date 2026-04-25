@@ -43,6 +43,28 @@ struct TagManager: ManagerProtocol {
         })
     }
 
+    func hierarchy() -> [HierarchyNode<Tag>]? {
+      let all = load()
+      guard all.contains(where: { $0.parent != nil }) else { return nil }
+
+      let known = Set(all.map(\.id))
+      var byParent: [UInt?: [Tag]] = [:]
+      for tag in all {
+        // Treat references to unknown/inaccessible parents as roots so no tag is hidden.
+        let key: UInt? = tag.parent.flatMap { known.contains($0) ? $0 : nil }
+        byParent[key, default: []].append(tag)
+      }
+
+      func build(parent: UInt?) -> [HierarchyNode<Tag>] {
+        (byParent[parent] ?? []).map { tag in
+          let children = build(parent: tag.id)
+          return HierarchyNode(element: tag, children: children.isEmpty ? nil : children)
+        }
+      }
+
+      return build(parent: nil)
+    }
+
     func update(_ tag: Tag) async throws {
       try await store.update(tag: tag)
     }

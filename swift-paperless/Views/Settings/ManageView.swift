@@ -10,6 +10,14 @@ import Networking
 import SwiftUI
 import os
 
+struct HierarchyNode<Element: Hashable & Identifiable & Sendable>: Hashable, Identifiable, Sendable
+{
+  var element: Element
+  var children: [HierarchyNode<Element>]?
+
+  var id: Element.ID { element.id }
+}
+
 protocol ManagerModel: Sendable {
   associatedtype Element: Hashable, Identifiable, Sendable, LocalizedResource
   associatedtype ProtoElement: Sendable
@@ -19,12 +27,23 @@ protocol ManagerModel: Sendable {
   @MainActor
   func load() -> [Element]
 
+  /// Optional hierarchical view of `load()`. Return `nil` for a flat list.
+  /// When non-nil, `ManageView` renders an outline; the flattened set must
+  /// match `load()` so search and delete keep working.
+  @MainActor
+  func hierarchy() -> [HierarchyNode<Element>]?
+
   func update(_ element: Element) async throws
   func create(_ element: ProtoElement) async throws -> Element
   func delete(_ element: Element) async throws
 
   @MainActor
   var permissions: UserPermissions.PermissionSet { get }
+}
+
+extension ManagerModel {
+  @MainActor
+  func hierarchy() -> [HierarchyNode<Element>]? { nil }
 }
 
 protocol RowViewProtocol: View {
@@ -67,6 +86,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
   @State var model: Manager.Model?
 
   @State private var elements: [Element] = []
+  @State private var hierarchy: [HierarchyNode<Element>]? = nil
 
   @State private var searchText = ""
 
@@ -137,6 +157,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
       if let model {
         withAnimation {
           elements = model.load()
+          hierarchy = model.hierarchy()
         }
       }
     } catch {
@@ -181,36 +202,45 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     elements.remove(atOffsets: offsets)
   }
 
+  @ViewBuilder
+  private func elementLink(_ element: Element, model: Manager.Model) -> some View {
+    NavigationLink {
+      Edit(model: model, element: element) { element in
+        guard model.permissions.test(.change) else {
+          Logger.shared.info(
+            "Silently not saving from edit view: this likely indicates a button is active that shouldn't be"
+          )
+          return
+        }
+
+        try await model.update(element)
+
+        if let index = elements.firstIndex(where: { $0.id == element.id }) {
+          elements[index] = element
+        }
+      }
+    } label: {
+      Manager.RowView(element: element)
+    }
+  }
+
   var body: some View {
     let displayElements = elements.filter { filter(element: $0) }
+    let useHierarchy = hierarchy != nil && searchText.isEmpty
     List {
       if let model {
         if !model.permissions.test(.view) {
           noPermissionsView
         } else if elements.isEmpty, searchText.isEmpty {
           noElementsView
+        } else if useHierarchy, let hierarchy {
+          OutlineGroup(hierarchy, children: \.children) { node in
+            elementLink(node.element, model: model)
+          }
         } else {
           if !displayElements.isEmpty {
             ForEach(displayElements, id: \.self) { element in
-              NavigationLink {
-                Edit(model: model, element: element) { element in
-                  guard model.permissions.test(.change) else {
-                    Logger.shared.info(
-                      "Silently not saving from edit view: this likely indicates a button is active that shouldn't be"
-                    )
-                    return
-                  }
-
-                  try await model.update(element)
-
-                  if let index = elements.firstIndex(where: { $0.id == element.id }) {
-                    elements[index] = element
-                  }
-
-                }
-              } label: {
-                Manager.RowView(element: element)
-              }
+              elementLink(element, model: model)
             }
             .if(test(.delete)) {
               $0.onDelete(perform: deleteRow)
@@ -262,6 +292,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
       if model == nil {
         model = Manager.Model(store: store)
         elements = model!.load()
+        hierarchy = model!.hierarchy()
       }
     }
   }
