@@ -41,7 +41,13 @@ let package = Package(
     ),
     .testTarget(
       name: "NetworkingTests",
-      dependencies: ["Networking"]
+      dependencies: [
+        "Networking",
+        .product(name: "DataModel", package: "DataModel"),
+      ],
+      resources: [
+        .copy("Data")
+      ]
     ),
   ]
 )
