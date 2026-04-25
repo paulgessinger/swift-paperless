@@ -1,5 +1,6 @@
 import Common
 import DataModel
+import Foundation
 import SwiftUI
 import Testing
 
@@ -58,6 +59,49 @@ struct ApiTagTest {
 
     let all = topLevel.flattenedUnique.map(\.domain)
     assertNestedTagsV219(all)
+  }
+
+  // The paperless-ngx update endpoint treats a missing `parent` key as
+  // "unchanged", so clearing the parent must encode as explicit JSON `null`.
+  @Test("ApiTagUpdate emits `parent: null` when cleared")
+  func testEncodingClearsParent() throws {
+    let update = ApiTagUpdate(
+      id: 7,
+      is_inbox_tag: false,
+      name: "Tag",
+      slug: "tag",
+      color: HexColor(Color(hex: "#ff0000")!),
+      match: "",
+      matching_algorithm: .auto,
+      is_insensitive: true,
+      parent: nil
+    )
+
+    let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(update))
+    let dict = try #require(json as? [String: Any])
+
+    #expect(dict.keys.contains("parent"))
+    #expect(dict["parent"] is NSNull)
+  }
+
+  @Test("ApiTagUpdate emits parent id when set")
+  func testEncodingKeepsParent() throws {
+    let update = ApiTagUpdate(
+      id: 7,
+      is_inbox_tag: false,
+      name: "Tag",
+      slug: "tag",
+      color: HexColor(Color(hex: "#ff0000")!),
+      match: "",
+      matching_algorithm: .auto,
+      is_insensitive: true,
+      parent: 42
+    )
+
+    let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(update))
+    let dict = try #require(json as? [String: Any])
+
+    #expect((dict["parent"] as? NSNumber)?.uintValue == 42)
   }
 }
 

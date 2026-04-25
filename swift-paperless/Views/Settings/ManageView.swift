@@ -187,6 +187,12 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     model?.permissions ?? .empty
   }
 
+  private func reloadElements() {
+    guard let model else { return }
+    elements = model.load()
+    hierarchy = model.hierarchy()
+  }
+
   private func deleteRow(at offsets: IndexSet) {
     for (i, element) in elements.enumerated() {
       guard offsets.contains(i) else { continue }
@@ -200,6 +206,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
       }
     }
     elements.remove(atOffsets: offsets)
+    hierarchy = model?.hierarchy()
   }
 
   @ViewBuilder
@@ -215,9 +222,10 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
         try await model.update(element)
 
-        if let index = elements.firstIndex(where: { $0.id == element.id }) {
-          elements[index] = element
-        }
+        // The store is the source of truth, including any side effects on
+        // other elements (e.g. parent reassignments). Reload everything
+        // so the hierarchy and rows stay in sync.
+        await MainActor.run { reloadElements() }
       }
     } label: {
       Manager.RowView(element: element)

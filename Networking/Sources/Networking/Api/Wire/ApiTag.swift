@@ -7,6 +7,7 @@
 
 import Common
 import DataModel
+import MetaCodable
 
 // MARK: - Wire type for reading tags from the API
 
@@ -77,6 +78,7 @@ struct ApiTagCreate: Encodable, Sendable {
   var is_insensitive: Bool
   var owner: Owner
   var set_permissions: Permissions?
+  var parent: UInt?
 }
 
 extension ApiTagCreate {
@@ -90,14 +92,16 @@ extension ApiTagCreate {
       matching_algorithm: proto.matchingAlgorithm,
       is_insensitive: proto.isInsensitive,
       owner: proto.owner,
-      set_permissions: proto.permissions
+      set_permissions: proto.permissions,
+      parent: proto.parent
     )
   }
 }
 
 // MARK: - Wire type for updating tags
 
-struct ApiTagUpdate: Encodable, Sendable {
+@Codable
+struct ApiTagUpdate: Sendable {
   var id: UInt
   var is_inbox_tag: Bool
   var name: String
@@ -106,6 +110,10 @@ struct ApiTagUpdate: Encodable, Sendable {
   var match: String
   var matching_algorithm: MatchingAlgorithm
   var is_insensitive: Bool
+  // Encode as explicit JSON `null` when cleared so the paperless-ngx update
+  // endpoint actually unsets the parent (it would otherwise treat a missing
+  // key as "unchanged" and silently no-op).
+  @CodedBy(NullCoder<UInt>())
   var parent: UInt?
 }
 

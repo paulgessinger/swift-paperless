@@ -8,10 +8,13 @@
 import Combine
 import Common
 import DataModel
+import Networking
 import SwiftUI
 import os
 
 struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
+  @EnvironmentObject private var store: DocumentStore
+
   var onSave: ((Element) throws -> Void)?
 
   //    @Environment(\.dismiss) private var dismiss
@@ -21,6 +24,12 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
   @State private var tag: Element
 
   let editable: Bool
+
+  /// Persisted id of the tag being edited, when applicable. `nil` when creating
+  /// (`ProtoTag`); used to exclude self + descendants from the parent picker.
+  private var persistedId: UInt? {
+    (tag as? Tag)?.id
+  }
 
   init(
     element: Element,
@@ -43,6 +52,15 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
 
   private func valid() -> Bool {
     !tag.name.isEmpty && editable
+  }
+
+  @ViewBuilder
+  private var parentLabel: some View {
+    if let id = tag.parent, let parent = store.tags[id] {
+      TagView(tag: parent)
+    } else {
+      Text("None")
+    }
   }
 
   var body: some View {
@@ -89,6 +107,20 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
         .disabled(!editable)
       }
 
+      Section {
+        NavigationLink {
+          TagParentPickerView(selection: $tag.parent, excludingId: persistedId)
+        } label: {
+          HStack {
+            Text("Parent tag")
+            Spacer()
+            parentLabel
+              .foregroundStyle(.secondary)
+          }
+        }
+        .disabled(!editable)
+      }
+
       MatchEditView(element: $tag)
         .disabled(!editable)
     }
@@ -117,6 +149,93 @@ extension TagEditView where Element == ProtoTag {
       element: ProtoTag(color: HexColor(Self.randomColor())),
       onSave: onSave)
     saveLabel = String(localized: .localizable(.add))
+  }
+}
+
+// MARK: - Parent picker
+
+struct TagParentPickerView: View {
+  @EnvironmentObject private var store: DocumentStore
+  @Environment(\.dismiss) private var dismiss
+
+  @Binding var selection: UInt?
+  /// Tag id to hide from the candidates along with all its descendants, to
+  /// prevent self-parenting and cycles. `nil` when creating a new tag.
+  let excludingId: UInt?
+
+  @State private var searchText = ""
+
+  /// Returns `excludingId` and all of its transitive descendants.
+  private func excludedSet() -> Set<UInt> {
+    guard let excludingId else { return [] }
+    var excluded: Set<UInt> = [excludingId]
+    var changed = true
+    let tags = store.tags
+    while changed {
+      changed = false
+      for tag in tags.values {
+        if let parent = tag.parent, excluded.contains(parent), !excluded.contains(tag.id) {
+          excluded.insert(tag.id)
+          changed = true
+        }
+      }
+    }
+    return excluded
+  }
+
+  private var candidates: [Tag] {
+    let excluded = excludedSet()
+    return store.tags.values
+      .filter { !excluded.contains($0.id) }
+      .filter {
+        searchText.isEmpty
+          || $0.name.range(of: searchText, options: .caseInsensitive) != nil
+      }
+      .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+  }
+
+  private func select(_ id: UInt?) {
+    selection = id
+    dismiss()
+  }
+
+  var body: some View {
+    List {
+      Section {
+        Button {
+          select(nil)
+        } label: {
+          HStack {
+            Text("None")
+              .foregroundStyle(.primary)
+            Spacer()
+            if selection == nil {
+              Image(systemName: "checkmark")
+            }
+          }
+        }
+      }
+
+      Section {
+        ForEach(candidates, id: \.id) { tag in
+          Button {
+            select(tag.id)
+          } label: {
+            HStack {
+              TagView(tag: tag)
+              Spacer()
+              if selection == tag.id {
+                Image(systemName: "checkmark")
+              }
+            }
+          }
+          .foregroundStyle(.primary)
+        }
+      }
+    }
+    .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+    .navigationTitle(Text("Parent tag"))
+    .navigationBarTitleDisplayMode(.inline)
   }
 }
 
