@@ -1,3 +1,7 @@
+1.10.0 (187)
+
+- Internal refactor of the networking data model. This should be transparent but please let me know if you see any unexpected errors.
+
 1.10.0 (186)
 
 - Fix performance issues with large lists of attributes in detail v4
