@@ -25,6 +25,9 @@ class DocumentListViewModel {
 
   var noPermissions = false
 
+  private var inFlight: Int = 0
+  var isFetching: Bool { inFlight > 0 }
+
   private var source: (any DocumentSource)?
   private var exhausted: Bool = false
 
@@ -84,6 +87,8 @@ class DocumentListViewModel {
   func load() async {
     Logger.shared.debug("DocumentListViewModel.load")
     guard documents.isEmpty else { return }
+    inFlight += 1
+    defer { inFlight -= 1 }
     do {
       // Ensure we have up-to-date permissions
       try await store.fetchUISettings()
@@ -177,6 +182,8 @@ class DocumentListViewModel {
   }
 
   func refresh(filter: FilterState? = nil, retain: Bool = false) async throws -> [Document] {
+    inFlight += 1
+    defer { inFlight -= 1 }
     try await store.fetchAll()
 
     if let filter {
