@@ -105,11 +105,26 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     return result
   }
 
+  private func addTag(_ id: UInt) {
+    // Mirror backend behavior: implicitly attach all ancestors.
+    let toAdd = [id] + store.tagAncestors(of: id)
+    let existing = Set(document.tags)
+    let new = toAdd.filter { !existing.contains($0) }
+    guard !new.isEmpty else { return }
+    document.tags.append(contentsOf: new)
+  }
+
+  private func removeTag(_ id: UInt) {
+    // Mirror backend behavior: detach every descendant of `id` as well.
+    let toRemove = store.tagDescendants(of: id).union([id])
+    document.tags.removeAll { toRemove.contains($0) }
+  }
+
   @ViewBuilder
   private func availableRow(tag: Tag, depth: Int) -> some View {
     Button(action: {
       withAnimation {
-        document.tags.append(tag.id)
+        addTag(tag.id)
       }
     }) {
       HStack {
@@ -151,7 +166,7 @@ struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             let tag = store.tags[id]
             Button(action: {
               withAnimation {
-                document.tags = document.tags.filter { $0 != id }
+                removeTag(id)
               }
             }) {
               HStack {

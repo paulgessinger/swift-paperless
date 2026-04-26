@@ -59,7 +59,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     if let id = tag.parent, let parent = store.tags[id] {
       TagView(tag: parent)
     } else {
-      Text("None")
+      Text(.localizable(.none))
     }
   }
 
@@ -112,7 +112,7 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
           TagParentPickerView(selection: $tag.parent, excludingId: persistedId)
         } label: {
           HStack {
-            Text("Parent tag")
+            Text(.localizable(.tagParent))
             Spacer()
             parentLabel
               .foregroundStyle(.secondary)
@@ -206,7 +206,7 @@ struct TagParentPickerView: View {
           select(nil)
         } label: {
           HStack {
-            Text("None")
+            Text(.localizable(.none))
               .foregroundStyle(.primary)
             Spacer()
             if selection == nil {
@@ -234,7 +234,7 @@ struct TagParentPickerView: View {
       }
     }
     .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-    .navigationTitle(Text("Parent tag"))
+    .navigationTitle(Text(.localizable(.tagParent)))
     .navigationBarTitleDisplayMode(.inline)
   }
 }
