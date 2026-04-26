@@ -10,7 +10,7 @@ import MetaCodable
 
 @Codable
 @CodingKeys(.snake_case)
-public struct RemoteVersion {
+public struct RemoteVersion: Sendable {
   @CodedAs("version")
   private let versionImpl: String
 

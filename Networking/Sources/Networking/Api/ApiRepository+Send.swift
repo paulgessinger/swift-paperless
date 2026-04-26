@@ -32,7 +32,7 @@ extension ApiRepository {
   }
 
   // Typed response, no body.
-  func send<Response: Decodable>(
+  func send<Response: Decodable & Sendable>(
     _ method: HttpMethod = .get,
     endpoint: Endpoint,
     expectedStatus: HTTPStatusCode = .ok,
@@ -49,7 +49,7 @@ extension ApiRepository {
   }
 
   // Typed response, with body.
-  func send<Response: Decodable>(
+  func send<Response: Decodable & Sendable>(
     _ method: HttpMethod,
     endpoint: Endpoint,
     body: some Encodable,
@@ -130,24 +130,24 @@ extension ApiRepository {
   }
 
   func create<Element>(element: some Encodable, endpoint: Endpoint, returns: Element.Type)
-    async throws -> Element where Element: Decodable
+    async throws -> Element where Element: Decodable & Sendable
   {
     try await send(
       .post, endpoint: endpoint, body: element, expectedStatus: .created, returns: returns)
   }
 
   func update<Element>(element: Element, endpoint: Endpoint) async throws -> Element
-  where Element: Codable {
+  where Element: Codable & Sendable {
     try await send(.patch, endpoint: endpoint, body: element, returns: Element.self)
   }
 
-  func update<Response: Decodable>(
+  func update<Response: Decodable & Sendable>(
     element: some Encodable, endpoint: Endpoint, returns: Response.Type
   ) async throws -> Response {
     try await send(.patch, endpoint: endpoint, body: element, returns: returns)
   }
 
-  func get<T: Decodable>(
+  func get<T: Decodable & Sendable>(
     _ type: T.Type, endpoint: Endpoint
   ) async throws -> T? {
     do {

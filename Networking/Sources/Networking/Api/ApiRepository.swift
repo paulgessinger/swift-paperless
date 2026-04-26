@@ -294,7 +294,14 @@ public class ApiRepository {
     return (data, response)
   }
 
-  func fetchData<T: Decodable>(
+  @concurrent
+  private nonisolated static func decodeBackground<T: Decodable & Sendable>(
+    _ type: T.Type, from data: Data
+  ) async throws -> T {
+    try decoder.decode(type, from: data)
+  }
+
+  func fetchData<T: Decodable & Sendable>(
     for request: URLRequest, as type: T.Type,
     expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
@@ -303,7 +310,7 @@ public class ApiRepository {
     let (data, _) = try await fetchData(
       for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy)
     do {
-      return try decoder.decode(type, from: data)
+      return try await Self.decodeBackground(type, from: data)
     } catch let error as DecodingError {
       let sanitizedUrl =
         request.url.map(Self.sanitizeUrlForLog) ?? "<unknown>"
@@ -344,7 +351,7 @@ public class ApiRepository {
     }
   }
 
-  private func get<T: Decodable & Model>(_ type: T.Type, id: UInt) async throws -> T? {
+  private func get<T: Decodable & Model & Sendable>(_ type: T.Type, id: UInt) async throws -> T? {
     try await get(type, endpoint: .single(T.self, id: id))
   }
 
