@@ -85,6 +85,10 @@ struct DocumentList: View {
       store.userCanDelete(document: document)
     }
 
+    private var canRemoveInboxTags: Bool {
+      userCanChange && viewModel.hasInboxTags(document: document)
+    }
+
     private func onDeleteButtonPressed() {
       if documentDeleteConfirmation {
         documentToDelete = document
@@ -112,7 +116,7 @@ struct DocumentList: View {
         }
 
         .swipeActions(edge: .leading) {
-          if userCanChange {
+          if canRemoveInboxTags {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
             } label: {
@@ -141,7 +145,7 @@ struct DocumentList: View {
             Label(String(localized: .localizable(.edit)), systemImage: "pencil")
           }
 
-          if userCanChange {
+          if canRemoveInboxTags {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
             } label: {
