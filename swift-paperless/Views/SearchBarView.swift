@@ -10,6 +10,7 @@ import SwiftUI
 @available(iOS 26.0, macOS 26.0, *)
 struct SearchBarView<Content: View>: View {
   @Binding var text: String
+  var isLoading: Bool = false
   let content: () -> Content
 
   @FocusState private var focused: Bool
@@ -27,6 +28,10 @@ struct SearchBarView<Content: View>: View {
             }
           )
           .focused($focused)
+          ProgressView()
+            .controlSize(.regular)
+            .opacity(isLoading ? 1 : 0)
+            .animation(.default, value: isLoading)
         }
         .padding(.leading, 20)
         .padding(.trailing, 12)
@@ -68,8 +73,9 @@ struct SearchBarView<Content: View>: View {
 
 @available(iOS 26.0, *)
 extension SearchBarView where Content == EmptyView {
-  init(text: Binding<String>) {
+  init(text: Binding<String>, isLoading: Bool = false) {
     self._text = text
+    self.isLoading = isLoading
     self.content = { EmptyView() }
   }
 }

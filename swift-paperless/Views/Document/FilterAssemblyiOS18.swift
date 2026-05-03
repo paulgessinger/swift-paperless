@@ -11,15 +11,20 @@ import SwiftUI
 
 struct FilterAssemblyiOS18: View {
   var filterModel: FilterModel
+  var isFetching: Bool = false
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
+  @State private var searchPending: Bool = false
   private let searchTaskDelay: Duration = .seconds(0.5)
 
   var body: some View {
     VStack {
       HStack {
-        SearchBarViewiOS18(text: $searchText, cancelEnabled: false) {}
+        SearchBarViewiOS18(
+          text: $searchText, cancelEnabled: false,
+          isLoading: searchPending || isFetching
+        ) {}
 
         Menu {
           ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
@@ -48,9 +53,14 @@ struct FilterAssemblyiOS18: View {
     .onChange(of: searchText) {
       searchTask?.cancel()
 
-      guard searchText != filterModel.filterState.searchText else { return }
+      guard searchText != filterModel.filterState.searchText else {
+        searchPending = false
+        return
+      }
 
+      searchPending = true
       searchTask = Task {
+        defer { searchPending = false }
         do {
           try await Task.sleep(for: searchTaskDelay)
           filterModel.filterState.searchText = searchText
