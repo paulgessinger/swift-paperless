@@ -50,7 +50,7 @@ public class PreviewRepository: Repository {
   private let documentTypes: [UInt: DocumentType]
   private let correspondents: [UInt: Correspondent]
   private let storagePaths: [UInt: StoragePath]
-  private let tasks: [PaperlessTask]
+  private let storedTasks: [PaperlessTask]
   private let users: [User]
   private let groups: [UserGroup]
   private var notesByDocument: [UInt: [Document.Note]]
@@ -219,7 +219,7 @@ public class PreviewRepository: Repository {
     self.users = users
     self.groups = groups
 
-    tasks = [
+    storedTasks = [
       PaperlessTask(
         id: 2748,
         taskId: UUID(uuidString: "ef16d8fb-c495-4850-92b8-73a64109674e")!,
@@ -442,10 +442,14 @@ public class PreviewRepository: Repository {
   public func users() async -> [User] { users }
   public func groups() async throws -> [UserGroup] { groups }
 
-  public func tasks() async -> [PaperlessTask] { tasks }
+  public func tasks(limit: UInt) async -> [PaperlessTask] {
+    Array(storedTasks.prefix(Int(limit)))
+  }
+
+  public func tasks() throws -> any TaskSource { InMemoryTaskSource(storedTasks) }
   public func task(id _: UInt) async throws -> PaperlessTask? { nil }
 
-  public func task(id: UInt) throws -> PaperlessTask? { tasks.first { $0.id == id } }
+  public func task(id: UInt) throws -> PaperlessTask? { storedTasks.first { $0.id == id } }
 
   public func acknowledge(tasks _: [UInt]) async throws {}
 

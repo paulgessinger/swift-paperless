@@ -248,13 +248,19 @@ import Testing
   @Test func testTasksDefault() {
     let endpoint = Endpoint.tasks()
     #expect(endpoint.path == "/api/tasks")
-    #expect(endpoint.queryItems.count == 1)
+    #expect(endpoint.queryItems.count == 2)
     #expect(endpoint.queryItems.contains { $0.name == "acknowledged" && $0.value == "false" })
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "100000" })
   }
 
   @Test func testTasksAcknowledged() {
     let endpoint = Endpoint.tasks(acknowledged: true)
     #expect(endpoint.queryItems.contains { $0.name == "acknowledged" && $0.value == "true" })
+  }
+
+  @Test func testTasksPageSize() {
+    let endpoint = Endpoint.tasks(pageSize: 250)
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "250" })
   }
 
   @Test func testTask() {

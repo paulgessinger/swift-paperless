@@ -215,11 +215,17 @@ final class DocumentStore: ObservableObject, Sendable {
     return try await repository.notes(documentId: document.id)
   }
 
+  // Polling fetches a small leading page to bound decode cost when a server
+  // has many unacknowledged tasks. Active and recently-failed tasks are at
+  // the top of the list (sorted by creation date), so this window catches
+  // everything the poller actually consumes (badge count, error events).
+  static let taskPollLimit: UInt = 100
+
   func fetchTasks() async {
     guard (try? checkPermission(.view, for: .paperlessTask)) != nil else {
       return
     }
-    guard let tasks = try? await repository.tasks() else {
+    guard let tasks = try? await repository.tasks(limit: Self.taskPollLimit) else {
       return
     }
     self.tasks = tasks

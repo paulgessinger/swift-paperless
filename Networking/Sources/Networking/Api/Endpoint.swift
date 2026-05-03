@@ -311,12 +311,20 @@ extension Endpoint {
 
 // MARK: - Task related endpoints
 extension Endpoint {
-  public static func tasks(name: TaskName? = nil, acknowledged: Bool = false) -> Endpoint {
+  public static func tasks(
+    name: TaskName? = nil, acknowledged: Bool = false, pageSize: UInt = 100_000
+  ) -> Endpoint {
     var queryItems: [URLQueryItem] = []
     if let name {
+      // https://github.com/paperless-ngx/paperless-ngx/pull/12584 renamed `task_name`
+      // to `task_type`. Send both: pre-#12584 servers read `task_name` and ignore
+      // `task_type`; #12584 servers do the opposite. Values are identical so neither
+      // server can observe a conflict.
       queryItems.append(URLQueryItem(name: "task_name", value: name.rawValue))
+      queryItems.append(URLQueryItem(name: "task_type", value: name.rawValue))
     }
     queryItems.append(URLQueryItem(name: "acknowledged", value: acknowledged ? "true" : "false"))
+    queryItems.append(URLQueryItem(name: "page_size", value: String(pageSize)))
     return Endpoint(path: "/api/tasks", queryItems: queryItems)
   }
 

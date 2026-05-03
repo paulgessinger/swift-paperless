@@ -161,7 +161,12 @@ public protocol Repository: Sendable {
   func update(settings: UISettingsSettings) async throws
 
   func task(id: UInt) async throws -> PaperlessTask?
-  func tasks() async throws -> [PaperlessTask]
+
+  // Cap to bound decode cost on installations with many unacknowledged tasks.
+  // V10 backends honor the cap server-side; V9 backends serve the full array.
+  func tasks(limit: UInt) async throws -> [PaperlessTask]
+
+  func tasks() throws -> any TaskSource
 
   func acknowledge(tasks: [UInt]) async throws
 
@@ -199,4 +204,27 @@ extension Repository {
 public protocol DocumentSource: Actor {
   func fetch(limit: UInt) async throws -> [Document]
   func hasMore() async -> Bool
+}
+
+// - MARK: TaskSource
+public protocol TaskSource: Actor {
+  func fetch(limit: UInt) async throws -> [PaperlessTask]
+  func hasMore() async -> Bool
+}
+
+public actor InMemoryTaskSource: TaskSource {
+  private var remaining: [PaperlessTask]
+
+  public init(_ tasks: [PaperlessTask]) {
+    remaining = tasks
+  }
+
+  public func fetch(limit: UInt) async -> [PaperlessTask] {
+    let take = Int(min(UInt(remaining.count), limit))
+    let head = Array(remaining.prefix(take))
+    remaining.removeFirst(take)
+    return head
+  }
+
+  public func hasMore() async -> Bool { !remaining.isEmpty }
 }

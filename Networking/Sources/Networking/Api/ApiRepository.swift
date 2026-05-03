@@ -812,19 +812,40 @@ extension ApiRepository: Repository {
     try await send(.post, endpoint: .uiSettings(), body: UISettingsPayload(settings: settings))
   }
 
-  public func tasks() async throws -> [PaperlessTask] {
-    let request = try request(.tasks(name: .consumeFile, acknowledged: false))
+  public func tasks(limit: UInt) async throws -> [PaperlessTask] {
+    if supports(feature: .taskListEnvelope) {
+      return try await send(
+        endpoint: .tasks(name: .consumeFile, acknowledged: false, pageSize: limit),
+        returns: ListResponse<ApiTaskV10>.self
+      ).results.map(\.domain)
+    } else {
+      // V9 backends do not paginate the tasks endpoint; the limit is ignored.
+      return try await send(
+        endpoint: .tasks(name: .consumeFile, acknowledged: false),
+        returns: [ApiTaskV9].self
+      ).map(\.domain)
+    }
+  }
 
-    do {
-      return try await fetchData(for: request, as: [ApiTask].self).map(\.domain)
-    } catch {
-      Logger.networking.error("Unable to load tasks: \(error)")
-      throw error
+  public func tasks() throws -> any TaskSource {
+    if supports(feature: .taskListEnvelope) {
+      let initial = try url(.tasks(name: .consumeFile, acknowledged: false, pageSize: 100))
+      return ApiTaskSourceV10(repository: self, initialUrl: initial)
+    } else {
+      return ApiTaskSourceV9(repository: self)
     }
   }
 
   public func task(id: UInt) async throws -> PaperlessTask? {
-    try await get(ApiTask.self, endpoint: .task(id: id))?.domain
+    do {
+      if supports(feature: .taskListEnvelope) {
+        return try await send(endpoint: .task(id: id), returns: ApiTaskV10.self).domain
+      } else {
+        return try await send(endpoint: .task(id: id), returns: ApiTaskV9.self).domain
+      }
+    } catch RequestError.unexpectedStatusCode(code: .notFound, _) {
+      return nil
+    }
   }
 
   public func acknowledge(tasks ids: [UInt]) async throws {
