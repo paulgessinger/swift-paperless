@@ -5,52 +5,12 @@
 //  Created by Paul Gessinger on 18.03.23.
 //
 
-import AsyncAlgorithms
 import DataModel
 import Foundation
 import SwiftUI
 
 public enum DocumentCreateError: Error {
   case tooLarge
-}
-
-public actor AnyAsyncSequence<Element>: AsyncSequence & Sendable where Element: Sendable {
-  public typealias AsyncIterator = AnyAsyncIterator<Element>
-  public typealias Element = Element
-
-  private let _makeAsyncIterator: @Sendable () -> AnyAsyncIterator<Element>
-
-  public actor AnyAsyncIterator<E>: AsyncIteratorProtocol, Sendable where E: Sendable {
-    public typealias Element = E
-
-    private let _next: () async throws -> Element?
-
-    public init<I: AsyncIteratorProtocol>(itr: I) where I.Element == Element {
-      var itr = itr
-      _next = {
-        try await itr.next()
-      }
-    }
-
-    public func next() async throws -> Element? {
-      try await _next()
-    }
-  }
-
-  public init<S: AsyncSequence & Sendable>(seq: S)
-  where S.Element == Element, S.AsyncIterator: Sendable {
-    _makeAsyncIterator = { AnyAsyncIterator(itr: seq.makeAsyncIterator()) }
-  }
-
-  public nonisolated func makeAsyncIterator() -> AnyAsyncIterator<Element> {
-    _makeAsyncIterator()
-  }
-}
-
-extension AsyncSequence where Self: Sendable, Element: Sendable, AsyncIterator: Sendable {
-  public func eraseToAnyAsyncSequence() -> AnyAsyncSequence<Element> {
-    AnyAsyncSequence(seq: self)
-  }
 }
 
 public enum DocumentDownloadEvent {
@@ -200,22 +160,32 @@ extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
 }
 
-// - MARK: DocumentSource
-public protocol DocumentSource: Actor {
-  func fetch(limit: UInt) async throws -> [Document]
-  func hasMore() async -> Bool
+// - MARK: PagedSource
+//
+// Single abstraction for paged API resources. Both `DocumentSource` and
+// `TaskSource` are typealiases for a `PagedSource` parameterised on the
+// resource type, so that view models depend on one protocol shape.
+public protocol PagedSource<Element>: Actor {
+  associatedtype Element: Sendable
+  func fetch(limit: UInt) async throws -> [Element]
+  var isExhausted: Bool { get async }
+  // Total number of items the server reports. `nil` until the first fetch
+  // completes — and remains `nil` for sources with no notion of a server-side
+  // total (e.g. unpaginated V9 task listings before the one-shot fetch).
+  var totalCount: UInt? { get async }
 }
 
-// - MARK: TaskSource
-public protocol TaskSource: Actor {
-  func fetch(limit: UInt) async throws -> [PaperlessTask]
-  func hasMore() async -> Bool
-}
+public typealias DocumentSource = PagedSource<Document>
+public typealias TaskSource = PagedSource<PaperlessTask>
 
-public actor InMemoryTaskSource: TaskSource {
+public actor InMemoryTaskSource: PagedSource {
+  public typealias Element = PaperlessTask
+
+  private let initialCount: UInt
   private var remaining: [PaperlessTask]
 
   public init(_ tasks: [PaperlessTask]) {
+    initialCount = UInt(tasks.count)
     remaining = tasks
   }
 
@@ -226,5 +196,6 @@ public actor InMemoryTaskSource: TaskSource {
     return head
   }
 
-  public func hasMore() async -> Bool { !remaining.isEmpty }
+  public var isExhausted: Bool { remaining.isEmpty }
+  public var totalCount: UInt? { initialCount }
 }

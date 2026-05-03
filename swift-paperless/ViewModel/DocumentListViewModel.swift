@@ -145,6 +145,7 @@ class DocumentListViewModel {
           }
 
           let batch = try await source.fetch(limit: self.batchSize)
+          let sourceExhausted = await source.isExhausted
           if batch.isEmpty {
             await MainActor.run {
               self.exhausted = true
@@ -172,6 +173,9 @@ class DocumentListViewModel {
 
           await MainActor.run {
             self.documents += batch
+            if sourceExhausted {
+              self.exhausted = true
+            }
           }
         } catch {
           Logger.shared.error("DocumentList failed to load more if needed: \(error)")

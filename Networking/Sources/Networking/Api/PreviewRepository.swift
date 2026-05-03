@@ -11,7 +11,8 @@ import GameplayKit
 import SwiftUI
 import os
 
-public actor PreviewDocumentSource: DocumentSource {
+public actor PreviewDocumentSource: PagedSource {
+  public typealias Element = Document
   public typealias DocumentSequence = [Document]
 
   public var sequence: DocumentSequence
@@ -24,7 +25,8 @@ public actor PreviewDocumentSource: DocumentSource {
     Array(sequence.prefix(Int(limit)))
   }
 
-  public func hasMore() async -> Bool { false }
+  public var isExhausted: Bool { true }
+  public var totalCount: UInt? { UInt(sequence.count) }
 }
 
 struct SeededGenerator: RandomNumberGenerator {

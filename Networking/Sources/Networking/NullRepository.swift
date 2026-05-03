@@ -144,7 +144,9 @@ public class NullRepository: Repository {
   }
 }
 
-public actor NullDocumentSource: DocumentSource {
+public actor NullDocumentSource: PagedSource {
+  public typealias Element = Document
   public func fetch(limit _: UInt) async throws -> [Document] { [] }
-  public func hasMore() async -> Bool { false }
+  public var isExhausted: Bool { true }
+  public var totalCount: UInt? { 0 }
 }
