@@ -270,12 +270,17 @@ class DocumentListViewModel {
     }
   }
 
+  func hasInboxTags(document: Document) -> Bool {
+    document.tags.contains { store.tags[$0]?.isInboxTag == true }
+  }
+
   func removeInboxTags(document: Document) async {
+    guard hasInboxTags(document: document) else { return }
+
     var document = document
-    let inboxTags = store.tags.values.filter(\.isInboxTag)
-    for tag in inboxTags {
-      document.tags.removeAll(where: { $0 == tag.id })
-    }
+    let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
+    document.tags.removeAll { inboxTagIDs.contains($0) }
+
     _ = try? await store.updateDocument(document)
   }
 }
