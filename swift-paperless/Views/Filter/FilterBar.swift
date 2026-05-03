@@ -133,7 +133,7 @@ private struct FilterMenu<Content: View>: View {
           if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
             Divider()
           }
-          Text(.localizable(.filtersApplied(UInt(filterModel.filterState.ruleCount))))
+          Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
           Divider()
           Button(role: .destructive) {
             Haptics.shared.notification(.success)
@@ -150,14 +150,22 @@ private struct FilterMenu<Content: View>: View {
   }
 }
 
-private struct CircleCounter: View {
+private struct CircleCounter<Value: CustomStringConvertible>: View {
   enum Mode {
     case include
     case exclude
   }
 
-  var value: Int
+  var value: Value
   var mode = Mode.include
+
+  private var text: String {
+    String(describing: value)
+  }
+
+  private var contentPadding: EdgeInsets {
+    EdgeInsets(top: 5, leading: text == "1" ? 4 : 5, bottom: 5, trailing: 5)
+  }
 
   private var bg: Color {
     switch mode {
@@ -178,10 +186,9 @@ private struct CircleCounter: View {
   }
 
   var body: some View {
-    Text(String("\(value)"))
+    Text(text)
       .foregroundColor(fg)
-      .if(value == 1) { view in view.padding(5).padding(.leading, -1) }
-      .if(value > 1) { view in view.padding(5) }
+      .padding(contentPadding)
       .frame(minWidth: 20, minHeight: 20)
       .background(Circle().fill(bg))
   }
@@ -828,7 +835,7 @@ struct FilterBar: View {
             )
             .labelStyle(.iconOnly)
             if filterModel.filterState.filtering {
-              CircleCounter(value: filterModel.filterState.ruleCount)
+              CircleCounter(value: filterModel.filterState.defaultAwareRuleCount)
             }
           }
         }
