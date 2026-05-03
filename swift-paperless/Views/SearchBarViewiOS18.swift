@@ -11,6 +11,7 @@ struct SearchBarViewiOS18: View {
   @Binding var text: String
   var cancelEnabled = true
   var isFocused: Binding<Bool>? = nil
+  var isLoading: Bool = false
   var onSubmit: () -> Void = {}
 
   @Environment(\.colorScheme) private var colorScheme
@@ -52,6 +53,11 @@ struct SearchBarViewiOS18: View {
               text = ""
             }
         }
+
+        ProgressView()
+          .controlSize(.regular)
+          .opacity(isLoading ? 1 : 0)
+          .animation(.default, value: isLoading)
       }
       .padding(.horizontal, 10)
       .background(

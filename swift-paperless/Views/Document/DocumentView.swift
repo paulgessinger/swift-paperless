@@ -56,6 +56,7 @@ struct DocumentView: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
   @State private var filterModel = FilterModel()
+  @State private var isFetching: Bool = false
 
   // MARK: State
 
@@ -413,14 +414,15 @@ struct DocumentView: View {
       DocumentList(
         store: store, navPath: $navPath,
         filterModel: filterModel,
-        errorController: errorController
+        errorController: errorController,
+        isFetching: $isFetching
       )
 
       .safeAreaInset(edge: .top) {
         if #available(iOS 26.0, *) {
-          FilterAssembly(filterModel: filterModel)
+          FilterAssembly(filterModel: filterModel, isFetching: isFetching)
         } else {
-          FilterAssemblyiOS18(filterModel: filterModel)
+          FilterAssemblyiOS18(filterModel: filterModel, isFetching: isFetching)
         }
       }
 

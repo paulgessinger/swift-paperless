@@ -12,9 +12,11 @@ import SwiftUI
 @available(iOS 26.0, *)
 struct FilterAssembly: View {
   var filterModel: FilterModel
+  var isFetching: Bool = false
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
+  @State private var searchPending: Bool = false
   private let searchTaskDelay: Duration = .seconds(0.5)
 
   private var searchModeMenu: some View {
@@ -40,7 +42,7 @@ struct FilterAssembly: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      SearchBarView(text: $searchText) {
+      SearchBarView(text: $searchText, isLoading: searchPending || isFetching) {
         searchModeMenu
       }
       .padding(.horizontal)
@@ -54,9 +56,14 @@ struct FilterAssembly: View {
     .onChange(of: searchText) {
       searchTask?.cancel()
 
-      guard searchText != filterModel.filterState.searchText else { return }
+      guard searchText != filterModel.filterState.searchText else {
+        searchPending = false
+        return
+      }
 
+      searchPending = true
       searchTask = Task {
+        defer { searchPending = false }
         do {
           try await Task.sleep(for: searchTaskDelay)
           filterModel.filterState.searchText = searchText

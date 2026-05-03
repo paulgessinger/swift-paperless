@@ -42,6 +42,7 @@ struct DocumentList: View {
   var store: DocumentStore
   @Binding var navPath: [NavigationState]
   var filterModel: FilterModel
+  @Binding var isFetching: Bool
 
   @State private var documentToDelete: Document?
 
@@ -53,11 +54,12 @@ struct DocumentList: View {
 
   init(
     store: DocumentStore, navPath: Binding<[NavigationState]>, filterModel: FilterModel,
-    errorController: ErrorController
+    errorController: ErrorController, isFetching: Binding<Bool>
   ) {
     self.store = store
     _navPath = navPath
     self.filterModel = filterModel
+    _isFetching = isFetching
     _viewModel = State(
       initialValue: DocumentListViewModel(
         store: store,
@@ -268,6 +270,10 @@ struct DocumentList: View {
           viewModel.replace(documents: documents)
         }
       }
+    }
+
+    .onChange(of: viewModel.isFetching) { _, fetching in
+      isFetching = fetching
     }
 
     // @TODO: Re-evaluate if we want an animation here
