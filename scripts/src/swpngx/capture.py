@@ -627,11 +627,7 @@ def should_log_created_random_item(
     requested_count: int,
     created_count: int,
 ) -> bool:
-    return (
-        not is_random_item
-        or requested_count <= 20
-        or created_count % 100 == 0
-    )
+    return not is_random_item or requested_count <= 20 or created_count % 100 == 0
 
 
 async def create_tags(paperless: Paperless, random_tag_count: int = 0) -> None:
@@ -759,9 +755,7 @@ async def create_document_types(
                 created_count=created_random_document_types,
             )
             if should_log_document_type:
-                console.log(
-                    f"  Created document type: {dt_data['name']} (ID: {dt_id})"
-                )
+                console.log(f"  Created document type: {dt_data['name']} (ID: {dt_id})")
         except Exception as e:
             console.log(
                 f"  [yellow]Document type {dt_data['name']} may already exist: {e}"
