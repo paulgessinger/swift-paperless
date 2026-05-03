@@ -1,7 +1,0 @@
-- Move JSON decoding to a background branch to not block the UI
-- Fix filter rule count display not taking sorting into account
-- Add loading indicator to search bar when loading
-- Add support for the new task API endpoint coming in v3.0.0 / APIv10
-- Add support for the new task API endpoint coming in v3.0.0 / APIv10
-- Fix freeze when polling tasks on installations with many unacknowledged tasks; the task list now scroll-loads additional pages on demand
-- Hide the remove inbox tag action for documents that do not have inbox tags
