@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # dependencies = [
+#   "jinja2",
 #   "rich",
 #   "typer",
 #   "pydantic>=2",
@@ -14,12 +15,15 @@ import asyncio
 import concurrent.futures
 from dataclasses import dataclass
 from pathlib import Path
+import random
 import re
 import subprocess
+import tempfile
 import time
 from typing import Annotated
 
 import aiohttp
+from jinja2 import Environment, PackageLoader
 import typer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pypaperless import Paperless
@@ -37,6 +41,11 @@ app = typer.Typer(
     no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app"
 )
 console = Console()
+DOCKER_COMPOSE_PROJECT = "swpngx-screenshot"
+DOCKER_COMPOSE_TEMPLATE = "docker-compose.screenshot.yml.j2"
+RENDERED_DOCKER_COMPOSE_FILE = (
+    Path(tempfile.gettempdir()) / "swpngx-docker-compose.screenshot.yml"
+)
 
 
 # ============================================================================
@@ -238,6 +247,54 @@ DOCUMENT_TITLES = [
     "Quarterly Statement",
     "Travel Itinerary",
     "Home Insurance Renewal",
+]
+
+RANDOM_TAG_WORDS = [
+    "Amber",
+    "Archive",
+    "Audit",
+    "Batch",
+    "Client",
+    "Delta",
+    "Expense",
+    "Ledger",
+    "Memo",
+    "Policy",
+    "Project",
+    "Receipt",
+    "Review",
+    "Signal",
+    "Travel",
+]
+
+RANDOM_CORRESPONDENT_WORDS = [
+    "Accounts",
+    "Archive",
+    "Bureau",
+    "Client",
+    "Consulting",
+    "Finance",
+    "Group",
+    "Holdings",
+    "Office",
+    "Partners",
+    "Services",
+    "Trust",
+]
+
+RANDOM_DOCUMENT_TYPE_WORDS = [
+    "Agreement",
+    "Brief",
+    "Certificate",
+    "Confirmation",
+    "Contract",
+    "Notice",
+    "Record",
+    "Report",
+    "Request",
+    "Statement",
+    "Summary",
+    "Voucher",
 ]
 
 
@@ -446,9 +503,39 @@ def install_app(target: str, app_path: Path, *, dry_run: bool) -> None:
 # ============================================================================
 
 
+def render_docker_compose_file(pngx_tag: str) -> Path:
+    """Render the package Docker Compose template with the requested PNGX tag."""
+    tag = pngx_tag.strip()
+    if not tag:
+        console.log("[red]Error: --pngx-tag must not be empty")
+        raise typer.Exit(1)
+
+    env = Environment(
+        loader=PackageLoader("swpngx", "templates"),
+        autoescape=False,
+        keep_trailing_newline=True,
+    )
+    template = env.get_template(DOCKER_COMPOSE_TEMPLATE)
+    rendered = template.render(pngx_tag=tag)
+    RENDERED_DOCKER_COMPOSE_FILE.write_text(rendered, encoding="utf-8")
+    console.log(
+        f"[blue]Using Paperless-ngx image tag {tag} "
+        f"(compose: {RENDERED_DOCKER_COMPOSE_FILE})"
+    )
+    return RENDERED_DOCKER_COMPOSE_FILE
+
+
 def docker_compose_cmd(compose_file: Path, *args) -> list[str]:
     """Build docker-compose command."""
-    return ["docker", "compose", "-f", str(compose_file), *args]
+    return [
+        "docker",
+        "compose",
+        "-p",
+        DOCKER_COMPOSE_PROJECT,
+        "-f",
+        str(compose_file),
+        *args,
+    ]
 
 
 def wait_for_docker_services(url: str, timeout: int) -> None:
@@ -515,44 +602,170 @@ async def authenticate(url: str, username: str, password: str) -> str:
             raise AuthenticationError(f"Authentication failed: {e}")
 
 
-async def create_tags(paperless: Paperless) -> None:
+def generate_random_tags(count: int) -> list[dict[str, object]]:
+    rng = random.SystemRandom()
+    return [
+        {
+            "name": (
+                f"Load Test {index:04d} "
+                f"{rng.choice(RANDOM_TAG_WORDS)} "
+                f"{rng.randrange(16**6):06x}"
+            ),
+            "color": f"#{rng.randrange(16**6):06X}",
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "match": "",
+            "is_inbox_tag": False,
+        }
+        for index in range(1, count + 1)
+    ]
+
+
+def should_log_created_random_item(
+    *,
+    is_random_item: bool,
+    requested_count: int,
+    created_count: int,
+) -> bool:
+    return not is_random_item or requested_count <= 20 or created_count % 100 == 0
+
+
+async def create_tags(paperless: Paperless, random_tag_count: int = 0) -> None:
     """Create tags in backend."""
     console.log("[blue]Creating tags...")
-    for tag_data in TAGS:
+    tag_payloads = [*TAGS, *generate_random_tags(random_tag_count)]
+    fixed_tag_count = len(TAGS)
+    created_random_tags = 0
+    for index, tag_data in enumerate(tag_payloads):
+        is_random_tag = index >= fixed_tag_count
         try:
             draft = paperless.tags.draft(**tag_data)
             tag_id = await draft.save()
-            console.log(f"  Created tag: {tag_data['name']} (ID: {tag_id})")
+            if is_random_tag:
+                created_random_tags += 1
+            should_log_tag = should_log_created_random_item(
+                is_random_item=is_random_tag,
+                requested_count=random_tag_count,
+                created_count=created_random_tags,
+            )
+            if should_log_tag:
+                console.log(f"  Created tag: {tag_data['name']} (ID: {tag_id})")
         except Exception as e:
             console.log(f"  [yellow]Tag {tag_data['name']} may already exist: {e}")
+    if random_tag_count > 0:
+        console.log(
+            f"[green]Created {created_random_tags}/{random_tag_count} random tag(s)"
+        )
 
 
-async def create_correspondents(paperless: Paperless) -> None:
+def generate_random_correspondents(count: int) -> list[dict[str, object]]:
+    rng = random.SystemRandom()
+    return [
+        {
+            "name": (
+                f"Load Test Correspondent {index:04d} "
+                f"{rng.choice(RANDOM_CORRESPONDENT_WORDS)} "
+                f"{rng.randrange(16**6):06x}"
+            ),
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "match": "",
+        }
+        for index in range(1, count + 1)
+    ]
+
+
+async def create_correspondents(
+    paperless: Paperless, random_correspondent_count: int = 0
+) -> None:
     """Create correspondents in backend."""
     console.log("[blue]Creating correspondents...")
-    for corr_data in CORRESPONDENTS:
+    correspondent_payloads = [
+        *CORRESPONDENTS,
+        *generate_random_correspondents(random_correspondent_count),
+    ]
+    fixed_correspondent_count = len(CORRESPONDENTS)
+    created_random_correspondents = 0
+    for index, corr_data in enumerate(correspondent_payloads):
+        is_random_correspondent = index >= fixed_correspondent_count
         try:
             draft = paperless.correspondents.draft(**corr_data)
             corr_id = await draft.save()
-            console.log(f"  Created correspondent: {corr_data['name']} (ID: {corr_id})")
+            if is_random_correspondent:
+                created_random_correspondents += 1
+            should_log_correspondent = should_log_created_random_item(
+                is_random_item=is_random_correspondent,
+                requested_count=random_correspondent_count,
+                created_count=created_random_correspondents,
+            )
+            if should_log_correspondent:
+                console.log(
+                    f"  Created correspondent: {corr_data['name']} (ID: {corr_id})"
+                )
         except Exception as e:
             console.log(
                 f"  [yellow]Correspondent {corr_data['name']} may already exist: {e}"
             )
+    if random_correspondent_count > 0:
+        console.log(
+            "[green]Created "
+            f"{created_random_correspondents}/{random_correspondent_count} "
+            "random correspondent(s)"
+        )
 
 
-async def create_document_types(paperless: Paperless) -> None:
+def generate_random_document_types(count: int) -> list[dict[str, object]]:
+    rng = random.SystemRandom()
+    return [
+        {
+            "name": (
+                f"Load Test Type {index:04d} "
+                f"{rng.choice(RANDOM_DOCUMENT_TYPE_WORDS)} "
+                f"{rng.randrange(16**6):06x}"
+            ),
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "match": "",
+        }
+        for index in range(1, count + 1)
+    ]
+
+
+async def create_document_types(
+    paperless: Paperless, random_document_type_count: int = 0
+) -> None:
     """Create document types in backend."""
     console.log("[blue]Creating document types...")
-    for dt_data in DOCUMENT_TYPES:
+    document_type_payloads = [
+        *DOCUMENT_TYPES,
+        *generate_random_document_types(random_document_type_count),
+    ]
+    fixed_document_type_count = len(DOCUMENT_TYPES)
+    created_random_document_types = 0
+    for index, dt_data in enumerate(document_type_payloads):
+        is_random_document_type = index >= fixed_document_type_count
         try:
             draft = paperless.document_types.draft(**dt_data)
             dt_id = await draft.save()
-            console.log(f"  Created document type: {dt_data['name']} (ID: {dt_id})")
+            if is_random_document_type:
+                created_random_document_types += 1
+            should_log_document_type = should_log_created_random_item(
+                is_random_item=is_random_document_type,
+                requested_count=random_document_type_count,
+                created_count=created_random_document_types,
+            )
+            if should_log_document_type:
+                console.log(f"  Created document type: {dt_data['name']} (ID: {dt_id})")
         except Exception as e:
             console.log(
                 f"  [yellow]Document type {dt_data['name']} may already exist: {e}"
             )
+    if random_document_type_count > 0:
+        console.log(
+            "[green]Created "
+            f"{created_random_document_types}/{random_document_type_count} "
+            "random document type(s)"
+        )
 
 
 async def create_storage_paths(paperless: Paperless) -> None:
@@ -877,7 +1090,14 @@ async def assign_metadata(paperless: Paperless, document_ids: list[int]) -> None
 
 
 async def setup_backend_async(
-    url: str, username: str, password: str, fixtures_dir: Path, timeout: int
+    url: str,
+    username: str,
+    password: str,
+    fixtures_dir: Path,
+    timeout: int,
+    random_tags: int = 0,
+    random_correspondents: int = 0,
+    random_document_types: int = 0,
 ) -> str:
     """Main backend setup orchestrator."""
     # 1. Authenticate and get token
@@ -890,9 +1110,9 @@ async def setup_backend_async(
         console.log("[green]Paperless client initialized")
 
         # 3. Create metadata entities
-        await create_tags(paperless)
-        await create_correspondents(paperless)
-        await create_document_types(paperless)
+        await create_tags(paperless, random_tags)
+        await create_correspondents(paperless, random_correspondents)
+        await create_document_types(paperless, random_document_types)
         await create_storage_paths(paperless)
 
         # 4. Upload documents
@@ -942,14 +1162,42 @@ def setup(
     wait_timeout: Annotated[
         int, typer.Option("--wait-timeout", help="Backend readiness timeout (seconds)")
     ] = 120,
+    pngx_tag: Annotated[
+        str,
+        typer.Option(
+            "--pngx-tag",
+            help="Paperless-ngx Docker image tag for the screenshot backend",
+        ),
+    ] = "latest",
+    random_tags: Annotated[
+        int,
+        typer.Option(
+            "--random-tags",
+            min=0,
+            help="Additional random tags to create for UI stress testing",
+        ),
+    ] = 0,
+    random_correspondents: Annotated[
+        int,
+        typer.Option(
+            "--random-correspondents",
+            min=0,
+            help="Additional random correspondents to create for UI stress testing",
+        ),
+    ] = 0,
+    random_document_types: Annotated[
+        int,
+        typer.Option(
+            "--random-document-types",
+            min=0,
+            help="Additional random document types to create for UI stress testing",
+        ),
+    ] = 0,
 ) -> None:
     """Setup backend: start Docker and populate with test data."""
     try:
         # 1. Manage Docker lifecycle
-        compose_file = Path("docker-compose.screenshot.yml")
-        if not compose_file.exists():
-            console.log(f"[red]Error: {compose_file} not found")
-            raise typer.Exit(1)
+        compose_file = render_docker_compose_file(pngx_tag)
 
         manage_docker_backend(compose_file, recreate, wait_timeout, url)
 
@@ -967,12 +1215,25 @@ def setup(
 
         # 3. Populate backend
         asyncio.run(
-            setup_backend_async(url, username, password, fixtures_dir, wait_timeout)
+            setup_backend_async(
+                url,
+                username,
+                password,
+                fixtures_dir,
+                wait_timeout,
+                random_tags,
+                random_correspondents,
+                random_document_types,
+            )
         )
 
     except BackendNotReadyError:
         console.log(f"[red]Error: Backend not ready. Check Docker logs:")
-        console.log(f"[yellow]  docker compose -f docker-compose.screenshot.yml logs")
+        console.log(
+            "[yellow]  docker compose "
+            f"-p {DOCKER_COMPOSE_PROJECT} "
+            f"-f {RENDERED_DOCKER_COMPOSE_FILE} logs"
+        )
         raise typer.Exit(1)
     except AuthenticationError as e:
         console.log(f"[red]Error: {e}")

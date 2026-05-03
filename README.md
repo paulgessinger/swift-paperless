@@ -54,6 +54,12 @@ If you have any questions or need support create an issue on [GitHub](https://gi
 
 ```console
 swpngx capture setup
+# Or pin the screenshot backend:
+swpngx capture setup --pngx-tag 2.19.4
+# Or add random tags for UI stress testing:
+swpngx capture setup --random-tags 1000
+# Or add multiple random metadata types:
+swpngx capture setup --random-tags 1000 --random-correspondents 500 --random-document-types 250
 swpngx capture capture
 swpngx frame
 fastlane deliver
