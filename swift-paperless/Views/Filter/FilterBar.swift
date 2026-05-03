@@ -133,7 +133,7 @@ private struct FilterMenu<Content: View>: View {
           if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
             Divider()
           }
-          Text(.localizable(.filtersApplied(UInt(filterModel.filterState.ruleCount))))
+          Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
           Divider()
           Button(role: .destructive) {
             Haptics.shared.notification(.success)

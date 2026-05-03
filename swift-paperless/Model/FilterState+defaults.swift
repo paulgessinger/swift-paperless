@@ -68,4 +68,8 @@ extension FilterState {
   var filtering: Bool {
     ruleCount > 0 || !defaultSorting
   }
+
+  var defaultAwareRuleCount: UInt {
+    UInt(ruleCount + (defaultSorting ? 0 : 1))
+  }
 }
