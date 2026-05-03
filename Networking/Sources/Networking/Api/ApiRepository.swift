@@ -521,7 +521,7 @@ extension ApiRepository: Repository {
     let sequence = try ApiSequence<ApiTag>(
       repository: self,
       url: url(.tags()))
-    return try await Array(sequence).map(\.domain)
+    return try await Array(sequence).flattenedUnique.map(\.domain)
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {

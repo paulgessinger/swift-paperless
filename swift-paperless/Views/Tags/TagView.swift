@@ -43,7 +43,6 @@ struct TagView<Trailing: View>: View {
         .lineLimit(1)
         .truncationMode(.tail)
         .font(.body)
-        .frame(maxWidth: 200, alignment: .leading)
         .opacity(redactionReasons.contains(.placeholder) ? 0 : 1)
       trailing
     }

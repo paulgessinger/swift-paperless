@@ -19,6 +19,7 @@ public protocol TagProtocol:
   var slug: String { get set }
   var color: HexColor { get set }
   var textColor: HexColor { get }
+  var parent: UInt? { get set }
 
   static func placeholder(_ length: Int) -> Self
 }
@@ -43,6 +44,7 @@ public struct ProtoTag: TagProtocol, MatchingModel {
   public var isInsensitive: Bool
   public var owner: Owner
   public var permissions: Permissions?
+  public var parent: UInt?
 
   public init(
     isInboxTag: Bool = false,
@@ -53,7 +55,8 @@ public struct ProtoTag: TagProtocol, MatchingModel {
     matchingAlgorithm: MatchingAlgorithm = .auto,
     isInsensitive: Bool = true,
     owner: Owner = .unset,
-    permissions: Permissions? = nil
+    permissions: Permissions? = nil,
+    parent: UInt? = nil
   ) {
     self.isInboxTag = isInboxTag
     self.name = name
@@ -64,6 +67,7 @@ public struct ProtoTag: TagProtocol, MatchingModel {
     self.isInsensitive = isInsensitive
     self.owner = owner
     self.permissions = permissions
+    self.parent = parent
   }
 
   public static func placeholder(_ length: Int) -> Self {
@@ -89,6 +93,7 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
   public var match: String
   public var matchingAlgorithm: MatchingAlgorithm
   public var isInsensitive: Bool
+  public var parent: UInt?
 
   public init(
     id: UInt,
@@ -98,7 +103,8 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
     color: HexColor,
     match: String,
     matchingAlgorithm: MatchingAlgorithm,
-    isInsensitive: Bool
+    isInsensitive: Bool,
+    parent: UInt? = nil
   ) {
     self.id = id
     self.isInboxTag = isInboxTag
@@ -108,6 +114,7 @@ public struct Tag: Identifiable, Model, TagProtocol, MatchingModel, Equatable, H
     self.match = match
     self.matchingAlgorithm = matchingAlgorithm
     self.isInsensitive = isInsensitive
+    self.parent = parent
   }
 
   public static func placeholder(_ length: Int) -> Self {

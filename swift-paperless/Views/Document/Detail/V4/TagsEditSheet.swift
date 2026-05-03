@@ -74,7 +74,7 @@ struct TagsEditSheet: View {
     values.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
   }
 
-  private func computeAvailable() -> (tags: [Tag], total: Int) {
+  private func computeAvailable() -> (entries: [(tag: Tag, depth: Int)], total: Int) {
     let selected = Set(tagIds)
     let search = searchText
     var matched: [Tag] = []
@@ -84,7 +84,32 @@ struct TagsEditSheet: View {
       if !search.isEmpty, !tag.name.localizedCaseInsensitiveContains(search) { continue }
       matched.append(tag)
     }
-    let limited = Array(matched.prefix(tagsEditDisplayLimit))
+
+    // While searching, keep results flat (depth 0) so cross-tree matches stay
+    // grouped together. Otherwise lay out children right under their parents.
+    let entries: [(tag: Tag, depth: Int)]
+    if search.isEmpty, matched.contains(where: { $0.parent != nil }) {
+      let visibleIds = Set(matched.map(\.id))
+      var byParent: [UInt?: [Tag]] = [:]
+      for tag in matched {
+        let key: UInt? = tag.parent.flatMap { visibleIds.contains($0) ? $0 : nil }
+        byParent[key, default: []].append(tag)
+      }
+      var dfs: [(tag: Tag, depth: Int)] = []
+      dfs.reserveCapacity(matched.count)
+      func walk(_ parent: UInt?, depth: Int) {
+        for tag in byParent[parent] ?? [] {
+          dfs.append((tag, depth))
+          walk(tag.id, depth: depth + 1)
+        }
+      }
+      walk(nil, depth: 0)
+      entries = dfs
+    } else {
+      entries = matched.map { (tag: $0, depth: 0) }
+    }
+
+    let limited = Array(entries.prefix(tagsEditDisplayLimit))
     return (limited, matched.count)
   }
 
@@ -104,14 +129,22 @@ struct TagsEditSheet: View {
   }
 
   private func add(_ tag: UInt) {
+    // Mirror backend behavior: attaching a child tag implicitly attaches
+    // every ancestor along its parent chain.
+    let toAdd = [tag] + store.tagAncestors(of: tag)
+    let existing = Set(tagIds)
+    let new = toAdd.filter { !existing.contains($0) }
+    guard !new.isEmpty else { return }
     withAnimation(animation) {
-      tagIds.append(tag)
+      tagIds.append(contentsOf: new)
     }
   }
 
   private func remove(_ tag: UInt) {
+    // Mirror backend behavior: detaching a tag also detaches every descendant.
+    let toRemove = store.tagDescendants(of: tag).union([tag])
     withAnimation(animation) {
-      tagIds.removeAll { $0 == tag }
+      tagIds.removeAll { toRemove.contains($0) }
     }
   }
 
@@ -169,28 +202,30 @@ struct TagsEditSheet: View {
             }
           }
 
-          if !available.tags.isEmpty {
+          if !available.entries.isEmpty {
             CustomSection {
               VStack(spacing: 0) {
-                ForEach(Array(available.tags.enumerated()), id: \.element.id) { index, tag in
+                ForEach(Array(available.entries.enumerated()), id: \.element.tag.id) {
+                  index, entry in
                   Button {
-                    add(tag.id)
+                    add(entry.tag.id)
                   } label: {
                     CustomSectionRow {
                       HStack {
-                        TagView(tag: tag)
+                        TagView(tag: entry.tag)
                           .fixedSize()
-                          .matchedGeometryEffect(id: tag.id, in: tagNamespace)
+                          .matchedGeometryEffect(id: entry.tag.id, in: tagNamespace)
                         Spacer()
                         Image(systemName: "plus.circle.fill")
                           .foregroundStyle(.secondary)
                       }
+                      .padding(.leading, CGFloat(entry.depth) * 16)
                     }
                   }
                   .buttonStyle(.plain)
                   .transition(.opacity)
 
-                  if index < available.tags.count - 1 {
+                  if index < available.entries.count - 1 {
                     Divider()
                   }
                 }

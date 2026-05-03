@@ -698,4 +698,38 @@ extension DocumentStore {
 
     return currentUser?.canDelete(document) ?? false
   }
+
+  /// All ancestor tag ids of `id` (excluding `id` itself), walking up the
+  /// `parent` chain. Stops at unknown ids and at cycles. Used to mirror the
+  /// backend behavior of implicitly attaching ancestors when a child tag is
+  /// added to a document.
+  func tagAncestors(of id: UInt) -> [UInt] {
+    var result: [UInt] = []
+    var seen: Set<UInt> = [id]
+    var current = tags[id]?.parent
+    while let parent = current, !seen.contains(parent), let tag = tags[parent] {
+      result.append(parent)
+      seen.insert(parent)
+      current = tag.parent
+    }
+    return result
+  }
+
+  /// All descendant tag ids of `id` (excluding `id` itself). Used to mirror
+  /// the backend behavior of removing children when their parent is detached.
+  func tagDescendants(of id: UInt) -> Set<UInt> {
+    var descendants: Set<UInt> = []
+    var frontier: Set<UInt> = [id]
+    while !frontier.isEmpty {
+      var next: Set<UInt> = []
+      for tag in tags.values {
+        guard let parent = tag.parent, frontier.contains(parent) else { continue }
+        if descendants.insert(tag.id).inserted, tag.id != id {
+          next.insert(tag.id)
+        }
+      }
+      frontier = next
+    }
+    return descendants
+  }
 }
