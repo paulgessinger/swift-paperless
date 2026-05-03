@@ -607,7 +607,8 @@ public enum RepositoryError: Error {
   case userNotFound
 }
 
-actor TransientDocumentSource: DocumentSource {
+actor TransientDocumentSource: PagedSource {
+  typealias Element = Document
   typealias DocumentSequence = [Document]
 
   var sequence: DocumentSequence
@@ -620,7 +621,6 @@ actor TransientDocumentSource: DocumentSource {
     Array(sequence.prefix(Int(limit)))
   }
 
-  public func hasMore() async -> Bool {
-    false
-  }
+  public var isExhausted: Bool { true }
+  public var totalCount: UInt? { UInt(sequence.count) }
 }

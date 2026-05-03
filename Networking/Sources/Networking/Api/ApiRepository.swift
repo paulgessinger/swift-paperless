@@ -13,25 +13,6 @@ import Semaphore
 import SwiftUI
 import os
 
-public actor ApiDocumentSource: DocumentSource {
-  public typealias DocumentSequence = ApiSequence<Document>
-
-  private let sequence: DocumentSequence
-
-  public init(sequence: DocumentSequence) {
-    self.sequence = sequence
-  }
-
-  public func fetch(limit: UInt) async throws -> [Document] {
-    guard await sequence.hasMore else {
-      return []
-    }
-    return try await Array(sequence.prefix(Int(limit)))
-  }
-
-  public func hasMore() async -> Bool { await sequence.hasMore }
-}
-
 public struct DecodingErrorWithRootType: Error {
   public let type: any Any.Type
   public let error: DecodingError
@@ -379,10 +360,10 @@ public class ApiRepository {
         fatalError("Invalid type")
       }
 
-    let sequence = try ApiSequence<T>(
+    let cursor = try PageCursor<T>(
       repository: self,
-      url: url(endpoint))
-    return try await Array(sequence)
+      initialURL: url(endpoint))
+    return try await cursor.collectAll()
   }
 
 }
@@ -460,10 +441,10 @@ extension ApiRepository: Repository {
 
   public func documents(filter: FilterState) throws -> any DocumentSource {
     Logger.networking.notice("Getting document sequence for filter")
-    return try ApiDocumentSource(
-      sequence: ApiSequence<Document>(
-        repository: self,
-        url: url(.documents(page: 1, filter: filter))))
+    let cursor = try PageCursor<Document>(
+      repository: self,
+      initialURL: url(.documents(page: 1, filter: filter)))
+    return ApiPagedSource<Document, Document>(cursor: cursor, map: { $0 })
   }
 
   public func download(
@@ -518,10 +499,10 @@ extension ApiRepository: Repository {
   }
 
   public func tags() async throws -> [Tag] {
-    let sequence = try ApiSequence<ApiTag>(
+    let cursor = try PageCursor<ApiTag>(
       repository: self,
-      url: url(.tags()))
-    return try await Array(sequence).flattenedUnique.map(\.domain)
+      initialURL: url(.tags()))
+    return try await cursor.collectAll().flattenedUnique.map(\.domain)
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
@@ -614,8 +595,8 @@ extension ApiRepository: Repository {
   public func trash() async throws -> [Document] {
     Logger.networking.notice("Getting trash documents")
     let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
-    let sequence = try ApiSequence<Document>(repository: self, url: url(endpoint))
-    return try await Array(sequence)
+    let cursor = try PageCursor<Document>(repository: self, initialURL: url(endpoint))
+    return try await cursor.collectAll()
   }
 
   private enum TrashAction: String, Encodable {
@@ -830,7 +811,8 @@ extension ApiRepository: Repository {
   public func tasks() throws -> any TaskSource {
     if supports(feature: .taskListEnvelope) {
       let initial = try url(.tasks(name: .consumeFile, acknowledged: false, pageSize: 100))
-      return ApiTaskSourceV10(repository: self, initialUrl: initial)
+      let cursor = PageCursor<ApiTaskV10>(repository: self, initialURL: initial)
+      return ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain })
     } else {
       return ApiTaskSourceV9(repository: self)
     }

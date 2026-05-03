@@ -8,32 +8,10 @@
 import DataModel
 import Foundation
 
-// V10 backends paginate via the standard ListResponse envelope; we drive the
-// fetch through ApiSequence and map each wire item to its domain type.
-public actor ApiTaskSourceV10: TaskSource {
-  private let sequence: ApiSequence<ApiTaskV10>
-
-  init(repository: ApiRepository, initialUrl: URL) {
-    sequence = ApiSequence<ApiTaskV10>(repository: repository, url: initialUrl)
-  }
-
-  public func fetch(limit: UInt) async throws -> [PaperlessTask] {
-    var batch: [PaperlessTask] = []
-    while UInt(batch.count) < limit {
-      guard let item = try await sequence.next() else { break }
-      batch.append(item.domain)
-    }
-    return batch
-  }
-
-  public func hasMore() async -> Bool {
-    await sequence.hasMore
-  }
-}
-
 // V9 backends serve the full unpaginated array, so we cache the first fetch
 // and serve client-side chunks to keep the UI responsive.
-public actor ApiTaskSourceV9: TaskSource {
+public actor ApiTaskSourceV9: PagedSource {
+  public typealias Element = PaperlessTask
   private let repository: ApiRepository
 
   private var loaded: [PaperlessTask] = []
@@ -59,7 +37,6 @@ public actor ApiTaskSourceV9: TaskSource {
     return result
   }
 
-  public func hasMore() async -> Bool {
-    !fetched || cursor < loaded.count
-  }
+  public var isExhausted: Bool { fetched && cursor >= loaded.count }
+  public var totalCount: UInt? { fetched ? UInt(loaded.count) : nil }
 }

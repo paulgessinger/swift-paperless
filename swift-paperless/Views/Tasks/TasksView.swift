@@ -263,7 +263,7 @@ final class TaskListViewModel {
       let source = try store.repository.tasks()
       self.source = source
       tasks = try await source.fetch(limit: initialBatchSize)
-      exhausted = await !source.hasMore()
+      exhausted = await source.isExhausted
       ready = true
     } catch {
       Logger.shared.error("TaskList failed to load: \(error)")
@@ -290,7 +290,7 @@ final class TaskListViewModel {
         return
       }
       tasks.append(contentsOf: batch)
-      exhausted = await !source.hasMore()
+      exhausted = await source.isExhausted
     } catch {
       Logger.shared.error("TaskList failed to load more: \(error)")
     }
