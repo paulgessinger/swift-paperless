@@ -53,8 +53,6 @@ public class ApiRepository {
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
 
-  private let taskShape = FallbackLatch<TaskShape>()
-
   nonisolated
     private let apiVersion: UInt?
   nonisolated
@@ -815,24 +813,25 @@ extension ApiRepository: Repository {
   }
 
   public func tasks() async throws -> [PaperlessTask] {
-    try await send(
-      endpoint: .tasks(name: .consumeFile, acknowledged: false),
-      through: taskShape
-    ) { data in
-      Attempt(TaskShape.v10) {
-        try decoder.decode(ListResponse<ApiTaskV10>.self, from: data).results.map(\.domain)
-      }
-      Attempt(TaskShape.v9) {
-        try decoder.decode([ApiTaskV9].self, from: data).map(\.domain)
-      }
+    if supports(feature: .taskListEnvelope) {
+      try await send(
+        endpoint: .tasks(name: .consumeFile, acknowledged: false),
+        returns: ListResponse<ApiTaskV10>.self
+      ).results.map(\.domain)
+    } else {
+      try await send(
+        endpoint: .tasks(name: .consumeFile, acknowledged: false),
+        returns: [ApiTaskV9].self
+      ).map(\.domain)
     }
   }
 
   public func task(id: UInt) async throws -> PaperlessTask? {
     do {
-      return try await send(endpoint: .task(id: id), through: taskShape) { data in
-        Attempt(TaskShape.v10) { try decoder.decode(ApiTaskV10.self, from: data).domain }
-        Attempt(TaskShape.v9) { try decoder.decode(ApiTaskV9.self, from: data).domain }
+      if supports(feature: .taskListEnvelope) {
+        return try await send(endpoint: .task(id: id), returns: ApiTaskV10.self).domain
+      } else {
+        return try await send(endpoint: .task(id: id), returns: ApiTaskV9.self).domain
       }
     } catch RequestError.unexpectedStatusCode(code: .notFound, _) {
       return nil
