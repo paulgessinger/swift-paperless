@@ -76,6 +76,19 @@ for name, id in re.findall(r"export const (FILTER_[A-Z_]+) = (\d+)", code):
     name_by_id[id] = name
     id_by_name[name] = id
 
+const_values = {
+    name: int(value)
+    for name, value in re.findall(r"export const ([A-Z][A-Z0-9_]*) = (-?\d+)", code)
+}
+const_values.update(
+    {
+        name: value
+        for name, value in re.findall(
+            r"export const ([A-Z][A-Z0-9_]*) = '([^']*)'", code
+        )
+    }
+)
+
 
 start_type_info = code.index("export const FILTER_RULE_TYPES: FilterRuleType[] = [")
 groups = re.findall(r"{.*?}", code[start_type_info:], re.MULTILINE | re.DOTALL)
@@ -110,8 +123,23 @@ class FilterRuleType:
 rule_types = []
 
 for group in groups[:-1]:
+    id_match = re.search(r"id:\s*(FILTER_[A-Z_]+)", group)
+    if not id_match:
+        print(group)
+        raise RuntimeError("Unable to determine filter rule id")
+    rule_name = id_match.group(1)
+
     prepped = re.sub(r"(FILTER_[A-Z_]+)", r'"\1"', group)
     prepped = re.sub(r"DataType\.(\w+)", r'"\1"', prepped)
+    prepped = re.sub(
+        r"(:\s*)([A-Z][A-Z0-9_]*)",
+        lambda match: (
+            match.group(1) + json.dumps(const_values[match.group(2)])
+            if match.group(2) in const_values
+            else match.group(0)
+        ),
+        prepped,
+    )
     prepped = re.sub(r"(\w+):", r'"\1":', prepped)
     prepped = prepped.replace("'", '"')
     try:
@@ -123,8 +151,8 @@ for group in groups[:-1]:
     try:
         rule_types.append(
             FilterRuleType(
-                id=int(id_by_name[obj["id"]]),
-                name=obj["id"],
+                id=int(id_by_name[rule_name]),
+                name=rule_name,
                 filtervar=obj["filtervar"],
                 isnull_filtervar=obj.get("isnull_filtervar"),
                 datatype=obj["datatype"].lower()[0] + obj["datatype"][1:],
