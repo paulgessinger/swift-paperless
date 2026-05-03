@@ -120,7 +120,8 @@ public class NullRepository: Repository {
   public func groups() async throws -> [UserGroup] { [] }
 
   public func task(id _: UInt) async throws -> PaperlessTask? { nil }
-  public func tasks() async -> [PaperlessTask] { [] }
+  public func tasks(limit _: UInt) async -> [PaperlessTask] { [] }
+  public func tasks() throws -> any TaskSource { InMemoryTaskSource([]) }
 
   public func acknowledge(tasks _: [UInt]) async throws {}
 

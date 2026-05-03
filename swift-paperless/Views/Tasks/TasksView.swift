@@ -239,6 +239,68 @@ struct TaskDetailView: View {
   }
 }
 
+@MainActor
+@Observable
+final class TaskListViewModel {
+  var tasks: [PaperlessTask] = []
+  var ready = false
+
+  private weak var store: DocumentStore?
+  private var source: (any TaskSource)?
+  private var exhausted = false
+
+  private let initialBatchSize: UInt = 100
+  private let batchSize: UInt = 100
+  private let fetchMargin = 10
+
+  init(store: DocumentStore) {
+    self.store = store
+  }
+
+  func load() async {
+    guard let store, tasks.isEmpty else { return }
+    do {
+      let source = try store.repository.tasks()
+      self.source = source
+      tasks = try await source.fetch(limit: initialBatchSize)
+      exhausted = await !source.hasMore()
+      ready = true
+    } catch {
+      Logger.shared.error("TaskList failed to load: \(error)")
+      ready = true
+    }
+  }
+
+  func refresh() async {
+    source = nil
+    exhausted = false
+    tasks = []
+    ready = false
+    await load()
+  }
+
+  func fetchMoreIfNeeded(currentIndex: Int) async {
+    guard !exhausted, let source else { return }
+    guard currentIndex >= tasks.count - fetchMargin else { return }
+
+    do {
+      let batch = try await source.fetch(limit: batchSize)
+      if batch.isEmpty {
+        exhausted = true
+        return
+      }
+      tasks.append(contentsOf: batch)
+      exhausted = await !source.hasMore()
+    } catch {
+      Logger.shared.error("TaskList failed to load more: \(error)")
+    }
+  }
+
+  func remove(ids: Set<UInt>) {
+    tasks.removeAll { ids.contains($0.id) }
+  }
+}
+
 struct TasksView: View {
   @State var navPath: [NavigationState]
 
@@ -250,7 +312,7 @@ struct TasksView: View {
 
   var body: some View {
     NavigationStack(path: $navPath) {
-      TaskList(tasks: store.tasks, navPath: $navPath)
+      TaskList(navPath: $navPath)
 
         .navigationTitle(String(localized: .tasks(.title)))
         .navigationBarTitleDisplayMode(.inline)
@@ -265,7 +327,6 @@ struct TasksView: View {
             Text("Empty")
           }
         }
-        .animation(.default, value: store.tasks)
     }
 
     .task {
@@ -275,11 +336,10 @@ struct TasksView: View {
 }
 
 private struct TaskList: View {
-  let tasks: [PaperlessTask]
-
   @Binding var navPath: [NavigationState]
 
   @State private var errorTask: PaperlessTask? = nil
+  @State private var viewModel: TaskListViewModel?
 
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var errorController: ErrorController
@@ -295,42 +355,50 @@ private struct TaskList: View {
     return fmt
   }
 
-  private var mainList: some View {
-    List(tasks, selection: $selection) { task in
-      NavigationLink(value: NavigationState.task(task)) {
-        VStack(alignment: .leading) {
-          HStack {
-            Text(String(localized: .tasks(.task(String(task.id)))))
-            if let created = task.dateCreated {
-              Text("\(fmt.string(from: created))")
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-          }
-          .foregroundColor(.gray)
+  private func acknowledge(ids: [UInt]) async {
+    do {
+      try await store.acknowledge(tasks: ids)
+      viewModel?.remove(ids: Set(ids))
+    } catch {
+      Logger.shared.error("Error acknowledging \(ids.count) task(s): \(error)")
+      errorController.push(error: error)
+    }
+  }
 
-          let name = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
-          HStack(alignment: .top) {
-            task.status.label
-              .labelStyle(.iconOnly)
-            Text("\(name)")
-          }
-          .bold()
-          .font(.body)
-        }
-
-        .swipeActions(edge: .trailing) {
-          Button {
-            Task {
-              do {
-                try await store.acknowledge(tasks: [task.id])
-              } catch {
-                Logger.shared.error("Error acknowledging task \(task.id): \(error)")
-                errorController.push(error: error)
+  private func mainList(viewModel: TaskListViewModel) -> some View {
+    List(selection: $selection) {
+      ForEach(Array(zip(viewModel.tasks.indices, viewModel.tasks)), id: \.1.id) { idx, task in
+        NavigationLink(value: NavigationState.task(task)) {
+          VStack(alignment: .leading) {
+            HStack {
+              Text(String(localized: .tasks(.task(String(task.id)))))
+              if let created = task.dateCreated {
+                Text("\(fmt.string(from: created))")
+                  .frame(maxWidth: .infinity, alignment: .trailing)
               }
             }
-          } label: {
-            Label(localized: .tasks(.acknowledge), systemImage: "checkmark")
+            .foregroundColor(.gray)
+
+            let name = task.taskFileName ?? String(localized: .tasks(.unknownFileName))
+            HStack(alignment: .top) {
+              task.status.label
+                .labelStyle(.iconOnly)
+              Text("\(name)")
+            }
+            .bold()
+            .font(.body)
           }
+
+          .swipeActions(edge: .trailing) {
+            Button {
+              Task { await acknowledge(ids: [task.id]) }
+            } label: {
+              Label(localized: .tasks(.acknowledge), systemImage: "checkmark")
+            }
+          }
+        }
+        .task {
+          await viewModel.fetchMoreIfNeeded(currentIndex: idx)
         }
       }
     }
@@ -360,8 +428,8 @@ private struct TaskList: View {
         Form {
           NoPermissionsView()
         }
-      } else if !tasks.isEmpty {
-        mainList
+      } else if let viewModel, !viewModel.tasks.isEmpty {
+        mainList(viewModel: viewModel)
       } else {
         Form {
           NoElementsView()
@@ -370,12 +438,20 @@ private struct TaskList: View {
       }
     }
 
+    .task {
+      if viewModel == nil {
+        viewModel = TaskListViewModel(store: store)
+      }
+      await viewModel?.load()
+    }
+
     .refreshable {
       store.startTaskPolling()
+      await viewModel?.refresh()
     }
 
     .animation(.default, value: editMode)
-    .animation(.default, value: store.tasks)
+    .animation(.default, value: viewModel?.tasks ?? [])
 
     .environment(\.editMode, $editMode)
 
@@ -391,29 +467,21 @@ private struct TaskList: View {
           CancelIconButton()
         } else {
           if selection.isEmpty {
+            // Acknowledges only the loaded subset; remaining unacknowledged
+            // tasks past the scroll-load horizon are left for a follow-up pass.
+            let loadedIds = viewModel?.tasks.map(\.id) ?? []
             Button(String(localized: .tasks(.acknowledgeAll)), role: .destructive) {
               Task {
-                do {
-                  try await store.acknowledge(tasks: store.tasks.map(\.id))
-                  editMode = .inactive
-                } catch {
-                  Logger.shared.error("Error dismissing \(store.tasks.count) tasks: \(error)")
-                  errorController.push(error: error)
-                }
+                await acknowledge(ids: loadedIds)
+                editMode = .inactive
               }
             }
+            .disabled(loadedIds.isEmpty)
           } else {
             Button(
               String(localized: .tasks(.acknowledgeN(UInt(selection.count)))), role: .destructive
             ) {
-              Task {
-                do {
-                  try await store.acknowledge(tasks: Array(selection))
-                } catch {
-                  Logger.shared.error("Error dismissing \(selection.count) tasks: \(error)")
-                  errorController.push(error: error)
-                }
-              }
+              Task { await acknowledge(ids: Array(selection)) }
             }
           }
         }
@@ -424,7 +492,7 @@ private struct TaskList: View {
           Button(String(localized: .localizable(.select))) {
             editMode = .active
           }
-          .disabled(tasks.isEmpty)
+          .disabled(viewModel?.tasks.isEmpty ?? true)
         } else {
           Button(String(localized: .localizable(.done))) {
             editMode = .inactive

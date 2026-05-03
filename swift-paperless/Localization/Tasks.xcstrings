@@ -59,49 +59,49 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Afvis alle"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Alle verwerfen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dismiss all"
+            "value" : "Dismiss visible"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Tout ignorer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Ignora tutti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Alles negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Odrzuć wszystkie"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "stale",
             "value" : "Tümünü yoksay"
           }
         }

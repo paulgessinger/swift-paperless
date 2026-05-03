@@ -12,7 +12,7 @@ public class TransientRepository {
   private var documentTypes: [UInt: DocumentType]
   private var correspondents: [UInt: Correspondent]
   private var storagePaths: [UInt: StoragePath]
-  private var tasks: [PaperlessTask]
+  private var storedTasks: [PaperlessTask]
   private var users: [User]
   private var groups: [UserGroup]
   private var savedViews: [UInt: SavedView]
@@ -40,7 +40,7 @@ public class TransientRepository {
     documentTypes = [:]
     correspondents = [:]
     storagePaths = [:]
-    tasks = []
+    storedTasks = []
     users = []
     groups = []
     savedViews = [:]
@@ -394,20 +394,24 @@ extension TransientRepository: Repository {
 
   // MARK: - Tasks
 
-  public func tasks() async throws -> [PaperlessTask] {
-    tasks
+  public func tasks(limit: UInt) async throws -> [PaperlessTask] {
+    Array(storedTasks.prefix(Int(limit)))
+  }
+
+  public func tasks() throws -> any TaskSource {
+    InMemoryTaskSource(storedTasks)
   }
 
   public func task(id: UInt) async throws -> PaperlessTask? {
-    tasks.first { $0.id == id }
+    storedTasks.first { $0.id == id }
   }
 
   public func acknowledge(tasks ids: [UInt]) async throws {
     for id in ids {
-      if let index = tasks.firstIndex(where: { $0.id == id }) {
-        var task = tasks[index]
+      if let index = storedTasks.firstIndex(where: { $0.id == id }) {
+        var task = storedTasks[index]
         task.acknowledged = true
-        tasks[index] = task
+        storedTasks[index] = task
       }
     }
   }
