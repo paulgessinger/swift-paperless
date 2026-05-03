@@ -249,6 +249,9 @@ struct DocumentList: View {
             .listSectionSeparator(.hidden)
           }
           .listStyle(.plain)
+          .overlay(alignment: .bottom) {
+            DocumentCountPill(total: viewModel.totalCount)
+          }
         } else {
           NoDocumentsView(filtering: filterModel.filterState.filtering)
             .equatable()
@@ -347,6 +350,26 @@ private struct NoDocumentsView: View, Equatable {
     static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool
   {
     true
+  }
+}
+
+private struct DocumentCountPill: View {
+  let total: UInt?
+
+  var body: some View {
+    if let total, total > 0 {
+      Text(.localizable(.documentCountIndicator(Int(total))))
+        .font(.caption2.monospacedDigit())
+        .fontWeight(.semibold)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .backport.glassEffect(
+          .regular, in: Capsule(), orFill: .ultraThinMaterial
+        )
+        .contentTransition(.numericText())
+        .animation(.default, value: total)
+        .padding(.bottom, 8)
+    }
   }
 }
 

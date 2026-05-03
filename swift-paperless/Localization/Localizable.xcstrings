@@ -4206,6 +4206,24 @@
         }
       }
     },
+    "documentCountIndicator" : {
+      "comment" : "Total document count, shown in a pill at the bottom of the document list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Dokumente"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld documents"
+          }
+        }
+      }
+    },
     "documentCreateFailedTooLarge" : {
       "extractionState" : "manual",
       "localizations" : {
