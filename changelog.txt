@@ -1,3 +1,7 @@
+1.10.0 (190)
+
+- Try another visual arrangement for the document detail screen with peeking neighboring pages
+
 1.10.0 (189)
 
 - Move JSON decoding to a background branch to not block the UI
