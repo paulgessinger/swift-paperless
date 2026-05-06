@@ -33,11 +33,19 @@ struct DocumentPreview: View {
   var downloadState: DocumentDownloadState
   @Binding var currentPage: Int
 
+  var transitionID: AnyHashable? = nil
+  var transitionNamespace: Namespace.ID? = nil
+  var onTap: (() -> Void)? = nil
+
   var body: some View {
     IntegratedDocumentPreview(
-      document: document, downloadState: downloadState, currentPage: $currentPage
+      document: document,
+      downloadState: downloadState,
+      currentPage: $currentPage,
+      transitionID: transitionID,
+      transitionNamespace: transitionNamespace,
+      onTap: onTap
     )
-    .frame(minWidth: 200, minHeight: 200)
   }
 }
 
@@ -122,7 +130,13 @@ private struct PDFPageView: View {
       pageBreakMargins: .zero,
       pageIndex: pageIndex
     )
-    .aspectRatio(aspectRatio, contentMode: .fill)
+    .aspectRatio(aspectRatio, contentMode: .fit)
+    .background(.white)
+    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    .overlay(
+      RoundedRectangle(cornerRadius: 20, style: .continuous)
+        .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+    )
   }
 }
 
@@ -130,7 +144,14 @@ private struct PDFPagingPreview: View {
   let document: PDFDocument
   @Binding var currentPage: Int
 
+  var transitionID: AnyHashable? = nil
+  var transitionNamespace: Namespace.ID? = nil
+  var onTap: (() -> Void)? = nil
+
   @State private var scrolledPage: Int? = 0
+
+  static let pageInset: CGFloat = 80
+  private static let pageSpacing: CGFloat = 16
 
   private var pageCount: Int {
     document.pageCount
@@ -148,21 +169,38 @@ private struct PDFPagingPreview: View {
 
   var body: some View {
     ScrollView(.horizontal, showsIndicators: false) {
-      LazyHStack(spacing: 0) {
+      LazyHStack(spacing: Self.pageSpacing) {
         ForEach(0..<pageCount, id: \.self) { index in
-          PDFPageView(
-            document: document,
-            pageIndex: index,
-            aspectRatio: aspectRatio(for: index)
-          )
-          .containerRelativeFrame(.horizontal)
+          let isActive = index == (scrolledPage ?? 0)
+          Button {
+            onTap?()
+          } label: {
+            PDFPageView(
+              document: document,
+              pageIndex: index,
+              aspectRatio: aspectRatio(for: index)
+            )
+            .containerRelativeFrame(.horizontal)
+            .aspectRatio(aspectRatio(for: index), contentMode: .fit)
+          }
+          .buttonStyle(.plain)
+          .allowsHitTesting(isActive && onTap != nil)
+          .apply {
+            if isActive, let transitionID, let transitionNamespace {
+              $0.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
+            } else {
+              $0
+            }
+          }
         }
       }
       .scrollTargetLayout()
+      .fixedSize(horizontal: false, vertical: true)
     }
+    .contentMargins(.horizontal, Self.pageInset, for: .scrollContent)
     .scrollTargetBehavior(.viewAligned)
-    .scrollPosition(id: $scrolledPage)
-    .aspectRatio(firstPageAspectRatio, contentMode: .fit)
+    .scrollPosition(id: $scrolledPage, anchor: .center)
+    .scrollClipDisabled()
     .onChange(of: scrolledPage) { _, newValue in
       if let newValue {
         currentPage = newValue
@@ -173,20 +211,6 @@ private struct PDFPagingPreview: View {
         scrolledPage = newValue
       }
     }
-    .overlay(alignment: .bottom) {
-      Text(.localizable(.pageIndicator((scrolledPage ?? 0) + 1, pageCount)))
-        .font(.caption2)
-        .fontWeight(.semibold)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .backport.glassEffect(
-          .regular, in: Capsule(), orFill: .ultraThinMaterial
-        )
-        .contentTransition(.numericText())
-        .animation(.default, value: scrolledPage)
-        .padding(8)
-    }
-    .background(.white)
   }
 }
 
@@ -196,6 +220,10 @@ private struct IntegratedDocumentPreview: View {
   var document: Document
   var downloadState: DocumentDownloadState
   @Binding var currentPage: Int
+
+  var transitionID: AnyHashable? = nil
+  var transitionNamespace: Namespace.ID? = nil
+  var onTap: (() -> Void)? = nil
 
   @StateObject private var image = FetchImage()
 
@@ -210,6 +238,19 @@ private struct IntegratedDocumentPreview: View {
           .resizable()
           .scaledToFit()
           .blur(radius: 5, opaque: true)
+          .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+          )
+          .padding(.horizontal, PDFPagingPreview.pageInset)
+          .apply {
+            if let transitionID, let transitionNamespace {
+              $0.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
+            } else {
+              $0
+            }
+          }
 
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
@@ -218,7 +259,31 @@ private struct IntegratedDocumentPreview: View {
           .frame(maxWidth: .infinity, alignment: .center)
 
       case .loaded(url: _, document: let pdfDocument):
-        PDFPagingPreview(document: pdfDocument, currentPage: $currentPage)
+        PDFPagingPreview(
+          document: pdfDocument,
+          currentPage: $currentPage,
+          transitionID: transitionID,
+          transitionNamespace: transitionNamespace,
+          onTap: onTap
+        )
+      }
+    }
+    .padding(.vertical, 16)
+    .background(Color(.systemGray6))
+    .overlay(alignment: .bottom) {
+      if case .loaded(url: _, document: let pdfDocument) = downloadState {
+        Text(.localizable(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 4)
+          .backport.glassEffect(
+            .regular, in: Capsule(), orFill: .ultraThinMaterial
+          )
+          .contentTransition(.numericText())
+          .animation(.default, value: currentPage)
+          .padding(.bottom, 24)
+          .allowsHitTesting(false)
       }
     }
 

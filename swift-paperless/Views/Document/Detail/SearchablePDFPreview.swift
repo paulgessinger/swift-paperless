@@ -39,28 +39,56 @@ struct SearchablePDFPreview: View {
       view.isUserInteractionEnabled = true
       pdfView = view
 
+      // Seed the coordinator so the first observation that lands on the
+      // initial page does not propagate as a "page changed" event.
+      context.coordinator.lastReportedPage = initialPage
+
       if let scrollView = findScrollView(in: view) {
         let onPageChange = onPageChange
         let coordinator = context.coordinator
         coordinator.scrollObservation = scrollView.observe(
           \.contentOffset, options: [.new]
-        ) { [weak view] _, _ in
+        ) { [weak view, weak scrollView] _, _ in
           MainActor.assumeIsolated {
+            // Suppress any callbacks until the initial layout has been
+            // applied — early KVO firings during initial sizing can otherwise
+            // report a stale center page (e.g. before the offset is moved
+            // below the navigation bar).
+            guard coordinator.didApplyInitialTopAlignment else { return }
             guard let view, let document = view.document else { return }
-
-            // Use the center of the visible rect to determine the current page
-            let visibleCenter = CGPoint(
-              x: view.bounds.midX,
-              y: view.bounds.midY
-            )
+            // Only react to user-initiated scrolling. Programmatic offset
+            // changes (initial layout, sheet open/dismiss transitions, etc.)
+            // shouldn't propagate back to the inline preview's page state.
+            guard let scrollView,
+              scrollView.isDragging || scrollView.isTracking
+                || scrollView.isDecelerating
+            else { return }
 
             let pageIndex: Int
-            if let page = view.page(for: visibleCenter, nearest: true) {
-              pageIndex = document.index(for: page)
-            } else if let current = view.currentPage {
-              pageIndex = document.index(for: current)
+
+            // If the user has scrolled to the bottom of the content, pin to
+            // the last page — short pages can't scroll high enough for a
+            // top-anchored probe to reach the last page otherwise.
+            if Self.isScrolledToBottom(scrollView, threshold: 1) {
+              pageIndex = max(0, document.pageCount - 1)
             } else {
-              return
+              // Probe a point just below the top safe area / navigation bar
+              // instead of the geometric centre. For short landscape pages
+              // where multiple pages fit in the viewport, the centre lands
+              // past page 0 and reports the wrong page on open.
+              let topInset = view.safeAreaInsets.top
+              let topProbe = CGPoint(
+                x: view.bounds.midX,
+                y: topInset + 40
+              )
+
+              if let page = view.page(for: topProbe, nearest: true) {
+                pageIndex = document.index(for: page)
+              } else if let current = view.currentPage {
+                pageIndex = document.index(for: current)
+              } else {
+                return
+              }
             }
 
             guard pageIndex != coordinator.lastReportedPage else { return }
@@ -141,6 +169,13 @@ struct SearchablePDFPreview: View {
         scrollView.contentOffset.y -= topInset
         coordinator.didNavigateToInitialPage = true
       }
+    }
+
+    @MainActor
+    private static func isScrolledToBottom(_ scrollView: UIScrollView, threshold: CGFloat) -> Bool {
+      let maxOffsetY =
+        scrollView.contentSize.height + scrollView.contentInset.bottom - scrollView.bounds.height
+      return scrollView.contentOffset.y >= maxOffsetY - threshold
     }
 
     private func findScrollView(in view: UIView) -> UIScrollView? {

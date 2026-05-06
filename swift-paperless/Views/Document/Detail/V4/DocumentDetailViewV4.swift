@@ -375,48 +375,44 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     ScrollView(.vertical) {
       VStack(alignment: .leading, spacing: 16) {
-        Button {
-          guard previewEnabled else { return }
-          showPreview = true
-        } label: {
-          DocumentPreview(
-            document: viewModel.document,
-            downloadState: viewModel.download,
-            currentPage: $previewPage
+        DocumentPreview(
+          document: viewModel.document,
+          downloadState: viewModel.download,
+          currentPage: $previewPage,
+          transitionID: TransitionID.doc,
+          transitionNamespace: namespace,
+          onTap: previewEnabled ? { showPreview = true } : nil
+        )
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel(.localizable(.documentOpen))
+
+        VStack(alignment: .leading, spacing: 16) {
+          DocumentTitleView(
+            title: viewModel.document.title,
+            transitionID: .title,
+            namespace: namespace,
+            action: { activeSheet = .title },
+            enabled: store.userCanChange(document: viewModel.document)
           )
-          .frame(maxWidth: .infinity)
-          .backport.matchedTransitionSource(id: TransitionID.doc, in: namespace)
-          .accessibilityLabel(.localizable(.documentOpen))
+
+          readOnlyExplanation
+
+          detailAspects
+            .animation(.spring(duration: 0.25), value: viewModel.document)
+
+          DocumentTagsSection(
+            tags: viewModel.document.tags.map { store.tags[$0] },
+            action: {
+              activeSheet = .tags
+            },
+            transitionID: .tags,
+            namespace: namespace,
+            enabled: store.userCanChange(document: viewModel.document)
+          )
         }
-        .disabled(!previewEnabled)
-
-        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
-        .shadow(color: Color(.imageShadow), radius: 15)
-
-        DocumentTitleView(
-          title: viewModel.document.title,
-          transitionID: .title,
-          namespace: namespace,
-          action: { activeSheet = .title },
-          enabled: store.userCanChange(document: viewModel.document)
-        )
-
-        readOnlyExplanation
-
-        detailAspects
-          .animation(.spring(duration: 0.25), value: viewModel.document)
-
-        DocumentTagsSection(
-          tags: viewModel.document.tags.map { store.tags[$0] },
-          action: {
-            activeSheet = .tags
-          },
-          transitionID: .tags,
-          namespace: namespace,
-          enabled: store.userCanChange(document: viewModel.document)
-        )
+        .padding(.horizontal)
       }
-      .padding()
+      .padding(.bottom)
     }
     .refreshable {
       let model = viewModel
