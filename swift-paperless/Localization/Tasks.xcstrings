@@ -59,13 +59,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Afvis alle"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Alle verwerfen"
           }
         },
@@ -77,31 +77,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Tout ignorer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Ignora tutti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Alles negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Odrzuć wszystkie"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "stale",
+            "state" : "translated",
             "value" : "Tümünü yoksay"
           }
         }
@@ -959,9 +959,51 @@
     "statusUnknown" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unknown"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Unknown"
           }
         }
