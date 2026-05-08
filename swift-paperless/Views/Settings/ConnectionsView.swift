@@ -10,6 +10,13 @@ import Networking
 import SwiftUI
 import os
 
+extension StoredConnection {
+  fileprivate var nonEmptyFriendlyName: String? {
+    guard let friendlyName, !friendlyName.isEmpty else { return nil }
+    return friendlyName
+  }
+}
+
 private struct ConnectionSelectionViews: View {
   @ObservedObject var connectionManager: ConnectionManager
   let animated: Bool
@@ -25,9 +32,21 @@ private struct ConnectionSelectionViews: View {
           id: conn.id,
           animated: animated)
       } label: {
-        // Bit of a hack to have by-character line breaks
-        let label = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
-        Text(label.map { String($0) }.joined(separator: "\u{200B}"))
+        let urlLabel = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
+        if let friendlyName = conn.nonEmptyFriendlyName,
+          !connectionManager.isFriendlyNameUnique(friendlyName)
+        {
+          // Disambiguate identically-named servers by also showing the URL.
+          // Bit of a hack to have by-character line breaks.
+          Text(
+            "\(friendlyName) — \(urlLabel)"
+              .map { String($0) }.joined(separator: "\u{200B}"))
+        } else {
+          // Bit of a hack to have by-character line breaks
+          let primary = (conn.nonEmptyFriendlyName ?? urlLabel)
+            .map { String($0) }.joined(separator: "\u{200B}")
+          Text(primary)
+        }
       }
       .disabled(conn.id == connectionManager.activeConnectionId)
     }
@@ -43,13 +62,26 @@ struct ConnectionSelectionMenu: View {
       Menu {
         ConnectionSelectionViews(connectionManager: connectionManager, animated: animated)
       } label: {
+        let urlLabel =
+          connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
         HStack {
-          let label =
-            connectionManager.isServerUnique(stored.url) ? stored.shortLabel : stored.label
-          Text(label)
-            .font(.body)
-            .foregroundStyle(.gray)
-            .multilineTextAlignment(.leading)
+          if let friendlyName = stored.nonEmptyFriendlyName {
+            VStack(alignment: .leading, spacing: 0) {
+              Text(friendlyName)
+                .font(.body)
+                .foregroundStyle(.gray)
+                .multilineTextAlignment(.leading)
+              Text(urlLabel)
+                .font(.caption2)
+                .foregroundStyle(.gray.opacity(0.7))
+                .multilineTextAlignment(.leading)
+            }
+          } else {
+            Text(urlLabel)
+              .font(.body)
+              .foregroundStyle(.gray)
+              .multilineTextAlignment(.leading)
+          }
           Label(
             String(localized: .settings(.chooseServerAccessibilityLabel)),
             systemImage: "chevron.up.chevron.down"
@@ -104,6 +136,10 @@ struct ConnectionsView: View {
   var body: some View {
     Section {
       if let stored = connectionManager.storedConnection {
+        if let friendlyName = stored.nonEmptyFriendlyName {
+          LabeledContent(.settings(.serverName), value: friendlyName)
+        }
+
         HStack {
           Text(.settings(.activeServerUrl))
           Menu {

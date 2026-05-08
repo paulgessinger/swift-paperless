@@ -20,6 +20,38 @@ struct StoredConnection: Equatable, Codable, Identifiable {
   var extraHeaders: [Connection.HeaderValue]
   var user: User
   var identity: String?
+  var friendlyName: String? = nil
+
+  private enum CodingKeys: String, CodingKey {
+    case id, url, extraHeaders, user, identity, friendlyName
+  }
+
+  init(
+    id: UUID = .init(),
+    url: URL,
+    extraHeaders: [Connection.HeaderValue],
+    user: User,
+    identity: String? = nil,
+    friendlyName: String? = nil
+  ) {
+    self.id = id
+    self.url = url
+    self.extraHeaders = extraHeaders
+    self.user = user
+    self.identity = identity
+    self.friendlyName = friendlyName
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    url = try container.decode(URL.self, forKey: .url)
+    extraHeaders =
+      try container.decodeIfPresent([Connection.HeaderValue].self, forKey: .extraHeaders) ?? []
+    user = try container.decode(User.self, forKey: .user)
+    identity = try container.decodeIfPresent(String.self, forKey: .identity)
+    friendlyName = try container.decodeIfPresent(String.self, forKey: .friendlyName)
+  }
 
   var token: String? {
     get throws {
@@ -270,6 +302,10 @@ class ConnectionManager: ObservableObject {
     return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
   }
 
+  func isFriendlyNameUnique(_ name: String) -> Bool {
+    connections.values.reduce(0) { $1.friendlyName == name ? $0 + 1 : $0 } == 1
+  }
+
   func migrateToMultiServer() async {
     Logger.migration.trace("Checking migration status")
     if activeConnectionId == nil, apiHost != nil {
@@ -412,6 +448,21 @@ class ConnectionManager: ObservableObject {
     }
     Logger.api.trace("Updating extra headers in \(stored.id) to \(headers)")
     stored.extraHeaders = headers
+    connections[stored.id] = stored
+  }
+
+  func setFriendlyName(_ name: String?) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set friendly name but have no active connection")
+      return
+    }
+    let normalized = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let value = (normalized?.isEmpty ?? true) ? nil : normalized
+    if stored.friendlyName == value {
+      return
+    }
+    Logger.api.info("Updating friendly name on connection \(stored.id)")
+    stored.friendlyName = value
     connections[stored.id] = stored
   }
 
