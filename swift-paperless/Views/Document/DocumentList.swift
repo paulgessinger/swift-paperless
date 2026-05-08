@@ -253,7 +253,7 @@ struct DocumentList: View {
             .listSectionSeparator(.hidden)
           }
           .listStyle(.plain)
-          .overlay(alignment: .bottom) {
+          .safeAreaInset(edge: .bottom, spacing: 0) {
             DocumentCountPill(total: viewModel.totalCount)
           }
         } else {
@@ -372,7 +372,6 @@ private struct DocumentCountPill: View {
         )
         .contentTransition(.numericText())
         .animation(.default, value: total)
-        .padding(.bottom, 8)
     }
   }
 }
