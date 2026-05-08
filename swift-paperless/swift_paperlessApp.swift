@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import Combine
 import Common
 import Networking
 import SwiftUI
@@ -20,6 +21,8 @@ struct MainView: View {
   @State private var showSettings = false
 
   @StateObject private var manager = ConnectionManager()
+
+  @State private var friendlyNameSubscription: AnyCancellable?
 
   @StateObject private var errorController: ErrorController
 
@@ -152,12 +155,13 @@ struct MainView: View {
         await sleep(.seconds(0.3))
         showLoadingScreen = false
       } else {
-        store = await DocumentStore(
-          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode),
-          connectionManager: manager)
+        let newStore = await DocumentStore(
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        store = newStore
+        observeFriendlyName(on: newStore)
         storeReady = true
-        try? await store!.fetchAll()
-        store!.startTaskPolling()
+        try? await newStore.fetchAll()
+        newStore.startTaskPolling()
         showLoadingScreen = false
       }
       showLoginScreen = false
@@ -167,6 +171,19 @@ struct MainView: View {
       showLoginScreen = true
       showLoadingScreen = false
     }
+  }
+
+  private func observeFriendlyName(on store: DocumentStore) {
+    // Forwards the server's PAPERLESS_APP_TITLE (settings.appTitle) to the
+    // active connection. compactMap drops nil values so resets from
+    // store.clear() don't wipe out a previously stored friendly name.
+    friendlyNameSubscription =
+      store.$settings
+      .compactMap(\.appTitle)
+      .removeDuplicates()
+      .sink { [manager] title in
+        manager.setFriendlyName(title)
+      }
   }
 
   private func setupQuickActions() {

@@ -68,14 +68,11 @@ final class DocumentStore: ObservableObject, Sendable {
 
   private var taskUpdateTask: Task<Void, Never>?
 
-  private weak var connectionManager: ConnectionManager?
-
   // MARK: Methods
 
-  init(repository: some Repository, connectionManager: ConnectionManager? = nil) {
+  init(repository: some Repository) {
     self.repository = repository
     self.imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
-    self.connectionManager = connectionManager
   }
 
   deinit {
@@ -309,7 +306,6 @@ final class DocumentStore: ObservableObject, Sendable {
       let uiSettings = try await repository.uiSettings()
       permissions = uiSettings.permissions
       settings = uiSettings.settings
-      connectionManager?.setFriendlyName(uiSettings.settings.appTitle)
     } catch let error where error.isCancellationError {
       Logger.shared.debug("Cancelled fetch UI settings")
     } catch {
