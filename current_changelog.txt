@@ -1,1 +1,2 @@
 - Renamed "Log out" to "Disconnect" in the connection management UI to better reflect what the action does
+- Updated visuals: document count pill moves down, detail list attribute select becomes plain button, tags get a new look
