@@ -148,6 +148,34 @@ struct TagsEditSheet: View {
     }
   }
 
+  private var trimmedSearch: String {
+    searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private var canQuickAdd: Bool {
+    let search = trimmedSearch
+    guard !search.isEmpty else { return false }
+    guard store.permissions.test(.add, for: .tag) else { return false }
+    return !store.tags.values.contains {
+      $0.name.localizedCaseInsensitiveCompare(search) == .orderedSame
+    }
+  }
+
+  private func quickAdd() {
+    let name = trimmedSearch
+    guard !name.isEmpty else { return }
+    Task {
+      do {
+        let tag = try await store.create(tag: ProtoTag(name: name))
+        Haptics.shared.impact(style: .light)
+        searchText = ""
+        add(tag.id)
+      } catch {
+        errorController.push(error: error)
+      }
+    }
+  }
+
   let animation = Animation.spring(duration: 0.2)
 
   var body: some View {
@@ -202,7 +230,8 @@ struct TagsEditSheet: View {
             }
           }
 
-          if !available.entries.isEmpty {
+          let showQuickAdd = canQuickAdd
+          if !available.entries.isEmpty || showQuickAdd {
             CustomSection {
               VStack(spacing: 0) {
                 ForEach(Array(available.entries.enumerated()), id: \.element.tag.id) {
@@ -228,6 +257,28 @@ struct TagsEditSheet: View {
                   if index < available.entries.count - 1 {
                     Divider()
                   }
+                }
+
+                if showQuickAdd {
+                  if !available.entries.isEmpty {
+                    Divider()
+                  }
+                  Button {
+                    quickAdd()
+                  } label: {
+                    CustomSectionRow {
+                      HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: "plus.circle.fill")
+                          .foregroundStyle(.secondary)
+                        Text(.localizable(.quickAdd(trimmedSearch)))
+                          .foregroundStyle(.primary)
+                          .multilineTextAlignment(.leading)
+                          .frame(maxWidth: .infinity, alignment: .leading)
+                      }
+                    }
+                  }
+                  .buttonStyle(.plain)
+                  .transition(.opacity)
                 }
               }
             }
