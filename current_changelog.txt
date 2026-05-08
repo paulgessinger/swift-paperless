@@ -3,3 +3,4 @@
 - Show the server's configured PAPERLESS_APP_TITLE as a friendly name in the server picker and connection settings
 - Quick add: when searching in the tag, correspondent, or document type picker, a "Add '<name>'" row appears at the end and creates the entry on-the-fly
 - Success haptic feedback when an attribute change saves successfully on the document detail edit sheets
+- Document cells in the list now show the number of notes when a document has any
