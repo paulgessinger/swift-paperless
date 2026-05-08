@@ -1248,6 +1248,31 @@ def setup(
 
 
 @app.command()
+def teardown(
+    volumes: Annotated[
+        bool,
+        typer.Option(
+            "--volumes/--no-volumes",
+            help="Remove named volumes when tearing down containers",
+        ),
+    ] = True,
+    pngx_tag: Annotated[
+        str,
+        typer.Option(
+            "--pngx-tag",
+            help="Paperless-ngx Docker image tag used to render compose file",
+        ),
+    ] = "latest",
+) -> None:
+    """Tear down screenshot backend containers."""
+    compose_file = render_docker_compose_file(pngx_tag)
+    args = ["down"]
+    if volumes:
+        args.append("-v")
+    run_command(docker_compose_cmd(compose_file, *args), check=False)
+
+
+@app.command()
 def capture(
     config: Annotated[
         Path,
