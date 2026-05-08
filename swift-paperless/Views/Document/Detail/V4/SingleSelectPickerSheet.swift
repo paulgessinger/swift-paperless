@@ -25,6 +25,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
   let notAssignedLabel: LocalizedStringResource
   let canCreate: Bool
   let suggestions: [UInt]
+  let quickCreate: ((String) async throws -> Item)?
   @ViewBuilder let createView: (@escaping (Item) -> Void) -> CreateView
 
   @State private var searchText = ""
@@ -43,6 +44,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     notAssignedLabel: LocalizedStringResource,
     canCreate: Bool,
     suggestions: [UInt],
+    quickCreate: ((String) async throws -> Item)? = nil,
     @ViewBuilder createView: @escaping (@escaping (Item) -> Void) -> CreateView
   ) {
     self.viewModel = viewModel
@@ -53,6 +55,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     self.notAssignedLabel = notAssignedLabel
     self.canCreate = canCreate
     self.suggestions = suggestions
+    self.quickCreate = quickCreate
     self.createView = createView
     let nothingSelected = viewModel.document[keyPath: keyPath] == nil
     _searchIsActive = State(initialValue: nothingSelected)
@@ -146,6 +149,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         async let delay: () = Task.sleep(for: .seconds(0.5))
 
         try await update
+        Haptics.shared.notification(.success)
         try await delay
         saving = false
         if id != nil {
@@ -157,6 +161,65 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         errorController.push(error: error)
       }
     }
+  }
+
+  private var trimmedSearch: String {
+    searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private var canQuickAdd: Bool {
+    guard quickCreate != nil, canCreate else { return false }
+    let search = trimmedSearch
+    guard !search.isEmpty else { return false }
+    return !allItems.values.contains {
+      $0.name.localizedCaseInsensitiveCompare(search) == .orderedSame
+    }
+  }
+
+  private func quickAdd() {
+    guard !saving, let quickCreate else { return }
+    let name = trimmedSearch
+    guard !name.isEmpty else { return }
+    let previous = viewModel.document[keyPath: keyPath]
+    Task {
+      do {
+        saving = true
+        let item = try await quickCreate(name)
+        Haptics.shared.impact(style: .light)
+        viewModel.document[keyPath: keyPath] = item.id
+        async let update: Void = viewModel.updateDocument()
+        async let delay: () = Task.sleep(for: .seconds(0.5))
+        try await update
+        Haptics.shared.notification(.success)
+        try await delay
+        saving = false
+        dismiss()
+      } catch {
+        viewModel.document[keyPath: keyPath] = previous
+        saving = false
+        errorController.push(error: error)
+      }
+    }
+  }
+
+  private var quickAddRow: some View {
+    Button {
+      quickAdd()
+    } label: {
+      CustomSectionRow {
+        HStack(alignment: .firstTextBaseline) {
+          Image(systemName: "plus.circle.fill")
+            .foregroundStyle(.secondary)
+          Text(.localizable(.quickAdd(trimmedSearch)))
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      }
+    }
+    .buttonStyle(.plain)
+    .allowsHitTesting(!saving)
+    .transition(.opacity)
   }
 
   private func row(_ item: Item) -> some View {
@@ -242,7 +305,8 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
             Text(.localizable(.selected))
           }
 
-          if !matching.items.isEmpty {
+          let showQuickAdd = canQuickAdd
+          if !matching.items.isEmpty || showQuickAdd {
             CustomSection {
               LazyVStack(spacing: 0) {
                 ForEach(Array(matching.items.enumerated()), id: \.element.id) { index, item in
@@ -250,6 +314,12 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
                   if index < matching.items.count - 1 {
                     Divider()
                   }
+                }
+                if showQuickAdd {
+                  if !matching.items.isEmpty {
+                    Divider()
+                  }
+                  quickAddRow
                 }
               }
             } header: {

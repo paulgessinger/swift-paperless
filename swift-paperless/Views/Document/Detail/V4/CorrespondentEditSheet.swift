@@ -48,6 +48,9 @@ struct CorrespondentEditSheet: View {
       notAssignedLabel: .localizable(.correspondentNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .correspondent),
       suggestions: viewModel.suggestions.correspondents,
+      quickCreate: { name in
+        try await store.create(correspondent: ProtoCorrespondent(name: name))
+      },
       createView: { onCreated in
         CreateCorrespondentView(onCreated: onCreated)
       }
