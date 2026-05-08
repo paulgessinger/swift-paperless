@@ -5,40 +5,34 @@
 //  Created by Paul Gessinger on 26.12.24.
 //
 
-import MetaCodable
-
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct UISettingsDocumentEditing: Sendable {
-  @Default(false)
+public struct UISettingsDocumentEditing: Sendable, Equatable {
   public var removeInboxTags: Bool
 
-  @usableFromInline
-  static var `default`: Self { .init() }
+  public init(removeInboxTags: Bool = false) {
+    self.removeInboxTags = removeInboxTags
+  }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct UISettingsPermissions: Sendable {
-  @Default(nil as UInt?)
-  var defaultOwner: UInt?
+public struct UISettingsPermissions: Sendable, Equatable {
+  public var defaultOwner: UInt?
+  public var defaultViewUsers: [UInt]
+  public var defaultViewGroups: [UInt]
+  public var defaultEditUsers: [UInt]
+  public var defaultEditGroups: [UInt]
 
-  @Default([UInt]())
-  var defaultViewUsers: [UInt]
-
-  @Default([UInt]())
-  var defaultViewGroups: [UInt]
-
-  @Default([UInt]())
-  var defaultEditUsers: [UInt]
-
-  @Default([UInt]())
-  var defaultEditGroups: [UInt]
-
-  @usableFromInline
-  static var `default`: Self { .init() }
+  public init(
+    defaultOwner: UInt? = nil,
+    defaultViewUsers: [UInt] = [],
+    defaultViewGroups: [UInt] = [],
+    defaultEditUsers: [UInt] = [],
+    defaultEditGroups: [UInt] = []
+  ) {
+    self.defaultOwner = defaultOwner
+    self.defaultViewUsers = defaultViewUsers
+    self.defaultViewGroups = defaultViewGroups
+    self.defaultEditUsers = defaultEditUsers
+    self.defaultEditGroups = defaultEditGroups
+  }
 
   public func applyAsDefaults(to model: inout some PermissionsModel) {
     if case .unset = model.owner {
@@ -66,48 +60,50 @@ public struct UISettingsPermissions: Sendable {
 
 /// Saved view visibility (moved from per-view to UI settings in backend v3+).
 /// Only the keys the app interacts with are modeled.
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct UISettingsSavedViews: Sendable {
-  @Default([UInt]())
+public struct UISettingsSavedViews: Sendable, Equatable {
   public var dashboardViewsVisibleIds: [UInt]
-
-  @Default([UInt]())
   public var sidebarViewsVisibleIds: [UInt]
 
-  @usableFromInline
-  static var `default`: Self { .init() }
+  public init(
+    dashboardViewsVisibleIds: [UInt] = [],
+    sidebarViewsVisibleIds: [UInt] = []
+  ) {
+    self.dashboardViewsVisibleIds = dashboardViewsVisibleIds
+    self.sidebarViewsVisibleIds = sidebarViewsVisibleIds
+  }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct UISettingsSettings: Sendable {
-  @Default(UISettingsDocumentEditing.default)
+public struct UISettingsSettings: Sendable, Equatable {
   public var documentEditing: UISettingsDocumentEditing
-
-  @Default(UISettingsPermissions.default)
   public var permissions: UISettingsPermissions
-
-  @Default(UISettingsSavedViews.default)
   public var savedViews: UISettingsSavedViews
-
-  @Default(nil as String?)
   public var appTitle: String?
 
-  @usableFromInline
-  static var `default`: Self { .init() }
+  public init(
+    documentEditing: UISettingsDocumentEditing = UISettingsDocumentEditing(),
+    permissions: UISettingsPermissions = UISettingsPermissions(),
+    savedViews: UISettingsSavedViews = UISettingsSavedViews(),
+    appTitle: String? = nil
+  ) {
+    self.documentEditing = documentEditing
+    self.permissions = permissions
+    self.savedViews = savedViews
+    self.appTitle = appTitle
+  }
 }
 
-@Codable
-@MemberInit
 public struct UISettings: Sendable {
   public var user: User
-
-  @Default(UISettingsSettings.default)
   public var settings: UISettingsSettings
-
-  @IgnoreEncoding
   public var permissions: UserPermissions
+
+  public init(
+    user: User,
+    settings: UISettingsSettings = UISettingsSettings(),
+    permissions: UserPermissions
+  ) {
+    self.user = user
+    self.settings = settings
+    self.permissions = permissions
+  }
 }
