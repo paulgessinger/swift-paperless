@@ -167,7 +167,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         itemLabel(item, selected: false)
       }
     }
-    .buttonStyle(.borderless)
+    .buttonStyle(.plain)
     .allowsHitTesting(!saving)
     .id(item.id)
     .transition(

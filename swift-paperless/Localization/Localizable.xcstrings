@@ -6978,19 +6978,19 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Det ser ud til, at appen ikke er i stand til at oprette forbindelse til %@. Du kan prøve at skifte server eller logge ud og ind igen:"
+            "value" : "Det ser ud til, at appen ikke er i stand til at oprette forbindelse til %@. Du kan prøve at skifte server eller afbryde forbindelsen og oprette den igen:"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen den Server zu wechseln, oder dich ab- und wieder anzumelden:"
+            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen den Server zu wechseln, oder die Verbindung zu trennen und neu aufzubauen:"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or logging out and back in again:"
+            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or disconnecting and reconnecting:"
           }
         },
         "fr" : {
@@ -7002,25 +7002,25 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sembra che l'applicazione non riesca a connettersi a %@. Puoi provare a cambiare server o fare il log out e riprovare ad accedere:"
+            "value" : "Sembra che l'applicazione non riesca a connettersi a %@. Puoi provare a cambiare server o disconnetterti e riconnetterti:"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het lijkt erop dat de app geen verbinding kan maken met %@. Je kunt proberen van server te wisselen of uit te loggen en weer in te loggen:"
+            "value" : "Het lijkt erop dat de app geen verbinding kan maken met %@. Je kunt proberen van server te wisselen of de verbinding te verbreken en opnieuw te maken:"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wygląda na to, że aplikacja nie może połączyć się z %@. Możesz spróbować zmienić serwer lub wylogować się i zalogować ponownie:"
+            "value" : "Wygląda na to, że aplikacja nie może połączyć się z %@. Możesz spróbować zmienić serwer lub rozłączyć się i połączyć ponownie:"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Görünüşe göre uygulama %@ adresine bağlanamıyor. Sunucuyu değiştirmeyi veya oturumu kapatıp tekrar açmayı deneyebilirsiniz:"
+            "value" : "Görünüşe göre uygulama %@ adresine bağlanamıyor. Sunucuyu değiştirmeyi veya bağlantıyı kesip yeniden bağlanmayı deneyebilirsiniz:"
           }
         }
       }
@@ -7031,19 +7031,19 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log ud"
+            "value" : "Afbryd forbindelse"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ausloggen"
+            "value" : "Trennen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log out"
+            "value" : "Disconnect"
           }
         },
         "fr" : {
@@ -7055,25 +7055,25 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log out"
+            "value" : "Disconnetti"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afmelden"
+            "value" : "Verbinding verbreken"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyloguj"
+            "value" : "Rozłącz"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Çıkış yap"
+            "value" : "Bağlantıyı kes"
           }
         }
       }
