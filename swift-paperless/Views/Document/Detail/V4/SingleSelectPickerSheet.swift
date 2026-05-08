@@ -171,7 +171,9 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     guard quickCreate != nil, canCreate else { return false }
     let search = trimmedSearch
     guard !search.isEmpty else { return false }
-    return !allItems.values.contains { $0.name.localizedCaseInsensitiveCompare(search) == .orderedSame }
+    return !allItems.values.contains {
+      $0.name.localizedCaseInsensitiveCompare(search) == .orderedSame
+    }
   }
 
   private func quickAdd() {
