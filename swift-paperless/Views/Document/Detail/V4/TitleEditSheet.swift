@@ -27,6 +27,7 @@ struct TitleEditSheet: View {
         saving = true
         viewModel.document.title = title.trimmingCharacters(in: .whitespaces)
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch {

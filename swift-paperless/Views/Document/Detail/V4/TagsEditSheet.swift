@@ -119,6 +119,7 @@ struct TagsEditSheet: View {
         saving = true
         viewModel.document.tags = tagIds
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch {

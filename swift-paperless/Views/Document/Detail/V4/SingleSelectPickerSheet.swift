@@ -149,6 +149,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         async let delay: () = Task.sleep(for: .seconds(0.5))
 
         try await update
+        Haptics.shared.notification(.success)
         try await delay
         saving = false
         if id != nil {
@@ -187,6 +188,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         async let update: Void = viewModel.updateDocument()
         async let delay: () = Task.sleep(for: .seconds(0.5))
         try await update
+        Haptics.shared.notification(.success)
         try await delay
         saving = false
         dismiss()

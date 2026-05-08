@@ -41,6 +41,7 @@ struct CustomFieldsEditSheet: View {
         saving = true
         viewModel.document.customFields = document.customFields
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch {

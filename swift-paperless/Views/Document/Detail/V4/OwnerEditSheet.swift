@@ -44,6 +44,7 @@ struct OwnerEditSheet: View {
         saving = true
         viewModel.document = document
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch let RequestError.unexpectedStatusCode(code, detail) where code == .notFound {
@@ -52,6 +53,7 @@ struct OwnerEditSheet: View {
             "Document update resulted in \(code.rawValue, privacy: .public) as expected due to permission change"
           )
           viewModel.document = document
+          Haptics.shared.notification(.success)
           dismiss()
         } else {
           let error = RequestError.unexpectedStatusCode(code: code, detail: detail)
@@ -64,6 +66,7 @@ struct OwnerEditSheet: View {
           Logger.shared.info(
             "Document update resulted in forbidden as expected due to permission change")
           viewModel.document = document
+          Haptics.shared.notification(.success)
           dismiss()
         } else {
           let error = RequestError.forbidden(detail: body)

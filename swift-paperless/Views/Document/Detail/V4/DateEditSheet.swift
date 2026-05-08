@@ -36,6 +36,7 @@ struct DateEditSheet: View {
         saving = true
         viewModel.document.created = date
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch {

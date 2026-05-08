@@ -51,6 +51,7 @@ struct AsnEditSheet: View {
         saving = true
         viewModel.document.asn = parsedAsn
         try await viewModel.updateDocument()
+        Haptics.shared.notification(.success)
         saving = false
         dismiss()
       } catch {
