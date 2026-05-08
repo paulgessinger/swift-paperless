@@ -154,6 +154,13 @@ struct DocumentCell: View {
             .truncationMode(.tail)
         }
 
+        if document.notes.count > 0 {
+          Aspect(localized: .localizable(.notes(document.notes.count)), systemImage: "note.text")
+            .fixedSize(horizontal: false, vertical: true)
+            .lineLimit(1)
+            .truncationMode(.tail)
+        }
+
         if let id = document.storagePath {
           Aspect(store.storagePaths[id]?.name, systemImage: "archivebox")
             .fixedSize(horizontal: false, vertical: true)
