@@ -153,7 +153,8 @@ struct MainView: View {
         showLoadingScreen = false
       } else {
         store = await DocumentStore(
-          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode),
+          connectionManager: manager)
         storeReady = true
         try? await store!.fetchAll()
         store!.startTaskPolling()

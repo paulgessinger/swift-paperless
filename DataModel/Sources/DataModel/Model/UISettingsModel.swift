@@ -93,6 +93,9 @@ public struct UISettingsSettings: Sendable {
   @Default(UISettingsSavedViews.default)
   public var savedViews: UISettingsSavedViews
 
+  @Default(nil as String?)
+  public var appTitle: String?
+
   @usableFromInline
   static var `default`: Self { .init() }
 }

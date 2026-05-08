@@ -36,6 +36,9 @@ struct UISettingsTest {
     #expect(settings.permissions.defaultViewGroups == [])
     #expect(settings.permissions.defaultEditUsers == [])
     #expect(settings.permissions.defaultEditGroups == [])
+
+    // app_title not present in this older response: should decode to nil
+    #expect(settings.appTitle == nil)
   }
 
   @Test
@@ -66,6 +69,22 @@ struct UISettingsTest {
     #expect(settings.permissions.defaultViewGroups == [1])
     #expect(settings.permissions.defaultEditUsers == [])
     #expect(settings.permissions.defaultEditGroups == [6])
+
+    // app_title is present but null in v2.13.5: should decode to nil
+    #expect(settings.appTitle == nil)
+  }
+
+  @Test("app_title decodes when present as a string")
+  func testAppTitleDecodes() throws {
+    let json = """
+      {
+        "user": {"id": 1, "username": "paperless", "is_staff": true, "is_superuser": true, "groups": []},
+        "settings": {"app_title": "My Paperless"},
+        "permissions": []
+      }
+      """.data(using: .utf8)!
+    let response = try JSONDecoder().decode(UISettings.self, from: json)
+    #expect(response.settings.appTitle == "My Paperless")
   }
 
   @Test
