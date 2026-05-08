@@ -33,10 +33,20 @@ private struct ConnectionSelectionViews: View {
           animated: animated)
       } label: {
         let urlLabel = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
-        // Bit of a hack to have by-character line breaks
-        let primary = (conn.nonEmptyFriendlyName ?? urlLabel)
-          .map { String($0) }.joined(separator: "\u{200B}")
-        Text(primary)
+        if let friendlyName = conn.nonEmptyFriendlyName,
+          !connectionManager.isFriendlyNameUnique(friendlyName)
+        {
+          // Disambiguate identically-named servers by also showing the URL.
+          // Bit of a hack to have by-character line breaks.
+          Text(
+            "\(friendlyName) — \(urlLabel)"
+              .map { String($0) }.joined(separator: "\u{200B}"))
+        } else {
+          // Bit of a hack to have by-character line breaks
+          let primary = (conn.nonEmptyFriendlyName ?? urlLabel)
+            .map { String($0) }.joined(separator: "\u{200B}")
+          Text(primary)
+        }
       }
       .disabled(conn.id == connectionManager.activeConnectionId)
     }
