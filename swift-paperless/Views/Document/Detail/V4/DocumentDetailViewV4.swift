@@ -478,13 +478,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .navigationTitle(viewModel.document.title)
       }
       // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
-      // Resolve the zoom source to the *tapped* page (mirrors the
-      // PDFPagingPreview's per-page sources) so iPad zooms from whichever
-      // peek the user picked, not always from the centred page.
-      .backport.navigationTransitionZoom(
-        sourceID: PDFPageZoomID(base: AnyHashable(TransitionID.doc), index: previewPage),
-        in: namespace
-      )
+      .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
     }
   }
 
@@ -499,18 +493,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           currentPage: $previewPage,
           transitionID: TransitionID.doc,
           transitionNamespace: namespace,
-          // Set previewPage explicitly here so the destination's sourceID
-          // (computed from previewPage) is in sync with showPreview before
-          // the cover renders. The PDFPagingPreview also writes currentPage
-          // through the binding, but relying on that propagation alone has
-          // a one-frame race that can leave the zoom anchored on the wrong
-          // page.
-          onTap: previewEnabled
-            ? { tappedIndex in
-              previewPage = tappedIndex
-              showPreview = true
-            }
-            : nil
+          onTap: previewEnabled ? { showPreview = true } : nil
         )
         .frame(maxWidth: .infinity)
         .accessibilityLabel(.localizable(.documentOpen))
@@ -622,20 +605,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    // The full PDF reader is content-heavy; on iPad a normal sheet renders as a
-    // small centered form sheet that wastes most of the screen, so we promote
-    // it to a full-screen cover on regular size class while keeping the sheet
-    // (with its zoom transition + swipe-to-dismiss) on compact.
-    .apply {
-      if horizontalSizeClass == .regular {
-        $0.fullScreenCover(isPresented: $showPreview) {
-          previewContent
-        }
-      } else {
-        $0.sheet(isPresented: $showPreview) {
-          previewContent
-        }
-      }
+    .sheet(isPresented: $showPreview) {
+      previewContent
     }
 
     .task {
