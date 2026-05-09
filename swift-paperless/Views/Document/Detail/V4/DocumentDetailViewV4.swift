@@ -65,6 +65,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
+  // iPad-only: drives the .inspector-presented edit panel. Defaults open so
+  // the document's metadata is visible alongside the PDF the first time
+  // someone opens it on iPad. SceneStorage so the open/closed state
+  // persists across app launches per scene.
+  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
 
@@ -132,10 +137,15 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
       document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
-    let columns = [
-      GridItem(.flexible(), spacing: 12),
-      GridItem(.flexible(), spacing: 12),
-    ]
+    // Inspector lays out one column so each aspect spans full width;
+    // iPhone keeps the two-column pill layout.
+    let columns: [GridItem] =
+      horizontalSizeClass == .regular
+      ? [GridItem(.flexible(), spacing: 12)]
+      : [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+      ]
     return LazyVGrid(columns: columns, spacing: 12) {
       EditableAspect(
         title: .localizable(.asn),
@@ -289,6 +299,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let badge: String?
     let style: S
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ScaledMetric(relativeTo: .title2) private var iconSize = 24
 
     init(
@@ -309,19 +320,25 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       self.style = style
     }
 
+    private var isRegular: Bool { horizontalSizeClass == .regular }
+
     var body: some View {
+      // iPad: match the SearchablePDFPreview search button — 13pt padding,
+      // semibold .title2 icon, circular glass. Badge becomes a corner pill
+      // overlay so the circle isn't stretched.
       Button(action: action) {
         HStack {
           Label(localized: label, systemImage: image)
             .font(.title2)
+            .fontWeight(isRegular ? .semibold : .regular)
             .labelStyle(.iconOnly)
             .frame(width: iconSize, height: iconSize)
 
-          if let badge {
+          if !isRegular, let badge {
             Text(badge)
           }
         }
-        .padding(10)
+        .padding(isRegular ? 13 : 10)
         .apply {
           if let transitionID, let namespace {
             $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
@@ -329,9 +346,81 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             $0
           }
         }
-        .backport.glassEffect(.regular.interactive())
+        .apply {
+          if isRegular {
+            $0.backport.glassEffect(.regular.interactive(), in: Circle())
+          } else {
+            $0.backport.glassEffect(.regular.interactive())
+          }
+        }
+        .overlay(alignment: .topTrailing) {
+          if isRegular, let badge {
+            Text(badge)
+              .font(.caption2)
+              .fontWeight(.bold)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 5)
+              .padding(.vertical, 1)
+              .background(.red, in: Capsule())
+              .offset(x: 6, y: -4)
+          }
+        }
       }
       .foregroundStyle(style)
+    }
+  }
+
+  // The bare metadata/notes/delete buttons. Used inline on iPhone (inside
+  // the `metadataBar` glass capsule) and on iPad as the trailing slot of
+  // SearchablePDFPreview's bottom bar.
+  @ViewBuilder
+  private var metadataActionButtons: some View {
+    BottomBarButton(
+      label: .documentMetadata(.metadata), image: "info.circle",
+      action: {
+        activeSheet = .metadata
+      },
+      transitionID: .metadata,
+      namespace: namespace,
+      badge: nil
+    )
+
+    BottomBarButton(
+      label: .documentMetadata(.notes), image: "note.text",
+      action: {
+        activeSheet = .notes
+      },
+      transitionID: .notes,
+      namespace: namespace,
+      badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
+    )
+
+    let canDelete = store.userCanDelete(document: viewModel.document)
+
+    BottomBarButton(
+      label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+      image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
+      action: {
+        if appSettings.documentDeleteConfirmation {
+          showDeleteConfirmation = true
+        } else {
+          deleteDocument()
+        }
+      },
+      style: canDelete ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
+    )
+    .contentTransition(.symbolEffect)
+    .disabled(!canDelete)
+    .opacity(1)
+    .confirmationDialog(
+      String(localized: .localizable(.confirmationPromptTitle)),
+      isPresented: $showDeleteConfirmation,
+      titleVisibility: .visible
+    ) {
+      Button(String(localized: .localizable(.delete)), role: .destructive) {
+        deleteDocument()
+      }
+      Button(String(localized: .localizable(.cancel)), role: .cancel) {}
     }
   }
 
@@ -339,53 +428,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   private var metadataBar: some View {
     GlassEffectContainerCompat {
       HStack {
-        BottomBarButton(
-          label: .documentMetadata(.metadata), image: "info.circle",
-          action: {
-            activeSheet = .metadata
-          },
-          transitionID: .metadata,
-          namespace: namespace,
-          badge: nil
-        )
-
-        BottomBarButton(
-          label: .documentMetadata(.notes), image: "note.text",
-          action: {
-            activeSheet = .notes
-          },
-          transitionID: .notes,
-          namespace: namespace,
-          badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
-        )
-
-        let canDelete = store.userCanDelete(document: viewModel.document)
-
-        BottomBarButton(
-          label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
-          image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
-          action: {
-            if appSettings.documentDeleteConfirmation {
-              showDeleteConfirmation = true
-            } else {
-              deleteDocument()
-            }
-          },
-          style: canDelete ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
-        )
-        .contentTransition(.symbolEffect)
-        .disabled(!canDelete)
-        .opacity(1)
-        .confirmationDialog(
-          String(localized: .localizable(.confirmationPromptTitle)),
-          isPresented: $showDeleteConfirmation,
-          titleVisibility: .visible
-        ) {
-          Button(String(localized: .localizable(.delete)), role: .destructive) {
-            deleteDocument()
-          }
-          Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-        }
+        metadataActionButtons
       }
       .apply {
         if #unavailable(iOS 26.0) {
@@ -482,9 +525,68 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
-  var body: some View {
+  // The aspects/tags/title block. Used inline in the iPhone layout and
+  // inside the iPad inspector. Popovers attach to their source views, so the
+  // anchoring is the same whichever container hosts the panel.
+  @ViewBuilder
+  private var editPanel: some View {
     @Bindable var viewModel = viewModel
+    VStack(alignment: .leading, spacing: 16) {
+      DocumentTitleView(
+        title: viewModel.document.title,
+        transitionID: .title,
+        namespace: namespace,
+        action: { activeFieldEdit = .title },
+        enabled: store.userCanChange(document: viewModel.document)
+      )
+      .editPopover(
+        forFieldEdit: .title,
+        active: $activeFieldEdit,
+        popoverSize: CGSize(width: 480, height: 240)
+      ) {
+        TitleEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
+      }
 
+      readOnlyExplanation
+
+      detailAspects
+        .animation(.spring(duration: 0.25), value: viewModel.document)
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(.localizable(.tags))
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .textCase(.uppercase)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .truncationMode(.tail)
+
+        DocumentTagsSection(
+          tags: viewModel.document.tags.map { store.tags[$0] },
+          action: {
+            activeFieldEdit = .tags
+          },
+          transitionID: .tags,
+          namespace: namespace,
+          enabled: store.userCanChange(document: viewModel.document)
+        )
+        .editPopover(
+          forFieldEdit: .tags,
+          active: $activeFieldEdit,
+          detents: [.medium, .large]
+        ) {
+          TagsEditSheet(viewModel: viewModel)
+            .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+        }
+      }
+    }
+  }
+
+  // iPhone layout: horizontal page preview + edit panel stacked in a scroll
+  // view, metadata bar pinned to the bottom.
+  @ViewBuilder
+  private var compactBody: some View {
     ScrollView(.vertical) {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(
@@ -498,59 +600,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .frame(maxWidth: .infinity)
         .accessibilityLabel(.localizable(.documentOpen))
 
-        VStack(alignment: .leading, spacing: 16) {
-          DocumentTitleView(
-            title: viewModel.document.title,
-            transitionID: .title,
-            namespace: namespace,
-            action: { activeFieldEdit = .title },
-            enabled: store.userCanChange(document: viewModel.document)
-          )
-          .editPopover(
-            forFieldEdit: .title,
-            active: $activeFieldEdit,
-            popoverSize: CGSize(width: 480, height: 240)
-          ) {
-            TitleEditSheet(viewModel: viewModel)
-              .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
-          }
-
-          readOnlyExplanation
-
-          detailAspects
-            .animation(.spring(duration: 0.25), value: viewModel.document)
-
-          VStack(alignment: .leading, spacing: 6) {
-            Text(.localizable(.tags))
-              .font(.caption2)
-              .fontWeight(.semibold)
-              .textCase(.uppercase)
-              .foregroundStyle(.secondary)
-              .lineLimit(1)
-              .truncationMode(.tail)
-
-            DocumentTagsSection(
-              tags: viewModel.document.tags.map { store.tags[$0] },
-              action: {
-                activeFieldEdit = .tags
-              },
-              transitionID: .tags,
-              namespace: namespace,
-              enabled: store.userCanChange(document: viewModel.document)
-            )
-            .editPopover(
-              forFieldEdit: .tags,
-              active: $activeFieldEdit,
-              detents: [.medium, .large]
-            ) {
-              TagsEditSheet(viewModel: viewModel)
-                .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
-            }
-          }
-        }
-        .padding(.horizontal)
-        .frame(maxWidth: horizontalSizeClass == .regular ? 720 : .infinity)
-        .frame(maxWidth: .infinity)
+        editPanel
+          .padding(.horizontal)
       }
       .padding(.bottom)
     }
@@ -559,6 +610,73 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       async let document: () = model.loadDocument()
       async let metadata: () = model.loadMetadata()
       _ = await (document, metadata)
+    }
+    .safeAreaInset(edge: .bottom) {
+      metadataBar
+    }
+  }
+
+  // iPad layout: full SearchablePDFPreview as the primary surface; the
+  // metadata buttons are merged into the same bottom bar as the search
+  // button. Edit panel goes into a resizable, togglable inspector.
+  @ViewBuilder
+  private var regularBody: some View {
+    let pdfReady: Bool = {
+      if case .loaded = viewModel.download { return true }
+      return false
+    }()
+
+    // PDF mounts as soon as the document is loaded, with a scrim layered on
+    // top until then. Animating the scrim's opacity is more reliable than
+    // animating PDFKit's insertion — PDFView's own layout phase otherwise
+    // races the SwiftUI fade and you end up seeing nothing.
+    ZStack {
+      if case .loaded(url: _, document: let pdfDocument) = viewModel.download {
+        SearchablePDFPreview(
+          document: pdfDocument,
+          currentPage: $previewPage,
+          showsDismissButton: false,
+          extendsBehindTopBar: true
+        ) {
+          // Inject the metadata/notes/delete trio into the same row as the
+          // search button so they share the bar's vertical position.
+          HStack {
+            metadataActionButtons
+          }
+        }
+      }
+
+      Color(.secondarySystemBackground)
+        .ignoresSafeArea()
+        .overlay {
+          ProgressView()
+            .controlSize(.large)
+            .scaleEffect(1.0)
+        }
+        .opacity(pdfReady ? 0 : 1)
+        .animation(.easeOut(duration: 0.35), value: pdfReady)
+        .allowsHitTesting(!pdfReady)
+    }
+    .inspector(isPresented: $showEditInspector) {
+      ScrollView {
+        editPanel
+          .padding()
+      }
+      .scrollBounceBehavior(.basedOnSize)
+      // Resizable inspector. SwiftUI doesn't expose the user-set width as a
+      // binding, so persisting the resize across launches isn't directly
+      // possible — exposing min/ideal/max at least lets the user drag.
+      .inspectorColumnWidth(min: 280, ideal: 360, max: 560)
+    }
+  }
+
+  var body: some View {
+    Group {
+      if horizontalSizeClass == .regular {
+        regularBody
+      } else {
+        compactBody
+      }
     }
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
@@ -572,16 +690,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .labelStyle(.iconOnly)
         }
       }
-    }
-
-    .apply {
-      if #available(iOS 26.0, *) {
-        $0.safeAreaInset(edge: .bottom) {
-          metadataBar
-        }
-      } else {
-        $0.safeAreaInset(edge: .bottom) {
-          metadataBar
+      if horizontalSizeClass == .regular {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            showEditInspector.toggle()
+          } label: {
+            Label(localized: .localizable(.edit), systemImage: "sidebar.right")
+              .labelStyle(.iconOnly)
+          }
         }
       }
     }

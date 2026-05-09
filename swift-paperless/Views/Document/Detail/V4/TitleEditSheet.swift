@@ -20,6 +20,10 @@ struct TitleEditSheet: View {
   @State private var saving = false
   @FocusState private var focused: Bool
 
+  // Paperless-ngx rejects titles longer than this; clamp at the source so
+  // the user gets immediate feedback rather than a save-time error.
+  private static let titleCharacterLimit = 128
+
   private func save() {
     Task {
       let origTitle = viewModel.document.title
@@ -43,12 +47,27 @@ struct TitleEditSheet: View {
       ScrollView(.vertical) {
         CustomSection {
           CustomSectionRow {
-            TextField(
-              String(localized: .localizable(.documentEditTitleLabel)),
-              text: $title,
-              axis: .vertical
-            )
-            .focused($focused)
+            VStack(alignment: .leading, spacing: 6) {
+              TextField(
+                String(localized: .localizable(.documentEditTitleLabel)),
+                text: $title,
+                axis: .vertical
+              )
+              .focused($focused)
+              .onChange(of: title) { _, newValue in
+                // Server-side limit; truncate inline so the user sees the
+                // cap rather than getting an error on save.
+                if newValue.count > Self.titleCharacterLimit {
+                  title = String(newValue.prefix(Self.titleCharacterLimit))
+                }
+              }
+
+              Text("\(title.count) / \(Self.titleCharacterLimit)")
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(
+                  title.count >= Self.titleCharacterLimit ? .secondary : .tertiary
+                )
+            }
           }
         }
       }

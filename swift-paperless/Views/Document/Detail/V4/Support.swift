@@ -240,8 +240,14 @@ struct DocumentTitleView: View {
 
   private let lineLimit = 3
 
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var isExpanded = false
   @State private var isTruncated = false
+
+  // Truncation + the "More" button only make sense on compact (iPhone). On
+  // iPad the inspector is wide enough — and resizable — that any line cap
+  // is misleading; just let the title flow as long as it needs.
+  private var truncates: Bool { horizontalSizeClass != .regular }
 
   @SchemeValue(.editButtonColor)
   private var editButtonColor
@@ -260,24 +266,34 @@ struct DocumentTitleView: View {
       HStack(alignment: .top, spacing: 8) {
         Button(action: action) {
           titleText
-            .lineLimit(isExpanded ? nil : lineLimit)
+            .lineLimit(truncates && !isExpanded ? lineLimit : nil)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-              GeometryReader { displayedProxy in
-                titleText
-                  .fixedSize(horizontal: false, vertical: true)
-                  .frame(width: displayedProxy.size.width, alignment: .leading)
-                  .hidden()
-                  .background(
-                    GeometryReader { fullProxy in
-                      Color.clear.onAppear {
-                        isTruncated = fullProxy.size.height > displayedProxy.size.height + 1
-                      }
-                      .onChange(of: title) {
-                        isTruncated = fullProxy.size.height > displayedProxy.size.height + 1
-                      }
-                    }
-                  )
+              // Skip the truncation measurement entirely on iPad — the
+              // measurement only fires on appear / title change, so it
+              // can't keep up with inspector resizing and would otherwise
+              // leave the "More" button stuck visible.
+              Group {
+                if truncates {
+                  GeometryReader { displayedProxy in
+                    titleText
+                      .fixedSize(horizontal: false, vertical: true)
+                      .frame(width: displayedProxy.size.width, alignment: .leading)
+                      .hidden()
+                      .background(
+                        GeometryReader { fullProxy in
+                          Color.clear.onAppear {
+                            isTruncated =
+                              fullProxy.size.height > displayedProxy.size.height + 1
+                          }
+                          .onChange(of: title) {
+                            isTruncated =
+                              fullProxy.size.height > displayedProxy.size.height + 1
+                          }
+                        }
+                      )
+                  }
+                }
               }
             )
         }
@@ -312,7 +328,7 @@ struct DocumentTitleView: View {
         }
       }
 
-      if isTruncated || isExpanded {
+      if truncates && (isTruncated || isExpanded) {
         Button {
           withAnimation(.spring(duration: 0.15)) {
             isExpanded.toggle()
@@ -328,9 +344,12 @@ struct DocumentTitleView: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.vertical, 6)
           .contentShape(Rectangle())
-          .offset(y: -5)
         }
         .buttonStyle(.plain)
+        // Pull the row up visually *and* shift its hit area — `.offset` only
+        // moves the rendering, so the original button frame stayed at the
+        // un-offset position and the visible chevron tapped on nothing.
+        .padding(.top, -5)
       }
     }
   }

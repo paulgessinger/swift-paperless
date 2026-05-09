@@ -7,11 +7,12 @@ import Common
 import PDFKit
 import SwiftUI
 
-struct SearchablePDFPreview: View {
+struct SearchablePDFPreview<TrailingContent: View>: View {
   private struct SearchablePDFView: UIViewRepresentable {
     let document: PDFDocument
     let bottomContentInset: CGFloat
     let initialPage: Int
+    let extendsBehindTopBar: Bool
     @Binding var pdfView: PDFKit.PDFView?
     var onPageChange: (@MainActor @Sendable (Int) -> Void)?
 
@@ -123,25 +124,41 @@ struct SearchablePDFPreview: View {
         return
       }
 
-      // Prevent UIKit from adding another automatic safe-area inset on top of ours.
-      scrollView.contentInsetAdjustmentBehavior = .never
+      // Prevent UIKit from adding another automatic safe-area inset on top
+      // of ours. This is set once — re-setting on every updateUIView causes
+      // visible scroll jitter while the user is mid-fling.
+      if scrollView.contentInsetAdjustmentBehavior != .never {
+        scrollView.contentInsetAdjustmentBehavior = .never
+      }
 
       let topInset = pdfView.safeAreaInsets.top
-      var contentInset = scrollView.contentInset
-      contentInset.top = topInset
-      contentInset.bottom = bottomInset
-      scrollView.contentInset = contentInset
+      // Guard the writes — `scrollView.contentInset = …` interrupts active
+      // gestures and was the cause of the jittery kinetic scroll / "stuck
+      // at the bottom" behaviour: SwiftUI re-runs updateUIView whenever any
+      // observed state nearby changes, and each pass would clobber the
+      // scroll's deceleration.
+      if scrollView.contentInset.top != topInset
+        || scrollView.contentInset.bottom != bottomInset
+      {
+        var contentInset = scrollView.contentInset
+        contentInset.top = topInset
+        contentInset.bottom = bottomInset
+        scrollView.contentInset = contentInset
 
-      // Keep the scroll indicator aligned with the visible content start.
-      var verticalIndicatorInset = scrollView.verticalScrollIndicatorInsets
-      verticalIndicatorInset.top = topInset
-      verticalIndicatorInset.bottom = bottomInset
-      scrollView.verticalScrollIndicatorInsets = verticalIndicatorInset
+        var verticalIndicatorInset = scrollView.verticalScrollIndicatorInsets
+        verticalIndicatorInset.top = topInset
+        verticalIndicatorInset.bottom = bottomInset
+        scrollView.verticalScrollIndicatorInsets = verticalIndicatorInset
+      }
 
       guard !coordinator.didApplyInitialTopAlignment else {
         return
       }
-      guard topInset > 0 else {
+
+      // When extending behind the top bar we expect topInset to be 0 (the
+      // PDFView's safe area is excluded by `.ignoresSafeArea(edges: .top)`),
+      // so skip the "wait for safe area" gate that would otherwise loop.
+      if !extendsBehindTopBar, topInset == 0 {
         // Wait until layout/safe area is finalized before applying initial offset.
         DispatchQueue.main.async {
           applyInsetsAndInitialTopAlignmentIfNeeded(
@@ -153,7 +170,10 @@ struct SearchablePDFPreview: View {
         return
       }
 
-      // Start aligned below the top bar, while still allowing later scrolling under it.
+      // Start aligned below the top bar, while still allowing later
+      // scrolling under it. With `extendsBehindTopBar`, topInset is zero
+      // and this is a no-op — the page starts at the top of the view,
+      // visually behind the translucent toolbar.
       scrollView.setContentOffset(
         CGPoint(x: scrollView.contentOffset.x, y: -topInset),
         animated: false
@@ -193,6 +213,33 @@ struct SearchablePDFPreview: View {
 
   let document: PDFDocument
   @Binding var currentPage: Int
+  // When false, the leading X button is omitted — used on iPad where this
+  // view is the primary content and there's no presentation to dismiss.
+  var showsDismissButton: Bool = true
+  // When true, the PDF view extends under the navigation bar so the page
+  // scrolls behind a translucent toolbar. The page's first-paint position
+  // and the indicator insets are kept where they are, just the frame
+  // stretches up under the bar.
+  var extendsBehindTopBar: Bool = false
+  // Trailing content rendered to the right of the page indicator in the
+  // bottom bar — used by iPad to merge document-level action buttons
+  // (metadata/notes/delete) into the same row as search. iPhone leaves it
+  // as `EmptyView` (via the convenience init below).
+  let trailingContent: TrailingContent
+
+  init(
+    document: PDFDocument,
+    currentPage: Binding<Int>,
+    showsDismissButton: Bool = true,
+    extendsBehindTopBar: Bool = false,
+    @ViewBuilder trailingContent: () -> TrailingContent
+  ) {
+    self.document = document
+    self._currentPage = currentPage
+    self.showsDismissButton = showsDismissButton
+    self.extendsBehindTopBar = extendsBehindTopBar
+    self.trailingContent = trailingContent()
+  }
 
   @Environment(\.dismiss) private var dismiss
   @FocusState private var isSearchFieldFocused: Bool
@@ -308,20 +355,27 @@ struct SearchablePDFPreview: View {
         .fixedSize(horizontal: false, vertical: true)
 
       } else {
-        HStack {
-          Button {
-            setSearchMode(true)
-            isSearchFieldFocused = true
-          } label: {
-            Label(localized: .localizable(.search), systemImage: "magnifyingglass")
-              .labelStyle(.iconOnly)
-              .font(.title2)
-              .fontWeight(.semibold)
-              .padding(13)
-          }
-          .glassEffect(.regular.interactive(), in: Circle())
+        // Page indicator goes in the geometric centre via ZStack; the
+        // search button + optional trailing slot fill left/right and stay
+        // vertically aligned with the centred indicator.
+        ZStack {
+          HStack {
+            Button {
+              setSearchMode(true)
+              isSearchFieldFocused = true
+            } label: {
+              Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+                .labelStyle(.iconOnly)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .padding(13)
+            }
+            .glassEffect(.regular.interactive(), in: Circle())
 
-          Spacer()
+            Spacer()
+
+            trailingContent
+          }
 
           if document.pageCount > 1 {
             Text(.localizable(.pageIndicator(currentPage + 1, document.pageCount)))
@@ -481,10 +535,14 @@ struct SearchablePDFPreview: View {
       document: document,
       bottomContentInset: max(bottomBarHeight, 44) + 0,
       initialPage: currentPage,
+      extendsBehindTopBar: extendsBehindTopBar,
       pdfView: $pdfView,
       onPageChange: { @MainActor page in currentPage = page }
     )
-    .ignoresSafeArea(.container, edges: .bottom)
+    .ignoresSafeArea(
+      .container,
+      edges: extendsBehindTopBar ? [.top, .bottom] : .bottom
+    )
     .safeAreaInset(edge: .bottom, spacing: 0) {
       bottomBar
         .readHeight { height in
@@ -493,9 +551,11 @@ struct SearchablePDFPreview: View {
     }
     .trackKeyboardState(isVisible: $isSoftwareKeyboardVisible, height: $keyboardHeight)
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        CancelIconButton {
-          dismiss()
+      if showsDismissButton {
+        ToolbarItem(placement: .topBarLeading) {
+          CancelIconButton {
+            dismiss()
+          }
         }
       }
     }
@@ -610,6 +670,23 @@ struct SearchablePDFPreview: View {
     pdfView.highlightedSelections = highlightedSelections
   }
 
+}
+
+extension SearchablePDFPreview where TrailingContent == EmptyView {
+  init(
+    document: PDFDocument,
+    currentPage: Binding<Int>,
+    showsDismissButton: Bool = true,
+    extendsBehindTopBar: Bool = false
+  ) {
+    self.init(
+      document: document,
+      currentPage: currentPage,
+      showsDismissButton: showsDismissButton,
+      extendsBehindTopBar: extendsBehindTopBar,
+      trailingContent: { EmptyView() }
+    )
+  }
 }
 
 extension View {
