@@ -741,9 +741,17 @@ struct FilterBar: View {
 
   @ViewBuilder
   private func componentView(_ component: FilterBarComponent) -> some View {
+    @Bindable var filterModel = filterModel
     switch component {
     case .tags:
       tagElement
+        .filterPopover(isPresented: $showTags) {
+          Modal(title: String(localized: .localizable(.tags))) {
+            TagFilterView(
+              selectedTags: $filterModel.filterState.tags)
+          }
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
+        }
     case .documentType:
       Element(
         label: {
@@ -756,6 +764,18 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.documentType != .any
       ) { present(.documentType) }
+      .filterPopover(isPresented: $showDocumentType) {
+        Modal(title: String(localized: .localizable(.documentType))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.documentType,
+            elements: store.documentTypes.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
+          )
+        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
+      }
     case .correspondent:
       Element(
         label: {
@@ -768,6 +788,18 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.correspondent != .any
       ) { present(.correspondent) }
+      .filterPopover(isPresented: $showCorrespondent) {
+        Modal(title: String(localized: .localizable(.correspondent))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.correspondent,
+            elements: store.correspondents.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
+          )
+        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
+      }
     case .storagePath:
       Element(
         label: {
@@ -780,6 +812,18 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
+      .filterPopover(isPresented: $showStoragePath) {
+        Modal(title: String(localized: .localizable(.storagePath))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.storagePath,
+            elements: store.storagePaths.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
+          )
+        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
+      }
     case .permissions:
       ownerMenu {
         ownerElement
@@ -796,6 +840,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.customField != .any
       ) { present(.customFields) }
+      .filterPopover(isPresented: $showCustomFields) {
+        CustomFieldFilterView(query: $filterModel.filterState.customField)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
+      }
     case .asn:
       Element(
         label: {
@@ -805,6 +853,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.asn != .any
       ) { present(.asn) }
+      .filterPopover(isPresented: $showAsn) {
+        AsnFilterView(query: $filterModel.filterState.asn)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
+      }
     case .date:
       Element(
         label: {
@@ -814,6 +866,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.date.isActive
       ) { present(.date) }
+      .filterPopover(isPresented: $showDate) {
+        DateFilterView(query: $filterModel.filterState.date)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
+      }
     }
   }
 
@@ -868,74 +924,30 @@ struct FilterBar: View {
 
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
-      // MARK: Sheets
-
-      .sheet(isPresented: $showTags) {
-        Modal(title: String(localized: .localizable(.tags))) {
-          TagFilterView(
-            selectedTags: $filterModel.filterState.tags)
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
-      }
-
-      .sheet(isPresented: $showDocumentType) {
-        Modal(title: String(localized: .localizable(.documentType))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.documentType,
-            elements: store.documentTypes.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
-      }
-
-      .sheet(isPresented: $showCorrespondent) {
-        Modal(title: String(localized: .localizable(.correspondent))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.correspondent,
-            elements: store.correspondents.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
-      }
-
-      .sheet(isPresented: $showStoragePath) {
-        Modal(title: String(localized: .localizable(.storagePath))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.storagePath,
-            elements: store.storagePaths.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
-      }
-
-      .sheet(isPresented: $showCustomFields) {
-        CustomFieldFilterView(query: $filterModel.filterState.customField)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
-      }
-
-      .sheet(isPresented: $showAsn) {
-        AsnFilterView(query: $filterModel.filterState.asn)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
-      }
-
-      .sheet(isPresented: $showDate) {
-        DateFilterView(query: $filterModel.filterState.date)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
-      }
-
       .sheet(item: $savedView) { view in
         AddSavedViewSheet(savedView: view)
       }
 
+  }
+}
+
+extension View {
+  /// Presents the filter editor anchored to the source pill. Renders as a
+  /// popover on regular size class (iPad) and adapts back to a sheet on
+  /// compact (iPhone) via `presentationCompactAdaptation(.sheet)`.
+  ///
+  /// `popoverSize` only affects the popover layer — the adapted sheet
+  /// ignores it and lays out at full height.
+  fileprivate func filterPopover<Content: View>(
+    isPresented: Binding<Bool>,
+    popoverSize: CGSize = CGSize(width: 420, height: 520),
+    @ViewBuilder content: @escaping () -> Content
+  ) -> some View {
+    popover(isPresented: isPresented) {
+      content()
+        .frame(idealWidth: popoverSize.width, idealHeight: popoverSize.height)
+        .presentationCompactAdaptation(.sheet)
+    }
   }
 }
 
