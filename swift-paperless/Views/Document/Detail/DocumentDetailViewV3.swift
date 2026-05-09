@@ -393,7 +393,11 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     guard case .document(let docId, let edit) = action else { return }
     guard docId == viewModel.document.id else { return }
     routeManager.pendingRoute = nil
-    showEditSheet = edit
+    switch edit {
+    case .none: showEditSheet = false
+    case .all: showEditSheet = true
+    case .field: break
+    }
   }
 
   init(

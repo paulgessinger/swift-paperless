@@ -1,2 +1,3 @@
 - Fix task view showing "no elements" while loading
 - Tune visuals for document preview thumbnail fade-in and page indicator
+- Deep links can now open a specific document field for editing, e.g. x-paperless://v1/document/123?edit=tags

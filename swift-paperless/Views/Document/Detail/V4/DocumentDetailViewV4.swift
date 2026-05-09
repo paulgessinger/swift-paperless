@@ -25,6 +25,21 @@ private enum ActiveSheet: Identifiable, Hashable {
   case shareLink
 
   var id: Self { self }
+
+  init(field: Route.Action.EditTarget.Field) {
+    switch field {
+    case .title: self = .title
+    case .tags: self = .tags
+    case .asn: self = .asn
+    case .correspondent: self = .correspondent
+    case .documentType: self = .documentType
+    case .date: self = .date
+    case .storagePath: self = .storagePath
+    case .owner: self = .owner
+    case .customFields: self = .customFields
+    case .notes: self = .notes
+    }
+  }
 }
 
 @MainActor
@@ -32,6 +47,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var viewModel: DocumentDetailModel
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var errorController: ErrorController
+  @Environment(RouteManager.self) private var routeManager
 
   @State private var activeSheet: ActiveSheet? = nil
   @State private var showPreview = false
@@ -60,6 +76,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
     )
     self.navPath = navPath
+  }
+
+  private func handlePendingRoute() {
+    guard let action = routeManager.pendingRoute?.action,
+      case .document(let docId, let edit) = action,
+      docId == viewModel.document.id
+    else { return }
+    routeManager.pendingRoute = nil
+    guard case .field(let field) = edit else { return }
+    activeSheet = ActiveSheet(field: field)
   }
 
   private func deleteDocument() {
@@ -536,6 +562,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       await viewModel.loadMetadata()
       try? await viewModel.loadSuggestions()
     }
+
+    .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
   }
 }
 
