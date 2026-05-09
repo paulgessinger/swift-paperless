@@ -32,7 +32,7 @@ struct DeeplinkRouteTests {
     let documentURL = try #require(
       URL(string: "x-paperless://v1/document/123?server=\(encodedServer)"))
     let documentRoute = try Route(from: documentURL)
-    #expect(documentRoute.action == .document(id: 123, edit: false))
+    #expect(documentRoute.action == .document(id: 123, edit: nil))
     #expect(documentRoute.server == server)
 
     // Test valid scan route with server query parameter
@@ -47,7 +47,7 @@ struct DeeplinkRouteTests {
     // Test valid document route without server
     let documentURL = try #require(URL(string: "x-paperless://v1/document/456"))
     let documentRoute = try Route(from: documentURL)
-    #expect(documentRoute.action == .document(id: 456, edit: false))
+    #expect(documentRoute.action == .document(id: 456, edit: nil))
     #expect(documentRoute.server == nil)
 
     // Test valid scan route without server
@@ -58,36 +58,36 @@ struct DeeplinkRouteTests {
   }
 
   @Test func testV1DocumentWithEditParameter() throws {
-    // Test document with edit=true
+    // Test document with edit=true → legacy V3 monolithic edit (.all)
     let editTrueURL = try #require(URL(string: "x-paperless://v1/document/789?edit=true"))
     let editTrueRoute = try Route(from: editTrueURL)
-    #expect(editTrueRoute.action == .document(id: 789, edit: true))
+    #expect(editTrueRoute.action == .document(id: 789, edit: .all))
     #expect(editTrueRoute.server == nil)
 
-    // Test document with edit=1 (true)
+    // Test document with edit=1 → .all
     let edit1URL = try #require(URL(string: "x-paperless://v1/document/790?edit=1"))
     let edit1Route = try Route(from: edit1URL)
-    #expect(edit1Route.action == .document(id: 790, edit: true))
+    #expect(edit1Route.action == .document(id: 790, edit: .all))
 
-    // Test document with edit=yes (true)
+    // Test document with edit=yes → .all
     let editYesURL = try #require(URL(string: "x-paperless://v1/document/791?edit=yes"))
     let editYesRoute = try Route(from: editYesURL)
-    #expect(editYesRoute.action == .document(id: 791, edit: true))
+    #expect(editYesRoute.action == .document(id: 791, edit: .all))
 
-    // Test document with edit=false (explicit)
+    // Test document with edit=false (explicit) → nil
     let editFalseURL = try #require(URL(string: "x-paperless://v1/document/101?edit=false"))
     let editFalseRoute = try Route(from: editFalseURL)
-    #expect(editFalseRoute.action == .document(id: 101, edit: false))
+    #expect(editFalseRoute.action == .document(id: 101, edit: nil))
 
-    // Test document with edit=0 (false)
+    // Test document with edit=0 → nil
     let edit0URL = try #require(URL(string: "x-paperless://v1/document/102?edit=0"))
     let edit0Route = try Route(from: edit0URL)
-    #expect(edit0Route.action == .document(id: 102, edit: false))
+    #expect(edit0Route.action == .document(id: 102, edit: nil))
 
-    // Test document with edit=no (false)
+    // Test document with edit=no → nil
     let editNoURL = try #require(URL(string: "x-paperless://v1/document/103?edit=no"))
     let editNoRoute = try Route(from: editNoURL)
-    #expect(editNoRoute.action == .document(id: 103, edit: false))
+    #expect(editNoRoute.action == .document(id: 103, edit: nil))
 
     // Test document with edit parameter but invalid value (should throw error)
     #expect(throws: Route.ParseError.invalidEditValue("on")) {
@@ -106,8 +106,39 @@ struct DeeplinkRouteTests {
     let editWithServerURL = try #require(
       URL(string: "x-paperless://v1/document/303?edit=true&server=\(encodedServer)"))
     let editWithServerRoute = try Route(from: editWithServerURL)
-    #expect(editWithServerRoute.action == .document(id: 303, edit: true))
+    #expect(editWithServerRoute.action == .document(id: 303, edit: .all))
     #expect(editWithServerRoute.server == server)
+  }
+
+  @Test func testV1DocumentWithFieldEdit() throws {
+    // Every field raw value should parse to .field(...)
+    for field in Route.Action.EditTarget.Field.allCases {
+      let url = try #require(URL(string: "x-paperless://v1/document/42?edit=\(field.rawValue)"))
+      let route = try Route(from: url)
+      #expect(route.action == .document(id: 42, edit: .field(field)))
+      #expect(route.server == nil)
+    }
+
+    // Field name combined with server param
+    let serverURL = try #require(URL(string: "https://example.com"))
+    let server = try #require(serverURL.stringDroppingScheme)
+    let encodedServer = server.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let url = try #require(
+      URL(string: "x-paperless://v1/document/77?edit=tags&server=\(encodedServer)"))
+    let route = try Route(from: url)
+    #expect(route.action == .document(id: 77, edit: .field(.tags)))
+    #expect(route.server == server)
+
+    // Unknown field name should throw
+    #expect(throws: Route.ParseError.invalidEditValue("banana")) {
+      try Route(from: URL(string: "x-paperless://v1/document/55?edit=banana")!)
+    }
+
+    // Field names are case-sensitive (camelCase enum raw values)
+    #expect(throws: Route.ParseError.invalidEditValue("documenttype")) {
+      try Route(from: URL(string: "x-paperless://v1/document/55?edit=documenttype")!)
+    }
   }
 
   @Test func testV1ParsingInvalidRoutes() throws {
@@ -844,16 +875,33 @@ struct DeeplinkRouteTests {
   }
 
   @Test func testDocumentRouteToURL() throws {
-    let route = Route(action: .document(id: 1, edit: false))
+    let route = Route(action: .document(id: 1, edit: nil))
 
     let expected = try #require(URL(string: "x-paperless://v1/document/1"))
     #expect(route.url == expected)
 
     let serverURL = try #require(URL(string: "https://example.com"))
-    let route2 = Route(action: .document(id: 1, edit: false), server: serverURL.absoluteString)
+    let route2 = Route(action: .document(id: 1, edit: nil), server: serverURL.absoluteString)
     let expected2 = try #require(
       URL(string: "x-paperless://v1/document/1?server=https://example.com"))
     #expect(route2.url == expected2)
+  }
+
+  @Test func testDocumentRouteToURLWithEdit() throws {
+    // Legacy .all → ?edit=1
+    let allRoute = Route(action: .document(id: 5, edit: .all))
+    #expect(allRoute.url == URL(string: "x-paperless://v1/document/5?edit=1"))
+
+    // Round-trip parse of generated URL stays as .all
+    let allReparsed = try Route(from: #require(allRoute.url))
+    #expect(allReparsed.action == .document(id: 5, edit: .all))
+
+    // Field target → ?edit=<rawValue>
+    let fieldRoute = Route(action: .document(id: 9, edit: .field(.documentType)))
+    #expect(fieldRoute.url == URL(string: "x-paperless://v1/document/9?edit=documentType"))
+
+    let fieldReparsed = try Route(from: #require(fieldRoute.url))
+    #expect(fieldReparsed.action == .document(id: 9, edit: .field(.documentType)))
   }
 
 }

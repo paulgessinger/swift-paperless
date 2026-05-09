@@ -32,7 +32,20 @@ public struct Route: Equatable, Sendable {
   }
 
   public enum Action: Equatable, Sendable {
-    case document(id: UInt, edit: Bool)
+    /// Specifies what edit UI a document deep link should open.
+    /// `.all` is the legacy V3 monolithic edit sheet; `.field(...)` targets a single V4 per-field sheet.
+    /// Will collapse to just `.field(...)` once V3 is removed.
+    public enum EditTarget: Equatable, Sendable {
+      case all
+      case field(Field)
+
+      public enum Field: String, Equatable, Sendable, CaseIterable {
+        case title, tags, asn, correspondent, documentType,
+          date, storagePath, owner, customFields, notes
+      }
+    }
+
+    case document(id: UInt, edit: EditTarget?)
     case setFilter(DeepLinkFilter)
     case clearFilter
     case scan
@@ -542,23 +555,28 @@ public struct Route: Equatable, Sendable {
     }
   }
 
-  /// Parses the edit parameter from query items
-  /// Accepts "true", "1", "yes" as true; "false", "0", "no" as false
-  /// Missing parameter defaults to false
-  /// Any other value throws an error
-  static private func parseEditParameter(from queryItems: [URLQueryItem]) throws -> Bool {
+  /// Parses the edit parameter from query items.
+  /// Accepts the legacy boolean grammar (true/1/yes → `.all`, false/0/no → `nil`)
+  /// or a `Field` raw value (`tags`, `correspondent`, `documentType`, …) → `.field(...)`.
+  /// Missing parameter returns `nil`. Anything else throws.
+  static private func parseEditParameter(from queryItems: [URLQueryItem]) throws -> Action
+    .EditTarget?
+  {
     guard let value = queryItems.first(where: { $0.name == "edit" })?.value else {
-      return false
+      return nil
     }
 
-    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
 
-    switch trimmed {
+    switch trimmed.lowercased() {
     case "true", "1", "yes":
-      return true
+      return .all
     case "false", "0", "no":
-      return false
+      return nil
     default:
+      if let field = Action.EditTarget.Field(rawValue: trimmed) {
+        return .field(field)
+      }
       throw ParseError.invalidEditValue(value)
     }
   }
@@ -574,8 +592,13 @@ public struct Route: Equatable, Sendable {
     components.path = "/document/\(id)"
 
     var queryItems = [URLQueryItem]()
-    if edit {
+    switch edit {
+    case .none:
+      break
+    case .all:
       queryItems.append(URLQueryItem(name: "edit", value: "1"))
+    case .field(let field):
+      queryItems.append(URLQueryItem(name: "edit", value: field.rawValue))
     }
     if let server {
       queryItems.append(URLQueryItem(name: "server", value: server))

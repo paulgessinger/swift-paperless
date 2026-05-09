@@ -172,10 +172,10 @@ class DocumentDetailModel {
     let withServer: Route? = (store.repository as? ApiRepository).flatMap {
       let serverURL = $0.connection.url
       guard let server = serverURL.stringDroppingScheme else { return nil }
-      return Route(action: .document(id: document.id, edit: false), server: server)
+      return Route(action: .document(id: document.id, edit: nil), server: server)
     }
 
-    let withoutServer: Route? = Route(action: .document(id: document.id, edit: false))
+    let withoutServer: Route? = Route(action: .document(id: document.id, edit: nil))
     return (withServer, withoutServer)
 
   }
