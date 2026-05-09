@@ -2663,13 +2663,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Serverens navn"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Servername"
           }
         },
         "en" : {
@@ -2681,31 +2681,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Nom du serveur"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Nome del server"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Servernaam"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Nazwa serwera"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server name"
+            "value" : "Sunucu adı"
           }
         }
       }
