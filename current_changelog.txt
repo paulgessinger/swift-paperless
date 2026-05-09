@@ -3,3 +3,4 @@
 - Deep links can now open a specific document field for editing, e.g. x-paperless://v1/document/123?edit=tags
 - Drop primary action for the "add document" button in the document list: this didn't work properly
 - Use popovers for filter bar aspects
+- Optimize document detail v4 screen for iPad
