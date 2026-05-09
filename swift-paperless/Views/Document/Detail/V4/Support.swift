@@ -54,6 +54,7 @@ enum AspectLabel {
 }
 
 struct EditableAspect: View {
+  let title: LocalizedStringResource?
   let label: AspectLabel
   let systemImage: String
   let transitionID: TransitionID?
@@ -64,16 +65,19 @@ struct EditableAspect: View {
   @ScaledMetric(relativeTo: .body)
   private var fontSizeRaw = 15
 
+  @ScaledMetric(relativeTo: .body)
+  private var iconDiameter: CGFloat = 32
+
   private var fontSize: CGFloat {
     min(fontSizeRaw, 20)
   }
 
   private var pillPadding: CGFloat {
-    1 + fontSize / 6
+    2 + fontSize / 6
   }
 
-  private var iconPadding: CGFloat {
-    2 + fontSize / 6
+  private var iconImagePadding: CGFloat {
+    iconDiameter * 0.22
   }
 
   @SchemeValue(.backgroundColor)
@@ -86,6 +90,7 @@ struct EditableAspect: View {
   private var editButtonColor
 
   init(
+    title: LocalizedStringResource? = nil,
     label: AspectLabel,
     systemImage: String,
     action: (() -> Void)? = nil,
@@ -93,6 +98,7 @@ struct EditableAspect: View {
     namespace: Namespace.ID? = nil,
     enabled: Bool = true
   ) {
+    self.title = title
     self.label = label
     self.systemImage = systemImage
     self.action = action
@@ -101,31 +107,55 @@ struct EditableAspect: View {
     self.enabled = enabled
   }
 
+  private var accessibilityText: Text {
+    if let title {
+      Text(title) + Text(verbatim: ": ") + Text(label.displayText ?? "")
+    } else {
+      Text(label.displayText ?? "")
+    }
+  }
+
   var body: some View {
     Button {
       action?()
     } label: {
-      HStack {
-        Image(systemName: systemImage)
-          .resizable()
-          .scaledToFit()
-          .frame(width: fontSize, height: fontSize)
-          .padding(iconPadding)
-          .background(Circle().fill(iconBackgroundColor))
-          .padding(.vertical, pillPadding)
-          .padding(.leading, pillPadding)
-        if let text = label.displayText {
-          Text(text)
+      HStack(spacing: 0) {
+        ZStack {
+          Circle().fill(iconBackgroundColor)
+          Image(systemName: systemImage)
+            .resizable()
+            .scaledToFit()
+            .padding(iconImagePadding)
+        }
+        .frame(width: iconDiameter, height: iconDiameter)
+        .padding(.vertical, pillPadding)
+        .padding(.leading, pillPadding)
+
+        VStack(alignment: .leading, spacing: 1) {
+          if let title {
+            Text(title)
+              .font(.caption2)
+              .textCase(.uppercase)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .truncationMode(.tail)
+          }
+          Text(label.displayText ?? "—")
             .italic(label.isPrivate)
             .lineLimit(1)
             .truncationMode(.tail)
-            .frame(maxWidth: 200, alignment: .leading)
         }
+        .padding(.leading, 8)
+        .padding(.vertical, 2)
+
+        Spacer(minLength: 8)
+
         Image(systemName: enabled ? "pencil" : "lock.fill")
           .foregroundStyle(editButtonColor)
           .padding(.trailing, 2 + fontSize / 2)
       }
       .font(.system(size: fontSize))
+      .frame(maxWidth: .infinity)
       .background {
         Capsule()
           .fill(backgroundColor)
@@ -139,7 +169,7 @@ struct EditableAspect: View {
         }
       }
     }
-    .accessibilityLabel(label.displayText ?? "")
+    .accessibilityLabel(accessibilityText)
     .buttonStyle(.plain)
     .allowsHitTesting(enabled)
   }

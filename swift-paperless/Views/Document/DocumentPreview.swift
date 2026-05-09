@@ -298,7 +298,7 @@ private struct IntegratedDocumentPreview: View {
   // Regular-size-class height cap. iPad screens are tall enough that an
   // unconstrained, container-wide page would push the rest of the detail view
   // off-screen, so we bound the preview and let pages size by their aspect.
-  private static let regularMaxHeight: CGFloat = 520
+  private static let regularMaxHeight: CGFloat = 420
 
   private var isRegularWidth: Bool {
     horizontalSizeClass == .regular

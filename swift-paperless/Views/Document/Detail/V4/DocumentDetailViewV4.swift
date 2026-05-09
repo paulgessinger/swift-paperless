@@ -537,25 +537,36 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           detailAspects
             .animation(.spring(duration: 0.25), value: viewModel.document)
 
-          DocumentTagsSection(
-            tags: viewModel.document.tags.map { store.tags[$0] },
-            action: {
-              activeFieldEdit = .tags
-            },
-            transitionID: .tags,
-            namespace: namespace,
-            enabled: store.userCanChange(document: viewModel.document)
-          )
-          .editPopover(
-            forFieldEdit: .tags,
-            active: $activeFieldEdit,
-            detents: [.medium, .large]
-          ) {
-            TagsEditSheet(viewModel: viewModel)
-              .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+          VStack(alignment: .leading, spacing: 6) {
+            Text(.localizable(.tags))
+              .font(.caption2)
+              .textCase(.uppercase)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .truncationMode(.tail)
+
+            DocumentTagsSection(
+              tags: viewModel.document.tags.map { store.tags[$0] },
+              action: {
+                activeFieldEdit = .tags
+              },
+              transitionID: .tags,
+              namespace: namespace,
+              enabled: store.userCanChange(document: viewModel.document)
+            )
+            .editPopover(
+              forFieldEdit: .tags,
+              active: $activeFieldEdit,
+              detents: [.medium, .large]
+            ) {
+              TagsEditSheet(viewModel: viewModel)
+                .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+            }
           }
         }
         .padding(.horizontal)
+        .frame(maxWidth: horizontalSizeClass == .regular ? 720 : .infinity)
+        .frame(maxWidth: .infinity)
       }
       .padding(.bottom)
     }
