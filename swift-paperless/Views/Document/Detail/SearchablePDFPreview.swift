@@ -38,7 +38,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       view.displaysPageBreaks = true
       view.backgroundColor = .secondarySystemBackground
       view.isUserInteractionEnabled = true
-      pdfView = view
+      publishPDFView(view)
 
       // Seed the coordinator so the first observation that lands on the
       // initial page does not propagate as a "page changed" event.
@@ -103,6 +103,8 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
     }
 
     func updateUIView(_ uiView: PDFKit.PDFView, context: Context) {
+      publishPDFView(uiView)
+
       if uiView.document !== document {
         // Reset one-time layout fixes when the underlying document changes.
         uiView.document = document
@@ -188,6 +190,19 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
         // Adjust offset so the page starts below the top bar, not under it
         scrollView.contentOffset.y -= topInset
         coordinator.didNavigateToInitialPage = true
+      }
+    }
+
+    private func publishPDFView(_ view: PDFKit.PDFView) {
+      guard pdfView !== view else {
+        return
+      }
+
+      DispatchQueue.main.async {
+        guard pdfView !== view else {
+          return
+        }
+        pdfView = view
       }
     }
 
