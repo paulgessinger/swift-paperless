@@ -12,6 +12,16 @@ import PDFKit
 import SwiftUI
 import os
 
+/// Per-page zoom transition ID. Every visible page registers its own source
+/// (so the matched-transition modifier can be unconditional, avoiding view-
+/// identity churn during scroll), and the full-preview destination resolves
+/// the right source by combining the same base with whichever page the user
+/// tapped.
+struct PDFPageZoomID: Hashable {
+  let base: AnyHashable
+  let index: Int
+}
+
 private enum DownloadState: Equatable {
   case initial
   case loading
@@ -35,7 +45,7 @@ struct DocumentPreview: View {
 
   var transitionID: AnyHashable? = nil
   var transitionNamespace: Namespace.ID? = nil
-  var onTap: (() -> Void)? = nil
+  var onTap: ((Int) -> Void)? = nil
 
   var body: some View {
     IntegratedDocumentPreview(
@@ -144,13 +154,26 @@ private struct PDFPagingPreview: View {
   let document: PDFDocument
   @Binding var currentPage: Int
 
+  var maxHeight: CGFloat? = nil
   var transitionID: AnyHashable? = nil
   var transitionNamespace: Namespace.ID? = nil
-  var onTap: (() -> Void)? = nil
+  // Receives the tapped page's index. Callers use this to set the destination
+  // sourceID *and* the initial preview page in the same handler — relying on
+  // the binding chain to propagate `currentPage` to the parent before the
+  // cover renders is unreliable.
+  var onTap: ((Int) -> Void)? = nil
 
   @State private var scrolledPage: Int? = 0
+  // Set to true when the *tap handler* mutates `currentPage`. The
+  // `onChange(currentPage)` syncs scroll on external updates (e.g. when the
+  // full preview navigates pages), but a tap shouldn't jump the small preview
+  // before the cover even opens — we'd just see a half-second of scroll
+  // animation tearing under the zoom transition. The flag is consumed by the
+  // very next `onChange` and reset, so subsequent external updates still sync.
+  @State private var skipNextScrollSync = false
 
   static let pageInset: CGFloat = 80
+  static let regularPageInset: CGFloat = 32
   private static let pageSpacing: CGFloat = 16
 
   private var pageCount: Int {
@@ -172,22 +195,55 @@ private struct PDFPagingPreview: View {
       LazyHStack(spacing: Self.pageSpacing) {
         ForEach(0..<pageCount, id: \.self) { index in
           let isActive = index == (scrolledPage ?? 0)
+          // iPhone: pages are full-width and the peek slivers belong to
+          // neighbours we can't really aim at — keep the original
+          // active-only tap. iPad: pages are smaller and clearly distinct,
+          // so allow tapping any of them.
+          let canTap = onTap != nil && (maxHeight != nil || isActive)
           Button {
-            onTap?()
+            // Update currentPage *before* firing onTap so the destination's
+            // navigationTransitionZoom resolves to this page's source ID.
+            // Set the flag first so the resulting onChange doesn't drag the
+            // scroll view to the new page — otherwise the small preview snaps
+            // sideways during the cover transition.
+            if currentPage != index {
+              skipNextScrollSync = true
+              currentPage = index
+            }
+            onTap?(index)
           } label: {
             PDFPageView(
               document: document,
               pageIndex: index,
               aspectRatio: aspectRatio(for: index)
             )
-            .containerRelativeFrame(.horizontal)
-            .aspectRatio(aspectRatio(for: index), contentMode: .fit)
+            .apply {
+              if let maxHeight {
+                // Regular size class: pin height; width follows the page's
+                // aspect ratio so multiple pages naturally peek on either
+                // side. We need a *definite* height (not maxHeight) so the
+                // aspect-ratio chain has something to derive width from —
+                // otherwise the layout collapses to zero in the horizontal
+                // ScrollView.
+                $0.frame(height: maxHeight)
+              } else {
+                $0
+                  .containerRelativeFrame(.horizontal)
+                  .aspectRatio(aspectRatio(for: index), contentMode: .fit)
+              }
+            }
           }
           .buttonStyle(.plain)
-          .allowsHitTesting(isActive && onTap != nil)
+          .allowsHitTesting(canTap)
           .apply {
-            if isActive, let transitionID, let transitionNamespace {
-              $0.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
+            // Apply the source unconditionally per-page so view identity stays
+            // stable when scrolling. The destination picks the matching ID via
+            // PDFPageZoomID(index: previewPage); other sources are ignored.
+            if let transitionID, let transitionNamespace {
+              $0.backport.matchedTransitionSource(
+                id: PDFPageZoomID(base: transitionID, index: index),
+                in: transitionNamespace
+              )
             } else {
               $0
             }
@@ -197,7 +253,11 @@ private struct PDFPagingPreview: View {
       .scrollTargetLayout()
       .fixedSize(horizontal: false, vertical: true)
     }
-    .contentMargins(.horizontal, Self.pageInset, for: .scrollContent)
+    .contentMargins(
+      .horizontal,
+      maxHeight != nil ? Self.regularPageInset : Self.pageInset,
+      for: .scrollContent
+    )
     .scrollTargetBehavior(.viewAligned)
     .scrollPosition(id: $scrolledPage, anchor: .center)
     .scrollClipDisabled()
@@ -207,6 +267,10 @@ private struct PDFPagingPreview: View {
       }
     }
     .onChange(of: currentPage) { _, newValue in
+      if skipNextScrollSync {
+        skipNextScrollSync = false
+        return
+      }
       if scrolledPage != newValue {
         scrolledPage = newValue
       }
@@ -216,6 +280,7 @@ private struct PDFPagingPreview: View {
 
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var showLoadingOverlay = false
   @State private var thumbnailHidden = false
   var document: Document
@@ -224,12 +289,28 @@ private struct IntegratedDocumentPreview: View {
 
   var transitionID: AnyHashable? = nil
   var transitionNamespace: Namespace.ID? = nil
-  var onTap: (() -> Void)? = nil
+  var onTap: ((Int) -> Void)? = nil
 
   @StateObject private var image = FetchImage()
 
   private static let loadingOverlayDelay: Duration = .seconds(0.5)
   private static let pdfFadeInDuration: TimeInterval = 0.35
+  // Regular-size-class height cap. iPad screens are tall enough that an
+  // unconstrained, container-wide page would push the rest of the detail view
+  // off-screen, so we bound the preview and let pages size by their aspect.
+  private static let regularMaxHeight: CGFloat = 520
+
+  private var isRegularWidth: Bool {
+    horizontalSizeClass == .regular
+  }
+
+  private var pdfMaxHeight: CGFloat? {
+    isRegularWidth ? Self.regularMaxHeight : nil
+  }
+
+  private var horizontalPadding: CGFloat {
+    isRegularWidth ? PDFPagingPreview.regularPageInset : PDFPagingPreview.pageInset
+  }
 
   var body: some View {
     ZStack {
@@ -247,7 +328,7 @@ private struct IntegratedDocumentPreview: View {
         // outside the .animation(value: downloadState) scope — so the now-
         // invisible thumbnail no longer peeks through during page scrolling.
         if !thumbnailHidden {
-          image.image?
+          let thumbnail = image.image?
             .resizable()
             .scaledToFit()
             .blur(radius: 5, opaque: true)
@@ -256,14 +337,31 @@ private struct IntegratedDocumentPreview: View {
               RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
             )
-            .padding(.horizontal, PDFPagingPreview.pageInset)
-            .transition(.identity)
+
+          if let pdfMaxHeight {
+            // The horizontal ScrollView leading-aligns the first page (its
+            // content offset clamps to zero, so `scrollPosition(.center)` can't
+            // actually centre page 0). Match that placement here so the
+            // thumbnail and the first PDF page occupy the same rect — without
+            // this, the thumbnail centres and the cross-fade visibly jumps
+            // sideways once the PDF loads.
+            thumbnail
+              .frame(height: pdfMaxHeight)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.leading, horizontalPadding)
+              .transition(.identity)
+          } else {
+            thumbnail
+              .padding(.horizontal, horizontalPadding)
+              .transition(.identity)
+          }
         }
 
         if case .loaded(url: _, document: let pdfDocument) = downloadState {
           PDFPagingPreview(
             document: pdfDocument,
             currentPage: $currentPage,
+            maxHeight: pdfMaxHeight,
             transitionID: transitionID,
             transitionNamespace: transitionNamespace,
             onTap: onTap
@@ -274,6 +372,7 @@ private struct IntegratedDocumentPreview: View {
       }
     }
     .padding(.vertical, 16)
+    .frame(maxWidth: .infinity)
     .background(Color(.systemGray6))
     .overlay(alignment: .bottom) {
       // Always mount the indicator while loaded so the glass effect can
@@ -282,7 +381,11 @@ private struct IntegratedDocumentPreview: View {
       // view-tree transition — the latter forces the glass material to
       // re-sample its backdrop on insertion, which reads as a brief dark
       // flash before it stabilises.
-      if case .loaded(url: _, document: let pdfDocument) = downloadState {
+      if case .loaded(url: _, document: let pdfDocument) = downloadState,
+        !isRegularWidth
+      {
+        // Hidden on iPad: scroll no longer drives `currentPage`, so the
+        // indicator would only update on tap — confusing rather than helpful.
         Text(.localizable(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
           .font(.caption2)
           .fontWeight(.semibold)

@@ -10,7 +10,11 @@ import DataModel
 import Networking
 import SwiftUI
 
-private enum ActiveSheet: Identifiable, Hashable {
+/// Per-field editors. On regular size class these render as popovers anchored
+/// to the source aspect; on compact they adapt back to sheets. Splitting these
+/// out from the auxiliary, always-sheet presentations lets each anchor
+/// independently.
+private enum FieldEdit: Identifiable, Hashable {
   case title
   case tags
   case asn
@@ -20,13 +24,10 @@ private enum ActiveSheet: Identifiable, Hashable {
   case storagePath
   case owner
   case customFields
-  case metadata
-  case notes
-  case shareLink
 
   var id: Self { self }
 
-  init(field: Route.Action.EditTarget.Field) {
+  init?(field: Route.Action.EditTarget.Field) {
     switch field {
     case .title: self = .title
     case .tags: self = .tags
@@ -37,9 +38,19 @@ private enum ActiveSheet: Identifiable, Hashable {
     case .storagePath: self = .storagePath
     case .owner: self = .owner
     case .customFields: self = .customFields
-    case .notes: self = .notes
+    case .notes: return nil
     }
   }
+}
+
+/// Auxiliary presentations that always render as sheets regardless of size
+/// class — they're large list/detail views that don't make sense as popovers.
+private enum AuxiliarySheet: Identifiable, Hashable {
+  case metadata
+  case notes
+  case shareLink
+
+  var id: Self { self }
 }
 
 @MainActor
@@ -48,8 +59,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-  @State private var activeSheet: ActiveSheet? = nil
+  @State private var activeFieldEdit: FieldEdit? = nil
+  @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
   @State private var shadowDelay: Double? = nil
@@ -85,7 +98,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     else { return }
     routeManager.pendingRoute = nil
     guard case .field(let field) = edit else { return }
-    activeSheet = ActiveSheet(field: field)
+    if let fieldEdit = FieldEdit(field: field) {
+      activeFieldEdit = fieldEdit
+    } else if field == .notes {
+      activeSheet = .notes
+    }
   }
 
   private func deleteDocument() {
@@ -111,6 +128,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   }
 
   private var detailAspects: some View {
+    @Bindable var viewModel = viewModel
     let document = viewModel.document
     let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
@@ -124,51 +142,81 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         title: .localizable(.asn),
         label: asnLabel,
         systemImage: "qrcode",
-        action: { activeSheet = .asn },
+        action: { activeFieldEdit = .asn },
         transitionID: .asn,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .asn,
+        active: $activeFieldEdit,
+        detents: [.fraction(0.25), .medium],
+        popoverSize: CGSize(width: 380, height: 240)
+      ) {
+        AsnEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
+      }
 
       EditableAspect(
         title: .localizable(.correspondent),
         label: aspectLabel(id: document.correspondent, in: store.correspondents),
         systemImage: "person.fill",
-        action: { activeSheet = .correspondent },
+        action: { activeFieldEdit = .correspondent },
         transitionID: .correspondent,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .correspondent, active: $activeFieldEdit) {
+        CorrespondentEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
+      }
 
       EditableAspect(
         title: .localizable(.documentType),
         label: aspectLabel(id: document.documentType, in: store.documentTypes),
         systemImage: "doc.fill",
-        action: { activeSheet = .documentType },
+        action: { activeFieldEdit = .documentType },
         transitionID: .documentType,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .documentType, active: $activeFieldEdit) {
+        DocumentTypeEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
+      }
 
       EditableAspect(
         title: .localizable(.documentEditCreatedDateLabel),
         label: .text(DocumentCell.dateFormatter.string(from: document.created)),
         systemImage: "calendar",
-        action: { activeSheet = .date },
+        action: { activeFieldEdit = .date },
         transitionID: .date,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .date,
+        active: $activeFieldEdit,
+        detents: [.fraction(0.25), .medium],
+        popoverSize: CGSize(width: 380, height: 440)
+      ) {
+        DateEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
+      }
 
       EditableAspect(
         title: .localizable(.storagePath),
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
         systemImage: "archivebox.fill",
-        action: { activeSheet = .storagePath },
+        action: { activeFieldEdit = .storagePath },
         transitionID: .storagePath,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .storagePath, active: $activeFieldEdit) {
+        StoragePathEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
+      }
 
       EditableAspect(
         title: .localizable(.sortOrderOwner),
@@ -177,20 +225,32 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           in: store.users
         ),
         systemImage: "person.badge.key.fill",
-        action: { activeSheet = .owner },
+        action: { activeFieldEdit = .owner },
         transitionID: .owner,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .owner,
+        active: $activeFieldEdit,
+        detents: [.medium, .large]
+      ) {
+        OwnerEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
+      }
 
       EditableAspect(
         label: .text(String(localized: .customFields(.title))),
         systemImage: "list.bullet.rectangle.fill",
-        action: { activeSheet = .customFields },
+        action: { activeFieldEdit = .customFields },
         transitionID: .customFields,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .customFields, active: $activeFieldEdit) {
+        CustomFieldsEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
+      }
     }
   }
 
@@ -406,6 +466,41 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
+  private var previewOnDismiss: () -> Void {
+    {
+      Task {
+        try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
+        shadowDelay = nil
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var previewContent: some View {
+    if case .loaded(url: _, document: let document) = viewModel.download {
+      NavigationStack {
+        SearchablePDFPreview(
+          document: document,
+          onButtonDismiss: {
+            shadowDelay = 0.2
+          },
+          currentPage: $previewPage
+        )
+        .ignoresSafeArea(.container)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(viewModel.document.title)
+      }
+      // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
+      // Resolve the zoom source to the *tapped* page (mirrors the
+      // PDFPagingPreview's per-page sources) so iPad zooms from whichever
+      // peek the user picked, not always from the centred page.
+      .backport.navigationTransitionZoom(
+        sourceID: PDFPageZoomID(base: AnyHashable(TransitionID.doc), index: previewPage),
+        in: namespace
+      )
+    }
+  }
+
   var body: some View {
     @Bindable var viewModel = viewModel
 
@@ -417,7 +512,18 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           currentPage: $previewPage,
           transitionID: TransitionID.doc,
           transitionNamespace: namespace,
-          onTap: previewEnabled ? { showPreview = true } : nil
+          // Set previewPage explicitly here so the destination's sourceID
+          // (computed from previewPage) is in sync with showPreview before
+          // the cover renders. The PDFPagingPreview also writes currentPage
+          // through the binding, but relying on that propagation alone has
+          // a one-frame race that can leave the zoom anchored on the wrong
+          // page.
+          onTap: previewEnabled
+            ? { tappedIndex in
+              previewPage = tappedIndex
+              showPreview = true
+            }
+            : nil
         )
         .frame(maxWidth: .infinity)
         .accessibilityLabel(.localizable(.documentOpen))
@@ -427,9 +533,17 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             title: viewModel.document.title,
             transitionID: .title,
             namespace: namespace,
-            action: { activeSheet = .title },
+            action: { activeFieldEdit = .title },
             enabled: store.userCanChange(document: viewModel.document)
           )
+          .editPopover(
+            forFieldEdit: .title,
+            active: $activeFieldEdit,
+            popoverSize: CGSize(width: 480, height: 240)
+          ) {
+            TitleEditSheet(viewModel: viewModel)
+              .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
+          }
 
           readOnlyExplanation
 
@@ -439,12 +553,20 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           DocumentTagsSection(
             tags: viewModel.document.tags.map { store.tags[$0] },
             action: {
-              activeSheet = .tags
+              activeFieldEdit = .tags
             },
             transitionID: .tags,
             namespace: namespace,
             enabled: store.userCanChange(document: viewModel.document)
           )
+          .editPopover(
+            forFieldEdit: .tags,
+            active: $activeFieldEdit,
+            detents: [.medium, .large]
+          ) {
+            TagsEditSheet(viewModel: viewModel)
+              .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+          }
         }
         .padding(.horizontal)
       }
@@ -484,45 +606,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
-      case .title:
-        TitleEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
-
-      case .tags:
-        TagsEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
-
-      case .asn:
-        AsnEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
-          .presentationDetents([.fraction(0.25), .medium])
-
-      case .correspondent:
-        CorrespondentEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
-
-      case .documentType:
-        DocumentTypeEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
-
-      case .date:
-        DateEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
-          .presentationDetents([.fraction(0.25), .medium])
-
-      case .storagePath:
-        StoragePathEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
-
-      case .owner:
-        OwnerEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
-          .presentationDetents([.medium, .large])
-
-      case .customFields:
-        CustomFieldsEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
-
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
           .environmentObject(store)
@@ -540,30 +623,25 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    .sheet(
-      isPresented: $showPreview,
-      onDismiss: {
-        Task {
-          try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
-          shadowDelay = nil
+    // The full PDF reader is content-heavy; on iPad a normal sheet renders as a
+    // small centered form sheet that wastes most of the screen, so we promote
+    // it to a full-screen cover on regular size class while keeping the sheet
+    // (with its zoom transition + swipe-to-dismiss) on compact.
+    .apply {
+      if horizontalSizeClass == .regular {
+        $0.fullScreenCover(
+          isPresented: $showPreview,
+          onDismiss: previewOnDismiss
+        ) {
+          previewContent
         }
-      }
-    ) {
-      if case .loaded(url: _, document: let document) = viewModel.download {
-        NavigationStack {
-          SearchablePDFPreview(
-            document: document,
-            onButtonDismiss: {
-              shadowDelay = 0.2
-            },
-            currentPage: $previewPage
-          )
-          .ignoresSafeArea(.container)
-          .navigationBarTitleDisplayMode(.inline)
-          .navigationTitle(viewModel.document.title)
+      } else {
+        $0.sheet(
+          isPresented: $showPreview,
+          onDismiss: previewOnDismiss
+        ) {
+          previewContent
         }
-        // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
-        .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
       }
     }
 
@@ -591,6 +669,37 @@ extension View {
       } else {
         $0
       }
+    }
+  }
+
+  /// Presents the per-field editor anchored to the source view. Renders as a
+  /// popover on regular size class and as a sheet (with the supplied detents)
+  /// on compact via `presentationCompactAdaptation(.sheet)`. The shared
+  /// `active` enum drives a derived isPresented binding so deep-link routing
+  /// and aspect taps both flow through one piece of state.
+  ///
+  /// `popoverSize` only affects the popover layer — sheets ignore it and
+  /// honour the supplied detents instead.
+  fileprivate func editPopover<Content: View>(
+    forFieldEdit field: FieldEdit,
+    active: Binding<FieldEdit?>,
+    detents: Set<PresentationDetent> = [.medium, .large],
+    popoverSize: CGSize = CGSize(width: 420, height: 520),
+    @ViewBuilder content: @escaping () -> Content
+  ) -> some View {
+    let isPresented = Binding(
+      get: { active.wrappedValue == field },
+      set: { newValue in
+        if !newValue, active.wrappedValue == field {
+          active.wrappedValue = nil
+        }
+      }
+    )
+    return popover(isPresented: isPresented) {
+      content()
+        .frame(idealWidth: popoverSize.width, idealHeight: popoverSize.height)
+        .presentationDetents(detents)
+        .presentationCompactAdaptation(.sheet)
     }
   }
 }
