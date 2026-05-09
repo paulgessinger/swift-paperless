@@ -75,78 +75,77 @@ private struct FilterMenu<Content: View>: View {
   }
 
   var body: some View {
-    VStack {
-      Menu {
-        if filterModel.filterState.filtering, filterModel.filterState.modified {
-          Section(menuSavedViewSectionTitle) {
-            if let savedViewId = filterModel.filterState.savedView,
-              let savedView = store.savedViews[savedViewId]
-            {
-              if store.permissions.test(.change, for: .savedView) {
-                Button {
-                  saveSavedView()
-                } label: {
-                  Label(
-                    String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
-                }
-              }
-
+    Menu {
+      if filterModel.filterState.filtering, filterModel.filterState.modified {
+        Section(menuSavedViewSectionTitle) {
+          if let savedViewId = filterModel.filterState.savedView,
+            let savedView = store.savedViews[savedViewId]
+          {
+            if store.permissions.test(.change, for: .savedView) {
               Button {
-                filterModel.filterState = .init(savedView: savedView)
+                saveSavedView()
               } label: {
                 Label(
-                  String(localized: .localizable(.discardChanges)),
-                  systemImage: "arrow.counterclockwise")
+                  String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
               }
             }
 
-            if store.permissions.test(.add, for: .savedView) {
-              Button {
-                let proto = ProtoSavedView(
-                  name: "",
-                  sortField: filterModel.filterState.sortField,
-                  sortOrder: filterModel.filterState.sortOrder,
-                  filterRules: filterModel.filterState.rules
-                )
+            Button {
+              filterModel.filterState = .init(savedView: savedView)
+            } label: {
+              Label(
+                String(localized: .localizable(.discardChanges)),
+                systemImage: "arrow.counterclockwise")
+            }
+          }
 
-                savedView = proto
+          if store.permissions.test(.add, for: .savedView) {
+            Button {
+              let proto = ProtoSavedView(
+                name: "",
+                sortField: filterModel.filterState.sortField,
+                sortOrder: filterModel.filterState.sortOrder,
+                filterRules: filterModel.filterState.rules
+              )
 
-              } label: {
-                Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
-              }
+              savedView = proto
+
+            } label: {
+              Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
             }
           }
         }
-
-        if store.permissions.test(.view, for: .savedView) {
-          NavigationLink {
-            ManageView<SavedViewManager>()
-              .navigationTitle(Text(.localizable(.savedViews)))
-          } label: {
-            Label(
-              String(localized: .localizable(.savedViewsEditButtonLabel)),
-              systemImage: "list.bullet")
-          }
-        }
-
-        if filterModel.filterState.filtering {
-          if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
-            Divider()
-          }
-          Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
-          Divider()
-          Button(role: .destructive) {
-            Haptics.shared.notification(.success)
-            filterModel.filterState.clear()
-          } label: {
-            Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
-          }
-        }
-
-      } label: {
-        label()
       }
+
+      if store.permissions.test(.view, for: .savedView) {
+        NavigationLink {
+          ManageView<SavedViewManager>()
+            .navigationTitle(Text(.localizable(.savedViews)))
+        } label: {
+          Label(
+            String(localized: .localizable(.savedViewsEditButtonLabel)),
+            systemImage: "list.bullet")
+        }
+      }
+
+      if filterModel.filterState.filtering {
+        if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
+          Divider()
+        }
+        Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
+        Divider()
+        Button(role: .destructive) {
+          Haptics.shared.notification(.success)
+          filterModel.filterState.clear()
+        } label: {
+          Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
+        }
+      }
+
+    } label: {
+      label()
     }
+    .backport.glassEffect(.regular.interactive())
   }
 }
 
@@ -270,6 +269,7 @@ private struct Element<Label: View>: View {
       } label: {
         Pill(active: active, chevron: chevron, label: label)
       }
+      .glassEffect(.regular.interactive())
     } else {
       Pill(active: active, chevron: chevron, label: label)
         .onTapGesture {
@@ -317,7 +317,6 @@ private struct PillLiquidGlass<Label: View>: View {
     .padding(.vertical, 4)
     .foregroundColor(active ? activeColor : Color.primary)
     .fontWeight(active ? .bold : .regular)
-    .glassEffect(.regular.interactive())
   }
 }
 
@@ -417,12 +416,12 @@ private struct SortMenu: View {
       }
       .pickerStyle(.menu)
     } label: {
-      Element(
-        label: {
-          Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
-            .labelStyle(.iconOnly)
-        }, active: !filterModel.filterState.defaultSorting, action: {})
+      Pill(active: !filterModel.filterState.defaultSorting) {
+        Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
+          .labelStyle(.iconOnly)
+      }
     }
+    .backport.glassEffect(.regular.interactive())
     .onTapGesture {
       Haptics.shared.impact(style: .light)
     }
@@ -702,6 +701,7 @@ struct FilterBar: View {
     } label: {
       content()
     }
+    .backport.glassEffect(.regular.interactive())
   }
 
   private var ownerElement: some View {
@@ -727,6 +727,7 @@ struct FilterBar: View {
         Text(.localizable(.ownerUnowned))
       }
     }
+    .transaction { $0.animation = nil }
   }
 
   private var configuredComponents: [FilterBarComponent] {
@@ -740,9 +741,17 @@ struct FilterBar: View {
 
   @ViewBuilder
   private func componentView(_ component: FilterBarComponent) -> some View {
+    @Bindable var filterModel = filterModel
     switch component {
     case .tags:
       tagElement
+        .filterPopover(isPresented: $showTags) {
+          Modal(title: String(localized: .localizable(.tags))) {
+            TagFilterView(
+              selectedTags: $filterModel.filterState.tags)
+          }
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
+        }
     case .documentType:
       Element(
         label: {
@@ -755,6 +764,18 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.documentType != .any
       ) { present(.documentType) }
+      .filterPopover(isPresented: $showDocumentType) {
+        Modal(title: String(localized: .localizable(.documentType))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.documentType,
+            elements: store.documentTypes.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
+          )
+        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
+      }
     case .correspondent:
       Element(
         label: {
@@ -767,6 +788,18 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.correspondent != .any
       ) { present(.correspondent) }
+      .filterPopover(isPresented: $showCorrespondent) {
+        Modal(title: String(localized: .localizable(.correspondent))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.correspondent,
+            elements: store.correspondents.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
+          )
+        }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
+      }
     case .storagePath:
       Element(
         label: {
@@ -779,19 +812,25 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
-    case .permissions:
-      ownerElement
-        .overlay {
-          GeometryReader { geo in
-            ownerMenu {
-              Color.clear
-                .frame(width: geo.size.width, height: geo.size.height)
-            }
-            .onTapGesture {
-              Haptics.shared.impact(style: .light)
-            }
-          }
+      .filterPopover(isPresented: $showStoragePath) {
+        Modal(title: String(localized: .localizable(.storagePath))) {
+          CommonPickerFilterView(
+            selection: $filterModel.filterState.storagePath,
+            elements: store.storagePaths.sorted {
+              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
+            }.map { ($0.value.id, $0.value.name) },
+            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
+          )
         }
+        .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
+      }
+    case .permissions:
+      ownerMenu {
+        ownerElement
+      }
+      .onTapGesture {
+        Haptics.shared.impact(style: .light)
+      }
     case .customFields:
       Element(
         label: {
@@ -801,6 +840,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.customField != .any
       ) { present(.customFields) }
+      .filterPopover(isPresented: $showCustomFields) {
+        CustomFieldFilterView(query: $filterModel.filterState.customField)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
+      }
     case .asn:
       Element(
         label: {
@@ -810,6 +853,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.asn != .any
       ) { present(.asn) }
+      .filterPopover(isPresented: $showAsn) {
+        AsnFilterView(query: $filterModel.filterState.asn)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
+      }
     case .date:
       Element(
         label: {
@@ -819,6 +866,10 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.date.isActive
       ) { present(.date) }
+      .filterPopover(isPresented: $showDate) {
+        DateFilterView(query: $filterModel.filterState.date)
+          .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
+      }
     }
   }
 
@@ -873,74 +924,30 @@ struct FilterBar: View {
 
       .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
-      // MARK: Sheets
-
-      .sheet(isPresented: $showTags) {
-        Modal(title: String(localized: .localizable(.tags))) {
-          TagFilterView(
-            selectedTags: $filterModel.filterState.tags)
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.tags, in: transition)
-      }
-
-      .sheet(isPresented: $showDocumentType) {
-        Modal(title: String(localized: .localizable(.documentType))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.documentType,
-            elements: store.documentTypes.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
-      }
-
-      .sheet(isPresented: $showCorrespondent) {
-        Modal(title: String(localized: .localizable(.correspondent))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.correspondent,
-            elements: store.correspondents.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
-      }
-
-      .sheet(isPresented: $showStoragePath) {
-        Modal(title: String(localized: .localizable(.storagePath))) {
-          CommonPickerFilterView(
-            selection: $filterModel.filterState.storagePath,
-            elements: store.storagePaths.sorted {
-              $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
-            }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
-          )
-        }
-        .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
-      }
-
-      .sheet(isPresented: $showCustomFields) {
-        CustomFieldFilterView(query: $filterModel.filterState.customField)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
-      }
-
-      .sheet(isPresented: $showAsn) {
-        AsnFilterView(query: $filterModel.filterState.asn)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
-      }
-
-      .sheet(isPresented: $showDate) {
-        DateFilterView(query: $filterModel.filterState.date)
-          .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
-      }
-
       .sheet(item: $savedView) { view in
         AddSavedViewSheet(savedView: view)
       }
 
+  }
+}
+
+extension View {
+  /// Presents the filter editor anchored to the source pill. Renders as a
+  /// popover on regular size class (iPad) and adapts back to a sheet on
+  /// compact (iPhone) via `presentationCompactAdaptation(.sheet)`.
+  ///
+  /// `popoverSize` only affects the popover layer — the adapted sheet
+  /// ignores it and lays out at full height.
+  fileprivate func filterPopover<Content: View>(
+    isPresented: Binding<Bool>,
+    popoverSize: CGSize = CGSize(width: 420, height: 520),
+    @ViewBuilder content: @escaping () -> Content
+  ) -> some View {
+    popover(isPresented: isPresented) {
+      content()
+        .frame(idealWidth: popoverSize.width, idealHeight: popoverSize.height)
+        .presentationCompactAdaptation(.sheet)
+    }
   }
 }
 
