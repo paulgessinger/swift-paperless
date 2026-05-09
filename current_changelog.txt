@@ -1,0 +1,1 @@
+- Fix task view showing "no elements" while loading
