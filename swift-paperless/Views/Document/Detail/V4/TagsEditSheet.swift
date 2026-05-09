@@ -31,9 +31,10 @@ struct TagsEditSheet: View {
   init(viewModel: DocumentDetailModel) {
     self.viewModel = viewModel
     let noTags = viewModel.document.tags.isEmpty
+    let autoFocus = noTags && AppFeatures.enabled(.autoFocusSearchInDetailSheets)
     _tagIds = State(initialValue: viewModel.document.tags)
-    _searchIsActive = State(initialValue: noTags)
-    _selectedDetent = State(initialValue: noTags ? .large : .medium)
+    _searchIsActive = State(initialValue: autoFocus)
+    _selectedDetent = State(initialValue: autoFocus ? .large : .medium)
   }
 
   private struct CreateTagView: View {
