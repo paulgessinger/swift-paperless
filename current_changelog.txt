@@ -1,1 +1,2 @@
 - Fix task view showing "no elements" while loading
+- Tune visuals for document preview thumbnail fade-in and page indicator
