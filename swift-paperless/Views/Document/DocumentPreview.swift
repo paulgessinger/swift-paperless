@@ -276,6 +276,12 @@ private struct IntegratedDocumentPreview: View {
     .padding(.vertical, 16)
     .background(Color(.systemGray6))
     .overlay(alignment: .bottom) {
+      // Always mount the indicator while loaded so the glass effect can
+      // settle against the final PDF background before the user sees it.
+      // We then drive visibility with an opacity modifier rather than a
+      // view-tree transition — the latter forces the glass material to
+      // re-sample its backdrop on insertion, which reads as a brief dark
+      // flash before it stabilises.
       if case .loaded(url: _, document: let pdfDocument) = downloadState {
         Text(.localizable(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
           .font(.caption2)
@@ -289,6 +295,8 @@ private struct IntegratedDocumentPreview: View {
           .animation(.default, value: currentPage)
           .padding(.bottom, 24)
           .allowsHitTesting(false)
+          .opacity(thumbnailHidden ? 1 : 0)
+          .animation(.easeOut(duration: 0.2).delay(0.4), value: thumbnailHidden)
       }
     }
 
@@ -330,28 +338,31 @@ private struct IntegratedDocumentPreview: View {
         Logger.shared.error("Error loading document thumbnail: \(error)")
       }
     }
-    .onChange(of: downloadState, initial: true) { _, newState in
-      if case .loading = newState {
-        Task {
-          try? await Task.sleep(for: Self.loadingOverlayDelay)
-          guard !Task.isCancelled else { return }
-          if case .loading = downloadState {
-            showLoadingOverlay = true
-          }
-        }
-      } else {
-        showLoadingOverlay = false
-      }
+    .task(id: downloadState) {
+      // Synchronous resets first so a fast state flip clears stale flags
+      // immediately, before the awaits below.
+      if case .loading = downloadState {} else { showLoadingOverlay = false }
+      if case .loaded = downloadState {} else { thumbnailHidden = false }
 
-      if case .loaded = newState {
-        Task {
-          try? await Task.sleep(for: .seconds(Self.pdfFadeInDuration))
-          if case .loaded = downloadState {
-            thumbnailHidden = true
-          }
+      // SwiftUI cancels this task (throwing CancellationError out of the
+      // sleep) when downloadState changes again or the view disappears, so
+      // a stale schedule from a prior state can't flip flags out from under
+      // the current one.
+      do {
+        switch downloadState {
+        case .loading:
+          try await Task.sleep(for: Self.loadingOverlayDelay)
+          showLoadingOverlay = true
+        case .loaded:
+          try await Task.sleep(for: .seconds(Self.pdfFadeInDuration))
+          thumbnailHidden = true
+        case .initial, .error:
+          break
         }
-      } else {
-        thumbnailHidden = false
+      } catch is CancellationError {
+        // Superseded by a newer state — drop this run.
+      } catch {
+        Logger.shared.error("Unexpected error scheduling preview state: \(error)")
       }
     }
   }
