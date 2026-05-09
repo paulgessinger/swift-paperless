@@ -28,7 +28,7 @@ jobs:
       - name: Build documentation
         run: |
           pip install -r docs/requirements.txt
-          mkdocs build
+          zensical build
           mkdir site/release_notes/md
           cp docs/release_notes/*.md site/release_notes/md
 

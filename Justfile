@@ -1,9 +1,9 @@
 default_port := '8000'
 docs-serve port=default_port:
-    uv run --with-requirements docs/requirements.txt mkdocs serve -o -a localhost:{{port}} -w docs
+    uv run --with-requirements docs/requirements.txt zensical serve -o -a localhost:{{port}}
 
 docs:
-    uv run --with-requirements docs/requirements.txt mkdocs build
+    uv run --with-requirements docs/requirements.txt zensical build
 
 alias sv := set_version
 set_version version:
