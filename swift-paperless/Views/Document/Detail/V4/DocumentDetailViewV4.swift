@@ -101,11 +101,26 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       docId == viewModel.document.id
     else { return }
     routeManager.pendingRoute = nil
-    guard case .field(let field) = edit else { return }
-    if let fieldEdit = FieldEdit(field: field) {
-      activeFieldEdit = fieldEdit
-    } else if field == .notes {
-      activeSheet = .notes
+    switch edit {
+    case .none:
+      activeFieldEdit = nil
+      if activeSheet == .notes {
+        activeSheet = nil
+      }
+    case .field(let field):
+      if let fieldEdit = FieldEdit(field: field) {
+        // Edit popovers anchor to rows inside the inspector on iPad. Force
+        // it open so the deep link doesn't silently no-op when the user
+        // had previously collapsed the inspector.
+        if horizontalSizeClass == .regular {
+          showEditInspector = true
+        }
+        activeFieldEdit = fieldEdit
+      } else if field == .notes {
+        activeSheet = .notes
+      }
+    case .all:
+      break
     }
   }
 

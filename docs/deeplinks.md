@@ -91,6 +91,7 @@ x-paperless://v1/document/<document_id>[?edit=<value>][&server=<server>]
 
   - The boolean form is supported for backwards compatibility and may be removed in a future release. New links should target a specific field.
   - Field-name links rely on the redesigned document detail UI. On older builds that still use the previous detail UI, a field-name `edit` value is ignored, and the document opens in view mode.
+  - **Closing an open editor**: if the document is already on screen and an edit sheet/popover is open, sending the same document deep link with `edit=false` (or `0`/`no`, or omitting the parameter) dismisses the active editor. This lets you script "open editor" / "close editor" pairs from shortcuts.
 
 - `server` (optional): Server specification
 
@@ -101,6 +102,7 @@ x-paperless://v1/document/456?edit=true
 x-paperless://v1/document/123?edit=tags
 x-paperless://v1/document/456?edit=correspondent
 x-paperless://v1/document/789?edit=documentType&server=example.com
+x-paperless://v1/document/123?edit=false   # close the active edit sheet on document 123
 ```
 
 ### Scan Document
