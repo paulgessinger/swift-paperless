@@ -115,8 +115,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
       document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
-    return HFlow(itemSpacing: 12) {
+    let columns = [
+      GridItem(.flexible(), spacing: 12),
+      GridItem(.flexible(), spacing: 12),
+    ]
+    return LazyVGrid(columns: columns, spacing: 12) {
       EditableAspect(
+        title: .localizable(.asn),
         label: asnLabel,
         systemImage: "qrcode",
         action: { activeSheet = .asn },
@@ -126,6 +131,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
 
       EditableAspect(
+        title: .localizable(.correspondent),
         label: aspectLabel(id: document.correspondent, in: store.correspondents),
         systemImage: "person.fill",
         action: { activeSheet = .correspondent },
@@ -135,6 +141,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
 
       EditableAspect(
+        title: .localizable(.documentType),
         label: aspectLabel(id: document.documentType, in: store.documentTypes),
         systemImage: "doc.fill",
         action: { activeSheet = .documentType },
@@ -144,6 +151,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
 
       EditableAspect(
+        title: .localizable(.documentEditCreatedDateLabel),
         label: .text(DocumentCell.dateFormatter.string(from: document.created)),
         systemImage: "calendar",
         action: { activeSheet = .date },
@@ -153,6 +161,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
 
       EditableAspect(
+        title: .localizable(.storagePath),
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
         systemImage: "archivebox.fill",
         action: { activeSheet = .storagePath },
@@ -162,6 +171,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       )
 
       EditableAspect(
+        title: .localizable(.sortOrderOwner),
         label: aspectLabel(
           id: { if case .user(let id) = document.owner { return id } else { return nil } }(),
           in: store.users
@@ -598,11 +608,20 @@ extension Tag {
 #Preview("EditableAspect", traits: .sizeThatFitsLayout) {
   VStack(alignment: .leading, spacing: 12) {
     EditableAspect(
+      title: .localizable(.asn),
       label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
-    EditableAspect(label: .text("Preview Correspondent"), systemImage: "person.fill")
-    EditableAspect(label: .text("Preview Type"), systemImage: "doc.fill")
-    EditableAspect(label: .notAssigned, systemImage: "person.badge.key.fill")
-    EditableAspect(label: .private, systemImage: "person.badge.key.fill")
+    EditableAspect(
+      title: .localizable(.correspondent),
+      label: .text("Preview Correspondent"), systemImage: "person.fill")
+    EditableAspect(
+      title: .localizable(.documentType),
+      label: .text("Preview Type"), systemImage: "doc.fill")
+    EditableAspect(
+      title: .localizable(.sortOrderOwner),
+      label: .notAssigned, systemImage: "person.badge.key.fill")
+    EditableAspect(
+      title: .localizable(.sortOrderOwner),
+      label: .private, systemImage: "person.badge.key.fill")
 
     DocumentTagsSection(
       tags: [
