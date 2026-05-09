@@ -217,6 +217,7 @@ private struct PDFPagingPreview: View {
 private struct IntegratedDocumentPreview: View {
   @EnvironmentObject private var store: DocumentStore
   @State private var showLoadingOverlay = false
+  @State private var thumbnailHidden = false
   var document: Document
   var downloadState: DocumentDownloadState
   @Binding var currentPage: Int
@@ -228,44 +229,48 @@ private struct IntegratedDocumentPreview: View {
   @StateObject private var image = FetchImage()
 
   private static let loadingOverlayDelay: Duration = .seconds(0.5)
+  private static let pdfFadeInDuration: TimeInterval = 0.35
 
   var body: some View {
     ZStack {
-
-      switch downloadState {
-      case .initial, .loading:
-        image.image?
-          .resizable()
-          .scaledToFit()
-          .blur(radius: 5, opaque: true)
-          .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-          .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
-          )
-          .padding(.horizontal, PDFPagingPreview.pageInset)
-          .apply {
-            if let transitionID, let transitionNamespace {
-              $0.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
-            } else {
-              $0
-            }
-          }
-
-      case .error:
+      if case .error = downloadState {
         Label("Unable to load preview", systemImage: "eye.slash")
           .labelStyle(.iconOnly)
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
+      } else {
+        // Thumbnail acts as a stable underlay while the PDF fades in on top.
+        // Avoids both layers being ~50% transparent mid-animation, which would
+        // bleed the dark background through and look like "fading through black".
+        // Once the PDF is fully opaque, `thumbnailHidden` flips and the
+        // thumbnail unmounts — without animation, since the flip happens
+        // outside the .animation(value: downloadState) scope — so the now-
+        // invisible thumbnail no longer peeks through during page scrolling.
+        if !thumbnailHidden {
+          image.image?
+            .resizable()
+            .scaledToFit()
+            .blur(radius: 5, opaque: true)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+              RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+            )
+            .padding(.horizontal, PDFPagingPreview.pageInset)
+            .transition(.identity)
+        }
 
-      case .loaded(url: _, document: let pdfDocument):
-        PDFPagingPreview(
-          document: pdfDocument,
-          currentPage: $currentPage,
-          transitionID: transitionID,
-          transitionNamespace: transitionNamespace,
-          onTap: onTap
-        )
+        if case .loaded(url: _, document: let pdfDocument) = downloadState {
+          PDFPagingPreview(
+            document: pdfDocument,
+            currentPage: $currentPage,
+            transitionID: transitionID,
+            transitionNamespace: transitionNamespace,
+            onTap: onTap
+          )
+          .transition(.opacity)
+          .scrollDisabled(!thumbnailHidden)
+        }
       }
     }
     .padding(.vertical, 16)
@@ -312,7 +317,7 @@ private struct IntegratedDocumentPreview: View {
       }
     }
     .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
-    .animation(.easeOut(duration: 0.8), value: downloadState)
+    .animation(.easeOut(duration: Self.pdfFadeInDuration), value: downloadState)
 
     .task {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
@@ -325,7 +330,7 @@ private struct IntegratedDocumentPreview: View {
         Logger.shared.error("Error loading document thumbnail: \(error)")
       }
     }
-    .onChange(of: downloadState) { _, newState in
+    .onChange(of: downloadState, initial: true) { _, newState in
       if case .loading = newState {
         Task {
           try? await Task.sleep(for: Self.loadingOverlayDelay)
@@ -336,6 +341,17 @@ private struct IntegratedDocumentPreview: View {
         }
       } else {
         showLoadingOverlay = false
+      }
+
+      if case .loaded = newState {
+        Task {
+          try? await Task.sleep(for: .seconds(Self.pdfFadeInDuration))
+          if case .loaded = downloadState {
+            thumbnailHidden = true
+          }
+        }
+      } else {
+        thumbnailHidden = false
       }
     }
   }
