@@ -192,7 +192,6 @@ struct SearchablePDFPreview: View {
   }
 
   let document: PDFDocument
-  let onButtonDismiss: () -> Void
   @Binding var currentPage: Int
 
   @Environment(\.dismiss) private var dismiss
@@ -496,7 +495,6 @@ struct SearchablePDFPreview: View {
     .toolbar {
       ToolbarItem(placement: .topBarLeading) {
         CancelIconButton {
-          onButtonDismiss()
           dismiss()
         }
       }
@@ -635,7 +633,6 @@ extension View {
   NavigationStack {
     SearchablePDFPreview(
       document: SearchablePDFPreviewPreviewData.document,
-      onButtonDismiss: {},
       currentPage: .constant(0)
     )
     .ignoresSafeArea()

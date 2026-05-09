@@ -65,7 +65,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
-  @State private var shadowDelay: Double? = nil
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
 
@@ -466,24 +465,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
-  private var previewOnDismiss: () -> Void {
-    {
-      Task {
-        try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
-        shadowDelay = nil
-      }
-    }
-  }
-
   @ViewBuilder
   private var previewContent: some View {
     if case .loaded(url: _, document: let document) = viewModel.download {
       NavigationStack {
         SearchablePDFPreview(
           document: document,
-          onButtonDismiss: {
-            shadowDelay = 0.2
-          },
           currentPage: $previewPage
         )
         .ignoresSafeArea(.container)
@@ -629,17 +616,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // (with its zoom transition + swipe-to-dismiss) on compact.
     .apply {
       if horizontalSizeClass == .regular {
-        $0.fullScreenCover(
-          isPresented: $showPreview,
-          onDismiss: previewOnDismiss
-        ) {
+        $0.fullScreenCover(isPresented: $showPreview) {
           previewContent
         }
       } else {
-        $0.sheet(
-          isPresented: $showPreview,
-          onDismiss: previewOnDismiss
-        ) {
+        $0.sheet(isPresented: $showPreview) {
           previewContent
         }
       }
