@@ -135,6 +135,7 @@ struct EditableAspect: View {
           if let title {
             Text(title)
               .font(.caption2)
+              .fontWeight(.semibold)
               .textCase(.uppercase)
               .foregroundStyle(.secondary)
               .lineLimit(1)

@@ -540,6 +540,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           VStack(alignment: .leading, spacing: 6) {
             Text(.localizable(.tags))
               .font(.caption2)
+              .fontWeight(.semibold)
               .textCase(.uppercase)
               .foregroundStyle(.secondary)
               .lineLimit(1)
