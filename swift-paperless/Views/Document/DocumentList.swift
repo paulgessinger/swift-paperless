@@ -82,6 +82,7 @@ struct DocumentList: View {
     var isSelected: Bool
 
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.colorScheme) private var colorScheme
 
     private var userCanChange: Bool {
       store.userCanChange(document: document)
@@ -118,8 +119,10 @@ struct DocumentList: View {
         .padding(.vertical)
         .background {
           if isSelected {
+            // Bump opacity in dark mode so the accent tint stays
+            // visible against the darker chrome of the row backdrop.
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .fill(Color.accentColor.opacity(0.15))
+              .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
               .padding(.horizontal, 8)
           }
         }

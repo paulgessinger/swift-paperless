@@ -333,6 +333,21 @@ struct DocumentView: View {
 
         ConnectionQuickChangeMenu()
 
+        // On iPad the ASN scanner moves into this menu — the leading
+        // toolbar gets crowded next to the sidebar-toggle button when
+        // the sidebar is collapsed, and there's no good place for a
+        // separate ASN button.
+        if horizontalSizeClass == .regular, isDataScannerAvailable {
+          Button {
+            showDataScanner = true
+          } label: {
+            Label(
+              String(localized: .localizable(.toolbarAsnButton)),
+              systemImage: "number.circle"
+            )
+          }
+        }
+
         #if DEBUG
           Section("Debug") {
             Button("Trigger error without details") {
@@ -378,7 +393,7 @@ struct DocumentView: View {
         }
       }
 
-      if isDataScannerAvailable {
+      if isDataScannerAvailable, horizontalSizeClass != .regular {
         Button {
           showDataScanner = true
         } label: {
@@ -431,11 +446,13 @@ struct DocumentView: View {
   // MARK: Filter assembly (shared compact + regular)
 
   @ViewBuilder
-  private var filterAssemblyView: some View {
+  private func filterAssemblyView(showsBackdrop: Bool) -> some View {
     if #available(iOS 26.0, *) {
-      FilterAssembly(filterModel: filterModel, isFetching: isFetching)
+      FilterAssembly(
+        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
     } else {
-      FilterAssemblyiOS18(filterModel: filterModel, isFetching: isFetching)
+      FilterAssemblyiOS18(
+        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
     }
   }
 
@@ -453,7 +470,7 @@ struct DocumentView: View {
       )
 
       .safeAreaInset(edge: .top) {
-        filterAssemblyView
+        filterAssemblyView(showsBackdrop: true)
       }
 
       .toolbarBackground(.hidden, for: .navigationBar)
@@ -524,7 +541,7 @@ struct DocumentView: View {
       selectedDocumentID: selectedDocument?.id
     )
     .safeAreaInset(edge: .top) {
-      filterAssemblyView
+      filterAssemblyView(showsBackdrop: false)
     }
     .navigationTitle(savedViewNavigationTitle)
     .navigationBarTitleDisplayMode(.inline)
@@ -574,15 +591,27 @@ struct DocumentView: View {
       withAnimation {
         switch new {
         case .none, .allDocuments:
-          filterModel.filterState.clear()
+          // Only clear if there's actually something to clear — otherwise
+          // the initial reverse-sync (below) ricochets back here and
+          // wipes a perfectly valid restored filter.
+          if filterModel.filterState.savedView != nil
+            || filterModel.filterState.modified
+          {
+            filterModel.filterState.clear()
+          }
         case .savedView(let id):
-          if let sv = store.savedViews[id] {
+          // Same idempotency guard: if we're already on this saved view
+          // (e.g., we just adopted it from filterState), don't reassign
+          // and discard any user modifications restored from defaults.
+          if filterModel.filterState.savedView != id, let sv = store.savedViews[id] {
             filterModel.filterState = .init(savedView: sv)
           }
         }
       }
     }
-    .onChange(of: filterModel.filterState.savedView) { _, new in
+    // initial: true makes the sidebar adopt a saved view that was already
+    // present in filterState at mount (restored from UserDefaults).
+    .onChange(of: filterModel.filterState.savedView, initial: true) { _, new in
       let target: SidebarSelection = new.map(SidebarSelection.savedView) ?? .allDocuments
       if sidebarSelection != target { sidebarSelection = target }
     }
