@@ -75,78 +75,77 @@ private struct FilterMenu<Content: View>: View {
   }
 
   var body: some View {
-    VStack {
-      Menu {
-        if filterModel.filterState.filtering, filterModel.filterState.modified {
-          Section(menuSavedViewSectionTitle) {
-            if let savedViewId = filterModel.filterState.savedView,
-              let savedView = store.savedViews[savedViewId]
-            {
-              if store.permissions.test(.change, for: .savedView) {
-                Button {
-                  saveSavedView()
-                } label: {
-                  Label(
-                    String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
-                }
-              }
-
+    Menu {
+      if filterModel.filterState.filtering, filterModel.filterState.modified {
+        Section(menuSavedViewSectionTitle) {
+          if let savedViewId = filterModel.filterState.savedView,
+            let savedView = store.savedViews[savedViewId]
+          {
+            if store.permissions.test(.change, for: .savedView) {
               Button {
-                filterModel.filterState = .init(savedView: savedView)
+                saveSavedView()
               } label: {
                 Label(
-                  String(localized: .localizable(.discardChanges)),
-                  systemImage: "arrow.counterclockwise")
+                  String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
               }
             }
 
-            if store.permissions.test(.add, for: .savedView) {
-              Button {
-                let proto = ProtoSavedView(
-                  name: "",
-                  sortField: filterModel.filterState.sortField,
-                  sortOrder: filterModel.filterState.sortOrder,
-                  filterRules: filterModel.filterState.rules
-                )
+            Button {
+              filterModel.filterState = .init(savedView: savedView)
+            } label: {
+              Label(
+                String(localized: .localizable(.discardChanges)),
+                systemImage: "arrow.counterclockwise")
+            }
+          }
 
-                savedView = proto
+          if store.permissions.test(.add, for: .savedView) {
+            Button {
+              let proto = ProtoSavedView(
+                name: "",
+                sortField: filterModel.filterState.sortField,
+                sortOrder: filterModel.filterState.sortOrder,
+                filterRules: filterModel.filterState.rules
+              )
 
-              } label: {
-                Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
-              }
+              savedView = proto
+
+            } label: {
+              Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
             }
           }
         }
-
-        if store.permissions.test(.view, for: .savedView) {
-          NavigationLink {
-            ManageView<SavedViewManager>()
-              .navigationTitle(Text(.localizable(.savedViews)))
-          } label: {
-            Label(
-              String(localized: .localizable(.savedViewsEditButtonLabel)),
-              systemImage: "list.bullet")
-          }
-        }
-
-        if filterModel.filterState.filtering {
-          if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
-            Divider()
-          }
-          Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
-          Divider()
-          Button(role: .destructive) {
-            Haptics.shared.notification(.success)
-            filterModel.filterState.clear()
-          } label: {
-            Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
-          }
-        }
-
-      } label: {
-        label()
       }
+
+      if store.permissions.test(.view, for: .savedView) {
+        NavigationLink {
+          ManageView<SavedViewManager>()
+            .navigationTitle(Text(.localizable(.savedViews)))
+        } label: {
+          Label(
+            String(localized: .localizable(.savedViewsEditButtonLabel)),
+            systemImage: "list.bullet")
+        }
+      }
+
+      if filterModel.filterState.filtering {
+        if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
+          Divider()
+        }
+        Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
+        Divider()
+        Button(role: .destructive) {
+          Haptics.shared.notification(.success)
+          filterModel.filterState.clear()
+        } label: {
+          Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
+        }
+      }
+
+    } label: {
+      label()
     }
+    .backport.glassEffect(.regular.interactive())
   }
 }
 
@@ -270,6 +269,7 @@ private struct Element<Label: View>: View {
       } label: {
         Pill(active: active, chevron: chevron, label: label)
       }
+      .glassEffect(.regular.interactive())
     } else {
       Pill(active: active, chevron: chevron, label: label)
         .onTapGesture {
@@ -317,7 +317,6 @@ private struct PillLiquidGlass<Label: View>: View {
     .padding(.vertical, 4)
     .foregroundColor(active ? activeColor : Color.primary)
     .fontWeight(active ? .bold : .regular)
-    .glassEffect(.regular.interactive())
   }
 }
 
@@ -417,12 +416,12 @@ private struct SortMenu: View {
       }
       .pickerStyle(.menu)
     } label: {
-      Element(
-        label: {
-          Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
-            .labelStyle(.iconOnly)
-        }, active: !filterModel.filterState.defaultSorting, action: {})
+      Pill(active: !filterModel.filterState.defaultSorting) {
+        Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
+          .labelStyle(.iconOnly)
+      }
     }
+    .backport.glassEffect(.regular.interactive())
     .onTapGesture {
       Haptics.shared.impact(style: .light)
     }
@@ -702,6 +701,7 @@ struct FilterBar: View {
     } label: {
       content()
     }
+    .backport.glassEffect(.regular.interactive())
   }
 
   private var ownerElement: some View {
@@ -727,6 +727,7 @@ struct FilterBar: View {
         Text(.localizable(.ownerUnowned))
       }
     }
+    .transaction { $0.animation = nil }
   }
 
   private var configuredComponents: [FilterBarComponent] {
@@ -780,18 +781,12 @@ struct FilterBar: View {
         }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
     case .permissions:
-      ownerElement
-        .overlay {
-          GeometryReader { geo in
-            ownerMenu {
-              Color.clear
-                .frame(width: geo.size.width, height: geo.size.height)
-            }
-            .onTapGesture {
-              Haptics.shared.impact(style: .light)
-            }
-          }
-        }
+      ownerMenu {
+        ownerElement
+      }
+      .onTapGesture {
+        Haptics.shared.impact(style: .light)
+      }
     case .customFields:
       Element(
         label: {
