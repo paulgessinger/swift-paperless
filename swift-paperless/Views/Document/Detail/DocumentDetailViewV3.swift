@@ -894,7 +894,7 @@ private struct PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
     .task {
       try? await store.fetchAll()
     }

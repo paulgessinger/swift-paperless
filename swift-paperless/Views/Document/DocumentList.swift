@@ -247,31 +247,44 @@ struct DocumentList: View {
       } else {
         let documents = viewModel.documents
         if !documents.isEmpty {
-          List {
-            Section {
-              ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
-                Cell(
-                  store: store,
-                  document: document,
-                  onSelect: onSelect,
-                  documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                  documentToDelete: $documentToDelete,
-                  viewModel: viewModel,
-                  isSelected: document.id == selectedDocumentID
-                )
+          ScrollViewReader { proxy in
+            List {
+              Section {
+                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
+                  Cell(
+                    store: store,
+                    document: document,
+                    onSelect: onSelect,
+                    documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                    documentToDelete: $documentToDelete,
+                    viewModel: viewModel,
+                    isSelected: document.id == selectedDocumentID
+                  )
+                  .id(document.id)
 
-                .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
+                  .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
 
-                .task {
-                  await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                  .task {
+                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                  }
                 }
               }
+              .listSectionSeparator(.hidden)
             }
-            .listSectionSeparator(.hidden)
-          }
-          .listStyle(.plain)
-          .safeAreaInset(edge: .bottom, spacing: 0) {
-            DocumentCountPill(total: viewModel.totalCount)
+            .listStyle(.plain)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+              DocumentCountPill(total: viewModel.totalCount)
+            }
+            // Scroll the selected row into view on iPad when selection
+            // changes externally (e.g., from a deep link). `initial: true`
+            // catches the freshly-mounted case where selectedDocumentID was
+            // set before the list rendered.
+            .onChange(of: selectedDocumentID, initial: true) { _, id in
+              guard let id else { return }
+              withAnimation {
+                proxy.scrollTo(id, anchor: .center)
+              }
+            }
           }
         } else {
           NoDocumentsView(filtering: filterModel.filterState.filtering)

@@ -922,7 +922,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
     .task {
       do {
         guard let repository = store.repository as? TransientRepository else {

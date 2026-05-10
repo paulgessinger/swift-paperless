@@ -968,7 +968,7 @@ private let customFields = [
         .environmentObject(store)
         .environment(filterModel)
         .environmentObject(errorController)
-        .environment(RouteManager.shared)
+        .environment(RouteManager())
 
       Section {
         Text(String(describing: filterModel.filterState))

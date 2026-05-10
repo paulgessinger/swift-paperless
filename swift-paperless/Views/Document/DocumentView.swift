@@ -760,5 +760,5 @@ struct DocumentView: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
 }
