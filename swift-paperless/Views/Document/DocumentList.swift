@@ -117,15 +117,21 @@ struct DocumentList: View {
 
         .padding(.horizontal)
         .padding(.vertical)
-        .background {
-          if isSelected {
-            // Bump opacity in dark mode so the accent tint stays
-            // visible against the darker chrome of the row backdrop.
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
-              .padding(.horizontal, 8)
+        .listRowBackground(
+          Group {
+            if isSelected {
+              // Bump opacity in dark mode so the accent tint stays
+              // visible against the darker chrome of the row backdrop.
+              // Rendered as the row background (not inside the cell)
+              // so it stays clipped to the row during swipe actions.
+              RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
+                .padding(.horizontal, 8)
+            } else {
+              Color.clear
+            }
           }
-        }
+        )
         .onTapGesture {
           store.preloadThumbnail(for: document)
           onSelect(document)
