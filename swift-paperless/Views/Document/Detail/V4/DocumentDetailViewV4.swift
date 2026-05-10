@@ -762,6 +762,29 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
 // MARK: - Helpers
 
+/// One-frame-deferred wrapper that holds an empty placeholder of the
+/// popover's ideal size during the very first render pass, then mounts the
+/// real content on the next runloop tick. This prevents toolbar items and
+/// `.searchable` from registering against the source view's parent
+/// NavigationStack while the popover host is still being set up.
+private struct DeferredPopoverContent<Content: View>: View {
+  let size: CGSize
+  @ViewBuilder let content: () -> Content
+  @State private var ready = false
+
+  var body: some View {
+    Group {
+      if ready {
+        content()
+      } else {
+        Color.clear
+      }
+    }
+    .frame(idealWidth: size.width, idealHeight: size.height)
+    .task { ready = true }
+  }
+}
+
 extension View {
   /// Applies `.zoom` navigation transition only on iOS 26+.
   /// On iOS 18, the zoom transition forces full-screen presentation which breaks sheet detent interaction.
@@ -769,11 +792,15 @@ extension View {
     -> some View
   {
     apply {
-      if #available(iOS 26.0, *) {
-        $0.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
-      } else {
+      #if targetEnvironment(macCatalyst)
         $0
-      }
+      #else
+        if #available(iOS 26.0, *) {
+          $0.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+        } else {
+          $0
+        }
+      #endif
     }
   }
 
@@ -801,10 +828,18 @@ extension View {
       }
     )
     return popover(isPresented: isPresented) {
-      content()
-        .frame(idealWidth: popoverSize.width, idealHeight: popoverSize.height)
-        .presentationDetents(detents)
-        .presentationCompactAdaptation(.sheet)
+      // SwiftUI evaluates the popover content closure once in the source's
+      // environment before the popover host installs its own scope; during
+      // that frame, the picker sheet's `.searchable` and `.toolbar` items
+      // register preferences against the *parent column's* nav bar and
+      // visibly merge with the share/inspector buttons until the popover
+      // host takes over. Deferring the first render of `content()` past
+      // that frame keeps those modifiers from running in the wrong scope.
+      DeferredPopoverContent(size: popoverSize, content: content)
+        #if !targetEnvironment(macCatalyst)
+          .presentationDetents(detents)
+          .presentationCompactAdaptation(.sheet)
+        #endif
     }
   }
 }
