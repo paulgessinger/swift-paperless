@@ -120,7 +120,17 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         activeSheet = .notes
       }
     case .all:
-      break
+      if horizontalSizeClass == .regular {
+        showEditInspector = true
+      }
+    case .close:
+      if horizontalSizeClass == .regular {
+        showEditInspector = false
+      }
+      activeFieldEdit = nil
+      if activeSheet == .notes {
+        activeSheet = nil
+      }
     }
   }
 

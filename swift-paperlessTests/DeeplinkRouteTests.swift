@@ -74,20 +74,20 @@ struct DeeplinkRouteTests {
     let editYesRoute = try Route(from: editYesURL)
     #expect(editYesRoute.action == .document(id: 791, edit: .all))
 
-    // Test document with edit=false (explicit) → nil
+    // Test document with edit=false (explicit) → .close
     let editFalseURL = try #require(URL(string: "x-paperless://v1/document/101?edit=false"))
     let editFalseRoute = try Route(from: editFalseURL)
-    #expect(editFalseRoute.action == .document(id: 101, edit: nil))
+    #expect(editFalseRoute.action == .document(id: 101, edit: .close))
 
-    // Test document with edit=0 → nil
+    // Test document with edit=0 → .close
     let edit0URL = try #require(URL(string: "x-paperless://v1/document/102?edit=0"))
     let edit0Route = try Route(from: edit0URL)
-    #expect(edit0Route.action == .document(id: 102, edit: nil))
+    #expect(edit0Route.action == .document(id: 102, edit: .close))
 
-    // Test document with edit=no → nil
+    // Test document with edit=no → .close
     let editNoURL = try #require(URL(string: "x-paperless://v1/document/103?edit=no"))
     let editNoRoute = try Route(from: editNoURL)
-    #expect(editNoRoute.action == .document(id: 103, edit: nil))
+    #expect(editNoRoute.action == .document(id: 103, edit: .close))
 
     // Test document with edit parameter but invalid value (should throw error)
     #expect(throws: Route.ParseError.invalidEditValue("on")) {
@@ -888,13 +888,20 @@ struct DeeplinkRouteTests {
   }
 
   @Test func testDocumentRouteToURLWithEdit() throws {
-    // Legacy .all → ?edit=1
+    // .all → ?edit=1
     let allRoute = Route(action: .document(id: 5, edit: .all))
     #expect(allRoute.url == URL(string: "x-paperless://v1/document/5?edit=1"))
 
     // Round-trip parse of generated URL stays as .all
     let allReparsed = try Route(from: #require(allRoute.url))
     #expect(allReparsed.action == .document(id: 5, edit: .all))
+
+    // .close → ?edit=0
+    let closeRoute = Route(action: .document(id: 7, edit: .close))
+    #expect(closeRoute.url == URL(string: "x-paperless://v1/document/7?edit=0"))
+
+    let closeReparsed = try Route(from: #require(closeRoute.url))
+    #expect(closeReparsed.action == .document(id: 7, edit: .close))
 
     // Field target → ?edit=<rawValue>
     let fieldRoute = Route(action: .document(id: 9, edit: .field(.documentType)))

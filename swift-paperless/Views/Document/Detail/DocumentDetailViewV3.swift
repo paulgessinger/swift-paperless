@@ -394,8 +394,9 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     guard docId == viewModel.document.id else { return }
     routeManager.pendingRoute = nil
     switch edit {
-    case .none: showEditSheet = false
+    case .none: break
     case .all: showEditSheet = true
+    case .close: showEditSheet = false
     case .field: break
     }
   }
