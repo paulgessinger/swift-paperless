@@ -10,7 +10,11 @@ import DataModel
 import Networking
 import SwiftUI
 
-private enum ActiveSheet: Identifiable, Hashable {
+/// Per-field editors. On regular size class these render as popovers anchored
+/// to the source aspect; on compact they adapt back to sheets. Splitting these
+/// out from the auxiliary, always-sheet presentations lets each anchor
+/// independently.
+private enum FieldEdit: Identifiable, Hashable {
   case title
   case tags
   case asn
@@ -20,13 +24,10 @@ private enum ActiveSheet: Identifiable, Hashable {
   case storagePath
   case owner
   case customFields
-  case metadata
-  case notes
-  case shareLink
 
   var id: Self { self }
 
-  init(field: Route.Action.EditTarget.Field) {
+  init?(field: Route.Action.EditTarget.Field) {
     switch field {
     case .title: self = .title
     case .tags: self = .tags
@@ -37,9 +38,19 @@ private enum ActiveSheet: Identifiable, Hashable {
     case .storagePath: self = .storagePath
     case .owner: self = .owner
     case .customFields: self = .customFields
-    case .notes: self = .notes
+    case .notes: return nil
     }
   }
+}
+
+/// Auxiliary presentations that always render as sheets regardless of size
+/// class — they're large list/detail views that don't make sense as popovers.
+private enum AuxiliarySheet: Identifiable, Hashable {
+  case metadata
+  case notes
+  case shareLink
+
+  var id: Self { self }
 }
 
 @MainActor
@@ -48,11 +59,17 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @EnvironmentObject private var store: DocumentStore
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-  @State private var activeSheet: ActiveSheet? = nil
+  @State private var activeFieldEdit: FieldEdit? = nil
+  @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
-  @State private var shadowDelay: Double? = nil
+  // iPad-only: drives the .inspector-presented edit panel. Defaults open so
+  // the document's metadata is visible alongside the PDF the first time
+  // someone opens it on iPad. SceneStorage so the open/closed state
+  // persists across app launches per scene.
+  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
 
@@ -84,8 +101,37 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       docId == viewModel.document.id
     else { return }
     routeManager.pendingRoute = nil
-    guard case .field(let field) = edit else { return }
-    activeSheet = ActiveSheet(field: field)
+    switch edit {
+    case .none:
+      activeFieldEdit = nil
+      if activeSheet == .notes {
+        activeSheet = nil
+      }
+    case .field(let field):
+      if let fieldEdit = FieldEdit(field: field) {
+        // Edit popovers anchor to rows inside the inspector on iPad. Force
+        // it open so the deep link doesn't silently no-op when the user
+        // had previously collapsed the inspector.
+        if horizontalSizeClass == .regular {
+          showEditInspector = true
+        }
+        activeFieldEdit = fieldEdit
+      } else if field == .notes {
+        activeSheet = .notes
+      }
+    case .all:
+      if horizontalSizeClass == .regular {
+        showEditInspector = true
+      }
+    case .close:
+      if horizontalSizeClass == .regular {
+        showEditInspector = false
+      }
+      activeFieldEdit = nil
+      if activeSheet == .notes {
+        activeSheet = nil
+      }
+    }
   }
 
   private func deleteDocument() {
@@ -111,76 +157,134 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   }
 
   private var detailAspects: some View {
+    @Bindable var viewModel = viewModel
     let document = viewModel.document
     let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
       document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
-    return HFlow(itemSpacing: 12) {
+    // Inspector lays out one column so each aspect spans full width;
+    // iPhone keeps the two-column pill layout.
+    let columns: [GridItem] =
+      horizontalSizeClass == .regular
+      ? [GridItem(.flexible(), spacing: 12)]
+      : [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+      ]
+    return LazyVGrid(columns: columns, spacing: 12) {
       EditableAspect(
+        title: .localizable(.asn),
         label: asnLabel,
         systemImage: "qrcode",
-        action: { activeSheet = .asn },
+        action: { activeFieldEdit = .asn },
         transitionID: .asn,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .asn,
+        active: $activeFieldEdit,
+        detents: [.fraction(0.25), .medium],
+        popoverSize: CGSize(width: 380, height: 240)
+      ) {
+        AsnEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
+      }
 
       EditableAspect(
+        title: .localizable(.correspondent),
         label: aspectLabel(id: document.correspondent, in: store.correspondents),
         systemImage: "person.fill",
-        action: { activeSheet = .correspondent },
+        action: { activeFieldEdit = .correspondent },
         transitionID: .correspondent,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .correspondent, active: $activeFieldEdit) {
+        CorrespondentEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
+      }
 
       EditableAspect(
+        title: .localizable(.documentType),
         label: aspectLabel(id: document.documentType, in: store.documentTypes),
         systemImage: "doc.fill",
-        action: { activeSheet = .documentType },
+        action: { activeFieldEdit = .documentType },
         transitionID: .documentType,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .documentType, active: $activeFieldEdit) {
+        DocumentTypeEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
+      }
 
       EditableAspect(
+        title: .localizable(.documentEditCreatedDateLabel),
         label: .text(DocumentCell.dateFormatter.string(from: document.created)),
         systemImage: "calendar",
-        action: { activeSheet = .date },
+        action: { activeFieldEdit = .date },
         transitionID: .date,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .date,
+        active: $activeFieldEdit,
+        detents: [.fraction(0.25), .medium],
+        popoverSize: CGSize(width: 380, height: 440)
+      ) {
+        DateEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
+      }
 
       EditableAspect(
+        title: .localizable(.storagePath),
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
         systemImage: "archivebox.fill",
-        action: { activeSheet = .storagePath },
+        action: { activeFieldEdit = .storagePath },
         transitionID: .storagePath,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .storagePath, active: $activeFieldEdit) {
+        StoragePathEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
+      }
 
       EditableAspect(
+        title: .localizable(.sortOrderOwner),
         label: aspectLabel(
           id: { if case .user(let id) = document.owner { return id } else { return nil } }(),
           in: store.users
         ),
         systemImage: "person.badge.key.fill",
-        action: { activeSheet = .owner },
+        action: { activeFieldEdit = .owner },
         transitionID: .owner,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(
+        forFieldEdit: .owner,
+        active: $activeFieldEdit,
+        detents: [.medium, .large]
+      ) {
+        OwnerEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
+      }
 
       EditableAspect(
         label: .text(String(localized: .customFields(.title))),
         systemImage: "list.bullet.rectangle.fill",
-        action: { activeSheet = .customFields },
+        action: { activeFieldEdit = .customFields },
         transitionID: .customFields,
         namespace: namespace,
         enabled: canChange
       )
+      .editPopover(forFieldEdit: .customFields, active: $activeFieldEdit) {
+        CustomFieldsEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
+      }
     }
   }
 
@@ -220,6 +324,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let badge: String?
     let style: S
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ScaledMetric(relativeTo: .title2) private var iconSize = 24
 
     init(
@@ -240,19 +345,25 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       self.style = style
     }
 
+    private var isRegular: Bool { horizontalSizeClass == .regular }
+
     var body: some View {
+      // iPad: match the SearchablePDFPreview search button — 13pt padding,
+      // semibold .title2 icon, circular glass. Badge becomes a corner pill
+      // overlay so the circle isn't stretched.
       Button(action: action) {
         HStack {
           Label(localized: label, systemImage: image)
             .font(.title2)
+            .fontWeight(isRegular ? .semibold : .regular)
             .labelStyle(.iconOnly)
             .frame(width: iconSize, height: iconSize)
 
-          if let badge {
+          if !isRegular, let badge {
             Text(badge)
           }
         }
-        .padding(10)
+        .padding(isRegular ? 13 : 10)
         .apply {
           if let transitionID, let namespace {
             $0.backport.matchedTransitionSource(id: transitionID, in: namespace)
@@ -260,9 +371,81 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             $0
           }
         }
-        .backport.glassEffect(.regular.interactive())
+        .apply {
+          if isRegular {
+            $0.backport.glassEffect(.regular.interactive(), in: Circle())
+          } else {
+            $0.backport.glassEffect(.regular.interactive())
+          }
+        }
+        .overlay(alignment: .topTrailing) {
+          if isRegular, let badge {
+            Text(badge)
+              .font(.caption2)
+              .fontWeight(.bold)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 5)
+              .padding(.vertical, 1)
+              .background(.red, in: Capsule())
+              .offset(x: 6, y: -4)
+          }
+        }
       }
       .foregroundStyle(style)
+    }
+  }
+
+  // The bare metadata/notes/delete buttons. Used inline on iPhone (inside
+  // the `metadataBar` glass capsule) and on iPad as the trailing slot of
+  // SearchablePDFPreview's bottom bar.
+  @ViewBuilder
+  private var metadataActionButtons: some View {
+    BottomBarButton(
+      label: .documentMetadata(.metadata), image: "info.circle",
+      action: {
+        activeSheet = .metadata
+      },
+      transitionID: .metadata,
+      namespace: namespace,
+      badge: nil
+    )
+
+    BottomBarButton(
+      label: .documentMetadata(.notes), image: "note.text",
+      action: {
+        activeSheet = .notes
+      },
+      transitionID: .notes,
+      namespace: namespace,
+      badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
+    )
+
+    let canDelete = store.userCanDelete(document: viewModel.document)
+
+    BottomBarButton(
+      label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+      image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
+      action: {
+        if appSettings.documentDeleteConfirmation {
+          showDeleteConfirmation = true
+        } else {
+          deleteDocument()
+        }
+      },
+      style: canDelete ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
+    )
+    .contentTransition(.symbolEffect)
+    .disabled(!canDelete)
+    .opacity(1)
+    .confirmationDialog(
+      String(localized: .localizable(.confirmationPromptTitle)),
+      isPresented: $showDeleteConfirmation,
+      titleVisibility: .visible
+    ) {
+      Button(String(localized: .localizable(.delete)), role: .destructive) {
+        deleteDocument()
+      }
+      Button(String(localized: .localizable(.cancel)), role: .cancel) {}
     }
   }
 
@@ -270,53 +453,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   private var metadataBar: some View {
     GlassEffectContainerCompat {
       HStack {
-        BottomBarButton(
-          label: .documentMetadata(.metadata), image: "info.circle",
-          action: {
-            activeSheet = .metadata
-          },
-          transitionID: .metadata,
-          namespace: namespace,
-          badge: nil
-        )
-
-        BottomBarButton(
-          label: .documentMetadata(.notes), image: "note.text",
-          action: {
-            activeSheet = .notes
-          },
-          transitionID: .notes,
-          namespace: namespace,
-          badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
-        )
-
-        let canDelete = store.userCanDelete(document: viewModel.document)
-
-        BottomBarButton(
-          label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
-          image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
-          action: {
-            if appSettings.documentDeleteConfirmation {
-              showDeleteConfirmation = true
-            } else {
-              deleteDocument()
-            }
-          },
-          style: canDelete ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
-        )
-        .contentTransition(.symbolEffect)
-        .disabled(!canDelete)
-        .opacity(1)
-        .confirmationDialog(
-          String(localized: .localizable(.confirmationPromptTitle)),
-          isPresented: $showDeleteConfirmation,
-          titleVisibility: .visible
-        ) {
-          Button(String(localized: .localizable(.delete)), role: .destructive) {
-            deleteDocument()
-          }
-          Button(String(localized: .localizable(.cancel)), role: .cancel) {}
-        }
+        metadataActionButtons
       }
       .apply {
         if #unavailable(iOS 26.0) {
@@ -396,9 +533,85 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
   }
 
-  var body: some View {
-    @Bindable var viewModel = viewModel
+  @ViewBuilder
+  private var previewContent: some View {
+    if case .loaded(url: _, document: let document) = viewModel.download {
+      NavigationStack {
+        SearchablePDFPreview(
+          document: document,
+          currentPage: $previewPage
+        )
+        .ignoresSafeArea(.container)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(viewModel.document.title)
+      }
+      // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
+      .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
+    }
+  }
 
+  // The aspects/tags/title block. Used inline in the iPhone layout and
+  // inside the iPad inspector. Popovers attach to their source views, so the
+  // anchoring is the same whichever container hosts the panel.
+  @ViewBuilder
+  private var editPanel: some View {
+    @Bindable var viewModel = viewModel
+    VStack(alignment: .leading, spacing: 16) {
+      DocumentTitleView(
+        title: viewModel.document.title,
+        transitionID: .title,
+        namespace: namespace,
+        action: { activeFieldEdit = .title },
+        enabled: store.userCanChange(document: viewModel.document)
+      )
+      .editPopover(
+        forFieldEdit: .title,
+        active: $activeFieldEdit,
+        popoverSize: CGSize(width: 480, height: 240)
+      ) {
+        TitleEditSheet(viewModel: viewModel)
+          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
+      }
+
+      readOnlyExplanation
+
+      detailAspects
+        .animation(.spring(duration: 0.25), value: viewModel.document)
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(.localizable(.tags))
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .textCase(.uppercase)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .truncationMode(.tail)
+
+        DocumentTagsSection(
+          tags: viewModel.document.tags.map { store.tags[$0] },
+          action: {
+            activeFieldEdit = .tags
+          },
+          transitionID: .tags,
+          namespace: namespace,
+          enabled: store.userCanChange(document: viewModel.document)
+        )
+        .editPopover(
+          forFieldEdit: .tags,
+          active: $activeFieldEdit,
+          detents: [.medium, .large]
+        ) {
+          TagsEditSheet(viewModel: viewModel)
+            .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
+        }
+      }
+    }
+  }
+
+  // iPhone layout: horizontal page preview + edit panel stacked in a scroll
+  // view, metadata bar pinned to the bottom.
+  @ViewBuilder
+  private var compactBody: some View {
     ScrollView(.vertical) {
       VStack(alignment: .leading, spacing: 16) {
         DocumentPreview(
@@ -412,31 +625,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .frame(maxWidth: .infinity)
         .accessibilityLabel(.localizable(.documentOpen))
 
-        VStack(alignment: .leading, spacing: 16) {
-          DocumentTitleView(
-            title: viewModel.document.title,
-            transitionID: .title,
-            namespace: namespace,
-            action: { activeSheet = .title },
-            enabled: store.userCanChange(document: viewModel.document)
-          )
-
-          readOnlyExplanation
-
-          detailAspects
-            .animation(.spring(duration: 0.25), value: viewModel.document)
-
-          DocumentTagsSection(
-            tags: viewModel.document.tags.map { store.tags[$0] },
-            action: {
-              activeSheet = .tags
-            },
-            transitionID: .tags,
-            namespace: namespace,
-            enabled: store.userCanChange(document: viewModel.document)
-          )
-        }
-        .padding(.horizontal)
+        editPanel
+          .padding(.horizontal)
       }
       .padding(.bottom)
     }
@@ -445,6 +635,73 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       async let document: () = model.loadDocument()
       async let metadata: () = model.loadMetadata()
       _ = await (document, metadata)
+    }
+    .safeAreaInset(edge: .bottom) {
+      metadataBar
+    }
+  }
+
+  // iPad layout: full SearchablePDFPreview as the primary surface; the
+  // metadata buttons are merged into the same bottom bar as the search
+  // button. Edit panel goes into a resizable, togglable inspector.
+  @ViewBuilder
+  private var regularBody: some View {
+    let pdfReady: Bool = {
+      if case .loaded = viewModel.download { return true }
+      return false
+    }()
+
+    // PDF mounts as soon as the document is loaded, with a scrim layered on
+    // top until then. Animating the scrim's opacity is more reliable than
+    // animating PDFKit's insertion — PDFView's own layout phase otherwise
+    // races the SwiftUI fade and you end up seeing nothing.
+    ZStack {
+      if case .loaded(url: _, document: let pdfDocument) = viewModel.download {
+        SearchablePDFPreview(
+          document: pdfDocument,
+          currentPage: $previewPage,
+          showsDismissButton: false,
+          extendsBehindTopBar: true
+        ) {
+          // Inject the metadata/notes/delete trio into the same row as the
+          // search button so they share the bar's vertical position.
+          HStack {
+            metadataActionButtons
+          }
+        }
+      }
+
+      Color(.secondarySystemBackground)
+        .ignoresSafeArea()
+        .overlay {
+          ProgressView()
+            .controlSize(.large)
+            .scaleEffect(1.0)
+        }
+        .opacity(pdfReady ? 0 : 1)
+        .animation(.easeOut(duration: 0.35), value: pdfReady)
+        .allowsHitTesting(!pdfReady)
+    }
+    .inspector(isPresented: $showEditInspector) {
+      ScrollView {
+        editPanel
+          .padding()
+      }
+      .scrollBounceBehavior(.basedOnSize)
+      // Resizable inspector. SwiftUI doesn't expose the user-set width as a
+      // binding, so persisting the resize across launches isn't directly
+      // possible — exposing min/ideal/max at least lets the user drag.
+      .inspectorColumnWidth(min: 280, ideal: 360, max: 560)
+    }
+  }
+
+  var body: some View {
+    Group {
+      if horizontalSizeClass == .regular {
+        regularBody
+      } else {
+        compactBody
+      }
     }
     .navigationTitle(String(localized: .localizable(.details)))
     .navigationBarTitleDisplayMode(.inline)
@@ -458,61 +715,20 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .labelStyle(.iconOnly)
         }
       }
-    }
-
-    .apply {
-      if #available(iOS 26.0, *) {
-        $0.safeAreaInset(edge: .bottom) {
-          metadataBar
-        }
-      } else {
-        $0.safeAreaInset(edge: .bottom) {
-          metadataBar
+      if horizontalSizeClass == .regular {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            showEditInspector.toggle()
+          } label: {
+            Label(localized: .localizable(.edit), systemImage: "sidebar.right")
+              .labelStyle(.iconOnly)
+          }
         }
       }
     }
 
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
-      case .title:
-        TitleEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
-
-      case .tags:
-        TagsEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
-
-      case .asn:
-        AsnEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
-          .presentationDetents([.fraction(0.25), .medium])
-
-      case .correspondent:
-        CorrespondentEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
-
-      case .documentType:
-        DocumentTypeEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
-
-      case .date:
-        DateEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
-          .presentationDetents([.fraction(0.25), .medium])
-
-      case .storagePath:
-        StoragePathEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
-
-      case .owner:
-        OwnerEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
-          .presentationDetents([.medium, .large])
-
-      case .customFields:
-        CustomFieldsEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
-
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
           .environmentObject(store)
@@ -530,31 +746,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    .sheet(
-      isPresented: $showPreview,
-      onDismiss: {
-        Task {
-          try? await Task.sleep(for: .seconds(shadowDelay ?? 1.0))
-          shadowDelay = nil
-        }
-      }
-    ) {
-      if case .loaded(url: _, document: let document) = viewModel.download {
-        NavigationStack {
-          SearchablePDFPreview(
-            document: document,
-            onButtonDismiss: {
-              shadowDelay = 0.2
-            },
-            currentPage: $previewPage
-          )
-          .ignoresSafeArea(.container)
-          .navigationBarTitleDisplayMode(.inline)
-          .navigationTitle(viewModel.document.title)
-        }
-        // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
-        .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
-      }
+    .sheet(isPresented: $showPreview) {
+      previewContent
     }
 
     .task {
@@ -564,10 +757,43 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
+
+    // External mutations (e.g. the document-list swipe action that strips
+    // inbox tags) update the store but don't reach our local copy. Sync from
+    // the server-confirmed event so the edit panel stays in lock-step.
+    .onReceive(store.eventPublisher) { event in
+      guard case .changeReceived(let updated) = event,
+        updated.id == viewModel.document.id
+      else { return }
+      viewModel.document = updated
+    }
   }
 }
 
 // MARK: - Helpers
+
+/// One-frame-deferred wrapper that holds an empty placeholder of the
+/// popover's ideal size during the very first render pass, then mounts the
+/// real content on the next runloop tick. This prevents toolbar items and
+/// `.searchable` from registering against the source view's parent
+/// NavigationStack while the popover host is still being set up.
+private struct DeferredPopoverContent<Content: View>: View {
+  let size: CGSize
+  @ViewBuilder let content: () -> Content
+  @State private var ready = false
+
+  var body: some View {
+    Group {
+      if ready {
+        content()
+      } else {
+        Color.clear
+      }
+    }
+    .frame(idealWidth: size.width, idealHeight: size.height)
+    .task { ready = true }
+  }
+}
 
 extension View {
   /// Applies `.zoom` navigation transition only on iOS 26+.
@@ -576,11 +802,54 @@ extension View {
     -> some View
   {
     apply {
-      if #available(iOS 26.0, *) {
-        $0.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
-      } else {
+      #if targetEnvironment(macCatalyst)
         $0
+      #else
+        if #available(iOS 26.0, *) {
+          $0.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+        } else {
+          $0
+        }
+      #endif
+    }
+  }
+
+  /// Presents the per-field editor anchored to the source view. Renders as a
+  /// popover on regular size class and as a sheet (with the supplied detents)
+  /// on compact via `presentationCompactAdaptation(.sheet)`. The shared
+  /// `active` enum drives a derived isPresented binding so deep-link routing
+  /// and aspect taps both flow through one piece of state.
+  ///
+  /// `popoverSize` only affects the popover layer — sheets ignore it and
+  /// honour the supplied detents instead.
+  fileprivate func editPopover<Content: View>(
+    forFieldEdit field: FieldEdit,
+    active: Binding<FieldEdit?>,
+    detents: Set<PresentationDetent> = [.medium, .large],
+    popoverSize: CGSize = CGSize(width: 420, height: 520),
+    @ViewBuilder content: @escaping () -> Content
+  ) -> some View {
+    let isPresented = Binding(
+      get: { active.wrappedValue == field },
+      set: { newValue in
+        if !newValue, active.wrappedValue == field {
+          active.wrappedValue = nil
+        }
       }
+    )
+    return popover(isPresented: isPresented) {
+      // SwiftUI evaluates the popover content closure once in the source's
+      // environment before the popover host installs its own scope; during
+      // that frame, the picker sheet's `.searchable` and `.toolbar` items
+      // register preferences against the *parent column's* nav bar and
+      // visibly merge with the share/inspector buttons until the popover
+      // host takes over. Deferring the first render of `content()` past
+      // that frame keeps those modifiers from running in the wrong scope.
+      DeferredPopoverContent(size: popoverSize, content: content)
+        #if !targetEnvironment(macCatalyst)
+          .presentationDetents(detents)
+          .presentationCompactAdaptation(.sheet)
+        #endif
     }
   }
 }
@@ -598,11 +867,20 @@ extension Tag {
 #Preview("EditableAspect", traits: .sizeThatFitsLayout) {
   VStack(alignment: .leading, spacing: 12) {
     EditableAspect(
+      title: .localizable(.asn),
       label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
-    EditableAspect(label: .text("Preview Correspondent"), systemImage: "person.fill")
-    EditableAspect(label: .text("Preview Type"), systemImage: "doc.fill")
-    EditableAspect(label: .notAssigned, systemImage: "person.badge.key.fill")
-    EditableAspect(label: .private, systemImage: "person.badge.key.fill")
+    EditableAspect(
+      title: .localizable(.correspondent),
+      label: .text("Preview Correspondent"), systemImage: "person.fill")
+    EditableAspect(
+      title: .localizable(.documentType),
+      label: .text("Preview Type"), systemImage: "doc.fill")
+    EditableAspect(
+      title: .localizable(.sortOrderOwner),
+      label: .notAssigned, systemImage: "person.badge.key.fill")
+    EditableAspect(
+      title: .localizable(.sortOrderOwner),
+      label: .private, systemImage: "person.badge.key.fill")
 
     DocumentTagsSection(
       tags: [
@@ -654,7 +932,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
     .task {
       do {
         guard let repository = store.repository as? TransientRepository else {

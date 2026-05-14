@@ -30,7 +30,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7A5482AA299AD56C00D5061E"
-               BuildableName = "swift-paperless.app"
+               BuildableName = "Paperless.app"
                BlueprintName = "swift-paperless"
                ReferencedContainer = "container:swift-paperless.xcodeproj">
             </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7A5482AA299AD56C00D5061E"
-            BuildableName = "swift-paperless.app"
+            BuildableName = "Paperless.app"
             BlueprintName = "swift-paperless"
             ReferencedContainer = "container:swift-paperless.xcodeproj">
          </BuildableReference>
@@ -81,7 +81,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7A5482AA299AD56C00D5061E"
-            BuildableName = "swift-paperless.app"
+            BuildableName = "Paperless.app"
             BlueprintName = "swift-paperless"
             ReferencedContainer = "container:swift-paperless.xcodeproj">
          </BuildableReference>

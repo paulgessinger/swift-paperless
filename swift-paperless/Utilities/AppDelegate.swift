@@ -12,6 +12,11 @@ extension NSNotification.Name {
 }
 
 class SceneDelegate: NSObject, UIWindowSceneDelegate {
+  // Quick Actions deliver per-scene already (UIKit picks the scene the user
+  // tapped from). To keep routing state scoped to that one scene we don't
+  // touch RouteManager directly — we open the URL on the scene, which
+  // round-trips through `scene(_:openURLContexts:)` and SwiftUI's
+  // `.onOpenURL`, landing in this scene's MainView.
   func windowScene(
     _ windowScene: UIWindowScene,
     performActionFor shortcutItem: UIApplicationShortcutItem,
@@ -20,7 +25,7 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
     if let urlString = shortcutItem.userInfo?["url"] as? String,
       let url = URL(string: urlString)
     {
-      RouteManager.shared.pendingURL = url
+      windowScene.open(url, options: nil, completionHandler: nil)
       completionHandler(true)
     } else {
       completionHandler(false)
@@ -32,14 +37,16 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
     willConnectTo session: UISceneSession,
     options connectionOptions: UIScene.ConnectionOptions
   ) {
-    // Handle shortcut on app launch
-    if let shortcutItem = connectionOptions.shortcutItem {
-      if let urlString = shortcutItem.userInfo?["url"] as? String,
-        let url = URL(string: urlString)
-      {
-        //        NotificationCenter.default.post(name: .openShortcutURL, object: url)
-        RouteManager.shared.pendingURL = url
-      }
+    // Cold-launch shortcut. Defer the open until after SwiftUI has built
+    // the scene's view hierarchy — otherwise `.onOpenURL` isn't registered
+    // yet when we try to deliver.
+    guard
+      let shortcutItem = connectionOptions.shortcutItem,
+      let urlString = shortcutItem.userInfo?["url"] as? String,
+      let url = URL(string: urlString)
+    else { return }
+    Task { @MainActor in
+      await scene.open(url, options: nil)
     }
   }
 }

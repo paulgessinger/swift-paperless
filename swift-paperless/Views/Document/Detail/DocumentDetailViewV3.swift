@@ -394,8 +394,9 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     guard docId == viewModel.document.id else { return }
     routeManager.pendingRoute = nil
     switch edit {
-    case .none: showEditSheet = false
+    case .none: break
     case .all: showEditSheet = true
+    case .close: showEditSheet = false
     case .field: break
     }
   }
@@ -893,7 +894,7 @@ private struct PreviewHelper: View {
     }
     .environmentObject(store)
     .environmentObject(errorController)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
     .task {
       try? await store.fetchAll()
     }

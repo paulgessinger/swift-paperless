@@ -37,6 +37,12 @@ extension NavigationPath {
   }
 }
 
+// iPad-only: drives the saved-view sidebar selection.
+enum SidebarSelection: Hashable {
+  case allDocuments
+  case savedView(UInt)
+}
+
 struct DocumentNotFoundError: DisplayableError {
   let id: UInt
   let connection: StoredConnection
@@ -55,12 +61,18 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var filterModel = FilterModel()
   @State private var isFetching: Bool = false
 
   // MARK: State
 
   @State private var navPath: [NavigationState] = []
+
+  // iPad split-view state. Compact size class ignores these.
+  @State private var sidebarSelection: SidebarSelection? = .allDocuments
+  @State private var selectedDocument: Document?
+  @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
   @State private var showFileImporter = false
   @State private var isDocumentScannerAvailable = false
@@ -132,9 +144,13 @@ struct DocumentView: View {
           guard case .document(let reqId, _) = route.action else { return }
 
           // Check if currently open id is the one that's requested
-          if let last = navPath.last {
-            if case .detail(let open) = last {
-              if reqId == open.id { return }
+          if horizontalSizeClass == .regular {
+            if selectedDocument?.id == reqId { return }
+          } else {
+            if let last = navPath.last {
+              if case .detail(let open) = last {
+                if reqId == open.id { return }
+              }
             }
           }
 
@@ -149,8 +165,12 @@ struct DocumentView: View {
           }
 
           store.preloadThumbnail(for: document)
-          await clear()
-          navPath.append(NavigationState.detail(document: document))
+          if horizontalSizeClass == .regular {
+            selectedDocument = document
+          } else {
+            await clear()
+            navPath.append(NavigationState.detail(document: document))
+          }
         }
       case .setFilter(let filter):
         routeManager.pendingRoute = nil
@@ -263,7 +283,7 @@ struct DocumentView: View {
   }
 
   @ToolbarContentBuilder
-  private var toolbar: some ToolbarContent {
+  private var trailingToolbar: some ToolbarContent {
     ToolbarItemGroup(placement: .navigationBarTrailing) {
       TaskActivityToolbar(navState: $taskViewNavState)
 
@@ -298,7 +318,10 @@ struct DocumentView: View {
       }
       .tint(.accent)
     }
+  }
 
+  @ToolbarContentBuilder
+  private var leadingToolbar: some ToolbarContent {
     ToolbarItemGroup(placement: .navigationBarLeading) {
       Menu {
 
@@ -309,6 +332,21 @@ struct DocumentView: View {
         }
 
         ConnectionQuickChangeMenu()
+
+        // On iPad the ASN scanner moves into this menu — the leading
+        // toolbar gets crowded next to the sidebar-toggle button when
+        // the sidebar is collapsed, and there's no good place for a
+        // separate ASN button.
+        if horizontalSizeClass == .regular, isDataScannerAvailable {
+          Button {
+            showDataScanner = true
+          } label: {
+            Label(
+              String(localized: .localizable(.toolbarAsnButton)),
+              systemImage: "number.circle"
+            )
+          }
+        }
 
         #if DEBUG
           Section("Debug") {
@@ -355,7 +393,7 @@ struct DocumentView: View {
         }
       }
 
-      if isDataScannerAvailable {
+      if isDataScannerAvailable, horizontalSizeClass != .regular {
         Button {
           showDataScanner = true
         } label: {
@@ -405,23 +443,34 @@ struct DocumentView: View {
     }
   }
 
-  // MARK: Main View Body
+  // MARK: Filter assembly (shared compact + regular)
 
-  var body: some View {
+  @ViewBuilder
+  private func filterAssemblyView(showsBackdrop: Bool) -> some View {
+    if #available(iOS 26.0, *) {
+      FilterAssembly(
+        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
+    } else {
+      FilterAssemblyiOS18(
+        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
+    }
+  }
+
+  // MARK: Compact body (iPhone / compact size class)
+
+  @ViewBuilder
+  private var compactBody: some View {
     NavigationStack(path: $navPath) {
       DocumentList(
-        store: store, navPath: $navPath,
+        store: store,
+        onSelect: { navPath.append(.detail(document: $0)) },
         filterModel: filterModel,
         errorController: errorController,
         isFetching: $isFetching
       )
 
       .safeAreaInset(edge: .top) {
-        if #available(iOS 26.0, *) {
-          FilterAssembly(filterModel: filterModel, isFetching: isFetching)
-        } else {
-          FilterAssemblyiOS18(filterModel: filterModel, isFetching: isFetching)
-        }
+        filterAssemblyView(showsBackdrop: true)
       }
 
       .toolbarBackground(.hidden, for: .navigationBar)
@@ -441,20 +490,173 @@ struct DocumentView: View {
       .navigationBarTitleDisplayMode(.inline)
 
       .toolbar {
-        toolbar
+        leadingToolbar
+        trailingToolbar
+      }
+    }
+  }
+
+  // MARK: Regular body (iPad / regular size class)
+
+  @ViewBuilder
+  private var sidebarColumn: some View {
+    List(selection: $sidebarSelection) {
+      Section {
+        NavigationLink(value: SidebarSelection.allDocuments) {
+          Label(
+            String(localized: .localizable(.allDocuments)),
+            systemImage: "tray.full"
+          )
+        }
       }
 
-      .fileImporter(
-        isPresented: $showFileImporter,
-        allowedContentTypes: [.pdf, .image],
-        allowsMultipleSelection: true,
+      if store.permissions.test(.view, for: .savedView) {
+        Section(String(localized: .localizable(.savedViews))) {
+          let savedViews = store.savedViews.map(\.value).sorted { $0.name < $1.name }
+          if savedViews.isEmpty {
+            Text(.localizable(.noSavedViews))
+              .foregroundStyle(.secondary)
+          } else {
+            ForEach(savedViews, id: \.id) { sv in
+              NavigationLink(value: SidebarSelection.savedView(sv.id)) {
+                Label(sv.name, systemImage: "bookmark")
+              }
+            }
+          }
+        }
+      }
+    }
+    .navigationTitle(String(localized: .localizable(.documents)))
+    .toolbar { leadingToolbar }
+  }
+
+  @ViewBuilder
+  private var contentColumn: some View {
+    DocumentList(
+      store: store,
+      onSelect: { selectedDocument = $0 },
+      filterModel: filterModel,
+      errorController: errorController,
+      isFetching: $isFetching,
+      selectedDocumentID: selectedDocument?.id
+    )
+    .safeAreaInset(edge: .top) {
+      filterAssemblyView(showsBackdrop: false)
+    }
+    .navigationTitle(savedViewNavigationTitle)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbarBackground(.hidden, for: .navigationBar)
+    .toolbar {
+      // When the sidebar is collapsed (portrait, or user-toggled), the
+      // settings/logout/ASN menu becomes unreachable from the sidebar's
+      // toolbar — mirror it here so it's still one tap away.
+      if columnVisibility != .all {
+        leadingToolbar
+      }
+      trailingToolbar
+    }
+  }
+
+  @ViewBuilder
+  private var detailColumn: some View {
+    if let doc = selectedDocument {
+      let bridge = Binding<[NavigationState]>(
+        get: { [.detail(document: doc)] },
+        set: { newValue in
+          if newValue.isEmpty { selectedDocument = nil }
+        }
+      )
+      DocumentDetailView(store: store, document: doc, navPath: bridge)
+        .id(doc.id)
+    } else {
+      ContentUnavailableView {
+        Label(
+          String(localized: .localizable(.documents)),
+          systemImage: "doc.text"
+        )
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var regularBody: some View {
+    NavigationSplitView(columnVisibility: $columnVisibility) {
+      sidebarColumn
+    } content: {
+      NavigationStack { contentColumn }
+    } detail: {
+      NavigationStack { detailColumn }
+    }
+    .onChange(of: sidebarSelection) { _, new in
+      withAnimation {
+        switch new {
+        case .none, .allDocuments:
+          // Only clear if there's actually something to clear — otherwise
+          // the initial reverse-sync (below) ricochets back here and
+          // wipes a perfectly valid restored filter.
+          if filterModel.filterState.savedView != nil
+            || filterModel.filterState.modified
+          {
+            filterModel.filterState.clear()
+          }
+        case .savedView(let id):
+          // Same idempotency guard: if we're already on this saved view
+          // (e.g., we just adopted it from filterState), don't reassign
+          // and discard any user modifications restored from defaults.
+          if filterModel.filterState.savedView != id, let sv = store.savedViews[id] {
+            filterModel.filterState = .init(savedView: sv)
+          }
+        }
+      }
+    }
+    // initial: true makes the sidebar adopt a saved view that was already
+    // present in filterState at mount (restored from UserDefaults).
+    .onChange(of: filterModel.filterState.savedView, initial: true) { _, new in
+      let target: SidebarSelection = new.map(SidebarSelection.savedView) ?? .allDocuments
+      if sidebarSelection != target { sidebarSelection = target }
+    }
+  }
+
+  // MARK: Main View Body
+
+  var body: some View {
+    Group {
+      if horizontalSizeClass == .regular {
+        regularBody
+      } else {
+        compactBody
+      }
+    }
+
+    .fileImporter(
+      isPresented: $showFileImporter,
+      allowedContentTypes: [.pdf, .image],
+      allowsMultipleSelection: true,
+      onCompletion: { result in
+        Task { @MainActor in
+          switch result {
+          case .success(let urls):
+            showFileImporter = false
+            await importModel.importFile(
+              result: urls, isSecurityScoped: true, errorController: errorController)
+            showCreateModal = true
+          case .failure(let failure):
+            errorController.push(error: failure)
+          }
+        }
+      }
+    )
+
+    .fullScreenCover(isPresented: $showDocumentScanner) {
+      DocumentScannerView(
+        isPresented: $showDocumentScanner,
         onCompletion: { result in
           Task { @MainActor in
             switch result {
             case .success(let urls):
-              showFileImporter = false
+              showDocumentScanner = false
               await importModel.importFile(
-                result: urls, isSecurityScoped: true, errorController: errorController)
+                result: urls, isSecurityScoped: false, errorController: errorController)
               showCreateModal = true
             case .failure(let failure):
               errorController.push(error: failure)
@@ -462,86 +664,67 @@ struct DocumentView: View {
           }
         }
       )
+      .ignoresSafeArea()
+    }
 
-      .fullScreenCover(isPresented: $showDocumentScanner) {
-        DocumentScannerView(
-          isPresented: $showDocumentScanner,
-          onCompletion: { result in
-            Task { @MainActor in
-              switch result {
-              case .success(let urls):
-                showDocumentScanner = false
-                await importModel.importFile(
-                  result: urls, isSecurityScoped: false, errorController: errorController)
-                showCreateModal = true
-              case .failure(let failure):
-                errorController.push(error: failure)
-              }
-            }
-          }
-        )
-        .ignoresSafeArea()
+    .sheet(
+      isPresented: $showCreateModal,
+      onDismiss: {
+        importModel.reset()
+      }
+    ) {
+      DocumentModelWrapper(
+        importModel: importModel,
+        callback: createCallback,
+        title: createDocumentTitle
+      )
+      .environmentObject(store)
+      .environmentObject(errorController)
+    }
+
+    .sheet(isPresented: $showDataScanner) {
+      DataScannerView(store: store)
+    }
+
+    .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)
+
+    .onChange(of: selectedPhotos) {
+      Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
+      guard !selectedPhotos.isEmpty else {
+        Logger.shared.debug("No photos, nothing to do")
+        return
       }
 
-      .sheet(
-        isPresented: $showCreateModal,
-        onDismiss: {
-          importModel.reset()
-        }
-      ) {
-        DocumentModelWrapper(
-          importModel: importModel,
-          callback: createCallback,
-          title: createDocumentTitle
-        )
-        .environmentObject(store)
-        .environmentObject(errorController)
-      }
-
-      .sheet(isPresented: $showDataScanner) {
-        DataScannerView(store: store)
-      }
-
-      .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotos, matching: .images)
-
-      .onChange(of: selectedPhotos) {
-        Logger.shared.info("Photo picker returns \(selectedPhotos.count) photos")
-        guard !selectedPhotos.isEmpty else {
-          Logger.shared.debug("No photos, nothing to do")
-          return
-        }
-
-        Task { @MainActor in
-          do {
-            let url = try await createPDFFrom(photos: selectedPhotos)
-            Logger.shared.debug("Have PDF at \(url)")
-            await importModel.importFile(
-              result: [url], isSecurityScoped: false, errorController: errorController)
-            selectedPhotos = []
-            showCreateModal = true
-          } catch {
-            Logger.shared.error("Got error when creating PDF from photos: \(error)")
-            errorController.push(error: error)
-          }
-        }
-      }
-
-      .sheet(item: $taskViewNavState, content: tasksSheet)
-
-      .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
-
-      .task {
+      Task { @MainActor in
         do {
-          async let fetch: Void = store.fetchAll()
-
-          (isDataScannerAvailable, isDocumentScannerAvailable) = await (
-            DataScannerView.isAvailable, DocumentScannerView.isAvailable
-          )
-
-          try await fetch
+          let url = try await createPDFFrom(photos: selectedPhotos)
+          Logger.shared.debug("Have PDF at \(url)")
+          await importModel.importFile(
+            result: [url], isSecurityScoped: false, errorController: errorController)
+          selectedPhotos = []
+          showCreateModal = true
         } catch {
+          Logger.shared.error("Got error when creating PDF from photos: \(error)")
           errorController.push(error: error)
         }
+      }
+    }
+
+    .sheet(item: $taskViewNavState, content: tasksSheet)
+
+    .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
+
+    .task {
+      do {
+        async let fetch: Void = store.fetchAll()
+
+        (isDataScannerAvailable, isDocumentScannerAvailable) = await (
+          DataScannerView.isAvailable, DocumentScannerView.isAvailable
+        )
+
+        try await fetch
+      } catch {
+        errorController.push(error: error)
       }
     }
 
@@ -577,5 +760,5 @@ struct DocumentView: View {
     .environmentObject(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
-    .environment(RouteManager.shared)
+    .environment(RouteManager())
 }

@@ -4,3 +4,5 @@
 - Drop primary action for the "add document" button in the document list: this didn't work properly
 - Use popovers for filter bar aspects
 - Optimize document detail v4 screen for iPad
+- Additional work on the detail screen UI
+- Full-on multi-column iPad layout for the document list and detail screen 🚀

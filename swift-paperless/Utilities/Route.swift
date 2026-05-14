@@ -33,10 +33,12 @@ public struct Route: Equatable, Sendable {
 
   public enum Action: Equatable, Sendable {
     /// Specifies what edit UI a document deep link should open.
-    /// `.all` is the legacy V3 monolithic edit sheet; `.field(...)` targets a single V4 per-field sheet.
-    /// Will collapse to just `.field(...)` once V3 is removed.
+    /// `.all` opens the iPad inspector / V3 monolithic edit sheet; `.close` actively hides it.
+    /// `.field(...)` targets a single V4 per-field sheet. `nil` means "no instruction" — leave
+    /// the current edit state alone.
     public enum EditTarget: Equatable, Sendable {
       case all
+      case close
       case field(Field)
 
       public enum Field: String, Equatable, Sendable, CaseIterable {
@@ -556,9 +558,9 @@ public struct Route: Equatable, Sendable {
   }
 
   /// Parses the edit parameter from query items.
-  /// Accepts the legacy boolean grammar (true/1/yes → `.all`, false/0/no → `nil`)
+  /// Accepts the boolean grammar (true/1/yes → `.all`, false/0/no → `.close`)
   /// or a `Field` raw value (`tags`, `correspondent`, `documentType`, …) → `.field(...)`.
-  /// Missing parameter returns `nil`. Anything else throws.
+  /// Missing parameter returns `nil` (no instruction). Anything else throws.
   static private func parseEditParameter(from queryItems: [URLQueryItem]) throws -> Action
     .EditTarget?
   {
@@ -572,7 +574,7 @@ public struct Route: Equatable, Sendable {
     case "true", "1", "yes":
       return .all
     case "false", "0", "no":
-      return nil
+      return .close
     default:
       if let field = Action.EditTarget.Field(rawValue: trimmed) {
         return .field(field)
@@ -597,6 +599,8 @@ public struct Route: Equatable, Sendable {
       break
     case .all:
       queryItems.append(URLQueryItem(name: "edit", value: "1"))
+    case .close:
+      queryItems.append(URLQueryItem(name: "edit", value: "0"))
     case .field(let field):
       queryItems.append(URLQueryItem(name: "edit", value: field.rawValue))
     }
