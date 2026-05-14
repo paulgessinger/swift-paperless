@@ -71,3 +71,9 @@ resolve-packages:
   xcodebuild -project swift-paperless.xcodeproj \
     -scheme swift-paperless \
     -resolvePackageDependencies | xcbeautify
+
+demo-up:
+  uv run --project scripts swpngx capture setup
+
+demo-down:
+  uv run --project scripts swpngx capture teardown
