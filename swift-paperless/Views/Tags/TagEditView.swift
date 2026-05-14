@@ -14,6 +14,7 @@ import os
 
 struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
   @EnvironmentObject private var store: DocumentStore
+  @Environment(\.colorScheme) private var colorScheme
 
   var onSave: ((Element) throws -> Void)?
 
@@ -77,10 +78,16 @@ struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
           .lineLimit(1)
           .truncationMode(.middle)
           .font(.title3)
-          .padding(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-          .background(tag.color.color)
-          .foregroundColor(tag.textColor.color)
+          .padding(EdgeInsets(top: 3, leading: 8, bottom: 3, trailing: 8))
+          .background(tag.color.color.opacity(0.28))
+          .foregroundColor(
+            blend(colorScheme == .dark ? .white : .black, tag.color.color, by: 0.35)
+          )
           .clipShape(Capsule())
+          .overlay {
+            Capsule()
+              .strokeBorder(tag.color.color, lineWidth: 1)
+          }
           .textCase(.none)
           .animation(.linear(duration: 0.2), value: tag.name)
           .frame(maxWidth: .infinity, alignment: .center)
