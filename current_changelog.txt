@@ -1,8 +1,0 @@
-- Fix task view showing "no elements" while loading
-- Tune visuals for document preview thumbnail fade-in and page indicator
-- Deep links can now open a specific document field for editing, e.g. x-paperless://v1/document/123?edit=tags
-- Drop primary action for the "add document" button in the document list: this didn't work properly
-- Use popovers for filter bar aspects
-- Optimize document detail v4 screen for iPad
-- Additional work on the detail screen UI
-- Full-on multi-column iPad layout for the document list and detail screen 🚀
