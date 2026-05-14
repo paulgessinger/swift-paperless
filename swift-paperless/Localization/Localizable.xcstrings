@@ -1929,7 +1929,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Benutzerdefiniertes Feld"
+            "value" : "Benutzerdef. Feld"
           }
         },
         "en" : {
@@ -1982,7 +1982,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Benutzerdefinierte Felder"
+            "value" : "Benutzerdef. Felder"
           }
         },
         "en" : {
@@ -4212,8 +4212,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld documents"
+            "state" : "translated",
+            "value" : "%lld dokumenter"
           }
         },
         "de" : {
@@ -4230,32 +4230,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld documents"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld documents"
+            "state" : "translated",
+            "value" : "%lld documenti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld documents"
+            "state" : "translated",
+            "value" : "%lld documenten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld documents"
+            "state" : "translated",
+            "value" : "%lld dokumenty"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld documents"
+            "state" : "translated",
+            "value" : "%lld belgeler"
           }
         }
       }
@@ -7767,6 +7767,167 @@
         }
       }
     },
+    "notes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Note"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Noter"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Notiz"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Notizen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld note"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld notes"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld note"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld notes"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nota"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld note"
+                }
+              }
+            }
+          }
+        },
+        "nl" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld notitie"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld notities"
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld uwaga"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld uwaga"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld uwaga"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld notatki"
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Not"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Notlar"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "numberOfTags" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8892,13 +9053,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Tilføj \"%@\""
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "\"%@\" hinzufügen"
           }
         },
         "en" : {
@@ -8910,31 +9071,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Ajouter \"%@\""
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Aggiungi \"%@\""
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Toevoegen \"%@\""
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Dodaj \"%@\""
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add \"%@\""
+            "value" : "Ekle \"%@\""
           }
         }
       }
@@ -13081,14 +13242,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Forældre-tag"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Übergeordneter Tag"
           }
         },
         "en" : {
@@ -13099,32 +13260,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Étiquette parent"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Tag genitore"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Ouder tag"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Znacznik rodzica"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Parent tag"
+            "state" : "translated",
+            "value" : "Ebeveyn etiketi"
           }
         }
       }

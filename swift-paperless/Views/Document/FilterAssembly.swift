@@ -13,6 +13,10 @@ import SwiftUI
 struct FilterAssembly: View {
   var filterModel: FilterModel
   var isFetching: Bool = false
+  // Caller-controlled. Inside a NavigationSplitView column the column
+  // itself reports a compact horizontalSizeClass to children, so we can't
+  // detect iPad layout from inside this view — the parent has to tell us.
+  var showsBackdrop: Bool = true
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
@@ -82,24 +86,26 @@ struct FilterAssembly: View {
       }
     }
 
-    .background(
-      Rectangle()
-        .fill(
-          Material.ultraThinMaterial
-        )
-        .mask {
-          LinearGradient(
-            colors: [
-              Color.black,
-              Color.black,
-              Color.black.opacity(0.4),
-              Color.black.opacity(0),
-            ], startPoint: .top, endPoint: .bottom)
+    .background {
+      if showsBackdrop {
+        Rectangle()
+          .fill(
+            Material.ultraThinMaterial
+          )
+          .mask {
+            LinearGradient(
+              colors: [
+                Color.black,
+                Color.black,
+                Color.black.opacity(0.4),
+                Color.black.opacity(0),
+              ], startPoint: .top, endPoint: .bottom)
 
-        }
+          }
 
-        .ignoresSafeArea(.container, edges: .top)
-    )
+          .ignoresSafeArea(.container, edges: .top)
+      }
+    }
   }
 }
 

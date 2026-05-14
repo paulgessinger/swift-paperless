@@ -58,8 +58,9 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
     self.quickCreate = quickCreate
     self.createView = createView
     let nothingSelected = viewModel.document[keyPath: keyPath] == nil
-    _searchIsActive = State(initialValue: nothingSelected)
-    _selectedDetent = State(initialValue: nothingSelected ? .large : .medium)
+    let autoFocus = nothingSelected && AppFeatures.enabled(.autoFocusSearchInDetailSheets)
+    _searchIsActive = State(initialValue: autoFocus)
+    _selectedDetent = State(initialValue: autoFocus ? .large : .medium)
   }
 
   private let animation = Animation.spring(duration: 0.2)

@@ -272,11 +272,17 @@ final class TaskListViewModel {
   }
 
   func refresh() async {
-    source = nil
-    exhausted = false
-    tasks = []
-    ready = false
-    await load()
+    guard let store else { return }
+    do {
+      let source = try store.repository.tasks()
+      let batch = try await source.fetch(limit: initialBatchSize)
+      self.source = source
+      tasks = batch
+      exhausted = await source.isExhausted
+      ready = true
+    } catch {
+      Logger.shared.error("TaskList failed to refresh: \(error)")
+    }
   }
 
   func fetchMoreIfNeeded(currentIndex: Int) async {
@@ -423,18 +429,23 @@ private struct TaskList: View {
   }
 
   var body: some View {
-    Group {
+    ZStack {
       if !store.permissions.test(.view, for: .paperlessTask) {
         Form {
           NoPermissionsView()
         }
       } else if let viewModel, !viewModel.tasks.isEmpty {
         mainList(viewModel: viewModel)
+          .transition(.opacity)
+      } else if viewModel?.ready != true {
+        Form {}
+          .transition(.opacity)
       } else {
         Form {
           NoElementsView()
             .padding(.top, 50)
         }
+        .transition(.opacity)
       }
     }
 
@@ -452,6 +463,7 @@ private struct TaskList: View {
 
     .animation(.default, value: editMode)
     .animation(.default, value: viewModel?.tasks ?? [])
+    .animation(.default, value: viewModel?.ready)
 
     .environment(\.editMode, $editMode)
 
@@ -484,6 +496,12 @@ private struct TaskList: View {
               Task { await acknowledge(ids: Array(selection)) }
             }
           }
+        }
+      }
+
+      ToolbarItem(placement: .topBarTrailing) {
+        if viewModel?.ready == false {
+          ProgressView()
         }
       }
 

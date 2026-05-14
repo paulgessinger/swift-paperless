@@ -10,6 +10,7 @@ import Foundation
 enum AppFeatures {
   case tipJar
   case documentDetailViewV4
+  case autoFocusSearchInDetailSheets
 
   static func enabled(_ feature: Self) -> Bool {
     let channel = Bundle.main.appConfiguration
@@ -23,6 +24,7 @@ enum AppFeatures {
       case .AppStore:
         false
       }
+    case .autoFocusSearchInDetailSheets: false
     }
   }
 }

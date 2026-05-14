@@ -12,6 +12,7 @@ import SwiftUI
 struct FilterAssemblyiOS18: View {
   var filterModel: FilterModel
   var isFetching: Bool = false
+  var showsBackdrop: Bool = true
 
   @State private var searchText: String = ""
   @State private var searchTask: Task<Void, Never>?
@@ -72,13 +73,15 @@ struct FilterAssemblyiOS18: View {
       searchText = filterModel.filterState.searchText
     }
 
-    .background(
-      Rectangle()
-        .fill(
-          Material.bar
-        )
-        .ignoresSafeArea(.container, edges: .top)
-    )
+    .background {
+      if showsBackdrop {
+        Rectangle()
+          .fill(
+            Material.bar
+          )
+          .ignoresSafeArea(.container, edges: .top)
+      }
+    }
 
     .overlay(alignment: .bottom) {
       Rectangle()

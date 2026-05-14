@@ -905,9 +905,8 @@ struct CustomFieldFilterView: View {
         ToolbarItem(placement: .topBarTrailing) {
           switch state {
           case .valid:
-            Button(.localizable(.done)) {
-              dismiss()
-            }
+            SaveButton(action: { dismiss() })
+              .backport.glassProminentButtonStyle(or: .automatic)
           case .error:
             Button(.customFields(.filterAbandonButtonLabel), role: .destructive) {
               dismiss()

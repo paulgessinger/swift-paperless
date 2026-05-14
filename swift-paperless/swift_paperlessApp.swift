@@ -34,7 +34,11 @@ struct MainView: View {
 
   @StateObject private var biometricLockManager: BiometricLockManager
 
-  @Environment(RouteManager.self) private var routeManager
+  // Per-scene routing state. Owning this here (instead of a global
+  // singleton) means each window in a multi-window setup has its own
+  // pendingRoute, so listeners in one scene don't react to URLs that
+  // landed in another.
+  @State private var routeManager = RouteManager()
 
   init() {
     _ = AppSettings.shared
@@ -263,8 +267,6 @@ struct MainView: View {
         return
       }
 
-      Logger.shared.info("INITIAL ROUTE: \(String(describing:RouteManager.shared.pendingURL))")
-      Logger.shared.info("INITIAL ROUTE: \(String(describing:routeManager.pendingURL))")
       setupQuickActions()
 
       Logger.shared.notice("Checking login status")
@@ -309,12 +311,7 @@ struct MainView: View {
     }
 
     .onOpenURL(perform: handleUrlOpen)
-    .onChange(of: routeManager.pendingURL, initial: true) {
-      if let url = routeManager.pendingURL {
-        handleUrlOpen(url)
-        routeManager.pendingURL = nil
-      }
-    }
+    .environment(routeManager)
   }
 }
 
@@ -325,7 +322,6 @@ struct swift_paperlessApp: App {
   var body: some Scene {
     WindowGroup {
       MainView()
-        .environment(RouteManager.shared)
     }
   }
 }
