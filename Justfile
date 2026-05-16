@@ -7,6 +7,8 @@ docs-serve port=default_port:
 
 docs:
     {{zensical}} build
+    mkdir -p site/release_notes/md
+    cp docs/release_notes/*.md site/release_notes/md
 
 alias sv := set_version
 set_version version:
