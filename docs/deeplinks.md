@@ -67,20 +67,31 @@ If the `server` parameter is not specified, the currently active server will be 
 
 ### Open Document
 
-Opens a specific document by its ID.
+Opens a specific document by its ID. Optionally opens an editing UI immediately after the document loads.
 
 **URL Format:**
 ```
-x-paperless://v1/document/<document_id>[?edit=<boolean>][&server=<server>]
+x-paperless://v1/document/<document_id>[?edit=<value>][&server=<server>]
 ```
 
 **Parameters:**
 
 - `document_id` (required): The numeric ID of the document
 
-- `edit` (optional): Whether to open the document in edit mode. Defaults to `false` if not specified.
-  - Accepted values for `true`: `true`, `1`, `yes` (case-insensitive)
-  - Accepted values for `false`: `false`, `0`, `no` (case-insensitive)
+- `edit` (optional): Selects an editing UI to open along with the document. If omitted, the document opens in view mode.
+
+  Accepted values:
+
+  - **Boolean (legacy)**: `true`, `1`, `yes` (case-insensitive) opens the full document edit sheet. `false`, `0`, `no` is equivalent to omitting the parameter.
+
+  - **Field name**: opens the editor for one specific field. Accepted field names (case-sensitive):
+    `title`, `tags`, `asn`, `correspondent`, `documentType`, `date`, `storagePath`, `owner`, `customFields`, `notes`.
+
+  Notes:
+
+  - The boolean form is supported for backwards compatibility and may be removed in a future release. New links should target a specific field.
+  - Field-name links rely on the redesigned document detail UI. On older builds that still use the previous detail UI, a field-name `edit` value is ignored, and the document opens in view mode.
+  - **Closing an open editor**: if the document is already on screen and an edit sheet/popover is open, sending the same document deep link with `edit=false` (or `0`/`no`, or omitting the parameter) dismisses the active editor. This lets you script "open editor" / "close editor" pairs from shortcuts.
 
 - `server` (optional): Server specification
 
@@ -88,7 +99,10 @@ x-paperless://v1/document/<document_id>[?edit=<boolean>][&server=<server>]
 ```
 x-paperless://v1/document/123
 x-paperless://v1/document/456?edit=true
-x-paperless://v1/document/789?edit=yes&server=example.com
+x-paperless://v1/document/123?edit=tags
+x-paperless://v1/document/456?edit=correspondent
+x-paperless://v1/document/789?edit=documentType&server=example.com
+x-paperless://v1/document/123?edit=false   # close the active edit sheet on document 123
 ```
 
 ### Scan Document
@@ -402,13 +416,13 @@ The following errors may occur when parsing deep links:
 
 **Invalid Edit Parameter**
 
-- The `edit` parameter must be one of the accepted boolean values
+- The `edit` parameter must be either an accepted boolean value or a known field name
 
-- Accepted values for `true`: `true`, `1`, `yes` (case-insensitive)
+- Accepted boolean values: `true`, `1`, `yes`, `false`, `0`, `no` (case-insensitive)
 
-- Accepted values for `false`: `false`, `0`, `no` (case-insensitive)
+- Accepted field names (case-sensitive): `title`, `tags`, `asn`, `correspondent`, `documentType`, `date`, `storagePath`, `owner`, `customFields`, `notes`
 
-- Example: `x-paperless://v1/document/123?edit=on` (invalid value)
+- Examples of invalid values: `?edit=on`, `?edit=banana`, `?edit=documenttype` (wrong case)
 
 **Invalid Tag Mode**
 

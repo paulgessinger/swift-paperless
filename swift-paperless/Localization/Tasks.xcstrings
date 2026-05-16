@@ -961,14 +961,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Ukendt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Unbekannt"
           }
         },
         "en" : {
@@ -979,32 +979,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Inconnu"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Sconosciuto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Onbekend"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Nieznany"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown"
+            "state" : "translated",
+            "value" : "Bilinmiyor"
           }
         }
       }

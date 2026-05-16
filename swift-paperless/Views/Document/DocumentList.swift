@@ -40,9 +40,12 @@ struct LoadingDocumentList: View {
 
 struct DocumentList: View {
   var store: DocumentStore
-  @Binding var navPath: [NavigationState]
+  var onSelect: (Document) -> Void
   var filterModel: FilterModel
   @Binding var isFetching: Bool
+  // iPad split-view: highlights the row matching the selected detail doc.
+  // Nil on iPhone (push-based navigation needs no list-side highlight).
+  var selectedDocumentID: UInt?
 
   @State private var documentToDelete: Document?
 
@@ -53,13 +56,15 @@ struct DocumentList: View {
   @ObservedObject private var appSettings = AppSettings.shared
 
   init(
-    store: DocumentStore, navPath: Binding<[NavigationState]>, filterModel: FilterModel,
-    errorController: ErrorController, isFetching: Binding<Bool>
+    store: DocumentStore, onSelect: @escaping (Document) -> Void, filterModel: FilterModel,
+    errorController: ErrorController, isFetching: Binding<Bool>,
+    selectedDocumentID: UInt? = nil
   ) {
     self.store = store
-    _navPath = navPath
+    self.onSelect = onSelect
     self.filterModel = filterModel
     _isFetching = isFetching
+    self.selectedDocumentID = selectedDocumentID
     _viewModel = State(
       initialValue: DocumentListViewModel(
         store: store,
@@ -70,12 +75,14 @@ struct DocumentList: View {
   struct Cell: View {
     var store: DocumentStore
     var document: Document
-    @Binding var navPath: [NavigationState]
+    var onSelect: (Document) -> Void
     var documentDeleteConfirmation: Bool
     @Binding var documentToDelete: Document?
     var viewModel: DocumentListViewModel
+    var isSelected: Bool
 
     @EnvironmentObject private var errorController: ErrorController
+    @Environment(\.colorScheme) private var colorScheme
 
     private var userCanChange: Bool {
       store.userCanChange(document: document)
@@ -110,9 +117,24 @@ struct DocumentList: View {
 
         .padding(.horizontal)
         .padding(.vertical)
+        .listRowBackground(
+          Group {
+            if isSelected {
+              // Bump opacity in dark mode so the accent tint stays
+              // visible against the darker chrome of the row backdrop.
+              // Rendered as the row background (not inside the cell)
+              // so it stays clipped to the row during swipe actions.
+              RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
+                .padding(.horizontal, 8)
+            } else {
+              Color.clear
+            }
+          }
+        )
         .onTapGesture {
           store.preloadThumbnail(for: document)
-          navPath.append(NavigationState.detail(document: document))
+          onSelect(document)
         }
 
         .swipeActions(edge: .leading) {
@@ -140,7 +162,7 @@ struct DocumentList: View {
         .contextMenu {
           Button {
             store.preloadThumbnail(for: document)
-            navPath.append(NavigationState.detail(document: document))
+            onSelect(document)
           } label: {
             Label(String(localized: .localizable(.edit)), systemImage: "pencil")
           }
@@ -231,30 +253,44 @@ struct DocumentList: View {
       } else {
         let documents = viewModel.documents
         if !documents.isEmpty {
-          List {
-            Section {
-              ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
-                Cell(
-                  store: store,
-                  document: document,
-                  navPath: $navPath,
-                  documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                  documentToDelete: $documentToDelete,
-                  viewModel: viewModel
-                )
+          ScrollViewReader { proxy in
+            List {
+              Section {
+                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
+                  Cell(
+                    store: store,
+                    document: document,
+                    onSelect: onSelect,
+                    documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                    documentToDelete: $documentToDelete,
+                    viewModel: viewModel,
+                    isSelected: document.id == selectedDocumentID
+                  )
+                  .id(document.id)
 
-                .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
+                  .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
 
-                .task {
-                  await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                  .task {
+                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                  }
                 }
               }
+              .listSectionSeparator(.hidden)
             }
-            .listSectionSeparator(.hidden)
-          }
-          .listStyle(.plain)
-          .safeAreaInset(edge: .bottom, spacing: 0) {
-            DocumentCountPill(total: viewModel.totalCount)
+            .listStyle(.plain)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+              DocumentCountPill(total: viewModel.totalCount)
+            }
+            // Scroll the selected row into view on iPad when selection
+            // changes externally (e.g., from a deep link). `initial: true`
+            // catches the freshly-mounted case where selectedDocumentID was
+            // set before the list rendered.
+            .onChange(of: selectedDocumentID, initial: true) { _, id in
+              guard let id else { return }
+              withAnimation {
+                proxy.scrollTo(id, anchor: .center)
+              }
+            }
           }
         } else {
           NoDocumentsView(filtering: filterModel.filterState.filtering)

@@ -10,7 +10,7 @@ import DataModel
 import Networking
 import SwiftUI
 
-private func blend(_ a: Color, _ b: Color, by t: Double) -> Color {
+func blend(_ a: Color, _ b: Color, by t: Double) -> Color {
   var ar: CGFloat = 0
   var ag: CGFloat = 0
   var ab: CGFloat = 0
