@@ -21,14 +21,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v5
 
       - name: Build documentation
         run: |
-          pip install -r docs/requirements.txt
-          zensical build
+          uvx \
+            --from 'zensical==0.0.40' \
+            --with 'mkdocs-redirects==1.2.2' \
+            --with 'mkdocs-literate-nav==0.6.2' \
+            --with 'mkdocs-exclude==1.0.2' \
+            --with 'pymdown-extensions==10.21.2' \
+            zensical build
           mkdir site/release_notes/md
           cp docs/release_notes/*.md site/release_notes/md
 

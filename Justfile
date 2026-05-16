@@ -1,9 +1,12 @@
 default_port := '8000'
+
+zensical := "uvx --from 'zensical==0.0.40' --with 'mkdocs-redirects==1.2.2' --with 'mkdocs-literate-nav==0.6.2' --with 'mkdocs-exclude==1.0.2' --with 'pymdown-extensions==10.21.2' zensical"
+
 docs-serve port=default_port:
-    uv run --with-requirements docs/requirements.txt zensical serve -o -a localhost:{{port}}
+    {{zensical}} serve -o -a localhost:{{port}}
 
 docs:
-    uv run --with-requirements docs/requirements.txt zensical build
+    {{zensical}} build
 
 alias sv := set_version
 set_version version:
