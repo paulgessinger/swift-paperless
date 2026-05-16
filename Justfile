@@ -1,12 +1,13 @@
 default_port := '8000'
 
-zensical := "uvx --from 'zensical==0.0.40' --with 'mkdocs-redirects==1.2.2' --with 'mkdocs-literate-nav==0.6.2' --with 'mkdocs-exclude==1.0.2' --with 'pymdown-extensions==10.21.2' zensical"
+zensical := "uv run --with-requirements docs/requirements.txt zensical"
 
 docs-serve port=default_port:
     {{zensical}} serve -o -a localhost:{{port}}
 
 docs:
     {{zensical}} build
+    rm -f site/requirements.in site/requirements.txt
     mkdir -p site/release_notes/md
     cp docs/release_notes/*.md site/release_notes/md
 
