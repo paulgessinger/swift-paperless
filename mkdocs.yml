@@ -47,20 +47,7 @@ extra_css:
 
 nav:
   - index.md
-  - Release notes:
-      - release_notes/v1.9.1.md
-      - release_notes/v1.9.0.md
-      - release_notes/v1.8.0.md
-      - release_notes/v1.7.2.md
-      - release_notes/v1.7.1.md
-      - release_notes/v1.7.0.md
-      - release_notes/v1.6.1.md
-      - release_notes/v1.6.0.md
-      - release_notes/v1.5.1.md
-      - release_notes/v1.5.0.md
-      - release_notes/v1.4.0.md
-      - release_notes/v1.3.0.md
-      - release_notes/v1.2.0.md
+  - Release notes: release_notes/
   - deeplinks.md
   - oidc.md
   - Common Issues:
