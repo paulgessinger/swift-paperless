@@ -344,17 +344,22 @@ private struct IntegratedDocumentPreview: View {
       if case .loading = downloadState {} else { showLoadingOverlay = false }
       if case .loaded = downloadState {} else { thumbnailHidden = false }
 
-      // SwiftUI cancels this task (throwing CancellationError out of the
-      // sleep) when downloadState changes again or the view disappears, so
-      // a stale schedule from a prior state can't flip flags out from under
-      // the current one.
+      // SwiftUI cancels this task when downloadState changes again or the
+      // view disappears. The explicit checkCancellation after each sleep
+      // closes a race where the timer fires at the same instant the state
+      // flips: without it, sleep can return normally just before cancellation
+      // arrives, and this body would clobber the flag the superseding task
+      // just reset (e.g. leaving the loading overlay visible on top of an
+      // already-loaded PDF).
       do {
         switch downloadState {
         case .loading:
           try await Task.sleep(for: Self.loadingOverlayDelay)
+          try Task.checkCancellation()
           showLoadingOverlay = true
         case .loaded:
           try await Task.sleep(for: .seconds(Self.pdfFadeInDuration))
+          try Task.checkCancellation()
           thumbnailHidden = true
         case .initial, .error:
           break
