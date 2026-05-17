@@ -7,7 +7,7 @@ let package = Package(
   name: "Networking",
   platforms: [
     .iOS(.v17),
-    .macOS(.v13),
+    .macOS(.v14),
   ],
   products: [
     // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -43,6 +43,7 @@ let package = Package(
       name: "NetworkingTests",
       dependencies: [
         "Networking",
+        .product(name: "Common", package: "Common"),
         .product(name: "DataModel", package: "DataModel"),
       ],
       resources: [

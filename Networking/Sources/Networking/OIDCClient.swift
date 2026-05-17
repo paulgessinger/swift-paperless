@@ -28,7 +28,7 @@ public final class OIDCClient {
 
   private let logger = Logger(subsystem: "com.paulgessinger.swift-paperless", category: "OIDC")
 
-  public init(baseURL: URL, redirectURI: URL) throws(OIDCError) {
+  public init(baseURL: URL, redirectURI: URL, session: URLSession? = nil) throws(OIDCError) {
     self.baseURL = baseURL
 
     self.redirectURI = redirectURI
@@ -41,10 +41,14 @@ public final class OIDCClient {
 
     self.callbackScheme = scheme
 
-    let config = URLSessionConfiguration.default
-    config.httpCookieStorage = .shared
-    config.httpShouldSetCookies = true
-    self.session = URLSession(configuration: config)
+    if let session {
+      self.session = session
+    } else {
+      let config = URLSessionConfiguration.default
+      config.httpCookieStorage = .shared
+      config.httpShouldSetCookies = true
+      self.session = URLSession(configuration: config)
+    }
   }
 
   public func login(provider: OIDCProvider, auth: WebAuthenticationSession) async throws -> String {
@@ -212,7 +216,7 @@ public final class OIDCClient {
     return try JSONDecoder().decode(OIDCDiscovery.self, from: data)
   }
 
-  private func exchangeCode(
+  func exchangeCode(
     tokenEndpoint: URL,
     clientId: String,
     code: String,
@@ -229,11 +233,11 @@ public final class OIDCClient {
       "redirect_uri": redirectURI.absoluteString,
       "code_verifier": pkce.verifier,
     ])
-    let (data, _) = try await URLSession.shared.data(for: request)
+    let (data, _) = try await session.data(for: request)
     return try JSONDecoder().decode(TokenResponse.self, from: data)
   }
 
-  private func exchangeIdTokenWithPaperless(
+  func exchangeIdTokenWithPaperless(
     providerId: String,
     clientId: String,
     idToken: String,
@@ -348,16 +352,12 @@ private
   let token_endpoint: URL
 }
 
-private
-  struct TokenResponse: Decodable
-{
+struct TokenResponse: Decodable, Equatable {
   let id_token: String
 }
 
-private
-  struct PaperlessTokenResponse: Decodable
-{
-  struct Meta: Decodable { let access_token: String }
+struct PaperlessTokenResponse: Decodable, Equatable {
+  struct Meta: Decodable, Equatable { let access_token: String }
   let meta: Meta
 }
 
@@ -374,7 +374,7 @@ private
   }
 }
 
-public enum OIDCError: Error {
+public enum OIDCError: Error, Equatable {
   case missingCSRF
   case missingScope
   case missingCode
@@ -384,4 +384,6 @@ public enum OIDCError: Error {
   case invalidURL
   case invalidRedirectURL
   case formBodyEncodingFailed
+  case tokenExchangeFailed(error: String, description: String?)
+  case paperlessTokenExchangeFailed(statusCode: Int, body: String)
 }
