@@ -159,6 +159,15 @@ public class ApiRepository {
     #endif
   }
 
+  private nonisolated static func sentApiVersion(in request: URLRequest) -> UInt? {
+    guard let accept = request.value(forHTTPHeaderField: "Accept"),
+      let match = try? /version=(\d+)/.firstMatch(in: accept)
+    else {
+      return nil
+    }
+    return UInt(match.1)
+  }
+
   static func sanitizedError(_ error: some Error, url: URL) -> String {
     #if DEBUG
       return String(describing: error)
@@ -262,7 +271,7 @@ public class ApiRepository {
       case .unauthorized:
         throw RequestError.unauthorized(body: data)
       case .notAcceptable:
-        throw RequestError.unsupportedVersion
+        throw RequestError.unsupportedVersion(sentVersion: sentApiVersion(in: request))
       default:
         throw RequestError.unexpectedStatusCode(code: status, body: data)
       }
@@ -856,20 +865,24 @@ extension ApiRepository: Repository {
       }
 
       var request = URLRequest(url: url)
+      request.cachePolicy = .reloadIgnoringLocalCacheData
       Self.addTokenTo(request: &request, token: connection.token)
       connection.extraHeaders.apply(toRequest: &request)
 
-      let (_, res) = try await Self.fetchData(for: request, urlSession: urlSession)
+      // Use the raw URLSession directly: paperless-ngx sets X-Version / X-Api-Version on every
+      // response via middleware, so we want to read them even when the body request would have
+      // failed (e.g. the authenticated user lacks permissions to view /api/ui_settings/, which
+      // would otherwise throw forbidden before we ever see the headers).
+      let (_, res) = try await urlSession.getData(for: request)
 
-      // fetchData should have already ensured this
       guard let res = res as? HTTPURLResponse else {
         Logger.networking.error("Unable to get API and backend version: Not an HTTP response")
         return nil
       }
 
       if res.statusCode != 200 {
-        Logger.networking.error(
-          "Status code for version request was \(res.statusCode), not 200. Usually this means authentication is broken."
+        Logger.networking.warning(
+          "Status code for version request was \(res.statusCode), not 200 — continuing with version headers from the response anyway."
         )
       }
 
