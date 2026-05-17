@@ -1,0 +1,1 @@
+- Fix loading indicator occasionally remaining visible after PDF preview finishes loading
