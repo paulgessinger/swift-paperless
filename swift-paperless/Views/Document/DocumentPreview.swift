@@ -140,6 +140,14 @@ private struct PDFPageView: View {
   }
 }
 
+// Per-cell sentinel id used by inactive PDF pages so that the
+// `matchedTransitionSource` modifier can be applied unconditionally without
+// every page colliding on the real transition id. The destination only ever
+// looks for the caller's real id, so these sentinels never match anything.
+private struct InactivePageSourceID: Hashable {
+  let index: Int
+}
+
 private struct PDFPagingPreview: View {
   let document: PDFDocument
   @Binding var currentPage: Int
@@ -185,11 +193,24 @@ private struct PDFPagingPreview: View {
           }
           .buttonStyle(.plain)
           .allowsHitTesting(isActive && onTap != nil)
-          .apply {
-            if isActive, let transitionID, let transitionNamespace {
-              $0.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
+          // The matchedTransitionSource modifier is *always* applied — only
+          // the `id` value differs between active and inactive pages. The
+          // outer `if let` is stable across a swipe (transitionID/namespace
+          // are fixed by the parent), so SwiftUI sees the same modifier
+          // chain on every render and the PDFKit view's identity does not
+          // churn when `isActive` flips. Inactive pages register under a
+          // per-cell sentinel id that the destination never looks for, so
+          // matching behaves as if only the active page were registered.
+          .apply { view in
+            if let transitionID, let transitionNamespace {
+              view.backport.matchedTransitionSource(
+                id: isActive
+                  ? transitionID
+                  : AnyHashable(InactivePageSourceID(index: index)),
+                in: transitionNamespace
+              )
             } else {
-              $0
+              view
             }
           }
         }
