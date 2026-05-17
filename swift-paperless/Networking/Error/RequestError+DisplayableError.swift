@@ -53,11 +53,15 @@ extension RequestError: DisplayableError {
       s += " " + label + " " + detail
       raw = s
 
-    case .unsupportedVersion:
-      raw = String(
+    case .unsupportedVersion(let sentVersion):
+      var s = String(
         localized: .localizable(
           .requestErrorUnsupportedVersion(
             ApiRepository.minimumApiVersion, ApiRepository.maximumApiVersion)))
+      if let sentVersion {
+        s += " (\(label) sent version=\(sentVersion))"
+      }
+      raw = s
 
     case .localNetworkDenied:
       raw = String(localized: .localizable(.requestErrorLocalNetworkDenied))
@@ -80,7 +84,7 @@ extension RequestError: DisplayableError {
     switch self {
     case .forbidden:
       DocumentationLinks.insufficientPermissions
-    case .unsupportedVersion:
+    case .unsupportedVersion(_):
       DocumentationLinks.supportedVersions
     case .localNetworkDenied:
       DocumentationLinks.localNetworkDenied

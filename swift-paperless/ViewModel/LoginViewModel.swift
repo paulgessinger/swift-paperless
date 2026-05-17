@@ -290,7 +290,7 @@ class LoginViewModel {
         Logger.shared.warning(
           "Backend did not accept any API version in [\(ApiRepository.minimumApiVersion), \(ApiRepository.maximumApiVersion)]\(lastUnsupportedDetail.map { ", last detail: \($0)" } ?? "")"
         )
-        loginState = .error(.request(.unsupportedVersion))
+        loginState = .error(.request(.unsupportedVersion(sentVersion: nil)))
 
       case .unexpectedStatusCode(let status, let detail):
         Logger.shared.warning(

@@ -25,8 +25,10 @@ public enum RequestError: Error, Equatable {
   // A 401 status code was returned (and was not expected)
   case unauthorized(detail: String)
 
-  // A 406 status code was returned. Use by paperless-ngx to indicate that the requested API version is not accepted
-  case unsupportedVersion
+  // A 406 status code was returned. Use by paperless-ngx to indicate that the requested API version is not accepted.
+  // `sentVersion` is the API version we put in the failing request's Accept header, when known — useful for
+  // diagnosing the case where the backend rejects a version it previously advertised as supported.
+  case unsupportedVersion(sentVersion: UInt?)
 
   case localNetworkDenied
 
