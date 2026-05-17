@@ -2,11 +2,14 @@ default_port := '8000'
 
 zensical := "uv run --with-requirements docs/requirements.txt zensical"
 
-docs-serve port=default_port:
-    {{zensical}} serve -o -a localhost:{{port}}
+_docs-config:
+    uv run scripts/build_docs_config.py > .zensical-build.yml
 
-docs:
-    {{zensical}} build
+docs-serve port=default_port: _docs-config
+    {{zensical}} serve -f .zensical-build.yml -o -a localhost:{{port}}
+
+docs: _docs-config
+    {{zensical}} build -f .zensical-build.yml
     rm -f site/requirements.in site/requirements.txt
     mkdir -p site/release_notes/md
     cp docs/release_notes/*.md site/release_notes/md
