@@ -28,7 +28,7 @@ public final class OIDCClient {
 
   private let logger = Logger(subsystem: "com.paulgessinger.swift-paperless", category: "OIDC")
 
-  public init(baseURL: URL, redirectURI: URL) throws(OIDCError) {
+  public init(baseURL: URL, redirectURI: URL, session: URLSession? = nil) throws(OIDCError) {
     self.baseURL = baseURL
 
     self.redirectURI = redirectURI
@@ -41,10 +41,14 @@ public final class OIDCClient {
 
     self.callbackScheme = scheme
 
-    let config = URLSessionConfiguration.default
-    config.httpCookieStorage = .shared
-    config.httpShouldSetCookies = true
-    self.session = URLSession(configuration: config)
+    if let session {
+      self.session = session
+    } else {
+      let config = URLSessionConfiguration.default
+      config.httpCookieStorage = .shared
+      config.httpShouldSetCookies = true
+      self.session = URLSession(configuration: config)
+    }
   }
 
   public func login(provider: OIDCProvider, auth: WebAuthenticationSession) async throws -> String {
@@ -163,7 +167,7 @@ public final class OIDCClient {
     providers = config.data.socialaccount.providers.filter { $0.supported }
   }
 
-  private func fetchScope(providerId: String, csrf: String) async throws -> String {
+  func fetchScope(providerId: String, csrf: String) async throws -> String {
     logger.info("Fetching scope from redirect")
     guard
       let url = URL(
@@ -176,6 +180,7 @@ public final class OIDCClient {
     request.httpMethod = "POST"
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
+    setRefererHeader(on: &request)
     request.httpBody = try formBody([
       "provider": providerId,
       "callback_url": baseURL.absoluteString,
@@ -212,7 +217,7 @@ public final class OIDCClient {
     return try JSONDecoder().decode(OIDCDiscovery.self, from: data)
   }
 
-  private func exchangeCode(
+  func exchangeCode(
     tokenEndpoint: URL,
     clientId: String,
     code: String,
@@ -229,11 +234,25 @@ public final class OIDCClient {
       "redirect_uri": redirectURI.absoluteString,
       "code_verifier": pkce.verifier,
     ])
-    let (data, _) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await session.data(for: request)
+
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+      logger.error(
+        "Token endpoint returned status \(http.statusCode), attempting to decode OAuth2 error"
+      )
+      if let oauth = try? JSONDecoder().decode(OAuth2ErrorResponse.self, from: data) {
+        throw OIDCError.tokenExchangeFailed(
+          error: oauth.error, description: oauth.error_description)
+      }
+      let body = String(data: data, encoding: .utf8) ?? ""
+      throw OIDCError.tokenExchangeFailed(
+        error: "http_\(http.statusCode)", description: body.isEmpty ? nil : body)
+    }
+
     return try JSONDecoder().decode(TokenResponse.self, from: data)
   }
 
-  private func exchangeIdTokenWithPaperless(
+  func exchangeIdTokenWithPaperless(
     providerId: String,
     clientId: String,
     idToken: String,
@@ -249,6 +268,7 @@ public final class OIDCClient {
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
+    setRefererHeader(on: &request)
     let payload: [String: Any] = [
       "provider": providerId,
       "process": "login",
@@ -256,9 +276,18 @@ public final class OIDCClient {
       "csrfmiddlewaretoken": csrf,
     ]
     request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-    let (data, _) = try await session.data(for: request)
-    let response = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
-    return response.meta.access_token
+    let (data, response) = try await session.data(for: request)
+
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error(
+        "Paperless token exchange returned status \(http.statusCode): \(body, privacy: .private)"
+      )
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
+    }
+
+    let decoded = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
+    return decoded.meta.access_token
   }
 
   private func buildAuthorizationURL(
@@ -308,6 +337,15 @@ public final class OIDCClient {
       .queryItems?
       .reduce(into: [:]) { $0[$1.name] = $1.value } ?? [:]
   }
+
+  // Django's CSRF middleware rejects HTTPS POSTs that carry neither an `Origin`
+  // nor a `Referer` header, even when the CSRF token itself is valid (it falls
+  // back to "strict referer checking" for secure requests). URLSession does not
+  // set either header on programmatic requests, so we add `Referer` ourselves to
+  // satisfy the same-origin check. See issue #559.
+  private func setRefererHeader(on request: inout URLRequest) {
+    request.setValue(baseURL.absoluteString, forHTTPHeaderField: "Referer")
+  }
 }
 
 @Codable
@@ -348,16 +386,18 @@ private
   let token_endpoint: URL
 }
 
-private
-  struct TokenResponse: Decodable
-{
+struct TokenResponse: Decodable, Equatable {
   let id_token: String
 }
 
-private
-  struct PaperlessTokenResponse: Decodable
-{
-  struct Meta: Decodable { let access_token: String }
+// Per RFC 6749 §5.2 — OAuth 2.0 token endpoint error envelope.
+struct OAuth2ErrorResponse: Decodable, Equatable {
+  let error: String
+  let error_description: String?
+}
+
+struct PaperlessTokenResponse: Decodable, Equatable {
+  struct Meta: Decodable, Equatable { let access_token: String }
   let meta: Meta
 }
 
@@ -374,7 +414,10 @@ private
   }
 }
 
-public enum OIDCError: Error {
+// User-facing, localized descriptions are provided by the app layer (see
+// `OIDCError+LocalizedError.swift`), consistent with how `RequestError` is
+// handled — the Networking package itself stays free of localized strings.
+public enum OIDCError: Error, Equatable {
   case missingCSRF
   case missingScope
   case missingCode
@@ -384,4 +427,6 @@ public enum OIDCError: Error {
   case invalidURL
   case invalidRedirectURL
   case formBodyEncodingFailed
+  case tokenExchangeFailed(error: String, description: String?)
+  case paperlessTokenExchangeFailed(statusCode: Int, body: String)
 }

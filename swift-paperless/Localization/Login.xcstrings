@@ -2017,6 +2017,138 @@
         }
       }
     },
+    "oidcErrorAuthFailed" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication with the OIDC provider failed."
+          }
+        }
+      }
+    },
+    "oidcErrorFormBodyEncodingFailed" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to encode the OIDC request body."
+          }
+        }
+      }
+    },
+    "oidcErrorInvalidRedirectUrl" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The OIDC redirect URL is invalid."
+          }
+        }
+      }
+    },
+    "oidcErrorInvalidState" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC callback returned an unexpected state value."
+          }
+        }
+      }
+    },
+    "oidcErrorInvalidUrl" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to construct a valid OIDC request URL."
+          }
+        }
+      }
+    },
+    "oidcErrorMissingCode" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC provider did not return an authorization code."
+          }
+        }
+      }
+    },
+    "oidcErrorMissingConfigurationUrl" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC provider does not advertise an OpenID configuration URL."
+          }
+        }
+      }
+    },
+    "oidcErrorMissingCsrf" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server did not provide a CSRF token."
+          }
+        }
+      }
+    },
+    "oidcErrorMissingScope" : {
+      "comment" : "OIDC login error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not determine OIDC scope from the server's redirect response."
+          }
+        }
+      }
+    },
+    "oidcErrorPaperlessRejected" : {
+      "comment" : "OIDC login error. The argument is the HTTP status code returned by Paperless.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless rejected the OIDC id_token (HTTP %@)."
+          }
+        }
+      }
+    },
+    "oidcErrorTokenExchangeFailed" : {
+      "comment" : "OIDC login error. The argument is the OAuth2 error returned by the identity provider.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth2 token exchange failed: %@"
+          }
+        }
+      }
+    },
     "oidcLoginUsing" : {
       "comment" : "The argument is the OIDC provider name",
       "extractionState" : "manual",
