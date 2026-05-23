@@ -1,0 +1,292 @@
+name: swift-paperless
+
+options:
+  createIntermediateGroups: true
+  groupSortPosition: top
+  # All build settings live in Config/*.xcconfig; do not let XcodeGen inject its
+  # own preset defaults that would override the xcconfig.
+  settingPresets: none
+  generateEmptyDirectories: true
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Config/Shared/Debug.xcconfig
+  Release: Config/Shared/Release.xcconfig
+
+settings: {}
+
+fileGroups:
+  - Config
+  - project.yml
+
+packages:
+  Common:
+    path: Common
+  DataModel:
+    path: DataModel
+  Networking:
+    path: Networking
+  Nuke:
+    url: https://github.com/kean/Nuke
+    majorVersion: 12.0.0
+  swift-markdown-ui:
+    url: https://github.com/gonzalezreal/swift-markdown-ui.git
+    majorVersion: 2.3.1
+  Semaphore:
+    url: https://github.com/groue/Semaphore
+    majorVersion: 0.1.0
+  swift-async-algorithms:
+    url: https://github.com/apple/swift-async-algorithms
+    majorVersion: 1.0.0
+  BezelKit:
+    url: https://github.com/markbattistella/BezelKit
+    majorVersion: 4.1.1
+  swift-collections:
+    url: https://github.com/apple/swift-collections.git
+    majorVersion: 1.0.0
+  xcstrings-tool-plugin:
+    url: https://github.com/liamnichols/xcstrings-tool-plugin
+    majorVersion: 1.2.0
+
+targets:
+
+  swift-paperless:
+    type: application
+    platform: iOS
+    configFiles:
+      Debug: Config/App/App-Debug.xcconfig
+      Release: Config/App/App-Release.xcconfig
+    sources:
+      - path: swift-paperless
+        excludes:
+          - "ViewModel/AttachmentManager.swift"
+          - "Info.plist"
+      # libraries.md is bundled as a resource but lives outside the app folder.
+      - path: docs/libraries.md
+        buildPhase: resources
+    dependencies:
+      - target: ShareExtension
+        embed: true
+        codeSignOnCopy: true
+      - package: Nuke
+        product: Nuke
+      - package: Nuke
+        product: NukeExtensions
+      - package: Nuke
+        product: NukeUI
+      - package: swift-markdown-ui
+        product: MarkdownUI
+      - package: Semaphore
+      - package: swift-async-algorithms
+        product: AsyncAlgorithms
+      - package: BezelKit
+      - package: Common
+      - package: DataModel
+      - package: Networking
+    buildToolPlugins:
+      - plugin: XCStringsToolPlugin
+        package: xcstrings-tool-plugin
+
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    configFiles:
+      Debug: Config/ShareExtension/ShareExtension-Debug.xcconfig
+      Release: Config/ShareExtension/ShareExtension-Release.xcconfig
+    sources:
+      - path: ShareExtension
+        excludes:
+          - "Info.plist"
+      - path: swift-paperless/Localization
+      - path: swift-paperless/Model
+      - path: swift-paperless/Document
+      - path: swift-paperless/ViewModel
+        excludes:
+          - "DocumentDetailModel.swift"
+          - "DocumentListViewModel.swift"
+          - "LoginViewModel.swift"
+      - path: swift-paperless/Utilities
+        excludes:
+          - "AppDelegate.swift"
+          - "BiometricLockManager.swift"
+          - "Route.swift"
+          - "Route+DisplayableError.swift"
+          - "RouteManager.swift"
+      - path: swift-paperless/Views
+        excludes:
+          - "DataScannerView.swift"
+          - "Document/Detail/DocumentDetailView.swift"
+          - "Document/Detail/DocumentDetailViewV3.swift"
+          - "Document/Detail/DocumentMetadataView.swift"
+          - "Document/Detail/SearchablePDFPreview.swift"
+          - "Document/Detail/ShareLinkView.swift"
+          - "Document/Detail/V4/*.swift"
+          - "Document/DocumentEditView.swift"
+          - "Document/DocumentList.swift"
+          - "Document/DocumentPreview.swift"
+          - "Document/DocumentView.swift"
+          - "Document/FilterAssembly.swift"
+          - "Document/FilterAssemblyiOS18.swift"
+          - "Filter/CustomFieldFilterView.swift"
+          - "Filter/CustomFieldQueryDisplayView.swift"
+          - "Filter/FilterBar.swift"
+          - "InactiveView.swift"
+          - "Login/BackgroundColorModifier.swift"
+          - "Login/ConnectionStageView.swift"
+          - "Login/CredentialsStageView.swift"
+          - "Login/CustomSection.swift"
+          - "Login/LoginStage.swift"
+          - "Login/LoginView.swift"
+          - "Login/LoginViewV2.swift"
+          - "Login/StageSelectionView.swift"
+          - "Login/UrlEntryView.swift"
+          - "Login/UrlError.swift"
+          - "ReleaseNotesView.swift"
+          - "Settings/DebugMenuView.swift"
+          - "Settings/LibrariesView.swift"
+          - "Settings/LogoChangeView.swift"
+          - "Settings/PreferencesView.swift"
+          - "Settings/PrivacyView.swift"
+          - "Settings/SettingsView.swift"
+          - "Tasks/TaskActivityToolbar.swift"
+          - "Tasks/TasksView.swift"
+      - path: swift-paperless/Networking
+        excludes:
+          - "DeriveUrl.swift"
+          - "Error/LoginError.swift"
+          - "Error/LoginError+PresentableError.swift"
+      # Shared top-level resources the extension bundles (parity with current project).
+      - path: swift-paperless/Assets.xcassets
+      - path: swift-paperless/PrivacyInfo.xcprivacy
+      - path: swift-paperless/Swift Paperless.storekit
+      - path: swift-paperless/AppIcon.icon
+    dependencies:
+      - package: Nuke
+        product: NukeUI
+      - package: Semaphore
+      - package: swift-async-algorithms
+        product: AsyncAlgorithms
+      - package: Common
+      - package: DataModel
+      - package: Networking
+    buildToolPlugins:
+      - plugin: XCStringsToolPlugin
+        package: xcstrings-tool-plugin
+
+  swift-paperlessTests:
+    type: bundle.unit-test
+    platform: iOS
+    configFiles:
+      Debug: Config/Tests/UnitTests.xcconfig
+      Release: Config/Tests/UnitTests.xcconfig
+    sources:
+      - path: swift-paperlessTests
+      - path: swift-paperless/Localization
+      - path: swift-paperless/Model
+      # Cherry-picked app sources under test (matches current membership exceptions).
+      - path: swift-paperless/Utilities/AppSettings.swift
+      - path: swift-paperless/Utilities/Binding.swift
+      - path: swift-paperless/Utilities/Bundle.swift
+      - path: swift-paperless/Utilities/DocumentationLinks.swift
+      - path: swift-paperless/Utilities/Gather.swift
+      - path: swift-paperless/Utilities/Haptics.swift
+      - path: swift-paperless/Utilities/Logging.swift
+      - path: swift-paperless/Utilities/Route.swift
+      - path: swift-paperless/Utilities/View+alert.swift
+      - path: swift-paperless/Views/CancelIconButton.swift
+      - path: swift-paperless/Views/Error/ErrorController.swift
+      - path: swift-paperless/Views/Error/ErrorDisplay.swift
+      - path: swift-paperless/Views/Login/UrlError.swift
+      - path: swift-paperless/Networking/DeriveUrl.swift
+      - path: swift-paperless/Networking/Error/DocumentedError.swift
+      - path: swift-paperless/Networking/Error/PresentableError.swift
+    dependencies:
+      - package: Common
+      - package: DataModel
+      - package: Networking
+      - package: swift-async-algorithms
+        product: AsyncAlgorithms
+    buildToolPlugins:
+      - plugin: XCStringsToolPlugin
+        package: xcstrings-tool-plugin
+
+  swift-paperlessUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    configFiles:
+      Debug: Config/Tests/UITests.xcconfig
+      Release: Config/Tests/UITests.xcconfig
+    sources:
+      - path: swift-paperlessUITests
+      - path: swift-paperless/Localization
+        excludes:
+          - "DocumentMetadata.xcstrings"
+          - "Permissions.xcstrings"
+      - path: swift-paperless/Utilities/Binding.swift
+      - path: swift-paperless/Utilities/Bundle.swift
+      - path: swift-paperless/Utilities/View+alert.swift
+    dependencies:
+      - target: swift-paperless
+    buildToolPlugins:
+      - plugin: XCStringsToolPlugin
+        package: xcstrings-tool-plugin
+
+schemes:
+
+  swift-paperless:
+    build:
+      targets:
+        swift-paperless: all
+    run:
+      config: Debug
+      environmentVariables:
+        TASK_POLLING_INTERVAL: "30"
+      storeKitConfiguration: swift-paperless/Testing.storekit
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true
+
+  ShareExtension:
+    build:
+      targets:
+        ShareExtension: all
+        swift-paperless: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
+
+  swift-paperlessTests:
+    build:
+      targets:
+        swift-paperlessTests: all
+    test:
+      config: Debug
+      targets:
+        - swift-paperlessTests
+    profile:
+      config: Release
+    archive:
+      config: Release
+
+  swift-paperlessUITests:
+    build:
+      targets:
+        swift-paperlessUITests: all
+    test:
+      config: Debug
+      targets:
+        - swift-paperlessUITests
+    archive:
+      config: Release

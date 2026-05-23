@@ -1,0 +1,20 @@
+// swift-paperlessTests — Swift Testing logic bundle (also builds for macOS).
+// No TEST_HOST / BUNDLE_LOADER: it compiles a cherry-picked subset of app sources.
+
+#include "../Shared/Version.xcconfig"
+
+PRODUCT_NAME = $(TARGET_NAME)
+PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.swift-paperlessTests
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+MACOSX_DEPLOYMENT_TARGET = 14.0
+TARGETED_DEVICE_FAMILY = 1,2
+SDKROOT = auto
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator macosx
+SUPPORTS_MACCATALYST = NO
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+
+CODE_SIGN_STYLE = Automatic
+REGISTER_APP_GROUPS = NO
+GENERATE_INFOPLIST_FILE = YES
+SWIFT_EMIT_LOC_STRINGS = NO

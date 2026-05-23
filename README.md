@@ -44,6 +44,23 @@ This application requires a self-hosted instance to function!
 To get the latest development version of the app, grab it on
 [TestFlight](https://testflight.apple.com/join/bOpOdzwL)!
 
+## Building from source
+
+The Xcode project is **generated** with [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+from [`project.yml`](project.yml); build settings live in [`Config/`](Config) as
+`.xcconfig` files. `swift-paperless.xcodeproj` is not committed — generate it before
+opening or building:
+
+```console
+brew install xcodegen   # once
+just generate           # or: xcodegen generate
+open swift-paperless.xcodeproj
+```
+
+`just build` / `just test-xcode` regenerate the project automatically. Edit
+`project.yml` (targets, sources, dependencies) and `Config/*.xcconfig` (build
+settings) rather than the generated project, then re-run `just generate`.
+
 ## Contact
 
 If you have any questions or need support create an issue on [GitHub](https://github.com/paulgessinger/swift-paperless/issues/new) or send me a [message](mailto:swift-paperless@paulgessinger.com).
