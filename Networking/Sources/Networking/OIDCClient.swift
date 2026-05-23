@@ -414,6 +414,9 @@ private
   }
 }
 
+// User-facing, localized descriptions are provided by the app layer (see
+// `OIDCError+LocalizedError.swift`), consistent with how `RequestError` is
+// handled — the Networking package itself stays free of localized strings.
 public enum OIDCError: Error, Equatable {
   case missingCSRF
   case missingScope
@@ -426,41 +429,4 @@ public enum OIDCError: Error, Equatable {
   case formBodyEncodingFailed
   case tokenExchangeFailed(error: String, description: String?)
   case paperlessTokenExchangeFailed(statusCode: Int, body: String)
-}
-
-extension OIDCError: LocalizedError {
-  public var errorDescription: String? {
-    switch self {
-    case .missingCSRF:
-      "Server did not provide a CSRF token."
-    case .missingScope:
-      "Could not determine OIDC scope from the server's redirect response."
-    case .missingCode:
-      "OIDC provider did not return an authorization code."
-    case .missingConfigurationURL:
-      "OIDC provider does not advertise an OpenID configuration URL."
-    case .invalidState:
-      "OIDC callback returned an unexpected state value."
-    case .authFailed:
-      "Authentication with the OIDC provider failed."
-    case .invalidURL:
-      "Failed to construct a valid OIDC request URL."
-    case .invalidRedirectURL:
-      "The OIDC redirect URL is invalid."
-    case .formBodyEncodingFailed:
-      "Failed to encode the OIDC request body."
-    case .tokenExchangeFailed(let error, let description):
-      if let description {
-        "OAuth2 token exchange failed: \(error) — \(description)"
-      } else {
-        "OAuth2 token exchange failed: \(error)"
-      }
-    case .paperlessTokenExchangeFailed(let statusCode, let body):
-      if body.isEmpty {
-        "Paperless rejected the OIDC id_token (HTTP \(statusCode))."
-      } else {
-        "Paperless rejected the OIDC id_token (HTTP \(statusCode)): \(body)"
-      }
-    }
-  }
 }
