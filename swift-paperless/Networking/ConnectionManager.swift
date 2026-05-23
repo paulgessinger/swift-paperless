@@ -302,10 +302,6 @@ class ConnectionManager: ObservableObject {
     return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
   }
 
-  func isFriendlyNameUnique(_ name: String) -> Bool {
-    connections.values.reduce(0) { $1.friendlyName == name ? $0 + 1 : $0 } == 1
-  }
-
   func migrateToMultiServer() async {
     Logger.migration.trace("Checking migration status")
     if activeConnectionId == nil, apiHost != nil {
