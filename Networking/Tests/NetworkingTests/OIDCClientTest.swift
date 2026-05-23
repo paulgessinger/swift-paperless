@@ -136,6 +136,34 @@ struct OIDCClientTest {
     }
   }
 
+  // MARK: - fetchScope
+
+  // Regression for #559: Django's CSRF middleware rejects HTTPS POSTs that carry
+  // neither `Origin` nor `Referer` (it falls back to strict referer checking for
+  // secure requests), returning 403 even though the CSRF token is valid. The app
+  // must set a `Referer` header so the same-origin check passes.
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/559", id: 559))
+  func fetchScope_setsRefererHeader() async throws {
+    let redirectURL = Self.baseURL.appendingPathComponent(
+      "api/auth/headless/browser/v1/auth/provider/redirect")
+    MockURLProtocol.responder = { [baseURL = Self.baseURL] request in
+      #expect(request.httpMethod == "POST")
+      #expect(request.value(forHTTPHeaderField: "Referer") == baseURL.absoluteString)
+      return (
+        HTTPURLResponse(
+          url: redirectURL, statusCode: 302, httpVersion: "HTTP/1.1",
+          headerFields: ["Location": "https://idp.example.com/authorize?scope=openid"])!,
+        Data()
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClient()
+    let scope = try await client.fetchScope(providerId: "authentik", csrf: "csrf-value")
+
+    #expect(scope == "openid")
+  }
+
   // MARK: - exchangeIdTokenWithPaperless
 
   @Test func exchangeIdTokenWithPaperless_returnsTokenOnSuccess() async throws {
@@ -164,6 +192,33 @@ struct OIDCClientTest {
     )
 
     #expect(token == "paperless-api-token")
+  }
+
+  // Regression for #559: this POST hits the same Django CSRF middleware as
+  // fetchScope, so it must also carry a `Referer` header.
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/559", id: 559))
+  func exchangeIdTokenWithPaperless_setsRefererHeader() async throws {
+    let body = #"{"meta":{"access_token":"paperless-api-token"},"status":200}"#
+    let expectedURL = Self.baseURL.appendingPathComponent(
+      "api/auth/headless/app/v1/auth/provider/token")
+    MockURLProtocol.responder = { [baseURL = Self.baseURL] request in
+      #expect(request.value(forHTTPHeaderField: "Referer") == baseURL.absoluteString)
+      return (
+        HTTPURLResponse(
+          url: expectedURL, statusCode: 200, httpVersion: "HTTP/1.1",
+          headerFields: ["Content-Type": "application/json"])!,
+        Data(body.utf8)
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClient()
+    _ = try await client.exchangeIdTokenWithPaperless(
+      providerId: "authentik",
+      clientId: "client-123",
+      idToken: "the-id-token",
+      csrf: "csrf-value"
+    )
   }
 
   @Test func exchangeIdTokenWithPaperless_surfacesErrorBodyOn4xx() async throws {

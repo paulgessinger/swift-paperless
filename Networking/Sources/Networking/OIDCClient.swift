@@ -167,7 +167,7 @@ public final class OIDCClient {
     providers = config.data.socialaccount.providers.filter { $0.supported }
   }
 
-  private func fetchScope(providerId: String, csrf: String) async throws -> String {
+  func fetchScope(providerId: String, csrf: String) async throws -> String {
     logger.info("Fetching scope from redirect")
     guard
       let url = URL(
@@ -180,6 +180,7 @@ public final class OIDCClient {
     request.httpMethod = "POST"
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
+    setRefererHeader(on: &request)
     request.httpBody = try formBody([
       "provider": providerId,
       "callback_url": baseURL.absoluteString,
@@ -267,6 +268,7 @@ public final class OIDCClient {
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
+    setRefererHeader(on: &request)
     let payload: [String: Any] = [
       "provider": providerId,
       "process": "login",
@@ -334,6 +336,15 @@ public final class OIDCClient {
     URLComponents(url: url, resolvingAgainstBaseURL: false)?
       .queryItems?
       .reduce(into: [:]) { $0[$1.name] = $1.value } ?? [:]
+  }
+
+  // Django's CSRF middleware rejects HTTPS POSTs that carry neither an `Origin`
+  // nor a `Referer` header, even when the CSRF token itself is valid (it falls
+  // back to "strict referer checking" for secure requests). URLSession does not
+  // set either header on programmatic requests, so we add `Referer` ourselves to
+  // satisfy the same-origin check. See issue #559.
+  private func setRefererHeader(on request: inout URLRequest) {
+    request.setValue(baseURL.absoluteString, forHTTPHeaderField: "Referer")
   }
 }
 
