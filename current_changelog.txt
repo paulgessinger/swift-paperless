@@ -1,3 +1,0 @@
-- Fix loading indicator occasionally remaining visible after PDF preview finishes loading
-- Surface the actual OAuth2 error (e.g. invalid_client) from the IdP during OIDC login instead of the cryptic "data couldn't be read because it's missing" message
-- Fix OIDC login failing with a "missing scope" error on HTTPS servers behind a reverse proxy by sending a Referer header that satisfies Django's CSRF checks
