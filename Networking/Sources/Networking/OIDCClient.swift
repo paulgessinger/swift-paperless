@@ -233,7 +233,21 @@ public final class OIDCClient {
       "redirect_uri": redirectURI.absoluteString,
       "code_verifier": pkce.verifier,
     ])
-    let (data, _) = try await session.data(for: request)
+    let (data, response) = try await session.data(for: request)
+
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+      logger.error(
+        "Token endpoint returned status \(http.statusCode), attempting to decode OAuth2 error"
+      )
+      if let oauth = try? JSONDecoder().decode(OAuth2ErrorResponse.self, from: data) {
+        throw OIDCError.tokenExchangeFailed(
+          error: oauth.error, description: oauth.error_description)
+      }
+      let body = String(data: data, encoding: .utf8) ?? ""
+      throw OIDCError.tokenExchangeFailed(
+        error: "http_\(http.statusCode)", description: body.isEmpty ? nil : body)
+    }
+
     return try JSONDecoder().decode(TokenResponse.self, from: data)
   }
 
@@ -260,9 +274,18 @@ public final class OIDCClient {
       "csrfmiddlewaretoken": csrf,
     ]
     request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-    let (data, _) = try await session.data(for: request)
-    let response = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
-    return response.meta.access_token
+    let (data, response) = try await session.data(for: request)
+
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error(
+        "Paperless token exchange returned status \(http.statusCode): \(body, privacy: .private)"
+      )
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
+    }
+
+    let decoded = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
+    return decoded.meta.access_token
   }
 
   private func buildAuthorizationURL(
@@ -356,6 +379,12 @@ struct TokenResponse: Decodable, Equatable {
   let id_token: String
 }
 
+// Per RFC 6749 §5.2 — OAuth 2.0 token endpoint error envelope.
+struct OAuth2ErrorResponse: Decodable, Equatable {
+  let error: String
+  let error_description: String?
+}
+
 struct PaperlessTokenResponse: Decodable, Equatable {
   struct Meta: Decodable, Equatable { let access_token: String }
   let meta: Meta
@@ -386,4 +415,41 @@ public enum OIDCError: Error, Equatable {
   case formBodyEncodingFailed
   case tokenExchangeFailed(error: String, description: String?)
   case paperlessTokenExchangeFailed(statusCode: Int, body: String)
+}
+
+extension OIDCError: LocalizedError {
+  public var errorDescription: String? {
+    switch self {
+    case .missingCSRF:
+      "Server did not provide a CSRF token."
+    case .missingScope:
+      "Could not determine OIDC scope from the server's redirect response."
+    case .missingCode:
+      "OIDC provider did not return an authorization code."
+    case .missingConfigurationURL:
+      "OIDC provider does not advertise an OpenID configuration URL."
+    case .invalidState:
+      "OIDC callback returned an unexpected state value."
+    case .authFailed:
+      "Authentication with the OIDC provider failed."
+    case .invalidURL:
+      "Failed to construct a valid OIDC request URL."
+    case .invalidRedirectURL:
+      "The OIDC redirect URL is invalid."
+    case .formBodyEncodingFailed:
+      "Failed to encode the OIDC request body."
+    case .tokenExchangeFailed(let error, let description):
+      if let description {
+        "OAuth2 token exchange failed: \(error) — \(description)"
+      } else {
+        "OAuth2 token exchange failed: \(error)"
+      }
+    case .paperlessTokenExchangeFailed(let statusCode, let body):
+      if body.isEmpty {
+        "Paperless rejected the OIDC id_token (HTTP \(statusCode))."
+      } else {
+        "Paperless rejected the OIDC id_token (HTTP \(statusCode)): \(body)"
+      }
+    }
+  }
 }
