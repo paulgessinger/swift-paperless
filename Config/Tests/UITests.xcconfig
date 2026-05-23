@@ -1,0 +1,19 @@
+// swift-paperlessUITests — UI test bundle targeting the swift-paperless app.
+
+#include "../Shared/Version.xcconfig"
+
+PRODUCT_NAME = $(TARGET_NAME)
+PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.swift-paperlessUITests
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+MACOSX_DEPLOYMENT_TARGET = 14.0
+TARGETED_DEVICE_FAMILY = 1,2
+SDKROOT = auto
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+SUPPORTS_MACCATALYST = NO
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+
+CODE_SIGN_STYLE = Automatic
+GENERATE_INFOPLIST_FILE = YES
+SWIFT_EMIT_LOC_STRINGS = NO
+TEST_TARGET_NAME = swift-paperless

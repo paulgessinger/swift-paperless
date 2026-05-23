@@ -1,0 +1,3 @@
+#include "ShareExtension.xcconfig"
+
+VALIDATE_PRODUCT = YES
