@@ -2021,10 +2021,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autentificering med OIDC-udbyderen mislykkedes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Authentifizierung mit dem OIDC-Anbieter ist fehlgeschlagen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentication with the OIDC provider failed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'authentification avec le fournisseur OIDC a échoué."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'autenticazione con il provider OIDC non è riuscita."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authenticatie met de OIDC provider is mislukt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uwierzytelnianie u dostawcy OIDC nie powiodło się."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC sağlayıcısı ile kimlik doğrulama başarısız oldu."
           }
         }
       }
@@ -2033,10 +2075,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det lykkedes ikke at kode OIDC-forespørgslen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die OIDC-Anfrage konnte nicht kodiert werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to encode the OIDC request body."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l'encodage du corps de la requête OIDC."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile codificare il corpo della richiesta OIDC."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mislukt bij het coderen van de OIDC-verzoekinstantie."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się zakodować treści żądania OIDC."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC istek gövdesi kodlanamadı."
           }
         }
       }
@@ -2045,10 +2129,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC-omdirigeringsadressen er ugyldig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die OIDC-Umleitungs-URL ist ungültig."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The OIDC redirect URL is invalid."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'URL de redirection de l'OIDC n'est pas valide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'URL di reindirizzamento OIDC non è valido."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De OIDC omleidings-URL is ongeldig."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adres URL przekierowania OIDC jest nieprawidłowy."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC yönlendirme URL'si geçersiz."
           }
         }
       }
@@ -2057,10 +2183,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC-callback returnerede en uventet tilstandsværdi."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der OIDC-Callback hat einen unerwarteten Statuswert zurückgegeben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OIDC callback returned an unexpected state value."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le rappel OIDC a renvoyé une valeur d'état inattendue."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il callback OIDC ha restituito un valore di stato inatteso."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC callback heeft een onverwachte statuswaarde geretourneerd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wywołanie zwrotne OIDC zwróciło nieoczekiwaną wartość stanu."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC geri çağrısı beklenmedik bir durum değeri döndürdü."
           }
         }
       }
@@ -2069,10 +2237,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunne ikke konstruere en gyldig OIDC-forespørgsels-URL."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es konnte keine gültige OIDC-Anforderungs-URL erstellt werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to construct a valid OIDC request URL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la construction d'une URL de demande OIDC valide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile costruire un URL di richiesta OIDC valido."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is geen geldige OIDC-aanvraag-URL gemaakt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się utworzyć prawidłowego adresu URL żądania OIDC."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli bir OIDC istek URL'si oluşturulamadı."
           }
         }
       }
@@ -2081,10 +2291,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC-udbyderen returnerede ikke en autorisationskode."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der OIDC-Anbieter hat keinen Autorisierungscode zurückgegeben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OIDC provider did not return an authorization code."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fournisseur de l'OIDC n'a pas renvoyé de code d'autorisation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il fornitore OIDC non ha restituito un codice di autorizzazione."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC-aanbieder heeft geen autorisatiecode teruggestuurd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostawca OIDC nie zwrócił kodu autoryzacji."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC sağlayıcısı bir yetkilendirme kodu göndermemiştir."
           }
         }
       }
@@ -2093,10 +2345,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC-udbyderen annoncerer ikke en OpenID-konfigurations-URL."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der OIDC-Anbieter gibt keine OpenID-Konfigurations-URL bekannt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OIDC provider does not advertise an OpenID configuration URL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fournisseur OIDC n'annonce pas d'URL de configuration OpenID."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il provider OIDC non pubblicizza un URL di configurazione OpenID."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC provider adverteert geen OpenID configuratie URL."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostawca OIDC nie reklamuje adresu URL konfiguracji OpenID."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OIDC sağlayıcısı bir OpenID yapılandırma URL'sinin reklamını yapmaz."
           }
         }
       }
@@ -2105,10 +2399,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveren leverede ikke et CSRF-token."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat kein CSRF-Token bereitgestellt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server did not provide a CSRF token."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur n'a pas fourni de jeton CSRF."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server non ha fornito un token CSRF."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server heeft geen CSRF-token geleverd."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer nie dostarczył tokena CSRF."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucu bir CSRF belirteci sağlamadı."
           }
         }
       }
@@ -2117,10 +2453,52 @@
       "comment" : "OIDC login error",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunne ikke bestemme OIDC-scope ud fra serverens omdirigeringsrespons."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der OIDC-Bereich konnte aus der Redirect-Antwort des Servers nicht ermittelt werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Could not determine OIDC scope from the server's redirect response."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de déterminer la portée de l'OIDC à partir de la réponse de redirection du serveur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile determinare l'ambito OIDC dalla risposta di reindirizzamento del server."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon het OIDC-bereik niet bepalen uit het redirect-antwoord van de server."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można określić zakresu OIDC na podstawie odpowiedzi przekierowania serwera."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucunun yönlendirme yanıtından OIDC kapsamı belirlenemedi."
           }
         }
       }
@@ -2129,10 +2507,52 @@
       "comment" : "OIDC login error. The argument is the HTTP status code returned by Paperless.",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless afviste OIDC-id_token (HTTP %@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless hat den OIDC id_token abgelehnt (HTTP %@)."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paperless rejected the OIDC id_token (HTTP %@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless a rejeté l'id_token de l'OIDC (HTTP %@)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless ha rifiutato l'id_token OIDC (HTTP %@)."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless heeft de OIDC id_token geweigerd (HTTP %@)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless odrzucił id_token OIDC (HTTP %@)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless, OIDC id_token'ını reddetti (HTTP %@)."
           }
         }
       }
@@ -2141,10 +2561,52 @@
       "comment" : "OIDC login error. The argument is the OAuth2 error returned by the identity provider.",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth2-tokenudveksling mislykkedes: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth2-Token-Austausch fehlgeschlagen: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OAuth2 token exchange failed: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'échange de jetons OAuth2 a échoué : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scambio di token OAuth2 fallito: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth2 tokenuitwisseling mislukt: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymiana tokenu OAuth2 nie powiodła się: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth2 belirteç değişimi başarısız oldu: %@"
           }
         }
       }
