@@ -29,6 +29,8 @@ packages:
     path: DataModel
   Networking:
     path: Networking
+  AppShared:
+    path: AppShared
   Nuke:
     url: https://github.com/kean/Nuke
     majorVersion: 12.0.0
@@ -83,6 +85,7 @@ targets:
       - package: swift-async-algorithms
         product: AsyncAlgorithms
       - package: BezelKit
+      - package: AppShared
       - package: Common
       - package: DataModel
       - package: Networking
