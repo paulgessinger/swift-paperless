@@ -3,32 +3,8 @@ output_folder = "fastlane/screenshots/framed"
 string_catalog = "fastlane/screenshots/Screenshots.xcstrings"
 font_file = "fastlane/screenshots/OpenSans-VariableFont_wdth,wght.ttf"
 
-[[devices]]
-name = "iPad_Pro_13-inch"
-frame = "fastlane/screenshots/frames/iPad Pro 13 - M4 - Space Gray - Portrait.png"
-target_size = [2064, 2752]
-offset = [120, 125]
-post_offset = [0, 500]
-mask_corner_radius = 50
-mask_margin = 10
-
-[[devices]]
-name = "iPhone_17_Pro"
-frame = "fastlane/screenshots/frames/iPhone 17 Pro - Silver - Portrait.png"
-offset = [70, 70]
-post_offset = [0, 500]
-target_size = [1206, 2622]
-mask_corner_radius = 150
-mask_margin = 0
-
-[[devices]]
-name = "iPhone_17_Pro_Max"
-frame = "fastlane/screenshots/frames/iPhone 17 Pro Max - Silver - Portrait.png"
-offset = [74, 68]
-post_offset = [0, 500]
-target_size = [1320, 2868]
-mask_corner_radius = 150
-mask_margin = 0
+# Device ids, simulators, bezels, and framing geometry: screenshot_devices.toml
+devices = "screenshot_devices.toml"
 
 [[screens]]
 device_pattern = ".*"
@@ -41,13 +17,6 @@ text_color = "#17541F"
 text_offset = [60, 60]
 text_size = 100
 font_spacing = 10
-
-[[screens]]
-device_pattern = "iPhone_17_Pro$"
-screen_pattern = ".*"
-
-[screens.style]
-text_size = 80
 
 [[screens]]
 device_pattern = ".*"

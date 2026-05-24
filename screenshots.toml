@@ -34,12 +34,12 @@ password = "admin"
 # udid = "07ACA670-CF2B-42C2-B33A-229787FDF3B9"
 #
 [[simulators]]
-name = "iPhone 17 Pro Max"
+device = "iPhone_17_Pro_Max"
 udid = "D38BC21C-2840-4B54-88C3-018011A0BE29"
 
 [[simulators]]
-name = "iPad Pro 13-inch"
-udid="B14463F9-4862-46B8-9D69-AA05A15DFDA9"
+device = "iPad_Pro_13_M5"
+udid = "B14463F9-4862-46B8-9D69-AA05A15DFDA9"
 
 [[steps]]
 name = "documents"

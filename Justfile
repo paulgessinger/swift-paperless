@@ -36,6 +36,37 @@ tag:
 beta:
   bundle exec fastlane beta
 
+# Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
+deliver:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bundle exec fastlane deliver \
+    --metadata_path fastlane/metadata \
+    --overwrite_screenshots \
+    --app_version "$(just get-version)" \
+    --force
+
+# Metadata only (release notes, description, …) — no screenshots.
+deliver-metadata:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bundle exec fastlane deliver \
+    --metadata_path fastlane/metadata \
+    --skip_screenshots \
+    --app_version "$(just get-version)" \
+    --force
+
+# Dry run for `just deliver`.
+deliver-preview:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bundle exec fastlane deliver \
+    --metadata_path fastlane/metadata \
+    --preview \
+    --overwrite_screenshots \
+    --app_version "$(just get-version)" \
+    --force
+
 default_os := '26.2'
 default_device := 'iPhone 17 Pro'
 build os=default_os device=default_device:

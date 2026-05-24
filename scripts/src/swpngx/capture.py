@@ -37,6 +37,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
     import tomli as tomllib
 
+from swpngx.devices_config import (
+    ScreenshotDevicesFile,
+    device_by_id,
+    load_screenshot_devices,
+)
+
 app = typer.Typer(
     no_args_is_help=True, help="Screenshot automation for Swift Paperless iOS app"
 )
@@ -116,7 +122,7 @@ class BuildConfig(BaseModel):
 class SimulatorConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
+    device: str
     udid: str
 
 
@@ -446,11 +452,12 @@ def ensure_simulator_booted(target: str, *, dry_run: bool) -> None:
 
 def build_app_for_simulator(
     *,
-    simulator: SimulatorConfig,
+    simulator_name: str,
+    simulator_udid: str,
     build: BuildConfig,
     dry_run: bool,
 ) -> Path:
-    derived_data = build.derived_data_path / sanitize_filename(simulator.name)
+    derived_data = build.derived_data_path / sanitize_filename(simulator_name)
     command = [
         "xcodebuild",
         "-scheme",
@@ -460,7 +467,7 @@ def build_app_for_simulator(
         "-configuration",
         build.configuration,
         "-destination",
-        f"id={simulator.udid}",
+        f"id={simulator_udid}",
         "-derivedDataPath",
         str(derived_data),
     ]
@@ -474,7 +481,7 @@ def build_app_for_simulator(
     with log_path.open("w", encoding="utf-8") as log_file:
         result = subprocess.run(command, stdout=log_file, stderr=subprocess.STDOUT)
     if result.returncode != 0:
-        console.log(f"[red]Build failed for {simulator.name} (log: {log_path})[/red]")
+        console.log(f"[red]Build failed for {simulator_name} (log: {log_path})[/red]")
         if log_path.exists():
             console.log(log_path.read_text(encoding="utf-8", errors="replace"))
         raise typer.Exit(result.returncode)
@@ -1294,6 +1301,12 @@ def capture(
 ) -> None:
     """Capture screenshots from iOS simulator."""
     capture_config = load_capture_config(config)
+    config_path = config.resolve()
+    devices_path = config_path.parent / "screenshot_devices.toml"
+    screenshot_devices = load_screenshot_devices(devices_path)
+    for simulator in capture_config.simulators:
+        device_by_id(screenshot_devices, simulator.device)
+
     screenshot_steps = [
         ScreenshotStep(
             name=step.name,
@@ -1346,7 +1359,7 @@ def capture(
     ) as progress:
         progress_tasks = {
             simulator.udid: progress.add_task(
-                f"{simulator.name} • queued",
+                f"{simulator.device} • queued",
                 total=steps_per_simulator,
             )
             for simulator in simulators
@@ -1354,9 +1367,14 @@ def capture(
 
         def capture_simulator(simulator: SimulatorConfig) -> None:
             target = simulator.udid
-            device_name = simulator.name
+            device = device_by_id(screenshot_devices, simulator.device)
+            screenshot_prefix = device.id
+            simulator_name = device.simulator_name
             progress_task_id = progress_tasks[target]
-            progress.update(progress_task_id, description=f"{device_name} • preparing")
+            progress.update(
+                progress_task_id,
+                description=f"{screenshot_prefix} • preparing",
+            )
 
             ensure_simulator_booted(target, dry_run=dry_run)
             configure_simulator(
@@ -1368,11 +1386,12 @@ def capture(
             )
 
             derived_data = build_config.derived_data_path / sanitize_filename(
-                simulator.name
+                simulator_name
             )
             if build_config.enabled and not skip_build:
                 app_path = build_app_for_simulator(
-                    simulator=simulator,
+                    simulator_name=simulator_name,
+                    simulator_udid=target,
                     build=build_config,
                     dry_run=dry_run,
                 )
@@ -1418,7 +1437,7 @@ def capture(
                 for index, step in enumerate(screenshot_steps, start=1):
                     progress.update(
                         progress_task_id,
-                        description=f"{device_name} • {language} • {step.name}",
+                        description=f"{screenshot_prefix} • {language} • {step.name}",
                     )
                     wait_time = step.wait if step.wait is not None else url_wait
                     if step.url:
@@ -1428,7 +1447,7 @@ def capture(
                     elif step.wait is not None and wait_time > 0:
                         time.sleep(wait_time)
 
-                    screenshot_name = f"{sanitize_filename(device_name)}-{index:02d}_{sanitize_filename(step.name)}.png"
+                    screenshot_name = f"{screenshot_prefix}-{index:02d}_{sanitize_filename(step.name)}.png"
                     output_path = language_dir / screenshot_name
                     simctl(
                         ["io", target, "screenshot", "--type", "png", str(output_path)],
@@ -1442,7 +1461,7 @@ def capture(
                         if wait_time > 0:
                             time.sleep(wait_time)
 
-            progress.update(progress_task_id, description=f"{device_name} • done")
+            progress.update(progress_task_id, description=f"{screenshot_prefix} • done")
 
         errors: list[str] = []
         with concurrent.futures.ThreadPoolExecutor(
@@ -1457,8 +1476,8 @@ def capture(
                 try:
                     future.result()
                 except Exception as exc:
-                    console.log(f"[red]Error capturing {simulator.name}: {exc}")
-                    errors.append(simulator.name)
+                    console.log(f"[red]Error capturing {simulator.device}: {exc}")
+                    errors.append(simulator.device)
         if errors:
             raise typer.Exit(1)
 
