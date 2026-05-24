@@ -19,10 +19,8 @@ enum AppFeatures {
     case .tipJar: false  // disable for now until ready
     case .documentDetailViewV4:
       switch channel {
-      case .Debug, .Simulator, .TestFlight:
+      case .Debug, .Simulator, .TestFlight, .AppStore:
         true
-      case .AppStore:
-        false
       }
     case .autoFocusSearchInDetailSheets: false
     }
