@@ -17,6 +17,7 @@ swift-paperless.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resol
 swift-paperless.xcodeproj/xcuserdata
 .env
 scripts/frames
+.cache/swpngx
 
 /vendor
 /build

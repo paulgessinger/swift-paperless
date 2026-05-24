@@ -28,6 +28,8 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for Python < 3.11
     import tomli as tomllib
 
+from swpngx.devices_config import ScreenshotDevice, load_screenshot_devices
+from swpngx.fonts import ensure_framing_font
 from swpngx.string_catalog import load as load_string_catalog
 from swpngx.text_wrap import TextWrapConfig, calculate_text_max_width, wrap_text_pixel
 
@@ -289,8 +291,41 @@ def collect_input_files(inputs: list[Path]) -> list[Path]:
     return sorted(files)
 
 
+def screenshot_device_to_frame_device(device: ScreenshotDevice) -> DeviceConfig:
+    return DeviceConfig(
+        name=device.id,
+        frame=device.frame_path,
+        target_size=Point(device.target_size),
+        offset=Point(device.offset),
+        post_offset=Point(device.post_offset),
+        post_margin=device.post_margin,
+        mask_corner_radius=device.mask_corner_radius,
+        mask_margin=device.mask_margin,
+        shadow_blur=device.shadow_blur,
+    )
+
+
 def load_config(config_file: Path) -> Config:
+    config_file = config_file.resolve()
+    repo_root = config_file.parent
     config_data = tomllib.loads(config_file.read_text(encoding="utf-8"))
+    devices_value = config_data.pop("devices", "screenshot_devices.toml")
+
+    if isinstance(devices_value, str):
+        devices_path = (repo_root / devices_value).resolve()
+        screenshot_devices = load_screenshot_devices(devices_path)
+        config_data["devices"] = [
+            screenshot_device_to_frame_device(device)
+            for device in screenshot_devices.devices
+        ]
+    elif isinstance(devices_value, list):
+        config_data["devices"] = [DeviceConfig(**entry) for entry in devices_value]
+    else:
+        raise ValueError(
+            "frames.toml 'devices' must be a path to screenshot_devices.toml "
+            "or a legacy inline [[devices]] array"
+        )
+
     return Config(**config_data)
 
 
@@ -342,12 +377,7 @@ def main(
         console.log("[yellow]No screenshots found to frame")
         return
 
-    # font_file = config_file.parent / "DejaVuSans-Bold.ttf"
-    font_file = config_file.parent / config.font_file
-    if not font_file.is_file():
-        console.log(f"[red]Font file not found at {font_file}")
-        raise typer.Exit(1)
-    #  font_file = config_file.parent / "helvetica-bold.ttf"
+    font_file = ensure_framing_font(config_file)
 
     if jobs == 1 or len(files) == 1:
         for file in files:
