@@ -7,7 +7,7 @@
 
 extension DecodingError: DisplayableError {
   public var message: String {
-    String(localized: .localizable(.decodingError))
+    String(localized: .app(.decodingError))
   }
 
   public var details: String? {
@@ -26,7 +26,7 @@ extension DecodingError: DisplayableError {
         nil
       }
 
-    let msg = String(localized: .localizable(.decodingErrorDetail(type ?? "Unknown")))
+    let msg = String(localized: .app(.decodingErrorDetail(type ?? "Unknown")))
 
     guard let context else {
       return msg

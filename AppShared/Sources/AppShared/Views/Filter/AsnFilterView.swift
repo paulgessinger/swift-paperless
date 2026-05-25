@@ -29,12 +29,12 @@ public struct AsnFilterView: View {
 
     var label: LocalizedStringResource {
       switch self {
-      case .any: .localizable(.asnFilterAny)
-      case .isNull: .localizable(.asnFilterIsNull)
-      case .isNotNull: .localizable(.asnFilterIsNotNull)
-      case .equalTo: .localizable(.asnFilterEqualTo)
-      case .greaterThan: .localizable(.asnFilterGreaterThan)
-      case .lessThan: .localizable(.asnFilterLessThan)
+      case .any: .app(.asnFilterAny)
+      case .isNull: .app(.asnFilterIsNull)
+      case .isNotNull: .app(.asnFilterIsNotNull)
+      case .equalTo: .app(.asnFilterEqualTo)
+      case .greaterThan: .app(.asnFilterGreaterThan)
+      case .lessThan: .app(.asnFilterLessThan)
       }
     }
   }
@@ -102,7 +102,7 @@ public struct AsnFilterView: View {
     NavigationStack {
       Form {
         Section {
-          Picker(.localizable(.asnFilterModeSelectLabel), selection: $mode) {
+          Picker(.app(.asnFilterModeSelectLabel), selection: $mode) {
             ForEach(Mode.allCases, id: \.self) { mode in
               Text(mode.label)
                 .tag(mode)
@@ -110,7 +110,7 @@ public struct AsnFilterView: View {
           }
 
           if mode == .equalTo || mode == .greaterThan || mode == .lessThan {
-            TextField(.localizable(.asnFilterArgumentLabel), text: $argument)
+            TextField(.app(.asnFilterArgumentLabel), text: $argument)
               .keyboardType(.numberPad)
           }
         }
@@ -123,7 +123,7 @@ public struct AsnFilterView: View {
           .disabled(!isValid)
       }
 
-      .navigationTitle(.localizable(.asn))
+      .navigationTitle(.app(.asn))
       .navigationBarTitleDisplayMode(.inline)
 
       .onAppear(perform: initFromFilterState)
@@ -160,26 +160,26 @@ public struct AsnFilterDisplayView: View {
   public var body: some View {
     switch query {
     case .any:
-      Text(.localizable(.asn))
+      Text(.app(.asn))
     case .isNotNull:
-      label(.localizable(.asn), systemImage: "number.circle")
+      label(.app(.asn), systemImage: "number.circle")
     case .isNull:
-      label(.localizable(.asn), systemImage: "nosign")
+      label(.app(.asn), systemImage: "nosign")
     case .equalTo(let arg):
       HStack {
-        Text(.localizable(.asn))
+        Text(.app(.asn))
         Image(systemName: "equal.circle")
         Text("\(arg)")
       }
     case .greaterThan(let arg):
       HStack {
-        Text(.localizable(.asn))
+        Text(.app(.asn))
         Image(systemName: "lessthan.circle")
         Text("\(arg)")
       }
     case .lessThan(let arg):
       HStack {
-        Text(.localizable(.asn))
+        Text(.app(.asn))
         Image(systemName: "greaterthan.circle")
         Text("\(arg)")
       }

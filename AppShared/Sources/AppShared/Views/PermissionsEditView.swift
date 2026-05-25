@@ -90,7 +90,7 @@ where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel {
 
         if selected.contains(element.id) {
           Label(
-            localized: .localizable(.elementIsSelected),
+            localized: .app(.elementIsSelected),
             systemImage: "checkmark"
           )
           .labelStyle(.iconOnly)
@@ -136,7 +136,7 @@ private struct OwnerPicker<Object>: View where Object: PermissionsModel {
           .frame(maxWidth: .infinity, alignment: .leading)
         if isActive {
           Label(
-            localized: .localizable(.elementIsSelected),
+            localized: .app(.elementIsSelected),
             systemImage: "checkmark"
           )
           .labelStyle(.iconOnly)

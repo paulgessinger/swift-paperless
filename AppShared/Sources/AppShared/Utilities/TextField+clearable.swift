@@ -19,7 +19,7 @@ public struct ClearableModifier: ViewModifier {
       if isEnabled {
         Spacer()
 
-        Label(String(localized: .localizable(.clearText)), systemImage: "xmark.circle.fill")
+        Label(String(localized: .app(.clearText)), systemImage: "xmark.circle.fill")
           .labelStyle(.iconOnly)
           .foregroundColor(.gray)
           .onTapGesture {

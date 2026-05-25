@@ -21,7 +21,7 @@ public struct StoragePathEditView<Element>: View where Element: StoragePathProto
   ) {
     _storagePath = State(initialValue: storagePath)
     self.onSave = onSave
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 
   public var isValid: Bool {
@@ -31,18 +31,18 @@ public struct StoragePathEditView<Element>: View where Element: StoragePathProto
   public var body: some View {
     Form {
       Section {
-        TextField(String(localized: .localizable(.title)), text: $storagePath.name)
+        TextField(String(localized: .app(.title)), text: $storagePath.name)
           .clearable($storagePath.name)
 
-        TextField(String(localized: .localizable(.path)), text: $storagePath.path)
+        TextField(String(localized: .app(.path)), text: $storagePath.path)
           .clearable($storagePath.path)
           .autocorrectionDisabled(true)
           .textInputAutocapitalization(.never)
 
       } header: {
-        Text(.localizable(.properties))
+        Text(.app(.properties))
       } footer: {
-        Text(.localizable(.storagePathFormatExplanation))
+        Text(.app(.storagePathFormatExplanation))
       }
 
       MatchEditView(element: $storagePath)
@@ -68,7 +68,7 @@ public struct StoragePathEditView<Element>: View where Element: StoragePathProto
 extension StoragePathEditView where Element == ProtoStoragePath {
   public init(onSave: @escaping (Element) throws -> Void) {
     self.init(element: ProtoStoragePath(), onSave: onSave)
-    saveLabel = String(localized: .localizable(.add))
+    saveLabel = String(localized: .app(.add))
   }
 }
 
@@ -76,6 +76,6 @@ extension StoragePathEditView where Element == ProtoStoragePath {
   NavigationStack {
     StoragePathEditView<ProtoStoragePath>(onSave: { _ in })
       .navigationBarTitleDisplayMode(.inline)
-      .navigationTitle(Text(.localizable(.storagePathCreateTitle)))
+      .navigationTitle(Text(.app(.storagePathCreateTitle)))
   }
 }

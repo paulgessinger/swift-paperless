@@ -23,7 +23,7 @@ public struct ClearableDatePickerView: View {
       if let unwrapped = Binding(unwrapping: $value) {
         Image(systemName: "xmark.circle.fill")
           .foregroundColor(.secondary)
-          .accessibilityLabel(String(localized: .localizable(.dateClear)))
+          .accessibilityLabel(String(localized: .app(.dateClear)))
           .contentShape(Rectangle())
           .onTapGesture {
             value = nil
@@ -32,7 +32,7 @@ public struct ClearableDatePickerView: View {
       } else {
         HStack {
           Image(systemName: "plus.circle.fill")
-          Text(.localizable(.dateAdd))
+          Text(.app(.dateAdd))
         }
         .foregroundColor(.accentColor)
         .onTapGesture {

@@ -151,7 +151,7 @@ private struct DocumentPropertyView: View {
         VStack(alignment: .leading) {
           HFlow(itemSpacing: spacing) {
             if let asn = document.asn {
-              Aspect(localized: .localizable(.documentAsn(asn)), systemImage: "qrcode")
+              Aspect(localized: .app(.documentAsn(asn)), systemImage: "qrcode")
             }
 
             if let id = document.correspondent {
@@ -159,7 +159,7 @@ private struct DocumentPropertyView: View {
             }
 
             if let pageCount = document.pageCount {
-              Aspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
+              Aspect(localized: .app(.pages(pageCount)), systemImage: "book.pages")
             }
 
             if let id = document.documentType {
@@ -202,7 +202,7 @@ private struct DocumentPropertyView: View {
           }
 
         } label: {
-          Label(localized: .localizable(.details), systemImage: "info.circle.fill")
+          Label(localized: .app(.details), systemImage: "info.circle.fill")
             .labelStyle(.iconOnly)
             .fontWeight(.bold)
             .symbolRenderingMode(.palette)
@@ -278,7 +278,7 @@ private struct DocumentPropertyView: View {
           }
           .offset(y: secondaryOffset)
 
-        Label(localized: .localizable(.edit), systemImage: "square.and.pencil.circle.fill")
+        Label(localized: .app(.edit), systemImage: "square.and.pencil.circle.fill")
           .labelStyle(.iconOnly)
           .font(.title)
           .fontWeight(.bold)
@@ -438,7 +438,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
       .scrollDisabled(true)
       .overlay {
         VStack {
-          Text(.localizable(.loading))
+          Text(.app(.loading))
             .foregroundStyle(.primary)
           ProgressView(value: viewModel.downloadProgress, total: 1.0)
             .frame(width: 100)
@@ -603,7 +603,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
               showPropertyBar = true
             } label: {
               Label(
-                localized: .localizable(.showDocumentPropertiesLabel),
+                localized: .app(.showDocumentPropertiesLabel),
                 systemImage: "inset.filled.bottomthird.square"
               )
               .labelStyle(.iconOnly)
@@ -649,19 +649,19 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     .toolbarBackground(.thinMaterial, for: .navigationBar)
     .toolbar {
       ToolbarItemGroup(placement: .topBarTrailing) {
-        Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+        Label(localized: .app(.share), systemImage: "square.and.arrow.up")
           .tint(.accent)
           .overlay {
             Menu {
               Button {
                 showShareLinkSheet = true
               } label: {
-                Label(localized: .localizable(.shareLink), systemImage: "link")
+                Label(localized: .app(.shareLink), systemImage: "link")
               }
 
               if let url = viewModel.documentUrl {
                 ShareLink(item: url) {
-                  Label(localized: .localizable(.documentLink), systemImage: "safari")
+                  Label(localized: .app(.documentLink), systemImage: "safari")
                 }
               }
 
@@ -671,23 +671,23 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
 
                 if let url = deepLinks.withoutServer?.url {
                   ShareLink(item: url) {
-                    Text(.localizable(.documentDeepLinkWithoutBackend))
+                    Text(.app(.documentDeepLinkWithoutBackend))
                   }
                 }
 
                 if let url = deepLinks.withServer?.url {
                   ShareLink(item: url) {
-                    Text(.localizable(.documentDeepLinkWithBackend))
+                    Text(.app(.documentDeepLinkWithBackend))
                   }
                 }
 
               } label: {
-                Label(localized: .localizable(.documentDeepLink), systemImage: "app")
+                Label(localized: .app(.documentDeepLink), systemImage: "app")
               }
 
               if case .loaded(url: let url, document: _) = viewModel.download {
                 ShareLink(item: url) {
-                  Label(localized: .localizable(.shareSheet), systemImage: "square.and.arrow.down")
+                  Label(localized: .app(.shareSheet), systemImage: "square.and.arrow.down")
                 }
               }
             } label: {

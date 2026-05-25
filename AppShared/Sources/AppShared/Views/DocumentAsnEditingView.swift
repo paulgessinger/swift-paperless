@@ -65,7 +65,7 @@ where DocumentType: DocumentProtocol & Equatable {
 
   public var body: some View {
     HStack {
-      TextField(String(localized: .localizable(.asn)), text: $asn)
+      TextField(String(localized: .app(.asn)), text: $asn)
         .keyboardType(.numberPad)
         .disabled(!isEnabled)
 
@@ -86,7 +86,7 @@ where DocumentType: DocumentProtocol & Equatable {
           ProgressView()
         } else {
           Label(
-            String(localized: .localizable(.documentDuplicateAsn)),
+            String(localized: .app(.documentDuplicateAsn)),
             systemImage:
               "xmark.circle.fill"
           )

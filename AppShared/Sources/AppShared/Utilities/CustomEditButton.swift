@@ -13,23 +13,23 @@ public struct CustomEditButton: View {
   public var body: some View {
     if #available(iOS 26.0, *) {
       if editMode?.wrappedValue.isEditing == true {
-        Button(.localizable(.done), systemImage: "checkmark") {
+        Button(.app(.done), systemImage: "checkmark") {
           editMode?.wrappedValue = .inactive
         }
         .buttonStyle(.glassProminent)
       } else {
-        Button(.localizable(.done), systemImage: "pencil") {
+        Button(.app(.done), systemImage: "pencil") {
           editMode?.wrappedValue = .active
         }
       }
     } else {
       if editMode?.wrappedValue.isEditing == true {
-        Button(.localizable(.done)) {
+        Button(.app(.done)) {
           editMode?.wrappedValue = .inactive
         }
         .bold()
       } else {
-        Button(.localizable(.edit)) {
+        Button(.app(.edit)) {
           editMode?.wrappedValue = .active
         }
       }

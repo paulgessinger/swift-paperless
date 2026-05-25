@@ -147,7 +147,7 @@ public struct LogView: View {
           Section {
             HStack(alignment: .top) {
               Image(systemName: "info.circle.fill")
-              Text(.localizable(.logsExportNoFile))
+              Text(.app(.logsExportNoFile))
             }
           }
         }
@@ -159,7 +159,7 @@ public struct LogView: View {
                 proxy.scrollTo(entries.count - 1, anchor: .bottom)
               }
             } label: {
-              Label(.localizable(.scrollToBottom), systemImage: "arrow.down.to.line.alt")
+              Label(.app(.scrollToBottom), systemImage: "arrow.down.to.line.alt")
             }
           }
         }
@@ -169,7 +169,7 @@ public struct LogView: View {
           case .loading:
             HStack {
               ProgressView()
-              Text(.localizable(.logsExportLoading))
+              Text(.app(.logsExportLoading))
             }
             .frame(maxWidth: .infinity, alignment: .center)
 
@@ -194,7 +194,7 @@ public struct LogView: View {
               }
 
               .contextMenu {
-                Button(.localizable(.copyToClipboard)) {
+                Button(.app(.copyToClipboard)) {
                   Pasteboard.general.string = entry.formatted
                 }
               }
@@ -227,11 +227,11 @@ public struct LogView: View {
               Pasteboard.general.string = payload
               Haptics.shared.notification(.success)
             } label: {
-              Label(.localizable(.copyToClipboard), systemImage: "doc.on.doc")
+              Label(.app(.copyToClipboard), systemImage: "doc.on.doc")
             }
 
             ShareLink(item: file ?? URL(filePath: "")!, preview: SharePreview("Logs")) {
-              Label(.localizable(.share), systemImage: "square.and.arrow.up")
+              Label(.app(.share), systemImage: "square.and.arrow.up")
             }
             .disabled(file == nil)
           }

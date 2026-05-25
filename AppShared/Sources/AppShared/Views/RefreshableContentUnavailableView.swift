@@ -57,7 +57,7 @@ public struct NoPermissionsView<Resource>: View where Resource: LocalizedResourc
 
 #Preview("Full") {
   ScrollableContentUnavailableView {
-    Label(String(localized: .localizable(.requestErrorForbidden)), systemImage: "lock.fill")
+    Label(String(localized: .app(.requestErrorForbidden)), systemImage: "lock.fill")
   } description: {
     Text("Some subtitle text")
   }
@@ -68,7 +68,7 @@ public struct NoPermissionsView<Resource>: View where Resource: LocalizedResourc
 
 #Preview("Label only") {
   ScrollableContentUnavailableView {
-    Label(String(localized: .localizable(.requestErrorForbidden)), systemImage: "lock.fill")
+    Label(String(localized: .app(.requestErrorForbidden)), systemImage: "lock.fill")
   }
   .refreshable {
     print("Refresh")

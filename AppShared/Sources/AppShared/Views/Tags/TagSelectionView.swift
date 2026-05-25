@@ -59,7 +59,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         .foregroundColor(.primary)
       Spacer()
       if active {
-        Label(String(localized: .localizable(.tagIsSelected)), systemImage: "checkmark")
+        Label(String(localized: .app(.tagIsSelected)), systemImage: "checkmark")
           .labelStyle(.iconOnly)
       }
     }
@@ -134,7 +134,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
       HStack {
         TagView(tag: tag)
         Spacer()
-        Label(String(localized: .localizable(.tagAdd)), systemImage: "plus.circle")
+        Label(String(localized: .app(.tagAdd)), systemImage: "plus.circle")
           .labelStyle(.iconOnly)
           .foregroundColor(.accentColor)
       }
@@ -145,7 +145,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
   private struct NoElementsView: View {
     public var body: some View {
       ContentUnavailableView(
-        String(localized: .localizable(.noElementsFound)),
+        String(localized: .app(.noElementsFound)),
         systemImage: "exclamationmark.magnifyingglass",
         description: Text(Tag.localizedNamePlural))
     }
@@ -176,17 +176,17 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
               HStack {
                 TagView(tag: tag)
                 Spacer()
-                Label(String(localized: .localizable(.remove)), systemImage: "xmark.circle.fill")
+                Label(String(localized: .app(.remove)), systemImage: "xmark.circle.fill")
                   .labelStyle(.iconOnly)
                   .foregroundColor(.gray)
               }
             }
           }
           if document.tags.isEmpty {
-            Text(.localizable(.none))
+            Text(.app(.none))
           }
         } header: {
-          Text(.localizable(.selected))
+          Text(.app(.selected))
         }
 
         Section {
@@ -217,14 +217,14 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
       }
     }
 
-    .navigationTitle(Text(.localizable(.tags)))
+    .navigationTitle(Text(.app(.tags)))
 
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         NavigationLink {
           CreateTag(document: $document)
         } label: {
-          Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
+          Label(String(localized: .app(.tagAdd)), systemImage: "plus")
         }
 
         .disabled(!store.permissions.test(.add, for: .tag))

@@ -10,14 +10,14 @@ extension DocumentCreateError: DisplayableError {
   public var message: String {
     switch self {
     case .tooLarge:
-      String(localized: .localizable(.documentCreateFailedTooLarge))
+      String(localized: .app(.documentCreateFailedTooLarge))
     }
   }
 
   public var details: String? {
     switch self {
     case .tooLarge:
-      String(localized: .localizable(.documentCreateFailedTooLargeDetails))
+      String(localized: .app(.documentCreateFailedTooLargeDetails))
     }
   }
 }

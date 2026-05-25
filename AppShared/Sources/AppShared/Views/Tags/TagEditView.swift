@@ -39,7 +39,7 @@ public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     _tag = State(initialValue: element)
     self.onSave = onSave
     editable = onSave != nil
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 
   private let scale = 2.0
@@ -60,21 +60,21 @@ public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
     if let id = tag.parent, let parent = store.tags[id] {
       TagView(tag: parent)
     } else {
-      Text(.localizable(.none))
+      Text(.app(.none))
     }
   }
 
   public var body: some View {
     Form {
       Section {
-        TextField(String(localized: .localizable(.tagName)), text: $tag.name)
+        TextField(String(localized: .app(.tagName)), text: $tag.name)
           .clearable($tag.name)
           .disabled(!editable)
 
-        Toggle(String(localized: .localizable(.tagIsInbox)), isOn: $tag.isInboxTag)
+        Toggle(String(localized: .app(.tagIsInbox)), isOn: $tag.isInboxTag)
           .disabled(!editable)
       } header: {
-        Text(!tag.name.isEmpty ? tag.name : String(localized: .localizable(.tagName)))
+        Text(!tag.name.isEmpty ? tag.name : String(localized: .app(.tagName)))
           .lineLimit(1)
           .truncationMode(.middle)
           .font(.title3)
@@ -93,9 +93,9 @@ public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
           .frame(maxWidth: .infinity, alignment: .center)
       }
 
-      Section(String(localized: .localizable(.color))) {
+      Section(String(localized: .app(.color))) {
         ColorPicker(
-          String(localized: .localizable(.color)),
+          String(localized: .app(.color)),
           selection: $tag.color.color,
           supportsOpacity: false
         )
@@ -107,7 +107,7 @@ public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
         } label: {
           HStack {
             Spacer()
-            Text(.localizable(.tagColorRandom))
+            Text(.app(.tagColorRandom))
             Spacer()
           }
         }
@@ -119,7 +119,7 @@ public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
           TagParentPickerView(selection: $tag.parent, excludingId: persistedId)
         } label: {
           HStack {
-            Text(.localizable(.tagParent))
+            Text(.app(.tagParent))
             Spacer()
             parentLabel
               .foregroundStyle(.secondary)
@@ -155,7 +155,7 @@ extension TagEditView where Element == ProtoTag {
     self.init(
       element: ProtoTag(color: HexColor(Self.randomColor())),
       onSave: onSave)
-    saveLabel = String(localized: .localizable(.add))
+    saveLabel = String(localized: .app(.add))
   }
 }
 
@@ -213,7 +213,7 @@ public struct TagParentPickerView: View {
           select(nil)
         } label: {
           HStack {
-            Text(.localizable(.none))
+            Text(.app(.none))
               .foregroundStyle(.primary)
             Spacer()
             if selection == nil {
@@ -241,7 +241,7 @@ public struct TagParentPickerView: View {
       }
     }
     .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-    .navigationTitle(Text(.localizable(.tagParent)))
+    .navigationTitle(Text(.app(.tagParent)))
     .navigationBarTitleDisplayMode(.inline)
   }
 }
@@ -250,6 +250,6 @@ public struct TagParentPickerView: View {
   NavigationStack {
     TagEditView<ProtoTag>(onSave: { _ in })
       .navigationBarTitleDisplayMode(.inline)
-      .navigationTitle(Text(.localizable(.tagCreateTitle)))
+      .navigationTitle(Text(.app(.tagCreateTitle)))
   }
 }

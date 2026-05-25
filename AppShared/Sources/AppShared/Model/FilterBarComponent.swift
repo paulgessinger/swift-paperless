@@ -19,14 +19,14 @@ public enum FilterBarComponent: String, CaseIterable, Codable {
 
   public var localizedName: LocalizedStringResource {
     switch self {
-    case .tags: .localizable(.tags)
-    case .documentType: .localizable(.documentType)
-    case .correspondent: .localizable(.correspondent)
-    case .storagePath: .localizable(.storagePath)
-    case .permissions: .localizable(.permissions)
-    case .customFields: .localizable(.customFields)
-    case .asn: .localizable(.asn)
-    case .date: .localizable(.dateFilterTitle)
+    case .tags: .app(.tags)
+    case .documentType: .app(.documentType)
+    case .correspondent: .app(.correspondent)
+    case .storagePath: .app(.storagePath)
+    case .permissions: .app(.permissions)
+    case .customFields: .app(.customFields)
+    case .asn: .app(.asn)
+    case .date: .app(.dateFilterTitle)
     }
   }
 }

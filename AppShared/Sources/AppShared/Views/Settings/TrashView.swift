@@ -105,18 +105,18 @@ public struct TrashView: View {
           }
           .disabled(selection.isEmpty)
 
-          Button(.localizable(.delete), systemImage: "trash") {
+          Button(.app(.delete), systemImage: "trash") {
             showDeleteConfirmation = true
           }
           .disabled(selection.isEmpty)
           .confirmationDialog(
             confirmTitle, isPresented: $showDeleteConfirmation, titleVisibility: .visible
           ) {
-            Button(.localizable(.delete), role: .destructive) {
+            Button(.app(.delete), role: .destructive) {
               deleteDocuments(ids: selection)
               showDeleteConfirmation = false
             }
-            Button(.localizable(.cancel)) {
+            Button(.app(.cancel)) {
               selection = Set()
               showDeleteConfirmation = false
             }

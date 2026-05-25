@@ -33,7 +33,7 @@ public struct SearchBarView<Content: View>: View {
           TextField(
             text: $text,
             label: {
-              Text(.localizable(.search))
+              Text(.app(.search))
             }
           )
           .focused($focused)
@@ -52,7 +52,7 @@ public struct SearchBarView<Content: View>: View {
             focused = false
             text = ""
           } label: {
-            Label(localized: .localizable(.cancel), systemImage: "xmark")
+            Label(localized: .app(.cancel), systemImage: "xmark")
               .labelStyle(.iconOnly)
               .foregroundStyle(Color("AccentColorLightened"))
           }

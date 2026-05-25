@@ -11,23 +11,23 @@ import Foundation
 extension SortField {
   public func localizedName(customFields: [UInt: CustomField]) -> String {
     switch self {
-    case .asn: String(localized: .localizable(.asn))
-    case .correspondent: String(localized: .localizable(.correspondent))
-    case .title: String(localized: .localizable(.title))
-    case .documentType: String(localized: .localizable(.documentType))
-    case .created: String(localized: .localizable(.sortOrderCreated))
-    case .added: String(localized: .localizable(.sortOrderAdded))
-    case .modified: String(localized: .localizable(.sortOrderModified))
-    case .storagePath: String(localized: .localizable(.sortOrderStoragePath))
-    case .owner: String(localized: .localizable(.sortOrderOwner))
-    case .notes: String(localized: .localizable(.sortOrderNotes))
-    case .score: String(localized: .localizable(.sortOrderScore))
-    case .pageCount: String(localized: .localizable(.sortOrderPageCount))
+    case .asn: String(localized: .app(.asn))
+    case .correspondent: String(localized: .app(.correspondent))
+    case .title: String(localized: .app(.title))
+    case .documentType: String(localized: .app(.documentType))
+    case .created: String(localized: .app(.sortOrderCreated))
+    case .added: String(localized: .app(.sortOrderAdded))
+    case .modified: String(localized: .app(.sortOrderModified))
+    case .storagePath: String(localized: .app(.sortOrderStoragePath))
+    case .owner: String(localized: .app(.sortOrderOwner))
+    case .notes: String(localized: .app(.sortOrderNotes))
+    case .score: String(localized: .app(.sortOrderScore))
+    case .pageCount: String(localized: .app(.sortOrderPageCount))
     case .customField(let id):
       if let field = customFields[id] {
         field.name
       } else {
-        String(localized: .localizable(.sortOrderCustomFieldUnknown(id)))
+        String(localized: .app(.sortOrderCustomFieldUnknown(id)))
       }
     case .other(let name): name
     }

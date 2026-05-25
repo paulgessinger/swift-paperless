@@ -30,7 +30,7 @@ public struct SavedViewEditView<Element>: View where Element: SavedViewProtocol 
   ) {
     _savedView = State(initialValue: savedView)
     self.onSave = onSave
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 
   private func load() async {
@@ -54,28 +54,28 @@ public struct SavedViewEditView<Element>: View where Element: SavedViewProtocol 
 
   public var body: some View {
     Form {
-      Section(String(localized: .localizable(.properties))) {
-        TextField(String(localized: .localizable(.title)), text: $savedView.name)
+      Section(String(localized: .app(.properties))) {
+        TextField(String(localized: .app(.title)), text: $savedView.name)
           .clearable($savedView.name)
 
         Toggle(
-          String(localized: .localizable(.savedViewShowOnDashboard)),
+          String(localized: .app(.savedViewShowOnDashboard)),
           isOn: $savedView.showOnDashboard)
 
         Toggle(
-          String(localized: .localizable(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar
+          String(localized: .app(.savedViewShowInSidebar)), isOn: $savedView.showInSidebar
         )
       }
       .disabled(!editable)
 
-      Section(String(localized: .localizable(.sorting))) {
-        Picker(String(localized: .localizable(.sortBy)), selection: $savedView.sortField) {
+      Section(String(localized: .app(.sorting))) {
+        Picker(String(localized: .app(.sortBy)), selection: $savedView.sortField) {
           ForEach(SortField.allCases, id: \.rawValue) { v in
             Text(localizedName(for: v)).tag(v)
           }
         }
 
-        Picker(String(localized: .localizable(.sortOrder)), selection: $savedView.sortOrder) {
+        Picker(String(localized: .app(.sortOrder)), selection: $savedView.sortOrder) {
           Text(DataModel.SortOrder.ascending.localizedName)
             .tag(DataModel.SortOrder.ascending)
           Text(DataModel.SortOrder.descending.localizedName)
@@ -97,7 +97,7 @@ public struct SavedViewEditView<Element>: View where Element: SavedViewProtocol 
 
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
-        Button(String(localized: .localizable(.save))) {
+        Button(String(localized: .app(.save))) {
           do {
             try onSave?(savedView)
           } catch {
@@ -119,7 +119,7 @@ public struct SavedViewEditView<Element>: View where Element: SavedViewProtocol 
 extension SavedViewEditView where Element == ProtoSavedView {
   public init(onSave: @escaping (Element) throws -> Void) {
     self.init(element: ProtoSavedView(), onSave: onSave)
-    saveLabel = String(localized: .localizable(.add))
+    saveLabel = String(localized: .app(.add))
   }
 }
 

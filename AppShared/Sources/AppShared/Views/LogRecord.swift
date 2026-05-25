@@ -80,7 +80,7 @@ public struct LogRecordExportButton: View {
 
   @ViewBuilder
   public static func loadingView() -> some View {
-    Label(String(localized: .localizable(.logsExportLoading)), systemImage: "ellipsis")
+    Label(String(localized: .app(.logsExportLoading)), systemImage: "ellipsis")
       .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing)
   }
 
@@ -93,7 +93,7 @@ public struct LogRecordExportButton: View {
           export()
         } label: {
           Label {
-            Text(.localizable(.logsExport))
+            Text(.app(.logsExport))
               .accentColor(.primary)
           } icon: {
             Image(systemName: "text.word.spacing")
@@ -106,7 +106,7 @@ public struct LogRecordExportButton: View {
       case .loaded(let logs):
         ShareLink(item: logs, preview: SharePreview("Logs")) {
           Label {
-            Text(.localizable(.logsExportReady))
+            Text(.app(.logsExportReady))
               .accentColor(.primary)
           } icon: {
             Image(systemName: "checkmark.circle.fill")

@@ -66,13 +66,13 @@ private struct FilterMenu<Content: View>: View {
     {
       let indicator: String =
         if filterModel.filterState.modified {
-          String(localized: .localizable(.savedViewModified(savedView.name)))
+          String(localized: .app(.savedViewModified(savedView.name)))
         } else {
           savedView.name
         }
-      return "\(String(localized: .localizable(.savedView))): \(indicator)"
+      return "\(String(localized: .app(.savedView))): \(indicator)"
     }
-    return String(localized: .localizable(.savedViews))
+    return String(localized: .app(.savedViews))
   }
 
   var body: some View {
@@ -87,7 +87,7 @@ private struct FilterMenu<Content: View>: View {
                 saveSavedView()
               } label: {
                 Label(
-                  String(localized: .localizable(.save)), systemImage: "square.and.arrow.down")
+                  String(localized: .app(.save)), systemImage: "square.and.arrow.down")
               }
             }
 
@@ -95,7 +95,7 @@ private struct FilterMenu<Content: View>: View {
               filterModel.filterState = .init(savedView: savedView)
             } label: {
               Label(
-                String(localized: .localizable(.discardChanges)),
+                String(localized: .app(.discardChanges)),
                 systemImage: "arrow.counterclockwise")
             }
           }
@@ -112,7 +112,7 @@ private struct FilterMenu<Content: View>: View {
               savedView = proto
 
             } label: {
-              Label(String(localized: .localizable(.add)), systemImage: "plus.circle")
+              Label(String(localized: .app(.add)), systemImage: "plus.circle")
             }
           }
         }
@@ -121,10 +121,10 @@ private struct FilterMenu<Content: View>: View {
       if store.permissions.test(.view, for: .savedView) {
         NavigationLink {
           ManageView<SavedViewManager>()
-            .navigationTitle(Text(.localizable(.savedViews)))
+            .navigationTitle(Text(.app(.savedViews)))
         } label: {
           Label(
-            String(localized: .localizable(.savedViewsEditButtonLabel)),
+            String(localized: .app(.savedViewsEditButtonLabel)),
             systemImage: "list.bullet")
         }
       }
@@ -133,13 +133,13 @@ private struct FilterMenu<Content: View>: View {
         if !store.savedViews.isEmpty, store.permissions.test(.view, for: .savedView) {
           Divider()
         }
-        Text(.localizable(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
+        Text(.app(.filtersApplied(filterModel.filterState.defaultAwareRuleCount)))
         Divider()
         Button(role: .destructive) {
           Haptics.shared.notification(.success)
           filterModel.filterState.clear()
         } label: {
-          Label(String(localized: .localizable(.clearFilters)), systemImage: "xmark")
+          Label(String(localized: .app(.clearFilters)), systemImage: "xmark")
         }
       }
 
@@ -385,7 +385,7 @@ private struct SortMenu: View {
 
     Menu {
       Picker(
-        String(localized: .localizable(.sortOrder)),
+        String(localized: .app(.sortOrder)),
         selection: $filterModel.filterState.sortOrder
       ) {
         Label(SortOrder.ascending.localizedName, systemImage: "arrow.up")
@@ -395,7 +395,7 @@ private struct SortMenu: View {
       }
 
       Picker(
-        String(localized: .localizable(.sortBy)),
+        String(localized: .app(.sortBy)),
         selection: $filterModel.filterState.sortField
       ) {
         ForEach(eligibleSortFields, id: \.rawValue) { f in
@@ -408,7 +408,7 @@ private struct SortMenu: View {
       }
 
       Picker(
-        String(localized: .localizable(.customFields)),
+        String(localized: .app(.customFields)),
         selection: $filterModel.filterState.sortField
       ) {
         ForEach(customFields, id: \.rawValue) { f in
@@ -418,7 +418,7 @@ private struct SortMenu: View {
       .pickerStyle(.menu)
     } label: {
       Pill(active: !filterModel.filterState.defaultSorting) {
-        Label(String(localized: .localizable(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
+        Label(String(localized: .app(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
           .labelStyle(.iconOnly)
       }
     }
@@ -563,7 +563,7 @@ struct FilterBar: View {
         }
         .toolbar {
           ToolbarItem(placement: .navigationBarLeading) {
-            Button(String(localized: .localizable(.cancel))) {
+            Button(String(localized: .app(.cancel))) {
               dismiss()
             }
           }
@@ -579,20 +579,20 @@ struct FilterBar: View {
         Group {
           switch filterModel.filterState.tags {
           case .any:
-            Text(.localizable(.tags))
+            Text(.app(.tags))
           case .notAssigned:
-            Text(.localizable(.tagsNotAssignedFilter))
+            Text(.app(.tagsNotAssignedFilter))
           case .allOf(let include, let exclude):
             let count = include.count + exclude.count
             if count == 1 {
               if let i = include.first, let name = store.tags[i]?.name {
                 Text(name)
               } else if let i = exclude.first, let name = store.tags[i]?.name {
-                Label(String(localized: .localizable(.tagExclude)), systemImage: "xmark")
+                Label(String(localized: .app(.tagExclude)), systemImage: "xmark")
                   .labelStyle(.iconOnly)
                 Text(name)
               } else {
-                Text(.localizable(.numberOfTags(1)))
+                Text(.app(.numberOfTags(1)))
                   .redacted(reason: .placeholder)
               }
             } else {
@@ -605,19 +605,19 @@ struct FilterBar: View {
               } else {
                 CircleCounter(value: count, mode: .exclude)
               }
-              Text(.localizable(.tags))
+              Text(.app(.tags))
             }
           case .anyOf(let ids):
             if ids.count == 1 {
               if let name = store.tags[ids.first!]?.name {
                 Text(name)
               } else {
-                Text(.localizable(.numberOfTags(1)))
+                Text(.app(.numberOfTags(1)))
                   .redacted(reason: .placeholder)
               }
             } else {
               CircleCounter(value: ids.count)
-              Text(.localizable(.tags))
+              Text(.app(.tags))
             }
           }
         }
@@ -637,7 +637,7 @@ struct FilterBar: View {
       Button {
         filterModel.filterState.owner = .any
       } label: {
-        let text = String(localized: .localizable(.ownerAll))
+        let text = String(localized: .app(.ownerAll))
         if filterModel.filterState.owner == .any {
           Label(text, systemImage: "checkmark")
         } else {
@@ -649,7 +649,7 @@ struct FilterBar: View {
         Button {
           filterModel.filterState.owner = .anyOf(ids: [user.id])
         } label: {
-          let text = String(localized: .localizable(.ownerMyDocuments))
+          let text = String(localized: .app(.ownerMyDocuments))
           switch filterModel.filterState.owner {
           case .anyOf(let ids):
             if ids.count == 1, ids[0] == store.currentUser?.id {
@@ -664,7 +664,7 @@ struct FilterBar: View {
         Button {
           filterModel.filterState.owner = .noneOf(ids: [user.id])
         } label: {
-          let text = String(localized: .localizable(.ownerSharedWithMe))
+          let text = String(localized: .app(.ownerSharedWithMe))
           switch filterModel.filterState.owner {
           case .noneOf(let ids):
             if ids.count == 1, ids[0] == store.currentUser?.id {
@@ -680,7 +680,7 @@ struct FilterBar: View {
       Button {
         filterModel.filterState.owner = .notAssigned
       } label: {
-        let text = String(localized: .localizable(.ownerUnowned))
+        let text = String(localized: .app(.ownerUnowned))
         if filterModel.filterState.owner == .notAssigned {
           Label(text, systemImage: "checkmark")
         } else {
@@ -692,7 +692,7 @@ struct FilterBar: View {
       case .anyOf(let ids), .noneOf(let ids):
         if ids.count > 1 || (ids.count == 1 && ids[0] != store.currentUser?.id) {
           Divider()
-          Text(String(localized: .localizable(.ownerFilterExplicitUnsupported)))
+          Text(String(localized: .app(.ownerFilterExplicitUnsupported)))
         } else {
           EmptyView()
         }
@@ -709,23 +709,23 @@ struct FilterBar: View {
     Pill(active: filterModel.filterState.owner != .any) {
       switch filterModel.filterState.owner {
       case .any:
-        Text(.localizable(.permissions))
+        Text(.app(.permissions))
       case .anyOf(let ids):
         if ids.count == 1, ids[0] == store.currentUser?.id {
-          Text(.localizable(.ownerMyDocuments))
+          Text(.app(.ownerMyDocuments))
         } else {
           CircleCounter(value: ids.count, mode: .include)
-          Text(.localizable(.ownerMultipleUsers))
+          Text(.app(.ownerMultipleUsers))
         }
       case .noneOf(let ids):
         if ids.count == 1, ids[0] == store.currentUser?.id {
-          Text(.localizable(.ownerSharedWithMe))
+          Text(.app(.ownerSharedWithMe))
         } else {
           CircleCounter(value: ids.count, mode: .exclude)
-          Text(.localizable(.ownerMultipleUsers))
+          Text(.app(.ownerMultipleUsers))
         }
       case .notAssigned:
-        Text(.localizable(.ownerUnowned))
+        Text(.app(.ownerUnowned))
       }
     }
     .transaction { $0.animation = nil }
@@ -747,7 +747,7 @@ struct FilterBar: View {
     case .tags:
       tagElement
         .filterPopover(isPresented: $showTags) {
-          Modal(title: String(localized: .localizable(.tags))) {
+          Modal(title: String(localized: .app(.tags))) {
             TagFilterView(
               selectedTags: $filterModel.filterState.tags)
           }
@@ -766,13 +766,13 @@ struct FilterBar: View {
         }, active: filterModel.filterState.documentType != .any
       ) { present(.documentType) }
       .filterPopover(isPresented: $showDocumentType) {
-        Modal(title: String(localized: .localizable(.documentType))) {
+        Modal(title: String(localized: .app(.documentType))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.documentType,
             elements: store.documentTypes.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.documentTypeNotAssignedPicker))
+            notAssignedLabel: String(localized: .app(.documentTypeNotAssignedPicker))
           )
         }
         .backport.navigationTransitionZoom(sourceID: TransitionKeys.documentType, in: transition)
@@ -790,13 +790,13 @@ struct FilterBar: View {
         }, active: filterModel.filterState.correspondent != .any
       ) { present(.correspondent) }
       .filterPopover(isPresented: $showCorrespondent) {
-        Modal(title: String(localized: .localizable(.correspondent))) {
+        Modal(title: String(localized: .app(.correspondent))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.correspondent,
             elements: store.correspondents.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.correspondentNotAssignedPicker))
+            notAssignedLabel: String(localized: .app(.correspondentNotAssignedPicker))
           )
         }
         .backport.navigationTransitionZoom(sourceID: TransitionKeys.correspondent, in: transition)
@@ -814,13 +814,13 @@ struct FilterBar: View {
         }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
       .filterPopover(isPresented: $showStoragePath) {
-        Modal(title: String(localized: .localizable(.storagePath))) {
+        Modal(title: String(localized: .app(.storagePath))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.storagePath,
             elements: store.storagePaths.sorted {
               $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending
             }.map { ($0.value.id, $0.value.name) },
-            notAssignedLabel: String(localized: .localizable(.storagePathNotAssignedPicker))
+            notAssignedLabel: String(localized: .app(.storagePathNotAssignedPicker))
           )
         }
         .backport.navigationTransitionZoom(sourceID: TransitionKeys.storagePath, in: transition)
@@ -883,7 +883,7 @@ struct FilterBar: View {
             chevron: false
           ) {
             Label(
-              String(localized: .localizable(.filtering)), systemImage: "line.3.horizontal.decrease"
+              String(localized: .app(.filtering)), systemImage: "line.3.horizontal.decrease"
             )
             .labelStyle(.iconOnly)
             if filterModel.filterState.filtering {

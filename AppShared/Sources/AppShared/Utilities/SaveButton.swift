@@ -17,8 +17,7 @@ public struct SaveButton: View {
     self.action = action
   }
 
-  public init(_ label: LocalizedStringResource = .localizable(.save), action: @escaping () -> Void)
-  {
+  public init(_ label: LocalizedStringResource = .app(.save), action: @escaping () -> Void) {
     self.label = String(localized: label)
     self.action = action
   }

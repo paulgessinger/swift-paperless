@@ -40,7 +40,7 @@ struct FilterAssemblyiOS18: View {
           }
 
         } label: {
-          Label(localized: .localizable(.searchModeSettings), systemImage: "ellipsis.circle")
+          Label(localized: .app(.searchModeSettings), systemImage: "ellipsis.circle")
             .labelStyle(.iconOnly)
         }
       }

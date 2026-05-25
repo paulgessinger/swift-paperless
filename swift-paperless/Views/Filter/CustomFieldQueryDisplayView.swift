@@ -51,7 +51,7 @@ private struct OpView: View {
             CustomFieldQueryDisplayView(query: args[idx])
           }
         } else {
-          Text(.localizable(.none))
+          Text(.app(.none))
             .italic()
             .foregroundStyle(.secondary)
         }

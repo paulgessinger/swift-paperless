@@ -152,7 +152,7 @@ public struct TipJarView: View {
         Text(alert.title)
       },
       actions: { alert in
-        Button(.localizable(.ok)) { store.alert = nil }
+        Button(.app(.ok)) { store.alert = nil }
       },
       message: { alert in
         Text(alert.message)

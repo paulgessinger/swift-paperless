@@ -22,3 +22,8 @@ scripts/frames
 
 /vendor
 /build
+
+# Xcode auto-extracts untabled string literals into the default "Localizable"
+# table on IDE builds (an SPM-package quirk we can't disable). The real catalog is
+# App.xcstrings; this orphan only ever holds junk, so ignore it everywhere.
+Localizable.xcstrings

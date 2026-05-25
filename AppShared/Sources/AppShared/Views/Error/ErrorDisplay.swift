@@ -58,7 +58,7 @@ public struct ErrorDisplay: ViewModifier {
               Text(error.message)
                 .bold()
               if error.details != nil {
-                Text(.localizable(.errorAlertTapForDetails))
+                Text(.app(.errorAlertTapForDetails))
                   .font(Font.custom("", size: 14))
               }
             }
@@ -135,15 +135,15 @@ public struct ErrorDisplay: ViewModifier {
           Text(detail.message)
         },
         actions: { detail in
-          Button(String(localized: .localizable(.copyToClipboard))) {
+          Button(String(localized: .app(.copyToClipboard))) {
             Pasteboard.general.string = detail.details
           }
 
           if let link = detail.documentationLink {
-            Link(String(localized: .localizable(.errorMoreInfo)), destination: link)
+            Link(String(localized: .app(.errorMoreInfo)), destination: link)
           }
 
-          Button(String(localized: .localizable(.ok)), role: .cancel) {}
+          Button(String(localized: .app(.ok)), role: .cancel) {}
         },
         message: { detail in
           Text(detail.details!)

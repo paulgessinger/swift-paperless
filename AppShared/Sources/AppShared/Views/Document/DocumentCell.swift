@@ -153,14 +153,14 @@ public struct DocumentCell: View {
         }
 
         if let pageCount = document.pageCount {
-          Aspect(localized: .localizable(.pages(pageCount)), systemImage: "book.pages")
+          Aspect(localized: .app(.pages(pageCount)), systemImage: "book.pages")
             .fixedSize(horizontal: false, vertical: true)
             .lineLimit(1)
             .truncationMode(.tail)
         }
 
         if document.notes.count > 0 {
-          Aspect(localized: .localizable(.notes(document.notes.count)), systemImage: "note.text")
+          Aspect(localized: .app(.notes(document.notes.count)), systemImage: "note.text")
             .fixedSize(horizontal: false, vertical: true)
             .lineLimit(1)
             .truncationMode(.tail)

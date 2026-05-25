@@ -34,7 +34,7 @@ struct DocumentTypeEditSheet: View {
           }
         }
       })
-      .navigationTitle(Text(.localizable(.documentTypeCreateTitle)))
+      .navigationTitle(Text(.app(.documentTypeCreateTitle)))
       .navigationBarTitleDisplayMode(.inline)
     }
   }
@@ -44,9 +44,9 @@ struct DocumentTypeEditSheet: View {
       viewModel: viewModel,
       storeKeyPath: \.documentTypes,
       keyPath: \.documentType,
-      navigationTitle: .localizable(.documentType),
-      listSectionTitle: .localizable(.documentTypes),
-      notAssignedLabel: .localizable(.documentTypeNotAssignedPicker),
+      navigationTitle: .app(.documentType),
+      listSectionTitle: .app(.documentTypes),
+      notAssignedLabel: .app(.documentTypeNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .documentType),
       suggestions: viewModel.suggestions.documentTypes,
       quickCreate: { name in

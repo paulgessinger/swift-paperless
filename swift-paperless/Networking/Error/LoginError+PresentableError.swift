@@ -24,7 +24,7 @@ extension LoginError: PresentableError {
     case .invalidLogin(let details):
       Text(.login(.errorLoginInvalidDetails))
       if let details {
-        Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+        Text(.app(.requestErrorDetailLabel)) + Text(": ")
           + (Text(details).italic())
       }
 
@@ -42,7 +42,7 @@ extension LoginError: PresentableError {
       Text(.login(.errorMessage))
         .fixedSize(horizontal: false, vertical: true)
         .bold()
-      Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+      Text(.app(.requestErrorDetailLabel)) + Text(": ")
         + Text(error)
         .italic()
     }

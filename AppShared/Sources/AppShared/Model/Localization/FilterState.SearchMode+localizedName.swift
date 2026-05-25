@@ -11,13 +11,13 @@ extension FilterState.SearchMode {
   public var localizedName: String {
     switch self {
     case .title:
-      String(localized: .localizable(.searchTitle))
+      String(localized: .app(.searchTitle))
     case .content:
-      String(localized: .localizable(.searchContent))
+      String(localized: .app(.searchContent))
     case .titleContent:
-      String(localized: .localizable(.searchTitleContent))
+      String(localized: .app(.searchTitleContent))
     case .advanced:
-      String(localized: .localizable(.searchAdvanced))
+      String(localized: .app(.searchAdvanced))
     }
   }
 }

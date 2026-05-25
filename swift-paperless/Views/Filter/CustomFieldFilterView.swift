@@ -57,7 +57,7 @@ private struct OpView: View {
             Button(role: .destructive) {
               op.args.remove(at: index)
             } label: {
-              Label(.localizable(.delete), systemImage: "trash")
+              Label(.app(.delete), systemImage: "trash")
             }
           }
         }
@@ -466,7 +466,7 @@ where Content: View, Label: View, T: CustomStringConvertible & Hashable {
                 .frame(maxWidth: .infinity, alignment: .leading)
               if selection.contains(option) {
                 SwiftUI.Label(
-                  localized: .localizable(.selected),
+                  localized: .app(.selected),
                   systemImage: "checkmark"
                 )
                 .labelStyle(.iconOnly)

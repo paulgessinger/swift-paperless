@@ -45,7 +45,7 @@ public struct TagFilterView: View {
         .foregroundColor(.primary)
       Spacer()
       if active {
-        Label(String(localized: .localizable(.tagIsSelected)), systemImage: "checkmark")
+        Label(String(localized: .app(.tagIsSelected)), systemImage: "checkmark")
           .labelStyle(.iconOnly)
       }
     }
@@ -132,7 +132,7 @@ public struct TagFilterView: View {
               Task { withAnimation { selectedTags = .any } }
             }, active: selectedTags == .any,
             content: {
-              Text(.localizable(.tagsFilterAny))
+              Text(.app(.tagsFilterAny))
             })
 
           row(
@@ -140,7 +140,7 @@ public struct TagFilterView: View {
               Task { withAnimation { selectedTags = .notAssigned } }
             }, active: selectedTags == .notAssigned,
             content: {
-              Text(.localizable(.tagsNotAssignedPicker))
+              Text(.app(.tagsNotAssignedPicker))
             })
         }
 
@@ -159,7 +159,7 @@ public struct TagFilterView: View {
 
               VStack {
                 let empty = Label(
-                  String(localized: .localizable(.tagIsNotSelected)), systemImage: "circle"
+                  String(localized: .app(.tagIsNotSelected)), systemImage: "circle"
                 )
                 .labelStyle(.iconOnly)
                 switch selectedTags {
@@ -170,12 +170,12 @@ public struct TagFilterView: View {
                 case .allOf(let include, let exclude):
                   if include.contains(tag.id) {
                     Label(
-                      String(localized: .localizable(.tagIncluded)), systemImage: "checkmark.circle"
+                      String(localized: .app(.tagIncluded)), systemImage: "checkmark.circle"
                     )
                     .labelStyle(.iconOnly)
                   } else if exclude.contains(tag.id) {
                     Label(
-                      String(localized: .localizable(.tagExcluded)), systemImage: "xmark.circle"
+                      String(localized: .app(.tagExcluded)), systemImage: "xmark.circle"
                     )
                     .labelStyle(.iconOnly)
                   } else {
@@ -184,7 +184,7 @@ public struct TagFilterView: View {
                 case .anyOf(let ids):
                   if ids.contains(tag.id) {
                     Label(
-                      String(localized: .localizable(.tagIsSelected)),
+                      String(localized: .app(.tagIsSelected)),
                       systemImage: "checkmark.circle"
                     )
                     .labelStyle(.iconOnly)
@@ -199,8 +199,8 @@ public struct TagFilterView: View {
           }
         } header: {
           Picker("Tag filter mode", selection: $mode) {
-            Text(.localizable(.tagsAll)).tag(Mode.all)
-            Text(.localizable(.tagsAny)).tag(Mode.any)
+            Text(.app(.tagsAll)).tag(Mode.all)
+            Text(.app(.tagsAny)).tag(Mode.any)
           }
           .textCase(.none)
           .padding(.bottom, 10)

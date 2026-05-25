@@ -31,7 +31,7 @@ public struct MainLoadingView: View {
   @ViewBuilder
   private var failSafeView: some View {
     VStack {
-      Text(.localizable(.loginFailSafe(url ?? "???")))
+      Text(.app(.loginFailSafe(url ?? "???")))
         .padding(.horizontal)
         .padding(.top, 50)
 
@@ -51,7 +51,7 @@ public struct MainLoadingView: View {
         manager.logout(animated: false)
       } label: {
         Label(
-          String(localized: .localizable(.logout)),
+          String(localized: .app(.logout)),
           systemImage: "rectangle.portrait.and.arrow.right")
       }
       .foregroundColor(Color.red)

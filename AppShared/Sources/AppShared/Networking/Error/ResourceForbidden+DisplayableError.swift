@@ -11,11 +11,11 @@ import Networking
 
 extension ResourceForbidden: DisplayableError where Resource: Model & LocalizedResource {
   public var message: String {
-    String(localized: .localizable(.apiForbiddenErrorMessage(Resource.localizedName)))
+    String(localized: .app(.apiForbiddenErrorMessage(Resource.localizedName)))
   }
 
   public var details: String? {
-    var msg = String(localized: .localizable(.apiForbiddenDetails(Resource.localizedName)))
+    var msg = String(localized: .app(.apiForbiddenDetails(Resource.localizedName)))
     if let response {
       msg += "\n\n\(response)"
     }

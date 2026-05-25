@@ -34,7 +34,7 @@ struct StoragePathEditSheet: View {
           }
         }
       })
-      .navigationTitle(Text(.localizable(.storagePathCreateTitle)))
+      .navigationTitle(Text(.app(.storagePathCreateTitle)))
       .navigationBarTitleDisplayMode(.inline)
     }
   }
@@ -44,9 +44,9 @@ struct StoragePathEditSheet: View {
       viewModel: viewModel,
       storeKeyPath: \.storagePaths,
       keyPath: \.storagePath,
-      navigationTitle: .localizable(.storagePath),
-      listSectionTitle: .localizable(.storagePaths),
-      notAssignedLabel: .localizable(.storagePathNotAssignedPicker),
+      navigationTitle: .app(.storagePath),
+      listSectionTitle: .app(.storagePaths),
+      notAssignedLabel: .app(.storagePathNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .storagePath),
       suggestions: viewModel.suggestions.storagePaths,
       createView: { onCreated in

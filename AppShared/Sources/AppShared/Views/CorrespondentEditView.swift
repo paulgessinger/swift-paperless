@@ -18,7 +18,7 @@ public struct CorrespondentEditView<Element>: View where Element: CorrespondentP
   public init(element: Element, onSave: ((Element) throws -> Void)?) {
     _element = State(initialValue: element)
     self.onSave = onSave
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 
   private var editable: Bool {
@@ -32,7 +32,7 @@ public struct CorrespondentEditView<Element>: View where Element: CorrespondentP
   public var body: some View {
     Form {
       Section {
-        TextField(String(localized: .localizable(.name)), text: $element.name)
+        TextField(String(localized: .app(.name)), text: $element.name)
           .clearable($element.name)
           .disabled(!editable)
       }
@@ -58,7 +58,7 @@ public struct CorrespondentEditView<Element>: View where Element: CorrespondentP
 extension CorrespondentEditView where Element == ProtoCorrespondent {
   public init(onSave: @escaping (Element) throws -> Void) {
     self.init(element: ProtoCorrespondent(), onSave: onSave)
-    saveLabel = String(localized: .localizable(.add))
+    saveLabel = String(localized: .app(.add))
   }
 }
 
@@ -68,7 +68,7 @@ public struct CorrespondentEditView_Previews: PreviewProvider {
       NavigationStack {
         CorrespondentEditView<ProtoCorrespondent>(onSave: { _ in })
           .navigationBarTitleDisplayMode(.inline)
-          .navigationTitle(Text(.localizable(.correspondentCreateTitle)))
+          .navigationTitle(Text(.app(.correspondentCreateTitle)))
       }
     }
   }

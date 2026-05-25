@@ -41,11 +41,11 @@ public struct SearchBarViewiOS18: View {
   public var body: some View {
     HStack {
       HStack {
-        Label(String(localized: .localizable(.search)), systemImage: "magnifyingglass")
+        Label(String(localized: .app(.search)), systemImage: "magnifyingglass")
           .labelStyle(.iconOnly)
           .foregroundColor(.gray)
           .padding(.trailing, -2)
-        TextField(String(localized: .localizable(.search)), text: $text)
+        TextField(String(localized: .app(.search)), text: $text)
           .padding(.trailing, 4)
           .padding(.leading, 0)
           .padding(.vertical, 8)
@@ -57,7 +57,7 @@ public struct SearchBarViewiOS18: View {
 
         if !text.isEmpty {
           Spacer()
-          Label(String(localized: .localizable(.searchClear)), systemImage: "xmark.circle.fill")
+          Label(String(localized: .app(.searchClear)), systemImage: "xmark.circle.fill")
             .labelStyle(.iconOnly)
             .foregroundColor(.gray)
             .onTapGesture {
@@ -80,7 +80,7 @@ public struct SearchBarViewiOS18: View {
 
       Group {
         if showCancel, cancelEnabled {
-          Text(.localizable(.cancel))
+          Text(.app(.cancel))
             .foregroundColor(.accentColor)
             .onTapGesture {
               focused = false

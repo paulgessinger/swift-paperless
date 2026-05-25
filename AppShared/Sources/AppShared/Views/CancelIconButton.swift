@@ -26,10 +26,10 @@ public struct CancelIconButton: View {
         }
       } label: {
         Image(systemName: "xmark")
-          .accessibilityLabel(Text(.localizable(.back)))
+          .accessibilityLabel(Text(.app(.back)))
       }
     } else {
-      Label(.localizable(.back), systemImage: "xmark.circle.fill")
+      Label(.app(.back), systemImage: "xmark.circle.fill")
         .labelStyle(.iconOnly)
         .symbolRenderingMode(.palette)
         .foregroundStyle(.primary, .tertiary)

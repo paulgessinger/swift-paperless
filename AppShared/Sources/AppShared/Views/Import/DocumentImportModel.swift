@@ -74,7 +74,7 @@ public class DocumentImportModel: ObservableObject {
                 .typeIdentifier, let supertypes = UTType(typeID)?.supertypes
             else {
               Logger.shared.error("Unable to get structured type info for imported file")
-              errorController.push(message: String(localized: .localizable(.errorDefaultMessage)))
+              errorController.push(message: String(localized: .app(.errorDefaultMessage)))
               return
             }
 
@@ -96,7 +96,7 @@ public class DocumentImportModel: ObservableObject {
 
           } else {
             Logger.shared.error("Document import: Access denied")
-            errorController.push(message: String(localized: .localizable(.errorDefaultMessage)))
+            errorController.push(message: String(localized: .app(.errorDefaultMessage)))
           }
         } else {
           importUrls.append(selectedFile)

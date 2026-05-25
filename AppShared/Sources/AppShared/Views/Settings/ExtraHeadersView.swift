@@ -74,7 +74,7 @@ public struct ExtraHeadersView: View {
             headers.append(.init(key: "Header", value: "Value"))
           }
         } label: {
-          Label(String(localized: .localizable(.add)), systemImage: "plus")
+          Label(String(localized: .app(.add)), systemImage: "plus")
         }
         EditButton()
       }

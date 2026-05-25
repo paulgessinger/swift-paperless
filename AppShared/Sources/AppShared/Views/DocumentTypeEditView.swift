@@ -18,7 +18,7 @@ public struct DocumentTypeEditView<Element>: View where Element: DocumentTypePro
   public init(element: Element, onSave: ((Element) throws -> Void)?) {
     _element = State(initialValue: element)
     self.onSave = onSave
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 
   private var editable: Bool {
@@ -32,7 +32,7 @@ public struct DocumentTypeEditView<Element>: View where Element: DocumentTypePro
   public var body: some View {
     Form {
       Section {
-        TextField(String(localized: .localizable(.name)), text: $element.name)
+        TextField(String(localized: .app(.name)), text: $element.name)
           .clearable($element.name)
           .disabled(!editable)
       }
@@ -59,7 +59,7 @@ public struct DocumentTypeEditView<Element>: View where Element: DocumentTypePro
 extension DocumentTypeEditView where Element == ProtoDocumentType {
   public init(onSave: @escaping (Element) throws -> Void) {
     self.init(element: ProtoDocumentType(), onSave: onSave)
-    saveLabel = String(localized: .localizable(.save))
+    saveLabel = String(localized: .app(.save))
   }
 }
 
@@ -69,7 +69,7 @@ public struct DocumentTypeEditView_Previews: PreviewProvider {
       NavigationStack {
         DocumentTypeEditView<ProtoDocumentType>(onSave: { _ in })
           .navigationBarTitleDisplayMode(.inline)
-          .navigationTitle(Text(.localizable(.documentTypeEditTitle)))
+          .navigationTitle(Text(.app(.documentTypeEditTitle)))
       }
     }
   }

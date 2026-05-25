@@ -37,7 +37,7 @@ struct FilterAssembly: View {
       }
 
     } label: {
-      Label(localized: .localizable(.searchModeSettings), systemImage: "ellipsis.circle")
+      Label(localized: .app(.searchModeSettings), systemImage: "ellipsis.circle")
         .labelStyle(.iconOnly)
         .foregroundStyle(.accentColorLightened)
     }

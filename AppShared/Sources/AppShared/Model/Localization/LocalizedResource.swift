@@ -15,8 +15,8 @@ public protocol LocalizedResource {
 }
 
 extension Document: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.document)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.documents)) }
+  public static var localizedName: String { String(localized: .app(.document)) }
+  public static var localizedNamePlural: String { String(localized: .app(.documents)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsDocument))
@@ -33,8 +33,8 @@ extension Document.Note: LocalizedResource {
 }
 
 extension Tag: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.tag)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.tags)) }
+  public static var localizedName: String { String(localized: .app(.tag)) }
+  public static var localizedNamePlural: String { String(localized: .app(.tags)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsTags))
@@ -42,8 +42,8 @@ extension Tag: LocalizedResource {
 }
 
 extension User: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.user)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.users)) }
+  public static var localizedName: String { String(localized: .app(.user)) }
+  public static var localizedNamePlural: String { String(localized: .app(.users)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsUsers))
@@ -51,8 +51,8 @@ extension User: LocalizedResource {
 }
 
 extension UserGroup: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.group)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.groups)) }
+  public static var localizedName: String { String(localized: .app(.group)) }
+  public static var localizedNamePlural: String { String(localized: .app(.groups)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsGroups))
@@ -60,8 +60,8 @@ extension UserGroup: LocalizedResource {
 }
 
 extension DocumentType: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.documentType)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.documentTypes)) }
+  public static var localizedName: String { String(localized: .app(.documentType)) }
+  public static var localizedNamePlural: String { String(localized: .app(.documentTypes)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsDocumentTypes))
@@ -69,8 +69,8 @@ extension DocumentType: LocalizedResource {
 }
 
 extension Correspondent: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.correspondent)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.correspondents)) }
+  public static var localizedName: String { String(localized: .app(.correspondent)) }
+  public static var localizedNamePlural: String { String(localized: .app(.correspondents)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsCorrespondents))
@@ -78,8 +78,8 @@ extension Correspondent: LocalizedResource {
 }
 
 extension SavedView: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.savedView)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.savedViews)) }
+  public static var localizedName: String { String(localized: .app(.savedView)) }
+  public static var localizedNamePlural: String { String(localized: .app(.savedViews)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsDocument))
@@ -87,8 +87,8 @@ extension SavedView: LocalizedResource {
 }
 
 extension StoragePath: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.storagePath)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.storagePaths)) }
+  public static var localizedName: String { String(localized: .app(.storagePath)) }
+  public static var localizedNamePlural: String { String(localized: .app(.storagePaths)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsStoragePaths))
@@ -105,7 +105,7 @@ extension PaperlessTask: LocalizedResource {
 }
 
 extension UISettings: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.uiSettings)) }
+  public static var localizedName: String { String(localized: .app(.uiSettings)) }
   public static var localizedNamePlural: String { localizedName }
 
   public static var localizedNoViewPermissions: String {
@@ -114,8 +114,8 @@ extension UISettings: LocalizedResource {
 }
 
 extension CustomField: LocalizedResource {
-  public static var localizedName: String { String(localized: .localizable(.customField)) }
-  public static var localizedNamePlural: String { String(localized: .localizable(.customFields)) }
+  public static var localizedName: String { String(localized: .app(.customField)) }
+  public static var localizedNamePlural: String { String(localized: .app(.customFields)) }
 
   public static var localizedNoViewPermissions: String {
     String(localized: .permissions(.noViewPermissionsCustomFields))

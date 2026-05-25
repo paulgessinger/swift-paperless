@@ -281,7 +281,7 @@ public struct CustomFieldsEditView<D: DocumentProtocol>: View {
           showAddSheet = true
         } label: {
           Image(systemName: "plus")
-            .accessibilityLabel(.localizable(.add))
+            .accessibilityLabel(.app(.add))
         }
         .disabled(!store.permissions.test(.view, for: .customField))
         .accessibilityAddTraits(.isButton)

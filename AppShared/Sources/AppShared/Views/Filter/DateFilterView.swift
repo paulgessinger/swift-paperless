@@ -11,20 +11,20 @@ import SwiftUI
 extension FilterState.DateFilter.Range {
   public var localizedLabel: String {
     switch self {
-    case .currentYear: String(localized: .localizable(.dateFilterCurrentYear))
-    case .currentMonth: String(localized: .localizable(.dateFilterCurrentMonth))
-    case .today: String(localized: .localizable(.dateFilterToday))
-    case .yesterday: String(localized: .localizable(.dateFilterYesterday))
-    case .previousWeek: String(localized: .localizable(.dateFilterPreviousWeek))
-    case .previousMonth: String(localized: .localizable(.dateFilterPreviousMonth))
-    case .previousQuarter: String(localized: .localizable(.dateFilterPreviousQuarter))
-    case .previousYear: String(localized: .localizable(.dateFilterPreviousYear))
+    case .currentYear: String(localized: .app(.dateFilterCurrentYear))
+    case .currentMonth: String(localized: .app(.dateFilterCurrentMonth))
+    case .today: String(localized: .app(.dateFilterToday))
+    case .yesterday: String(localized: .app(.dateFilterYesterday))
+    case .previousWeek: String(localized: .app(.dateFilterPreviousWeek))
+    case .previousMonth: String(localized: .app(.dateFilterPreviousMonth))
+    case .previousQuarter: String(localized: .app(.dateFilterPreviousQuarter))
+    case .previousYear: String(localized: .app(.dateFilterPreviousYear))
 
     case .within(let num, let interval):
       switch interval {
-      case .week: String(localized: .localizable(.dateFilterWithinWeeks(num.magnitude)))
-      case .month: String(localized: .localizable(.dateFilterWithinMonths(num.magnitude)))
-      case .year: String(localized: .localizable(.dateFilterWithinYears(num.magnitude)))
+      case .week: String(localized: .app(.dateFilterWithinWeeks(num.magnitude)))
+      case .month: String(localized: .app(.dateFilterWithinMonths(num.magnitude)))
+      case .year: String(localized: .app(.dateFilterWithinYears(num.magnitude)))
       }
     }
   }
@@ -47,15 +47,15 @@ private struct DateFilterModeView: View {
 
   public var body: some View {
     Group {
-      Picker(.localizable(.dateFilterRange), selection: $modeValue) {
-        Text(.localizable(.none))
+      Picker(.app(.dateFilterRange), selection: $modeValue) {
+        Text(.app(.none))
           .tag(Argument.any)
-        Text(.localizable(.dateFilterBetween))
+        Text(.app(.dateFilterBetween))
           .tag(Argument.between(start: nil, end: nil))
 
         Divider()
 
-        Section(.localizable(.dateFilterRange)) {
+        Section(.app(.dateFilterRange)) {
           ForEach(rangeValues, id: \.self) { value in
             Text(value.localizedLabel)
               .tag(Argument.range(value))
@@ -68,14 +68,14 @@ private struct DateFilterModeView: View {
         LabeledContent {
           ClearableDatePickerView(value: btw.start)
         } label: {
-          Text(.localizable(.dateFilterFromLabel))
+          Text(.app(.dateFilterFromLabel))
             .padding(.vertical, 7)
         }
 
         LabeledContent {
           ClearableDatePickerView(value: btw.end)
         } label: {
-          Text(.localizable(.dateFilterToLabel))
+          Text(.app(.dateFilterToLabel))
             .padding(.vertical, 7)
         }
       }
@@ -160,16 +160,16 @@ public struct DateFilterView: View {
   public var body: some View {
     NavigationStack {
       Form {
-        Section(.localizable(.dateFilterCreated)) {
+        Section(.app(.dateFilterCreated)) {
           DateFilterModeView(value: $query.created)
         }
 
-        Section(.localizable(.dateFilterAdded)) {
+        Section(.app(.dateFilterAdded)) {
           DateFilterModeView(value: $query.added)
         }
 
         if store.repository.supports(feature: .dateFilterModified) {
-          Section(.localizable(.dateFilterModified)) {
+          Section(.app(.dateFilterModified)) {
             DateFilterModeView(value: $query.modified)
           }
         }
@@ -177,7 +177,7 @@ public struct DateFilterView: View {
         if query.isActive {
           Section {
             Button(action: clear) {
-              Label(localized: .localizable(.clearFilters), systemImage: "arrow.counterclockwise")
+              Label(localized: .app(.clearFilters), systemImage: "arrow.counterclockwise")
                 .frame(maxWidth: .infinity, alignment: .center)
             }
           }
@@ -191,7 +191,7 @@ public struct DateFilterView: View {
           .backport.glassProminentButtonStyle(or: .automatic)
       }
 
-      .navigationTitle(.localizable(.dateFilterTitle))
+      .navigationTitle(.app(.dateFilterTitle))
       .navigationBarTitleDisplayMode(.inline)
 
     }
@@ -210,7 +210,7 @@ public struct DateFilterDisplayView: View {
       if query.isActive {
         Image(systemName: "clock")
       }
-      Text(.localizable(.dateFilterTitle))
+      Text(.app(.dateFilterTitle))
     }
   }
 }

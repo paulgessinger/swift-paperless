@@ -68,7 +68,7 @@ public struct TLSListView: View {
               CreateView(identityManager: identityManager)
             },
             label: {
-              Label(String(localized: .localizable(.add)), systemImage: "plus")
+              Label(String(localized: .app(.add)), systemImage: "plus")
             })
           EditButton()
         }
@@ -84,7 +84,7 @@ public struct TLSListView: View {
                 Button {
                   showCreate = true
                 } label: {
-                  Label(String(localized: .localizable(.add)), systemImage: "plus")
+                  Label(String(localized: .app(.add)), systemImage: "plus")
                 }
                 EditButton()
               }
@@ -125,7 +125,7 @@ public struct TLSListView: View {
     public var body: some View {
       Form {
         Section {
-          TextField(String(localized: .localizable(.name)), text: $certificateName)
+          TextField(String(localized: .app(.name)), text: $certificateName)
           SecureField(String(localized: .login(.password)), text: $certificatePassword)
             .autocorrectionDisabled()
 
@@ -149,7 +149,7 @@ public struct TLSListView: View {
         }
 
         Section {
-          Button(String(localized: .localizable(.save))) {
+          Button(String(localized: .app(.save))) {
             guard let data = certificateData else {
               isCertificateValid = false
               certificateState = .notloaded
@@ -204,7 +204,7 @@ private struct TLSSingleView: View {
   public var body: some View {
     Form {
       Section {
-        LabeledContent(LocalizedStringKey(localizable: .name), value: identity.name)
+        LabeledContent(LocalizedStringKey(app: .name), value: identity.name)
         LabeledContent("CN", value: cn ?? "N/A")
       }
     }

@@ -26,7 +26,7 @@ public struct SelectView: View {
 
   public var body: some View {
     Picker(instance.field.name, selection: $selected) {
-      Text(.localizable(.none))
+      Text(.app(.none))
         .tag(nil as CustomField.SelectOption?)
       ForEach(options) { option in
         Text(option.label)

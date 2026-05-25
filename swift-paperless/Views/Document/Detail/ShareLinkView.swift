@@ -123,7 +123,7 @@ struct ShareLinkView: View {
         }
 
         ToolbarItem {
-          Button(.localizable(.add), systemImage: "plus") {
+          Button(.app(.add), systemImage: "plus") {
             showCreate = true
           }
           .disabled(!canAdd)

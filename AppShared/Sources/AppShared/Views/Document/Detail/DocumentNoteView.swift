@@ -165,7 +165,7 @@ public struct DocumentNoteView: View {
                 .if(store.permissions.test(.delete, for: .note)) {
                   $0.swipeActions(edge: .trailing) {
                     Button(
-                      .localizable(.delete), role: .destructive,
+                      .app(.delete), role: .destructive,
                       action: { delete(note) })
                   }
                 }
@@ -191,7 +191,7 @@ public struct DocumentNoteView: View {
             Button {
               adding = true
             } label: {
-              Label(.localizable(.add), systemImage: "plus")
+              Label(.app(.add), systemImage: "plus")
             }
             .disabled(!store.permissions.test(.add, for: .note))
           }

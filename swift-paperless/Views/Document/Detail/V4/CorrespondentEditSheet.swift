@@ -34,7 +34,7 @@ struct CorrespondentEditSheet: View {
           }
         }
       })
-      .navigationTitle(Text(.localizable(.correspondentCreateTitle)))
+      .navigationTitle(Text(.app(.correspondentCreateTitle)))
       .navigationBarTitleDisplayMode(.inline)
     }
   }
@@ -44,9 +44,9 @@ struct CorrespondentEditSheet: View {
       viewModel: viewModel,
       storeKeyPath: \.correspondents,
       keyPath: \.correspondent,
-      navigationTitle: .localizable(.correspondent),
-      listSectionTitle: .localizable(.correspondents),
-      notAssignedLabel: .localizable(.correspondentNotAssignedPicker),
+      navigationTitle: .app(.correspondent),
+      listSectionTitle: .app(.correspondents),
+      notAssignedLabel: .app(.correspondentNotAssignedPicker),
       canCreate: store.permissions.test(.add, for: .correspondent),
       suggestions: viewModel.suggestions.correspondents,
       quickCreate: { name in

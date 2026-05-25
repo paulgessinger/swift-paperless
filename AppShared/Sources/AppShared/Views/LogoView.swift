@@ -14,7 +14,7 @@ public struct LogoView: View {
   public var body: some View {
     VStack(spacing: -15) {
       Image("AppLogoTransparent")
-      Text(.localizable(.appName))
+      Text(.app(.appName))
         .font(.title)
     }
   }
@@ -30,7 +30,7 @@ public struct LogoTitle: View {
       Image("AppLogoTransparent")
         .resizable()
         .frame(width: logoSize, height: logoSize)
-      Text(.localizable(.appName))
+      Text(.app(.appName))
         .font(.title2)
     }
     .padding(.trailing, 15)

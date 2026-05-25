@@ -170,7 +170,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
   private var noElementsView: some View {
     ContentUnavailableView(
-      String(localized: .localizable(.noElementsFound)),
+      String(localized: .app(.noElementsFound)),
       systemImage: "exclamationmark.magnifyingglass",
       description: Text(Element.localizedNamePlural))
   }
@@ -279,7 +279,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
           }
         } label: {
           Image(systemName: "plus")
-            .accessibilityLabel(String(localized: .localizable(.add)))
+            .accessibilityLabel(String(localized: .app(.add)))
         }
         .disabled(!test(.add))
 

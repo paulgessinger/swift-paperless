@@ -42,7 +42,7 @@ public struct PermissionsView: View {
 
     public var body: some View {
       Label(
-        localized: value ? .localizable(.yes) : .localizable(.no),
+        localized: value ? .app(.yes) : .app(.no),
         systemImage: value ? "checkmark.circle.fill" : "xmark.circle.fill"
       )
       .labelStyle(.iconOnly)

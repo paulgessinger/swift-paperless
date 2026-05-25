@@ -32,7 +32,7 @@ struct DocumentMetadataView: View {
             if let modified = document.modified {
               Text(modified, style: .date)
             } else {
-              Text(.localizable(.none))
+              Text(.app(.none))
             }
           }
 
@@ -40,7 +40,7 @@ struct DocumentMetadataView: View {
             if let added = document.added {
               Text(added, style: .date)
             } else {
-              Text(.localizable(.none))
+              Text(.app(.none))
             }
           }
         }

@@ -19,7 +19,7 @@ private struct FullScreenConfirmationDialog<M>: ViewModifier where M: View {
     if horizontalSizeClass == .compact {
       content
         .confirmationDialog(
-          String(localized: .localizable(.confirmationPromptTitle)), isPresented: $isPresented,
+          String(localized: .app(.confirmationPromptTitle)), isPresented: $isPresented,
           titleVisibility: .visible
         ) {
           dialogContent()

@@ -31,7 +31,7 @@ public class ErrorController: ObservableObject {
 
   @Published public var state: State = .none
 
-  private static let defaultTitle = String(localized: .localizable(.errorDefaultMessage))
+  private static let defaultTitle = String(localized: .app(.errorDefaultMessage))
 
   private var channel = AsyncChannel<any DisplayableError>()
   private var task: Task<Void, Never>? = nil
@@ -121,7 +121,7 @@ public class ErrorController: ObservableObject {
 // MARK: Previews
 
 private struct PreviewError: LocalizedError {
-  public var errorDescription: String? { String(localized: .localizable(.errorDefaultMessage)) }
+  public var errorDescription: String? { String(localized: .app(.errorDefaultMessage)) }
 }
 
 public struct ErrorOverlay_Previews: PreviewProvider {

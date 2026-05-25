@@ -189,20 +189,20 @@ public struct ConnectionsView: View {
           logoutRequested = true
         } label: {
           Label(
-            String(localized: .localizable(.logout)),
+            String(localized: .app(.logout)),
             systemImage: "rectangle.portrait.and.arrow.right")
         }
         .foregroundColor(Color.red)
         .bold()
 
         .confirmationDialog(
-          String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested,
+          String(localized: .app(.confirmationPromptTitle)), isPresented: $logoutRequested,
           titleVisibility: .visible
         ) {
-          Button(String(localized: .localizable(.logout)), role: .destructive) {
+          Button(String(localized: .app(.logout)), role: .destructive) {
             connectionManager.logout(animated: false)
           }
-          Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+          Button(String(localized: .app(.cancel)), role: .cancel) {}
         }
 
       } else if let compat = connectionManager.connection {
@@ -218,7 +218,7 @@ public struct ConnectionsView: View {
         } label: {
           Image(systemName: "plus.circle").resizable()
             .frame(width: plusIconSize, height: plusIconSize)
-            .accessibilityLabel(Text(.localizable(.add)))
+            .accessibilityLabel(Text(.app(.add)))
         }
         .buttonStyle(BorderlessButtonStyle())
       }

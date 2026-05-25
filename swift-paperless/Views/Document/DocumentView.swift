@@ -49,10 +49,10 @@ struct DocumentNotFoundError: DisplayableError {
   let connection: StoredConnection
 
   var message: String {
-    String(localized: .localizable(.urlCallbackDocumentNotFoundTitle))
+    String(localized: .app(.urlCallbackDocumentNotFoundTitle))
   }
   var details: String? {
-    String(localized: .localizable(.urlCallbackDocumentNotFound(id, connection.label)))
+    String(localized: .app(.urlCallbackDocumentNotFound(id, connection.label)))
   }
 }
 
@@ -262,14 +262,14 @@ struct DocumentView: View {
   private var savedViewNavigationTitle: String {
     guard let id = filterModel.filterState.savedView else {
       // No saved view active
-      return String(localized: .localizable(.documents))
+      return String(localized: .app(.documents))
     }
     guard let savedView = store.savedViews[id] else {
       // Not necessarily an error, might be still loading
-      return String(localized: .localizable(.documents))
+      return String(localized: .app(.documents))
     }
     if filterModel.filterState.modified {
-      return String(localized: .localizable(.savedViewModified(savedView.name)))
+      return String(localized: .app(.savedViewModified(savedView.name)))
     } else {
       return savedView.name
     }
@@ -277,9 +277,9 @@ struct DocumentView: View {
 
   private var createDocumentTitle: String {
     if importModel.totalUrls > 1 {
-      "\(String(localized: .localizable(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
+      "\(String(localized: .app(.documentAdd))) (\(importModel.remaining) / \(importModel.totalUrls))"
     } else {
-      String(localized: .localizable(.documentAdd))
+      String(localized: .app(.documentAdd))
     }
   }
 
@@ -294,7 +294,7 @@ struct DocumentView: View {
             Button {
               showDocumentScanner = true
             } label: {
-              Label(String(localized: .localizable(.scanDocument)), systemImage: "doc.viewfinder")
+              Label(String(localized: .app(.scanDocument)), systemImage: "doc.viewfinder")
             }
           }
 
@@ -302,20 +302,20 @@ struct DocumentView: View {
             showFileImporter = true
           } label: {
             Label(
-              String(localized: .localizable(.importDocument)), systemImage: "folder.badge.plus")
+              String(localized: .app(.importDocument)), systemImage: "folder.badge.plus")
           }
 
           Button {
             showPhotosPicker = true
           } label: {
-            Label(String(localized: .localizable(.importPhotos)), systemImage: "photo")
+            Label(String(localized: .app(.importPhotos)), systemImage: "photo")
           }
 
         }
         .disabled(!store.permissions.test(.add, for: .document))
 
       } label: {
-        Label(String(localized: .localizable(.add)), systemImage: "plus")
+        Label(String(localized: .app(.add)), systemImage: "plus")
       }
       .tint(.accent)
     }
@@ -343,7 +343,7 @@ struct DocumentView: View {
             showDataScanner = true
           } label: {
             Label(
-              String(localized: .localizable(.toolbarAsnButton)),
+              String(localized: .app(.toolbarAsnButton)),
               systemImage: "number.circle"
             )
           }
@@ -373,23 +373,23 @@ struct DocumentView: View {
           logoutRequested = true
         } label: {
           Label(
-            String(localized: .localizable(.logout)),
+            String(localized: .app(.logout)),
             systemImage: "rectangle.portrait.and.arrow.right"
           )
           .foregroundStyle(.red)
         }
 
       } label: {
-        Label(String(localized: .localizable(.detailsMenuLabel)), systemImage: "ellipsis.circle")
+        Label(String(localized: .app(.detailsMenuLabel)), systemImage: "ellipsis.circle")
           .labelStyle(.iconOnly)
       }
       .tint(.accent)
 
       .confirmationDialog(
-        String(localized: .localizable(.confirmationPromptTitle)), isPresented: $logoutRequested,
+        String(localized: .app(.confirmationPromptTitle)), isPresented: $logoutRequested,
         titleVisibility: .visible
       ) {
-        Button(String(localized: .localizable(.logout)), role: .destructive) {
+        Button(String(localized: .app(.logout)), role: .destructive) {
           connectionManager.logout(animated: true)
         }
       }
@@ -398,7 +398,7 @@ struct DocumentView: View {
         Button {
           showDataScanner = true
         } label: {
-          Label(String(localized: .localizable(.toolbarAsnButton)), systemImage: "number.circle")
+          Label(String(localized: .app(.toolbarAsnButton)), systemImage: "number.circle")
         }
         .tint(.accent)
       }
@@ -413,11 +413,11 @@ struct DocumentView: View {
           filterModel.filterState.clear()
         }
       } label: {
-        Text(.localizable(.allDocuments))
+        Text(.app(.allDocuments))
       }
     }
 
-    Section(String(localized: .localizable(.savedViews))) {
+    Section(String(localized: .app(.savedViews))) {
       if store.permissions.test(.view, for: .savedView) {
         if !store.savedViews.isEmpty {
           ForEach(
@@ -436,7 +436,7 @@ struct DocumentView: View {
             }
           }
         } else {
-          Text(.localizable(.noSavedViews))
+          Text(.app(.noSavedViews))
         }
       } else {
         Text(.permissions(.noViewPermissionsSavedViews))
@@ -505,17 +505,17 @@ struct DocumentView: View {
       Section {
         NavigationLink(value: SidebarSelection.allDocuments) {
           Label(
-            String(localized: .localizable(.allDocuments)),
+            String(localized: .app(.allDocuments)),
             systemImage: "tray.full"
           )
         }
       }
 
       if store.permissions.test(.view, for: .savedView) {
-        Section(String(localized: .localizable(.savedViews))) {
+        Section(String(localized: .app(.savedViews))) {
           let savedViews = store.savedViews.map(\.value).sorted { $0.name < $1.name }
           if savedViews.isEmpty {
-            Text(.localizable(.noSavedViews))
+            Text(.app(.noSavedViews))
               .foregroundStyle(.secondary)
           } else {
             ForEach(savedViews, id: \.id) { sv in
@@ -527,7 +527,7 @@ struct DocumentView: View {
         }
       }
     }
-    .navigationTitle(String(localized: .localizable(.documents)))
+    .navigationTitle(String(localized: .app(.documents)))
     .toolbar { leadingToolbar }
   }
 
@@ -572,7 +572,7 @@ struct DocumentView: View {
     } else {
       ContentUnavailableView {
         Label(
-          String(localized: .localizable(.documents)),
+          String(localized: .app(.documents)),
           systemImage: "doc.text"
         )
       }

@@ -10,22 +10,22 @@ import Networking
 
 extension RequestError: DisplayableError {
   public var message: String {
-    String(localized: .localizable(.errorDefaultMessage))
+    String(localized: .app(.errorDefaultMessage))
   }
 
   public var details: String? {
-    let label = String(localized: .localizable(.requestErrorDetailLabel)) + ":"
+    let label = String(localized: .app(.requestErrorDetailLabel)) + ":"
     let raw: String
 
     switch self {
     case .invalidRequest:
-      raw = String(localized: .localizable(.requestErrorInvalidRequest))
+      raw = String(localized: .app(.requestErrorInvalidRequest))
 
     case .invalidResponse:
-      raw = String(localized: .localizable(.requestErrorInvalidResponse))
+      raw = String(localized: .app(.requestErrorInvalidResponse))
 
     case .unexpectedStatusCode(let code, let details):
-      var msg = String(localized: .localizable(.requestErrorUnexpectedStatusCode(code.description)))
+      var msg = String(localized: .app(.requestErrorUnexpectedStatusCode(code.description)))
 
       if let details {
         if !Self.isMTLSError(code: code, message: details) {
@@ -34,13 +34,13 @@ extension RequestError: DisplayableError {
             " " + label + " "
             + details
         } else {
-          msg += " " + .localizable(.requestErrorMTLS)
+          msg += " " + .app(.requestErrorMTLS)
         }
       }
       raw = msg
 
     case .forbidden(let detail):
-      var s = String(localized: .localizable(.requestErrorForbidden))
+      var s = String(localized: .app(.requestErrorForbidden))
       if let detail {
         s +=
           " " + label + " "
@@ -49,13 +49,13 @@ extension RequestError: DisplayableError {
       raw = s
 
     case .unauthorized(let detail):
-      var s = String(localized: .localizable(.requestErrorUnauthorized))
+      var s = String(localized: .app(.requestErrorUnauthorized))
       s += " " + label + " " + detail
       raw = s
 
     case .unsupportedVersion(let sentVersion):
       var s = String(
-        localized: .localizable(
+        localized: .app(
           .requestErrorUnsupportedVersion(
             ApiRepository.minimumApiVersion, ApiRepository.maximumApiVersion)))
       if let sentVersion {
@@ -64,10 +64,10 @@ extension RequestError: DisplayableError {
       raw = s
 
     case .localNetworkDenied:
-      raw = String(localized: .localizable(.requestErrorLocalNetworkDenied))
+      raw = String(localized: .app(.requestErrorLocalNetworkDenied))
 
     case .certificate(let detail):
-      raw = String(localized: .localizable(.requestErrorCertificate)) + " " + detail
+      raw = String(localized: .app(.requestErrorCertificate)) + " " + detail
 
     case .other(let detail):
       raw = detail

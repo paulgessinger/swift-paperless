@@ -18,11 +18,11 @@ public struct PermissionsError: Error, DisplayableError {
   }
 
   public var message: String {
-    String(localized: .localizable(.apiForbiddenErrorMessage(resource.localizedName)))
+    String(localized: .app(.apiForbiddenErrorMessage(resource.localizedName)))
   }
 
   public var details: String? {
-    String(localized: .localizable(.apiForbiddenDetails(resource.localizedName)))
+    String(localized: .app(.apiForbiddenDetails(resource.localizedName)))
   }
 
   public var documentationLink: URL? { DocumentationLinks.forbidden }

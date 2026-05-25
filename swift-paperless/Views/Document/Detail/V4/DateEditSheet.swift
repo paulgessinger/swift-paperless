@@ -54,7 +54,7 @@ struct DateEditSheet: View {
           VStack(alignment: .leading, spacing: 0) {
             CustomSectionRow {
               DatePicker(
-                String(localized: .localizable(.documentEditCreatedDateLabel)),
+                String(localized: .app(.documentEditCreatedDateLabel)),
                 selection: $date,
                 displayedComponents: .date
               )
@@ -78,7 +78,7 @@ struct DateEditSheet: View {
       .onChange(of: date) {
         save()
       }
-      .navigationTitle(.localizable(.documentEditCreatedDateLabel))
+      .navigationTitle(.app(.documentEditCreatedDateLabel))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

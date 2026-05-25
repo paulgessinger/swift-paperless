@@ -24,11 +24,11 @@ public enum DocumentImportError: LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .photosReceivalFailed, .nilTransferableImage, .imageRenderFailed:
-      String(localized: .localizable(.photosReceivalFailed))
+      String(localized: .app(.photosReceivalFailed))
     case .pdfCreatePageFailed:
-      String(localized: .localizable(.documentScanErrorCreatePageFailed))
+      String(localized: .app(.documentScanErrorCreatePageFailed))
     case .pdfWriteFailed:
-      String(localized: .localizable(.documentScanErrorWriteFailed))
+      String(localized: .app(.documentScanErrorWriteFailed))
     }
   }
 }

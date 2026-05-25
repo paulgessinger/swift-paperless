@@ -305,7 +305,7 @@ private struct IntegratedDocumentPreview: View {
       // re-sample its backdrop on insertion, which reads as a brief dark
       // flash before it stabilises.
       if case .loaded(url: _, document: let pdfDocument) = downloadState {
-        Text(.localizable(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
+        Text(.app(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
           .font(.caption2)
           .fontWeight(.semibold)
           .padding(.horizontal, 8)
@@ -325,7 +325,7 @@ private struct IntegratedDocumentPreview: View {
     .overlay {
       if showLoadingOverlay {
         VStack {
-          Text(.localizable(.loading))
+          Text(.app(.loading))
             .foregroundStyle(.primary)
           LinearProgressBar(mode: .indeterminate)
             .frame(width: 100)
