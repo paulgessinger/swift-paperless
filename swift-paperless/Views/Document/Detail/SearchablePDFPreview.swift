@@ -841,23 +841,28 @@ private final class PDFFindDelegate: NSObject, PDFDocumentDelegate, @unchecked S
     flushScheduled = true
     lock.unlock()
     if shouldSchedule {
-      DispatchQueue.main.async { [weak self] in self?.flush() }
+      Task { @MainActor [weak self] in self?.flush() }
     }
   }
 
   func documentDidEndDocumentFind(_ notification: Notification) {
-    DispatchQueue.main.async { [weak self] in
+    Task { @MainActor [weak self] in
       guard let self else { return }
       self.flush()
-      self.lock.lock()
-      let generation = self.generation
-      self.lock.unlock()
-      MainActor.assumeIsolated { self.onEnd?(generation) }
+      self.onEnd?(self.currentGeneration())
     }
   }
 
-  // Always invoked on the main thread; drains whatever has accumulated since
-  // the last flush so rapid matches collapse into a single UI update.
+  private func currentGeneration() -> Int {
+    lock.lock()
+    defer { lock.unlock() }
+    return generation
+  }
+
+  // Drains whatever has accumulated since the last flush so rapid matches
+  // collapse into a single UI update. Match ordering doesn't matter: the buffer
+  // is lock-protected and `documentDidEndDocumentFind` always flushes the tail.
+  @MainActor
   private func flush() {
     lock.lock()
     flushScheduled = false
@@ -865,7 +870,7 @@ private final class PDFFindDelegate: NSObject, PDFDocumentDelegate, @unchecked S
     buffer.removeAll()
     lock.unlock()
     guard !batch.selections.isEmpty else { return }
-    MainActor.assumeIsolated { onBatch?(batch) }
+    onBatch?(batch)
   }
 }
 
