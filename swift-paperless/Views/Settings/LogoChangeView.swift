@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 17.05.2024.
 //
 
+import AppShared
 import Foundation
 import SwiftUI
 import os

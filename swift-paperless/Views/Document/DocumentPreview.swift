@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 11.09.25.
 //
 
+import AppShared
 import DataModel
 import Nuke
 import NukeUI

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 20.05.2024.
 //
 
+import AppShared
 import XCTest
 
 final class Screenshots: XCTestCase {

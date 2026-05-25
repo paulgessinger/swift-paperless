@@ -1,0 +1,76 @@
+//
+//  RequestError+PresentableError.swift
+//  swift-paperless
+//
+//  Created by Paul Gessinger on 04.05.2024.
+//
+
+import Foundation
+import Networking
+import SwiftUI
+
+extension RequestError: PresentableError {
+  @ViewBuilder
+  public var presentation: some View {
+    switch self {
+    case .unsupportedVersion(let sentVersion):
+      Text(
+        .localizable(
+          .requestErrorUnsupportedVersion(
+            ApiRepository.minimumApiVersion, ApiRepository.maximumApiVersion))
+      )
+      .bold()
+      if let sentVersion {
+        Text(.localizable(.requestErrorDetailLabel)) + Text(": sent version=\(sentVersion)")
+      }
+
+    case .unexpectedStatusCode(let code, let details):
+      Text(.localizable(.requestErrorUnexpectedStatusCode(code.description)))
+        .bold()
+
+      if let details {
+        if !Self.isMTLSError(code: code, message: details) {
+          // We're not sure this is an SSL error, show details just in case
+          Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+            + (Text(details).italic())
+        }
+        Text(.localizable(.requestErrorMTLS))
+      }
+
+    case .invalidRequest:
+      Text(.localizable(.requestErrorInvalidRequest))
+        .bold()
+
+    case .invalidResponse:
+      Text(.localizable(.requestErrorInvalidResponse))
+        .bold()
+
+    case .forbidden(let detail):
+      Text(.localizable(.requestErrorForbidden))
+        .bold()
+      if let detail {
+        Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+          + (Text(detail).italic())
+      }
+
+    case .unauthorized(let detail):
+      Text(.localizable(.requestErrorUnauthorized))
+
+      Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+        + (Text(detail).italic())
+
+    case .localNetworkDenied:
+      Text(localizable: .requestErrorLocalNetworkDenied)
+
+    case .certificate(let detail):
+      Text(.localizable(.requestErrorCertificate))
+        .bold()
+      Text(.localizable(.requestErrorDetailLabel)) + Text(": ")
+        + (Text(detail).italic())
+
+    case .other(let detail):
+      Text(detail)
+        .bold()
+    }
+  }
+}

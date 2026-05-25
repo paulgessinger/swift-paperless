@@ -1,3 +1,4 @@
+import AppShared
 import DataModel
 import LocalAuthentication
 import SwiftUI

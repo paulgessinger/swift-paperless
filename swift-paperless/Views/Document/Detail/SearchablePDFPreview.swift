@@ -3,6 +3,7 @@
 //  swift-paperless
 //
 
+import AppShared
 import Common
 import PDFKit
 import SwiftUI

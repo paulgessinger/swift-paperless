@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 28.06.25.
 //
 
+import AppShared
 import CasePaths
 import Common
 import DataModel

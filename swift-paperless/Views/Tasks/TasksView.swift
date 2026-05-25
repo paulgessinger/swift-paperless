@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.05.2024.
 //
 
+import AppShared
 import DataModel
 import Networking
 import Nuke

@@ -6,9 +6,10 @@ import PackageDescription
 let package = Package(
   name: "AppShared",
   defaultLocalization: "en",
+  // iOS-only: AppShared bundles SwiftUI/UIKit/VisionKit UI code that has no
+  // macOS equivalent. Logic-only tests therefore run on the iOS simulator.
   platforms: [
-    .iOS(.v17),
-    .macOS(.v14),
+    .iOS(.v17)
   ],
   products: [
     .library(
@@ -48,9 +49,15 @@ let package = Package(
         .product(name: "BezelKit", package: "BezelKit"),
         .product(name: "CasePaths", package: "swift-case-paths"),
       ],
+      resources: [
+        .process("Resources/Localization")
+      ],
       swiftSettings: [
         .swiftLanguageMode(.v6),
         .enableExperimentalFeature("StrictConcurrency"),
+      ],
+      plugins: [
+        .plugin(name: "XCStringsToolPlugin", package: "xcstrings-tool-plugin")
       ]
     )
   ]

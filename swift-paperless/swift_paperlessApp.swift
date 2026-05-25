@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import AppShared
 import Combine
 import Common
 import Networking

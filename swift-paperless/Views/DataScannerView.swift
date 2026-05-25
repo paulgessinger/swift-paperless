@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.07.23.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
