@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 24.01.26.
 //
 
+import AppShared
 import Foundation
 
 enum AppFeatures {

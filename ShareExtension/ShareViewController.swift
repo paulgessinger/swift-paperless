@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 10.03.23.
 //
 
+import AppShared
 import Social
 import SwiftUI
 import UIKit

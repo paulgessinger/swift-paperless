@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.01.26.
 //
 
+import AppShared
 import Common
 import DataModel
 import Foundation

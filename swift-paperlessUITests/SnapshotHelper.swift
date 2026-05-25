@@ -12,6 +12,7 @@
 //            the new SnapshotHelper.swift
 // -----------------------------------------------------
 
+import AppShared
 import Foundation
 import XCTest
 

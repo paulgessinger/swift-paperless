@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.09.23.
 //
 
+import AppShared
 import MarkdownUI
 import SwiftUI
 

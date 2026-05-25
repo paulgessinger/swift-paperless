@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 11.02.2024.
 //
 
+import AppShared
 import SwiftUI
 
 struct InactiveView: View {
