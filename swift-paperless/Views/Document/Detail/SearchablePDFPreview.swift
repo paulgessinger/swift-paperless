@@ -3,7 +3,6 @@
 //  swift-paperless
 //
 
-import Combine
 import Common
 import PDFKit
 import SwiftUI
@@ -262,7 +261,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
   @State private var pdfView: PDFKit.PDFView?
   @State private var query = ""
   @State private var isSearchMode = false
-  @StateObject private var controller = PDFSearchController()
+  @State private var controller = PDFSearchController()
   @State private var bottomBarHeight: CGFloat = 0
   @State private var isSoftwareKeyboardVisible = false
   @State private var keyboardHeight: CGFloat = 0
@@ -716,19 +715,20 @@ private struct PDFMatchBatch: @unchecked Sendable {
 /// thread and streams matches through the delegate; results are coalesced and
 /// published incrementally.
 @MainActor
-final class PDFSearchController: ObservableObject {
-  @Published private(set) var matches: [PDFSelection] = []
-  @Published private(set) var activeIndex = 0
-  @Published private(set) var isSearching = false
+@Observable
+final class PDFSearchController {
+  private(set) var matches: [PDFSelection] = []
+  private(set) var activeIndex = 0
+  private(set) var isSearching = false
   /// Bumped whenever the active match should be scrolled into view.
-  @Published private(set) var focusToken = 0
+  private(set) var focusToken = 0
 
-  private let finder = PDFFindDelegate()
-  private weak var document: PDFDocument?
-  private var debounceTask: Task<Void, Never>?
+  @ObservationIgnored private let finder = PDFFindDelegate()
+  @ObservationIgnored private weak var document: PDFDocument?
+  @ObservationIgnored private var debounceTask: Task<Void, Never>?
   /// Tags the search currently being displayed so stale streamed batches from
   /// a superseded query can be dropped.
-  private var liveGeneration = 0
+  @ObservationIgnored private var liveGeneration = 0
 
   private static let debounce: Duration = .milliseconds(250)
 
