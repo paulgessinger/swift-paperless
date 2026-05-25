@@ -1,2 +1,0 @@
-- Fixed the in-document PDF search freezing (and sometimes crashing) on text-heavy documents; search now runs in the background and streams results as they are found
-- The PDF viewer now scrolls to and highlights the active search result, and the page indicator follows along
