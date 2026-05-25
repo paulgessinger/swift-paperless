@@ -29,7 +29,6 @@ let package = Package(
     .package(
       url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "1.0.0")),
     .package(url: "https://github.com/markbattistella/BezelKit", .upToNextMajor(from: "4.1.1")),
-    .package(url: "https://github.com/pointfreeco/swift-case-paths", exact: "1.7.2"),
     .package(
       url: "https://github.com/liamnichols/xcstrings-tool-plugin", .upToNextMajor(from: "1.2.0")),
   ],
@@ -47,7 +46,6 @@ let package = Package(
         .product(name: "Semaphore", package: "Semaphore"),
         .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
         .product(name: "BezelKit", package: "BezelKit"),
-        .product(name: "CasePaths", package: "swift-case-paths"),
       ],
       resources: [
         .process("Resources/Localization")

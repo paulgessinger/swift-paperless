@@ -6,12 +6,31 @@
 //
 
 import AppShared
-import CasePaths
 import Common
 import DataModel
 import Networking
 import SwiftUI
 import os
+
+extension Binding where Value == CustomFieldQuery {
+  /// Binding to the associated value when the query is an `.op` case, else `nil`.
+  fileprivate var op: Binding<OpContent>? {
+    Binding<OpContent>(
+      unwrapping: Binding<OpContent?>(
+        get: { if case .op(let content) = wrappedValue { content } else { nil } },
+        set: { if let content = $0 { wrappedValue = .op(content) } }
+      ))
+  }
+
+  /// Binding to the associated value when the query is an `.expr` case, else `nil`.
+  fileprivate var expr: Binding<ExprContent>? {
+    Binding<ExprContent>(
+      unwrapping: Binding<ExprContent?>(
+        get: { if case .expr(let content) = wrappedValue { content } else { nil } },
+        set: { if let content = $0 { wrappedValue = .expr(content) } }
+      ))
+  }
+}
 
 private struct OpView: View {
   @Binding var op: OpContent

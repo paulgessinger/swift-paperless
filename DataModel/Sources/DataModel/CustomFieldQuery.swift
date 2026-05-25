@@ -1,4 +1,3 @@
-import CasePaths
 import Foundation
 import os
 
@@ -24,8 +23,6 @@ public struct ExprContent: Sendable, Equatable, Hashable {
   }
 }
 
-@CasePathable
-@dynamicMemberLookup
 public indirect enum CustomFieldQuery: Equatable, Sendable, Hashable {
   public enum LogicalOperator: String, Codable, Sendable, Hashable {
     case or = "OR"
