@@ -42,6 +42,12 @@ jobs:
         with:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
       - name: Build application
         run: |
           set -o pipefail
@@ -97,6 +103,12 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
 
       - name: Run XCode tests
         run: |
