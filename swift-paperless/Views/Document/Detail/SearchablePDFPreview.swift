@@ -3,6 +3,7 @@
 //  swift-paperless
 //
 
+import Combine
 import Common
 import PDFKit
 import SwiftUI
@@ -261,22 +262,21 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
   @State private var pdfView: PDFKit.PDFView?
   @State private var query = ""
   @State private var isSearchMode = false
-  @State private var matches = [PDFSelection]()
-  @State private var currentMatchIndex = 0
+  @StateObject private var controller = PDFSearchController()
   @State private var bottomBarHeight: CGFloat = 0
   @State private var isSoftwareKeyboardVisible = false
   @State private var keyboardHeight: CGFloat = 0
 
   private var resultLabel: String? {
-    if matches.isEmpty {
+    if controller.matches.isEmpty {
       if query.isEmpty {
         return nil
-      } else {
-        return "0"
       }
+      // Distinguish "still scanning the document" from "no matches".
+      return controller.isSearching ? "…" : "0"
     }
 
-    return "\(currentMatchIndex + 1)/\(matches.count)"
+    return "\(controller.activeIndex + 1)/\(controller.matches.count)"
   }
 
   private var activeSearchBarVerticalPadding: CGFloat {
@@ -313,8 +313,8 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
             .submitLabel(.search)
 
             .onChange(of: query) { _, _ in
-              // Live-search keeps the interaction fast and predictable.
-              runSearch()
+              // Debounced, off-main search keeps the interaction fast.
+              controller.setQuery(query)
             }
             .padding(.horizontal)
             .frame(maxHeight: .infinity)
@@ -351,7 +351,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
                 .padding(.vertical)
                 .padding(.leading)
             }
-            .disabled(matches.isEmpty)
+            .disabled(controller.matches.isEmpty)
 
             Button {
               goToNext()
@@ -360,7 +360,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
                 .padding(.vertical)
                 .padding(.trailing)
             }
-            .disabled(matches.isEmpty)
+            .disabled(controller.matches.isEmpty)
           }
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.interactive())
@@ -428,7 +428,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
               .focused($isSearchFieldFocused)
               .submitLabel(.search)
               .onChange(of: query) { _, _ in
-                runSearch()
+                controller.setQuery(query)
               }
               .padding(.horizontal, 12)
               .padding(.vertical, 8)
@@ -464,8 +464,8 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
                 Image(systemName: "chevron.up")
                   .font(.body.weight(.medium))
               }
-              .foregroundStyle(matches.isEmpty ? .tertiary : .primary)
-              .disabled(matches.isEmpty)
+              .foregroundStyle(controller.matches.isEmpty ? .tertiary : .primary)
+              .disabled(controller.matches.isEmpty)
 
               Button {
                 goToNext()
@@ -473,8 +473,8 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
                 Image(systemName: "chevron.down")
                   .font(.body.weight(.medium))
               }
-              .foregroundStyle(matches.isEmpty ? .tertiary : .primary)
-              .disabled(matches.isEmpty)
+              .foregroundStyle(controller.matches.isEmpty ? .tertiary : .primary)
+              .disabled(controller.matches.isEmpty)
             }
           }
           .padding(.horizontal, 20)
@@ -565,6 +565,20 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
         }
     }
     .trackKeyboardState(isVisible: $isSoftwareKeyboardVisible, height: $keyboardHeight)
+    .onAppear {
+      controller.configure(document: document)
+    }
+    .onChange(of: ObjectIdentifier(document)) { _, _ in
+      controller.configure(document: document)
+    }
+    .onChange(of: controller.matches.count) { _, _ in
+      // New matches streamed in — refresh the (capped) highlight overlay.
+      updateHighlightedSelections()
+    }
+    .onChange(of: controller.focusToken) { _, _ in
+      updateHighlightedSelections()
+      focusCurrentMatch()
+    }
     .toolbar {
       if showsDismissButton {
         ToolbarItem(placement: .topBarLeading) {
@@ -590,101 +604,269 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
   }
 
   private func goToPrevious() {
-    guard !matches.isEmpty else {
-      return
-    }
-    currentMatchIndex = (currentMatchIndex - 1 + matches.count) % matches.count
-    focusCurrentMatch()
+    controller.previous()
   }
 
   private func goToNext() {
-    guard !matches.isEmpty else {
-      return
-    }
-    currentMatchIndex = (currentMatchIndex + 1) % matches.count
-    focusCurrentMatch()
-  }
-
-  private func runSearch() {
-    guard
-      let pdfView,
-      let document = pdfView.document
-    else {
-      return
-    }
-
-    let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !term.isEmpty else {
-      clearSearch()
-      return
-    }
-
-    let rawSelections = document.findString(
-      term,
-      withOptions: [.caseInsensitive, .diacriticInsensitive]
-    )
-    // Line-level selections avoid oversized highlight rectangles on some PDFs.
-    let foundSelections = rawSelections.flatMap { $0.selectionsByLine() }
-
-    matches = foundSelections
-    currentMatchIndex = 0
-    updateHighlightedSelections(pdfView: pdfView)
-    focusCurrentMatch()
-  }
-
-  private func focusCurrentMatch() {
-    guard
-      let pdfView,
-      !matches.isEmpty,
-      matches.indices.contains(currentMatchIndex)
-    else {
-      if let pdfView {
-        updateHighlightedSelections(pdfView: pdfView)
-      } else {
-        pdfView?.highlightedSelections = matches.isEmpty ? nil : matches
-      }
-      return
-    }
-
-    let match = matches[currentMatchIndex]
-    updateHighlightedSelections(pdfView: pdfView)
-    // Keep the active match visually selected and in view.
-    pdfView.currentSelection = match
-    pdfView.go(to: match)
+    controller.next()
   }
 
   private func clearSearch() {
     query = ""
-    matches = []
-    currentMatchIndex = 0
+    controller.clear()
     pdfView?.highlightedSelections = nil
     pdfView?.currentSelection = nil
   }
 
-  private func updateHighlightedSelections(pdfView: PDFKit.PDFView) {
+  private func focusCurrentMatch() {
+    guard let pdfView else { return }
+    let matches = controller.matches
+    let index = controller.activeIndex
+    guard matches.indices.contains(index) else { return }
+
+    let match = matches[index]
+    pdfView.currentSelection = match
+
+    guard let page = match.pages.first else {
+      pdfView.go(to: match)
+      return
+    }
+
+    // The scroll observer ignores programmatic scrolling, so keep the page
+    // indicator in sync ourselves when jumping to a match on another page.
+    currentPage = document.index(for: page)
+
+    // Rect-based navigation is far more reliable than `go(to: selection)` in
+    // continuous layout. Grow the target upward so the hit lands a little
+    // below the top edge rather than pinned under the toolbar.
+    let target = match.bounds(for: page).insetBy(dx: 0, dy: -60)
+    pdfView.go(to: target, on: page)
+  }
+
+  private func updateHighlightedSelections() {
+    guard let pdfView else { return }
+
+    let matches = controller.matches
     guard !matches.isEmpty else {
       pdfView.highlightedSelections = nil
       return
     }
 
-    let highlightedSelections = matches.enumerated().compactMap {
-      index, selection -> PDFSelection? in
-      guard let copy = selection.copy() as? PDFSelection else {
-        return nil
+    let activeIndex = controller.activeIndex
+    let cap = PDFSearchHighlight.cap
+
+    // Painting thousands of highlight rectangles on every page draw is what
+    // makes huge result sets sluggish, so cap how many overlays PDFKit gets.
+    // Within the cap we still split by line (cheap at <=500 selections) to
+    // avoid oversized highlight rectangles on some PDFs.
+    var highlighted: [PDFSelection] = []
+    for index in 0..<min(matches.count, cap) {
+      // Show all matches faintly, but make the active one visually stronger.
+      let color =
+        index == activeIndex
+        ? PDFSearchHighlight.active
+        : PDFSearchHighlight.inactive
+      for line in matches[index].selectionsByLine() {
+        line.color = color
+        highlighted.append(line)
       }
-      // Show all matches, but make the active one visually stronger.
-      copy.color =
-        index == currentMatchIndex
-        ? UIColor.systemYellow.withAlphaComponent(0.75)
-        : UIColor.systemYellow.withAlphaComponent(0.22)
-      return copy
+    }
+
+    // Always paint the active match strongly, even when it falls outside the
+    // capped prefix on very large result sets.
+    if activeIndex >= cap, matches.indices.contains(activeIndex) {
+      for line in matches[activeIndex].selectionsByLine() {
+        line.color = PDFSearchHighlight.active
+        highlighted.append(line)
+      }
     }
 
     // PDFView often needs a full reset to repaint highlight style changes.
     pdfView.highlightedSelections = nil
-    pdfView.highlightedSelections = highlightedSelections
+    pdfView.highlightedSelections = highlighted
   }
 
+}
+
+private enum PDFSearchHighlight {
+  // Cap how many overlays PDFKit paints — drawing thousands of highlight
+  // rectangles on every page draw is what makes huge result sets sluggish.
+  static let cap = 500
+  static let active = UIColor.systemYellow.withAlphaComponent(0.75)
+  static let inactive = UIColor.systemYellow.withAlphaComponent(0.22)
+}
+
+// MARK: - Async PDF search
+
+/// Wraps a batch of found selections so they can cross the background→main
+/// boundary. `PDFSelection` isn't `Sendable`, but the hand-off is guarded by a
+/// lock and the selections are only read on the main actor, so the unchecked
+/// conformance is sound.
+private struct PDFMatchBatch: @unchecked Sendable {
+  let generation: Int
+  let selections: [PDFSelection]
+}
+
+/// Runs PDF text search asynchronously, mirroring how the native viewer behaves.
+///
+/// `PDFDocument.findString(_:withOptions:)` is synchronous and walks the entire
+/// document before returning, so running it on the main thread for a text-heavy
+/// PDF blocks the UI long enough to trip the iOS watchdog (which surfaces as a
+/// crash). Instead we drive `beginFindString`, which searches on a background
+/// thread and streams matches through the delegate; results are coalesced and
+/// published incrementally.
+@MainActor
+final class PDFSearchController: ObservableObject {
+  @Published private(set) var matches: [PDFSelection] = []
+  @Published private(set) var activeIndex = 0
+  @Published private(set) var isSearching = false
+  /// Bumped whenever the active match should be scrolled into view.
+  @Published private(set) var focusToken = 0
+
+  private let finder = PDFFindDelegate()
+  private weak var document: PDFDocument?
+  private var debounceTask: Task<Void, Never>?
+  /// Tags the search currently being displayed so stale streamed batches from
+  /// a superseded query can be dropped.
+  private var liveGeneration = 0
+
+  private static let debounce: Duration = .milliseconds(250)
+
+  func configure(document: PDFDocument) {
+    guard self.document !== document else { return }
+    self.document = document
+
+    finder.onBatch = { [weak self] batch in
+      guard let self, batch.generation == self.liveGeneration else { return }
+      let wasEmpty = self.matches.isEmpty
+      self.matches.append(contentsOf: batch.selections)
+      // Bring the first hit into view as soon as results start arriving.
+      if wasEmpty {
+        self.activeIndex = 0
+        self.focusToken &+= 1
+      }
+    }
+    finder.onEnd = { [weak self] generation in
+      guard let self, generation == self.liveGeneration else { return }
+      self.isSearching = false
+    }
+
+    document.delegate = finder
+    resetState()
+  }
+
+  func setQuery(_ raw: String) {
+    debounceTask?.cancel()
+    let term = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !term.isEmpty else {
+      clear()
+      return
+    }
+    let delay = Self.debounce
+    debounceTask = Task { [weak self] in
+      try? await Task.sleep(for: delay)
+      guard !Task.isCancelled else { return }
+      self?.performSearch(term)
+    }
+  }
+
+  func next() {
+    guard !matches.isEmpty else { return }
+    activeIndex = (activeIndex + 1) % matches.count
+    focusToken &+= 1
+  }
+
+  func previous() {
+    guard !matches.isEmpty else { return }
+    activeIndex = (activeIndex - 1 + matches.count) % matches.count
+    focusToken &+= 1
+  }
+
+  func clear() {
+    debounceTask?.cancel()
+    debounceTask = nil
+    document?.cancelFindString()
+    resetState()
+  }
+
+  private func performSearch(_ term: String) {
+    guard let document else { return }
+    document.cancelFindString()
+    liveGeneration = finder.newSession()
+    matches = []
+    activeIndex = 0
+    isSearching = true
+    document.beginFindString(term, withOptions: [.caseInsensitive, .diacriticInsensitive])
+  }
+
+  private func resetState() {
+    // Invalidate any in-flight batches and drop existing results.
+    liveGeneration = finder.newSession()
+    matches = []
+    activeIndex = 0
+    isSearching = false
+  }
+}
+
+/// `PDFDocumentDelegate` that receives streamed matches on PDFKit's background
+/// find thread, buffers them under a lock, and coalesces them into batched
+/// main-thread updates.
+private final class PDFFindDelegate: NSObject, PDFDocumentDelegate, @unchecked Sendable {
+  private let lock = NSLock()
+  private var buffer: [PDFSelection] = []
+  private var generation = 0
+  private var flushScheduled = false
+
+  var onBatch: (@MainActor @Sendable (PDFMatchBatch) -> Void)?
+  var onEnd: (@MainActor @Sendable (Int) -> Void)?
+
+  /// Starts a fresh search session and returns its generation token so stale
+  /// batches can be discarded.
+  func newSession() -> Int {
+    lock.lock()
+    defer { lock.unlock() }
+    generation += 1
+    buffer.removeAll()
+    flushScheduled = false
+    return generation
+  }
+
+  // Called on PDFKit's background find thread. The instance is reused across
+  // callbacks, so we must copy it to keep the match around.
+  func didMatchString(_ instance: PDFSelection) {
+    guard let copy = instance.copy() as? PDFSelection else { return }
+    lock.lock()
+    buffer.append(copy)
+    let shouldSchedule = !flushScheduled
+    flushScheduled = true
+    lock.unlock()
+    if shouldSchedule {
+      DispatchQueue.main.async { [weak self] in self?.flush() }
+    }
+  }
+
+  func documentDidEndDocumentFind(_ notification: Notification) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      self.flush()
+      self.lock.lock()
+      let generation = self.generation
+      self.lock.unlock()
+      MainActor.assumeIsolated { self.onEnd?(generation) }
+    }
+  }
+
+  // Always invoked on the main thread; drains whatever has accumulated since
+  // the last flush so rapid matches collapse into a single UI update.
+  private func flush() {
+    lock.lock()
+    flushScheduled = false
+    let batch = PDFMatchBatch(generation: generation, selections: buffer)
+    buffer.removeAll()
+    lock.unlock()
+    guard !batch.selections.isEmpty else { return }
+    MainActor.assumeIsolated { onBatch?(batch) }
+  }
 }
 
 extension SearchablePDFPreview where TrailingContent == EmptyView {
