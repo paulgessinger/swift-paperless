@@ -19,7 +19,16 @@ public enum DocumentDownloadEvent {
 }
 
 @MainActor
-public protocol Repository: Sendable {
+public protocol Repository<Documents, Tasks>: Sendable {
+  // Concrete source types each conformer returns. Primary associated types
+  // so `any Repository` (unconstrained) still works at storage sites — the
+  // existential erases the source types back to `any PagedSource<Document>`
+  // / `any PagedSource<PaperlessTask>` at call sites. Decorators like
+  // `NeedsAuthRepository<Wrapped>` keep the types concrete: their wrappers
+  // (`InterceptingDocumentSource<Wrapped.Documents>`) carry no existentials.
+  associatedtype Documents: PagedSource where Documents.Element == Document
+  associatedtype Tasks: PagedSource where Tasks.Element == PaperlessTask
+
   func update(document: Document) async throws -> Document
   func delete(document: Document) async throws
   func create(document: ProtoDocument, file: URL, filename: String) async throws
@@ -53,7 +62,7 @@ public protocol Repository: Sendable {
   func document(id: UInt) async throws -> Document?
   func document(asn: UInt) async throws -> Document?
 
-  func documents(filter: FilterState) throws -> any DocumentSource
+  func documents(filter: FilterState) throws -> Documents
 
   func nextAsn() async throws -> UInt
 
@@ -134,7 +143,7 @@ public protocol Repository: Sendable {
   // V10 backends honor the cap server-side; V9 backends serve the full array.
   func tasks(limit: UInt) async throws -> [PaperlessTask]
 
-  func tasks() throws -> any TaskSource
+  func tasks() throws -> Tasks
 
   func acknowledge(tasks: [UInt]) async throws
 
@@ -218,4 +227,36 @@ public actor InMemoryTaskSource: PagedSource {
 
   public var isExhausted: Bool { remaining.isEmpty }
   public var totalCount: UInt? { initialCount }
+}
+
+// Type-erased TaskSource. Lets a single conformer return one of several
+// concrete `PagedSource` actors without exposing existentials at the
+// protocol boundary — `Repository.Tasks` can then be a single named
+// associated type. Used by `ApiRepository.tasks()` to wrap either
+// `ApiPagedSource<ApiTaskV10, PaperlessTask>` (V10+ envelope) or
+// `ApiTaskSourceV9` (V9 fallback) into the same return type.
+public actor AnyTaskSource: PagedSource {
+  public typealias Element = PaperlessTask
+
+  private let _fetch: @Sendable (UInt) async throws -> [PaperlessTask]
+  private let _isExhausted: @Sendable () async -> Bool
+  private let _totalCount: @Sendable () async -> UInt?
+
+  public init<S: PagedSource>(_ source: S) where S.Element == PaperlessTask {
+    _fetch = { limit in try await source.fetch(limit: limit) }
+    _isExhausted = { await source.isExhausted }
+    _totalCount = { await source.totalCount }
+  }
+
+  public func fetch(limit: UInt) async throws -> [PaperlessTask] {
+    try await _fetch(limit)
+  }
+
+  public var isExhausted: Bool {
+    get async { await _isExhausted() }
+  }
+
+  public var totalCount: UInt? {
+    get async { await _totalCount() }
+  }
 }

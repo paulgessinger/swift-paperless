@@ -153,7 +153,7 @@ extension TransientRepository: Repository {
     documents.first(where: { $0.value.asn == asn })?.value
   }
 
-  public func documents(filter: FilterState) throws -> any DocumentSource {
+  public func documents(filter: FilterState) throws -> TransientDocumentSource {
     let filteredDocs = documents.values.filter { doc in
       if !filter.searchText.isEmpty {
         return doc.title.localizedCaseInsensitiveContains(filter.searchText)
@@ -398,7 +398,7 @@ extension TransientRepository: Repository {
     Array(storedTasks.prefix(Int(limit)))
   }
 
-  public func tasks() throws -> any TaskSource {
+  public func tasks() throws -> InMemoryTaskSource {
     InMemoryTaskSource(storedTasks)
   }
 
@@ -609,13 +609,13 @@ public enum RepositoryError: Error {
   case userNotFound
 }
 
-actor TransientDocumentSource: PagedSource {
-  typealias Element = Document
-  typealias DocumentSequence = [Document]
+public actor TransientDocumentSource: PagedSource {
+  public typealias Element = Document
+  public typealias DocumentSequence = [Document]
 
   var sequence: DocumentSequence
 
-  init(sequence: DocumentSequence) {
+  public init(sequence: DocumentSequence) {
     self.sequence = sequence
   }
 
