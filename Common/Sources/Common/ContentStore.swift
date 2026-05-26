@@ -8,9 +8,6 @@
 import Foundation
 import os
 
-private let log = Logger(
-  subsystem: "com.paulgessinger.swift-paperless", category: "ContentStore")
-
 /// On-disk blob cache keyed by `(serverID, documentRemoteID, versionID, kind)`.
 ///
 /// Lives in the app-group container so the Share Extension (and a future
@@ -192,7 +189,7 @@ public struct ContentStore: Sendable {
           [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
           ofItemAtPath: url.path)
       } catch {
-        log.debug(
+        Logger.cache.debug(
           "Could not set file protection on \(url.path, privacy: .public): \(error)"
         )
       }
