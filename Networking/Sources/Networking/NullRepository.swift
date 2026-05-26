@@ -71,7 +71,7 @@ public class NullRepository: Repository {
   { [] }
   public func deleteNote(id _: UInt, documentId _: UInt) async throws -> [Document.Note] { [] }
 
-  public nonisolated func documents(filter _: FilterState) -> any DocumentSource {
+  public nonisolated func documents(filter _: FilterState) -> NullDocumentSource {
     NullDocumentSource()
   }
 
@@ -121,7 +121,7 @@ public class NullRepository: Repository {
 
   public func task(id _: UInt) async throws -> PaperlessTask? { nil }
   public func tasks(limit _: UInt) async -> [PaperlessTask] { [] }
-  public func tasks() throws -> any TaskSource { InMemoryTaskSource([]) }
+  public func tasks() throws -> InMemoryTaskSource { InMemoryTaskSource([]) }
 
   public func acknowledge(tasks _: [UInt]) async throws {}
 
