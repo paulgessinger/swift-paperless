@@ -112,11 +112,18 @@ public struct ConnectionsView: View {
     if existing != extraHeaders {
       Logger.shared.info("Active connection extra headers have changed")
       connectionManager.setExtraHeaders(extraHeaders)
-      if let connection = connectionManager.connection {
+      if let stored = connectionManager.storedConnection,
+        let connection = connectionManager.connection
+      {
         Task {
-          let repository = await ApiRepository(
+          let api = await ApiRepository(
             connection: connection, mode: Bundle.main.appConfiguration.mode)
-          store.set(repository: repository)
+          // Must carry the same needs-auth decoration the app shell installs:
+          // a bare repository 401s without ever flipping the flag, and 401s are
+          // suppressed on the assumption the connection banner covers them.
+          store.set(
+            repository: NeedsAuthRepository(
+              wrapping: api, serverID: stored.id, connectionManager: connectionManager))
         }
       }
     }

@@ -124,6 +124,20 @@ class LoginViewModel {
 
   // - MARK: Methods
 
+  /// Load an absolute URL into the pair the login form actually edits: `scheme`
+  /// plus a `url` that carries only host and path, which is what `UrlEntryView`
+  /// binds to. Prefilling from an existing connection goes through here so the
+  /// form ends up in the same state as if the user had typed it.
+  func setUrl(_ absolute: URL) {
+    let string = absolute.absoluteString
+    for candidate in [Scheme.https, .http] where string.hasPrefix(candidate.label) {
+      scheme = candidate
+      url = String(string.dropFirst(candidate.label.count))
+      return
+    }
+    url = string
+  }
+
   func onChangeUrl(immediate: Bool = false) {
     checkUrlTask?.cancel()
     oidcClient = nil
