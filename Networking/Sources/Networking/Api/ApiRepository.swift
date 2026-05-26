@@ -475,7 +475,7 @@ extension ApiRepository: Repository {
     try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
-  public func documents(filter: FilterState) throws -> any DocumentSource {
+  public func documents(filter: FilterState) throws -> ApiPagedSource<Document, Document> {
     Logger.networking.notice("Getting document sequence for filter")
     let cursor = try PageCursor<Document>(
       repository: self,
@@ -926,13 +926,14 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func tasks() throws -> any TaskSource {
+  public func tasks() throws -> AnyTaskSource {
     if supports(feature: .taskListEnvelope) {
       let initial = try url(.tasks(name: .consumeFile, acknowledged: false, pageSize: 100))
       let cursor = PageCursor<ApiTaskV10>(repository: self, initialURL: initial)
-      return ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain })
+      return AnyTaskSource(
+        ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain }))
     } else {
-      return ApiTaskSourceV9(repository: self)
+      return AnyTaskSource(ApiTaskSourceV9(repository: self))
     }
   }
 

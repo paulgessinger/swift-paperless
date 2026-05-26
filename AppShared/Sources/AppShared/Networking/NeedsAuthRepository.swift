@@ -95,7 +95,9 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try await intercept { try await wrapped.document(asn: asn) }
   }
 
-  public func documents(filter: FilterState) throws -> any DocumentSource {
+  public func documents(filter: FilterState) throws
+    -> InterceptingDocumentSource<Wrapped.Documents>
+  {
     let source = try interceptSync { try wrapped.documents(filter: filter) }
     return InterceptingDocumentSource(wrapping: source, onUnauthorized: sourceCallback)
   }
@@ -342,7 +344,7 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try await intercept { try await wrapped.tasks(limit: limit) }
   }
 
-  public func tasks() throws -> any TaskSource {
+  public func tasks() throws -> InterceptingTaskSource<Wrapped.Tasks> {
     let source = try interceptSync { try wrapped.tasks() }
     return InterceptingTaskSource(wrapping: source, onUnauthorized: sourceCallback)
   }
@@ -366,18 +368,26 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
 // asynchronously — their `fetch(limit:)` runs inside the source actor, so the
 // outer Repository decorator's `intercept` doesn't see those calls. Wrap the
 // returned sources so 401s during paging also flip the needs-auth flag.
+//
+// The wrappers are generic over the wrapped source so no `any` lives in their
+// storage. Construction sites receive `any DocumentSource` / `any TaskSource`
+// from the wrapped Repository's protocol method — Swift implicitly opens the
+// existential when handing it to the generic init (SE-0352), the wrapper
+// becomes `InterceptingDocumentSource<<opened>>`, and that erases back to
+// `any DocumentSource` at the Repository return boundary.
 
-actor InterceptingDocumentSource: PagedSource {
-  typealias Element = Document
-  private let wrapped: any DocumentSource
+public actor InterceptingDocumentSource<W: PagedSource>: PagedSource
+where W.Element == Document {
+  public typealias Element = Document
+  private let wrapped: W
   private let onUnauthorized: @Sendable () -> Void
 
-  init(wrapping: any DocumentSource, onUnauthorized: @escaping @Sendable () -> Void) {
+  public init(wrapping: W, onUnauthorized: @escaping @Sendable () -> Void) {
     self.wrapped = wrapping
     self.onUnauthorized = onUnauthorized
   }
 
-  func fetch(limit: UInt) async throws -> [Document] {
+  public func fetch(limit: UInt) async throws -> [Document] {
     do {
       return try await wrapped.fetch(limit: limit)
     } catch let error as RequestError {
@@ -386,26 +396,27 @@ actor InterceptingDocumentSource: PagedSource {
     }
   }
 
-  var isExhausted: Bool {
+  public var isExhausted: Bool {
     get async { await wrapped.isExhausted }
   }
 
-  var totalCount: UInt? {
+  public var totalCount: UInt? {
     get async { await wrapped.totalCount }
   }
 }
 
-actor InterceptingTaskSource: PagedSource {
-  typealias Element = PaperlessTask
-  private let wrapped: any TaskSource
+public actor InterceptingTaskSource<W: PagedSource>: PagedSource
+where W.Element == PaperlessTask {
+  public typealias Element = PaperlessTask
+  private let wrapped: W
   private let onUnauthorized: @Sendable () -> Void
 
-  init(wrapping: any TaskSource, onUnauthorized: @escaping @Sendable () -> Void) {
+  public init(wrapping: W, onUnauthorized: @escaping @Sendable () -> Void) {
     self.wrapped = wrapping
     self.onUnauthorized = onUnauthorized
   }
 
-  func fetch(limit: UInt) async throws -> [PaperlessTask] {
+  public func fetch(limit: UInt) async throws -> [PaperlessTask] {
     do {
       return try await wrapped.fetch(limit: limit)
     } catch let error as RequestError {
@@ -414,11 +425,11 @@ actor InterceptingTaskSource: PagedSource {
     }
   }
 
-  var isExhausted: Bool {
+  public var isExhausted: Bool {
     get async { await wrapped.isExhausted }
   }
 
-  var totalCount: UInt? {
+  public var totalCount: UInt? {
     get async { await wrapped.totalCount }
   }
 }
