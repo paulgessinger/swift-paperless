@@ -496,7 +496,7 @@ extension TransientRepository: Repository {
   public func download(
     documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
   )
-    async throws -> URL?
+    async throws -> URL
   {
     // Simulate download progress
     for i in 1...10 {
@@ -504,7 +504,9 @@ extension TransientRepository: Repository {
       progress?(Double(i) / 10.0)
     }
 
-    guard let data = documentPDFData[documentID] else { return nil }
+    guard let data = documentPDFData[documentID] else {
+      throw RepositoryError.documentNotFound
+    }
     let outputURL = FileManager.default.temporaryDirectory
       .appendingPathComponent("transient-\(documentID)")
       .appendingPathExtension("pdf")

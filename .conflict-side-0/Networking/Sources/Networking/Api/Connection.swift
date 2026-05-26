@@ -25,14 +25,24 @@ public struct Connection: Equatable, Sendable {
     }
   }
 
+  public let serverID: UUID
   public let url: URL
   public let token: String?
   public let extraHeaders: [HeaderValue]
   public let identity: String?
 
+  // Stable UUID used for Connections without a real server identity
+  // (preview mode, legacy single-server fallback). ContentStore keys are
+  // deterministic against this so cached blobs survive across launches in
+  // those contexts.
+  public static let unidentifiedServerID = UUID(
+    uuidString: "00000000-0000-0000-0000-000000000000")!
+
   public init(
-    url: URL, token: String? = nil, extraHeaders: [HeaderValue] = [], identityName: String?
+    url: URL, token: String? = nil, extraHeaders: [HeaderValue] = [],
+    identityName: String?, serverID: UUID = Connection.unidentifiedServerID
   ) {
+    self.serverID = serverID
     self.url = url
     self.token = token
     self.extraHeaders = extraHeaders
