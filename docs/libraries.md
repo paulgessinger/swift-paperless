@@ -35,7 +35,3 @@ Swift Paperless uses the following third-party libraries for various features:
 ## BezelKit
 [GitHub](https://github.com/markbattistella/BezelKit)
 MIT License
-
-## swift-case-paths
-[GitHub](https://github.com/pointfreeco/swift-case-paths)
-MIT License
