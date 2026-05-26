@@ -73,6 +73,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
+  @State private var sharedFile: NamedShareItem?
 
   @ObservedObject private var appSettings = AppSettings.shared
 
@@ -511,18 +512,24 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
 
     Menu {
-      NamedShareLink(
-        url: archiveURL ?? URL(filePath: "/"),
-        name: viewModel.document.shareFilename(original: false)
-      ) {
+      Button {
+        if let url = archiveURL {
+          sharedFile = NamedShareItem(
+            url: url,
+            name: viewModel.document.shareFilename(original: false))
+        }
+      } label: {
         Label(localized: .app(.shareArchive), systemImage: "doc.zipper")
       }
       .disabled(archiveURL == nil)
 
-      NamedShareLink(
-        url: originalURL ?? URL(filePath: "/"),
-        name: viewModel.document.shareFilename(original: true)
-      ) {
+      Button {
+        if let url = originalURL {
+          sharedFile = NamedShareItem(
+            url: url,
+            name: viewModel.document.shareFilename(original: true))
+        }
+      } label: {
         Label(localized: .app(.shareOriginal), systemImage: "doc")
       }
       .disabled(originalURL == nil)
@@ -752,6 +759,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         ShareLinkView(document: viewModel.document)
       }
     }
+    .namedShareSheet(item: $sharedFile)
 
     .sheet(isPresented: $showPreview) {
       previewContent
