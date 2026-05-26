@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 09.03.25.
 //
 
-import CasePaths
 import Common
 import Foundation
 import os
@@ -88,7 +87,6 @@ public struct FilterState: Equatable, Codable, Sendable {
       case previousYear
     }
 
-    @CasePathable
     public enum Argument: Equatable, Codable, Sendable, Hashable {
       case any
       case between(start: Date?, end: Date?)

@@ -8,6 +8,23 @@
 import DataModel
 import SwiftUI
 
+extension Binding where Value == FilterState.DateFilter.Argument {
+  /// Binding to the associated value when the argument is a `.between` case, else `nil`.
+  fileprivate var between: Binding<(start: Date?, end: Date?)>? {
+    Binding<(start: Date?, end: Date?)>(
+      unwrapping: Binding<(start: Date?, end: Date?)?>(
+        get: {
+          if case .between(let start, let end) = wrappedValue {
+            (start: start, end: end)
+          } else {
+            nil
+          }
+        },
+        set: { if let v = $0 { wrappedValue = .between(start: v.start, end: v.end) } }
+      ))
+  }
+}
+
 extension FilterState.DateFilter.Range {
   public var localizedLabel: String {
     switch self {
