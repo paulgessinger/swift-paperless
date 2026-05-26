@@ -82,6 +82,13 @@ struct ReauthSheet: View {
       "Re-auth succeeded for connection \(stored.id, privacy: .private(mask: .hash))")
     connectionManager.clearNeedsAuth(for: stored.id)
     connectionManager.cancelReauthRequest()
+    // Trigger a connection refresh so the app shell rebuilds ApiRepository
+    // with the now-fresh token. The init-time header probe runs again with
+    // valid auth, picking up backendVersion and the real apiVersion (rather
+    // than whatever the iteration probe inferred from the bad-token session
+    // — which is unauth-correct but missing backendVersion, so
+    // supports(feature:) is conservatively false until this fires).
+    connectionManager.setActiveConnection(id: stored.id, animated: false)
     dismiss()
   }
 
