@@ -19,7 +19,6 @@ let package = Package(
   dependencies: [
     .package(path: "../Common"),
     .package(path: "../DataModel"),
-    .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
     .package(url: "https://github.com/groue/Semaphore", from: "0.1.0"),
   ],
   targets: [
@@ -30,7 +29,6 @@ let package = Package(
       dependencies: [
         .product(name: "Common", package: "Common"),
         .product(name: "DataModel", package: "DataModel"),
-        .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
         .product(name: "Semaphore", package: "Semaphore"),
       ],
       path: "Sources",

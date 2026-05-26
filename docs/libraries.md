@@ -8,10 +8,6 @@ Swift Paperless uses the following third-party libraries for various features:
 [GitHub](https://github.com/apple/swift-async-algorithms)
 *Apache-2.0 license*
 
-## swift-collections
-[GitHub](https://github.com/apple/swift-collections)
-*Apache-2.0 license*
-
 ## Semaphore
 [GitHub](https://github.com/groue/Semaphore)
 *MIT license*
