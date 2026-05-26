@@ -74,7 +74,18 @@ class DocumentDetailModel {
   }
 
   func loadDocument() async {
-    async let updated = try await store.document(id: document.id)
+    // Resolve the fresh document FIRST so the download path can validate
+    // the ContentStore cache against the server's current `modified`
+    // timestamp. If we kicked off both in parallel, a stale `modified`
+    // could validate an out-of-date cached PDF before the metadata refresh
+    // landed — surfacing old content alongside fresh metadata.
+    do {
+      if let updated = try await store.document(id: document.id) {
+        document = updated
+      }
+    } catch {
+      Logger.shared.error("Error updating document with full perms for editing: \(error)")
+    }
 
     switch download {
     case .initial:
@@ -112,14 +123,6 @@ class DocumentDetailModel {
 
     default:
       break
-    }
-
-    do {
-      if let updated = try await updated {
-        document = updated
-      }
-    } catch {
-      Logger.shared.error("Error updating document with full perms for editing: \(error)")
     }
   }
 
