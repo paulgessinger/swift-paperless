@@ -363,6 +363,12 @@ struct DocumentView: View {
                   message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
               }
             }
+
+            if let id = connectionManager.activeConnectionId {
+              Button("Mark connection needs re-auth") {
+                connectionManager.markNeedsAuth(for: id)
+              }
+            }
           }
         #endif
 
