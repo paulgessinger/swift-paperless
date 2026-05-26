@@ -1,2 +1,3 @@
 - Recently-viewed documents now open offline; their files are cached on disk and survive app launches
+- Document thumbnails persist across launches, so the document list shows them instantly without a network round trip
 - Large document downloads no longer buffer the whole file in memory, reducing memory pressure (especially in the Share Extension)
