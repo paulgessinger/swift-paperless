@@ -33,6 +33,13 @@ public class ErrorController: ObservableObject {
 
   private static let defaultTitle = String(localized: .app(.errorDefaultMessage))
 
+  // Installed by the app shell. Returning true drops the error before it
+  // becomes a user-visible banner — used for cases where another UI surface
+  // already represents the condition (the connection-status banner covers
+  // 401s, and connectivity errors are redundant when the offline banner is
+  // already showing).
+  public var shouldSuppress: ((any Error) -> Bool)?
+
   private var channel = AsyncChannel<any DisplayableError>()
   private var task: Task<Void, Never>? = nil
 
@@ -63,6 +70,10 @@ public class ErrorController: ObservableObject {
   }
 
   public func push(error: any Error, message: String? = nil) {
+    if let shouldSuppress, shouldSuppress(error) {
+      Logger.shared.debug("Suppressing error: \(String(describing: error))")
+      return
+    }
     if let de = error as? any DisplayableError {
       push(error: de)
       return
@@ -94,6 +105,10 @@ public class ErrorController: ObservableObject {
   }
 
   public func push(error: any DisplayableError) {
+    if let shouldSuppress, shouldSuppress(error) {
+      Logger.shared.debug("Suppressing error: \(String(describing: error))")
+      return
+    }
     Task { @MainActor in
       await channel.send(error)
     }
