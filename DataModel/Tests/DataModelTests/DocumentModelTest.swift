@@ -43,6 +43,9 @@ struct DocumentModelTest {
     #expect(document.owner == .user(2))
     #expect(document.notes.count == 1)
 
+    #expect(document.originalFileName == "original.pdf")
+    #expect(document.archivedFileName == "archived.pdf")
+
     #expect(document.userCanChange == true)
 
     // No permissions by default
