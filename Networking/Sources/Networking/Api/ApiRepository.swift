@@ -520,11 +520,11 @@ extension ApiRepository: Repository {
       documentRemoteID: documentID,
       kind: original ? .original : .archive)
 
-    if let hit = contentStore.read(key, freshAgainst: modified) {
+    if let cached = contentStore.read(key, freshAgainst: modified) {
       Logger.networking.info(
         "ContentStore hit for documentID \(documentID) (original: \(original))")
       progress?(1.0)
-      return hit.friendlyURL
+      return cached
     }
 
     if let existing = inFlightDownloads[key] {
@@ -541,11 +541,8 @@ extension ApiRepository: Repository {
 
       try validateDownloadResponse(response, request: request)
 
-      let suggested = response.suggestedFilename ?? "document.pdf"
-      let hit = try contentStore.store(
-        key, movingFrom: tempURL,
-        modified: modified, suggestedFilename: suggested)
-      return hit.friendlyURL
+      return try contentStore.store(
+        key, movingFrom: tempURL, modified: modified)
     }
     inFlightDownloads[key] = task
     return try await task.value

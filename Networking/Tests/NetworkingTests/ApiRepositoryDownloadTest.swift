@@ -56,13 +56,15 @@ final class DownloadMockURLProtocol: URLProtocol, @unchecked Sendable {
 @MainActor
 @Suite(.serialized)
 struct ApiRepositoryDownloadTest {
-  private static let baseURL = URL(string: "https://example.com")!
+  nonisolated static let baseURL = URL(string: "https://example.com")!
+  nonisolated static let serverID = UUID(
+    uuidString: "11111111-2222-3333-4444-555555555555")!
 
   static func makeRepo(contentStore: ContentStore) -> ApiRepository {
     let session = DownloadMockURLProtocol.makeSession()
     return ApiRepository(
       connection: Connection(
-        url: baseURL, token: "t", identityName: nil, serverID: UUID()),
+        url: baseURL, token: "t", identityName: nil, serverID: serverID),
       mode: .release,
       contentStore: contentStore,
       urlSession: session)
@@ -95,6 +97,15 @@ struct ApiRepositoryDownloadTest {
       added: nil, modified: modified, storagePath: nil)
   }
 
+  nonisolated static func canonicalKey(
+    for document: Document, original: Bool = false
+  ) -> ContentStore.Key {
+    ContentStore.Key(
+      serverID: serverID,
+      documentRemoteID: document.id,
+      kind: original ? .original : .archive)
+  }
+
   // Atomic counter for request-count assertions across concurrent callbacks.
   final class Counter: @unchecked Sendable {
     private let lock = NSLock()
@@ -113,7 +124,7 @@ struct ApiRepositoryDownloadTest {
   }
 
   @Test
-  func firstCallWritesToContentStoreAndReturnsFriendlyURL() async throws {
+  func firstCallWritesToContentStore() async throws {
     let (store, _) = try Self.makeStore()
     let repo = Self.makeRepo(contentStore: store)
     let payload = Data("HELLO".utf8)
@@ -122,7 +133,7 @@ struct ApiRepositoryDownloadTest {
 
     let url = try await repo.download(document: Self.makeDocument())
 
-    #expect(url.lastPathComponent == "invoice.pdf")
+    #expect(url == store.url(for: Self.canonicalKey(for: Self.makeDocument())))
     #expect(try Data(contentsOf: url) == payload)
   }
 
@@ -216,28 +227,6 @@ struct ApiRepositoryDownloadTest {
     await #expect(throws: (any Error).self) {
       _ = try await repo.download(document: Self.makeDocument())
     }
-  }
-
-  @Test
-  func friendlyNameSurvivesPurge() async throws {
-    let (store, _) = try Self.makeStore()
-    let repo = Self.makeRepo(contentStore: store)
-    DownloadMockURLProtocol.responder = { req in
-      (Self.okResponse(for: req, suggested: "report.pdf"), Data("P".utf8))
-    }
-    defer { DownloadMockURLProtocol.reset() }
-
-    let first = try await repo.download(document: Self.makeDocument())
-    #expect(first.lastPathComponent == "report.pdf")
-
-    // Simulate the OS purging the Friendly/ directory: the canonical blob
-    // stays, the friendly hardlink does not.
-    try FileManager.default.removeItem(at: first)
-    #expect(!FileManager.default.fileExists(atPath: first.path))
-
-    let second = try await repo.download(document: Self.makeDocument())
-    #expect(second.lastPathComponent == "report.pdf")
-    #expect(FileManager.default.fileExists(atPath: second.path))
   }
 
   @Test
