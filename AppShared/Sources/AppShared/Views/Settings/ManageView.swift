@@ -338,7 +338,6 @@ private struct Container<M: ManagerProtocol>: View {
         .navigationTitle("Title")
     }
     .environmentObject(store)
-    .errorOverlay(errorController: errorController)
     .task {
       try? await store.fetchAll()
     }

@@ -1,4 +1,4 @@
-import AsyncAlgorithms
+import Combine
 import Foundation
 import SwiftUI
 import os
@@ -13,61 +13,28 @@ extension DisplayableError {
 }
 
 private struct GenericError: DisplayableError {
-  public let message: String
-  public let details: String?
-
-  public init(message: String, details: String? = nil) {
-    self.message = message
-    self.details = details
-  }
+  let message: String
+  let details: String?
 }
 
 @MainActor
 public class ErrorController: ObservableObject {
-  public enum State {
-    case none
-    case active(error: any DisplayableError, duration: Double)
-  }
-
-  @Published public var state: State = .none
-
   private static let defaultTitle = String(localized: .app(.errorDefaultMessage))
 
   // Installed by the app shell. Returning true drops the error before it
-  // becomes a user-visible banner — used for cases where another UI surface
+  // becomes a user-visible toast — used for cases where another UI surface
   // already represents the condition (the connection-status banner covers
   // 401s, and connectivity errors are redundant when the offline banner is
   // already showing).
   public var shouldSuppress: ((any Error) -> Bool)?
 
-  private var channel = AsyncChannel<any DisplayableError>()
-  private var task: Task<Void, Never>? = nil
+  let subject = PassthroughSubject<any DisplayableError, Never>()
 
-  public init() {
-    task = Task(operation: worker)
+  public var presentations: AnyPublisher<any DisplayableError, Never> {
+    subject.eraseToAnyPublisher()
   }
 
-  deinit {
-    task?.cancel()
-    channel.finish()
-  }
-
-  @Sendable
-  private func worker() async {
-    Logger.shared.debug("ErrorController worker started")
-    for await error in channel {
-      guard !Task.isCancelled else { break }
-      Logger.shared.debug("ErrorController worker got error from channel")
-
-      Haptics.shared.notification(.error)
-      let duration = 5.0
-      withAnimation(.spring(duration: 0.3)) {
-        state = State.active(error: error, duration: duration)
-      }
-      try? await Task.sleep(for: .seconds(0.3 + duration + 0.4))
-    }
-    Logger.shared.debug("ErrorController worker terminated")
-  }
+  public init() {}
 
   public func push(error: any Error, message: String? = nil) {
     if let shouldSuppress, shouldSuppress(error) {
@@ -78,13 +45,10 @@ public class ErrorController: ObservableObject {
       push(error: de)
       return
     }
-
     if let le = error as? any LocalizedError {
       if let message {
         Logger.shared.error("Presenting error: \(String(describing: error))")
-        Task {
-          push(error: GenericError(message: message, details: error.localizedDescription))
-        }
+        push(error: GenericError(message: message, details: error.localizedDescription))
       } else {
         push(error: le)
       }
@@ -101,7 +65,8 @@ public class ErrorController: ObservableObject {
   public func push(error: any LocalizedError) {
     push(
       error: GenericError(
-        message: error.errorDescription ?? Self.defaultTitle, details: error.failureReason))
+        message: error.errorDescription ?? Self.defaultTitle,
+        details: error.failureReason))
   }
 
   public func push(error: any DisplayableError) {
@@ -109,27 +74,13 @@ public class ErrorController: ObservableObject {
       Logger.shared.debug("Suppressing error: \(String(describing: error))")
       return
     }
-    Task { @MainActor in
-      await channel.send(error)
-    }
+    Logger.shared.debug("Pushing error: \(String(describing: error))")
+    Haptics.shared.notification(.error)
+    subject.send(error)
   }
 
   public func push(message: String, details: String? = nil) {
     push(error: GenericError(message: message, details: details))
-  }
-
-  public func clear(animate: Bool = true) {
-    Task {
-      await MainActor.run {
-        if animate {
-          withAnimation {
-            state = .none
-          }
-        } else {
-          state = .none
-        }
-      }
-    }
   }
 }
 
@@ -139,7 +90,7 @@ private struct PreviewError: LocalizedError {
   public var errorDescription: String? { String(localized: .app(.errorDefaultMessage)) }
 }
 
-public struct ErrorOverlay_Previews: PreviewProvider {
+public struct ErrorController_Previews: PreviewProvider {
   public struct MyButton: View {
     @EnvironmentObject var errorController: ErrorController
 
@@ -151,8 +102,6 @@ public struct ErrorOverlay_Previews: PreviewProvider {
   }
 
   public struct Container: View {
-    //        @State var error: LocalizedError? = PreviewError()
-
     @StateObject var errorController = ErrorController()
 
     public var body: some View {
@@ -161,14 +110,6 @@ public struct ErrorOverlay_Previews: PreviewProvider {
         Rectangle()
           .frame(height: 300)
       }
-      //            .overlay(alignment: .bottom) {
-      //                if let (e, d) = errorController.active {
-      //                    ErrorView(error: e, duration: d)
-      //                        .transition(.move(edge: .bottom).combined(with: .opacity))
-      //                        .zIndex(1)
-      //                        .id(UUID())
-      //                }
-      //            }
       .errorOverlay(errorController: errorController)
       .environmentObject(errorController)
     }
