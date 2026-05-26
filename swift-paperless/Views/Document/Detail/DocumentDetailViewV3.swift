@@ -686,7 +686,9 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
               }
 
               if case .loaded(url: let url, document: _) = viewModel.download {
-                ShareLink(item: url) {
+                NamedShareLink(
+                  url: url, name: viewModel.document.shareFilename(original: false)
+                ) {
                   Label(localized: .app(.shareSheet), systemImage: "square.and.arrow.down")
                 }
               }

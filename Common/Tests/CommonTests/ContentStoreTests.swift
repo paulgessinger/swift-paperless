@@ -51,34 +51,26 @@ struct ContentStoreTests {
   }
 
   @Test
-  func storeWritesBlobAndReturnsHit() throws {
+  func storeWritesBlobAtCanonicalPath() throws {
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("hello".utf8))
 
-    let hit = try store.store(
+    let url = try store.store(
       Self.key(), movingFrom: temp,
-      modified: Date(timeIntervalSince1970: 1000),
-      suggestedFilename: "invoice.pdf")
+      modified: Date(timeIntervalSince1970: 1000))
 
-    #expect(FileManager.default.fileExists(atPath: hit.canonicalURL.path))
-    #expect(FileManager.default.fileExists(atPath: hit.friendlyURL.path))
-    #expect(hit.friendlyURL.lastPathComponent == "invoice.pdf")
-    #expect(try Data(contentsOf: hit.canonicalURL) == Data("hello".utf8))
-    #expect(try Data(contentsOf: hit.friendlyURL) == Data("hello".utf8))
+    #expect(url == store.url(for: Self.key()))
+    #expect(try Data(contentsOf: url) == Data("hello".utf8))
   }
 
   @Test
-  func readReturnsHitWhenModifiedMatches() throws {
+  func readReturnsURLWhenModifiedMatches() throws {
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))
     let modified = Date(timeIntervalSince1970: 1234)
-    try store.store(
-      Self.key(), movingFrom: temp, modified: modified,
-      suggestedFilename: "a.pdf")
+    try store.store(Self.key(), movingFrom: temp, modified: modified)
 
-    let hit = store.read(Self.key(), freshAgainst: modified)
-    #expect(hit != nil)
-    #expect(hit?.suggestedFilename == "a.pdf")
+    #expect(store.read(Self.key(), freshAgainst: modified) != nil)
   }
 
   @Test
@@ -87,8 +79,7 @@ struct ContentStoreTests {
     let temp = try Self.writeTempFile(Data("x".utf8))
     try store.store(
       Self.key(), movingFrom: temp,
-      modified: Date(timeIntervalSince1970: 1),
-      suggestedFilename: "a.pdf")
+      modified: Date(timeIntervalSince1970: 1))
 
     #expect(
       store.read(Self.key(), freshAgainst: Date(timeIntervalSince1970: 2))
@@ -96,12 +87,10 @@ struct ContentStoreTests {
   }
 
   @Test
-  func readReturnsHitWhenBothNil() throws {
+  func readReturnsURLWhenBothNil() throws {
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))
-    try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "a.pdf")
+    try store.store(Self.key(), movingFrom: temp, modified: nil)
     #expect(store.read(Self.key(), freshAgainst: nil) != nil)
   }
 
@@ -111,206 +100,60 @@ struct ContentStoreTests {
     let temp = try Self.writeTempFile(Data("x".utf8))
     try store.store(
       Self.key(), movingFrom: temp,
-      modified: Date(timeIntervalSince1970: 1),
-      suggestedFilename: "a.pdf")
+      modified: Date(timeIntervalSince1970: 1))
     #expect(store.read(Self.key(), freshAgainst: nil) == nil)
 
     let (store2, _) = try Self.makeStore()
     let temp2 = try Self.writeTempFile(Data("x".utf8))
-    try store2.store(
-      Self.key(), movingFrom: temp2, modified: nil,
-      suggestedFilename: "a.pdf")
+    try store2.store(Self.key(), movingFrom: temp2, modified: nil)
     #expect(
       store2.read(Self.key(), freshAgainst: Date(timeIntervalSince1970: 1))
         == nil)
   }
 
   @Test
+  func readReturnsNilWhenSidecarMissing() throws {
+    let (store, root) = try Self.makeStore()
+    let temp = try Self.writeTempFile(Data("x".utf8))
+    let url = try store.store(Self.key(), movingFrom: temp, modified: nil)
+
+    // Wipe the sidecar but leave the blob. read() must NOT serve a hit
+    // because it can no longer validate freshness.
+    let sidecar = url.deletingLastPathComponent()
+      .appendingPathComponent("archive.meta.json")
+    try FileManager.default.removeItem(at: sidecar)
+    #expect(FileManager.default.fileExists(atPath: url.path))
+    _ = root  // silence unused warning
+
+    #expect(store.read(Self.key(), freshAgainst: nil) == nil)
+  }
+
+  @Test
   func storeOverwriteReplacesAtomically() throws {
     let (store, _) = try Self.makeStore()
     let first = try Self.writeTempFile(Data("first".utf8))
-    try store.store(
-      Self.key(), movingFrom: first, modified: nil,
-      suggestedFilename: "a.pdf")
+    try store.store(Self.key(), movingFrom: first, modified: nil)
 
     let second = try Self.writeTempFile(Data("second".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: second, modified: nil,
-      suggestedFilename: "a.pdf")
-    #expect(try Data(contentsOf: hit.canonicalURL) == Data("second".utf8))
-    #expect(try Data(contentsOf: hit.friendlyURL) == Data("second".utf8))
+    let url = try store.store(Self.key(), movingFrom: second, modified: nil)
+    #expect(try Data(contentsOf: url) == Data("second".utf8))
   }
 
   @Test
-  func friendlyLinkRematerializesAfterPurge() throws {
+  func deleteRemovesBlobAndSidecar() throws {
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "a.pdf")
-
-    try FileManager.default.removeItem(at: hit.friendlyURL)
-    #expect(!FileManager.default.fileExists(atPath: hit.friendlyURL.path))
-
-    let again = store.read(Self.key(), freshAgainst: nil)
-    #expect(again != nil)
-    #expect(FileManager.default.fileExists(atPath: again!.friendlyURL.path))
-    #expect(again?.friendlyURL.lastPathComponent == "a.pdf")
-  }
-
-  @Test
-  func friendlyLinkSharesInodeWithCanonical() throws {
-    let (store, _) = try Self.makeStore()
-    let temp = try Self.writeTempFile(Data("payload".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "a.pdf")
-
-    let canonAttr = try FileManager.default.attributesOfItem(
-      atPath: hit.canonicalURL.path)
-    let friendlyAttr = try FileManager.default.attributesOfItem(
-      atPath: hit.friendlyURL.path)
-    let canonInode = canonAttr[.systemFileNumber] as? NSNumber
-    let friendlyInode = friendlyAttr[.systemFileNumber] as? NSNumber
-    #expect(canonInode != nil)
-    #expect(canonInode == friendlyInode)
-  }
-
-  @Test
-  func friendlyNameCollisionGetsDisambiguated() throws {
-    let (store, _) = try Self.makeStore()
-
-    let temp1 = try Self.writeTempFile(Data("one".utf8))
-    let hit1 = try store.store(
-      Self.key(doc: 1), movingFrom: temp1, modified: nil,
-      suggestedFilename: "same.pdf")
-
-    let temp2 = try Self.writeTempFile(Data("two".utf8))
-    let hit2 = try store.store(
-      Self.key(doc: 2), movingFrom: temp2, modified: nil,
-      suggestedFilename: "same.pdf")
-
-    #expect(hit1.friendlyURL.lastPathComponent == "same.pdf")
-    #expect(hit2.friendlyURL.lastPathComponent == "same (2).pdf")
-    #expect(try Data(contentsOf: hit1.friendlyURL) == Data("one".utf8))
-    #expect(try Data(contentsOf: hit2.friendlyURL) == Data("two".utf8))
-  }
-
-  @Test
-  func sanitizesInvalidFilename() throws {
-    let (store, _) = try Self.makeStore()
-    let temp = try Self.writeTempFile(Data("x".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "evil/path\0with/slashes.pdf")
-    #expect(!hit.friendlyURL.lastPathComponent.contains("/"))
-    #expect(!hit.friendlyURL.lastPathComponent.contains("\0"))
-  }
-
-  @Test
-  func emptyFilenameFallsBackToKindBased() throws {
-    let (store, _) = try Self.makeStore()
-    let temp = try Self.writeTempFile(Data("x".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "")
-    #expect(hit.friendlyURL.lastPathComponent == "archive.pdf")
-  }
-
-  @Test
-  func renameCleansOldFriendlyLink() throws {
-    let (store, _) = try Self.makeStore()
-    let temp1 = try Self.writeTempFile(Data("v1".utf8))
-    let hit1 = try store.store(
-      Self.key(), movingFrom: temp1, modified: nil,
-      suggestedFilename: "old-name.pdf")
-    #expect(FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
-    #expect(hit1.friendlyURL.lastPathComponent == "old-name.pdf")
-
-    let temp2 = try Self.writeTempFile(Data("v2".utf8))
-    let hit2 = try store.store(
-      Self.key(), movingFrom: temp2, modified: nil,
-      suggestedFilename: "new-name.pdf")
-    #expect(hit2.friendlyURL.lastPathComponent == "new-name.pdf")
-    #expect(!FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
-  }
-
-  @Test
-  func renameLeavesOtherDocsFriendlyLinksAlone() throws {
-    let (store, _) = try Self.makeStore()
-
-    // Doc A: name "alpha.pdf"
-    let tempA = try Self.writeTempFile(Data("A".utf8))
-    let hitA = try store.store(
-      Self.key(doc: 1), movingFrom: tempA, modified: nil,
-      suggestedFilename: "alpha.pdf")
-
-    // Doc B: name "beta.pdf"
-    let tempB = try Self.writeTempFile(Data("B".utf8))
-    let hitB = try store.store(
-      Self.key(doc: 2), movingFrom: tempB, modified: nil,
-      suggestedFilename: "beta.pdf")
-
-    // Rename Doc A to "gamma.pdf"
-    let tempA2 = try Self.writeTempFile(Data("A2".utf8))
-    _ = try store.store(
-      Self.key(doc: 1), movingFrom: tempA2, modified: nil,
-      suggestedFilename: "gamma.pdf")
-
-    // alpha.pdf gone, beta.pdf still there
-    #expect(!FileManager.default.fileExists(atPath: hitA.friendlyURL.path))
-    #expect(FileManager.default.fileExists(atPath: hitB.friendlyURL.path))
-  }
-
-  @Test
-  func deleteRemovesDisambiguatedFriendlyLink() throws {
-    let (store, _) = try Self.makeStore()
-
-    let temp1 = try Self.writeTempFile(Data("one".utf8))
-    _ = try store.store(
-      Self.key(doc: 1), movingFrom: temp1, modified: nil,
-      suggestedFilename: "same.pdf")
-
-    let temp2 = try Self.writeTempFile(Data("two".utf8))
-    let hit2 = try store.store(
-      Self.key(doc: 2), movingFrom: temp2, modified: nil,
-      suggestedFilename: "same.pdf")
-    #expect(hit2.friendlyURL.lastPathComponent == "same (2).pdf")
-
-    try store.delete(Self.key(doc: 2))
-    #expect(!FileManager.default.fileExists(atPath: hit2.friendlyURL.path))
-  }
-
-  @Test
-  func deleteLeavesOtherDocsFriendlyLinksAlone() throws {
-    let (store, _) = try Self.makeStore()
-
-    let temp1 = try Self.writeTempFile(Data("one".utf8))
-    let hit1 = try store.store(
-      Self.key(doc: 1), movingFrom: temp1, modified: nil,
-      suggestedFilename: "same.pdf")
-
-    let temp2 = try Self.writeTempFile(Data("two".utf8))
-    _ = try store.store(
-      Self.key(doc: 2), movingFrom: temp2, modified: nil,
-      suggestedFilename: "same.pdf")
-
-    try store.delete(Self.key(doc: 2))
-    #expect(FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
-    #expect(try Data(contentsOf: hit1.friendlyURL) == Data("one".utf8))
-  }
-
-  @Test
-  func deleteRemovesBlobSidecarAndFriendly() throws {
-    let (store, _) = try Self.makeStore()
-    let temp = try Self.writeTempFile(Data("x".utf8))
-    let hit = try store.store(
-      Self.key(), movingFrom: temp, modified: nil,
-      suggestedFilename: "a.pdf")
+    let url = try store.store(Self.key(), movingFrom: temp, modified: nil)
 
     try store.delete(Self.key())
-    #expect(!FileManager.default.fileExists(atPath: hit.canonicalURL.path))
-    #expect(!FileManager.default.fileExists(atPath: hit.friendlyURL.path))
+    #expect(!FileManager.default.fileExists(atPath: url.path))
     #expect(store.read(Self.key(), freshAgainst: nil) == nil)
+  }
+
+  @Test
+  func deleteIsIdempotent() throws {
+    let (store, _) = try Self.makeStore()
+    try store.delete(Self.key())
+    try store.delete(Self.key())
   }
 }
