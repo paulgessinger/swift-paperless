@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -154,7 +155,27 @@ public final class DocumentStore: ObservableObject, Sendable {
     if let delegate {
       dataLoader.delegate = delegate
     }
-    return ImagePipeline(configuration: .init(dataLoader: dataLoader))
+    var config = ImagePipeline.Configuration(dataLoader: dataLoader)
+    if let cacheURL = sharedThumbnailCacheURL(),
+      let dataCache = try? DataCache(path: cacheURL)
+    {
+      config.dataCache = dataCache
+    }
+    return ImagePipeline(configuration: config)
+  }
+
+  private static func sharedThumbnailCacheURL() -> URL? {
+    guard
+      let container = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: ContentStore.appGroup)
+    else { return nil }
+    let url = container.appendingPathComponent("Caches/Nuke", isDirectory: true)
+    try? FileManager.default.createDirectory(
+      at: url, withIntermediateDirectories: true)
+    try? FileManager.default.setAttributes(
+      [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+      ofItemAtPath: url.path)
+    return url
   }
 
   public func preloadThumbnail(for document: Document) {
