@@ -165,13 +165,12 @@ public struct ContentStore: Sendable {
     try writeSidecar(
       for: key, modified: modified, suggestedFilename: suggestedFilename)
 
-    let friendlyTarget = friendlyURL(
-      for: key, suggestedFilename: suggestedFilename)
-    if let oldCanonicalInode,
-      FileManager.default.fileExists(atPath: friendlyTarget.path),
-      inode(of: friendlyTarget) == oldCanonicalInode
-    {
-      try? FileManager.default.removeItem(at: friendlyTarget)
+    // Sweep any friendly link still pointing at the *previous* canonical
+    // inode — covers both (i) plain overwrite under the same name and
+    // (ii) a server-side rename where the old name's link would otherwise
+    // be orphaned forever.
+    if let oldCanonicalInode {
+      removeFriendlyLinks(matchingInode: oldCanonicalInode)
     }
 
     let friendly =
@@ -195,13 +194,31 @@ public struct ContentStore: Sendable {
 
   public func delete(_ key: Key) throws {
     let canonical = url(for: key)
-    if let sidecar = readSidecar(for: key) {
-      let friendly = friendlyURL(
-        for: key, suggestedFilename: sidecar.suggestedFilename)
-      try? FileManager.default.removeItem(at: friendly)
-    }
+    // Capture the inode before removing the blob so we can sweep every
+    // friendly link that points at it — including disambiguated names
+    // (`name (docID).ext`) that the sidecar's suggestedFilename alone
+    // cannot tell us about.
+    let canonicalInode = inode(of: canonical)
+
     try? FileManager.default.removeItem(at: canonical)
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
+
+    if let canonicalInode {
+      removeFriendlyLinks(matchingInode: canonicalInode)
+    }
+  }
+
+  /// Removes every entry under `Friendly/` whose underlying inode equals
+  /// the given inode. Bounded by the size of `Friendly/`, which the OS
+  /// keeps small under storage pressure. Best-effort: failures are swallowed.
+  private func removeFriendlyLinks(matchingInode target: NSNumber) {
+    guard
+      let contents = try? FileManager.default.contentsOfDirectory(
+        at: friendlyRoot, includingPropertiesForKeys: nil)
+    else { return }
+    for entry in contents where inode(of: entry) == target {
+      try? FileManager.default.removeItem(at: entry)
+    }
   }
 
   // MARK: - Sidecar
