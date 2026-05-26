@@ -252,7 +252,6 @@ struct SettingsView: View {
       .sheet(isPresented: $showLoginSheet) {
         LoginView(connectionManager: connectionManager, initial: false)
           .environmentObject(errorController)
-          .errorOverlay(errorController: errorController, offset: 15)
       }
 
       // MainView also presents this, but it cannot while the settings sheet is
@@ -299,6 +298,5 @@ struct SettingsView: View {
     SettingsView()
       .environmentObject(store)
       .environmentObject(connectionManager)
-      .errorOverlay(errorController: errorController)
   }
 }
