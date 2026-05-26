@@ -105,13 +105,19 @@ public struct ContentStore: Sendable {
     FileManager.default.fileExists(atPath: url(for: key).path)
   }
 
-  /// Returns the canonical URL if the blob exists and the sidecar's
-  /// `modified` matches the passed value. Both-nil counts as fresh.
+  /// Returns the canonical URL if the blob exists, the sidecar is present,
+  /// and the sidecar's `modified` equals the passed value.
+  ///
+  /// A nil `modified` (either side) is treated as "no staleness signal" and
+  /// returns nil — the cache will not serve a hit without a positive
+  /// validity check. Callers that genuinely have no timestamp should bypass
+  /// the cache entirely rather than calling `read` with nil.
   public func read(_ key: Key, freshAgainst modified: Date?) -> URL? {
+    guard let modified else { return nil }
     let canonical = url(for: key)
     guard FileManager.default.fileExists(atPath: canonical.path),
       let sidecar = readSidecar(for: key),
-      staleness(sidecar.modified, matches: modified)
+      sidecar.modified == modified
     else { return nil }
     return canonical
   }
@@ -164,14 +170,6 @@ public struct ContentStore: Sendable {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
     return try? decoder.decode(Sidecar.self, from: data)
-  }
-
-  private func staleness(_ sidecar: Date?, matches arg: Date?) -> Bool {
-    switch (sidecar, arg) {
-    case (nil, nil): true
-    case (let l?, let r?): l == r
-    default: false
-    }
   }
 
   // MARK: - Filesystem helpers

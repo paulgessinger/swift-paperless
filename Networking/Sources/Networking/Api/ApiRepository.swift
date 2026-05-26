@@ -487,7 +487,8 @@ extension ApiRepository: Repository {
     documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
   ) async throws -> URL {
     // No Document handle → no modified timestamp to validate the cache,
-    // so always re-fetch. Callers should prefer download(document:...).
+    // so streamDownload's nil-modified guard bypasses ContentStore and
+    // fetches fresh every call. Callers should prefer download(document:...).
     try await streamDownload(
       documentID: documentID, original: original,
       modified: nil, progress: progress)
@@ -508,9 +509,12 @@ extension ApiRepository: Repository {
   ) async throws -> URL {
     Logger.networking.notice("Downloading document (original: \(original))")
 
-    guard let contentStore else {
-      // App-group container unavailable (host tests, mis-configured entitlement).
-      // Fall back to streaming straight to a temp file with no cache.
+    // Without a staleness signal (modified timestamp) we can't validate a
+    // cached blob — and writing one back without `modified` would cache it
+    // indefinitely with no way to detect server-side changes. Bypass the
+    // ContentStore entirely in that case. Also fall back when the app-group
+    // container isn't available (host tests, mis-configured entitlement).
+    guard let contentStore, let modified else {
       return try await fetchToTemp(
         documentID: documentID, original: original, progress: progress)
     }
