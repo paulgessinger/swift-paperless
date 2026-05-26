@@ -511,12 +511,18 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
 
     Menu {
-      ShareLink(item: archiveURL ?? URL(filePath: "/")) {
+      NamedShareLink(
+        url: archiveURL ?? URL(filePath: "/"),
+        name: viewModel.document.shareFilename(original: false)
+      ) {
         Label(localized: .app(.shareArchive), systemImage: "doc.zipper")
       }
       .disabled(archiveURL == nil)
 
-      ShareLink(item: originalURL ?? URL(filePath: "/")) {
+      NamedShareLink(
+        url: originalURL ?? URL(filePath: "/"),
+        name: viewModel.document.shareFilename(original: true)
+      ) {
         Label(localized: .app(.shareOriginal), systemImage: "doc")
       }
       .disabled(originalURL == nil)

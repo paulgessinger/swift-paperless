@@ -18,9 +18,10 @@ private let log = Logger(
 /// with `.completeUntilFirstUserAuthentication` protection on iOS; on macOS
 /// (host tests) the protection class is a no-op.
 ///
-/// `Hit.friendlyURL` is a hardlink under `Caches/ContentStore/Friendly/`
-/// named after the server-provided filename, so consumers like
-/// `UIActivityViewController` show a recognizable name.
+/// Returns canonical paths only; consumers that need to show the user a
+/// recognizable filename (e.g. the share sheet) use a separate display name
+/// from `Document.archivedFileName` / `Document.originalFileName` and pass it
+/// to `UIActivityViewController` via `NSItemProvider.suggestedName`.
 public struct ContentStore: Sendable {
   public enum Kind: String, Sendable, CaseIterable {
     case original
@@ -54,12 +55,6 @@ public struct ContentStore: Sendable {
     }
   }
 
-  public struct Hit: Sendable {
-    public let canonicalURL: URL
-    public let friendlyURL: URL
-    public let suggestedFilename: String
-  }
-
   public enum StoreError: Error {
     case appGroupUnavailable(identifier: String)
   }
@@ -83,17 +78,12 @@ public struct ContentStore: Sendable {
   public init(root: URL) throws {
     self.root = root
     try createDirectory(canonicalRoot)
-    try createDirectory(friendlyRoot)
   }
 
   // MARK: - Paths
 
   private var canonicalRoot: URL {
     root.appendingPathComponent("Caches/ContentStore", isDirectory: true)
-  }
-
-  private var friendlyRoot: URL {
-    canonicalRoot.appendingPathComponent("Friendly", isDirectory: true)
   }
 
   private func directory(for key: Key) -> URL {
@@ -118,42 +108,24 @@ public struct ContentStore: Sendable {
     FileManager.default.fileExists(atPath: url(for: key).path)
   }
 
-  public func read(_ key: Key, freshAgainst modified: Date?) -> Hit? {
+  /// Returns the canonical URL if the blob exists and the sidecar's
+  /// `modified` matches the passed value. Both-nil counts as fresh.
+  public func read(_ key: Key, freshAgainst modified: Date?) -> URL? {
     let canonical = url(for: key)
-    guard FileManager.default.fileExists(atPath: canonical.path) else {
-      return nil
-    }
-    guard let sidecar = readSidecar(for: key) else { return nil }
-    guard staleness(sidecar.modified, matches: modified) else { return nil }
-
-    let friendly =
-      (try? materializeFriendlyLink(
-        for: key,
-        suggestedFilename: sidecar.suggestedFilename,
-        canonical: canonical)) ?? canonical
-
-    return Hit(
-      canonicalURL: canonical,
-      friendlyURL: friendly,
-      suggestedFilename: sidecar.suggestedFilename)
+    guard FileManager.default.fileExists(atPath: canonical.path),
+      let sidecar = readSidecar(for: key),
+      staleness(sidecar.modified, matches: modified)
+    else { return nil }
+    return canonical
   }
 
   @discardableResult
   public func store(
-    _ key: Key,
-    movingFrom tempURL: URL,
-    modified: Date?,
-    suggestedFilename: String
-  ) throws -> Hit {
+    _ key: Key, movingFrom tempURL: URL, modified: Date?
+  ) throws -> URL {
     let directory = directory(for: key)
     try createDirectory(directory)
     let canonical = url(for: key)
-
-    // Capture old inode before overwriting so we can recognize stale friendly
-    // links that still point at our previous blob and remove them. A friendly
-    // link pointing at a *different* doc's blob is a collision (handled by
-    // materializeFriendlyLink via disambiguation), not ours to clear.
-    let oldCanonicalInode = inode(of: canonical)
 
     if FileManager.default.fileExists(atPath: canonical.path) {
       _ = try FileManager.default.replaceItemAt(canonical, withItemAt: tempURL)
@@ -162,79 +134,24 @@ public struct ContentStore: Sendable {
     }
     applyFileProtection(canonical)
 
-    try writeSidecar(
-      for: key, modified: modified, suggestedFilename: suggestedFilename)
-
-    // Sweep any friendly link still pointing at the *previous* canonical
-    // inode — covers both (i) plain overwrite under the same name and
-    // (ii) a server-side rename where the old name's link would otherwise
-    // be orphaned forever.
-    if let oldCanonicalInode {
-      removeFriendlyLinks(matchingInode: oldCanonicalInode)
-    }
-
-    let friendly =
-      (try? materializeFriendlyLink(
-        for: key,
-        suggestedFilename: suggestedFilename,
-        canonical: canonical)) ?? canonical
-
-    return Hit(
-      canonicalURL: canonical,
-      friendlyURL: friendly,
-      suggestedFilename: suggestedFilename)
-  }
-
-  private func inode(of url: URL) -> NSNumber? {
-    guard
-      let attr = try? FileManager.default.attributesOfItem(atPath: url.path)
-    else { return nil }
-    return attr[.systemFileNumber] as? NSNumber
+    try writeSidecar(for: key, modified: modified)
+    return canonical
   }
 
   public func delete(_ key: Key) throws {
-    let canonical = url(for: key)
-    // Capture the inode before removing the blob so we can sweep every
-    // friendly link that points at it — including disambiguated names
-    // (`name (docID).ext`) that the sidecar's suggestedFilename alone
-    // cannot tell us about.
-    let canonicalInode = inode(of: canonical)
-
-    try? FileManager.default.removeItem(at: canonical)
+    try? FileManager.default.removeItem(at: url(for: key))
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
-
-    if let canonicalInode {
-      removeFriendlyLinks(matchingInode: canonicalInode)
-    }
-  }
-
-  /// Removes every entry under `Friendly/` whose underlying inode equals
-  /// the given inode. Bounded by the size of `Friendly/`, which the OS
-  /// keeps small under storage pressure. Best-effort: failures are swallowed.
-  private func removeFriendlyLinks(matchingInode target: NSNumber) {
-    guard
-      let contents = try? FileManager.default.contentsOfDirectory(
-        at: friendlyRoot, includingPropertiesForKeys: nil)
-    else { return }
-    for entry in contents where inode(of: entry) == target {
-      try? FileManager.default.removeItem(at: entry)
-    }
   }
 
   // MARK: - Sidecar
 
   private struct Sidecar: Codable {
     var modified: Date?
-    var suggestedFilename: String
     var writtenAt: Date
   }
 
-  private func writeSidecar(
-    for key: Key, modified: Date?, suggestedFilename: String
-  ) throws {
-    let sidecar = Sidecar(
-      modified: modified, suggestedFilename: suggestedFilename,
-      writtenAt: Date())
+  private func writeSidecar(for key: Key, modified: Date?) throws {
+    let sidecar = Sidecar(modified: modified, writtenAt: Date())
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601
     encoder.outputFormatting = [.sortedKeys]
@@ -258,66 +175,6 @@ public struct ContentStore: Sendable {
     case (let l?, let r?): l == r
     default: false
     }
-  }
-
-  // MARK: - Friendly link
-
-  private func friendlyURL(for key: Key, suggestedFilename: String) -> URL {
-    let sanitized = sanitize(filename: suggestedFilename, kind: key.kind)
-    return friendlyRoot.appendingPathComponent(sanitized)
-  }
-
-  private func materializeFriendlyLink(
-    for key: Key, suggestedFilename: String, canonical: URL
-  ) throws -> URL {
-    var friendly = friendlyURL(
-      for: key, suggestedFilename: suggestedFilename)
-    let manager = FileManager.default
-
-    if manager.fileExists(atPath: friendly.path) {
-      if sameInode(friendly, canonical) {
-        return friendly
-      }
-      // Different inode at the friendly path means a *different* document
-      // hashed to the same filename. Disambiguate by appending the doc ID.
-      friendly = disambiguatedFriendlyURL(for: friendly, key: key)
-      if manager.fileExists(atPath: friendly.path) {
-        if sameInode(friendly, canonical) {
-          return friendly
-        }
-        try? manager.removeItem(at: friendly)
-      }
-    }
-
-    try manager.linkItem(at: canonical, to: friendly)
-    return friendly
-  }
-
-  private func sameInode(_ a: URL, _ b: URL) -> Bool {
-    guard let aI = inode(of: a), let bI = inode(of: b) else { return false }
-    return aI == bI
-  }
-
-  private func disambiguatedFriendlyURL(for url: URL, key: Key) -> URL {
-    let ext = url.pathExtension
-    let base = url.deletingPathExtension().lastPathComponent
-    let newName =
-      ext.isEmpty
-      ? "\(base) (\(key.documentRemoteID))"
-      : "\(base) (\(key.documentRemoteID)).\(ext)"
-    return url.deletingLastPathComponent().appendingPathComponent(newName)
-  }
-
-  private func sanitize(filename: String, kind: Kind) -> String {
-    let invalid = CharacterSet(charactersIn: "/\0").union(.controlCharacters)
-    let scrubbed =
-      filename
-      .components(separatedBy: invalid).joined()
-      .trimmingCharacters(in: .whitespacesAndNewlines)
-    if scrubbed.isEmpty {
-      return "\(kind.rawValue).\(kind.fileExtension)"
-    }
-    return scrubbed
   }
 
   // MARK: - Filesystem helpers
