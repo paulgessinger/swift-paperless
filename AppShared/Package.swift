@@ -22,13 +22,9 @@ let package = Package(
     .package(path: "../DataModel"),
     .package(path: "../Networking"),
     .package(url: "https://github.com/kean/Nuke", .upToNextMajor(from: "12.0.0")),
-    .package(
-      url: "https://github.com/gonzalezreal/swift-markdown-ui.git",
-      .upToNextMajor(from: "2.3.1")),
     .package(url: "https://github.com/groue/Semaphore", .upToNextMajor(from: "0.1.0")),
     .package(
       url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "1.0.0")),
-    .package(url: "https://github.com/markbattistella/BezelKit", .upToNextMajor(from: "4.1.1")),
     .package(
       url: "https://github.com/liamnichols/xcstrings-tool-plugin", .upToNextMajor(from: "1.2.0")),
   ],
@@ -41,11 +37,8 @@ let package = Package(
         .product(name: "Networking", package: "Networking"),
         .product(name: "Nuke", package: "Nuke"),
         .product(name: "NukeUI", package: "Nuke"),
-        .product(name: "NukeExtensions", package: "Nuke"),
-        .product(name: "MarkdownUI", package: "swift-markdown-ui"),
         .product(name: "Semaphore", package: "Semaphore"),
         .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-        .product(name: "BezelKit", package: "BezelKit"),
       ],
       resources: [
         .process("Resources/Localization")

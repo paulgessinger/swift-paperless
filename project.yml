@@ -37,18 +37,9 @@ packages:
   swift-markdown-ui:
     url: https://github.com/gonzalezreal/swift-markdown-ui.git
     majorVersion: 2.3.1
-  Semaphore:
-    url: https://github.com/groue/Semaphore
-    majorVersion: 0.1.0
-  swift-async-algorithms:
-    url: https://github.com/apple/swift-async-algorithms
-    majorVersion: 1.0.0
   BezelKit:
     url: https://github.com/markbattistella/BezelKit
     majorVersion: 4.1.1
-  swift-collections:
-    url: https://github.com/apple/swift-collections.git
-    majorVersion: 1.0.0
   xcstrings-tool-plugin:
     url: https://github.com/liamnichols/xcstrings-tool-plugin
     majorVersion: 1.2.0
@@ -75,14 +66,9 @@ targets:
       - package: Nuke
         product: Nuke
       - package: Nuke
-        product: NukeExtensions
-      - package: Nuke
         product: NukeUI
       - package: swift-markdown-ui
         product: MarkdownUI
-      - package: Semaphore
-      - package: swift-async-algorithms
-        product: AsyncAlgorithms
       - package: BezelKit
       - package: AppShared
       - package: Common
@@ -105,13 +91,6 @@ targets:
       - path: swift-paperless/PrivacyInfo.xcprivacy
     dependencies:
       - package: AppShared
-      - package: Nuke
-        product: NukeUI
-      - package: Semaphore
-      - package: swift-async-algorithms
-        product: AsyncAlgorithms
-      - package: Common
-      - package: DataModel
       - package: Networking
 
   swift-paperlessUITests:
