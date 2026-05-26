@@ -88,21 +88,10 @@ build os=default_os device=default_device: generate
 _test_swift package:
   swift test --package-path {{package}}
 
-# Runs on the iOS Simulator: swift-paperlessTests depends on AppShared, which is
-# iOS-only (it bundles SwiftUI/UIKit UI code), so it can't be built for "My Mac".
-test-xcode os=default_os device=default_device: generate
-  #!/bin/bash
-  set -e
-  set -o pipefail
-  set -x
-  xcodebuild test \
-    -scheme swift-paperlessTests \
-    -project ./swift-paperless.xcodeproj \
-    -destination "platform=iOS Simulator,OS={{os}},name={{device}}" \
-    -skipPackagePluginValidation -skipMacroValidation \
-    | xcbeautify
-
-test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") test-xcode
+# All unit tests live in the Common/DataModel/Networking package test targets,
+# which run natively on macOS via `swift test`. AppShared is iOS-only and has
+# no test target of its own.
+test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking")
 
 lint-format:
   find . -name '*.swift' \

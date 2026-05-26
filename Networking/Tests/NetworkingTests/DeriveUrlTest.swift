@@ -1,6 +1,7 @@
-import AppShared
 import Foundation
 import Testing
+
+@testable import Networking
 
 @Suite("DeriveUrl") struct DeriveUrlTests {
   @Test

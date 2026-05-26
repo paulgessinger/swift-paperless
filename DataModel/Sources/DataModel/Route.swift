@@ -1,11 +1,10 @@
 //
 //  Route.swift
-//  Common
+//  DataModel
 //
 //  Created by Paul Gessinger on 04.01.26.
 //
 
-import DataModel
 import Foundation
 
 public struct Route: Equatable, Sendable {

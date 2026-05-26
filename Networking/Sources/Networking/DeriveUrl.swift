@@ -12,7 +12,7 @@ public func deriveUrl(string value: String, suffix: String = "") throws(UrlError
     let scheme = matches.1
     let rest = matches.2
     if scheme != "http", scheme != "https" {
-      Logger.shared.error("Encountered invalid scheme \(scheme)")
+      Logger.networking.error("Encountered invalid scheme \(scheme)")
       throw .invalidScheme(String(scheme))
     }
     url = URL(string: "\(scheme)://\(rest)")
@@ -24,19 +24,19 @@ public func deriveUrl(string value: String, suffix: String = "") throws(UrlError
     var url = URL(
       string: url.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
   else {
-    Logger.shared.notice("Derived URL \(value) was invalid")
+    Logger.networking.notice("Derived URL \(value) was invalid")
     throw .other
   }
 
   let base = url
 
   guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-    Logger.shared.notice("Could not parse URL \(url) into components")
+    Logger.networking.notice("Could not parse URL \(url) into components")
     throw .cannotSplit
   }
 
   guard let host = components.host, !host.isEmpty else {
-    Logger.shared.error("URL \(url) had empty host")
+    Logger.networking.error("URL \(url) had empty host")
     throw .emptyHost
   }
 
@@ -47,7 +47,7 @@ public func deriveUrl(string value: String, suffix: String = "") throws(UrlError
     url = url.appending(component: suffix, directoryHint: .isDirectory)
   }
 
-  Logger.shared.notice("Derive URL: \(value) + \(suffix) -> \(url)")
+  Logger.networking.notice("Derive URL: \(value) + \(suffix) -> \(url)")
 
   return (base, url)
 }

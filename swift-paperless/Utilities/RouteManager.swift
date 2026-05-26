@@ -7,6 +7,7 @@
 
 import AppShared
 import Common
+import DataModel
 import SwiftUI
 
 /// Holds the route currently being processed by a scene. One instance per

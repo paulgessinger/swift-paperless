@@ -114,22 +114,6 @@ targets:
       - package: DataModel
       - package: Networking
 
-  swift-paperlessTests:
-    type: bundle.unit-test
-    platform: iOS
-    configFiles:
-      Debug: Config/Tests/UnitTests.xcconfig
-      Release: Config/Tests/UnitTests.xcconfig
-    sources:
-      - path: swift-paperlessTests
-    dependencies:
-      - package: AppShared
-      - package: Common
-      - package: DataModel
-      - package: Networking
-      - package: swift-async-algorithms
-        product: AsyncAlgorithms
-
   swift-paperlessUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -170,19 +154,6 @@ schemes:
         swift-paperless: all
     run:
       config: Debug
-    profile:
-      config: Release
-    archive:
-      config: Release
-
-  swift-paperlessTests:
-    build:
-      targets:
-        swift-paperlessTests: all
-    test:
-      config: Debug
-      targets:
-        - swift-paperlessTests
     profile:
       config: Release
     archive:

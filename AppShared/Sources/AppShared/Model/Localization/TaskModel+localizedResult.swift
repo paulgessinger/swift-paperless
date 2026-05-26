@@ -9,15 +9,14 @@ import DataModel
 
 extension PaperlessTask {
   public var localizedResult: String? {
-    guard let result else {
-      return nil
+    switch resultKind {
+    case .empty:
+      nil
+    case .duplicate(let fileName):
+      String(
+        localized: .tasks(.errorDuplicate(fileName ?? String(localized: .tasks(.unknownFileName)))))
+    case .raw(let message):
+      message
     }
-
-    if duplicateDocumentId != nil {
-      let fileName = taskFileName ?? String(localized: .tasks(.unknownFileName))
-      return String(localized: .tasks(.errorDuplicate(fileName)))
-    }
-
-    return String(stringLiteral: result)
   }
 }

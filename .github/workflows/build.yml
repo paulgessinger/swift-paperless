@@ -88,40 +88,6 @@ jobs:
       - name: Run ${{ matrix.package }} tests
         run: swift test --package-path ${{ matrix.package }} --jobs 4
 
-  test-xc:
-    runs-on: macos-26
-    name: "Xcode tests"
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Read Xcode version
-        id: xcode-version
-        run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
-
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "${{ steps.xcode-version.outputs.version }}"
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate project
-        run: xcodegen generate
-
-      - name: Run XCode tests
-        run: |
-          set -o pipefail
-          xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
-          xcodebuild test \
-            -scheme swift-paperlessTests \
-            -destination "platform=macOS,name=My Mac"\
-            -skipPackagePluginValidation -skipMacroValidation \
-            CODE_SIGN_IDENTITY="" \
-            | xcbeautify
-
-
   lint:
     runs-on: ubuntu-latest
     env:

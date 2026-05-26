@@ -8,6 +8,7 @@
 import AppShared
 import Combine
 import Common
+import DataModel
 import Networking
 import SwiftUI
 import os

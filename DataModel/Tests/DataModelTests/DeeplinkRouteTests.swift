@@ -5,11 +5,11 @@
 //  Created by Paul Gessinger on 04.01.26.
 //
 
-import AppShared
 import Common
-import DataModel
 import Foundation
 import Testing
+
+@testable import DataModel
 
 private func parseDate(_ value: String) throws -> Date {
   let formatter = DateFormatter()

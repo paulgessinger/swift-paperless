@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.01.26.
 //
 
+import DataModel
 import Foundation
 
 extension Route.ParseError: DisplayableError {
