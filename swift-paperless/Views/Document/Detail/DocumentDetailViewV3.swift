@@ -330,6 +330,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
   @State private var dragging = false
 
   @State private var showShareLinkSheet = false
+  @State private var sharedFile: NamedShareItem?
 
   @State private var safeAreaInsets = EdgeInsets()
   @State private var shareLinkUrl: URL?
@@ -686,9 +687,11 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
               }
 
               if case .loaded(url: let url, document: _) = viewModel.download {
-                NamedShareLink(
-                  url: url, name: viewModel.document.shareFilename(original: false)
-                ) {
+                Button {
+                  sharedFile = NamedShareItem(
+                    url: url,
+                    name: viewModel.document.shareFilename(original: false))
+                } label: {
                   Label(localized: .app(.shareSheet), systemImage: "square.and.arrow.down")
                 }
               }
@@ -702,6 +705,7 @@ struct DocumentDetailViewV3: DocumentDetailViewProtocol {
     .sheet(isPresented: $showShareLinkSheet) {
       ShareLinkView(document: viewModel.document)
     }
+    .namedShareSheet(item: $sharedFile)
 
     .sheet(isPresented: $showEditSheet) {
       editDetent = defaultEditDetent
