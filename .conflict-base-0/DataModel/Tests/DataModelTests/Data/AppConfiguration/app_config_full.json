@@ -1,0 +1,31 @@
+[
+  {
+    "id": 1,
+    "user_args": "--some-arg=value",
+    "barcode_tag_mapping": "PAPERLESS_ASN:{asn}",
+    "output_type": "pdf",
+    "pages": 100,
+    "language": "en",
+    "mode": "consume",
+    "skip_archive_file": "never",
+    "image_dpi": 300,
+    "unpaper_clean": "clean",
+    "deskew": true,
+    "rotate_pages": true,
+    "rotate_pages_threshold": 5.5,
+    "max_image_pixels": 50000000,
+    "color_conversion_strategy": "LeaveColorUnchanged",
+    "app_title": "Paperless-ngx",
+    "app_logo": "png",
+    "barcodes_enabled": true,
+    "barcode_enable_tiff_support": true,
+    "barcode_string": "PAPERLESS",
+    "barcode_retain_split_pages": true,
+    "barcode_enable_asn": true,
+    "barcode_asn_prefix": "ASN",
+    "barcode_upscale": 2.0,
+    "barcode_dpi": 600,
+    "barcode_max_pages": 50,
+    "barcode_enable_tag": true
+  }
+]

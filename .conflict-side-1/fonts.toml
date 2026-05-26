@@ -1,0 +1,6 @@
+# Screenshot framing font (not committed; use `swpngx fonts download`).
+# Open Sans variable font — https://fonts.google.com/specimen/Open+Sans (OFL-1.1)
+
+[open_sans]
+url = "https://github.com/googlefonts/opensans/raw/main/fonts/variable/OpenSans%5Bwdth,wght%5D.ttf"
+path = "fastlane/screenshots/OpenSans-VariableFont_wdth,wght.ttf"

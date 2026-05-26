@@ -1,0 +1,10 @@
+# Apple Product Bezels (DMG) used by `swpngx frames download`.
+# URLs are listed on https://developer.apple.com/design/resources/ (Product Bezels).
+
+[iphone_17]
+url = "https://devimages-cdn.apple.com/design/resources/download/Bezel-iPhone-17.dmg"
+filename = "Bezel-iPhone-17.dmg"
+
+[ipad_pro_m5]
+url = "https://devimages-cdn.apple.com/design/resources/download/Bezel-iPad-Pro-(M5).dmg"
+filename = "Bezel-iPad-Pro-(M5).dmg"

@@ -1,0 +1,30 @@
+# The Deliverfile allows you to store various App Store Connect metadata
+# For more information, check out the docs
+# https://docs.fastlane.tools/actions/deliver/
+
+metadata_path "fastlane/metadata"
+screenshots_path "fastlane/screenshots/framed"
+
+skip_binary_upload true
+
+# App version is set by `just deliver` from MARKETING_VERSION in Version.xcconfig.
+# overwrite_screenshots is passed on the CLI by `just deliver`.
+
+# What's New: single source in metadata/default/release_notes.txt (en-US does not
+# inherit default on App Store Connect, so we pass the same text for every locale).
+# Paths are relative to the repo root (same as metadata_path above); __FILE__ is
+# unreliable when Fastlane evals this file.
+metadata_dir = File.expand_path("fastlane/metadata")
+release_notes_path = File.join(metadata_dir, "default", "release_notes.txt")
+release_notes_text = File.read(release_notes_path).strip
+
+release_notes_by_locale = { "default" => release_notes_text, "en-US" => release_notes_text }
+Dir.foreach(metadata_dir) do |entry|
+  next if entry.start_with?(".")
+  next unless File.directory?(File.join(metadata_dir, entry))
+  next if entry == "review_information"
+
+  release_notes_by_locale[entry] = release_notes_text
+end
+
+release_notes(release_notes_by_locale)

@@ -1,0 +1,3 @@
+# Generated localization accessors must be public so the app target and the
+# ShareExtension (which both depend on AppShared) can use them.
+accessLevel: public

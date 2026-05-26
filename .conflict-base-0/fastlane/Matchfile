@@ -1,0 +1,7 @@
+git_url("git@github.com:paulgessinger/swift-paperless-match.git")
+
+storage_mode("git")
+
+type("appstore")
+
+app_identifier(["com.paulgessinger.swift-paperless", "com.paulgessinger.swift-paperless.ShareExtension"])

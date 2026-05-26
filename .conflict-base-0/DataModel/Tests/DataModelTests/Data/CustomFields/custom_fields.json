@@ -1,0 +1,132 @@
+{
+    "count": 10,
+    "next": null,
+    "previous": null,
+    "all": [
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1
+    ],
+    "results": [
+        {
+            "id": 10,
+            "name": "Custom select",
+            "data_type": "select",
+            "extra_data": {
+                "select_options": [
+                    {
+                        "label": "Option 1",
+                        "id": "9whg6VME2kWnDy9w"
+                    },
+                    {
+                        "label": "Option 2",
+                        "id": "VJc5Rk1yKQI95sFH"
+                    },
+                    {
+                        "label": "Option 3",
+                        "id": "nGAGi8292Tbzlwye"
+                    }
+                ],
+                "default_currency": null
+            },
+            "document_count": 1
+        },
+        {
+            "id": 9,
+            "name": "Custom doc link",
+            "data_type": "documentlink",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 3
+        },
+        {
+            "id": 8,
+            "name": "Custom url",
+            "data_type": "url",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        },
+        {
+            "id": 7,
+            "name": "Custom text",
+            "data_type": "string",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        },
+        {
+            "id": 6,
+            "name": "Money implicit currency",
+            "data_type": "monetary",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 1
+        },
+        {
+            "id": 5,
+            "name": "Custom money USD explicit",
+            "data_type": "monetary",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": "USD"
+            },
+            "document_count": 1
+        },
+        {
+            "id": 4,
+            "name": "Custom int",
+            "data_type": "integer",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        },
+        {
+            "id": 3,
+            "name": "Custom date",
+            "data_type": "date",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        },
+        {
+            "id": 2,
+            "name": "Custom bool",
+            "data_type": "boolean",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        },
+        {
+            "id": 1,
+            "name": "Custom float",
+            "data_type": "float",
+            "extra_data": {
+                "select_options": [],
+                "default_currency": null
+            },
+            "document_count": 0
+        }
+    ]
+}

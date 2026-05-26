@@ -1,0 +1,33 @@
+// ShareExtension (app extension) — common settings shared by Debug and Release.
+
+#include "../Shared/Version.xcconfig"
+
+PRODUCT_NAME = $(TARGET_NAME)
+PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.swift-paperless.ShareExtension
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+TARGETED_DEVICE_FAMILY = 1,2
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+SUPPORTS_MACCATALYST = YES
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO
+SKIP_INSTALL = YES
+
+CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements
+CODE_SIGN_IDENTITY = Apple Development
+CODE_SIGN_STYLE = Automatic
+PROVISIONING_PROFILE_SPECIFIER =
+
+ENABLE_APP_SANDBOX = YES
+ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES
+
+LOCALIZED_STRING_SWIFTUI_SUPPORT = NO
+SWIFT_EMIT_LOC_STRINGS = NO
+
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
+
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE = ShareExtension/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = Paperless
+INFOPLIST_KEY_NSHumanReadableCopyright =

@@ -1,0 +1,102 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "FEE3F56F",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "44.99",
+      "familyShareable" : false,
+      "internalID" : "6758055909",
+      "localizations" : [
+        {
+          "description" : "I may tell stories about you",
+          "displayName" : "Legendary generosity",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_xlarge",
+      "referenceName" : "Extra Large Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "17.99",
+      "familyShareable" : false,
+      "internalID" : "6758055862",
+      "localizations" : [
+        {
+          "description" : "You’re officially making my day",
+          "displayName" : "Above and beyond",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_large",
+      "referenceName" : "Large Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "8.99",
+      "familyShareable" : false,
+      "internalID" : "6758055854",
+      "localizations" : [
+        {
+          "description" : "This genuinely means a lot",
+          "displayName" : "Proper thank-you",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_medium",
+      "referenceName" : "Medium Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "6758055849",
+      "localizations" : [
+        {
+          "description" : "Keeps me pleasantly caffeinated",
+          "displayName" : "Coffee money",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tip_small",
+      "referenceName" : "Small Tip",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6448698521",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "ZHKJ4NHK6F",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 790623950.95388198,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

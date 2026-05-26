@@ -1,0 +1,57 @@
+// swift-paperless (main app) — common settings shared by Debug and Release.
+
+#include "../Shared/Version.xcconfig"
+
+PRODUCT_NAME = Paperless
+PRODUCT_BUNDLE_IDENTIFIER = com.paulgessinger.swift-paperless
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+MACOSX_DEPLOYMENT_TARGET = 14.0
+TARGETED_DEVICE_FAMILY = 1,2,6
+SDKROOT = auto
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+SUPPORTS_MACCATALYST = YES
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES
+
+CODE_SIGN_ENTITLEMENTS = swift-paperless/swift_paperless.entitlements
+CODE_SIGN_IDENTITY = Apple Development
+CODE_SIGN_STYLE = Automatic
+PROVISIONING_PROFILE_SPECIFIER =
+
+ENABLE_APP_SANDBOX = YES
+ENABLE_HARDENED_RUNTIME = YES
+ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES
+ENABLE_USER_SELECTED_FILES = readwrite
+REGISTER_APP_GROUPS = NO
+
+SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY = YES
+LOCALIZED_STRING_SWIFTUI_SUPPORT = NO
+SWIFT_EMIT_LOC_STRINGS = NO
+
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
+ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES
+
+DEVELOPMENT_ASSET_PATHS = "swift-paperless/Preview Content"
+
+LD_RUNPATH_SEARCH_PATHS = @executable_path/Frameworks
+LD_RUNPATH_SEARCH_PATHS[sdk=macosx*] = @executable_path/../Frameworks
+
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE = swift-paperless/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = Paperless
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.productivity
+INFOPLIST_KEY_NSCameraUsageDescription = Your camera is used to scan for ASNs.
+INFOPLIST_KEY_NSFaceIDUsageDescription = Protect access to documents in the app
+INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*] = YES
+INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*] = YES
+INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*] = YES
+INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*] = YES
+INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*] = YES
+INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*] = YES
+INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*] = UIStatusBarStyleDefault
+INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*] = UIStatusBarStyleDefault
+INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown

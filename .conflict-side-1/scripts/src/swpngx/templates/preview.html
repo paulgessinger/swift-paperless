@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_title }} - App Store Assets Preview</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #d2d2d7;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        header h1 .app-name {
+            color: #0071e3;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #f5f5f7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            transition: all 0.2s ease;
+        }
+        .tab-btn:hover {
+            background: #e8e8ed;
+        }
+        .tab-btn.active {
+            background: #0071e3;
+            color: #fff;
+        }
+        .locale-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .locale-panel h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #0071e3;
+        }
+        .metadata-section {
+            margin-bottom: 32px;
+        }
+        .metadata-item {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f5f5f7;
+            border-radius: 8px;
+            position: relative;
+        }
+        .metadata-item.fallback {
+            background: #fff9e6;
+            border-left: 4px solid #f5a623;
+        }
+        .metadata-item h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fallback-badge {
+            font-size: 10px;
+            font-weight: 500;
+            color: #b47d00;
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        .metadata-content {
+            font-size: 15px;
+            color: #1d1d1f;
+            white-space: pre-wrap;
+        }
+        .metadata-item.fallback .metadata-content {
+            color: #666;
+        }
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .screenshot-item {
+            background: #f5f5f7;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .screenshot-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .screenshot-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+        }
+        .screenshot-label {
+            padding: 12px;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+        .screenshot-label strong {
+            font-weight: 600;
+        }
+        .screenshot-label span {
+            color: #86868b;
+        }
+        .no-data {
+            color: #86868b;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+        /* Modal for full-size images */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+        .modal img {
+            max-width: 95%;
+            max-height: 95%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="app-name">{{ app_title }}</span> – App Store Assets Preview</h1>
+        </header>
+
+        <div class="tabs">
+            {% for locale in locales %}
+            <button class="tab-btn {{ 'active' if loop.first else '' }}" data-locale="{{ locale.code }}">{{ locale.display_name }}</button>
+            {% endfor %}
+        </div>
+
+        {% for locale in locales %}
+        <div class="locale-panel" data-locale="{{ locale.code }}" style="display: {{ 'block' if loop.first else 'none' }}">
+            <h2>Metadata</h2>
+            <div class="metadata-section">
+                {% if locale.metadata %}
+                    {% for item in locale.metadata %}
+                    <div class="metadata-item {{ 'fallback' if item.is_fallback else '' }}">
+                        <h3>{{ item.label }}{% if item.is_fallback %}<span class="fallback-badge">Not translated</span>{% endif %}</h3>
+                        <div class="metadata-content">{{ item.content }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p class="no-data">No metadata available</p>
+                {% endif %}
+            </div>
+            <h2>Screenshots</h2>
+            <div class="screenshots-grid">
+                {% if locale.screenshots %}
+                    {% for screenshot in locale.screenshots %}
+                    <div class="screenshot-item">
+                        <img src="{{ screenshot.src }}" alt="{{ screenshot.name }}" loading="lazy">
+                        <div class="screenshot-label">
+                            <strong>{{ screenshot.device_name }}</strong><br>
+                            <span>{{ screenshot.screen_name }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p class="no-data">No screenshots available</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="modal" id="imageModal">
+        <span class="modal-close">&times;</span>
+        <img id="modalImage" src="" alt="">
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const locale = btn.dataset.locale;
+
+                // Update active tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Show corresponding panel
+                document.querySelectorAll('.locale-panel').forEach(panel => {
+                    panel.style.display = panel.dataset.locale === locale ? 'block' : 'none';
+                });
+            });
+        });
+
+        // Image modal
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+
+        document.querySelectorAll('.screenshot-item img').forEach(img => {
+            img.addEventListener('click', () => {
+                modal.style.display = 'block';
+                modalImg.src = img.src;
+            });
+        });
+
+        modal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

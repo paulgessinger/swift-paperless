@@ -1,0 +1,100 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.macos }}
+    strategy:
+      matrix:
+        include:
+          - macos: macos-26
+            ios: "26.2"
+            xcode: default
+      fail-fast: false
+    name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Xcode version
+        id: xcode-version
+        run: |
+          if [ "${{ matrix.xcode }}" = "default" ]; then
+            echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ matrix.xcode }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "${{ steps.xcode-version.outputs.version }}"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build application
+        run: |
+          set -o pipefail
+          xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
+          xcodebuild build \
+            -scheme swift-paperless \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=${{ matrix.ios }}" \
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify
+
+  test:
+    name: "swift tests ${{ matrix.package }}"
+    runs-on: macos-26
+
+    strategy:
+      matrix:
+        package:
+          - DataModel
+          - Common
+          - Networking
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Xcode version
+        id: xcode-version
+        run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "${{ steps.xcode-version.outputs.version }}"
+
+      - name: Show resolved dependencies
+        run: swift package show-dependencies --package-path ${{ matrix.package }}
+
+      - name: Run ${{ matrix.package }} tests
+        run: swift test --package-path ${{ matrix.package }} --jobs 4
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: j178/prek-action@v2
+        with:
+          prek-version: '0.3.x'

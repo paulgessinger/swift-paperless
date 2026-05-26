@@ -1,0 +1,153 @@
+name: swift-paperless
+
+options:
+  createIntermediateGroups: true
+  groupSortPosition: top
+  # All build settings live in Config/*.xcconfig; do not let XcodeGen inject its
+  # own preset defaults that would override the xcconfig.
+  settingPresets: none
+  generateEmptyDirectories: true
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Config/Shared/Debug.xcconfig
+  Release: Config/Shared/Release.xcconfig
+
+settings: {}
+
+fileGroups:
+  - Config
+  - project.yml
+
+packages:
+  Common:
+    path: Common
+  DataModel:
+    path: DataModel
+  Networking:
+    path: Networking
+  AppShared:
+    path: AppShared
+  Nuke:
+    url: https://github.com/kean/Nuke
+    majorVersion: 12.0.0
+  swift-markdown-ui:
+    url: https://github.com/gonzalezreal/swift-markdown-ui.git
+    majorVersion: 2.3.1
+  BezelKit:
+    url: https://github.com/markbattistella/BezelKit
+    majorVersion: 4.1.1
+  xcstrings-tool-plugin:
+    url: https://github.com/liamnichols/xcstrings-tool-plugin
+    majorVersion: 1.2.0
+
+targets:
+
+  swift-paperless:
+    type: application
+    platform: iOS
+    configFiles:
+      Debug: Config/App/App-Debug.xcconfig
+      Release: Config/App/App-Release.xcconfig
+    sources:
+      - path: swift-paperless
+        excludes:
+          - "Info.plist"
+      # libraries.md is bundled as a resource but lives outside the app folder.
+      - path: docs/libraries.md
+        buildPhase: resources
+    dependencies:
+      - target: ShareExtension
+        embed: true
+        codeSignOnCopy: true
+      - package: Nuke
+        product: Nuke
+      - package: Nuke
+        product: NukeUI
+      - package: swift-markdown-ui
+        product: MarkdownUI
+      - package: BezelKit
+      - package: AppShared
+      - package: Common
+      - package: DataModel
+      - package: Networking
+
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    configFiles:
+      Debug: Config/ShareExtension/ShareExtension-Debug.xcconfig
+      Release: Config/ShareExtension/ShareExtension-Release.xcconfig
+    sources:
+      - path: ShareExtension
+        excludes:
+          - "Info.plist"
+      # Shared image/color assets are looked up from the running bundle, so the
+      # extension needs its own copy of the catalog (shared as target membership).
+      - path: swift-paperless/Assets.xcassets
+      - path: swift-paperless/PrivacyInfo.xcprivacy
+    dependencies:
+      - package: AppShared
+      - package: Networking
+
+  swift-paperlessUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    configFiles:
+      Debug: Config/Tests/UITests.xcconfig
+      Release: Config/Tests/UITests.xcconfig
+    sources:
+      - path: swift-paperlessUITests
+    dependencies:
+      - target: swift-paperless
+      - package: AppShared
+
+schemes:
+
+  swift-paperless:
+    build:
+      targets:
+        swift-paperless: all
+    run:
+      config: Debug
+      # LLDB attach is slow for this modular app; use Debug → Attach to Process when needed.
+      debugEnabled: false
+      environmentVariables:
+        TASK_POLLING_INTERVAL: "30"
+      storeKitConfiguration: swift-paperless/Testing.storekit
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true
+
+  ShareExtension:
+    build:
+      targets:
+        ShareExtension: all
+        swift-paperless: all
+    run:
+      config: Debug
+      debugEnabled: false
+    profile:
+      config: Release
+    archive:
+      config: Release
+
+  swift-paperlessUITests:
+    build:
+      targets:
+        swift-paperlessUITests: all
+    test:
+      config: Debug
+      targets:
+        - swift-paperlessUITests
+    archive:
+      config: Release

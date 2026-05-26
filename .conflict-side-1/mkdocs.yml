@@ -1,0 +1,73 @@
+site_name: Swift Paperless
+site_url: https://swift-paperless.gessinger.dev
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme)"
+
+    # Palette for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+
+    # Palette for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+
+
+repo_url: https://github.com/paulgessinger/swift-paperless
+
+plugins:
+  - privacy
+  - exclude:
+      glob:
+        - "requirements.*"
+  - literate-nav
+  - redirects:
+      redirect_maps:
+        "common-issues/invalid-certificate.md": "common_issues/certificates.md"
+        "common_issues/invalid-certificate.md": "common_issues/certificates.md"
+
+        "common_issues/forbidden.md": "common_issues/permissions.md"
+        "common-issues/forbidden.md": "common_issues/permissions.md"
+        "common_issues/insufficient-permissions.md": "common_issues/permissions.md"
+
+        "common-issues/local-network-denied.md": "common_issues/local-network-denied.md"
+
+
+markdown_extensions:
+  - pymdownx.snippets:
+  - attr_list
+  - admonition
+
+extra_css:
+  - extra.css
+
+nav:
+  - index.md
+  - Release notes:
+      - release_notes/v1.9.1.md
+      - release_notes/v1.9.0.md
+      - release_notes/v1.8.0.md
+      - release_notes/v1.7.2.md
+      - release_notes/v1.7.1.md
+      - release_notes/v1.7.0.md
+      - release_notes/v1.6.1.md
+      - release_notes/v1.6.0.md
+      - release_notes/v1.5.1.md
+      - release_notes/v1.5.0.md
+      - release_notes/v1.4.0.md
+      - release_notes/v1.3.0.md
+      - release_notes/v1.2.0.md
+  - deeplinks.md
+  - oidc.md
+  - Common Issues:
+      - common_issues/permissions.md
+
+      - common_issues/local-network-denied.md
+      - common_issues/certificates.md
+      - common_issues/supported-versions.md
+  - privacy.md
+  - libraries.md

@@ -1,0 +1,142 @@
+{
+    "original_checksum": "8e638f024cd9f14206dc63821f412844",
+    "original_size": 49036,
+    "original_mime_type": "application/pdf",
+    "media_filename": "blurp/2024/12/2024-12-31--Bank somehing something.pdf",
+    "has_archive_version": true,
+    "original_metadata": [
+        {
+            "namespace": "http://ns.adobe.com/pdf/1.3/",
+            "prefix": "pdf",
+            "key": "Producer",
+            "value": "ISIS Papyrus Software AG  "
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "CreatorTool",
+            "value": "Papyrus Server"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "CreateDate",
+            "value": "2025-01-02T00:15:04+01:00"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "ModifyDate",
+            "value": "2025-01-02T00:15:04+01:00"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "MetadataDate",
+            "value": "2025-01-02T00:15:04+01:00"
+        },
+        {
+            "namespace": "http://purl.org/dc/elements/1.1/",
+            "prefix": "dc",
+            "key": "format",
+            "value": "application/pdf"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/mm/",
+            "prefix": "xmpMM",
+            "key": "DocumentID",
+            "value": "uuid:5e77cc15-8398-4d8e-8d5e-b0eeb5030be9"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/mm/",
+            "prefix": "xmpMM",
+            "key": "InstanceID",
+            "value": "uuid:554dda4b-0064-4c0c-b3ca-84d37980994a"
+        },
+        {
+            "namespace": "http://www.aiim.org/pdfa/ns/id/",
+            "prefix": "pdfaid",
+            "key": "part",
+            "value": "1"
+        },
+        {
+            "namespace": "http://www.aiim.org/pdfa/ns/id/",
+            "prefix": "pdfaid",
+            "key": "conformance",
+            "value": "A"
+        },
+        {
+            "namespace": "http://www.aiim.org/pdfa/ns/extension/",
+            "prefix": "pdfaExtension",
+            "key": "schemas",
+            "value": "{'\\n            '}"
+        }
+    ],
+    "archive_checksum": "04d626c75b075a2a88e896e46420044e",
+    "archive_media_filename": "blurp/2024/12/2024-12-31--Bank Statement.pdf",
+    "original_filename": "E-Post_.pdf",
+    "archive_size": 24376,
+    "archive_metadata": [
+        {
+            "namespace": "http://ns.adobe.com/pdf/1.3/",
+            "prefix": "pdf",
+            "key": "Producer",
+            "value": "pikepdf 9.3.0"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "ModifyDate",
+            "value": "2025-01-03T09:44:56+00:00"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "CreateDate",
+            "value": "2025-01-03T10:44:56+01:00"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "CreatorTool",
+            "value": "OCRmyPDF 16.5.0 / Tesseract OCR-hOCR 5.3.0"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/mm/",
+            "prefix": "xmpMM",
+            "key": "DocumentID",
+            "value": "uuid:f0863c7e-01d3-11fb-0000-dfbe6596aee4"
+        },
+        {
+            "namespace": "http://purl.org/dc/elements/1.1/",
+            "prefix": "dc",
+            "key": "format",
+            "value": "application/pdf"
+        },
+        {
+            "namespace": "http://www.aiim.org/pdfa/ns/id/",
+            "prefix": "pdfaid",
+            "key": "part",
+            "value": "2"
+        },
+        {
+            "namespace": "http://www.aiim.org/pdfa/ns/id/",
+            "prefix": "pdfaid",
+            "key": "conformance",
+            "value": "B"
+        },
+        {
+            "namespace": "http://purl.org/dc/elements/1.1/",
+            "prefix": "dc",
+            "key": "creator",
+            "value": "None"
+        },
+        {
+            "namespace": "http://ns.adobe.com/xap/1.0/",
+            "prefix": "xmp",
+            "key": "MetadataDate",
+            "value": "2025-01-03T09:44:56.343459+00:00"
+        }
+    ],
+    "lang": "en"
+}
