@@ -251,7 +251,6 @@ struct SettingsView: View {
       .sheet(isPresented: $showLoginSheet) {
         LoginView(connectionManager: connectionManager, initial: false)
           .environmentObject(errorController)
-          .errorOverlay(errorController: errorController, offset: 15)
       }
 
       .toolbar {
@@ -277,6 +276,5 @@ struct SettingsView: View {
     SettingsView()
       .environmentObject(store)
       .environmentObject(connectionManager)
-      .errorOverlay(errorController: errorController)
   }
 }

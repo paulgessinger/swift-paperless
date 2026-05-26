@@ -34,8 +34,14 @@ private struct ConnectionSelectionViews: View {
       } label: {
         let urlLabel = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
         let text = conn.nonEmptyFriendlyName.map { "\($0) (\(urlLabel))" } ?? urlLabel
-        // Bit of a hack to have by-character line breaks
-        Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+        HStack {
+          // Bit of a hack to have by-character line breaks
+          Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+          if connectionManager.needsAuth(for: conn.id) {
+            Image(systemName: "lock.trianglebadge.exclamationmark")
+              .foregroundStyle(.orange)
+          }
+        }
       }
       .disabled(conn.id == connectionManager.activeConnectionId)
     }
@@ -184,6 +190,20 @@ public struct ConnectionsView: View {
           showExtraHeader = true
         }
         .tint(.primary)
+
+        if let activeId = connectionManager.activeConnectionId,
+          connectionManager.needsAuth(for: activeId)
+        {
+          Button {
+            connectionManager.requestReauth(for: activeId)
+          } label: {
+            Label(
+              String(localized: .app(.connectionStatusReauthAction)),
+              systemImage: "lock.trianglebadge.exclamationmark")
+          }
+          .foregroundStyle(.orange)
+          .bold()
+        }
 
         Button(role: .destructive) {
           logoutRequested = true

@@ -109,7 +109,6 @@ struct DocumentMetadataView: View {
       }
     }
 
-    .errorOverlay(errorController: errorController, offset: 20)
   }
 }
 

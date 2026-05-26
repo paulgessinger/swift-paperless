@@ -74,7 +74,6 @@ private struct CreateNoteView: View {
       .navigationTitle(.documentMetadata(.noteCreate))
       .navigationBarTitleDisplayMode(.inline)
     }
-    .errorOverlay(errorController: errorController, offset: 20)
     .task {
       focused = true
     }
@@ -203,8 +202,6 @@ public struct DocumentNoteView: View {
         CreateNoteView(document: $document, notes: $notes)
       }
     }
-
-    .errorOverlay(errorController: errorController, offset: 20)
 
     .task {
       guard canViewNotes else { return }

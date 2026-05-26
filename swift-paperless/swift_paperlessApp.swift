@@ -242,15 +242,13 @@ struct MainView: View {
       ZStack {
         if manager.connection != nil, storeReady {
           DocumentView(showSettings: $showSettings)
-            .errorOverlay(errorController: errorController)
             .environmentObject(store!)
             .environmentObject(manager)
-            .safeAreaInset(edge: .top, spacing: 0) {
-              ConnectionStatusBanner()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+              NeedsAuthBanner()
                 .environmentObject(manager)
                 .environment(networkMonitor)
             }
-
             .overlay {
               if AppSettings.shared.enableBiometricAppLock,
                 biometricLockManager.lockState == .locked || scenePhase == .inactive
@@ -282,7 +280,6 @@ struct MainView: View {
 
     .fullScreenCover(isPresented: $showLoginScreen) {
       LoginView(connectionManager: manager)
-        .errorOverlay(errorController: errorController)
         .environmentObject(errorController)
         .interactiveDismissDisabled()
     }
@@ -370,6 +367,10 @@ struct MainView: View {
 
     .onOpenURL(perform: handleUrlOpen)
     .environment(routeManager)
+    .appOverlays(
+      errorController: errorController,
+      networkMonitor: networkMonitor
+    )
   }
 }
 
