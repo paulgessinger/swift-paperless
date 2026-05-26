@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 16.07.23.
 //
 
+import AppShared
 import Combine
 import DataModel
 import Foundation
@@ -142,7 +143,7 @@ struct DocumentList: View {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
             } label: {
-              Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
+              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
             }
             .tint(.accentColor)
           }
@@ -153,7 +154,7 @@ struct DocumentList: View {
             Button(role: documentDeleteConfirmation ? .none : .destructive) {
               onDeleteButtonPressed()
             } label: {
-              Label(String(localized: .localizable(.delete)), systemImage: "trash")
+              Label(String(localized: .app(.delete)), systemImage: "trash")
             }
             .tint(.red)
           }
@@ -164,14 +165,14 @@ struct DocumentList: View {
             store.preloadThumbnail(for: document)
             onSelect(document)
           } label: {
-            Label(String(localized: .localizable(.edit)), systemImage: "pencil")
+            Label(String(localized: .app(.edit)), systemImage: "pencil")
           }
 
           if canRemoveInboxTags {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
             } label: {
-              Label(String(localized: .localizable(.tagsRemoveInbox)), systemImage: "tray")
+              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
             }
           }
 
@@ -179,7 +180,7 @@ struct DocumentList: View {
             Button(role: .destructive) {
               onDeleteButtonPressed()
             } label: {
-              Label(String(localized: .localizable(.delete)), systemImage: "trash")
+              Label(String(localized: .app(.delete)), systemImage: "trash")
             }
           }
 
@@ -338,7 +339,7 @@ struct DocumentList: View {
     // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
     .confirmationDialog(
       unwrapping: $documentToDelete,
-      title: { _ in String(localized: .localizable(.documentDelete)) },
+      title: { _ in String(localized: .app(.documentDelete)) },
       actions: { $item in
         let document = item
         Button(role: .destructive) {
@@ -351,17 +352,17 @@ struct DocumentList: View {
             }
           }
         } label: {
-          Text(.localizable(.documentDelete))
+          Text(.app(.documentDelete))
         }
         Button(role: .cancel) {
           documentToDelete = nil
         } label: {
-          Text(.localizable(.cancel))
+          Text(.app(.cancel))
         }
       },
       message: { $item in
         let document = item
-        Text(.localizable(.deleteDocumentName(document.title)))
+        Text(.app(.deleteDocumentName(document.title)))
       })
   }
 }
@@ -375,10 +376,10 @@ private struct NoDocumentsView: View, Equatable {
   var body: some View {
     ScrollView(.vertical) {
       ContentUnavailableView {
-        Label(String(localized: .localizable(.noDocuments)), systemImage: "tray.fill")
+        Label(String(localized: .app(.noDocuments)), systemImage: "tray.fill")
       } description: {
         if filtering {
-          Text(.localizable(.noDocumentsDescriptionFilter))
+          Text(.app(.noDocumentsDescriptionFilter))
         }
       }
 
@@ -398,7 +399,7 @@ private struct DocumentCountPill: View {
 
   var body: some View {
     if let total, total > 0 {
-      Text(.localizable(.documentCountIndicator(Int(total))))
+      Text(.app(.documentCountIndicator(Int(total))))
         .font(.caption2.monospacedDigit())
         .fontWeight(.semibold)
         .padding(.horizontal, 10)
@@ -416,9 +417,9 @@ private struct NoPermissionsViewDocument: View {
   var body: some View {
     ScrollView(.vertical) {
       ContentUnavailableView {
-        Label(String(localized: .localizable(.requestErrorForbidden)), systemImage: "lock.fill")
+        Label(String(localized: .app(.requestErrorForbidden)), systemImage: "lock.fill")
       } description: {
-        Text(.localizable(.documentsNoPermissionsDescription))
+        Text(.app(.documentsNoPermissionsDescription))
       }
       .padding(.top, 40)
     }

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 05.01.26.
 //
 
+import AppShared
 import UIKit
 
 extension NSNotification.Name {

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.09.23.
 //
 
+import AppShared
 import MarkdownUI
 import SwiftUI
 
@@ -22,7 +23,7 @@ struct PrivacyView: View {
     }
     .overlay {
       if text == nil {
-        ProgressView(String(localized: .localizable(.loading)))
+        ProgressView(String(localized: .app(.loading)))
       }
     }
     .task {

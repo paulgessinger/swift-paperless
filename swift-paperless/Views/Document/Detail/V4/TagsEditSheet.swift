@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 21.02.26.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -56,7 +57,7 @@ struct TagsEditSheet: View {
           }
         }
       })
-      .navigationTitle(Text(.localizable(.tagCreateTitle)))
+      .navigationTitle(Text(.app(.tagCreateTitle)))
       .navigationBarTitleDisplayMode(.inline)
     }
   }
@@ -189,7 +190,7 @@ struct TagsEditSheet: View {
             VStack(alignment: .leading, spacing: 0) {
               if tagIds.isEmpty {
                 CustomSectionRow {
-                  Text(.localizable(.noTagsSelected))
+                  Text(.app(.noTagsSelected))
                     .foregroundStyle(.secondary)
                     .transition(.opacity)
                 }
@@ -272,7 +273,7 @@ struct TagsEditSheet: View {
                       HStack(alignment: .firstTextBaseline) {
                         Image(systemName: "plus.circle.fill")
                           .foregroundStyle(.secondary)
-                        Text(.localizable(.quickAdd(trimmedSearch)))
+                        Text(.app(.quickAdd(trimmedSearch)))
                           .foregroundStyle(.primary)
                           .multilineTextAlignment(.leading)
                           .frame(maxWidth: .infinity, alignment: .leading)
@@ -293,7 +294,7 @@ struct TagsEditSheet: View {
         text: $searchText, isPresented: $searchIsActive,
         placement: .navigationBarDrawer(displayMode: .always)
       )
-      .navigationTitle(.localizable(.tags))
+      .navigationTitle(.app(.tags))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -303,7 +304,7 @@ struct TagsEditSheet: View {
           Button {
             showCreateTag = true
           } label: {
-            Label(String(localized: .localizable(.tagAdd)), systemImage: "plus")
+            Label(String(localized: .app(.tagAdd)), systemImage: "plus")
           }
           .disabled(!store.permissions.test(.add, for: .tag))
         }

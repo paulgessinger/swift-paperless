@@ -5,7 +5,9 @@
 //  Created by Paul Gessinger on 05.01.26.
 //
 
+import AppShared
 import Common
+import DataModel
 import SwiftUI
 
 /// Holds the route currently being processed by a scene. One instance per

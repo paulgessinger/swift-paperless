@@ -5,8 +5,10 @@
 //  Created by Paul Gessinger on 13.02.23.
 //
 
+import AppShared
 import Combine
 import Common
+import DataModel
 import Networking
 import SwiftUI
 import os
@@ -193,7 +195,7 @@ struct MainView: View {
   private func setupQuickActions() {
     let inboxAction = UIApplicationShortcutItem(
       type: "com.paulgessinger.swift-paperless.ActionScan",
-      localizedTitle: String(localized: .localizable(.scanDocument)),
+      localizedTitle: String(localized: .app(.scanDocument)),
       localizedSubtitle: nil,
       icon: UIApplicationShortcutIcon(systemImageName: "document.viewfinder"),
       userInfo: ["url": "x-paperless://v1/scan" as any NSSecureCoding]

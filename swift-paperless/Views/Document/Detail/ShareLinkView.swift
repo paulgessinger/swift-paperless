@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.01.26.
 //
 
+import AppShared
 import Common
 import DataModel
 import Networking
@@ -122,7 +123,7 @@ struct ShareLinkView: View {
         }
 
         ToolbarItem {
-          Button(.localizable(.add), systemImage: "plus") {
+          Button(.app(.add), systemImage: "plus") {
             showCreate = true
           }
           .disabled(!canAdd)

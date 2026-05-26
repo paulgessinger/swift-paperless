@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 24.08.25.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -50,7 +51,7 @@ private struct OpView: View {
             CustomFieldQueryDisplayView(query: args[idx])
           }
         } else {
-          Text(.localizable(.none))
+          Text(.app(.none))
             .italic()
             .foregroundStyle(.secondary)
         }

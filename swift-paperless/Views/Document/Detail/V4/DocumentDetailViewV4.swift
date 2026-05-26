@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 21.02.26.
 //
 
+import AppShared
 import Common
 import DataModel
 import Networking
@@ -161,7 +162,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let document = viewModel.document
     let canChange = store.userCanChange(document: document)
     let asnLabel: AspectLabel =
-      document.asn.map { .text(String(localized: .localizable(.documentAsn($0)))) } ?? .notAssigned
+      document.asn.map { .text(String(localized: .app(.documentAsn($0)))) } ?? .notAssigned
     // Inspector lays out one column so each aspect spans full width;
     // iPhone keeps the two-column pill layout.
     let columns: [GridItem] =
@@ -173,7 +174,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       ]
     return LazyVGrid(columns: columns, spacing: 12) {
       EditableAspect(
-        title: .localizable(.asn),
+        title: .app(.asn),
         label: asnLabel,
         systemImage: "qrcode",
         action: { activeFieldEdit = .asn },
@@ -192,7 +193,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
 
       EditableAspect(
-        title: .localizable(.correspondent),
+        title: .app(.correspondent),
         label: aspectLabel(id: document.correspondent, in: store.correspondents),
         systemImage: "person.fill",
         action: { activeFieldEdit = .correspondent },
@@ -206,7 +207,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
 
       EditableAspect(
-        title: .localizable(.documentType),
+        title: .app(.documentType),
         label: aspectLabel(id: document.documentType, in: store.documentTypes),
         systemImage: "doc.fill",
         action: { activeFieldEdit = .documentType },
@@ -220,7 +221,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
 
       EditableAspect(
-        title: .localizable(.documentEditCreatedDateLabel),
+        title: .app(.documentEditCreatedDateLabel),
         label: .text(DocumentCell.dateFormatter.string(from: document.created)),
         systemImage: "calendar",
         action: { activeFieldEdit = .date },
@@ -239,7 +240,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
 
       EditableAspect(
-        title: .localizable(.storagePath),
+        title: .app(.storagePath),
         label: aspectLabel(id: document.storagePath, in: store.storagePaths),
         systemImage: "archivebox.fill",
         action: { activeFieldEdit = .storagePath },
@@ -253,7 +254,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
 
       EditableAspect(
-        title: .localizable(.sortOrderOwner),
+        title: .app(.sortOrderOwner),
         label: aspectLabel(
           id: { if case .user(let id) = document.owner { return id } else { return nil } }(),
           in: store.users
@@ -294,11 +295,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     if !store.userCanChange(document: document) {
       let reason: LocalizedStringResource =
         if !store.permissions.test(.change, for: .document) {
-          .localizable(.documentReadOnlyNoGlobalPermission)
+          .app(.documentReadOnlyNoGlobalPermission)
         } else if case .user(let ownerId) = document.owner, let owner = store.users[ownerId] {
-          .localizable(.documentReadOnlyOwnedBy(owner.username))
+          .app(.documentReadOnlyOwnedBy(owner.username))
         } else {
-          .localizable(.documentReadOnlyNotOwner)
+          .app(.documentReadOnlyNotOwner)
         }
 
       Label {
@@ -423,7 +424,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     let canDelete = store.userCanDelete(document: viewModel.document)
 
     BottomBarButton(
-      label: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+      label: deleted ? .app(.documentDeleted) : .app(.delete),
       image: deleted ? "checkmark.circle.fill" : canDelete ? "trash" : "trash.slash",
       action: {
         if appSettings.documentDeleteConfirmation {
@@ -438,14 +439,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .disabled(!canDelete)
     .opacity(1)
     .confirmationDialog(
-      String(localized: .localizable(.confirmationPromptTitle)),
+      String(localized: .app(.confirmationPromptTitle)),
       isPresented: $showDeleteConfirmation,
       titleVisibility: .visible
     ) {
-      Button(String(localized: .localizable(.delete)), role: .destructive) {
+      Button(String(localized: .app(.delete)), role: .destructive) {
         deleteDocument()
       }
-      Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+      Button(String(localized: .app(.cancel)), role: .cancel) {}
     }
   }
 
@@ -475,12 +476,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     Button {
       activeSheet = .shareLink
     } label: {
-      Label(localized: .localizable(.shareLink), systemImage: "link")
+      Label(localized: .app(.shareLink), systemImage: "link")
     }
 
     if let url = viewModel.documentUrl {
       ShareLink(item: url) {
-        Label(localized: .localizable(.documentLink), systemImage: "safari")
+        Label(localized: .app(.documentLink), systemImage: "safari")
       }
     }
 
@@ -489,17 +490,17 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
       if let url = deepLinks.withoutServer?.url {
         ShareLink(item: url) {
-          Text(.localizable(.documentDeepLinkWithoutBackend))
+          Text(.app(.documentDeepLinkWithoutBackend))
         }
       }
 
       if let url = deepLinks.withServer?.url {
         ShareLink(item: url) {
-          Text(.localizable(.documentDeepLinkWithBackend))
+          Text(.app(.documentDeepLinkWithBackend))
         }
       }
     } label: {
-      Label(localized: .localizable(.documentDeepLink), systemImage: "app")
+      Label(localized: .app(.documentDeepLink), systemImage: "app")
     }
 
     Divider()
@@ -511,16 +512,16 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
     Menu {
       ShareLink(item: archiveURL ?? URL(filePath: "/")) {
-        Label(localized: .localizable(.shareArchive), systemImage: "doc.zipper")
+        Label(localized: .app(.shareArchive), systemImage: "doc.zipper")
       }
       .disabled(archiveURL == nil)
 
       ShareLink(item: originalURL ?? URL(filePath: "/")) {
-        Label(localized: .localizable(.shareOriginal), systemImage: "doc")
+        Label(localized: .app(.shareOriginal), systemImage: "doc")
       }
       .disabled(originalURL == nil)
     } label: {
-      Label(localized: .localizable(.shareDocument), systemImage: "square.and.arrow.up")
+      Label(localized: .app(.shareDocument), systemImage: "square.and.arrow.up")
     }
   }
 
@@ -579,7 +580,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .animation(.spring(duration: 0.25), value: viewModel.document)
 
       VStack(alignment: .leading, spacing: 6) {
-        Text(.localizable(.tags))
+        Text(.app(.tags))
           .font(.caption2)
           .fontWeight(.semibold)
           .textCase(.uppercase)
@@ -623,7 +624,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           onTap: previewEnabled ? { showPreview = true } : nil
         )
         .frame(maxWidth: .infinity)
-        .accessibilityLabel(.localizable(.documentOpen))
+        .accessibilityLabel(.app(.documentOpen))
 
         editPanel
           .padding(.horizontal)
@@ -703,7 +704,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         compactBody
       }
     }
-    .navigationTitle(String(localized: .localizable(.details)))
+    .navigationTitle(String(localized: .app(.details)))
     .navigationBarTitleDisplayMode(.inline)
 
     .toolbar {
@@ -711,7 +712,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         Menu {
           shareMenuContent
         } label: {
-          Label(localized: .localizable(.share), systemImage: "square.and.arrow.up")
+          Label(localized: .app(.share), systemImage: "square.and.arrow.up")
             .labelStyle(.iconOnly)
         }
       }
@@ -720,7 +721,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           Button {
             showEditInspector.toggle()
           } label: {
-            Label(localized: .localizable(.edit), systemImage: "sidebar.right")
+            Label(localized: .app(.edit), systemImage: "sidebar.right")
               .labelStyle(.iconOnly)
           }
         }
@@ -867,19 +868,19 @@ extension Tag {
 #Preview("EditableAspect", traits: .sizeThatFitsLayout) {
   VStack(alignment: .leading, spacing: 12) {
     EditableAspect(
-      title: .localizable(.asn),
-      label: .text(String(localized: .localizable(.documentAsn(42)))), systemImage: "qrcode")
+      title: .app(.asn),
+      label: .text(String(localized: .app(.documentAsn(42)))), systemImage: "qrcode")
     EditableAspect(
-      title: .localizable(.correspondent),
+      title: .app(.correspondent),
       label: .text("Preview Correspondent"), systemImage: "person.fill")
     EditableAspect(
-      title: .localizable(.documentType),
+      title: .app(.documentType),
       label: .text("Preview Type"), systemImage: "doc.fill")
     EditableAspect(
-      title: .localizable(.sortOrderOwner),
+      title: .app(.sortOrderOwner),
       label: .notAssigned, systemImage: "person.badge.key.fill")
     EditableAspect(
-      title: .localizable(.sortOrderOwner),
+      title: .app(.sortOrderOwner),
       label: .private, systemImage: "person.badge.key.fill")
 
     DocumentTagsSection(

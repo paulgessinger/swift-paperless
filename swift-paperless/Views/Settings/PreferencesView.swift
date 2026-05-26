@@ -1,3 +1,4 @@
+import AppShared
 import DataModel
 import LocalAuthentication
 import SwiftUI
@@ -67,7 +68,7 @@ struct PreferencesView: View {
           Text(.settings(.defaultSearchModeLabel))
         }
       } header: {
-        Text(.localizable(.filtering))
+        Text(.app(.filtering))
       } footer: {
         Text(.settings(.defaultSearchModeDescription))
       }

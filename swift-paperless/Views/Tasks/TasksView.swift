@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 03.05.2024.
 //
 
+import AppShared
 import DataModel
 import Networking
 import Nuke
@@ -179,7 +180,7 @@ struct TaskDetailView: View {
 
               HStack {
                 DocumentCell(document: document, store: store)
-                Label(localized: .localizable(.more), systemImage: "chevron.right")
+                Label(localized: .app(.more), systemImage: "chevron.right")
                   .labelStyle(.iconOnly)
                   .foregroundColor(.gray)
                   .font(.callout)
@@ -422,7 +423,7 @@ private struct TaskList: View {
   private struct NoElementsView: View {
     var body: some View {
       ContentUnavailableView(
-        String(localized: .localizable(.noElementsFound)),
+        String(localized: .app(.noElementsFound)),
         systemImage: "list.bullet.circle.fill",
         description: Text(.tasks(.title)))
     }
@@ -507,12 +508,12 @@ private struct TaskList: View {
 
       ToolbarItem(placement: .topBarTrailing) {
         if editMode == .inactive {
-          Button(String(localized: .localizable(.select))) {
+          Button(String(localized: .app(.select))) {
             editMode = .active
           }
           .disabled(viewModel?.tasks.isEmpty ?? true)
         } else {
-          Button(String(localized: .localizable(.done))) {
+          Button(String(localized: .app(.done))) {
             editMode = .inactive
           }
         }

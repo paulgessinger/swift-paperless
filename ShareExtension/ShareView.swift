@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 29.04.2024.
 //
 
+import AppShared
 import Networking
 import SwiftUI
 import os
@@ -62,10 +63,10 @@ struct ShareView: View {
     )
     // Apparently sometimes this is 0 (odd), hide the x/y title in that case
     if attachmentManager.totalInputs <= 1 {
-      return String(localized: .localizable(.documentAdd))
+      return String(localized: .app(.documentAdd))
     } else {
       return
-        "\(String(localized: .localizable(.documentAdd))) (\(remaining) / \(attachmentManager.totalInputs))"
+        "\(String(localized: .app(.documentAdd))) (\(remaining) / \(attachmentManager.totalInputs))"
     }
   }
 
@@ -73,13 +74,13 @@ struct ShareView: View {
 
   func errorView(_: AttachmentError) -> some View {
     VStack {
-      Text(.localizable(.shareSheetInvalidAttachmentTitle))
+      Text(.app(.shareSheetInvalidAttachmentTitle))
         .font(.title)
         .padding()
       Text("🫣")
         .font(.system(size: emojiScale))
 
-      Text(.localizable(.shareSheetInvalidAttachmentDetail))
+      Text(.app(.shareSheetInvalidAttachmentDetail))
         .multilineTextAlignment(.center)
         .padding(.top)
 
@@ -132,7 +133,7 @@ struct ShareView: View {
           Spacer()
           HStack {
             Spacer()
-            Text(.localizable(.shareSheetNotLoggedIn))
+            Text(.app(.shareSheetNotLoggedIn))
               .foregroundColor(.gray)
               .multilineTextAlignment(.center)
             Spacer()

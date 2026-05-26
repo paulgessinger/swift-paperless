@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import AppShared
 import Networking
 import SwiftUI
 
@@ -69,7 +70,7 @@ struct ConnectionStageView: View {
                 "",
                 selection: $viewModel.selectedIdentity
               ) {
-                Text(String(localized: .localizable(.none))).tag(nil as TLSIdentity?)
+                Text(String(localized: .app(.none))).tag(nil as TLSIdentity?)
                 ForEach(identityManager.identities, id: \.self) {
                   Text($0.name)
                     .tag(Optional($0))

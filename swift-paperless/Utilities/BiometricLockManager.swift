@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.06.2024.
 //
 
+import AppShared
 import Combine
 import Foundation
 import LocalAuthentication

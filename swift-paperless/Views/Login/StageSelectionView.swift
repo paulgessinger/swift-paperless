@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 04.02.25.
 //
 
+import AppShared
 import SwiftUI
 
 struct StageSelection: View {

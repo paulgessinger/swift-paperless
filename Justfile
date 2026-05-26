@@ -88,20 +88,10 @@ build os=default_os device=default_device: generate
 _test_swift package:
   swift test --package-path {{package}}
 
-test-xcode: generate
-  #!/bin/bash
-  set -e
-  set -o pipefail
-  set -x
-  xcodebuild -showdestinations -scheme swift-paperlessTests -project ./swift-paperless.xcodeproj
-  xcodebuild test \
-    -scheme swift-paperlessTests \
-    -destination "platform=macOS,name=My Mac"\
-    -skipPackagePluginValidation -skipMacroValidation \
-    CODE_SIGN_IDENTITY="" \
-    | xcbeautify
-
-test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") test-xcode
+# All unit tests live in the Common/DataModel/Networking package test targets,
+# which run natively on macOS via `swift test`. AppShared is iOS-only and has
+# no test target of its own.
+test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking")
 
 lint-format:
   find . -name '*.swift' \

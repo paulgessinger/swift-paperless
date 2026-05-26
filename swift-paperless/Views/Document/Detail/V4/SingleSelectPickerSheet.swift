@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 01.04.26.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -211,7 +212,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
         HStack(alignment: .firstTextBaseline) {
           Image(systemName: "plus.circle.fill")
             .foregroundStyle(.secondary)
-          Text(.localizable(.quickAdd(trimmedSearch)))
+          Text(.app(.quickAdd(trimmedSearch)))
             .foregroundStyle(.primary)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -303,7 +304,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
             }
             .animation(animation, value: viewModel.document[keyPath: keyPath])
           } header: {
-            Text(.localizable(.selected))
+            Text(.app(.selected))
           }
 
           let showQuickAdd = canQuickAdd
@@ -342,7 +343,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
           Button {
             showCreate = true
           } label: {
-            Label(String(localized: .localizable(.add)), systemImage: "plus")
+            Label(String(localized: .app(.add)), systemImage: "plus")
           }
           .disabled(!canCreate)
         }

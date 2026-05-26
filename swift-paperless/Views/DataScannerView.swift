@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.07.23.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -66,7 +67,7 @@ struct HighlightView: View {
         HStack(spacing: 10) {
           ProgressView()
           if let asn {
-            Text(.localizable(.asnSpecific(asn)))
+            Text(.app(.asnSpecific(asn)))
               .fixedSize()
           }
         }
@@ -121,12 +122,12 @@ struct HighlightView: View {
         .transition(.identity.combined(with: .opacity).animation(.default.delay(0.2)))
 
       case .noAsn:
-        Text(.localizable(.dataScannerNoAsn(text)))
+        Text(.app(.dataScannerNoAsn(text)))
           .fixedSize()
           .padding()
 
       case .invalidAsn(let asn):
-        Text(.localizable(.dataScannerInvalidAsn(asn)))
+        Text(.app(.dataScannerInvalidAsn(asn)))
           .fixedSize()
           .padding()
 
@@ -425,7 +426,7 @@ struct TypeAsnView: View {
           .padding(.bottom, 0)
       }
       HStack {
-        Text(.localizable(.asnPlaceholder))
+        Text(.app(.asnPlaceholder))
           .padding(.leading)
           .padding(.vertical, 19)
         TextField(String("1234"), text: $text)
@@ -440,7 +441,7 @@ struct TypeAsnView: View {
           ProgressView()
             .padding(20)
         case .valid(let document):
-          Button(String(localized: .localizable(.open))) {
+          Button(String(localized: .app(.open))) {
             action(document)
           }
           .padding(10)
@@ -451,9 +452,9 @@ struct TypeAsnView: View {
           )
           .padding(10)
         case .notAnAsn(let asn):
-          errorLabel(String(localized: .localizable(.dataScannerNoAsn(asn))))
+          errorLabel(String(localized: .app(.dataScannerNoAsn(asn))))
         case .invalid(let asn):
-          errorLabel(String(localized: .localizable(.dataScannerInvalidAsn(asn))))
+          errorLabel(String(localized: .app(.dataScannerInvalidAsn(asn))))
         case .error(let error):
           errorLabel(error.localizedDescription)
         }
@@ -601,7 +602,7 @@ struct DataScannerView: View {
           Button(role: .cancel) {
             dismiss()
           } label: {
-            Label(String(localized: .localizable(.cancel)), systemImage: "xmark")
+            Label(String(localized: .app(.cancel)), systemImage: "xmark")
               .labelStyle(.iconOnly)
               .font(.title2)
               .padding(15)
@@ -627,7 +628,7 @@ struct DataScannerView: View {
               }
             }
           } label: {
-            Label(String(localized: .localizable(.dataScannerTypeInAsn)), systemImage: "keyboard")
+            Label(String(localized: .app(.dataScannerTypeInAsn)), systemImage: "keyboard")
               .labelStyle(.iconOnly)
               .font(.title2)
               .padding(15)

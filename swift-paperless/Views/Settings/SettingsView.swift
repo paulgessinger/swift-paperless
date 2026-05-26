@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 23.04.23.
 //
 
+import AppShared
 import Networking
 import SwiftUI
 import os
@@ -63,39 +64,39 @@ struct SettingsView: View {
     Section(String(localized: .settings(.organization))) {
       NavigationLink {
         ManageView<TagManager>()
-          .navigationTitle(Text(.localizable(.tags)))
+          .navigationTitle(Text(.app(.tags)))
       } label: {
-        Label(String(localized: .localizable(.tags)), systemImage: "tag.fill")
+        Label(String(localized: .app(.tags)), systemImage: "tag.fill")
       }
 
       NavigationLink {
         ManageView<CorrespondentManager>()
-          .navigationTitle(Text(.localizable(.correspondents)))
+          .navigationTitle(Text(.app(.correspondents)))
       } label: {
-        Label(String(localized: .localizable(.correspondents)), systemImage: "person.fill")
+        Label(String(localized: .app(.correspondents)), systemImage: "person.fill")
       }
 
       NavigationLink {
         ManageView<DocumentTypeManager>()
-          .navigationTitle(Text(.localizable(.documentTypes)))
+          .navigationTitle(Text(.app(.documentTypes)))
       } label: {
-        Label(String(localized: .localizable(.documentTypes)), systemImage: "doc.fill")
+        Label(String(localized: .app(.documentTypes)), systemImage: "doc.fill")
       }
 
       NavigationLink {
         ManageView<SavedViewManager>()
-          .navigationTitle(Text(.localizable(.savedViews)))
+          .navigationTitle(Text(.app(.savedViews)))
       } label: {
         Label(
-          String(localized: .localizable(.savedViews)),
+          String(localized: .app(.savedViews)),
           systemImage: "line.3.horizontal.decrease.circle.fill")
       }
 
       NavigationLink {
         ManageView<StoragePathManager>()
-          .navigationTitle(Text(.localizable(.storagePaths)))
+          .navigationTitle(Text(.app(.storagePaths)))
       } label: {
-        Label(String(localized: .localizable(.storagePaths)), systemImage: "archivebox.fill")
+        Label(String(localized: .app(.storagePaths)), systemImage: "archivebox.fill")
       }
 
       NavigationLink {

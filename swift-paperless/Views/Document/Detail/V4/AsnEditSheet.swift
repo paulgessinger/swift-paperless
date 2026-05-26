@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 06.04.26.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -68,7 +69,7 @@ struct AsnEditSheet: View {
           VStack(alignment: .leading, spacing: 0) {
             CustomSectionRow {
               HStack {
-                Text(.localizable(.asn))
+                Text(.app(.asn))
                 Spacer()
                 TextField(
                   "#",
@@ -81,7 +82,7 @@ struct AsnEditSheet: View {
 
             if asnText.isEmpty, let nextAsn {
               SuggestionsRow {
-                SuggestionPill(text: String(localized: .localizable(.asnNext(nextAsn)))) {
+                SuggestionPill(text: String(localized: .app(.asnNext(nextAsn)))) {
                   withAnimation(.spring(duration: 0.2)) {
                     asnText = String(nextAsn)
                   }
@@ -94,7 +95,7 @@ struct AsnEditSheet: View {
       }
       .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
-      .navigationTitle(.localizable(.asn))
+      .navigationTitle(.app(.asn))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

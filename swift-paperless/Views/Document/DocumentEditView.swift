@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.02.23.
 //
 
+import AppShared
 import Common
 import DataModel
 import Networking
@@ -206,7 +207,7 @@ struct DocumentEditView: View {
     NavigationStack {
       Form {
         Section {
-          TextField(String(localized: .localizable(.title)), text: $document.title) {}
+          TextField(String(localized: .app(.title)), text: $document.title) {}
             .clearable($document.title)
             .disabled(!userCanChange)
 
@@ -215,7 +216,7 @@ struct DocumentEditView: View {
             .disabled(!userCanChange)
 
           DatePicker(
-            String(localized: .localizable(.documentEditCreatedDateLabel)),
+            String(localized: .app(.documentEditCreatedDateLabel)),
             selection: $document.created.animation(.default),
             displayedComponents: .date
           )
@@ -257,17 +258,17 @@ struct DocumentEditView: View {
                 document: $document,
                 store: store
               )
-              .navigationTitle(Text(.localizable(.correspondent)))
+              .navigationTitle(Text(.app(.correspondent)))
             }) {
               HStack {
-                Text(.localizable(.correspondent))
+                Text(.app(.correspondent))
                 Spacer()
                 Group {
                   if let id = document.correspondent {
                     Text(
                       store.correspondents[id]?.name ?? String(localized: .permissions(.private)))
                   } else {
-                    Text(.localizable(.correspondentNotAssignedFilter))
+                    Text(.app(.correspondentNotAssignedFilter))
                   }
                 }
                 .foregroundColor(.gray)
@@ -292,16 +293,16 @@ struct DocumentEditView: View {
                 document: $document,
                 store: store
               )
-              .navigationTitle(Text(.localizable(.documentType)))
+              .navigationTitle(Text(.app(.documentType)))
             }) {
               HStack {
-                Text(.localizable(.documentType))
+                Text(.app(.documentType))
                 Spacer()
                 Group {
                   if let id = document.documentType {
                     Text(store.documentTypes[id]?.name ?? String(localized: .permissions(.private)))
                   } else {
-                    Text(.localizable(.documentTypeNotAssignedFilter))
+                    Text(.app(.documentTypeNotAssignedFilter))
                   }
                 }
                 .foregroundColor(.gray)
@@ -327,16 +328,16 @@ struct DocumentEditView: View {
                 document: $document,
                 store: store
               )
-              .navigationTitle(Text(.localizable(.storagePath)))
+              .navigationTitle(Text(.app(.storagePath)))
             }) {
               HStack {
-                Text(.localizable(.storagePath))
+                Text(.app(.storagePath))
                 Spacer()
                 Group {
                   if let id = document.storagePath {
                     Text(store.storagePaths[id]?.name ?? String(localized: .permissions(.private)))
                   } else {
-                    Text(.localizable(.storagePathNotAssignedFilter))
+                    Text(.app(.storagePathNotAssignedFilter))
                   }
                 }
                 .foregroundColor(.gray)
@@ -359,7 +360,7 @@ struct DocumentEditView: View {
             DocumentTagEditView(document: $document)
           }) {
             if document.tags.isEmpty {
-              Text(.localizable(.numberOfTags(0)))
+              Text(.app(.numberOfTags(0)))
             } else {
               TagsView(tags: document.tags.compactMap { store.tags[$0] })
                 .contentShape(Rectangle())
@@ -393,7 +394,7 @@ struct DocumentEditView: View {
               }
             }) {
               Label(
-                localized: deleted ? .localizable(.documentDeleted) : .localizable(.delete),
+                localized: deleted ? .app(.documentDeleted) : .app(.delete),
                 systemImage: deleted ? "checkmark.circle.fill" : "trash"
               )
               .contentTransition(.symbolEffect)
@@ -404,15 +405,15 @@ struct DocumentEditView: View {
             .disabled(!userCanDelete)
 
             .confirmationDialog(
-              String(localized: .localizable(.confirmationPromptTitle)),
+              String(localized: .app(.confirmationPromptTitle)),
               isPresented: $showDeleteConfirmation,
               titleVisibility: .visible
             ) {
-              Button(String(localized: .localizable(.delete)), role: .destructive) {
+              Button(String(localized: .app(.delete)), role: .destructive) {
                 // @TODO: This will have to become configurable: from places other than DocumentView, this is wrong
                 doDocumentDelete()
               }
-              Button(String(localized: .localizable(.cancel)), role: .cancel) {}
+              Button(String(localized: .app(.cancel)), role: .cancel) {}
             }
           }
         }

@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 29.11.25.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -36,7 +37,7 @@ struct FilterAssembly: View {
       }
 
     } label: {
-      Label(localized: .localizable(.searchModeSettings), systemImage: "ellipsis.circle")
+      Label(localized: .app(.searchModeSettings), systemImage: "ellipsis.circle")
         .labelStyle(.iconOnly)
         .foregroundStyle(.accentColorLightened)
     }

@@ -29,6 +29,8 @@ packages:
     path: DataModel
   Networking:
     path: Networking
+  AppShared:
+    path: AppShared
   Nuke:
     url: https://github.com/kean/Nuke
     majorVersion: 12.0.0
@@ -62,7 +64,6 @@ targets:
     sources:
       - path: swift-paperless
         excludes:
-          - "ViewModel/AttachmentManager.swift"
           - "Info.plist"
       # libraries.md is bundled as a resource but lives outside the app folder.
       - path: docs/libraries.md
@@ -83,12 +84,10 @@ targets:
       - package: swift-async-algorithms
         product: AsyncAlgorithms
       - package: BezelKit
+      - package: AppShared
       - package: Common
       - package: DataModel
       - package: Networking
-    buildToolPlugins:
-      - plugin: XCStringsToolPlugin
-        package: xcstrings-tool-plugin
 
   ShareExtension:
     type: app-extension
@@ -100,70 +99,12 @@ targets:
       - path: ShareExtension
         excludes:
           - "Info.plist"
-      - path: swift-paperless/Localization
-      - path: swift-paperless/Model
-      - path: swift-paperless/Document
-      - path: swift-paperless/ViewModel
-        excludes:
-          - "DocumentDetailModel.swift"
-          - "DocumentListViewModel.swift"
-          - "LoginViewModel.swift"
-      - path: swift-paperless/Utilities
-        excludes:
-          - "AppDelegate.swift"
-          - "BiometricLockManager.swift"
-          - "Route.swift"
-          - "Route+DisplayableError.swift"
-          - "RouteManager.swift"
-      - path: swift-paperless/Views
-        excludes:
-          - "DataScannerView.swift"
-          - "Document/Detail/DocumentDetailView.swift"
-          - "Document/Detail/DocumentDetailViewV3.swift"
-          - "Document/Detail/DocumentMetadataView.swift"
-          - "Document/Detail/SearchablePDFPreview.swift"
-          - "Document/Detail/ShareLinkView.swift"
-          - "Document/Detail/V4/*.swift"
-          - "Document/DocumentEditView.swift"
-          - "Document/DocumentList.swift"
-          - "Document/DocumentPreview.swift"
-          - "Document/DocumentView.swift"
-          - "Document/FilterAssembly.swift"
-          - "Document/FilterAssemblyiOS18.swift"
-          - "Filter/CustomFieldFilterView.swift"
-          - "Filter/CustomFieldQueryDisplayView.swift"
-          - "Filter/FilterBar.swift"
-          - "InactiveView.swift"
-          - "Login/BackgroundColorModifier.swift"
-          - "Login/ConnectionStageView.swift"
-          - "Login/CredentialsStageView.swift"
-          - "Login/CustomSection.swift"
-          - "Login/LoginStage.swift"
-          - "Login/LoginView.swift"
-          - "Login/LoginViewV2.swift"
-          - "Login/StageSelectionView.swift"
-          - "Login/UrlEntryView.swift"
-          - "Login/UrlError.swift"
-          - "ReleaseNotesView.swift"
-          - "Settings/DebugMenuView.swift"
-          - "Settings/LibrariesView.swift"
-          - "Settings/LogoChangeView.swift"
-          - "Settings/PreferencesView.swift"
-          - "Settings/PrivacyView.swift"
-          - "Settings/SettingsView.swift"
-          - "Tasks/TaskActivityToolbar.swift"
-          - "Tasks/TasksView.swift"
-      - path: swift-paperless/Networking
-        excludes:
-          - "DeriveUrl.swift"
-          - "Error/LoginError.swift"
-          - "Error/LoginError+PresentableError.swift"
-      # Shared top-level resources the extension bundles (parity with current project).
+      # Shared image/color assets are looked up from the running bundle, so the
+      # extension needs its own copy of the catalog (shared as target membership).
       - path: swift-paperless/Assets.xcassets
       - path: swift-paperless/PrivacyInfo.xcprivacy
-      - path: swift-paperless/Swift Paperless.storekit
-      - path: swift-paperless/AppIcon.icon
     dependencies:
+      - package: AppShared
       - package: Nuke
         product: NukeUI
       - package: Semaphore
@@ -172,46 +113,6 @@ targets:
       - package: Common
       - package: DataModel
       - package: Networking
-    buildToolPlugins:
-      - plugin: XCStringsToolPlugin
-        package: xcstrings-tool-plugin
-
-  swift-paperlessTests:
-    type: bundle.unit-test
-    platform: iOS
-    configFiles:
-      Debug: Config/Tests/UnitTests.xcconfig
-      Release: Config/Tests/UnitTests.xcconfig
-    sources:
-      - path: swift-paperlessTests
-      - path: swift-paperless/Localization
-      - path: swift-paperless/Model
-      # Cherry-picked app sources under test (matches current membership exceptions).
-      - path: swift-paperless/Utilities/AppSettings.swift
-      - path: swift-paperless/Utilities/Binding.swift
-      - path: swift-paperless/Utilities/Bundle.swift
-      - path: swift-paperless/Utilities/DocumentationLinks.swift
-      - path: swift-paperless/Utilities/Gather.swift
-      - path: swift-paperless/Utilities/Haptics.swift
-      - path: swift-paperless/Utilities/Logging.swift
-      - path: swift-paperless/Utilities/Route.swift
-      - path: swift-paperless/Utilities/View+alert.swift
-      - path: swift-paperless/Views/CancelIconButton.swift
-      - path: swift-paperless/Views/Error/ErrorController.swift
-      - path: swift-paperless/Views/Error/ErrorDisplay.swift
-      - path: swift-paperless/Views/Login/UrlError.swift
-      - path: swift-paperless/Networking/DeriveUrl.swift
-      - path: swift-paperless/Networking/Error/DocumentedError.swift
-      - path: swift-paperless/Networking/Error/PresentableError.swift
-    dependencies:
-      - package: Common
-      - package: DataModel
-      - package: Networking
-      - package: swift-async-algorithms
-        product: AsyncAlgorithms
-    buildToolPlugins:
-      - plugin: XCStringsToolPlugin
-        package: xcstrings-tool-plugin
 
   swift-paperlessUITests:
     type: bundle.ui-testing
@@ -221,18 +122,9 @@ targets:
       Release: Config/Tests/UITests.xcconfig
     sources:
       - path: swift-paperlessUITests
-      - path: swift-paperless/Localization
-        excludes:
-          - "DocumentMetadata.xcstrings"
-          - "Permissions.xcstrings"
-      - path: swift-paperless/Utilities/Binding.swift
-      - path: swift-paperless/Utilities/Bundle.swift
-      - path: swift-paperless/Utilities/View+alert.swift
     dependencies:
       - target: swift-paperless
-    buildToolPlugins:
-      - plugin: XCStringsToolPlugin
-        package: xcstrings-tool-plugin
+      - package: AppShared
 
 schemes:
 
@@ -262,19 +154,6 @@ schemes:
         swift-paperless: all
     run:
       config: Debug
-    profile:
-      config: Release
-    archive:
-      config: Release
-
-  swift-paperlessTests:
-    build:
-      targets:
-        swift-paperlessTests: all
-    test:
-      config: Debug
-      targets:
-        - swift-paperlessTests
     profile:
       config: Release
     archive:

@@ -3,6 +3,7 @@
 //  swift-paperless
 //
 
+import AppShared
 import Common
 import PDFKit
 import SwiftUI
@@ -297,7 +298,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
             setSearchMode(false)
             isSearchFieldFocused = false
           } label: {
-            Label(localized: .localizable(.done), systemImage: "checkmark")
+            Label(localized: .app(.done), systemImage: "checkmark")
               .labelStyle(.iconOnly)
               .font(.title2)
               .bold()
@@ -307,7 +308,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
           .frame(maxHeight: .infinity)
           .glassEffect(.regular.tint(.accent).interactive(), in: Circle())
 
-          TextField(.localizable(.search), text: $query)
+          TextField(.app(.search), text: $query)
             .focused($isSearchFieldFocused)
             .submitLabel(.search)
 
@@ -331,7 +332,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
                   Button {
                     query = ""
                   } label: {
-                    Label(localized: .localizable(.clearText), systemImage: "xmark.circle.fill")
+                    Label(localized: .app(.clearText), systemImage: "xmark.circle.fill")
                       .labelStyle(.iconOnly)
                   }
                   .padding(.trailing)
@@ -378,7 +379,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
               setSearchMode(true)
               isSearchFieldFocused = true
             } label: {
-              Label(localized: .localizable(.search), systemImage: "magnifyingglass")
+              Label(localized: .app(.search), systemImage: "magnifyingglass")
                 .labelStyle(.iconOnly)
                 .font(.title2)
                 .fontWeight(.semibold)
@@ -392,7 +393,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
           }
 
           if document.pageCount > 1 {
-            Text(.localizable(.pageIndicator(currentPage + 1, document.pageCount)))
+            Text(.app(.pageIndicator(currentPage + 1, document.pageCount)))
               .font(.footnote.monospacedDigit())
               .fontWeight(.semibold)
               .padding(.horizontal, 10)
@@ -418,12 +419,12 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
               setSearchMode(false)
               isSearchFieldFocused = false
             } label: {
-              Text(.localizable(.done))
+              Text(.app(.done))
                 .font(.body)
                 .foregroundStyle(.primary)
             }
 
-            TextField(.localizable(.search), text: $query)
+            TextField(.app(.search), text: $query)
               .focused($isSearchFieldFocused)
               .submitLabel(.search)
               .onChange(of: query) { _, _ in
@@ -506,7 +507,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
             Spacer()
 
             if document.pageCount > 1 {
-              Text(.localizable(.pageIndicator(currentPage + 1, document.pageCount)))
+              Text(.app(.pageIndicator(currentPage + 1, document.pageCount)))
                 .font(.footnote.monospacedDigit())
                 .fontWeight(.semibold)
                 .padding(.horizontal, 10)

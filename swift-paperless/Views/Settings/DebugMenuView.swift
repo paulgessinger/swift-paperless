@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 22.09.2024.
 //
 
+import AppShared
 import Common
 import DataModel
 import SwiftUI
@@ -22,7 +23,7 @@ struct DebugMenuView: View {
           if let version = appSettings.currentAppVersion?.description {
             Text(version)
           } else {
-            Text(.localizable(.none))
+            Text(.app(.none))
           }
         }
         Button {
@@ -53,7 +54,7 @@ struct DebugMenuView: View {
     .navigationBarTitleDisplayMode(.inline)
     .alert(String(localized: .settings(.appVersionResetTitle)), isPresented: $showResetConfirmation)
     {
-      Button(.localizable(.ok)) {}
+      Button(.app(.ok)) {}
     } message: {
       Text(.settings(.appVersionResetMessage))
     }
@@ -80,7 +81,7 @@ struct AppVersionView: View {
       if let version {
         Text(version.version.description)
       } else {
-        Text(.localizable(.none))
+        Text(.app(.none))
       }
     } label: {
       Text(.settings(.appVersionLabel))
@@ -90,7 +91,7 @@ struct AppVersionView: View {
       if let version {
         Text("\(version.build)")
       } else {
-        Text(.localizable(.none))
+        Text(.app(.none))
       }
     } label: {
       Text(.settings(.appBuildNumberLabel))
@@ -100,7 +101,7 @@ struct AppVersionView: View {
       if let config {
         Text(config.rawValue)
       } else {
-        Text(.localizable(.none))
+        Text(.app(.none))
       }
     } label: {
       Text(.settings(.appConfigurationLabel))

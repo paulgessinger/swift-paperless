@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 01.04.26.
 //
 
+import AppShared
 import DataModel
 import Networking
 import SwiftUI
@@ -49,7 +50,7 @@ struct TitleEditSheet: View {
           CustomSectionRow {
             VStack(alignment: .leading, spacing: 6) {
               TextField(
-                String(localized: .localizable(.documentEditTitleLabel)),
+                String(localized: .app(.documentEditTitleLabel)),
                 text: $title,
                 axis: .vertical
               )
@@ -73,7 +74,7 @@ struct TitleEditSheet: View {
       }
       .customSectionBackground(.thickMaterial)
       .scrollBounceBehavior(.basedOnSize)
-      .navigationTitle(.localizable(.title))
+      .navigationTitle(.app(.title))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {

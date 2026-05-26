@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 18.05.2024.
 //
 
+import AppShared
 import Common
 import Foundation
 import MarkdownUI
@@ -15,7 +16,7 @@ private struct ReleaseNotesError: LocalizedError {
   @MainActor
   init(version: AppVersion?) {
     errorDescription = String(
-      localized: .localizable(.releaseNotesLoadError(version?.description ?? "(?)")))
+      localized: .app(.releaseNotesLoadError(version?.description ?? "(?)")))
   }
 
   var errorDescription: String?
@@ -380,7 +381,7 @@ private struct ReleaseNotesBareView: View {
               Button {
                 model.showReleaseNotes = false
               } label: {
-                Text(.localizable(.ok))
+                Text(.app(.ok))
                   .frame(maxWidth: .infinity, alignment: .center)
                   .font(.title2)
                   .padding()
@@ -395,7 +396,7 @@ private struct ReleaseNotesBareView: View {
               Button {
                 model.showReleaseNotes = false
               } label: {
-                Text(.localizable(.ok))
+                Text(.app(.ok))
                   .frame(maxWidth: .infinity)
                   .padding(.horizontal)
                   .padding(.vertical, 10)

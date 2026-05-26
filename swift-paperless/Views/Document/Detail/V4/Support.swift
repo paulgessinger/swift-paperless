@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 21.02.26.
 //
 
+import AppShared
 import Common
 import DataModel
 import SwiftUI
@@ -203,7 +204,7 @@ struct DocumentTagsSection: View {
           tags: tags, action: nil,
           content: {
             if tags.isEmpty {
-              Text(.localizable(.createDocumentNoTags))
+              Text(.app(.createDocumentNoTags))
                 .foregroundStyle(.secondary)
             }
             Image(systemName: enabled ? "pencil" : "lock.fill")
@@ -337,7 +338,7 @@ struct DocumentTitleView: View {
           HStack(spacing: 4) {
             Image(systemName: "chevron.down")
               .rotationEffect(isExpanded ? .degrees(180) : .zero)
-            Text(.localizable(.more))
+            Text(.app(.more))
           }
           .font(.footnote)
           .foregroundStyle(.secondary)
