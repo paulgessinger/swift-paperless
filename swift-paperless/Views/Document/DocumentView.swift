@@ -750,7 +750,6 @@ struct DocumentView: View {
     return TasksView(navPath: navPath)
       .environmentObject(store)
       .environmentObject(errorController)
-      .errorOverlay(errorController: errorController, offset: 15)
   }
 }
 
