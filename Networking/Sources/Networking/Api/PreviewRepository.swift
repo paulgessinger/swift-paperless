@@ -280,7 +280,7 @@ public class PreviewRepository: Repository {
   public func download(
     documentID _: UInt, original _: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
   )
-    async throws -> URL?
+    async throws -> URL
   {
     var elapsed = 0.0
     for i in 1...10 {
@@ -288,7 +288,10 @@ public class PreviewRepository: Repository {
       elapsed = Double(i) / 10.0 * downloadDelay
       progress?(elapsed)
     }
-    return Bundle.main.url(forResource: "demo2", withExtension: "pdf")
+    guard let url = Bundle.main.url(forResource: "demo2", withExtension: "pdf") else {
+      throw RepositoryError.documentNotFound
+    }
+    return url
   }
 
   public func tag(id: UInt) async -> Tag? { tags[id] }

@@ -32,6 +32,11 @@ public class ApiRepository {
 
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
+  private let contentStore: ContentStore?
+
+  // Per-key in-flight task map: two concurrent downloads of the same blob
+  // share one network request rather than racing into the ContentStore.
+  private var inFlightDownloads: [ContentStore.Key: Task<URL, Error>] = [:]
 
   nonisolated
     private let apiVersion: UInt?
@@ -48,9 +53,32 @@ public class ApiRepository {
     min(Self.maximumApiVersion, apiVersion ?? Self.maximumApiVersion)
   }
 
-  public init(connection: Connection, mode: Mode) async {
+  public convenience init(connection: Connection, mode: Mode) async {
+    let store = try? ContentStore()
+    await self.init(connection: connection, mode: mode, contentStore: store)
+  }
+
+  // Test seam: skips the backend-version discovery network call and accepts
+  // a caller-provided URLSession (typically backed by `MockURLProtocol`).
+  init(
+    connection: Connection, mode: Mode, contentStore: ContentStore?,
+    urlSession: URLSession, apiVersion: UInt? = nil,
+    backendVersion: Version? = nil
+  ) {
     self.connection = connection
     self.mode = mode
+    self.contentStore = contentStore
+    let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
+    urlSessionDelegate = delegate
+    self.urlSession = urlSession
+    self.apiVersion = apiVersion
+    self.backendVersion = backendVersion
+  }
+
+  init(connection: Connection, mode: Mode, contentStore: ContentStore?) async {
+    self.connection = connection
+    self.mode = mode
+    self.contentStore = contentStore
     let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
     let tokenStr = sanitize(token: connection.token)
     Logger.networking.notice(
@@ -457,32 +485,111 @@ extension ApiRepository: Repository {
 
   public func download(
     documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
-  ) async throws
-    -> URL?
-  {
+  ) async throws -> URL {
+    // No Document handle → no modified timestamp to validate the cache,
+    // so always re-fetch. Callers should prefer download(document:...).
+    try await streamDownload(
+      documentID: documentID, original: original,
+      modified: nil, progress: progress)
+  }
+
+  public func download(
+    document: Document, original: Bool = false,
+    progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws -> URL {
+    try await streamDownload(
+      documentID: document.id, original: original,
+      modified: document.modified, progress: progress)
+  }
+
+  private func streamDownload(
+    documentID: UInt, original: Bool,
+    modified: Date?, progress: (@Sendable (Double) -> Void)?
+  ) async throws -> URL {
     Logger.networking.notice("Downloading document (original: \(original))")
-    do {
-      let request = try request(.download(documentId: documentID, original: original))
 
-      let (data, response) = try await fetchData(
-        for: request,
-        progress: progress)
+    guard let contentStore else {
+      // App-group container unavailable (host tests, mis-configured entitlement).
+      // Fall back to streaming straight to a temp file with no cache.
+      return try await fetchToTemp(
+        documentID: documentID, original: original, progress: progress)
+    }
 
-      guard let suggestedFilename = response.suggestedFilename else {
-        Logger.networking.error("Cannot get suggested filename from response")
-        return nil
+    let key = ContentStore.Key(
+      serverID: connection.serverID,
+      documentRemoteID: documentID,
+      kind: original ? .original : .archive)
+
+    if let hit = contentStore.read(key, freshAgainst: modified) {
+      Logger.networking.info(
+        "ContentStore hit for documentID \(documentID) (original: \(original))")
+      progress?(1.0)
+      return hit.friendlyURL
+    }
+
+    if let existing = inFlightDownloads[key] {
+      return try await existing.value
+    }
+
+    let task = Task<URL, Error> { [contentStore] in
+      defer { inFlightDownloads[key] = nil }
+
+      let request = try request(
+        .download(documentId: documentID, original: original))
+      let (tempURL, response) = try await urlSession.getDownload(
+        for: request, progress: progress)
+
+      try validateDownloadResponse(response, request: request)
+
+      let suggested = response.suggestedFilename ?? "document.pdf"
+      let hit = try contentStore.store(
+        key, movingFrom: tempURL,
+        modified: modified, suggestedFilename: suggested)
+      return hit.friendlyURL
+    }
+    inFlightDownloads[key] = task
+    return try await task.value
+  }
+
+  private func fetchToTemp(
+    documentID: UInt, original: Bool,
+    progress: (@Sendable (Double) -> Void)?
+  ) async throws -> URL {
+    let request = try request(
+      .download(documentId: documentID, original: original))
+    let (tempURL, response) = try await urlSession.getDownload(
+      for: request, progress: progress)
+    try validateDownloadResponse(response, request: request)
+
+    let dest = URL(
+      fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
+    ).appendingPathComponent(
+      response.suggestedFilename ?? "document.pdf")
+    if FileManager.default.fileExists(atPath: dest.path) {
+      _ = try FileManager.default.replaceItemAt(dest, withItemAt: tempURL)
+    } else {
+      try FileManager.default.moveItem(at: tempURL, to: dest)
+    }
+    return dest
+  }
+
+  private nonisolated func validateDownloadResponse(
+    _ response: URLResponse, request: URLRequest
+  ) throws {
+    guard let http = response as? HTTPURLResponse, let status = http.status else {
+      throw RequestError.invalidResponse
+    }
+    guard status == .ok else {
+      switch status {
+      case .forbidden:
+        throw RequestError.forbidden(body: Data())
+      case .unauthorized:
+        throw RequestError.unauthorized(body: Data())
+      case .notAcceptable:
+        throw RequestError.unsupportedVersion(sentVersion: nil)
+      default:
+        throw RequestError.unexpectedStatusCode(code: status, body: Data())
       }
-
-      let temporaryDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-      let temporaryFileURL = temporaryDirectoryURL.appendingPathComponent(suggestedFilename)
-
-      try data.write(to: temporaryFileURL, options: .atomic)
-      try await Task.sleep(for: .seconds(0.2))  // wait a little bit for the data to be flushed
-      return temporaryFileURL
-
-    } catch {
-      Logger.networking.error("Error downloading document: \(error)")
-      return nil
     }
   }
 
