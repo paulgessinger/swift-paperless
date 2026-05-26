@@ -6,7 +6,7 @@ on:
     - cron: '2 */12 * * *'
   push:
     paths: [
-      'swift-paperless/Localization/*.xcstrings',
+      'AppShared/Sources/AppShared/Resources/Localization/*.xcstrings',
     ]
     branches: [ main ]
 
@@ -20,27 +20,17 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PRE_COMMIT_HOME: '/tmp/pre-commit'
       CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
       CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
     steps:
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install pre-commit
-        run: |
-          pip install pre-commit
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.PRE_COMMIT_HOME }}
-          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-
       - name: Checkout
         uses: actions/checkout@v4
+
+      - uses: j178/prek-action@v2
+        with:
+          prek-version: '0.3.x'
+          install-only: true
 
       - name: Crowdin push
         uses: crowdin/github-action@v2
@@ -54,8 +44,8 @@ jobs:
 
       - name: Fix generated files
         run: |
-          sudo chown $(whoami):$(whoami) swift-paperless/Localization/*.xcstrings
-          pre-commit run end-of-file-fixer --files swift-paperless/Localization/*.xcstrings || true
+          sudo chown $(whoami):$(whoami) AppShared/Sources/AppShared/Resources/Localization/*.xcstrings
+          prek run end-of-file-fixer --files AppShared/Sources/AppShared/Resources/Localization/*.xcstrings || true
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -67,4 +57,4 @@ jobs:
           delete-branch: true
           body: "Automated update of localizations from Crowdin"
           base: main
-          add-paths: swift-paperless/Localization
+          add-paths: AppShared/Sources/AppShared/Resources/Localization
