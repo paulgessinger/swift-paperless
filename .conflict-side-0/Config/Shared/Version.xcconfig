@@ -1,6 +1,0 @@
-// Single source of truth for the app version and build number.
-// Edited by bump.py / `just set-version` / `just set-build` / fastlane.
-// Included by every target's xcconfig so all targets stay in lockstep.
-
-MARKETING_VERSION = 1.10.0
-CURRENT_PROJECT_VERSION = 194

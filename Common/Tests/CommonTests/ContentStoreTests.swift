@@ -218,6 +218,89 @@ struct ContentStoreTests {
   }
 
   @Test
+  func renameCleansOldFriendlyLink() throws {
+    let (store, _) = try Self.makeStore()
+    let temp1 = try Self.writeTempFile(Data("v1".utf8))
+    let hit1 = try store.store(
+      Self.key(), movingFrom: temp1, modified: nil,
+      suggestedFilename: "old-name.pdf")
+    #expect(FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
+    #expect(hit1.friendlyURL.lastPathComponent == "old-name.pdf")
+
+    let temp2 = try Self.writeTempFile(Data("v2".utf8))
+    let hit2 = try store.store(
+      Self.key(), movingFrom: temp2, modified: nil,
+      suggestedFilename: "new-name.pdf")
+    #expect(hit2.friendlyURL.lastPathComponent == "new-name.pdf")
+    #expect(!FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
+  }
+
+  @Test
+  func renameLeavesOtherDocsFriendlyLinksAlone() throws {
+    let (store, _) = try Self.makeStore()
+
+    // Doc A: name "alpha.pdf"
+    let tempA = try Self.writeTempFile(Data("A".utf8))
+    let hitA = try store.store(
+      Self.key(doc: 1), movingFrom: tempA, modified: nil,
+      suggestedFilename: "alpha.pdf")
+
+    // Doc B: name "beta.pdf"
+    let tempB = try Self.writeTempFile(Data("B".utf8))
+    let hitB = try store.store(
+      Self.key(doc: 2), movingFrom: tempB, modified: nil,
+      suggestedFilename: "beta.pdf")
+
+    // Rename Doc A to "gamma.pdf"
+    let tempA2 = try Self.writeTempFile(Data("A2".utf8))
+    _ = try store.store(
+      Self.key(doc: 1), movingFrom: tempA2, modified: nil,
+      suggestedFilename: "gamma.pdf")
+
+    // alpha.pdf gone, beta.pdf still there
+    #expect(!FileManager.default.fileExists(atPath: hitA.friendlyURL.path))
+    #expect(FileManager.default.fileExists(atPath: hitB.friendlyURL.path))
+  }
+
+  @Test
+  func deleteRemovesDisambiguatedFriendlyLink() throws {
+    let (store, _) = try Self.makeStore()
+
+    let temp1 = try Self.writeTempFile(Data("one".utf8))
+    _ = try store.store(
+      Self.key(doc: 1), movingFrom: temp1, modified: nil,
+      suggestedFilename: "same.pdf")
+
+    let temp2 = try Self.writeTempFile(Data("two".utf8))
+    let hit2 = try store.store(
+      Self.key(doc: 2), movingFrom: temp2, modified: nil,
+      suggestedFilename: "same.pdf")
+    #expect(hit2.friendlyURL.lastPathComponent == "same (2).pdf")
+
+    try store.delete(Self.key(doc: 2))
+    #expect(!FileManager.default.fileExists(atPath: hit2.friendlyURL.path))
+  }
+
+  @Test
+  func deleteLeavesOtherDocsFriendlyLinksAlone() throws {
+    let (store, _) = try Self.makeStore()
+
+    let temp1 = try Self.writeTempFile(Data("one".utf8))
+    let hit1 = try store.store(
+      Self.key(doc: 1), movingFrom: temp1, modified: nil,
+      suggestedFilename: "same.pdf")
+
+    let temp2 = try Self.writeTempFile(Data("two".utf8))
+    _ = try store.store(
+      Self.key(doc: 2), movingFrom: temp2, modified: nil,
+      suggestedFilename: "same.pdf")
+
+    try store.delete(Self.key(doc: 2))
+    #expect(FileManager.default.fileExists(atPath: hit1.friendlyURL.path))
+    #expect(try Data(contentsOf: hit1.friendlyURL) == Data("one".utf8))
+  }
+
+  @Test
   func deleteRemovesBlobSidecarAndFriendly() throws {
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))

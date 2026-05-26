@@ -1,2 +1,0 @@
-- Recently-viewed documents now open offline; their files are cached on disk and survive app launches
-- Large document downloads no longer buffer the whole file in memory, reducing memory pressure (especially in the Share Extension)
