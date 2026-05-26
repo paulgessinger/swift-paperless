@@ -87,45 +87,48 @@ struct ContentStoreTests {
   }
 
   @Test
-  func readReturnsURLWhenBothNil() throws {
+  func readReturnsNilWhenAnyModifiedIsNil() throws {
+    // Both sides nil: still nil. A nil staleness signal is "we don't know",
+    // not "fresh". Callers without a timestamp should bypass the cache.
     let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))
     try store.store(Self.key(), movingFrom: temp, modified: nil)
-    #expect(store.read(Self.key(), freshAgainst: nil) != nil)
-  }
-
-  @Test
-  func readReturnsNilWhenOnlyOneSideIsNil() throws {
-    let (store, _) = try Self.makeStore()
-    let temp = try Self.writeTempFile(Data("x".utf8))
-    try store.store(
-      Self.key(), movingFrom: temp,
-      modified: Date(timeIntervalSince1970: 1))
     #expect(store.read(Self.key(), freshAgainst: nil) == nil)
 
+    // Sidecar has modified, caller doesn't: still nil.
     let (store2, _) = try Self.makeStore()
     let temp2 = try Self.writeTempFile(Data("x".utf8))
-    try store2.store(Self.key(), movingFrom: temp2, modified: nil)
+    try store2.store(
+      Self.key(), movingFrom: temp2,
+      modified: Date(timeIntervalSince1970: 1))
+    #expect(store2.read(Self.key(), freshAgainst: nil) == nil)
+
+    // Caller has modified, sidecar doesn't: still nil.
+    let (store3, _) = try Self.makeStore()
+    let temp3 = try Self.writeTempFile(Data("x".utf8))
+    try store3.store(Self.key(), movingFrom: temp3, modified: nil)
     #expect(
-      store2.read(Self.key(), freshAgainst: Date(timeIntervalSince1970: 1))
+      store3.read(Self.key(), freshAgainst: Date(timeIntervalSince1970: 1))
         == nil)
   }
 
   @Test
   func readReturnsNilWhenSidecarMissing() throws {
-    let (store, root) = try Self.makeStore()
+    let (store, _) = try Self.makeStore()
     let temp = try Self.writeTempFile(Data("x".utf8))
-    let url = try store.store(Self.key(), movingFrom: temp, modified: nil)
+    let modified = Date(timeIntervalSince1970: 1234)
+    let url = try store.store(
+      Self.key(), movingFrom: temp, modified: modified)
 
     // Wipe the sidecar but leave the blob. read() must NOT serve a hit
-    // because it can no longer validate freshness.
+    // because it can no longer validate freshness, even when the caller
+    // supplies a real timestamp.
     let sidecar = url.deletingLastPathComponent()
       .appendingPathComponent("archive.meta.json")
     try FileManager.default.removeItem(at: sidecar)
     #expect(FileManager.default.fileExists(atPath: url.path))
-    _ = root  // silence unused warning
 
-    #expect(store.read(Self.key(), freshAgainst: nil) == nil)
+    #expect(store.read(Self.key(), freshAgainst: modified) == nil)
   }
 
   @Test

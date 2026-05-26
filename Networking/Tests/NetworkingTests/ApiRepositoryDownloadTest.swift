@@ -230,6 +230,28 @@ struct ApiRepositoryDownloadTest {
   }
 
   @Test
+  func documentWithNilModifiedAlwaysHitsNetwork() async throws {
+    // No staleness signal → bypass ContentStore entirely. Two back-to-back
+    // calls must each hit the network and the result must not appear in the
+    // cache for a subsequent lookup.
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let doc = Self.makeDocument(modified: nil)
+    _ = try await repo.download(document: doc)
+    _ = try await repo.download(document: doc)
+    #expect(counter.value == 2)
+    #expect(
+      store.read(Self.canonicalKey(for: doc), freshAgainst: nil) == nil)
+  }
+
+  @Test
   func concurrentDownloadsForSameKeyDeduped() async throws {
     let (store, _) = try Self.makeStore()
     let repo = Self.makeRepo(contentStore: store)
