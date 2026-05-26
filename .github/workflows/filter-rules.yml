@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PRE_COMMIT_HOME: '/tmp/pre-commit'
       # For gh cli in generate_filterrules.py
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -24,16 +23,15 @@ jobs:
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v6
 
-      - uses: actions/cache@v4
+      - uses: j178/prek-action@v2
         with:
-          path: |
-            ${{ env.PRE_COMMIT_HOME }}
-          key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          prek-version: '0.3.x'
+          install-only: true
 
       - name: Generate filter rules
         run: |
           uv run scripts/generate_filterrules.py --output DataModel/Sources/DataModel/FilterRuleType.swift
-          uvx pre-commit run swift-format --files DataModel/Sources/DataModel/FilterRuleType.swift || true
+          prek run swift-format --files DataModel/Sources/DataModel/FilterRuleType.swift || true
 
       - run: git diff
 
