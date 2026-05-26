@@ -380,7 +380,7 @@ public class PreviewRepository: Repository {
     return notes
   }
 
-  public func documents(filter _: FilterState) -> any DocumentSource {
+  public func documents(filter _: FilterState) -> PreviewDocumentSource {
     PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
   }
 
@@ -451,7 +451,7 @@ public class PreviewRepository: Repository {
     Array(storedTasks.prefix(Int(limit)))
   }
 
-  public func tasks() throws -> any TaskSource { InMemoryTaskSource(storedTasks) }
+  public func tasks() throws -> InMemoryTaskSource { InMemoryTaskSource(storedTasks) }
   public func task(id _: UInt) async throws -> PaperlessTask? { nil }
 
   public func task(id: UInt) throws -> PaperlessTask? { storedTasks.first { $0.id == id } }
