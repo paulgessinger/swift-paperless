@@ -84,19 +84,14 @@ class DocumentDetailModel {
         download = .loading
       }
       do {
-        guard
-          let url = try await store.repository.download(
-            documentID: document.id,
-            original: false,
-            progress: { @Sendable value in
-              Task { @MainActor in
-                self.downloadProgress = value
-              }
-            })
-        else {
-          download = .error
-          break
-        }
+        let url = try await store.repository.download(
+          document: document,
+          original: false,
+          progress: { @Sendable value in
+            Task { @MainActor in
+              self.downloadProgress = value
+            }
+          })
 
         guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
           download = .error
@@ -132,11 +127,7 @@ class DocumentDetailModel {
     guard case .initial = originalDownload else { return }
     originalDownload = .loading
     do {
-      guard let url = try await store.repository.download(documentID: document.id, original: true)
-      else {
-        originalDownload = .error
-        return
-      }
+      let url = try await store.repository.download(document: document, original: true)
       originalDownload = .loaded(url: url)
     } catch {
       originalDownload = .error

@@ -13,7 +13,7 @@ let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDef
 
 extension UserDefaults {
   @MainActor
-  public static let group = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")!
+  public static let group = UserDefaults(suiteName: AppGroup.identifier)!
 
   public func load<Value>(_: Value.Type, key: String, storage: UserDefaults = .standard) throws
     -> Value? where Value: Decodable

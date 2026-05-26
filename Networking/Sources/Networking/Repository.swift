@@ -76,10 +76,18 @@ public protocol Repository: Sendable {
   nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest
 
-  func download(documentID: UInt) async throws -> URL?
+  func download(documentID: UInt) async throws -> URL
 
   func download(documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?)
-    async throws -> URL?
+    async throws -> URL
+
+  // Preferred entry point: callers that already hold a Document supply it so
+  // the cache layer can use Document.modified as a staleness key without an
+  // extra round trip.
+  func download(
+    document: Document, original: Bool,
+    progress: (@Sendable (Double) -> Void)?
+  ) async throws -> URL
 
   func suggestions(documentId: UInt) async throws -> Suggestions
 
@@ -138,12 +146,24 @@ public protocol Repository: Sendable {
 }
 
 extension Repository {
-  public func download(documentID: UInt) async throws -> URL? {
+  public func download(documentID: UInt) async throws -> URL {
     try await download(documentID: documentID, original: false, progress: nil)
   }
 
-  public func download(documentID: UInt, original: Bool) async throws -> URL? {
+  public func download(documentID: UInt, original: Bool) async throws -> URL {
     try await download(documentID: documentID, original: original, progress: nil)
+  }
+
+  // Default impl for conformers that don't implement the Document-aware path:
+  // fall back to the id-keyed call. ApiRepository overrides this directly to
+  // avoid a redundant document fetch when threading staleness through the
+  // ContentStore.
+  public func download(
+    document: Document, original: Bool = false,
+    progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws -> URL {
+    try await download(
+      documentID: document.id, original: original, progress: progress)
   }
 
   // Helper method documents with a title search
