@@ -7,7 +7,6 @@
 
 import AuthenticationServices
 import Common
-import MetaCodable
 import SwiftUI
 import os
 
@@ -149,7 +148,7 @@ public final class OIDCClient {
 
     struct HeadlessConfig: Decodable {
       struct DataContainer: Decodable { let socialaccount: SocialAccount }
-      struct SocialAccount: Decodable { let providers: [OIDCProvider] }
+      struct SocialAccount: Decodable { let providers: [ApiOIDCProvider] }
       let data: DataContainer
     }
 
@@ -164,7 +163,7 @@ public final class OIDCClient {
       )
       return
     }
-    providers = config.data.socialaccount.providers.filter { $0.supported }
+    providers = config.data.socialaccount.providers.map(\.domain).filter(\.supported)
   }
 
   func fetchScope(providerId: String, csrf: String) async throws -> String {
@@ -348,15 +347,46 @@ public final class OIDCClient {
   }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct OIDCProvider: Decodable, Identifiable, Sendable {
+private struct ApiOIDCProvider: Decodable, Sendable {
+  let id: String
+  let name: String
+  let flows: [String]
+  let client_id: String
+  let openid_configuration_url: String?
+}
+
+extension ApiOIDCProvider {
+  var domain: OIDCProvider {
+    OIDCProvider(
+      id: id,
+      name: name,
+      flows: flows,
+      clientId: client_id,
+      openidConfigurationUrl: openid_configuration_url
+    )
+  }
+}
+
+public struct OIDCProvider: Identifiable, Sendable {
   public let id: String
   public let name: String
   public let flows: [String]
   public let clientId: String
   public let openidConfigurationUrl: String?
+
+  public init(
+    id: String,
+    name: String,
+    flows: [String],
+    clientId: String,
+    openidConfigurationUrl: String?
+  ) {
+    self.id = id
+    self.name = name
+    self.flows = flows
+    self.clientId = clientId
+    self.openidConfigurationUrl = openidConfigurationUrl
+  }
 
   public var supported: Bool {
     flows.contains("provider_redirect") && flows.contains("provider_token")
