@@ -1,0 +1,73 @@
+{
+    "id": 16,
+    "correspondent": 13,
+    "document_type": null,
+    "storage_path": null,
+    "title": "Versioned sample document",
+    "content": "Sample document content for version decoding tests.",
+    "tags": [],
+    "created": "2025-05-01",
+    "created_date": "2025-05-01",
+    "modified": "2026-05-27T18:33:38.117362Z",
+    "added": "2025-06-09T09:51:07.344847Z",
+    "deleted_at": null,
+    "archive_serial_number": null,
+    "original_file_name": "sample-original.pdf",
+    "archived_file_name": "2025-05-01 sample-archived.pdf",
+    "duplicate_documents": [],
+    "owner": null,
+    "user_can_change": true,
+    "is_shared_by_requester": false,
+    "notes": [
+        {
+            "id": 16,
+            "note": "Note from authenticated user",
+            "created": "2025-09-05T18:58:45.010766Z",
+            "user": {
+                "id": 4,
+                "username": "testuser",
+                "first_name": "",
+                "last_name": ""
+            }
+        },
+        {
+            "id": 17,
+            "note": "Note without user",
+            "created": "2025-09-05T18:59:43.356117Z",
+            "user": null
+        }
+    ],
+    "custom_fields": [
+        {
+            "value": [
+                16,
+                3,
+                28
+            ],
+            "field": 9
+        },
+        {
+            "value": "Sample custom field value",
+            "field": 13
+        }
+    ],
+    "page_count": 1,
+    "mime_type": "application/pdf",
+    "root_document": null,
+    "versions": [
+        {
+            "id": 35,
+            "added": "2026-05-26T17:46:20.249790Z",
+            "version_label": "V2",
+            "checksum": "e01dfa2f3493d94fe91cc0d92652d5ecbf58e6b4d641c68d92e3d14c861ef1c2",
+            "is_root": false
+        },
+        {
+            "id": 16,
+            "added": "2025-06-09T09:51:07.344847Z",
+            "version_label": "V1",
+            "checksum": "501ebfb7eadb0278de132157b4728a3e52c772a95396258422ea010836774846",
+            "is_root": true
+        }
+    ]
+}

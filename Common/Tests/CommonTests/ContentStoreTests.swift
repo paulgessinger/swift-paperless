@@ -32,11 +32,10 @@ struct ContentStoreTests {
   static let serverB = UUID()
 
   static func key(
-    server: UUID = serverA, doc: UInt = 42, version: String = "current",
+    server: UUID = serverA, version: UInt = 42,
     kind: ContentStore.Kind = .archive
   ) -> ContentStore.Key {
-    ContentStore.Key(
-      serverID: server, documentRemoteID: doc, versionID: version, kind: kind)
+    ContentStore.Key(serverID: server, versionID: version, kind: kind)
   }
 
   @Test
@@ -44,10 +43,18 @@ struct ContentStoreTests {
     let (store, _) = try Self.makeStore()
     let k = Self.key()
     #expect(store.url(for: k) == store.url(for: k))
-    #expect(store.url(for: k) != store.url(for: Self.key(doc: 43)))
+    #expect(store.url(for: k) != store.url(for: Self.key(version: 43)))
     #expect(store.url(for: k) != store.url(for: Self.key(server: Self.serverB)))
     #expect(store.url(for: k) != store.url(for: Self.key(kind: .original)))
-    #expect(store.url(for: k) != store.url(for: Self.key(version: "other")))
+  }
+
+  @Test
+  func urlIncludesVersionInPath() throws {
+    let (store, _) = try Self.makeStore()
+    let url = store.url(for: Self.key(version: 35, kind: .archive))
+    #expect(url.pathComponents.contains("35"))
+    #expect(url.pathComponents.contains(Self.serverA.uuidString))
+    #expect(url.lastPathComponent == "archive.pdf")
   }
 
   @Test
