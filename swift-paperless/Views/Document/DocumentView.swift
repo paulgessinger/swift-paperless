@@ -767,6 +767,7 @@ struct DocumentView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var networkMonitor = NetworkMonitor()
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
@@ -774,4 +775,5 @@ struct DocumentView: View {
     .environmentObject(errorController)
     .environmentObject(connectionManager)
     .environment(RouteManager())
+    .environment(networkMonitor)
 }
