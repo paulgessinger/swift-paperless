@@ -6,7 +6,6 @@
 import Common
 import DataModel
 import Foundation
-import MetaCodable
 
 // MARK: - Wire type for reading documents
 //
@@ -15,18 +14,16 @@ import MetaCodable
 // associated-type pin); the wire type itself surfaces in that public
 // signature even though all consumers should map to `.domain` immediately.
 
-@Codable
-public struct ApiDocument: Sendable {
+public struct ApiDocument: Codable, Sendable {
   var id: UInt
   var title: String
   var archive_serial_number: UInt?
   var document_type: UInt?
   var correspondent: UInt?
-  // `created` arrives as YYYY-MM-DD; DateOnlyCoder parses in the local
-  // timezone (matches the previous DataModel.Document behaviour) so callers
-  // don't see a one-day shift when the host is east of UTC.
-  @CodedBy(DateOnlyCoder())
-  var created: Date
+  // `created` arrives as YYYY-MM-DD; @DateOnlyCodable parses in the local timezone
+  // (matches the previous DataModel.Document behaviour) so callers don't see
+  // a one-day shift when the host is east of UTC.
+  @DateOnlyCodable var created: Date
   var tags: [UInt]
   var added: Date?
   var modified: Date?
@@ -72,37 +69,29 @@ extension ApiDocument {
 
 // MARK: - Wire type for updating documents
 //
-// MetaCodable here earns its keep: `@CodedBy(NullCoder<…>)` is what makes the
-// server actually unset a foreign key when we send Swift `nil` (a missing
-// key is treated as "unchanged" by paperless-ngx), and `@CodedBy(DateOnlyCoder())`
-// keeps `created` as YYYY-MM-DD on the wire.
+// `@NullCodable` makes the server actually unset a foreign key when we send
+// Swift `nil` (a missing key is treated as "unchanged" by paperless-ngx,
+// while `null` means "clear"). `@DateOnlyCodable` keeps `created` as YYYY-MM-DD.
 
-@Codable
-struct ApiDocumentUpdate: Sendable {
+struct ApiDocumentUpdate: Codable, Sendable {
   var id: UInt
   var title: String
 
-  @CodedBy(NullCoder<UInt>())
-  var archive_serial_number: UInt?
+  @NullCodable var archive_serial_number: UInt?
 
-  @CodedBy(NullCoder<UInt>())
-  var document_type: UInt?
+  @NullCodable var document_type: UInt?
 
-  @CodedBy(NullCoder<UInt>())
-  var correspondent: UInt?
+  @NullCodable var correspondent: UInt?
 
-  @CodedBy(DateOnlyCoder())
-  var created: Date
+  @DateOnlyCodable var created: Date
 
   var tags: [UInt]
 
-  @CodedBy(NullCoder<UInt>())
-  var storage_path: UInt?
+  @NullCodable var storage_path: UInt?
 
   var owner: Owner
 
-  @CodedBy(NullCoder<Int>())
-  var page_count: Int?
+  @NullCodable var page_count: Int?
 
   var custom_fields: CustomFieldRawEntryList
   var set_permissions: Permissions?
@@ -145,9 +134,8 @@ struct ApiNotesPayload: Codable, Sendable {
     }
   }
 
-  // Required to satisfy ApiDocument's @Codable synthesis. The full
-  // round-trip is never exercised — the only writer is ApiDocumentUpdate,
-  // which doesn't carry notes.
+  // The full round-trip is never exercised — the only writer is
+  // ApiDocumentUpdate, which doesn't carry notes.
   func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode([UInt]())

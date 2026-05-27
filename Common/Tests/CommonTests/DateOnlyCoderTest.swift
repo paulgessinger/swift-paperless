@@ -6,19 +6,15 @@
 //
 
 import Foundation
-import MetaCodable
 import Testing
 
 @testable import Common
 
-@Codable
-@MemberInit
-struct TestStruct {
-  @CodedBy(DateOnlyCoder())
-  var created: Date
+struct TestStruct: Codable {
+  @DateOnlyCodable var created: Date
 }
 
-@Suite("DateOnlyCoder Tests")
+@Suite("DateOnly Tests")
 struct DateOnlyCoderTestSuite {
 
   @Test("Date only coder")
