@@ -5,36 +5,31 @@
 
 import DataModel
 import Foundation
-import MetaCodable
 
 // MARK: - Wire type for reading correspondents from the API
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiCorrespondent: Sendable {
+struct ApiCorrespondent: Decodable, Sendable {
   var id: UInt
-  @Default(nil as UInt?)
-  var documentCount: UInt?
-  @Default(nil as Date?)
-  var lastCorrespondence: Date?
+  var document_count: UInt?
+  var last_correspondence: Date?
   var name: String
   var slug: String
-  var matchingAlgorithm: MatchingAlgorithm
+  var matching_algorithm: MatchingAlgorithm
   var match: String
-  var isInsensitive: Bool
+  var is_insensitive: Bool
 }
 
 extension ApiCorrespondent {
   var domain: Correspondent {
     Correspondent(
       id: id,
-      documentCount: documentCount,
-      lastCorrespondence: lastCorrespondence,
+      documentCount: document_count,
+      lastCorrespondence: last_correspondence,
       name: name,
       slug: slug,
-      matchingAlgorithm: matchingAlgorithm,
+      matchingAlgorithm: matching_algorithm,
       match: match,
-      isInsensitive: isInsensitive
+      isInsensitive: is_insensitive
     )
   }
 }

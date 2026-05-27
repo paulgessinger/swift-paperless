@@ -378,40 +378,6 @@ public class ApiRepository {
     }
   }
 
-  private func get<T: Decodable & Model & Sendable>(_ type: T.Type, id: UInt) async throws -> T? {
-    try await get(type, endpoint: .single(T.self, id: id))
-  }
-
-  private func all<T>(_: T.Type) async throws -> [T]
-  where T: Decodable & Model & Sendable {
-    let endpoint: Endpoint =
-      switch T.self {
-      case is Correspondent.Type:
-        .correspondents()
-      case is DocumentType.Type:
-        .documentTypes()
-      case is Tag.Type:
-        .tags()
-      case is SavedView.Type:
-        .savedViews()
-      case is StoragePath.Type:
-        .storagePaths()
-      case is User.Type:
-        .users()
-      case is UserGroup.Type:
-        .groups()
-      case is CustomField.Type:
-        .customFields()
-      default:
-        fatalError("Invalid type")
-      }
-
-    let cursor = try PageCursor<T>(
-      repository: self,
-      initialURL: url(endpoint))
-    return try await cursor.collectAll()
-  }
-
 }
 
 extension ApiRepository: Repository {
