@@ -1,13 +1,19 @@
+//
+//  ApiSavedViewTest.swift
+//  Networking
+//
+
 import Common
+import DataModel
 import Foundation
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 private let decoder = JSONDecoder()
 
 @Suite
-struct SavedViewTest {
+struct ApiSavedViewTest {
   @Test func testDecoding() throws {
     do {
       let input = """
@@ -31,7 +37,7 @@ struct SavedViewTest {
         }
         """.data(using: .utf8)!
 
-      let result = try decoder.decode(SavedView.self, from: input)
+      let result = try decoder.decode(ApiSavedView.self, from: input).domain
       #expect(result.id == 5)
       #expect(result.name == "Aktien Kauf")
       #expect(result.showOnDashboard == false)
@@ -62,7 +68,7 @@ struct SavedViewTest {
         }
         """.data(using: .utf8)!
 
-      let result = try decoder.decode(SavedView.self, from: input)
+      let result = try decoder.decode(ApiSavedView.self, from: input).domain
       #expect(result.id == 5)
       #expect(result.name == "Aktien Kauf")
       #expect(result.showOnDashboard == false)
@@ -96,7 +102,7 @@ struct SavedViewTest {
       }
       """.data(using: .utf8)!
 
-    let result = try decoder.decode(SavedView.self, from: input)
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
     #expect(result.id == 1)
     #expect(result.name == "Inbox")
     #expect(result.showOnDashboard == true)
@@ -129,7 +135,7 @@ struct SavedViewTest {
       }
       """.data(using: .utf8)!
 
-    let result = try decoder.decode(SavedView.self, from: input)
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
     #expect(result.id == 1)
     #expect(result.name == "inbox")
     #expect(result.showOnDashboard == true)
@@ -156,7 +162,7 @@ struct SavedViewTest {
       }
       """.data(using: .utf8)!
 
-    let result = try decoder.decode(SavedView.self, from: input)
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
     #expect(result.id == 1)
     #expect(result.name == "inbox")
     #expect(result.showOnDashboard == true)
@@ -168,12 +174,13 @@ struct SavedViewTest {
   /// Backend v3+ removed show_on_dashboard and show_in_sidebar; they default to false when absent.
   @Test func testDecodingV3WithoutShowFields() throws {
     let data = try #require(testData("Data/SavedView/saved_view_perms_v3.json"))
-    let result = try decoder.decode(ListResponse<SavedView>.self, from: data)
+    let result = try decoder.decode(ListResponse<ApiSavedView>.self, from: data)
+    let results = result.results.map(\.domain)
 
     #expect(result.count == 7)
-    #expect(result.results.count == 7)
+    #expect(results.count == 7)
 
-    let first = try #require(result.results.first)
+    let first = try #require(results.first)
     #expect(first.id == 7)
     #expect(first.name == "ASN: 1")
     #expect(first.showOnDashboard == false)
@@ -198,7 +205,7 @@ struct SavedViewTest {
       }
       """.data(using: .utf8)!
 
-    let result = try decoder.decode(SavedView.self, from: input)
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
     #expect(result.owner == .unset)
     #expect(result.userCanChange == false)
   }
@@ -214,7 +221,7 @@ struct SavedViewTest {
       }
       """.data(using: .utf8)!
 
-    let result = try decoder.decode(SavedView.self, from: input)
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
     #expect(result.owner == .unset)
     #expect(result.userCanChange == true)
   }
