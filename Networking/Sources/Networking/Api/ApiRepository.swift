@@ -837,7 +837,8 @@ extension ApiRepository: Repository {
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     Logger.networking.notice("Get suggestions")
     return try await send(
-      endpoint: .suggestions(documentId: documentId), returns: Suggestions.self)
+      endpoint: .suggestions(documentId: documentId), returns: ApiSuggestions.self
+    ).domain
   }
 
   // MARK: Saved views
@@ -887,18 +888,18 @@ extension ApiRepository: Repository {
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     let configurations = try await send(
-      endpoint: .appConfiguration(), returns: [ServerConfiguration].self)
+      endpoint: .appConfiguration(), returns: [ApiServerConfiguration].self)
 
     guard let firstConfig = configurations.first else {
       Logger.networking.error("No server configuration found")
       throw RequestError.invalidResponse
     }
 
-    return firstConfig
+    return firstConfig.domain
   }
 
   public func remoteVersion() async throws -> RemoteVersion {
-    try await send(endpoint: .remoteVersion(), returns: RemoteVersion.self)
+    try await send(endpoint: .remoteVersion(), returns: ApiRemoteVersion.self).domain
   }
 
   // MARK: Others

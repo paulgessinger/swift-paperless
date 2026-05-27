@@ -6,26 +6,13 @@
 //
 
 import Common
-import MetaCodable
 
-@Codable
-@CodingKeys(.snake_case)
 public struct RemoteVersion: Sendable {
-  @CodedAs("version")
-  private let versionImpl: String
-
+  public let version: Version?
   public let updateAvailable: Bool
 
-  public init(version: Version, updateAvailable: Bool) {
-    self.versionImpl = "v\(version)"
+  public init(version: Version?, updateAvailable: Bool) {
+    self.version = version
     self.updateAvailable = updateAvailable
-  }
-
-  public var version: Version? {
-    if versionImpl.hasPrefix("v") {
-      return Version(String(versionImpl.dropFirst()))
-    } else {
-      return Version(versionImpl)
-    }
   }
 }
