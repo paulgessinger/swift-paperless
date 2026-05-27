@@ -695,7 +695,7 @@ extension ApiRepository: Repository {
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    try await send(endpoint: .metadata(documentId: documentId), returns: Metadata.self)
+    try await send(endpoint: .metadata(documentId: documentId), returns: ApiMetadata.self).domain
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
