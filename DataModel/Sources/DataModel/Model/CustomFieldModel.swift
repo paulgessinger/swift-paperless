@@ -5,9 +5,7 @@
 //  Created by AI Assistant on 26.03.2024.
 //
 
-import Common
 import Foundation
-import MetaCodable
 
 public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable, Sendable {
   case string
@@ -78,32 +76,31 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
   }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
-public struct CustomFieldSelectOption: Identifiable, Hashable, Sendable {
+// Wire-symmetric leaf value type — round-tripped by ApiCustomFieldExtraData
+// and the (future) storage layer. Stays Codable per the Stage 3 principle.
+public struct CustomFieldSelectOption: Codable, Identifiable, Hashable, Sendable {
   public var id: String
   public var label: String
+
+  public init(id: String, label: String) {
+    self.id = id
+    self.label = label
+  }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct CustomFieldExtraData: Sendable, Hashable {
-  @Default([CustomFieldSelectOption]())
   public var selectOptions: [CustomFieldSelectOption]
-
-  @Default(nil as String?)
-  @CodedBy(NullCoder<String>())
   public var defaultCurrency: String?
 
-  @usableFromInline
-  static var `default`: Self { .init() }
+  public init(
+    selectOptions: [CustomFieldSelectOption] = [],
+    defaultCurrency: String? = nil
+  ) {
+    self.selectOptions = selectOptions
+    self.defaultCurrency = defaultCurrency
+  }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct CustomField: Identifiable, Model, Hashable, Named, Sendable {
   public typealias SelectOption = CustomFieldSelectOption
   public typealias ExtraData = CustomFieldExtraData
@@ -112,11 +109,20 @@ public struct CustomField: Identifiable, Model, Hashable, Named, Sendable {
   public var id: UInt
   public var name: String
   public var dataType: DataType
-
-  @Default(CustomFieldExtraData.default)
   public var extraData: ExtraData
-
-  @IgnoreEncoding
-  @Default(nil as UInt?)
   public var documentCount: UInt?
+
+  public init(
+    id: UInt,
+    name: String,
+    dataType: DataType,
+    extraData: ExtraData = ExtraData(),
+    documentCount: UInt? = nil
+  ) {
+    self.id = id
+    self.name = name
+    self.dataType = dataType
+    self.extraData = extraData
+    self.documentCount = documentCount
+  }
 }

@@ -1,21 +1,20 @@
 //
-//  CustomFieldModelTests.swift
-//  DataModelTests
-//
-//  Created by AI Assistant on 26.03.2024.
+//  ApiCustomFieldTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
 import Foundation
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 private let decoder = makeDecoder(tz: .current)
 
-@Suite("CustomFieldModelTests")
-struct CustomFieldModelTests {
-  @Test("Test decoding a select type custom field")
+@Suite("ApiCustomFieldTest")
+struct ApiCustomFieldTest {
+  @Test("Decode a select-type custom field")
   func testDecodingSelectField() throws {
     let json = """
       {
@@ -39,7 +38,7 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let field: CustomField = try decoder.decode(CustomField.self, from: json)
+    let field = try decoder.decode(ApiCustomField.self, from: json).domain
 
     #expect(field.id == 10)
     #expect(field.name == "Custom select")
@@ -53,7 +52,7 @@ struct CustomFieldModelTests {
     #expect(field.extraData.selectOptions[1].id == "VJc5Rk1yKQI95sFH")
   }
 
-  @Test("Test decoding a monetary type custom field")
+  @Test("Decode a monetary-type custom field")
   func testDecodingMonetaryField() throws {
     let json = """
       {
@@ -68,7 +67,7 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let field: CustomField = try decoder.decode(CustomField.self, from: json)
+    let field = try decoder.decode(ApiCustomField.self, from: json).domain
 
     #expect(field.id == 5)
     #expect(field.name == "Custom money USD explicit")
@@ -78,7 +77,7 @@ struct CustomFieldModelTests {
     #expect(field.extraData.selectOptions.isEmpty)
   }
 
-  @Test("Test decoding a custom field list")
+  @Test("Decode a custom field list")
   func testDecodingCustomFieldList() throws {
     let json = """
       {
@@ -116,66 +115,27 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let list: ListResponse<CustomField> = try decoder.decode(
-      ListResponse<CustomField>.self, from: json)
+    let list = try decoder.decode(ListResponse<ApiCustomField>.self, from: json)
+    let results = list.results.map(\.domain)
 
     #expect(list.count == 2)
     #expect(list.next == nil)
     #expect(list.previous == nil)
-    #expect(list.results.count == 2)
+    #expect(results.count == 2)
 
-    // First result is select field
-    let selectField = list.results[0]
+    let selectField = results[0]
     #expect(selectField.id == 10)
     #expect(selectField.dataType == .select)
     #expect(selectField.extraData.selectOptions.count == 1)
 
-    // Second result is monetary field
-    let monetaryField = list.results[1]
+    let monetaryField = results[1]
     #expect(monetaryField.id == 5)
     #expect(monetaryField.dataType == .monetary)
     #expect(monetaryField.extraData.defaultCurrency == "USD")
   }
 
-  @Test("Test decoding all data types")
-  func testDecodingAllDataTypes() throws {
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "string"))
-        == .string)
-
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "longtext"))
-        == .longText)
-
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "url"))
-        == .url)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "date"))
-        == .date)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "boolean"))
-        == .boolean)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "integer"))
-        == .integer)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "float"))
-        == .float)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "monetary"))
-        == .monetary)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "documentlink"))
-        == .documentLink)
-    #expect(
-      try #require(CustomFieldDataType(rawValue: "select"))
-        == .select)
-
-  }
-
   @Test(
-    "Test decoding custom fields with all data types",
+    "Decode custom fields with each data type",
     arguments: [
       "string",
       "longtext",
@@ -203,47 +163,12 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let field = try decoder.decode(CustomField.self, from: json)
+    let field = try decoder.decode(ApiCustomField.self, from: json).domain
     #expect(field.dataType.rawValue == typeStr)
     #expect(field.dataType != .other(typeStr))
   }
 
-  @Test("Test encoding and decoding roundtrip")
-  func testEncodingDecodingRoundtrip() throws {
-    let originalField = CustomField(
-      id: 1,
-      name: "Test Field",
-      dataType: .select,
-      extraData: CustomField.ExtraData(
-        selectOptions: [
-          CustomField.SelectOption(id: "opt1", label: "Option 1"),
-          CustomField.SelectOption(id: "opt2", label: "Option 2"),
-        ],
-        defaultCurrency: "EUR"
-      ),
-      documentCount: 5
-    )
-
-    let encoder = JSONEncoder()
-
-    let encoded = try encoder.encode(originalField)
-    let decoded = try decoder.decode(CustomField.self, from: encoded)
-
-    #expect(decoded.id == originalField.id)
-    #expect(decoded.name == originalField.name)
-    #expect(decoded.dataType == originalField.dataType)
-    #expect(decoded.documentCount == nil)  // we don't encode the document count
-    #expect(decoded.extraData.defaultCurrency == originalField.extraData.defaultCurrency)
-    #expect(decoded.extraData.selectOptions.count == originalField.extraData.selectOptions.count)
-    #expect(decoded.extraData.selectOptions[0].id == originalField.extraData.selectOptions[0].id)
-    #expect(
-      decoded.extraData.selectOptions[0].label == originalField.extraData.selectOptions[0].label)
-    #expect(decoded.extraData.selectOptions[1].id == originalField.extraData.selectOptions[1].id)
-    #expect(
-      decoded.extraData.selectOptions[1].label == originalField.extraData.selectOptions[1].label)
-  }
-
-  @Test("Test decoding unknown data type")
+  @Test("Decode unknown data type as .other(...)")
   func testDecodingUnknownDataType() throws {
     let json = """
       {
@@ -258,12 +183,11 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let field = try decoder.decode(CustomField.self, from: json)
-
+    let field = try decoder.decode(ApiCustomField.self, from: json).domain
     #expect(field.dataType == .other("future_type"))
   }
 
-  @Test("Test decoding string field with null select options")
+  @Test("Decode tolerates null entries in select_options")
   func testDecodingStringFieldWithNullSelectOptions() throws {
     let json = """
       {
@@ -280,7 +204,7 @@ struct CustomFieldModelTests {
       }
       """.data(using: .utf8)!
 
-    let field = try decoder.decode(CustomField.self, from: json)
+    let field = try decoder.decode(ApiCustomField.self, from: json).domain
 
     #expect(field.id == 3)
     #expect(field.name == "Reference number")
@@ -288,5 +212,22 @@ struct CustomFieldModelTests {
     #expect(field.documentCount == 2)
     #expect(field.extraData.defaultCurrency == nil)
     #expect(field.extraData.selectOptions.isEmpty)
+  }
+}
+
+@Suite("CustomFieldDataType raw values")
+struct CustomFieldDataTypeRawTest {
+  @Test("All data types round-trip raw values")
+  func testDecodingAllDataTypes() throws {
+    #expect(try #require(CustomFieldDataType(rawValue: "string")) == .string)
+    #expect(try #require(CustomFieldDataType(rawValue: "longtext")) == .longText)
+    #expect(try #require(CustomFieldDataType(rawValue: "url")) == .url)
+    #expect(try #require(CustomFieldDataType(rawValue: "date")) == .date)
+    #expect(try #require(CustomFieldDataType(rawValue: "boolean")) == .boolean)
+    #expect(try #require(CustomFieldDataType(rawValue: "integer")) == .integer)
+    #expect(try #require(CustomFieldDataType(rawValue: "float")) == .float)
+    #expect(try #require(CustomFieldDataType(rawValue: "monetary")) == .monetary)
+    #expect(try #require(CustomFieldDataType(rawValue: "documentlink")) == .documentLink)
+    #expect(try #require(CustomFieldDataType(rawValue: "select")) == .select)
   }
 }
