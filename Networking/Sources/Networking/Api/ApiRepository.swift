@@ -870,15 +870,26 @@ extension ApiRepository: Repository {
   // MARK: Saved views
 
   public func savedViews() async throws -> [SavedView] {
-    try await all(SavedView.self)
+    let cursor = try PageCursor<ApiSavedView>(
+      repository: self,
+      initialURL: url(.savedViews()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(savedView view: ProtoSavedView) async throws -> SavedView {
-    try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
+    let api: ApiSavedView = try await create(
+      element: ApiSavedViewCreate(from: view),
+      endpoint: .createSavedView(),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func update(savedView view: SavedView) async throws -> SavedView {
-    try await update(element: view, endpoint: .savedView(id: view.id))
+    let api: ApiSavedView = try await update(
+      element: ApiSavedViewUpdate(from: view),
+      endpoint: .savedView(id: view.id),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func delete(savedView view: SavedView) async throws {
