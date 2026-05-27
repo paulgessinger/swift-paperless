@@ -275,7 +275,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless"
+            "value" : "Papirløs"
           }
         },
         "de" : {
@@ -293,25 +293,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless"
+            "value" : "Sans papier"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless"
+            "value" : "Senza Carta"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless"
+            "value" : "Papierloos"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paperless"
+            "value" : "Bezpapierowy"
           }
         },
         "tr" : {
@@ -399,7 +399,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ASN"
+            "value" : "NAS"
           }
         },
         "it" : {
@@ -2213,7 +2213,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set"
+            "value" : "Imposta"
           }
         },
         "nl" : {
@@ -3922,7 +3922,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Beschrijving"
           }
         },
         "pl" : {
@@ -4231,7 +4231,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld documents"
+            "value" : "Documents %lld"
           }
         },
         "it" : {
@@ -7836,7 +7836,7 @@
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld notes"
+                  "value" : "Notes %lld"
                 }
               }
             }
@@ -7991,13 +7991,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%d tag"
+                  "value" : "Balise %d"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%d tags"
+                  "value" : "Tags %d"
                 }
               }
             }
@@ -8095,7 +8095,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "de" : {
@@ -8113,7 +8113,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "it" : {
@@ -8125,7 +8125,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "pl" : {
@@ -9295,7 +9295,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Beschrijving"
           }
         },
         "pl" : {
@@ -12624,7 +12624,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag"
+            "value" : "Étiquette"
           }
         },
         "it" : {
@@ -12642,7 +12642,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag"
+            "value" : "Znacznik"
           }
         },
         "tr" : {
@@ -14006,7 +14006,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ASN"
+            "value" : "NAS"
           }
         },
         "it" : {
