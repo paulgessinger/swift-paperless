@@ -20,8 +20,6 @@ public enum SettingsKeys: String {
   case filterBarConfiguration
 
   case editingUserInterfaceExperiment
-
-  case showDocumentDetailPropertyBar
 }
 
 extension PublishedUserDefaultsBacked {
@@ -110,9 +108,6 @@ public class AppSettings: ObservableObject {
 
   @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
   public var editingUserInterface: EditingUserInterface = .automatic
-
-  @PublishedUserDefaultsBacked(.showDocumentDetailPropertyBar)
-  public var showDocumentDetailPropertyBar: Bool = true
 
   public var lastAppVersion: AppVersion?
   @UserDefaultsBacked(appVersionKey)
