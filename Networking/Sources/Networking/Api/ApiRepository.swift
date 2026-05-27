@@ -1116,12 +1116,16 @@ extension ApiRepository: Repository {
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
     try await send(
       endpoint: .shareLinks(documentId: documentId),
-      returns: [DataModel.ShareLink].self)
+      returns: [ApiShareLink].self
+    ).map(\.domain)
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
-    try await create(
-      element: shareLink, endpoint: .createShareLink(), returns: ShareLink.self)
+    let api: ApiShareLink = try await create(
+      element: ApiShareLinkCreate(from: shareLink),
+      endpoint: .createShareLink(),
+      returns: ApiShareLink.self)
+    return api.domain
   }
 
   public func delete(shareLink: DataModel.ShareLink) async throws {
