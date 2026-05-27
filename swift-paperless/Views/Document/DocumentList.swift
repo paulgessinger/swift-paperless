@@ -34,7 +34,7 @@ struct LoadingDocumentList: View {
     }
     .listStyle(.plain)
     .task {
-      documents = try! await PreviewRepository().documents(filter: .default).fetch(limit: 10)
+      documents = await PreviewRepository().documents(filter: .default).fetch(limit: 10)
     }
   }
 }
