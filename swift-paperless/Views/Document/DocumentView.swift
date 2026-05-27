@@ -61,6 +61,7 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(NetworkMonitor.self) private var networkMonitor
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var filterModel = FilterModel()
   @State private var isFetching: Bool = false
@@ -368,6 +369,10 @@ struct DocumentView: View {
               Button("Mark connection needs re-auth") {
                 connectionManager.markNeedsAuth(for: id)
               }
+            }
+
+            Button(networkMonitor.debugForceOffline ? "Stop forcing offline" : "Force offline") {
+              networkMonitor.debugForceOffline.toggle()
             }
           }
         #endif
