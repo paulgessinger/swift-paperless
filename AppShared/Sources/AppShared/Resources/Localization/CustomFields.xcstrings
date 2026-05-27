@@ -732,7 +732,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revert"
+            "value" : "Odwróć"
           }
         },
         "tr" : {
@@ -1998,7 +1998,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In"
+            "value" : "Over"
           }
         },
         "pl" : {
