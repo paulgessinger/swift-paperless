@@ -37,9 +37,6 @@ packages:
   swift-markdown-ui:
     url: https://github.com/gonzalezreal/swift-markdown-ui.git
     majorVersion: 2.3.1
-  BezelKit:
-    url: https://github.com/markbattistella/BezelKit
-    majorVersion: 4.1.1
   xcstrings-tool-plugin:
     url: https://github.com/liamnichols/xcstrings-tool-plugin
     majorVersion: 1.2.0
@@ -69,7 +66,6 @@ targets:
         product: NukeUI
       - package: swift-markdown-ui
         product: MarkdownUI
-      - package: BezelKit
       - package: AppShared
       - package: Common
       - package: DataModel

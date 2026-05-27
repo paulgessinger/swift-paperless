@@ -27,7 +27,3 @@ Swift Paperless uses the following third-party libraries for various features:
 ## MetaCodable
 [GitHub](https://github.com/SwiftyLab/MetaCodable)
 *MIT license*
-
-## BezelKit
-[GitHub](https://github.com/markbattistella/BezelKit)
-MIT License
