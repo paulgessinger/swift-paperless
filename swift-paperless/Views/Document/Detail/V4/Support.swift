@@ -318,6 +318,7 @@ struct DocumentTitleView: View {
               .background(Circle().fill(backgroundColor))
           }
           .buttonStyle(.plain)
+          .accessibilityIdentifier("documentEditButton")
           .padding(.top, 3)
         } else {
           Image(systemName: "lock.fill")
