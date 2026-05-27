@@ -462,49 +462,40 @@ extension ApiRepository: Repository {
   }
 
   public func download(
-    documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
-  ) async throws -> URL {
-    // No Document handle → no modified timestamp to validate the cache,
-    // so streamDownload's nil-modified guard bypasses ContentStore and
-    // fetches fresh every call. Callers should prefer download(document:...).
-    try await streamDownload(
-      documentID: documentID, original: original,
-      modified: nil, progress: progress)
-  }
-
-  public func download(
     document: Document, original: Bool = false,
     progress: (@Sendable (Double) -> Void)? = nil
   ) async throws -> URL {
-    try await streamDownload(
-      documentID: document.id, original: original,
-      modified: document.modified, progress: progress)
+    try await streamDownload(document: document, original: original, progress: progress)
   }
 
   private func streamDownload(
-    documentID: UInt, original: Bool,
-    modified: Date?, progress: (@Sendable (Double) -> Void)?
+    document: Document, original: Bool,
+    progress: (@Sendable (Double) -> Void)?
   ) async throws -> URL {
     Logger.networking.notice("Downloading document (original: \(original))")
+
+    let version = document.currentVersionID
 
     // Without a staleness signal (modified timestamp) we can't validate a
     // cached blob — and writing one back without `modified` would cache it
     // indefinitely with no way to detect server-side changes. Bypass the
     // ContentStore entirely in that case. Also fall back when the app-group
     // container isn't available (host tests, mis-configured entitlement).
-    guard let contentStore, let modified else {
+    guard let contentStore, let modified = document.modified else {
       return try await fetchToTemp(
-        documentID: documentID, original: original, progress: progress)
+        documentID: document.id, original: original, version: version,
+        progress: progress)
     }
 
     let key = ContentStore.Key(
       serverID: connection.serverID,
-      documentRemoteID: documentID,
+      versionID: version,
       kind: original ? .original : .archive)
 
     if let cached = contentStore.read(key, freshAgainst: modified) {
       Logger.networking.info(
-        "ContentStore hit for documentID \(documentID) (original: \(original))")
+        "ContentStore hit for documentID \(document.id) version \(version) (original: \(original))"
+      )
       progress?(1.0)
       return cached
     }
@@ -517,7 +508,7 @@ extension ApiRepository: Repository {
       defer { inFlightDownloads[key] = nil }
 
       let request = try request(
-        .download(documentId: documentID, original: original))
+        .download(documentId: document.id, original: original, version: version))
       let (tempURL, response) = try await urlSession.getDownload(
         for: request, progress: progress)
 
@@ -531,11 +522,11 @@ extension ApiRepository: Repository {
   }
 
   private func fetchToTemp(
-    documentID: UInt, original: Bool,
+    documentID: UInt, original: Bool, version: UInt?,
     progress: (@Sendable (Double) -> Void)?
   ) async throws -> URL {
     let request = try request(
-      .download(documentId: documentID, original: original))
+      .download(documentId: documentID, original: original, version: version))
     let (tempURL, response) = try await urlSession.getDownload(
       for: request, progress: progress)
     try validateDownloadResponse(response, request: request)
@@ -824,7 +815,8 @@ extension ApiRepository: Repository {
     func thumbnailRequest(document: Document) throws -> URLRequest
   {
     Logger.networking.debug("Get thumbnail for document \(document.id, privacy: .public)")
-    let url = try url(Endpoint.thumbnail(documentId: document.id))
+    let url = try url(
+      Endpoint.thumbnail(documentId: document.id, version: document.currentVersionID))
 
     var request = URLRequest(url: url)
     addTokenTo(request: &request)

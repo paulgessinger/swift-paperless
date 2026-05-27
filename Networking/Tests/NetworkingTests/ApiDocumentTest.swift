@@ -88,6 +88,48 @@ struct ApiDocumentTest {
     #expect(document.permissions == nil)
   }
 
+  @Test("Decodes the versions array from a multi-version document payload")
+  func testVersionsDecode() throws {
+    let data = try #require(testData("Data/Document/document_versions.json"))
+    let document = try decoder.decode(ApiDocument.self, from: data).domain
+
+    #expect(document.id == 16)
+    #expect(document.title == "Versioned sample document")
+    #expect(document.notes.count == 2)
+    #expect(document.customFields.count == 2)
+    #expect(document.versions.count == 2)
+
+    let v2 = try #require(document.versions.first { $0.id == 35 })
+    #expect(v2.label == "V2")
+    #expect(
+      v2.checksum
+        == "e01dfa2f3493d94fe91cc0d92652d5ecbf58e6b4d641c68d92e3d14c861ef1c2")
+    #expect(v2.isRoot == false)
+
+    let v1 = try #require(document.versions.first { $0.id == 16 })
+    #expect(v1.label == "V1")
+    #expect(
+      v1.checksum
+        == "501ebfb7eadb0278de132157b4728a3e52c772a95396258422ea010836774846")
+    #expect(v1.isRoot == true)
+
+    // V2 was added after V1, so it's the current version.
+    #expect(document.currentVersionID == 35)
+    #expect(document.rootVersionID == 16)
+  }
+
+  @Test("Older backends without a `versions` field produce an empty array")
+  func testVersionsAbsent() throws {
+    let data = try #require(testData("Data/Document/full.json"))
+    let document = try decoder.decode(ApiDocument.self, from: data).domain
+
+    #expect(document.versions.isEmpty)
+    // Fallback: doc id == root version id server-side, so both resolvers
+    // return the document id when the versions array is empty.
+    #expect(document.currentVersionID == document.id)
+    #expect(document.rootVersionID == document.id)
+  }
+
   @Test("Tests that the user_can_change field is correctly decoded, even if not present")
   func testUserCanChangeDefault() throws {
     let data = try #require(testData("Data/Document/full_no_user_can_change.json"))
