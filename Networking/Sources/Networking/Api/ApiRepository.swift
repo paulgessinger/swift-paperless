@@ -917,7 +917,10 @@ extension ApiRepository: Repository {
   // MARK: Custom fields
 
   public func customFields() async throws -> [CustomField] {
-    try await all(CustomField.self)
+    let cursor = try PageCursor<ApiCustomField>(
+      repository: self,
+      initialURL: url(.customFields()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   // MARK: Server configuration
