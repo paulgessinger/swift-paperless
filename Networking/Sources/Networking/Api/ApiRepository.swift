@@ -878,16 +878,26 @@ extension ApiRepository: Repository {
   // MARK: Storage paths
 
   public func storagePaths() async throws -> [StoragePath] {
-    try await all(StoragePath.self)
+    let cursor = try PageCursor<ApiStoragePath>(
+      repository: self,
+      initialURL: url(.storagePaths()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-    try await create(
-      element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
+    let api: ApiStoragePath = try await create(
+      element: ApiStoragePathCreate(from: storagePath),
+      endpoint: .createStoragePath(),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
-    try await update(element: storagePath, endpoint: .storagePath(id: storagePath.id))
+    let api: ApiStoragePath = try await update(
+      element: ApiStoragePathUpdate(from: storagePath),
+      endpoint: .storagePath(id: storagePath.id),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func delete(storagePath: StoragePath) async throws {
