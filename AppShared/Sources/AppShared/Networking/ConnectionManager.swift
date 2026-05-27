@@ -48,9 +48,41 @@ public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
     url = try container.decode(URL.self, forKey: .url)
     extraHeaders =
       try container.decodeIfPresent([Connection.HeaderValue].self, forKey: .extraHeaders) ?? []
-    user = try container.decode(User.self, forKey: .user)
+    user = try container.decode(StoredUser.self, forKey: .user).domain
     identity = try container.decodeIfPresent(String.self, forKey: .identity)
     friendlyName = try container.decodeIfPresent(String.self, forKey: .friendlyName)
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(url, forKey: .url)
+    try container.encode(extraHeaders, forKey: .extraHeaders)
+    try container.encode(StoredUser(from: user), forKey: .user)
+    try container.encodeIfPresent(identity, forKey: .identity)
+    try container.encodeIfPresent(friendlyName, forKey: .friendlyName)
+  }
+
+  // Persisted shape of `User` for the UserDefaults storage. Kept here (and
+  // not in `DataModel`) because this is local persistence, not wire
+  // serialization. After Stage 5 lands, the GRDB server row supersedes this
+  // and the inline Codable goes away.
+  private struct StoredUser: Codable {
+    var id: UInt
+    var is_superuser: Bool
+    var username: String
+    var groups: [UInt]?
+
+    init(from user: User) {
+      id = user.id
+      is_superuser = user.isSuperUser
+      username = user.username
+      groups = user.groups
+    }
+
+    var domain: User {
+      User(id: id, isSuperUser: is_superuser, username: username, groups: groups ?? [])
+    }
   }
 
   public var token: String? {

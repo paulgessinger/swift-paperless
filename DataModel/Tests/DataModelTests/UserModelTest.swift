@@ -11,9 +11,6 @@ import Testing
 
 @testable import DataModel
 
-private let tz = TimeZone(secondsFromGMT: 60 * 60)!
-private let decoder = makeDecoder(tz: tz)
-
 private struct Dummy: PermissionsModel {
   var owner: Owner
   var permissions: Permissions?
@@ -21,37 +18,6 @@ private struct Dummy: PermissionsModel {
 
 @Suite
 struct UserModelTest {
-  @Test func testDecoding() throws {
-    let data = try #require(testData("Data/users.json"))
-    let users = try decoder.decode([User].self, from: data)
-
-    // Test regular user
-    #expect(users[0].id == 42)
-    #expect(users[0].username == "testuser123")
-    #expect(users[0].isSuperUser == false)
-    #expect(users[0].groups == [1, 3, 5])
-
-    // Test admin user
-    #expect(users[1].id == 77)
-    #expect(users[1].username == "admin")
-    #expect(users[1].isSuperUser == true)
-    #expect(users[1].groups == [1])
-  }
-
-  @Test func testUserGroup() throws {
-    let jsonData = """
-      {
-          "id": 7,
-          "name": "Administrators"
-      }
-      """.data(using: .utf8)!
-
-    let group = try decoder.decode(UserGroup.self, from: jsonData)
-
-    #expect(group.id == 7)
-    #expect(group.name == "Administrators")
-  }
-
   @Test func testCanChange() throws {
     let user = User(id: 1, isSuperUser: false, username: "user", groups: [2, 3])
     let superUser = User(id: 2, isSuperUser: true, username: "superuser")
