@@ -78,30 +78,6 @@ extension Endpoint {
     Endpoint(path: "/api/config")
   }
 
-  public static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
-    var segment = ""
-    switch type {
-    case is Correspondent.Type:
-      segment = "correspondents"
-    case is DocumentType.Type:
-      segment = "document_types"
-    case is Tag.Type:
-      segment = "tags"
-    case is Document.Type:
-      return document(id: id)
-    case is SavedView.Type:
-      segment = "saved_views"
-    case is StoragePath.Type:
-      segment = "storage_paths"
-    default:
-      fatalError("Invalid type")
-    }
-
-    return Endpoint(
-      path: "/api/\(segment)/\(id)",
-      queryItems: [])
-  }
-
   public static func remoteVersion() -> Endpoint {
     Endpoint(path: "/api/remote_version")
   }
