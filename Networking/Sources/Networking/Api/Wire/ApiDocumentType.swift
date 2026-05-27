@@ -4,19 +4,16 @@
 //
 
 import DataModel
-import MetaCodable
 
 // MARK: - Wire type for reading document types
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiDocumentType: Sendable {
+struct ApiDocumentType: Decodable, Sendable {
   var id: UInt
   var name: String
   var slug: String
   var match: String
-  var matchingAlgorithm: MatchingAlgorithm
-  var isInsensitive: Bool
+  var matching_algorithm: MatchingAlgorithm
+  var is_insensitive: Bool
 }
 
 extension ApiDocumentType {
@@ -26,8 +23,8 @@ extension ApiDocumentType {
       name: name,
       slug: slug,
       match: match,
-      matchingAlgorithm: matchingAlgorithm,
-      isInsensitive: isInsensitive
+      matchingAlgorithm: matching_algorithm,
+      isInsensitive: is_insensitive
     )
   }
 }

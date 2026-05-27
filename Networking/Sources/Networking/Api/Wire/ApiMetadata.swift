@@ -4,39 +4,36 @@
 //
 
 import DataModel
-import MetaCodable
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiMetadata: Sendable {
-  var originalChecksum: String
-  var originalSize: Int64
-  var originalMimeType: String
-  var mediaFilename: String
-  var hasArchiveVersion: Bool
-  var originalMetadata: [Metadata.Item]
-  var archiveChecksum: String?
-  var archiveMediaFilename: String?
-  var originalFilename: String
-  var archiveSize: Int64?
-  var archiveMetadata: [Metadata.Item]?
+struct ApiMetadata: Decodable, Sendable {
+  var original_checksum: String
+  var original_size: Int64
+  var original_mime_type: String
+  var media_filename: String
+  var has_archive_version: Bool
+  var original_metadata: [Metadata.Item]
+  var archive_checksum: String?
+  var archive_media_filename: String?
+  var original_filename: String
+  var archive_size: Int64?
+  var archive_metadata: [Metadata.Item]?
   var lang: String
 }
 
 extension ApiMetadata {
   var domain: Metadata {
     Metadata(
-      originalChecksum: originalChecksum,
-      originalSize: originalSize,
-      originalMimeType: originalMimeType,
-      mediaFilename: mediaFilename,
-      hasArchiveVersion: hasArchiveVersion,
-      originalMetadata: originalMetadata,
-      archiveChecksum: archiveChecksum,
-      archiveMediaFilename: archiveMediaFilename,
-      originalFilename: originalFilename,
-      archiveSize: archiveSize,
-      archiveMetadata: archiveMetadata,
+      originalChecksum: original_checksum,
+      originalSize: original_size,
+      originalMimeType: original_mime_type,
+      mediaFilename: media_filename,
+      hasArchiveVersion: has_archive_version,
+      originalMetadata: original_metadata,
+      archiveChecksum: archive_checksum,
+      archiveMediaFilename: archive_media_filename,
+      originalFilename: original_filename,
+      archiveSize: archive_size,
+      archiveMetadata: archive_metadata,
       lang: lang
     )
   }

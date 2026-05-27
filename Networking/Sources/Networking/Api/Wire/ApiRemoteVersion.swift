@@ -5,13 +5,10 @@
 
 import Common
 import DataModel
-import MetaCodable
 
-@Codable
-@CodingKeys(.snake_case)
-struct ApiRemoteVersion: Sendable {
+struct ApiRemoteVersion: Decodable, Sendable {
   var version: String
-  var updateAvailable: Bool
+  var update_available: Bool
 }
 
 extension ApiRemoteVersion {
@@ -24,6 +21,6 @@ extension ApiRemoteVersion {
     } else {
       parsed = Version(version)
     }
-    return RemoteVersion(version: parsed, updateAvailable: updateAvailable)
+    return RemoteVersion(version: parsed, updateAvailable: update_available)
   }
 }
