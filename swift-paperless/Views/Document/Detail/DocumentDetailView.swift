@@ -36,20 +36,11 @@ struct DocumentDetailView: View {
   }
 
   var body: some View {
-    if AppFeatures.enabled(.documentDetailViewV4) {
-      DocumentDetailViewV4(
-        store: store,
-        connection: connectionManager.connection,
-        document: document,
-        navPath: navPath
-      )
-    } else {
-      DocumentDetailViewV3(
-        store: store,
-        connection: connectionManager.connection,
-        document: document,
-        navPath: navPath
-      )
-    }
+    DocumentDetailViewV4(
+      store: store,
+      connection: connectionManager.connection,
+      document: document,
+      navPath: navPath
+    )
   }
 }

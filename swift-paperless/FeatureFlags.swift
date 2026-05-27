@@ -5,24 +5,15 @@
 //  Created by Paul Gessinger on 24.01.26.
 //
 
-import AppShared
 import Foundation
 
 enum AppFeatures {
   case tipJar
-  case documentDetailViewV4
   case autoFocusSearchInDetailSheets
 
   static func enabled(_ feature: Self) -> Bool {
-    let channel = Bundle.main.appConfiguration
-
     return switch feature {
     case .tipJar: false  // disable for now until ready
-    case .documentDetailViewV4:
-      switch channel {
-      case .Debug, .Simulator, .TestFlight, .AppStore:
-        true
-      }
     case .autoFocusSearchInDetailSheets: false
     }
   }
