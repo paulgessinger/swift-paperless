@@ -4,21 +4,15 @@
 //
 
 import Foundation
-import MetaCodable
 import Testing
 
 @testable import Common
 
-@Codable
-@MemberInit
-private struct NullCodedOptional {
-  @CodedBy(NullCoder<UInt>())
-  var parent: UInt?
+private struct NullCodedOptional: Codable {
+  @NullCodable var parent: UInt?
 }
 
-@Codable
-@MemberInit
-private struct PlainOptional {
+private struct PlainOptional: Codable {
   var parent: UInt?
 }
 
