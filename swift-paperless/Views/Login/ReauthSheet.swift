@@ -16,6 +16,7 @@
 
 import AppShared
 import Common
+import DataModel
 import Networking
 import SwiftUI
 import os
@@ -94,7 +95,30 @@ struct ReauthSheet: View {
 
   var body: some View {
     NavigationStack {
-      VStack(spacing: 0) {
+      CredentialsStageView(onSuccess: handleSuccess) {
+        ReauthPreamble(stored: stored, mismatchMessage: mismatchMessage)
+      }
+      .navigationTitle(Text(.app(.reauthSheetTitle)))
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          CancelIconButton()
+        }
+      }
+      .environment(viewModel)
+      .environment(identityManager)
+    }
+    .task(id: stored.id) { prepopulate() }
+  }
+}
+
+private struct ReauthPreamble: View {
+  let stored: StoredConnection
+  let mismatchMessage: String?
+
+  var body: some View {
+    CustomSection {
+      VStack {
         if let mismatchMessage {
           HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: "xmark.circle.fill")
@@ -103,7 +127,6 @@ struct ReauthSheet: View {
               .font(.footnote)
             Spacer(minLength: 0)
           }
-          .padding(.horizontal)
           .padding(.vertical, 8)
         }
 
@@ -117,22 +140,26 @@ struct ReauthSheet: View {
             .lineLimit(1)
             .truncationMode(.middle)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
-        .padding(.bottom, 4)
-
-        CredentialsStageView(onSuccess: handleSuccess)
       }
-      .navigationTitle(Text(.app(.reauthSheetTitle)))
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          CancelIconButton()
-        }
-      }
-      .environment(viewModel)
-      .environment(identityManager)
+      .padding(.vertical)
     }
-    .task { prepopulate() }
   }
+}
+
+// MARK: - Previews
+
+#Preview("Reauth") {
+  @Previewable @StateObject var connectionManager = ConnectionManager(previewMode: true)
+  @Previewable @StateObject var errorController = ErrorController()
+
+  let stored = StoredConnection(
+    url: URL(string: "https://paperless.example.com")!,
+    extraHeaders: [],
+    user: User(id: 1, isSuperUser: false, username: "admin"),
+    friendlyName: "Home Server"
+  )
+
+  ReauthSheet(stored: stored)
+    .environmentObject(connectionManager)
+    .environmentObject(errorController)
 }
