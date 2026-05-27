@@ -1145,7 +1145,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Task #%@"
+            "value" : "Attività #%@"
           }
         },
         "nl" : {
@@ -1412,7 +1412,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tasks"
+            "value" : "Compiti"
           }
         },
         "nl" : {

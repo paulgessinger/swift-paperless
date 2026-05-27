@@ -399,7 +399,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ASN"
+            "value" : "NAS"
           }
         },
         "it" : {
@@ -2213,7 +2213,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set"
+            "value" : "Imposta"
           }
         },
         "nl" : {
@@ -3922,7 +3922,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Beschrijving"
           }
         },
         "pl" : {
@@ -4231,7 +4231,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld documents"
+            "value" : "Documents %lld"
           }
         },
         "it" : {
@@ -7836,7 +7836,7 @@
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld notes"
+                  "value" : "Notes %lld"
                 }
               }
             }
@@ -8095,7 +8095,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "de" : {
@@ -8113,7 +8113,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "it" : {
@@ -8125,7 +8125,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OK"
+            "value" : "Ok"
           }
         },
         "pl" : {
@@ -9295,7 +9295,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Beschrijving"
           }
         },
         "pl" : {
@@ -12642,7 +12642,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag"
+            "value" : "Znacznik"
           }
         },
         "tr" : {
@@ -14006,7 +14006,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ASN"
+            "value" : "NAS"
           }
         },
         "it" : {

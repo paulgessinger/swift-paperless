@@ -166,7 +166,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auto"
+            "value" : "Automatisk"
           }
         },
         "de" : {
@@ -249,7 +249,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exact"
+            "value" : "Exacte"
           }
         },
         "pl" : {
@@ -879,7 +879,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pattern"
+            "value" : "Sequenza"
           }
         },
         "nl" : {

@@ -151,7 +151,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "URL"
+            "value" : "Adres URL"
           }
         },
         "tr" : {
@@ -275,7 +275,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Build"
+            "value" : "Byg"
           }
         },
         "de" : {
@@ -293,19 +293,19 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Build"
+            "value" : "Construire"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Build"
+            "value" : "Costruisci"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Build"
+            "value" : "Bouwen"
           }
         },
         "pl" : {
@@ -1284,7 +1284,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Feedback"
+            "value" : "Tilbagemelding"
           }
         },
         "de" : {
@@ -1314,7 +1314,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Feedback"
+            "value" : "Terugkoppeling"
           }
         },
         "pl" : {
@@ -1632,7 +1632,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "Beschrijving"
           }
         },
         "pl" : {
