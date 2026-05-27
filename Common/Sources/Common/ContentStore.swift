@@ -8,7 +8,14 @@
 import Foundation
 import os
 
-/// On-disk blob cache keyed by `(serverID, documentRemoteID, versionID, kind)`.
+/// On-disk blob cache keyed by `(serverID, versionID, kind)`.
+///
+/// `versionID` is the server-side document version row id; since paperless-ngx
+/// stores versions as sibling rows in the document table, version ids share a
+/// namespace with document ids, so a single id uniquely identifies the
+/// content. For documents without a `versions` array (older backends, or
+/// single-file docs) callers pass the document id directly — it equals the
+/// root version id server-side.
 ///
 /// Lives in the app-group container so the Share Extension (and a future
 /// File Provider extension) can read it on a locked device. Files are written
@@ -35,18 +42,11 @@ public struct ContentStore: Sendable {
 
   public struct Key: Hashable, Sendable {
     public let serverID: UUID
-    public let documentRemoteID: UInt
-    public let versionID: String
+    public let versionID: UInt
     public let kind: Kind
 
-    public static let currentVersion = "current"
-
-    public init(
-      serverID: UUID, documentRemoteID: UInt,
-      versionID: String = Key.currentVersion, kind: Kind
-    ) {
+    public init(serverID: UUID, versionID: UInt, kind: Kind) {
       self.serverID = serverID
-      self.documentRemoteID = documentRemoteID
       self.versionID = versionID
       self.kind = kind
     }
@@ -86,8 +86,7 @@ public struct ContentStore: Sendable {
   private func directory(for key: Key) -> URL {
     canonicalRoot
       .appendingPathComponent(key.serverID.uuidString, isDirectory: true)
-      .appendingPathComponent(String(key.documentRemoteID), isDirectory: true)
-      .appendingPathComponent(key.versionID, isDirectory: true)
+      .appendingPathComponent(String(key.versionID), isDirectory: true)
   }
 
   public func url(for key: Key) -> URL {

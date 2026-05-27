@@ -52,6 +52,25 @@ public struct DocumentNote: Identifiable, Equatable, Sendable, Hashable {
   }
 }
 
+public struct DocumentVersion: Identifiable, Equatable, Sendable, Hashable {
+  public var id: UInt
+  public var added: Date
+  public var label: String?
+  public var checksum: String?
+  public var isRoot: Bool
+
+  public init(
+    id: UInt, added: Date, label: String? = nil,
+    checksum: String? = nil, isRoot: Bool
+  ) {
+    self.id = id
+    self.added = added
+    self.label = label
+    self.checksum = checksum
+    self.isRoot = isRoot
+  }
+}
+
 public struct Document: Identifiable, Equatable, Hashable, Sendable {
   public var id: UInt
   public var title: String
@@ -77,6 +96,13 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 
   public var notes: NotesPayload = .init()
   public var customFields: CustomFieldRawEntryList
+
+  // Server-side version rows for this document, newest-first or order-undefined
+  // depending on backend. Empty on backends predating multi-version support.
+  // `currentVersionID` and `rootVersionID` resolve the right id even when this
+  // is empty by falling back to `self.id` — the document id equals the root
+  // version id on the server (versions are sibling rows in the same table).
+  public var versions: [DocumentVersion] = []
 
   // Presense of this depends on the endpoint
   // If we didn't get a value, we likely just modified
@@ -109,6 +135,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     pageCount: Int? = nil,
     notes: NotesPayload = .init(),
     customFields: CustomFieldRawEntryList = CustomFieldRawEntryList(),
+    versions: [DocumentVersion] = [],
     userCanChange: Bool = true,
     permissions: Permissions? = nil,
     setPermissions: Permissions? = nil
@@ -129,6 +156,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     self.pageCount = pageCount
     self.notes = notes
     self.customFields = customFields
+    self.versions = versions
     self.userCanChange = userCanChange
     self.permissions = permissions
     self.setPermissions = setPermissions
@@ -148,6 +176,21 @@ extension Document {
     if let name = serverName, !name.isEmpty { return name }
     let base = title.isEmpty ? "document" : title
     return "\(base).pdf"
+  }
+
+  /// Id of the version the server returns when no `?version=` query is sent.
+  /// paperless serves the newest version by default; we mirror that by picking
+  /// the latest `added`. Falls back to `self.id` when `versions` is empty
+  /// (older backends, single-file documents) — the document id equals the
+  /// root version id server-side, so this fallback is correct, not a fudge.
+  public var currentVersionID: UInt {
+    versions.max(by: { $0.added < $1.added })?.id ?? id
+  }
+
+  /// Id of the original/root version. Same fallback rationale as
+  /// `currentVersionID`.
+  public var rootVersionID: UInt {
+    versions.first(where: \.isRoot)?.id ?? id
   }
 }
 
