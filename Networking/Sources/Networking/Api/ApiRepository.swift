@@ -632,27 +632,35 @@ extension ApiRepository: Repository {
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
-    try await get(Correspondent.self, id: id)
+    try await get(ApiCorrespondent.self, endpoint: .correspondent(id: id))?.domain
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-    try await create(
-      element: correspondent,
+    let api: ApiCorrespondent = try await create(
+      element: ApiCorrespondentCreate(from: correspondent),
       endpoint: .createCorrespondent(),
-      returns: Correspondent.self)
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
-    try await update(
-      element: correspondent,
-      endpoint: .correspondent(id: correspondent.id))
+    let api: ApiCorrespondent = try await update(
+      element: ApiCorrespondentUpdate(from: correspondent),
+      endpoint: .correspondent(id: correspondent.id),
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func delete(correspondent: Correspondent) async throws {
     try await delete(Correspondent.self, endpoint: .correspondent(id: correspondent.id))
   }
 
-  public func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
+  public func correspondents() async throws -> [Correspondent] {
+    let cursor = try PageCursor<ApiCorrespondent>(
+      repository: self,
+      initialURL: url(.correspondents()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func documentType(id: UInt) async throws -> DocumentType? {
     try await get(DocumentType.self, id: id)
