@@ -1,21 +1,21 @@
 //
-//  SuggestionsTest.swift
-//  DataModel
-//
-//  Created by Assistant on 03.01.25.
+//  ApiSuggestionsTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
+import Foundation
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 @Suite
-struct SuggestionsTest {
+struct ApiSuggestionsTest {
   @Test func testDecoding() throws {
     let data = try #require(testData("Data/suggestions.json"))
 
-    let suggestions = try makeDecoder(tz: .current).decode(Suggestions.self, from: data)
+    let suggestions = try makeDecoder(tz: .current).decode(ApiSuggestions.self, from: data).domain
 
     #expect(suggestions.correspondents == [72])
     #expect(suggestions.tags == [9])
