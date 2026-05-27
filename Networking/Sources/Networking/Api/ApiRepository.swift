@@ -416,9 +416,11 @@ public class ApiRepository {
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
-    try await update(
-      element: document,
-      endpoint: .document(id: document.id, fullPerms: false))
+    let api: ApiDocument = try await update(
+      element: ApiDocumentUpdate(from: document),
+      endpoint: .document(id: document.id, fullPerms: false),
+      returns: ApiDocument.self)
+    return api.domain
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -485,12 +487,12 @@ extension ApiRepository: Repository {
     try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
-  public func documents(filter: FilterState) throws -> ApiPagedSource<Document, Document> {
+  public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
     Logger.networking.notice("Getting document sequence for filter")
-    let cursor = try PageCursor<Document>(
+    let cursor = try PageCursor<ApiDocument>(
       repository: self,
       initialURL: url(.documents(page: 1, filter: filter)))
-    return ApiPagedSource<Document, Document>(cursor: cursor, map: { $0 })
+    return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 
   public func download(
@@ -693,7 +695,9 @@ extension ApiRepository: Repository {
     return try await cursor.collectAll().map(\.domain)
   }
 
-  public func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
+  public func document(id: UInt) async throws -> Document? {
+    try await get(ApiDocument.self, endpoint: .document(id: id))?.domain
+  }
 
   public func document(asn: UInt) async throws -> Document? {
     Logger.networking.notice("Getting document by ASN")
@@ -701,13 +705,13 @@ extension ApiRepository: Repository {
     let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
     let decoded = try await send(
       endpoint: .documents(page: 1, rules: [rule]),
-      returns: ListResponse<Document>.self)
+      returns: ListResponse<ApiDocument>.self)
 
     guard decoded.count > 0, !decoded.results.isEmpty else {
       Logger.networking.notice("Got empty document result (ASN not found)")
       return nil
     }
-    return decoded.results.first
+    return decoded.results.first?.domain
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
@@ -715,7 +719,8 @@ extension ApiRepository: Repository {
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    try await send(endpoint: .notes(documentId: documentId), returns: [Document.Note].self)
+    try await send(endpoint: .notes(documentId: documentId), returns: [ApiDocumentNote].self)
+      .map(\.domain)
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
@@ -723,22 +728,24 @@ extension ApiRepository: Repository {
     try await send(
       .post,
       endpoint: .notes(documentId: documentId),
-      body: note,
-      returns: [Document.Note].self)
+      body: ApiDocumentNoteCreate(from: note),
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     try await send(
       .delete,
       endpoint: .note(documentId: documentId, noteId: id),
-      returns: [Document.Note].self)
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func trash() async throws -> [Document] {
     Logger.networking.notice("Getting trash documents")
     let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
-    let cursor = try PageCursor<Document>(repository: self, initialURL: url(endpoint))
-    return try await cursor.collectAll()
+    let cursor = try PageCursor<ApiDocument>(repository: self, initialURL: url(endpoint))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   private enum TrashAction: String, Encodable {
@@ -772,8 +779,8 @@ extension ApiRepository: Repository {
 
     let decoded = try await send(
       endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
-      returns: ListResponse<Document>.self)
-    return (decoded.results.first?.asn ?? 0) + 1
+      returns: ListResponse<ApiDocument>.self)
+    return (decoded.results.first?.archive_serial_number ?? 0) + 1
   }
 
   private func nextAsnDirectEndpoint() async throws -> UInt {
