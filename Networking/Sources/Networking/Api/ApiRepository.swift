@@ -791,9 +791,19 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func users() async throws -> [User] { try await all(User.self) }
+  public func users() async throws -> [User] {
+    let cursor = try PageCursor<ApiUser>(
+      repository: self,
+      initialURL: url(.users()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
-  public func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
+  public func groups() async throws -> [UserGroup] {
+    let cursor = try PageCursor<ApiUserGroup>(
+      repository: self,
+      initialURL: url(.groups()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func thumbnail(document: Document) async throws -> Image? {
     let data = try await thumbnailData(document: document)
