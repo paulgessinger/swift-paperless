@@ -663,27 +663,35 @@ extension ApiRepository: Repository {
   }
 
   public func documentType(id: UInt) async throws -> DocumentType? {
-    try await get(DocumentType.self, id: id)
+    try await get(ApiDocumentType.self, endpoint: .documentType(id: id))?.domain
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-    try await create(
-      element: documentType,
+    let api: ApiDocumentType = try await create(
+      element: ApiDocumentTypeCreate(from: documentType),
       endpoint: .createDocumentType(),
-      returns: DocumentType.self)
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
-    try await update(
-      element: documentType,
-      endpoint: .documentType(id: documentType.id))
+    let api: ApiDocumentType = try await update(
+      element: ApiDocumentTypeUpdate(from: documentType),
+      endpoint: .documentType(id: documentType.id),
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func delete(documentType: DocumentType) async throws {
     try await delete(DocumentType.self, endpoint: .documentType(id: documentType.id))
   }
 
-  public func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
+  public func documentTypes() async throws -> [DocumentType] {
+    let cursor = try PageCursor<ApiDocumentType>(
+      repository: self,
+      initialURL: url(.documentTypes()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
 
