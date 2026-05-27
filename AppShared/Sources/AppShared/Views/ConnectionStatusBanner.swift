@@ -2,45 +2,20 @@
 //  ConnectionStatusBanner.swift
 //  AppShared
 //
-//  Two pill-shaped status indicators for the active connection, intentionally
-//  split by interactivity:
+//  Pill-shaped indicator for "the active connection needs re-authentication."
+//  Has a tappable "Re-authenticate" action that presents a SwiftUI sheet.
+//  Since SwiftUI permits only one presented modal per view, the banner is
+//  anchored via `safeAreaInset` on the home document screen so any existing
+//  sheet visually hides it — the user can't trigger a conflicting
+//  presentation in the first place.
 //
-//  - `OfflineBanner` is purely informational ("you're offline"). It can live
-//    in a `windowOverlay` UIWindow above all sheets/covers because there's
-//    no action attached — nothing can conflict.
-//  - `NeedsAuthBanner` has a tappable "Re-authenticate" action that presents
-//    a SwiftUI sheet. SwiftUI permits only one presented modal per view, so
-//    if a sheet is already up the cover/sheet can't appear. The pragmatic
-//    fix: anchor this banner via `safeAreaInset` on the home document
-//    screen so an existing sheet visually hides it — the user can't trigger
-//    the conflicting presentation in the first place.
-//
-//  Offline takes priority — when the device is offline, re-auth would fail
-//  anyway, so `NeedsAuthBanner` returns EmptyView in that state.
+//  The companion offline state is announced as a transient toast by
+//  `OfflineToastBridge` — no persistent surface there. While offline,
+//  `NeedsAuthBanner` returns EmptyView (re-auth would fail anyway).
 //
 
 import Common
 import SwiftUI
-
-public struct OfflineBanner: View {
-  @Environment(NetworkMonitor.self) private var networkMonitor
-
-  public init() {}
-
-  public var body: some View {
-    Group {
-      if !networkMonitor.isOnline {
-        BannerContent(
-          systemImage: "wifi.slash",
-          tint: .secondary,
-          label: Text(.app(.connectionStatusOfflineBanner)),
-          action: nil
-        )
-      }
-    }
-    .animation(.spring(response: 0.4, dampingFraction: 0.78), value: networkMonitor.isOnline)
-  }
-}
 
 public struct NeedsAuthBanner: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
@@ -136,17 +111,6 @@ private struct BannerContent: View {
           .combined(with: .opacity)
       )
     )
-  }
-}
-
-#Preview("Offline") {
-  VStack(spacing: 0) {
-    Spacer()
-    BannerContent(
-      systemImage: "wifi.slash",
-      tint: .secondary,
-      label: Text(.app(.connectionStatusOfflineBanner)),
-      action: nil)
   }
 }
 

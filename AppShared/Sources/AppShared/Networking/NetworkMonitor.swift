@@ -18,7 +18,20 @@ import os
 @MainActor
 @Observable
 public final class NetworkMonitor {
-  public private(set) var isOnline: Bool = true
+  // Effective online state, considering the debug override.
+  public var isOnline: Bool {
+    interfaceOnline && !debugForceOffline
+  }
+
+  // Raw NWPathMonitor signal. Exposed mainly for debugging surfaces that
+  // want to display "actually online but forced offline."
+  public private(set) var interfaceOnline: Bool = true
+
+  // When true, `isOnline` reports false regardless of the real interface
+  // status. Toggled from the in-app debug menu to exercise the offline UI
+  // without disrupting the device's actual network.
+  public var debugForceOffline: Bool = false
+
   public private(set) var isExpensive: Bool = false
   public private(set) var isConstrained: Bool = false
 
@@ -32,9 +45,10 @@ public final class NetworkMonitor {
       let constrained = path.isConstrained
       Task { @MainActor [weak self] in
         guard let self else { return }
-        if self.isOnline != online {
-          Logger.shared.info("NetworkMonitor: isOnline \(self.isOnline) -> \(online)")
-          self.isOnline = online
+        if self.interfaceOnline != online {
+          Logger.shared.info(
+            "NetworkMonitor: interfaceOnline \(self.interfaceOnline) -> \(online)")
+          self.interfaceOnline = online
         }
         if self.isExpensive != expensive { self.isExpensive = expensive }
         if self.isConstrained != constrained { self.isConstrained = constrained }
