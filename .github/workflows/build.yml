@@ -69,6 +69,7 @@ jobs:
           - DataModel
           - Common
           - Networking
+          - Persistence
 
     steps:
       - name: Checkout
