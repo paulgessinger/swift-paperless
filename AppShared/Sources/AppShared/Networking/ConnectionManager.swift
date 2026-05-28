@@ -12,19 +12,16 @@ import CryptoKit
 import DataModel
 import Foundation
 import Networking
+import Persistence
 import os
 
-public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
+public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var id: UUID = .init()
   public var url: URL
   public var extraHeaders: [Connection.HeaderValue]
   public var user: User
   public var identity: String?
   public var friendlyName: String? = nil
-
-  private enum CodingKeys: String, CodingKey {
-    case id, url, extraHeaders, user, identity, friendlyName
-  }
 
   public init(
     id: UUID = .init(),
@@ -40,49 +37,6 @@ public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
     self.user = user
     self.identity = identity
     self.friendlyName = friendlyName
-  }
-
-  public init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-    url = try container.decode(URL.self, forKey: .url)
-    extraHeaders =
-      try container.decodeIfPresent([Connection.HeaderValue].self, forKey: .extraHeaders) ?? []
-    user = try container.decode(StoredUser.self, forKey: .user).domain
-    identity = try container.decodeIfPresent(String.self, forKey: .identity)
-    friendlyName = try container.decodeIfPresent(String.self, forKey: .friendlyName)
-  }
-
-  public func encode(to encoder: any Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(id, forKey: .id)
-    try container.encode(url, forKey: .url)
-    try container.encode(extraHeaders, forKey: .extraHeaders)
-    try container.encode(StoredUser(from: user), forKey: .user)
-    try container.encodeIfPresent(identity, forKey: .identity)
-    try container.encodeIfPresent(friendlyName, forKey: .friendlyName)
-  }
-
-  // Persisted shape of `User` for the UserDefaults storage. Kept here (and
-  // not in `DataModel`) because this is local persistence, not wire
-  // serialization. After Stage 5 lands, the GRDB server row supersedes this
-  // and the inline Codable goes away.
-  private struct StoredUser: Codable {
-    var id: UInt
-    var is_superuser: Bool
-    var username: String
-    var groups: [UInt]?
-
-    init(from user: User) {
-      id = user.id
-      is_superuser = user.isSuperUser
-      username = user.username
-      groups = user.groups
-    }
-
-    var domain: User {
-      User(id: id, isSuperUser: is_superuser, username: username, groups: groups ?? [])
-    }
   }
 
   public var token: String? {
@@ -280,7 +234,11 @@ public class ConnectionManager: ObservableObject {
   private let previewArguments: PreviewLaunchArguments?
   public let previewMode: Bool
 
-  public init(previewMode: Bool? = nil) {
+  private let database: Database
+  private var observationTask: Task<Void, Never>?
+
+  public init(database: Database, previewMode: Bool? = nil) {
+    self.database = database
     let previewArguments = PreviewLaunchArguments.parse(ProcessInfo.processInfo.arguments)
     self.previewArguments = previewArguments
     if let previewMode {
@@ -290,6 +248,36 @@ public class ConnectionManager: ObservableObject {
     } else {
       self.previewMode = false
     }
+
+    // Synchronous bootstrap read so SwiftUI body sees the cache populated
+    // before the first frame. Subsequent updates come via the observer.
+    do {
+      let records = try database.allConnections()
+      applyHydrate(records: records)
+    } catch {
+      Logger.shared.fault("Initial connection hydrate failed: \(error)")
+    }
+
+    // Observer is the SOLE writer of the in-memory dict from here on.
+    // A failed DB write leaves the dict untouched (correct), and on success
+    // the observer fires within a runloop tick so SwiftUI re-renders.
+    let stream = database.observeConnections()
+    observationTask = Task { [weak self] in
+      do {
+        // Drop the initial snapshot — already applied above.
+        var iterator = stream.makeAsyncIterator()
+        _ = try await iterator.next()
+        while let records = try await iterator.next() {
+          await MainActor.run { self?.applyHydrate(records: records) }
+        }
+      } catch {
+        Logger.api.error("Server observation terminated: \(error)")
+      }
+    }
+  }
+
+  deinit {
+    observationTask?.cancel()
   }
 
   // @TODO: (multi-server) Remove in a few versions
@@ -311,13 +299,22 @@ public class ConnectionManager: ObservableObject {
   @UserDefaultsBacked("ApiPath", storage: .group)
   private var apiPath: String? = nil
 
-  @UserDefaultsBacked("Connections", storage: .group)
+  /// In-memory cache of connection rows. Written ONLY by ``applyHydrate(records:)``,
+  /// which is called from the bootstrap read at init and from the
+  /// `ValueObservation` task that follows it. Mutators go through the DB and
+  /// let the observer hydrate this dict.
   public private(set) var connections: [UUID: StoredConnection] = [:] {
     willSet {
       objectWillChange.send()
     }
   }
 
+  /// Active server pointer.
+  ///
+  /// Stays in app-group `UserDefaults` rather than moving into the DB so the
+  /// Share Extension picks up active-server changes through UserDefaults' free
+  /// cross-process syncing. The "dangling pointer after row delete" case is
+  /// handled in ``applyHydrate(records:)`` and ``logout(animated:)``.
   @UserDefaultsBacked("ActiveConnectionId", storage: .group)
   public var activeConnectionId: UUID? = nil {
     willSet {
@@ -325,10 +322,33 @@ public class ConnectionManager: ObservableObject {
     }
   }
 
-  // In-memory only: a per-connection flag set when a request returns 401. Re-auth
-  // clears it. Not persisted in Stage 2; Stage 5 moves this onto the GRDB server
-  // row so it becomes cross-process observable (File Provider foresight).
+  /// Per-connection "needs auth" set. Hydrated from the `needs_auth` column;
+  /// kept as a published Set<UUID> here so the existing banner / lock-badge
+  /// `.onChange(of: needsAuthIds)` watchers keep firing without touching the
+  /// SwiftUI sites in this commit.
   @Published public private(set) var needsAuthIds: Set<UUID> = []
+
+  /// Apply a fresh snapshot of records to the in-memory dict and the
+  /// needs-auth set. Called by both the bootstrap read and the observer.
+  /// Equality-guarded so `objectWillChange` only fires on real changes.
+  private func applyHydrate(records: [ConnectionRecord]) {
+    var dict: [UUID: StoredConnection] = [:]
+    var needsAuth: Set<UUID> = []
+    for record in records {
+      dict[record.id] = StoredConnection(record: record)
+      if record.needsAuth { needsAuth.insert(record.id) }
+    }
+    if dict != connections { connections = dict }
+    if needsAuth != needsAuthIds { needsAuthIds = needsAuth }
+
+    // Dangling-pointer fixup: if a row was deleted (e.g. by logout, or
+    // eventually by a cross-process delete after foreground refresh) and
+    // the active pointer still names it, advance to whatever else exists
+    // or clear. Cheap Swift check — no FK cascade needed.
+    if let activeId = activeConnectionId, dict[activeId] == nil {
+      activeConnectionId = dict.values.first?.id
+    }
+  }
 
   public func needsAuth(for id: UUID) -> Bool {
     needsAuthIds.contains(id)
@@ -338,14 +358,22 @@ public class ConnectionManager: ObservableObject {
     guard !needsAuthIds.contains(id) else { return }
     Logger.api.info(
       "Marking connection \(id, privacy: .private(mask: .hash)) as needing re-authentication")
-    needsAuthIds.insert(id)
+    do {
+      try database.setNeedsAuth(true, forConnection: id)
+    } catch {
+      Logger.api.error("markNeedsAuth DB write failed: \(error)")
+    }
   }
 
   public func clearNeedsAuth(for id: UUID) {
     guard needsAuthIds.contains(id) else { return }
     Logger.api.info(
       "Clearing needs-auth state for connection \(id, privacy: .private(mask: .hash))")
-    needsAuthIds.remove(id)
+    do {
+      try database.setNeedsAuth(false, forConnection: id)
+    } catch {
+      Logger.api.error("clearNeedsAuth DB write failed: \(error)")
+    }
   }
 
   // Set by the connection-status banner when the user taps "re-authenticate";
@@ -373,48 +401,6 @@ public class ConnectionManager: ObservableObject {
     let allUrls = connections.values.map(\.url.absoluteString)
     let url = url.absoluteString
     return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
-  }
-
-  public func migrateToMultiServer() async {
-    Logger.migration.trace("Checking migration status")
-    if activeConnectionId == nil, apiHost != nil {
-      Logger.migration.info(
-        "Connection manager has prior connection: migrating to multi-server scheme")
-
-      guard let connection else {
-        Logger.migration.warning("Existing connection was invalid")
-        return
-      }
-
-      let repository = await ApiRepository(
-        connection: connection, mode: Bundle.main.appConfiguration.mode)
-
-      // Migration runs asynchronously, this should be fine, since the active connection in memory
-      // will stay valid while we're trying.
-      Task {
-        Logger.migration.info("Getting current user to populate newly stored connection")
-        do {
-          let currentUser = try await repository.currentUser()
-          Logger.migration.info("Got current user: \(String(describing: currentUser))")
-
-          let newConnection = StoredConnection(
-            url: connection.url, extraHeaders: connection.extraHeaders, user: currentUser)
-          Logger.migration.info("Connection to store is: \(String(describing: newConnection))")
-
-          if let token = connection.token, token != "" {
-            Logger.migration.debug("Saving token into keychain under new lookup parameters")
-            try newConnection.setToken(token)
-          }
-
-          connections[newConnection.id] = newConnection
-          activeConnectionId = newConnection.id
-        } catch {
-          Logger.migration.error("An error was encountered: \(error)")
-        }
-      }
-    } else {
-      Logger.migration.info("Skipping migration")
-    }
   }
 
   public var connection: Connection? {
@@ -506,6 +492,17 @@ public class ConnectionManager: ObservableObject {
   public func login(_ connection: StoredConnection) {
     Logger.api.info(
       "Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
+    let record = connection.toRecord(needsAuth: needsAuthIds.contains(connection.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("login DB write failed: \(error)")
+      return
+    }
+    // Update the in-memory dict eagerly so the upcoming setActiveConnection
+    // → connectionChange → refreshConnection sees the row immediately
+    // (the observer also fires in the next tick; equality-guarded so the
+    // double-update is a no-op).
     connections[connection.id] = connection
     setActiveConnection(id: connection.id, animated: false)
   }
@@ -517,7 +514,12 @@ public class ConnectionManager: ObservableObject {
     }
     Logger.api.trace("Updating extra headers in \(stored.id) to \(headers)")
     stored.extraHeaders = headers
-    connections[stored.id] = stored
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("setExtraHeaders DB write failed: \(error)")
+    }
   }
 
   public func setFriendlyName(_ name: String?) {
@@ -532,7 +534,12 @@ public class ConnectionManager: ObservableObject {
     }
     Logger.api.info("Updating friendly name on connection \(stored.id)")
     stored.friendlyName = value
-    connections[stored.id] = stored
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("setFriendlyName DB write failed: \(error)")
+    }
   }
 
   public func logout(animated: Bool) {
@@ -558,6 +565,11 @@ public class ConnectionManager: ObservableObject {
       Logger.api.info("Have active connection \(storedConnection.redactedLabel, privacy: .public)")
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
       clearNeedsAuth(for: activeConnectionId)
+      do {
+        try database.deleteConnection(id: activeConnectionId)
+      } catch {
+        Logger.api.error("logout DB delete failed: \(error)")
+      }
       connections.removeValue(forKey: activeConnectionId)
       let count = connections.count
       Logger.api.info("Have \(count)")

@@ -10,6 +10,7 @@ import Combine
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -22,7 +23,7 @@ struct MainView: View {
   @State private var initialDisplay = true
   @State private var showSettings = false
 
-  @StateObject private var manager = ConnectionManager()
+  @StateObject private var manager: ConnectionManager
 
   @State private var friendlyNameSubscription: AnyCancellable?
 
@@ -44,8 +45,9 @@ struct MainView: View {
   // landed in another.
   @State private var routeManager = RouteManager()
 
-  init() {
+  init(database: Database) {
     _ = AppSettings.shared
+    _manager = StateObject(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
     // Suppress the noise that the connection-status banner already covers:
@@ -327,12 +329,6 @@ struct MainView: View {
       Logger.shared.notice("Checking login status")
       await refreshConnection(animated: initialDisplay)
       initialDisplay = false
-
-      // @TODO: Remove in a few versions
-      Task {
-        try? await Task.sleep(for: .seconds(3))
-        await manager.migrateToMultiServer()
-      }
     }
 
     .onReceive(manager.eventPublisher) { event in
@@ -374,13 +370,85 @@ struct MainView: View {
   }
 }
 
+/// Owns the at-launch ``Database`` construction. Sole producer; ``MainView``
+/// only sees a ready database after the bootstrap succeeds. On failure the
+/// app shows the hard-fail UI instead, with a "Try Again" affordance that
+/// re-runs the bootstrap.
+@MainActor
+@Observable
+final class DatabaseBootstrap {
+  enum Outcome {
+    case ready(Database)
+    case failed(any Error)
+  }
+
+  private(set) var outcome: Outcome
+
+  init() {
+    outcome = Self.attempt()
+  }
+
+  func retry() {
+    Logger.shared.notice("Retrying database bootstrap")
+    outcome = Self.attempt()
+  }
+
+  private static func attempt() -> Outcome {
+    do {
+      return .ready(try Database())
+    } catch {
+      Logger.shared.fault("Database bootstrap failed: \(error)")
+      return .failed(error)
+    }
+  }
+}
+
+struct DatabaseBootstrapView: View {
+  @Bindable var bootstrap: DatabaseBootstrap
+
+  var body: some View {
+    switch bootstrap.outcome {
+    case .ready(let database):
+      MainView(database: database)
+    case .failed(let error):
+      DatabaseFailureView(error: error) { bootstrap.retry() }
+    }
+  }
+}
+
+struct DatabaseFailureView: View {
+  let error: any Error
+  let onRetry: () -> Void
+
+  var body: some View {
+    VStack(spacing: 20) {
+      Image(systemName: "externaldrive.badge.exclamationmark")
+        .font(.system(size: 56))
+        .foregroundStyle(.orange)
+      Text("Couldn't open the local database")
+        .font(.title2)
+        .multilineTextAlignment(.center)
+      Text(String(describing: error))
+        .font(.caption.monospaced())
+        .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal)
+        .textSelection(.enabled)
+      Button("Try Again", action: onRetry)
+        .buttonStyle(.borderedProminent)
+    }
+    .padding()
+  }
+}
+
 @main
 struct swift_paperlessApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+  @State private var bootstrap = DatabaseBootstrap()
 
   var body: some Scene {
     WindowGroup {
-      MainView()
+      DatabaseBootstrapView(bootstrap: bootstrap)
     }
   }
 }

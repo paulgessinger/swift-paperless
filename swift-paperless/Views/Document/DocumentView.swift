@@ -11,6 +11,7 @@ import Common
 import DataModel
 import Networking
 import Nuke
+import Persistence
 import PhotosUI
 import SwiftUI
 import os
@@ -763,7 +764,8 @@ struct DocumentView: View {
 #Preview("DocumentView") {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @StateObject var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
   @Previewable @State var networkMonitor = NetworkMonitor()
   @Previewable @State var showSettings = false
 

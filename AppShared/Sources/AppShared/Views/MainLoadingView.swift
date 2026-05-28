@@ -6,6 +6,7 @@
 //
 
 import DataModel
+import Persistence
 import SwiftUI
 
 public struct MainLoadingView: View {
@@ -97,7 +98,8 @@ public struct MainLoadingView: View {
 }
 
 #Preview {
-  @Previewable @StateObject var manager = ConnectionManager()
+  @Previewable @StateObject var manager = ConnectionManager(
+    database: try! Database.inMemory())
 
   MainLoadingView(
     url: manager.connection?.url.absoluteString,

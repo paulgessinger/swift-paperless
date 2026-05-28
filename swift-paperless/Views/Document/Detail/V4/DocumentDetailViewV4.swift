@@ -9,6 +9,7 @@ import AppShared
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 
 /// Per-field editors. On regular size class these render as popovers anchored
@@ -921,7 +922,8 @@ extension Tag {
 private struct DocumentDetailViewV4PreviewHelper: View {
   @StateObject private var store = DocumentStore(repository: TransientRepository())
   @StateObject private var errorController = ErrorController()
-  @StateObject private var connectionManager = ConnectionManager(previewMode: true)
+  @StateObject private var connectionManager = ConnectionManager(
+    database: try! Database.inMemory(), previewMode: true)
 
   @State private var document: Document?
   @State private var navPath = [NavigationState]()

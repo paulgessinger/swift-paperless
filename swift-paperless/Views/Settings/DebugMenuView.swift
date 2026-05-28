@@ -8,6 +8,7 @@
 import AppShared
 import Common
 import DataModel
+import Persistence
 import SwiftUI
 
 struct DebugMenuView: View {
@@ -63,7 +64,8 @@ struct DebugMenuView: View {
 }
 
 #Preview("Debug menu") {
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @StateObject var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
 
   NavigationStack {
     DebugMenuView()

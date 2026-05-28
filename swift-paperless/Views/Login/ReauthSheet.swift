@@ -18,6 +18,7 @@ import AppShared
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -149,7 +150,8 @@ private struct ReauthPreamble: View {
 // MARK: - Previews
 
 #Preview("Reauth") {
-  @Previewable @StateObject var connectionManager = ConnectionManager(previewMode: true)
+  @Previewable @StateObject var connectionManager = ConnectionManager(
+    database: try! Database.inMemory(), previewMode: true)
   @Previewable @StateObject var errorController = ErrorController()
 
   let stored = StoredConnection(
