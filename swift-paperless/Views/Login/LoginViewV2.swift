@@ -7,6 +7,7 @@
 
 import AppShared
 import Foundation
+import Persistence
 import SwiftUI
 import os
 
@@ -175,11 +176,12 @@ struct LoginViewV2: LoginViewProtocol {
 // - MARK: Previews
 
 #Preview("Initial") {
-  LoginViewV2(connectionManager: ConnectionManager())
+  LoginViewV2(connectionManager: ConnectionManager(database: try! Database.inMemory()))
 }
 
 #Preview("Additional") {
-  LoginViewV2(connectionManager: ConnectionManager(), initial: false)
+  LoginViewV2(
+    connectionManager: ConnectionManager(database: try! Database.inMemory()), initial: false)
 }
 
 #Preview("StageSwitch") {
