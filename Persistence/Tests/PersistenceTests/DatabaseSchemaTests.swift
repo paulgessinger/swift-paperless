@@ -32,11 +32,13 @@ struct DatabaseSchemaTests {
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()
-    // GRDB maintains its own grdb_migrations table; v1 should appear.
+    // GRDB maintains its own grdb_migrations table; both registered
+    // migrations should appear after init.
     let applied = try database.writer.read { db in
       try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
     }
     #expect(applied.contains("v1_create_server"))
+    #expect(applied.contains(V2_ImportLegacyConnections.identifier))
   }
 
   @Test("PRAGMA foreign_keys is on")
@@ -70,7 +72,7 @@ struct DatabaseSchemaTests {
     let database = try Database.inMemory()
     // Initial migration already ran during init(). Running again must be a
     // no-op (the migrator tracks applied identifiers).
-    try Migrations.migrator().migrate(database.writer)
+    try Migrations.migrator(legacyConnectionsUserDefaults: nil).migrate(database.writer)
     let serverExists = try database.writer.read { db in
       try db.tableExists("server")
     }
