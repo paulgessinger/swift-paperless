@@ -9,6 +9,7 @@ import AppShared
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -253,7 +254,7 @@ private struct CreateShareLinkView: View {
   @StateObject var errorController = ErrorController()
 
   @Previewable
-  @StateObject var connectionManager = ConnectionManager()
+  @StateObject var connectionManager = ConnectionManager(database: try! Database.inMemory())
 
   @Previewable @State var document: Document? = nil
 

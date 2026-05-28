@@ -7,6 +7,7 @@
 
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import UniformTypeIdentifiers
 import os
@@ -467,7 +468,8 @@ public struct CreateDocumentView: View {
 private struct PreviewHelperView: View {
   @StateObject private var store = DocumentStore(repository: PreviewRepository())
   @StateObject private var errorController = ErrorController()
-  @StateObject private var connectionManager = ConnectionManager(previewMode: true)
+  @StateObject private var connectionManager = ConnectionManager(
+    database: try! Database.inMemory(), previewMode: true)
 
   private let url = Bundle.main.url(forResource: "demo2", withExtension: "pdf")!
 
