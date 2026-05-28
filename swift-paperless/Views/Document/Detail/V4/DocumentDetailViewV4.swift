@@ -924,7 +924,7 @@ extension Tag {
 private struct DocumentDetailViewV4PreviewHelper: View {
   @State private var store = DocumentStore(repository: TransientRepository())
   @StateObject private var errorController = ErrorController()
-  @StateObject private var connectionManager = ConnectionManager(
+  @State private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
 
   @State private var document: Document?

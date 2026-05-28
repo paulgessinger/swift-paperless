@@ -59,7 +59,7 @@ struct DocumentNotFoundError: DisplayableError {
 @MainActor
 struct DocumentView: View {
   @Environment(DocumentStore.self) private var store
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
   @Environment(NetworkMonitor.self) private var networkMonitor
@@ -764,7 +764,7 @@ struct DocumentView: View {
 #Preview("DocumentView") {
   @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
   @Previewable @State var networkMonitor = NetworkMonitor()
   @Previewable @State var showSettings = false
@@ -772,7 +772,7 @@ struct DocumentView: View {
   DocumentView(showSettings: $showSettings)
     .environment(store)
     .environmentObject(errorController)
-    .environmentObject(connectionManager)
+    .environment(connectionManager)
     .environment(RouteManager())
     .environment(networkMonitor)
 }

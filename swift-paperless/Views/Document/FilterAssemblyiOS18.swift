@@ -97,7 +97,7 @@ struct FilterAssemblyiOS18: View {
   @Previewable @State var filterModel = FilterModel()
   @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
 
   NavigationStack {
@@ -111,7 +111,7 @@ struct FilterAssemblyiOS18: View {
       FilterAssemblyiOS18(filterModel: filterModel)
         .environment(store)
         .environmentObject(errorController)
-        .environmentObject(connectionManager)
+        .environment(connectionManager)
         .environment(filterModel)
     }
 
