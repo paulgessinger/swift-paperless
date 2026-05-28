@@ -58,7 +58,7 @@ struct DocumentNotFoundError: DisplayableError {
 
 @MainActor
 struct DocumentView: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
@@ -693,7 +693,7 @@ struct DocumentView: View {
         callback: createCallback,
         title: createDocumentTitle
       )
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
     }
 
@@ -757,7 +757,7 @@ struct DocumentView: View {
       fatalError("Invalid task view navigation state pushed")
     }
     return TasksView(navPath: navPath)
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
   }
 }
@@ -765,7 +765,7 @@ struct DocumentView: View {
 // - MARK: Previews
 
 #Preview("DocumentView") {
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
@@ -773,7 +773,7 @@ struct DocumentView: View {
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
     .environmentObject(connectionManager)
     .environment(RouteManager())

@@ -92,7 +92,7 @@ extension TaskStatus {
 struct TaskDetailView: View {
   let task: PaperlessTask
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private enum DocumentResult {
     case document(_: Document)
@@ -311,7 +311,7 @@ final class TaskListViewModel {
 struct TasksView: View {
   @State var navPath: [NavigationState]
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   init(navPath: [NavigationState] = []) {
     _navPath = State(initialValue: navPath)
@@ -323,7 +323,7 @@ struct TasksView: View {
 
         .navigationTitle(String(localized: .tasks(.title)))
         .navigationBarTitleDisplayMode(.inline)
-        .environmentObject(store)
+        .environment(store)
         .navigationDestination(for: NavigationState.self) { nav in
           switch nav {
           case .detail(let document):
@@ -348,7 +348,7 @@ private struct TaskList: View {
   @State private var errorTask: PaperlessTask? = nil
   @State private var viewModel: TaskListViewModel?
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   @Environment(\.dismiss) private var dismiss
@@ -525,13 +525,13 @@ private struct TaskList: View {
 // MARK: - Previews
 
 private struct PreviewHelperView<Content: View>: View {
-  @StateObject private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore(repository: PreviewRepository())
 
   @ViewBuilder var content: () -> Content
 
   var body: some View {
     content()
-      .environmentObject(store)
+      .environment(store)
   }
 }
 

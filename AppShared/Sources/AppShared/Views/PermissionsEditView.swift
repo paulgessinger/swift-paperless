@@ -26,7 +26,7 @@ where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel {
   public let storePath: KeyPath<DocumentStore, [UInt: T]>
   public let name: KeyPath<T, String>
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   private var displayElements: [T] {
     store[keyPath: storePath]
       .values
@@ -117,7 +117,7 @@ where T: Identifiable & LocalizedResource, T.ID == UInt, E: PermissionsModel {
 
 private struct OwnerPicker<Object>: View where Object: PermissionsModel {
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   @Binding public var object: Object
 
@@ -234,7 +234,7 @@ public struct PermissionsEditView<Object>: View where Object: PermissionsModel {
     }
   }
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private var permissions: Permissions {
     object.permissions ?? .init()
@@ -416,7 +416,7 @@ public struct PermissionsEditView<Object>: View where Object: PermissionsModel {
 // - MARK: Previews
 
 private struct PreviewHelper: View {
-  @EnvironmentObject public var store: DocumentStore
+  @Environment(DocumentStore.self) public var store
   @State public var document: Document?
   @State public var navPath = NavigationPath()
 
@@ -463,11 +463,11 @@ private struct PreviewHelper: View {
 
 #Preview {
   @Previewable
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
   @Previewable
   @StateObject var errorController = ErrorController()
 
   return PreviewHelper()
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
 }

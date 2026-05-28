@@ -81,7 +81,7 @@ public struct DocumentCellAspect: View {
 }
 
 public struct DocumentCell: View {
-  @ObservedObject public var store: DocumentStore
+  public var store: DocumentStore
   @Environment(\.redactionReasons) public var redactionReasons
 
   public var document: Document
@@ -197,7 +197,7 @@ public struct DocumentCell: View {
 }
 
 #Preview {
-  @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore(repository: TransientRepository())
   @Previewable @State var documents = [Document]()
 
   List {
