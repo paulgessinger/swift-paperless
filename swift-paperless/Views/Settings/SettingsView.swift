@@ -14,7 +14,7 @@ import os
 // MARK: - Settings View
 
 struct SettingsView: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.openURL) private var openURL
@@ -267,7 +267,7 @@ struct SettingsView: View {
 }
 
 #Preview("SettingsView") {
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
@@ -276,7 +276,7 @@ struct SettingsView: View {
   }
   .sheet(isPresented: .constant(true)) {
     SettingsView()
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(connectionManager)
   }
 }

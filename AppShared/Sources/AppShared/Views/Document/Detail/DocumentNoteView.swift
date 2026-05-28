@@ -20,7 +20,7 @@ private struct CreateNoteView: View {
   @FocusState private var focused: Bool
 
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   private func saveNote() async {
@@ -89,7 +89,7 @@ public struct DocumentNoteView: View {
 
   @State private var notes: [Document.Note] = []
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   @Environment(\.dismiss) private var dismiss
@@ -213,7 +213,7 @@ public struct DocumentNoteView: View {
 // - MARK: Preview
 
 private struct PreviewHelper: View {
-  @StateObject public var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
+  @State public var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
   @StateObject public var errorController = ErrorController()
 
   @State public var document: Document?
@@ -233,7 +233,7 @@ private struct PreviewHelper: View {
         }
       }
     }
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
 
     .task {
