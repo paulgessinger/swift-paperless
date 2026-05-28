@@ -130,7 +130,7 @@ public struct CreateDocumentView: View {
 
   @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   @State private var document = ProtoDocument()
   @State private var status = Status.none
@@ -470,7 +470,7 @@ public struct CreateDocumentView: View {
 private struct PreviewHelperView: View {
   @State private var store = DocumentStore(repository: PreviewRepository())
   @StateObject private var errorController = ErrorController()
-  @StateObject private var connectionManager = ConnectionManager(
+  @State private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
 
   private let url = Bundle.main.url(forResource: "demo2", withExtension: "pdf")!
@@ -481,7 +481,7 @@ private struct PreviewHelperView: View {
     CreateDocumentView(sourceUrl: url, share: share)
       .environment(store)
       .environmentObject(errorController)
-      .environmentObject(connectionManager)
+      .environment(connectionManager)
   }
 }
 

@@ -6,7 +6,6 @@
 //
 
 import AppShared
-import Combine
 import Common
 import DataModel
 import Networking
@@ -23,7 +22,7 @@ struct MainView: View {
   @State private var initialDisplay = true
   @State private var showSettings = false
 
-  @StateObject private var manager: ConnectionManager
+  @State private var manager: ConnectionManager
 
   @State private var friendlyNameTask: Task<Void, Never>?
 
@@ -47,7 +46,7 @@ struct MainView: View {
 
   init(database: Database) {
     _ = AppSettings.shared
-    _manager = StateObject(wrappedValue: ConnectionManager(database: database))
+    _manager = State(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
@@ -228,10 +227,10 @@ struct MainView: View {
         if manager.connection != nil, storeReady {
           DocumentView(showSettings: $showSettings)
             .environment(store!)
-            .environmentObject(manager)
+            .environment(manager)
             .safeAreaInset(edge: .bottom, spacing: 0) {
               NeedsAuthBanner()
-                .environmentObject(manager)
+                .environment(manager)
                 .environment(networkMonitor)
             }
             .overlay {
@@ -284,7 +283,7 @@ struct MainView: View {
         let stored = manager.connections[id]
       {
         ReauthSheet(stored: stored)
-          .environmentObject(manager)
+          .environment(manager)
           .environmentObject(errorController)
           .environment(networkMonitor)
       }
@@ -297,7 +296,7 @@ struct MainView: View {
     .sheet(isPresented: $showSettings) {
       if let store {
         SettingsView()
-          .environmentObject(manager)
+          .environment(manager)
           .environment(store)
           .environmentObject(errorController)
           .environmentObject(biometricLockManager)
@@ -318,12 +317,14 @@ struct MainView: View {
       initialDisplay = false
     }
 
-    .onReceive(manager.eventPublisher) { event in
-      switch event {
-      case .connectionChange(let animated):
-        Task { await refreshConnection(animated: animated) }
-      case .logout:
-        showLoginScreen = true
+    .task {
+      for await event in manager.events.subscribe() {
+        switch event {
+        case .connectionChange(let animated):
+          Task { await refreshConnection(animated: animated) }
+        case .logout:
+          showLoginScreen = true
+        }
       }
     }
 
