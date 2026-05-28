@@ -59,8 +59,12 @@ struct DatabaseFailureView: View {
   let error: any Error
   let onRetry: () -> Void
 
+  @State private var showLogs = false
+  @State private var showWipeConfirmation = false
+  @State private var wipeError: String?
+
   private var title: String {
-    String(localized: .app(.databaseBootstrapFailureTitle))
+    String(localized: .persistence(.databaseBootstrapFailureTitle))
   }
 
   private var detail: String {
@@ -92,9 +96,93 @@ struct DatabaseFailureView: View {
         .multilineTextAlignment(.center)
         .padding(.horizontal)
         .textSelection(.enabled)
-      Button(String(localized: .app(.databaseBootstrapFailureRetry)), action: onRetry)
+
+      VStack(spacing: 16) {
+        Button(action: onRetry) {
+          Text(.persistence(.databaseBootstrapFailureRetry))
+            .frame(maxWidth: .infinity)
+        }
         .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+
+        Button {
+          showLogs = true
+        } label: {
+          Label(
+            String(localized: .persistence(.databaseBootstrapFailureViewLogs)),
+            systemImage: "text.word.spacing"
+          )
+          .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+
+        Button(role: .destructive) {
+          showWipeConfirmation = true
+        } label: {
+          Label(
+            String(localized: .persistence(.databaseBootstrapFailureWipe)),
+            systemImage: "trash"
+          )
+          .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .tint(.red)
+        .confirmationDialog(
+          String(localized: .persistence(.databaseBootstrapFailureWipeConfirmTitle)),
+          isPresented: $showWipeConfirmation,
+          titleVisibility: .visible
+        ) {
+          Button(
+            String(localized: .persistence(.databaseBootstrapFailureWipeConfirmAction)),
+            role: .destructive
+          ) {
+            wipeDatabase()
+          }
+          Button(String(localized: .app(.cancel)), role: .cancel) {}
+        } message: {
+          Text(.persistence(.databaseBootstrapFailureWipeConfirmMessage))
+        }
+      }
+      .padding(.horizontal, 24)
+      .padding(.top, 8)
+
+      if let wipeError {
+        Text(wipeError)
+          .font(.caption)
+          .foregroundStyle(.red)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal)
+      }
     }
     .padding()
+    .sheet(isPresented: $showLogs) {
+      NavigationStack {
+        LogView()
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button(role: .cancel) {
+                showLogs = false
+              } label: {
+                Label(String(localized: .app(.cancel)), systemImage: "xmark")
+              }
+              .labelStyle(.iconOnly)
+            }
+          }
+      }
+    }
+  }
+
+  private func wipeDatabase() {
+    do {
+      try Database.wipe()
+      wipeError = nil
+      onRetry()
+    } catch {
+      Logger.shared.error("Wipe database failed: \(error)")
+      wipeError =
+        "\(String(localized: .persistence(.databaseBootstrapFailureWipeFailed))) \(error.localizedDescription)"
+    }
   }
 }
