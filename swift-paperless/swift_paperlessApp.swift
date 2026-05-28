@@ -340,14 +340,12 @@ struct MainView: View {
       initialDisplay = false
     }
 
-    .task {
-      for await event in manager.events.subscribe() {
-        switch event {
-        case .connectionChange(let animated):
-          Task { await refreshConnection(animated: animated) }
-        case .logout:
-          showLoginScreen = true
-        }
+    .onEvent(from: manager.events) { event in
+      switch event {
+      case .connectionChange(let animated):
+        Task { await refreshConnection(animated: animated) }
+      case .logout:
+        showLoginScreen = true
       }
     }
 

@@ -6,11 +6,11 @@
 //
 
 import AppShared
-import Combine
 import DataModel
 import Foundation
 import Networking
 import Nuke
+import Persistence
 import SwiftUI
 import os
 
@@ -334,11 +334,7 @@ struct DocumentList: View {
       viewModel.ready = true
     }
 
-    .task {
-      for await event in store.events.subscribe() {
-        onReceiveEvent(event: event)
-      }
-    }
+    .onEvent(from: store.events, perform: onReceiveEvent)
 
     // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
     .confirmationDialog(
