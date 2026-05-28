@@ -79,7 +79,7 @@ private struct InvalidFieldView: View {
 
 private struct AddCustomFieldView: View {
   @Binding public var customFields: [CustomFieldInstance]
-  @EnvironmentObject public var store: DocumentStore
+  @Environment(DocumentStore.self) public var store
   @EnvironmentObject public var errorController: ErrorController
 
   @Environment(\.dismiss) private var dismiss
@@ -155,7 +155,7 @@ public struct CustomFieldsEditView<D: DocumentProtocol>: View {
   @Binding public var document: D
   @State private var customFields: [CustomFieldInstance] = []
 
-  @EnvironmentObject public var store: DocumentStore
+  @Environment(DocumentStore.self) public var store
   @Environment(\.locale) private var locale
   @Environment(\.isEnabled) private var isEnabled
 
@@ -383,7 +383,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Fully equipped") {
   @Previewable
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -394,7 +394,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
   NavigationStack {
     if document != nil {
       CustomFieldsEditView(document: Binding($document)!)
-        .environmentObject(store)
+        .environment(store)
         .environmentObject(errorController)
         .environment(\.locale, .init(identifier: "en_US"))
     }
@@ -410,7 +410,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Empty") {
   @Previewable
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -421,7 +421,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
   NavigationStack {
     if document != nil {
       CustomFieldsEditView(document: Binding($document)!)
-        .environmentObject(store)
+        .environment(store)
         .environmentObject(errorController)
         .environment(\.locale, .init(identifier: "en_US"))
     }

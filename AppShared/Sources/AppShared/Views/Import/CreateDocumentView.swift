@@ -128,7 +128,7 @@ public struct CreateDocumentView: View {
   public let share: Bool
   public let title: String
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
   @EnvironmentObject private var connectionManager: ConnectionManager
 
@@ -446,11 +446,13 @@ public struct CreateDocumentView: View {
         }
       }
 
-      .onReceive(store.eventPublisher) { event in
-        switch event {
-        case .repositoryWillChange:
-          resetDocument()
-        default: break
+      .task {
+        for await event in store.events.subscribe() {
+          switch event {
+          case .repositoryWillChange:
+            resetDocument()
+          default: break
+          }
         }
       }
 
@@ -466,7 +468,7 @@ public struct CreateDocumentView: View {
 // - MARK: Previews
 
 private struct PreviewHelperView: View {
-  @StateObject private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore(repository: PreviewRepository())
   @StateObject private var errorController = ErrorController()
   @StateObject private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
@@ -477,7 +479,7 @@ private struct PreviewHelperView: View {
 
   public var body: some View {
     CreateDocumentView(sourceUrl: url, share: share)
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
       .environmentObject(connectionManager)
   }

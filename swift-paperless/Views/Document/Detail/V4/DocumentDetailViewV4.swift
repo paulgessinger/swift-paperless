@@ -58,7 +58,7 @@ private enum AuxiliarySheet: Identifiable, Hashable {
 @MainActor
 struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var viewModel: DocumentDetailModel
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -746,13 +746,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       switch sheet {
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
-          .environmentObject(store)
+          .environment(store)
           .environmentObject(errorController)
           .sheetZoomTransition(sourceID: TransitionID.metadata, in: namespace)
 
       case .notes:
         DocumentNoteView(document: $viewModel.document)
-          .environmentObject(store)
+          .environment(store)
           .environmentObject(errorController)
           .sheetZoomTransition(sourceID: TransitionID.notes, in: namespace)
 
@@ -777,11 +777,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // External mutations (e.g. the document-list swipe action that strips
     // inbox tags) update the store but don't reach our local copy. Sync from
     // the server-confirmed event so the edit panel stays in lock-step.
-    .onReceive(store.eventPublisher) { event in
-      guard case .changeReceived(let updated) = event,
-        updated.id == viewModel.document.id
-      else { return }
-      viewModel.document = updated
+    .task {
+      for await event in store.events.subscribe() {
+        guard case .changeReceived(let updated) = event,
+          updated.id == viewModel.document.id
+        else { continue }
+        viewModel.document = updated
+      }
     }
   }
 }
@@ -920,7 +922,7 @@ extension Tag {
 }
 
 private struct DocumentDetailViewV4PreviewHelper: View {
-  @StateObject private var store = DocumentStore(repository: TransientRepository())
+  @State private var store = DocumentStore(repository: TransientRepository())
   @StateObject private var errorController = ErrorController()
   @StateObject private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
@@ -947,7 +949,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
         Text("No document")
       }
     }
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
     .environment(RouteManager())
     .task {

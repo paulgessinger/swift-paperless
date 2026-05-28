@@ -35,7 +35,7 @@ extension Binding where Value == CustomFieldQuery {
 private struct OpView: View {
   @Binding var op: OpContent
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private var defaultField: CustomField? {
     store.customFields.values
@@ -708,7 +708,7 @@ private struct ExprView: View {
   @State var field: CustomField
   @Binding var expr: ExprContent
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private var fields: [CustomField] {
     Array(
@@ -847,7 +847,7 @@ struct CustomFieldFilterView: View {
 
   @State private var state = QueryState.valid
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(\.dismiss) private var dismiss
 
   init(query: Binding<CustomFieldQuery>) {
@@ -974,7 +974,7 @@ private let customFields = [
 ]
 
 private struct PreviewHelper<C: View>: View {
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
 
   @State var show = false
 
@@ -1027,7 +1027,7 @@ private struct PreviewHelper<C: View>: View {
         show = true
       } catch {}
     }
-    .environmentObject(store)
+    .environment(store)
   }
 }
 
