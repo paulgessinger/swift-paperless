@@ -210,7 +210,9 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
   }
 
   @ViewBuilder
-  private func elementLink(_ element: Element, model: Manager.Model) -> some View {
+  private func elementLink(
+    _ element: Element, model: Manager.Model, swipeDelete: Bool = false
+  ) -> some View {
     NavigationLink {
       Edit(model: model, element: element) { element in
         guard model.permissions.test(.change) else {
@@ -230,6 +232,23 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
     } label: {
       Manager.RowView(element: element)
     }
+    .swipeActions(edge: .trailing) {
+      if swipeDelete && test(.delete) {
+        Button(role: .destructive) {
+          Task {
+            do {
+              try await model.delete(element)
+              await MainActor.run { reloadElements() }
+            } catch {
+              Logger.shared.error("Error deleting element: \(error)")
+              errorController.push(error: error)
+            }
+          }
+        } label: {
+          Label(String(localized: .localizable(.delete)), systemImage: "trash")
+        }
+      }
+    }
   }
 
   var body: some View {
@@ -243,7 +262,7 @@ struct ManageView<Manager>: View where Manager: ManagerProtocol {
           noElementsView
         } else if useHierarchy, let hierarchy {
           OutlineGroup(hierarchy, children: \.children) { node in
-            elementLink(node.element, model: model)
+            elementLink(node.element, model: model, swipeDelete: true)
           }
         } else {
           if !displayElements.isEmpty {
