@@ -907,6 +907,17 @@
         }
       }
     },
+    "checkingVersion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking version"
+          }
+        }
+      }
+    },
     "chooseServerAccessibilityLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2281,6 +2292,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Günlükler"
+          }
+        }
+      }
+    },
+    "noUpdateAvailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latest version"
           }
         }
       }
