@@ -11,6 +11,7 @@ import DataModel
 import SwiftUI
 
 struct DebugMenuView: View {
+  @EnvironmentObject private var connectionManager: ConnectionManager
   @ObservedObject private var appSettings = AppSettings.shared
   @State private var showResetConfirmation = false
 
@@ -39,7 +40,7 @@ struct DebugMenuView: View {
       }
 
       NavigationLink {
-        LogView()
+        LogView(connectionManager: connectionManager)
       } label: {
         Label {
           Text(.settings(.logs))
@@ -62,8 +63,11 @@ struct DebugMenuView: View {
 }
 
 #Preview("Debug menu") {
+  @Previewable @StateObject var connectionManager = ConnectionManager()
+
   NavigationStack {
     DebugMenuView()
+      .environmentObject(connectionManager)
   }
 }
 

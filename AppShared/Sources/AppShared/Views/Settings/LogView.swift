@@ -51,12 +51,19 @@ public struct LogView: View {
   }
 
   @State private var state = LogState.loading
+  private let connectionManager: ConnectionManager?
+  #if canImport(MessageUI)
+    @State private var feedbackMailRequest: FeedbackMailRequest?
+  #endif
 
-  fileprivate init(entries: [Entry]) {
-    _state = State(initialValue: .loaded(entries, nil))
+  public init(connectionManager: ConnectionManager? = nil) {
+    self.connectionManager = connectionManager
   }
 
-  public init() {}
+  fileprivate init(entries: [Entry], connectionManager: ConnectionManager? = nil) {
+    self.connectionManager = connectionManager
+    _state = State(initialValue: .loaded(entries, nil))
+  }
 
   fileprivate struct Entry: Hashable, Equatable {
     let date: Date
@@ -234,6 +241,17 @@ public struct LogView: View {
               Label(.app(.share), systemImage: "square.and.arrow.up")
             }
             .disabled(file == nil)
+
+            #if canImport(MessageUI)
+              if FeedbackMail.canSendMail, let file {
+                Button {
+                  feedbackMailRequest = FeedbackMailRequest(
+                    logFileURL: file, connectionManager: connectionManager)
+                } label: {
+                  Label(.settings(.detailsFeedback), systemImage: "paperplane.fill")
+                }
+              }
+            #endif
           }
         }
       }
@@ -251,6 +269,10 @@ public struct LogView: View {
       }
 
       .animation(.spring, value: state)
+
+      #if canImport(MessageUI)
+        .feedbackMailSheet(item: $feedbackMailRequest)
+      #endif
 
       .navigationTitle(.settings(.logs))
       .navigationBarTitleDisplayMode(.inline)
