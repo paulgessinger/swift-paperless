@@ -777,13 +777,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // External mutations (e.g. the document-list swipe action that strips
     // inbox tags) update the store but don't reach our local copy. Sync from
     // the server-confirmed event so the edit panel stays in lock-step.
-    .task {
-      for await event in store.events.subscribe() {
-        guard case .changeReceived(let updated) = event,
-          updated.id == viewModel.document.id
-        else { continue }
-        viewModel.document = updated
-      }
+    .onEvent(from: store.events) { event in
+      guard case .changeReceived(let updated) = event,
+        updated.id == viewModel.document.id
+      else { return }
+      viewModel.document = updated
     }
   }
 }

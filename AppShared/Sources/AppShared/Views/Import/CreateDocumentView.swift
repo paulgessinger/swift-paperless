@@ -446,13 +446,11 @@ public struct CreateDocumentView: View {
         }
       }
 
-      .task {
-        for await event in store.events.subscribe() {
-          switch event {
-          case .repositoryWillChange:
-            resetDocument()
-          default: break
-          }
+      .onEvent(from: store.events) { event in
+        switch event {
+        case .repositoryWillChange:
+          resetDocument()
+        default: break
         }
       }
 
