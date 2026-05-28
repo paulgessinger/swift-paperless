@@ -113,6 +113,8 @@ schemes:
         swift-paperless: all
     run:
       config: Debug
+      # LLDB attach is slow for this modular app; use Debug → Attach to Process when needed.
+      debugEnabled: false
       environmentVariables:
         TASK_POLLING_INTERVAL: "30"
       storeKitConfiguration: swift-paperless/Testing.storekit
@@ -133,6 +135,7 @@ schemes:
         swift-paperless: all
     run:
       config: Debug
+      debugEnabled: false
     profile:
       config: Release
     archive:
