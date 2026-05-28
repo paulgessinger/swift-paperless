@@ -12,6 +12,8 @@ import os
 
 @MainActor
 private struct DetailsView: View {
+  let connectionManager: ConnectionManager
+
   @Environment(\.dismiss) private var dismiss
   @Environment(LoginViewModel.self) private var viewModel
 
@@ -38,7 +40,7 @@ private struct DetailsView: View {
           }
 
           NavigationLink {
-            LogView()
+            LogView(connectionManager: connectionManager)
           } label: {
             Label {
               Text(.settings(.logs))
@@ -158,7 +160,7 @@ struct LoginViewV2: LoginViewProtocol {
     }
 
     .sheet(isPresented: $showDetails) {
-      DetailsView()
+      DetailsView(connectionManager: connectionManager)
     }
 
     .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {

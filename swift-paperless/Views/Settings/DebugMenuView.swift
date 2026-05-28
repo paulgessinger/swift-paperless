@@ -8,9 +8,11 @@
 import AppShared
 import Common
 import DataModel
+import Persistence
 import SwiftUI
 
 struct DebugMenuView: View {
+  @EnvironmentObject private var connectionManager: ConnectionManager
   @ObservedObject private var appSettings = AppSettings.shared
   @State private var showResetConfirmation = false
 
@@ -39,7 +41,7 @@ struct DebugMenuView: View {
       }
 
       NavigationLink {
-        LogView()
+        LogView(connectionManager: connectionManager)
       } label: {
         Label {
           Text(.settings(.logs))

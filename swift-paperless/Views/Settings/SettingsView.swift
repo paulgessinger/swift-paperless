@@ -10,10 +10,6 @@ import Networking
 import SwiftUI
 import os
 
-#if canImport(MessageUI)
-  import MessageUI
-#endif
-
 // MARK: - Settings View
 
 struct SettingsView: View {
@@ -23,10 +19,8 @@ struct SettingsView: View {
   @Environment(\.openURL) private var openURL
   @Environment(\.dismiss) private var dismiss
 
-  @State private var feedbackLogs: URL? = nil
-  @State private var showMailSheet: Bool = false
+  @State private var feedbackMailRequest: FeedbackMailRequest?
   @State private var showLoginSheet: Bool = false
-  @State private var result: Result<MFMailComposeResult, any Error>? = nil
   @State var identityManager = IdentityManager()
 
   private func checked(_ fn: @escaping () async throws -> Void) async {
@@ -145,7 +139,7 @@ struct SettingsView: View {
       }
 
       #if canImport(MessageUI)
-        if MFMailComposeViewController.canSendMail() {
+        if FeedbackMail.canSendMail {
           LogRecordExportButton {
             (state: LogRecordExportButton.LogState, export: @escaping () -> Void) in
             switch state {
@@ -177,7 +171,8 @@ struct SettingsView: View {
           } change: { state in
             switch state {
             case .loaded(let logs):
-              feedbackLogs = logs
+              feedbackMailRequest = FeedbackMailRequest(
+                logFileURL: logs, connectionManager: connectionManager)
             default:
               break
             }
@@ -250,28 +245,7 @@ struct SettingsView: View {
       }
 
       #if canImport(MessageUI)
-        .sheet(isPresented: $showMailSheet) {
-          // @FIXME: Weird empty bottom row that seems to come from MessageUI itself
-          MailView(result: $result, isPresented: $showMailSheet) { vc in
-            vc.setToRecipients(["swift-paperless@paulgessinger.com"])
-            if let feedbackLogs, let data = try? Data(contentsOf: feedbackLogs) {
-              vc.addAttachmentData(data, mimeType: "text/plain", fileName: "logs.txt")
-            }
-
-            let version = Bundle.main.releaseVersionNumber ?? "?"
-            let build = Bundle.main.buildVersionNumber ?? "?"
-
-            vc.setMessageBody(
-              """
-              ---
-              App version: \(version) (\(build)), \(Bundle.main.appConfiguration.rawValue)
-              """, isHTML: false)
-          }
-        }
-
-        .onChange(of: feedbackLogs) {
-          showMailSheet = true
-        }
+        .feedbackMailSheet(item: $feedbackMailRequest)
       #endif
 
       .sheet(isPresented: $showLoginSheet) {
