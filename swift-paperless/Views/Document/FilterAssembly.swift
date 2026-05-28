@@ -116,7 +116,7 @@ struct FilterAssembly: View {
   @Previewable @State var filterModel = FilterModel()
   @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
   @Previewable @State var searchText = ""
 
@@ -136,7 +136,7 @@ struct FilterAssembly: View {
         .environment(store)
         .environmentObject(errorController)
         // @TODO: Is this needed even?
-        .environmentObject(connectionManager)
+        .environment(connectionManager)
         .environment(filterModel)
     }
 

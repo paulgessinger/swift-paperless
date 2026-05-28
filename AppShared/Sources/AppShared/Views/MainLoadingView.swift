@@ -98,7 +98,7 @@ public struct MainLoadingView: View {
 }
 
 #Preview {
-  @Previewable @StateObject var manager = ConnectionManager(
+  @Previewable @State var manager = ConnectionManager(
     database: try! Database.inMemory())
 
   MainLoadingView(

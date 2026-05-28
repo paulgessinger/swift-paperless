@@ -15,7 +15,7 @@ import os
 
 struct SettingsView: View {
   @Environment(DocumentStore.self) private var store
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.openURL) private var openURL
   @Environment(\.dismiss) private var dismiss
@@ -269,7 +269,7 @@ struct SettingsView: View {
 #Preview("SettingsView") {
   @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
 
   VStack {
@@ -277,6 +277,6 @@ struct SettingsView: View {
   .sheet(isPresented: .constant(true)) {
     SettingsView()
       .environment(store)
-      .environmentObject(connectionManager)
+      .environment(connectionManager)
   }
 }
