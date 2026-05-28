@@ -81,7 +81,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
   public typealias Element = Manager.Model.Element
 
   @EnvironmentObject public var errorController: ErrorController
-  @EnvironmentObject public var store: DocumentStore
+  @Environment(DocumentStore.self) public var store
   @Environment(\.editMode) private var editMode
 
   @State public var model: Manager.Model?
@@ -329,7 +329,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
 }
 
 private struct Container<M: ManagerProtocol>: View {
-  @StateObject public var store = DocumentStore(repository: PreviewRepository())
+  @State public var store = DocumentStore(repository: PreviewRepository())
   @StateObject public var errorController = ErrorController()
 
   public var body: some View {
@@ -337,7 +337,7 @@ private struct Container<M: ManagerProtocol>: View {
       ManageView<M>()
         .navigationTitle("Title")
     }
-    .environmentObject(store)
+    .environment(store)
     .task {
       try? await store.fetchAll()
     }

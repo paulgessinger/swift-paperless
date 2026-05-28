@@ -113,7 +113,7 @@ extension EnvironmentValues {
 
 struct CustomFieldQueryDisplayView: View {
   let query: CustomFieldQuery
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   init(query: CustomFieldQuery) {
     self.query = query
@@ -192,7 +192,7 @@ private let customFields = [
 ]
 
 private struct PreviewHelper<C: View>: View {
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
 
   @State var show = false
 
@@ -247,7 +247,7 @@ private struct PreviewHelper<C: View>: View {
         show = true
       } catch {}
     }
-    .environmentObject(store)
+    .environment(store)
   }
 }
 

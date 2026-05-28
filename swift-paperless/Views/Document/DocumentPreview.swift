@@ -232,7 +232,7 @@ private struct PDFPagingPreview: View {
 }
 
 private struct IntegratedDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State private var showLoadingOverlay = false
   @State private var thumbnailHidden = false
   var document: Document
@@ -391,7 +391,7 @@ private struct IntegratedDocumentPreview: View {
 }
 
 struct PopupDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 

@@ -104,7 +104,7 @@ public struct ConnectionsView: View {
 
   @State private var showExtraHeader = false
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
     self.connectionManager = connectionManager

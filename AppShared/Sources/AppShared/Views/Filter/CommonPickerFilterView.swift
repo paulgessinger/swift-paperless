@@ -272,7 +272,7 @@ where
 {
   public typealias Element = Manager.Model.Element
 
-  @ObservedObject public var store: DocumentStore
+  public var store: DocumentStore
 
   @EnvironmentObject public var errorController: ErrorController
 
@@ -450,7 +450,7 @@ where
 }
 
 private struct FilterViewPreviewHelper<T: Pickable>: View {
-  @StateObject public var store = DocumentStore(repository: PreviewRepository())
+  @State public var store = DocumentStore(repository: PreviewRepository())
   @State public var filterState = FilterState.Filter.any
   @State public var elements: [(UInt, String)] = []
 
@@ -471,7 +471,7 @@ private struct FilterViewPreviewHelper<T: Pickable>: View {
         .map { ($0.key, $0.value.name) }
         .sorted(by: { $0.1 < $1.1 })
     }
-    .environmentObject(store)
+    .environment(store)
   }
 }
 

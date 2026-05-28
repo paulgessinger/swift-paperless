@@ -5,40 +5,39 @@
 //  Created by Paul Gessinger on 16.04.23.
 //
 
-import Combine
 import Common
 import DataModel
 import Foundation
 import Networking
 import Nuke
+import Persistence
 import Semaphore
 import SwiftUI
 import os
 
 @MainActor
-public final class DocumentStore: ObservableObject, Sendable {
-  // MARK: Publishers
+@Observable
+public final class DocumentStore: Sendable {
+  // MARK: Observed state
 
-  @Published public private(set) var documents: [UInt: Document] = [:]
-  @Published public private(set) var correspondents: [UInt: Correspondent] = [:]
-  @Published public private(set) var documentTypes: [UInt: DocumentType] = [:]
-  @Published public private(set) var tags: [UInt: Tag] = [:]
-  @Published public private(set) var savedViews: [UInt: SavedView] = [:]
-  @Published public private(set) var storagePaths: [UInt: StoragePath] = [:]
+  public private(set) var documents: [UInt: Document] = [:]
+  public private(set) var correspondents: [UInt: Correspondent] = [:]
+  public private(set) var documentTypes: [UInt: DocumentType] = [:]
+  public private(set) var tags: [UInt: Tag] = [:]
+  public private(set) var savedViews: [UInt: SavedView] = [:]
+  public private(set) var storagePaths: [UInt: StoragePath] = [:]
 
-  @Published public private(set) var users: [UInt: User] = [:]
-  @Published public private(set) var groups: [UInt: UserGroup] = [:]
-  @Published public private(set) var currentUser: User?
+  public private(set) var users: [UInt: User] = [:]
+  public private(set) var groups: [UInt: UserGroup] = [:]
+  public private(set) var currentUser: User?
 
-  @Published public private(set) var customFields: [UInt: CustomField] = [:]
+  public private(set) var customFields: [UInt: CustomField] = [:]
 
-  @Published public private(set) var serverConfiguration: ServerConfiguration?
+  public private(set) var serverConfiguration: ServerConfiguration?
 
-  @Published public private(set) var tasks: [PaperlessTask] = []
+  public private(set) var tasks: [PaperlessTask] = []
 
-  @Published
   public private(set) var permissions: UserPermissions = .empty
-  @Published
   public private(set) var settings = UISettingsSettings()
 
   public var activeTasks: [PaperlessTask] {
@@ -47,7 +46,7 @@ public final class DocumentStore: ObservableObject, Sendable {
 
   // MARK: Members
 
-  public enum Event {
+  public enum Event: Sendable {
     case deleted(document: Document)
     case changed(document: Document)
     case changeReceived(document: Document)
@@ -57,17 +56,17 @@ public final class DocumentStore: ObservableObject, Sendable {
     case taskError(task: PaperlessTask)
   }
 
-  public var eventPublisher =
-    PassthroughSubject<Event, Never>()
+  public let events = Broadcaster<Event>()
 
   public let semaphore = AsyncSemaphore(value: 1)
   public let fetchAllSemaphore = AsyncSemaphore(value: 1)
 
   public private(set) var repository: any Repository
 
-  @Published public private(set) var imagePipeline: ImagePipeline
+  public private(set) var imagePipeline: ImagePipeline
 
-  private var taskUpdateTask: Task<Void, Never>?
+  @ObservationIgnored
+  private nonisolated(unsafe) var taskUpdateTask: Task<Void, Never>?
 
   // MARK: Methods
 
@@ -99,7 +98,7 @@ public final class DocumentStore: ObservableObject, Sendable {
         Task {
           // don't send the errors all at once if there's multiple
           for task in newErrors {
-            eventPublisher.send(.taskError(task: task))
+            events.emit(.taskError(task: task))
             try? await Task.sleep(for: .seconds(2))
           }
         }
@@ -145,7 +144,7 @@ public final class DocumentStore: ObservableObject, Sendable {
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     if reload {
-      eventPublisher.send(.repositoryChanged)
+      events.emit(.repositoryChanged)
       clear()
     }
   }
@@ -186,7 +185,7 @@ public final class DocumentStore: ObservableObject, Sendable {
   public func updateDocument(_ document: Document) async throws -> Document {
     Logger.shared.info("Updating document with ID \(document.id, privacy: .public)")
     try checkPermission(.change, for: .document)
-    eventPublisher.send(.changed(document: document))
+    events.emit(.changed(document: document))
 
     var document = document
 
@@ -200,7 +199,7 @@ public final class DocumentStore: ObservableObject, Sendable {
 
     let updated = try await repository.update(document: document)
     documents[updated.id] = updated
-    eventPublisher.send(.changeReceived(document: updated))
+    events.emit(.changeReceived(document: updated))
     return updated
   }
 
@@ -209,26 +208,26 @@ public final class DocumentStore: ObservableObject, Sendable {
     try checkPermission(.delete, for: .document)
     try await repository.delete(document: document)
     documents.removeValue(forKey: document.id)
-    eventPublisher.send(.deleted(document: document))
+    events.emit(.deleted(document: document))
   }
 
   public func deleteNote(from document: Document, id: UInt) async throws {
     Logger.shared.info("Deleting note with ID \(id, privacy: .public)")
     try checkPermission(.delete, for: .note)
-    eventPublisher.send(.changed(document: document))
+    events.emit(.changed(document: document))
     _ = try await repository.deleteNote(id: id, documentId: document.id)
 
-    eventPublisher.send(.changeReceived(document: document))
+    events.emit(.changeReceived(document: document))
   }
 
   public func addNote(to document: Document, note: ProtoDocument.Note) async throws {
     Logger.shared.info("Adding note to document \(document.id, privacy: .public)")
     try checkPermission(.add, for: .note)
-    eventPublisher.send(.changed(document: document))
+    events.emit(.changed(document: document))
 
     _ = try await repository.createNote(documentId: document.id, note: note)
 
-    eventPublisher.send(.changeReceived(document: document))
+    events.emit(.changeReceived(document: document))
   }
 
   public func notes(for document: Document) async throws -> [Document.Note] {
