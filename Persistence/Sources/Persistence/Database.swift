@@ -145,19 +145,8 @@ public final class Database: Sendable {
   }
 }
 
-public enum DatabaseError: Error, CustomStringConvertible {
+public enum DatabaseError: Error {
   case appGroupUnavailable(identifier: String)
   case openFailed(path: String, underlying: Error)
   case migrationFailed(underlying: Error)
-
-  public var description: String {
-    switch self {
-    case .appGroupUnavailable(let id):
-      return "App group container is unavailable: \(id)"
-    case .openFailed(let path, let err):
-      return "Failed to open database at \(path): \(err)"
-    case .migrationFailed(let err):
-      return "Database migration failed: \(err)"
-    }
-  }
 }
