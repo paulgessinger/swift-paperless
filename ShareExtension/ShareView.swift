@@ -21,7 +21,7 @@ struct ShareView: View {
   // If the bootstrap fails (corrupt file, missing app-group), fall back to
   // an in-memory database so the extension still renders the disabled
   // "no active server" state cleanly instead of crashing.
-  @StateObject private var connectionManager: ConnectionManager = {
+  @State private var connectionManager: ConnectionManager = {
     let database: Database
     do {
       database = try Database()
@@ -146,7 +146,7 @@ struct ShareView: View {
                 .padding(.bottom, 40)
                 .environment(store)
                 .environmentObject(errorController)
-                .environmentObject(connectionManager)
+                .environment(connectionManager)
                 .accentColor(Color(.accent))
               } else {
                 ProgressView()

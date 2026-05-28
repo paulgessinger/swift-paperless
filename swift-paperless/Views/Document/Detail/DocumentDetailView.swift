@@ -21,7 +21,7 @@ protocol DocumentDetailViewProtocol: View {
 
 struct DocumentDetailView: View {
   private var store: DocumentStore
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @State var document: Document
   var navPath: Binding<[NavigationState]>?
 

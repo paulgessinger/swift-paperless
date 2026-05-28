@@ -81,7 +81,7 @@ struct LoginFooterView<Content: View>: View {
 
 @MainActor
 struct LoginViewV2: LoginViewProtocol {
-  @ObservedObject var connectionManager: ConnectionManager
+  var connectionManager: ConnectionManager
   var initial: Bool = false
 
   @State private var viewModel = LoginViewModel()

@@ -6,7 +6,6 @@
 //
 
 import AuthenticationServices
-import Combine
 import Common
 import CryptoKit
 import DataModel
@@ -165,7 +164,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
 }
 
 @MainActor
-public class ConnectionManager: ObservableObject {
+@Observable
+public class ConnectionManager {
   private struct PreviewLaunchArguments {
     let mode: Bool?
     let url: String?
@@ -223,19 +223,21 @@ public class ConnectionManager: ObservableObject {
     }
   }
 
-  public enum Event {
+  public enum Event: Sendable {
     case connectionChange(animated: Bool)
     case logout
   }
 
-  public var eventPublisher =
-    PassthroughSubject<Event, Never>()
+  public let events = Broadcaster<Event>()
 
+  @ObservationIgnored
   private let previewArguments: PreviewLaunchArguments?
   public let previewMode: Bool
 
+  @ObservationIgnored
   private let database: Database
-  private var observationTask: Task<Void, Never>?
+  @ObservationIgnored
+  private nonisolated(unsafe) var observationTask: Task<Void, Never>?
 
   public init(database: Database, previewMode: Bool? = nil) {
     self.database = database
@@ -284,11 +286,7 @@ public class ConnectionManager: ObservableObject {
   /// which is called from the bootstrap read at init and from the
   /// `ValueObservation` task that follows it. Mutators go through the DB and
   /// let the observer hydrate this dict.
-  public private(set) var connections: [UUID: StoredConnection] = [:] {
-    willSet {
-      objectWillChange.send()
-    }
-  }
+  public private(set) var connections: [UUID: StoredConnection] = [:]
 
   /// Active server pointer.
   ///
@@ -296,18 +294,32 @@ public class ConnectionManager: ObservableObject {
   /// Share Extension picks up active-server changes through UserDefaults' free
   /// cross-process syncing. The "dangling pointer after row delete" case is
   /// handled in ``applyHydrate(records:)`` and ``logout(animated:)``.
+  ///
+  /// The @UserDefaultsBacked property wrapper is incompatible with the
+  /// @Observable macro's auto-tracking, so observation is wired manually
+  /// via access(keyPath:) / withMutation(keyPath:) around the private
+  /// backing storage.
+  @ObservationIgnored
   @UserDefaultsBacked("ActiveConnectionId", storage: .group)
-  public var activeConnectionId: UUID? = nil {
-    willSet {
-      objectWillChange.send()
+  private var _activeConnectionId: UUID? = nil
+
+  public var activeConnectionId: UUID? {
+    get {
+      access(keyPath: \.activeConnectionId)
+      return _activeConnectionId
+    }
+    set {
+      withMutation(keyPath: \.activeConnectionId) {
+        _activeConnectionId = newValue
+      }
     }
   }
 
   /// Per-connection "needs auth" set. Hydrated from the `needs_auth` column;
-  /// kept as a published Set<UUID> here so the existing banner / lock-badge
+  /// kept as a Set<UUID> here so the existing banner / lock-badge
   /// `.onChange(of: needsAuthIds)` watchers keep firing without touching the
   /// SwiftUI sites in this commit.
-  @Published public private(set) var needsAuthIds: Set<UUID> = []
+  public private(set) var needsAuthIds: Set<UUID> = []
 
   /// Apply a fresh snapshot of records to the in-memory dict and the
   /// needs-auth set. Called by both the bootstrap read and the observer.
@@ -361,7 +373,7 @@ public class ConnectionManager: ObservableObject {
   // the app shell observes this and presents `ReauthSheet`. Decoupled from
   // `needsAuthIds` so the banner can show without auto-presenting a sheet —
   // user consent stays explicit.
-  @Published public var reauthRequested: UUID? = nil
+  public var reauthRequested: UUID? = nil
 
   public func requestReauth(for id: UUID) {
     Logger.api.info(
@@ -375,7 +387,7 @@ public class ConnectionManager: ObservableObject {
 
   public func setActiveConnection(id: UUID, animated: Bool = true) {
     activeConnectionId = id
-    eventPublisher.send(.connectionChange(animated: animated))
+    events.emit(.connectionChange(animated: animated))
   }
 
   public func isServerUnique(_ url: URL) -> Bool {
@@ -515,11 +527,11 @@ public class ConnectionManager: ObservableObject {
       } else {
         Logger.api.info("Setting active connection to nil")
         self.activeConnectionId = nil
-        eventPublisher.send(.logout)
+        events.emit(.logout)
       }
     } else {
       activeConnectionId = nil
-      eventPublisher.send(.logout)
+      events.emit(.logout)
     }
   }
 }

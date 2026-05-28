@@ -12,7 +12,7 @@ import Persistence
 import SwiftUI
 
 struct DebugMenuView: View {
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @ObservedObject private var appSettings = AppSettings.shared
   @State private var showResetConfirmation = false
 
@@ -64,12 +64,12 @@ struct DebugMenuView: View {
 }
 
 #Preview("Debug menu") {
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
 
   NavigationStack {
     DebugMenuView()
-      .environmentObject(connectionManager)
+      .environment(connectionManager)
   }
 }
 

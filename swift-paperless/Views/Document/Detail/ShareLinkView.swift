@@ -30,7 +30,7 @@ struct ShareLinkView: View {
 
   @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   @ScaledMetric(relativeTo: .body) var fontSize = 14
 
@@ -254,7 +254,7 @@ private struct CreateShareLinkView: View {
   @StateObject var errorController = ErrorController()
 
   @Previewable
-  @StateObject var connectionManager = ConnectionManager(database: try! Database.inMemory())
+  @State var connectionManager = ConnectionManager(database: try! Database.inMemory())
 
   @Previewable @State var document: Document? = nil
 
@@ -265,7 +265,7 @@ private struct CreateShareLinkView: View {
   }
   .environment(store)
   .environmentObject(errorController)
-  .environmentObject(connectionManager)
+  .environment(connectionManager)
   .task {
     do {
       let protoDoc = ProtoDocument(
