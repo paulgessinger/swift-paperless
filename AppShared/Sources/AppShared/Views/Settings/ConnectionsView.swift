@@ -224,10 +224,6 @@ public struct ConnectionsView: View {
           }
           Button(String(localized: .app(.cancel)), role: .cancel) {}
         }
-
-      } else if let compat = connectionManager.connection {
-        // @TODO: (multi-server) remove in a few versions
-        Text(compat.url.absoluteString)
       }
     } header: {
       HStack {

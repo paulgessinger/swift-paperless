@@ -280,25 +280,6 @@ public class ConnectionManager: ObservableObject {
     observationTask?.cancel()
   }
 
-  // @TODO: (multi-server) Remove in a few versions
-  @UserDefaultsBacked("ExtraHeaders", storage: .group)
-  private var extraHeaders: [Connection.HeaderValue] = []
-
-  // @TODO: (multi-server) Remove in a few versions
-  private var apiHost: String? {
-    get {
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.string(forKey: "ApiHost")
-    }
-    set {
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(
-        newValue, forKey: "ApiHost")
-    }
-  }
-
-  // @TODO: (multi-server) Remove in a few versions
-  @UserDefaultsBacked("ApiPath", storage: .group)
-  private var apiPath: String? = nil
-
   /// In-memory cache of connection rows. Written ONLY by ``applyHydrate(records:)``,
   /// which is called from the bootstrap read at init and from the
   /// `ValueObservation` task that follows it. Mutators go through the DB and
@@ -420,52 +401,23 @@ public class ConnectionManager: ObservableObject {
       return Connection(
         url: url,
         token: token,
-        extraHeaders: extraHeaders, identityName: nil)
+        extraHeaders: [], identityName: nil)
     }
 
-    if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
-      Logger.api.info(
-        "Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)"
-      )
-      do {
-        return try storedConnection.connection
-      } catch {
-        Logger.api.error(
-          "Getting connection from stored connection: \(storedConnection.redactedLabel, privacy: .public)"
-        )
-      }
-    }
-
-    // @TODO: (multi-server) Remove in a few versions
-    Logger.api.info("Making compatibility connection from parts (OLD STORAGE FLOW)")
-
-    guard let apiHost, var url = URL(string: apiHost) else {
+    guard let activeConnectionId, let storedConnection = connections[activeConnectionId] else {
       return nil
     }
-
-    if let path = apiPath {
-      url = url.appending(path: path)
-    }
-
-    let token: String?
+    Logger.api.info(
+      "Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)"
+    )
     do {
-      let keychainAccount = "PaperlessAccount"
-      let data = try Keychain.read(
-        service: apiHost,
-        account: keychainAccount)
-      if let data {
-        token = String(data: data, encoding: .utf8)!
-      } else {
-        token = nil
-      }
+      return try storedConnection.connection
     } catch {
+      Logger.api.error(
+        "Getting connection from stored connection: \(storedConnection.redactedLabel, privacy: .public)"
+      )
       return nil
     }
-
-    return Connection(
-      url: url,
-      token: token,
-      extraHeaders: extraHeaders, identityName: nil)
   }
 
   public var storedConnection: StoredConnection? {
@@ -479,7 +431,7 @@ public class ConnectionManager: ObservableObject {
 
       return StoredConnection(
         url: url,
-        extraHeaders: extraHeaders,
+        extraHeaders: [],
         user: User(id: 1, isSuperUser: true, username: "paperless"))
     }
 
@@ -544,22 +496,6 @@ public class ConnectionManager: ObservableObject {
 
   public func logout(animated: Bool) {
     Logger.api.info("Requested logout from current server")
-
-    // @TODO: (multi-server) Remove in a few versions
-    if let host = apiHost {
-      Logger.api.info("Prior single-server connection present, clearing")
-      do {
-        let keychainAccount = "PaperlessAccount"
-        try Keychain.delete(
-          service: host,
-          account: keychainAccount)
-      } catch {
-        Logger.shared.error("Error logging out: \(error)")
-      }
-
-      apiHost = nil
-      apiPath = nil
-    }
 
     if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
       Logger.api.info("Have active connection \(storedConnection.redactedLabel, privacy: .public)")
