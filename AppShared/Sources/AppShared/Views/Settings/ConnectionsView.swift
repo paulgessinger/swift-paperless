@@ -267,7 +267,7 @@ public struct ConnectionQuickChangeMenu: View {
 private struct BackendVersionView: View {
 
   public let backendVersion: Version
-  public let updateAvailable: Bool
+  public let updateAvailable: Bool?
 
   private let releases = #URL("https://github.com/paperless-ngx/paperless-ngx/releases")
 
@@ -276,23 +276,34 @@ private struct BackendVersionView: View {
       Text(backendVersion.description)
     } label: {
       Text(.settings(.backendVersion))
-      Link(destination: releases) {
-        HStack {
-          Image(systemName: "arrow.up.circle.fill")
-          Text(.settings(.updateAvailable))
+      if let updateAvailable {
+        if updateAvailable {
+          Link(destination: releases) {
+            HStack {
+              Image(systemName: "arrow.up.circle.fill")
+              Text(.settings(.updateAvailable))
+            }
+          }
+          .foregroundStyle(.green)
+        } else {
+          Text(.settings(.noUpdateAvailable))
         }
-        .foregroundStyle(.green)
+      } else {
+        HStack {
+          ProgressView()
+          Text(.settings(.checkingVersion))
+        }
       }
-      .opacity(updateAvailable ? 1 : 0)
     }
     .animation(.default, value: updateAvailable)
   }
 }
 
 #Preview {
-  @Previewable @State var updateAvailable = false
+  @Previewable @State var updateAvailable: Bool? = nil
 
   Form {
+    BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: nil)
     BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: false)
     BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: updateAvailable)
     BackendVersionView(backendVersion: Version(1, 2, 3), updateAvailable: true)
