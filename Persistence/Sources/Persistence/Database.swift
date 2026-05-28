@@ -122,6 +122,41 @@ public final class Database: Sendable {
     self.writer = writer
   }
 
+  // MARK: - Destructive maintenance
+
+  /// Delete the on-disk SQLite file and its WAL/SHM sidecars for the given
+  /// app group. Intended for the corruption-recovery UI: after a failed
+  /// bootstrap, the user can opt in to wiping the local database so the next
+  /// bootstrap starts from a clean slate (and re-runs all migrations,
+  /// including the v2 import from the app-group `UserDefaults` safety net).
+  ///
+  /// Callers must not hold a live ``Database`` instance against the same
+  /// path when invoking this — there should be no open `DatabasePool` for
+  /// the file being deleted.
+  public static func wipe(appGroupIdentifier: String = ContentStore.appGroup) throws {
+    guard
+      let container = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+    else {
+      throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
+    }
+    let base =
+      container
+      .appendingPathComponent("Library", isDirectory: true)
+      .appendingPathComponent("Application Support", isDirectory: true)
+      .appendingPathComponent("Database", isDirectory: true)
+      .appendingPathComponent("swift-paperless.sqlite")
+    let files = [
+      base,
+      base.deletingPathExtension().appendingPathExtension("sqlite-wal"),
+      base.deletingPathExtension().appendingPathExtension("sqlite-shm"),
+    ]
+    for file in files where FileManager.default.fileExists(atPath: file.path) {
+      try FileManager.default.removeItem(at: file)
+    }
+    Logger.persistence.notice("Wiped local database at \(base.path, privacy: .public)")
+  }
+
   // MARK: - Filesystem helpers
 
   private static func createDirectory(_ url: URL) throws {
