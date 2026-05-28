@@ -37,12 +37,22 @@ public final class Database: Sendable {
       .appendingPathComponent("Database", isDirectory: true)
     try Self.createDirectory(directory)
     let url = directory.appendingPathComponent("swift-paperless.sqlite")
-    try self.init(path: url)
+    try self.init(
+      path: url,
+      legacyConnectionsUserDefaults: UserDefaults(suiteName: appGroupIdentifier))
   }
 
-  /// Test seam: explicit on-disk path. Used by integration tests and any
-  /// consumer that wants to point at a temp directory.
-  public init(path: URL) throws {
+  /// Test seam: explicit on-disk path.
+  ///
+  /// - Parameter legacyConnectionsUserDefaults: `UserDefaults` to read the
+  ///   pre-Stage-5 `[UUID: StoredConnection]` payload from during the v2
+  ///   import migration. Pass `nil` (the default) when no legacy data is in
+  ///   play; the production convenience initializer threads through the
+  ///   app-group suite.
+  public init(
+    path: URL,
+    legacyConnectionsUserDefaults: UserDefaults? = nil
+  ) throws {
     let directory = path.deletingLastPathComponent()
     try Self.createDirectory(directory)
 
@@ -71,7 +81,8 @@ public final class Database: Sendable {
     Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-shm"))
 
     do {
-      try Migrations.migrator().migrate(pool)
+      try Migrations.migrator(legacyConnectionsUserDefaults: legacyConnectionsUserDefaults)
+        .migrate(pool)
     } catch {
       throw DatabaseError.migrationFailed(underlying: error)
     }
@@ -79,7 +90,13 @@ public final class Database: Sendable {
 
   /// In-memory test seam. Uses `DatabaseQueue` because `DatabasePool` requires
   /// a real on-disk file (it relies on WAL).
-  public static func inMemory() throws -> Database {
+  ///
+  /// - Parameter legacyConnectionsUserDefaults: optional `UserDefaults`
+  ///   for the v2 import migration. Default `nil` skips the import — the
+  ///   common case for schema / record unit tests.
+  public static func inMemory(
+    legacyConnectionsUserDefaults: UserDefaults? = nil
+  ) throws -> Database {
     var config = Configuration()
     config.label = "swift-paperless.persistence.inMemory"
     config.prepareDatabase { db in
@@ -92,7 +109,8 @@ public final class Database: Sendable {
       throw DatabaseError.openFailed(path: ":memory:", underlying: error)
     }
     do {
-      try Migrations.migrator().migrate(queue)
+      try Migrations.migrator(legacyConnectionsUserDefaults: legacyConnectionsUserDefaults)
+        .migrate(queue)
     } catch {
       throw DatabaseError.migrationFailed(underlying: error)
     }
