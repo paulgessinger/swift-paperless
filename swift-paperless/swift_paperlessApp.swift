@@ -24,6 +24,9 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
+  // Shared GRDB database, threaded into each connection's CachingRepository.
+  private let database: Database
+
   @State private var friendlyNameTask: Task<Void, Never>?
 
   @StateObject private var errorController: ErrorController
@@ -46,6 +49,7 @@ struct MainView: View {
 
   init(database: Database) {
     _ = AppSettings.shared
+    self.database = database
     _manager = State(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
@@ -183,8 +187,12 @@ struct MainView: View {
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
       let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
-      let repository = NeedsAuthRepository(
+      let needsAuth = NeedsAuthRepository(
         wrapping: api, serverID: conn.serverID, connectionManager: manager)
+      // Caching outermost: reads come from the GRDB cache, while sync's network
+      // calls still flow through the needs-auth 401 interception.
+      let repository = CachingRepository(
+        wrapping: needsAuth, database: database, serverID: conn.serverID)
       if let store {
         await sleep(.seconds(0.1))
         store.events.emit(.repositoryWillChange)
@@ -362,6 +370,12 @@ struct MainView: View {
         store?.startTaskPolling()
 
         Logger.shared.notice("App becomes active")
+
+        // Cache-first: foreground refresh syncs the element cache silently.
+        // The initial launch sync is handled by refreshConnection.
+        if !initialDisplay, let store {
+          Task { try? await store.sync() }
+        }
 
         Task { await biometricLockManager.unlockIfEnabled() }
 
