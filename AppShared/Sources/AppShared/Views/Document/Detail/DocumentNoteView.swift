@@ -137,12 +137,9 @@ public struct DocumentNoteView: View {
         } else if notes.isEmpty {
           Form {
             ContentUnavailableView {
-              Label(
-                LocalizedStringResource("notesEmptyTitle", table: "DocumentMetadata"),
-                systemImage: "note.text"
-              )
+              Label(.documentMetadata(.notesEmptyTitle), systemImage: "note.text")
             } description: {
-              Text(LocalizedStringResource("notesEmptyDescription", table: "DocumentMetadata"))
+              Text(.documentMetadata(.notesEmptyDescription))
             }
           }
         } else {
