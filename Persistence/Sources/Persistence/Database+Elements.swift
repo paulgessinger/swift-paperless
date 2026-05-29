@@ -1,6 +1,7 @@
 import DataModel
 import Foundation
 import GRDB
+import os
 
 /// Element-cache operations. Like `Database+Connections`, these are the only
 /// entry points AppShared uses to read or mutate element rows; GRDB stays
@@ -97,6 +98,42 @@ extension Database {
   public func setServerConfiguration(_ value: ServerConfiguration, serverID: UUID) throws {
     try writer.write { db in
       try ServerConfigurationRecord(serverId: serverID, domain: value).upsert(db)
+    }
+  }
+
+  // MARK: - Observation
+
+  /// A signal stream that fires whenever any element table is written in this
+  /// process. Backed by GRDB `DatabaseRegionObservation` (transaction-level,
+  /// no value coalescing), so every in-process write — sync, write-through,
+  /// or a background task — is captured.
+  ///
+  /// Stage 7 emits the full `ElementKind` set per change; the store hydrates
+  /// each kind (a cheap cache read). No initial value is emitted on subscribe:
+  /// the store performs an explicit initial hydrate.
+  public func observeElements() -> AsyncStream<CacheChange> {
+    let regions: [any DatabaseRegionConvertible] = [
+      TagRecord.all(),
+      CorrespondentRecord.all(),
+      DocumentTypeRecord.all(),
+      StoragePathRecord.all(),
+      SavedViewRecord.all(),
+      UserRecord.all(),
+      UserGroupRecord.all(),
+      CustomFieldRecord.all(),
+      UISettingsRecord.all(),
+      ServerConfigurationRecord.all(),
+    ]
+    let observation = DatabaseRegionObservation(tracking: regions)
+    let writer = writer
+    return AsyncStream { continuation in
+      let cancellable = observation.start(in: writer) { error in
+        Logger.persistence.error("Element observation failed: \(error)")
+        continuation.finish()
+      } onChange: { _ in
+        continuation.yield(.elements(kinds: Set(ElementKind.allCases)))
+      }
+      continuation.onTermination = { _ in cancellable.cancel() }
     }
   }
 }
