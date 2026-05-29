@@ -196,4 +196,31 @@ struct ElementCacheTests {
     #expect(!fetched.permissions.test(.delete, for: .document))
     #expect(!fetched.permissions.test(.view, for: .correspondent))
   }
+
+  // MARK: - Observation
+
+  @Test("observeElements fires on an element write")
+  func observationFires() async throws {
+    let server = UUID()
+    let database = try makeDatabase(server: server)
+    let stream = database.observeElements()
+
+    try database.replaceElements([tag(1, "A")], of: TagRecord.self, serverID: server)
+
+    let change = await withThrowingTaskGroup(of: CacheChange?.self) { group in
+      group.addTask {
+        for await change in stream { return change }
+        return nil
+      }
+      group.addTask {
+        try await Task.sleep(for: .seconds(2))
+        return nil
+      }
+      let first = try? await group.next()
+      group.cancelAll()
+      return first ?? nil
+    }
+
+    #expect(change == .elements(kinds: Set(ElementKind.allCases)))
+  }
 }

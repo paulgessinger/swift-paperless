@@ -77,15 +77,22 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private nonisolated(unsafe) var taskUpdateTask: Task<Void, Never>?
 
+  // Consumes the caching repository's `CacheChange` stream and re-hydrates.
+  // nil when the active repository isn't a `CachingBackend`.
+  @ObservationIgnored
+  private nonisolated(unsafe) var cacheChangeTask: Task<Void, Never>?
+
   // MARK: Methods
 
   public init(repository: some Repository) {
     self.repository = repository
     self.imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
+    startCacheObservation()
   }
 
   deinit {
     taskUpdateTask?.cancel()
+    cacheChangeTask?.cancel()
   }
 
   @Sendable
@@ -153,9 +160,31 @@ public final class DocumentStore: Sendable {
   public func set(repository: some Repository, reload: Bool = true) {
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
+    startCacheObservation()
     if reload {
       events.emit(.repositoryChanged)
       clear()
+    }
+  }
+
+  /// (Re)start the `CacheChange` consumer loop for the active repository. A
+  /// no-op (and clears any prior loop) when the repository isn't a
+  /// `CachingBackend` — that path stays direct-network.
+  private func startCacheObservation() {
+    cacheChangeTask?.cancel()
+    guard let backend = repository as? any CachingBackend else {
+      cacheChangeTask = nil
+      return
+    }
+    let changes = backend.changes
+    cacheChangeTask = Task { [weak self] in
+      for await change in changes {
+        guard let self else { break }
+        switch change {
+        case .elements:
+          await hydrate()
+        }
+      }
     }
   }
 
@@ -421,6 +450,13 @@ public final class DocumentStore: Sendable {
     }
   }
 
+  /// DB → observed dicts. Cheap, never throws (cache reads), driven by the
+  /// `CacheChange` consumer loop and the initial `fetchAll`.
+  public func hydrate() async {
+    Logger.shared.notice("Hydrate store from cache")
+    try? await loadAll(lenient: true)
+  }
+
   /// Network → DB (behind a `CachingBackend`) or network → dicts (otherwise).
   /// Automatic syncs fail soft into `lastSyncError`; user-initiated syncs
   /// rethrow so the caller can surface the failure (toast), as before.
@@ -445,11 +481,18 @@ public final class DocumentStore: Sendable {
     }
   }
 
-  /// The eager entry views call. Triggers a network → DB sync; the cache → UI
-  /// read side is wired up in a later commit layered on top of this core.
+  /// The eager entry views call: cache-first refresh. Paints from the cache
+  /// immediately, then syncs from the network (which writes the DB and triggers
+  /// a follow-up hydrate via the `CacheChange` loop). Without a cache backend
+  /// it degrades to a single direct-network load.
   public func fetchAll() async throws {
     Logger.shared.notice("Fetch all store request")
-    try await sync()
+    if repository is any CachingBackend {
+      await hydrate()
+      try await sync()
+    } else {
+      try await sync()
+    }
   }
 
   private func fetchAll<T>(

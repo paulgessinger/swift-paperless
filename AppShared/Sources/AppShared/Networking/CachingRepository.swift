@@ -5,20 +5,21 @@
 //  A `Repository` decorator that serves the small "element" collections (tags,
 //  correspondents, document types, storage paths, saved views, users, groups,
 //  custom fields, current user / UI settings, server config) from the local
-//  GRDB cache, and exposes a separate `sync` (network → DB) via
-//  `CachingBackend`.
+//  GRDB cache, and exposes a separate `sync` (network → DB) plus a
+//  `CacheChange` signal via `CachingBackend`.
 //
 //  Layering: this sits *outside* `NeedsAuthRepository` —
 //  `CachingRepository(wrapping: NeedsAuthRepository(wrapping: ApiRepository))` —
 //  so reads come from the cache while `sync`'s network calls still flow through
 //  the 401 → needs-auth interception.
 //
-//  Read methods are pure cache reads and never hit the network, except the
-//  single-element getters (`tag(id:)` etc.) which fall back to the network +
-//  write-through to resolve a referenced id absent from the cached set.
-//  Element mutations are pessimistic: forward to the server, then write the
-//  confirmed value through to the cache. Everything document/task related is
-//  forwarded unchanged — those caches are later stages.
+//  Read methods are pure cache reads (the store's `hydrate` source) and never
+//  hit the network, except the single-element getters (`tag(id:)` etc.) which
+//  fall back to the network + write-through to resolve a referenced id absent
+//  from the cached set. Element mutations are pessimistic: forward to the
+//  server, then write the confirmed value through to the cache (the region
+//  observation drives `hydrate`). Everything document/task related is forwarded
+//  unchanged — those caches are later stages.
 //
 
 import Common
@@ -39,6 +40,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements() async throws
+  /// A fresh signal stream that fires whenever the element cache changes.
+  var changes: AsyncStream<CacheChange> { get }
 }
 
 enum CachingRepositoryError: Error {
@@ -60,6 +63,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   // MARK: - CachingBackend
+
+  public var changes: AsyncStream<CacheChange> {
+    database.observeElements()
+  }
 
   public func syncElements() async throws {
     try await withThrowingTaskGroup(of: Void.self) { group in
