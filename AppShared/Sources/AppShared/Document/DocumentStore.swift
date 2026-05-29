@@ -40,6 +40,15 @@ public final class DocumentStore: Sendable {
   public private(set) var permissions: UserPermissions = .empty
   public private(set) var settings = UISettingsSettings()
 
+  /// True while a network `sync` is in flight. Distinct from data-presence so a
+  /// cold cache shows loading rather than emptiness.
+  public private(set) var isRefreshing = false
+
+  /// The last automatic (non-user-initiated) sync failure, kept so the UI can
+  /// surface a degraded state without tearing down the cached display.
+  /// User-initiated syncs rethrow instead (the caller toasts, as before).
+  public private(set) var lastSyncError: (any DisplayableError)?
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -138,6 +147,7 @@ public final class DocumentStore: Sendable {
     tasks = []
     permissions = .empty
     settings = UISettingsSettings()
+    lastSyncError = nil
   }
 
   public func set(repository: some Repository, reload: Bool = true) {
@@ -358,12 +368,15 @@ public final class DocumentStore: Sendable {
     }
   }
 
-  public func fetchAll() async throws {
-    // @TODO: This gets called concurrently during startup, maybe debounce
-    Logger.shared.notice("Fetch all store request")
+  /// Load every element collection through `repository` into the observed dicts.
+  /// Behind a `CachingRepository` this reads the DB (hydrate); behind a plain
+  /// `ApiRepository` it reads the network. `lenient` controls whether a failing
+  /// resource aborts the whole load (`false`, network-fetch semantics) or is
+  /// suppressed (`true`, cache-read semantics — a cold/partial cache must not
+  /// fail the UI).
+  private func loadAll(lenient: Bool) async throws {
     await fetchAllSemaphore.wait()
     defer { fetchAllSemaphore.signal() }
-    Logger.shared.notice("Fetch all store")
 
     try? await fetchUISettings()
 
@@ -391,20 +404,52 @@ public final class DocumentStore: Sendable {
         do {
           try await group.next()
         } catch is PermissionsError {
-          Logger.shared.debug("Fetch all task returned permissions error, suppressing")
+          Logger.shared.debug("Load task returned permissions error, suppressing")
           continue
         } catch let error where error.isCancellationError {
-          Logger.shared.debug("Fetch all task caught cancellation, suppressing")
+          Logger.shared.debug("Load task caught cancellation, suppressing")
           continue
         } catch {
-          Logger.shared.error("Fetch all task caught error: \(error)")
-          // @TODO: This cancels the other tasks, maybe we want to continue
+          if lenient {
+            Logger.shared.warning("Load task error (suppressed during hydrate): \(error)")
+            continue
+          }
+          Logger.shared.error("Load task caught error: \(error)")
           throw error
         }
       }
     }
+  }
 
-    Logger.shared.info("Fetch all store complete")
+  /// Network → DB (behind a `CachingBackend`) or network → dicts (otherwise).
+  /// Automatic syncs fail soft into `lastSyncError`; user-initiated syncs
+  /// rethrow so the caller can surface the failure (toast), as before.
+  public func sync(userInitiated: Bool = false) async throws {
+    Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
+    isRefreshing = true
+    defer { isRefreshing = false }
+    do {
+      if let backend = repository as? any CachingBackend {
+        try await backend.syncElements()
+      } else {
+        try await loadAll(lenient: false)
+      }
+      lastSyncError = nil
+      Logger.shared.info("Sync store complete")
+    } catch {
+      if userInitiated { throw error }
+      if !error.isCancellationError {
+        lastSyncError = error as? any DisplayableError
+        Logger.shared.error("Background sync failed (suppressed): \(error)")
+      }
+    }
+  }
+
+  /// The eager entry views call. Triggers a network → DB sync; the cache → UI
+  /// read side is wired up in a later commit layered on top of this core.
+  public func fetchAll() async throws {
+    Logger.shared.notice("Fetch all store request")
+    try await sync()
   }
 
   private func fetchAll<T>(

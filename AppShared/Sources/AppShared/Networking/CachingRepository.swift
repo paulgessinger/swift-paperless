@@ -1,0 +1,445 @@
+//
+//  CachingRepository.swift
+//  AppShared
+//
+//  A `Repository` decorator that serves the small "element" collections (tags,
+//  correspondents, document types, storage paths, saved views, users, groups,
+//  custom fields, current user / UI settings, server config) from the local
+//  GRDB cache, and exposes a separate `sync` (network → DB) via
+//  `CachingBackend`.
+//
+//  Layering: this sits *outside* `NeedsAuthRepository` —
+//  `CachingRepository(wrapping: NeedsAuthRepository(wrapping: ApiRepository))` —
+//  so reads come from the cache while `sync`'s network calls still flow through
+//  the 401 → needs-auth interception.
+//
+//  Read methods are pure cache reads and never hit the network, except the
+//  single-element getters (`tag(id:)` etc.) which fall back to the network +
+//  write-through to resolve a referenced id absent from the cached set.
+//  Element mutations are pessimistic: forward to the server, then write the
+//  confirmed value through to the cache. Everything document/task related is
+//  forwarded unchanged — those caches are later stages.
+//
+
+import Common
+import DataModel
+import Foundation
+import Networking
+import Persistence
+import SwiftUI
+import os
+
+/// The cache control surface the store reaches for, kept off the `Repository`
+/// protocol (which stays technology-agnostic). A repository that isn't a
+/// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
+/// to direct-network behavior.
+@MainActor
+public protocol CachingBackend: AnyObject, Sendable {
+  /// Fetch every element collection from the network and reconcile it into the
+  /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
+  /// resource the user lacks permission for is skipped, not fatal.
+  func syncElements() async throws
+}
+
+enum CachingRepositoryError: Error {
+  /// A pure cache read found nothing for a non-optional resource. The store's
+  /// hydrate path tolerates this (cold cache); `sync` then fills it.
+  case cacheMiss
+}
+
+@MainActor
+public final class CachingRepository<Wrapped: Repository>: Repository, CachingBackend {
+  private let wrapped: Wrapped
+  private let database: Database
+  private let serverID: UUID
+
+  public init(wrapping: Wrapped, database: Database, serverID: UUID) {
+    wrapped = wrapping
+    self.database = database
+    self.serverID = serverID
+  }
+
+  // MARK: - CachingBackend
+
+  public func syncElements() async throws {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      group.addTask { [self] in
+        try await syncCollection(TagRecord.self) { try await wrapped.tags() }
+      }
+      group.addTask { [self] in
+        try await syncCollection(CorrespondentRecord.self) {
+          try await wrapped.correspondents()
+        }
+      }
+      group.addTask { [self] in
+        try await syncCollection(DocumentTypeRecord.self) {
+          try await wrapped.documentTypes()
+        }
+      }
+      group.addTask { [self] in
+        try await syncCollection(StoragePathRecord.self) {
+          try await wrapped.storagePaths()
+        }
+      }
+      group.addTask { [self] in
+        try await syncCollection(SavedViewRecord.self) { try await wrapped.savedViews() }
+      }
+      group.addTask { [self] in
+        try await syncCollection(UserRecord.self) { try await wrapped.users() }
+      }
+      group.addTask { [self] in
+        try await syncCollection(UserGroupRecord.self) { try await wrapped.groups() }
+      }
+      group.addTask { [self] in
+        try await syncCollection(CustomFieldRecord.self) {
+          try await wrapped.customFields()
+        }
+      }
+      group.addTask { [self] in try await syncUISettings() }
+      group.addTask { [self] in try await syncServerConfiguration() }
+
+      for try await _ in group {}
+    }
+  }
+
+  private func syncCollection<R: ElementRecord>(
+    _ type: R.Type, _ fetch: () async throws -> [R.Domain]
+  ) async throws {
+    do {
+      let domains = try await fetch()
+      try database.replaceElements(domains, of: type, serverID: serverID)
+    } catch let error as RequestError where Self.isSkippable(error) {
+      Logger.shared.info(
+        "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
+    }
+  }
+
+  private func syncUISettings() async throws {
+    do {
+      let settings = try await wrapped.uiSettings()
+      try database.setUISettings(settings, serverID: serverID)
+    } catch let error as RequestError where Self.isSkippable(error) {
+      Logger.shared.info("Skipping uiSettings sync: \(error)")
+    }
+  }
+
+  private func syncServerConfiguration() async throws {
+    do {
+      let config = try await wrapped.serverConfiguration()
+      try database.setServerConfiguration(config, serverID: serverID)
+    } catch let error as RequestError where Self.isSkippable(error) {
+      Logger.shared.info("Skipping serverConfiguration sync: \(error)")
+    }
+  }
+
+  /// 401 already flips needs-auth via the wrapped decorator; 403 means the user
+  /// lacks permission for that one resource. Neither should fail the whole sync.
+  private static func isSkippable(_ error: RequestError) -> Bool {
+    switch error {
+    case .forbidden, .unauthorized: true
+    default: false
+    }
+  }
+
+  // MARK: - Element reads (cache)
+
+  public func tags() async throws -> [Tag] {
+    try database.elements(TagRecord.self, serverID: serverID)
+  }
+
+  public func correspondents() async throws -> [Correspondent] {
+    try database.elements(CorrespondentRecord.self, serverID: serverID)
+  }
+
+  public func documentTypes() async throws -> [DocumentType] {
+    try database.elements(DocumentTypeRecord.self, serverID: serverID)
+  }
+
+  public func storagePaths() async throws -> [StoragePath] {
+    try database.elements(StoragePathRecord.self, serverID: serverID)
+  }
+
+  public func savedViews() async throws -> [SavedView] {
+    try database.elements(SavedViewRecord.self, serverID: serverID)
+  }
+
+  public func users() async throws -> [User] {
+    try database.elements(UserRecord.self, serverID: serverID)
+  }
+
+  public func groups() async throws -> [UserGroup] {
+    try database.elements(UserGroupRecord.self, serverID: serverID)
+  }
+
+  public func customFields() async throws -> [CustomField] {
+    try database.elements(CustomFieldRecord.self, serverID: serverID)
+  }
+
+  public func currentUser() async throws -> User {
+    guard let user = try database.uiSettings(serverID: serverID)?.user else {
+      throw CachingRepositoryError.cacheMiss
+    }
+    return user
+  }
+
+  public func uiSettings() async throws -> UISettings {
+    guard let settings = try database.uiSettings(serverID: serverID) else {
+      throw CachingRepositoryError.cacheMiss
+    }
+    return settings
+  }
+
+  public func serverConfiguration() async throws -> ServerConfiguration {
+    guard let config = try database.serverConfiguration(serverID: serverID) else {
+      throw CachingRepositoryError.cacheMiss
+    }
+    return config
+  }
+
+  // MARK: - Single-element getters (cache-first + network fallback + write-through)
+
+  public func tag(id: UInt) async throws -> Tag? {
+    if let cached = try database.element(TagRecord.self, serverID: serverID, id: id) {
+      return cached
+    }
+    guard let fetched = try await wrapped.tag(id: id) else { return nil }
+    try database.upsertElement(fetched, of: TagRecord.self, serverID: serverID)
+    return fetched
+  }
+
+  public func correspondent(id: UInt) async throws -> Correspondent? {
+    if let cached = try database.element(CorrespondentRecord.self, serverID: serverID, id: id) {
+      return cached
+    }
+    guard let fetched = try await wrapped.correspondent(id: id) else { return nil }
+    try database.upsertElement(fetched, of: CorrespondentRecord.self, serverID: serverID)
+    return fetched
+  }
+
+  public func documentType(id: UInt) async throws -> DocumentType? {
+    if let cached = try database.element(DocumentTypeRecord.self, serverID: serverID, id: id) {
+      return cached
+    }
+    guard let fetched = try await wrapped.documentType(id: id) else { return nil }
+    try database.upsertElement(fetched, of: DocumentTypeRecord.self, serverID: serverID)
+    return fetched
+  }
+
+  // MARK: - Element mutations (pessimistic: forward + write-through)
+
+  public func create(tag: ProtoTag) async throws -> Tag {
+    let created = try await wrapped.create(tag: tag)
+    try database.upsertElement(created, of: TagRecord.self, serverID: serverID)
+    return created
+  }
+
+  public func update(tag: Tag) async throws -> Tag {
+    let updated = try await wrapped.update(tag: tag)
+    try database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
+    return updated
+  }
+
+  public func delete(tag: Tag) async throws {
+    try await wrapped.delete(tag: tag)
+    try database.deleteElement(TagRecord.self, serverID: serverID, id: tag.id)
+  }
+
+  public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
+    let created = try await wrapped.create(correspondent: correspondent)
+    try database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
+    return created
+  }
+
+  public func update(correspondent: Correspondent) async throws -> Correspondent {
+    let updated = try await wrapped.update(correspondent: correspondent)
+    try database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
+    return updated
+  }
+
+  public func delete(correspondent: Correspondent) async throws {
+    try await wrapped.delete(correspondent: correspondent)
+    try database.deleteElement(CorrespondentRecord.self, serverID: serverID, id: correspondent.id)
+  }
+
+  public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
+    let created = try await wrapped.create(documentType: documentType)
+    try database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
+    return created
+  }
+
+  public func update(documentType: DocumentType) async throws -> DocumentType {
+    let updated = try await wrapped.update(documentType: documentType)
+    try database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
+    return updated
+  }
+
+  public func delete(documentType: DocumentType) async throws {
+    try await wrapped.delete(documentType: documentType)
+    try database.deleteElement(DocumentTypeRecord.self, serverID: serverID, id: documentType.id)
+  }
+
+  public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
+    let created = try await wrapped.create(storagePath: storagePath)
+    try database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
+    return created
+  }
+
+  public func update(storagePath: StoragePath) async throws -> StoragePath {
+    let updated = try await wrapped.update(storagePath: storagePath)
+    try database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
+    return updated
+  }
+
+  public func delete(storagePath: StoragePath) async throws {
+    try await wrapped.delete(storagePath: storagePath)
+    try database.deleteElement(StoragePathRecord.self, serverID: serverID, id: storagePath.id)
+  }
+
+  public func create(savedView: ProtoSavedView) async throws -> SavedView {
+    let created = try await wrapped.create(savedView: savedView)
+    try database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
+    return created
+  }
+
+  public func update(savedView: SavedView) async throws -> SavedView {
+    let updated = try await wrapped.update(savedView: savedView)
+    try database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+    return updated
+  }
+
+  public func delete(savedView: SavedView) async throws {
+    try await wrapped.delete(savedView: savedView)
+    try database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
+  }
+
+  // MARK: - Documents (forwarded — Stage 8)
+
+  public func update(document: Document) async throws -> Document {
+    try await wrapped.update(document: document)
+  }
+
+  public func delete(document: Document) async throws {
+    try await wrapped.delete(document: document)
+  }
+
+  public func create(document: ProtoDocument, file: URL, filename: String) async throws {
+    try await wrapped.create(document: document, file: file, filename: filename)
+  }
+
+  public func document(id: UInt) async throws -> Document? {
+    try await wrapped.document(id: id)
+  }
+
+  public func document(asn: UInt) async throws -> Document? {
+    try await wrapped.document(asn: asn)
+  }
+
+  public func documents(filter: FilterState) throws -> Wrapped.Documents {
+    try wrapped.documents(filter: filter)
+  }
+
+  public func nextAsn() async throws -> UInt {
+    try await wrapped.nextAsn()
+  }
+
+  public func metadata(documentId: UInt) async throws -> Metadata {
+    try await wrapped.metadata(documentId: documentId)
+  }
+
+  public func notes(documentId: UInt) async throws -> [Document.Note] {
+    try await wrapped.notes(documentId: documentId)
+  }
+
+  public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws
+    -> [Document.Note]
+  {
+    try await wrapped.createNote(documentId: documentId, note: note)
+  }
+
+  public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
+    try await wrapped.deleteNote(id: id, documentId: documentId)
+  }
+
+  public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
+    try await wrapped.shareLinks(documentId: documentId)
+  }
+
+  public func trash() async throws -> [Document] {
+    try await wrapped.trash()
+  }
+
+  public func restoreTrash(documents: [UInt]) async throws {
+    try await wrapped.restoreTrash(documents: documents)
+  }
+
+  public func emptyTrash(documents: [UInt]) async throws {
+    try await wrapped.emptyTrash(documents: documents)
+  }
+
+  public func thumbnail(document: Document) async throws -> Image? {
+    try await wrapped.thumbnail(document: document)
+  }
+
+  public func thumbnailData(document: Document) async throws -> Data {
+    try await wrapped.thumbnailData(document: document)
+  }
+
+  public nonisolated func thumbnailRequest(document: Document) throws -> URLRequest {
+    try wrapped.thumbnailRequest(document: document)
+  }
+
+  public func download(
+    document: Document, original: Bool,
+    progress: (@Sendable (Double) -> Void)?
+  ) async throws -> URL {
+    try await wrapped.download(document: document, original: original, progress: progress)
+  }
+
+  public func suggestions(documentId: UInt) async throws -> Suggestions {
+    try await wrapped.suggestions(documentId: documentId)
+  }
+
+  // MARK: - Server / share links / settings (forwarded)
+
+  public func remoteVersion() async throws -> RemoteVersion {
+    try await wrapped.remoteVersion()
+  }
+
+  public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
+    try await wrapped.create(shareLink: shareLink)
+  }
+
+  public func delete(shareLink: DataModel.ShareLink) async throws {
+    try await wrapped.delete(shareLink: shareLink)
+  }
+
+  public func update(settings: UISettingsSettings) async throws {
+    try await wrapped.update(settings: settings)
+  }
+
+  // MARK: - Tasks (forwarded)
+
+  public func task(id: UInt) async throws -> PaperlessTask? {
+    try await wrapped.task(id: id)
+  }
+
+  public func tasks(limit: UInt) async throws -> [PaperlessTask] {
+    try await wrapped.tasks(limit: limit)
+  }
+
+  public func tasks() throws -> Wrapped.Tasks {
+    try wrapped.tasks()
+  }
+
+  public func acknowledge(tasks: [UInt]) async throws {
+    try await wrapped.acknowledge(tasks: tasks)
+  }
+
+  // MARK: - Infrastructure pass-throughs
+
+  public nonisolated var delegate: (any URLSessionDelegate)? { wrapped.delegate }
+
+  public func supports(feature: BackendFeature) -> Bool {
+    wrapped.supports(feature: feature)
+  }
+}
