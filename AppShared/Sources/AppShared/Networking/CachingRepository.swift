@@ -39,6 +39,13 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements() async throws
+
+  /// The shared database and the active server this repository caches into.
+  /// `DocumentStore` reads these to point its `ElementStore` projection at the
+  /// same `(database, serverID)` the writes land in, so the live observation
+  /// sees them.
+  var database: Database { get }
+  var serverID: UUID { get }
 }
 
 enum CachingRepositoryError: Error {
@@ -50,8 +57,8 @@ enum CachingRepositoryError: Error {
 @MainActor
 public final class CachingRepository<Wrapped: Repository>: Repository, CachingBackend {
   private let wrapped: Wrapped
-  private let database: Database
-  private let serverID: UUID
+  public let database: Database
+  public let serverID: UUID
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
@@ -415,6 +422,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(settings: UISettingsSettings) async throws {
     try await wrapped.update(settings: settings)
+    // Write the new settings through to the cached `ui_settings` singleton (the
+    // server returns no body), merging onto the cached user/permissions, so the
+    // live observation repaints `settings` (e.g. saved-view visibility).
+    if let current = try database.uiSettings(serverID: serverID) {
+      let merged = UISettings(
+        user: current.user, settings: settings, permissions: current.permissions)
+      try database.setUISettings(merged, serverID: serverID)
+    }
   }
 
   // MARK: - Tasks (forwarded)
