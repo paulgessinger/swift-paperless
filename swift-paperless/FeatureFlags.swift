@@ -16,7 +16,7 @@ enum AppFeatures {
     let channel = Bundle.main.appConfiguration
 
     return switch feature {
-    case .tipJar: false  // disable for now until ready
+    case .tipJar: true
     case .documentDetailViewV4:
       switch channel {
       case .Debug, .Simulator, .TestFlight, .AppStore:
