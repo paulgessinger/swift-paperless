@@ -14,34 +14,15 @@ import os
 struct ShareView: View {
   @ObservedObject var attachmentManager: AttachmentManager
 
-  // Build a Database for the extension process. WAL allows concurrent
-  // readers across processes, so opening the same app-group SQLite file
-  // alongside the main app is supported. Cross-process live notification
-  // is not — the extension sees whatever was committed at launch.
-  // If the bootstrap fails (corrupt file, missing app-group), fall back to
-  // an in-memory database so the extension still renders the disabled
-  // "no active server" state cleanly instead of crashing.
-  @State private var connectionManager: ConnectionManager = {
-    let database: Database
-    do {
-      database = try Database()
-    } catch {
-      Logger.shared.fault(
-        "Share Extension database bootstrap failed (\(error)); falling back to in-memory")
-      database =
-        (try? Database.inMemory())
-        ?? {
-          // The in-memory path opens a DatabaseQueue and runs migrations,
-          // both of which are infallible in practice. Force-unwrap so the
-          // closure has a non-optional return; if this ever throws we want
-          // to know immediately, not silently render a broken share sheet.
-          preconditionFailure(
-            "In-memory database fallback also failed; cannot construct ConnectionManager")
-        }()
-    }
-    return ConnectionManager(database: database)
-  }()
+  // The extension process's own Database (app-group SQLite, WAL). The same DB
+  // backs the `ConnectionManager` and — wrapped in a `CachingRepository` in
+  // `refreshConnection` — the element cache, so the store's `ElementStore`
+  // projection observes the extension's own writes. Cross-process live
+  // notification isn't delivered (the extension syncs at launch), but the
+  // extension's in-process writes drive its own observation normally.
+  private let database: Database
 
+  @State private var connectionManager: ConnectionManager
   @State private var store = DocumentStore(repository: NullRepository())
   @State private var storeReady = false
 
@@ -54,6 +35,28 @@ struct ShareView: View {
   init(attachmentManager: AttachmentManager, callback: @escaping () -> Void) {
     self.attachmentManager = attachmentManager
     self.callback = callback
+    let database = Self.bootstrapDatabase()
+    self.database = database
+    _connectionManager = State(initialValue: ConnectionManager(database: database))
+  }
+
+  // Open the app-group SQLite file. If the bootstrap fails (corrupt file,
+  // missing app-group), fall back to an in-memory database so the extension
+  // still renders the disabled "no active server" state cleanly instead of
+  // crashing. The in-memory path (DatabaseQueue + migrations) is infallible in
+  // practice; if it ever throws we want to know immediately.
+  private static func bootstrapDatabase() -> Database {
+    do {
+      return try Database()
+    } catch {
+      Logger.shared.fault(
+        "Share Extension database bootstrap failed (\(error)); falling back to in-memory")
+      if let inMemory = try? Database.inMemory() {
+        return inMemory
+      }
+      preconditionFailure(
+        "In-memory database fallback also failed; cannot construct ConnectionManager")
+    }
   }
 
   private func internalCallback() {
@@ -73,8 +76,14 @@ struct ShareView: View {
       Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
       Task {
         store.events.emit(.repositoryWillChange)
-        await store.set(
-          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        // Caching outermost, over the extension's own DB, so the store's
+        // ElementStore projection observes the writes its sync performs.
+        let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
+        let needsAuth = NeedsAuthRepository(
+          wrapping: api, serverID: conn.serverID, connectionManager: connectionManager)
+        let repository = CachingRepository(
+          wrapping: needsAuth, database: database, serverID: conn.serverID)
+        store.set(repository: repository)
         storeReady = true
         try? await store.fetchAll()
       }
