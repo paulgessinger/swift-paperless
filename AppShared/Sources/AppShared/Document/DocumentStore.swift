@@ -591,6 +591,14 @@ public final class DocumentStore: Sendable {
 /// `NullRepository` before login) the observations are empty, finished streams
 /// and `fillDocumentQuery` throws.
 extension DocumentStore {
+  /// The stable key for a list query, computed without touching the network, so
+  /// the list can subscribe to whatever is already cached (offline-first) before
+  /// — or independently of — the network fill. `nil` without a caching backend.
+  public func documentQueryKey(filter: FilterState) -> QueryKey? {
+    guard let backend = repository as? any CachingBackend else { return nil }
+    return QueryKey(serverID: backend.serverID, filter: filter)
+  }
+
   /// Eager full-fill of a list: await page 1 + count, then background-page the
   /// rest. The returned handle carries the `QueryKey` the list then observes.
   public func fillDocumentQuery(filter: FilterState) async throws -> QueryFillHandle {
