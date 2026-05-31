@@ -56,7 +56,7 @@ enum CachingRepositoryError: Error {
 
 @MainActor
 public final class CachingRepository<Wrapped: Repository>: Repository, CachingBackend {
-  private let wrapped: Wrapped
+  let wrapped: Wrapped
   public let database: Database
   public let serverID: UUID
 

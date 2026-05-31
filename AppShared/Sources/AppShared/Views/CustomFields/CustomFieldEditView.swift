@@ -364,7 +364,7 @@ private let instances = [
 
 @MainActor
 private func getDocument(store: DocumentStore) async throws -> Document? {
-  let repository = store.repository as! TransientRepository
+  let repository = store.previewRepository(as: TransientRepository.self)
   repository.addUser(
     User(id: 1, isSuperUser: false, username: "user", groups: [1]))
   try? repository.login(userId: 1)
@@ -383,7 +383,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Fully equipped") {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -410,7 +410,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Empty") {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -428,7 +428,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
     Button("Toggle perms") {
       Task {
-        let repository = store.repository as! TransientRepository
+        let repository = store.previewRepository(as: TransientRepository.self)
         repository.set(
           permissions: .full {
             $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
