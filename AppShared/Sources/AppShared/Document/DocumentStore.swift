@@ -721,7 +721,9 @@ extension DocumentStore {
     }
     lastDocumentReconcile = Date()
     do {
+      // Deletes first (correctness), then the changed-metadata delta (freshness).
       try await backend.reconcileDocumentDeletions()
+      try await backend.reconcileDocumentChanges()
     } catch {
       Logger.shared.info("Document reconcile failed (suppressed): \(error)")
     }
