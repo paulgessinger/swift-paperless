@@ -233,7 +233,7 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
 #Preview {
   @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([2]))
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
   @Previewable @State var document: Document? = nil
 
   NavigationStack {
