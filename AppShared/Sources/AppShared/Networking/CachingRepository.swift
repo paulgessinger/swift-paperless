@@ -398,14 +398,24 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
   }
 
-  // MARK: - Documents (forwarded — Stage 8)
+  // MARK: - Documents (Stage 8: pessimistic write-through + cache fallback)
 
   public func update(document: Document) async throws -> Document {
-    try await wrapped.update(document: document)
+    let updated = try await wrapped.update(document: document)
+    // Write the confirmed metadata through; the join observation repaints the row
+    // in place. Written at `.metadata` so the non-downgrade guard preserves an
+    // existing Tier-2 row's detail/permissions (a metadata edit doesn't change
+    // them; permissions edits reconcile on the next detail fetch). Ordering under
+    // the active sort isn't recomputed offline — mark affected queries stale.
+    try database.upsertDocument(updated, serverID: serverID, projectionLevel: .metadata)
+    try database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    return updated
   }
 
   public func delete(document: Document) async throws {
     try await wrapped.delete(document: document)
+    // FK cascade removes it from every cached query_order.
+    try database.deleteDocuments(serverID: serverID, removedIDs: [document.id])
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -413,11 +423,38 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func document(id: UInt) async throws -> Document? {
-    try await wrapped.document(id: id)
+    do {
+      guard let fetched = try await wrapped.document(id: id) else {
+        // Gone on the server — drop from cache (cascade clears its query_order).
+        try database.deleteDocuments(serverID: serverID, removedIDs: [id])
+        return nil
+      }
+      // A full-detail fetch — upgrade the row to Tier-2.
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      return fetched
+    } catch {
+      // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
+      // rather than failing the open. Mirrors the element offline-first policy.
+      if let cached = try database.document(serverID: serverID, id: id) {
+        Logger.shared.info("document(id:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func document(asn: UInt) async throws -> Document? {
-    try await wrapped.document(asn: asn)
+    do {
+      guard let fetched = try await wrapped.document(asn: asn) else { return nil }
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      return fetched
+    } catch {
+      if let cached = try database.document(serverID: serverID, asn: asn) {
+        Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func documents(filter: FilterState) throws -> Wrapped.Documents {
