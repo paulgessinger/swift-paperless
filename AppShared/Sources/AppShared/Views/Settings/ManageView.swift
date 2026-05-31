@@ -156,7 +156,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
   private func refresh() async {
     do {
-      try await store.fetchAll()
+      try await store.fetchAll(userInitiated: true)
       if let model {
         withAnimation {
           elements = model.load()

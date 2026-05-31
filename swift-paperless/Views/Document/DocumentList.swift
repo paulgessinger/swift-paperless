@@ -230,12 +230,13 @@ struct DocumentList: View {
 
   func refresh() async {
     do {
-      let documents = try await viewModel.refresh()
+      let documents = try await viewModel.refresh(userInitiated: true)
       withAnimation {
         viewModel.replace(documents: documents)
       }
     } catch {
       Logger.shared.error("Error refreshing documents: \(error)")
+      errorController.push(error: error)
     }
   }
 

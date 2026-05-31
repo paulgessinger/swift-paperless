@@ -325,10 +325,13 @@ public final class DocumentStore: Sendable {
   }
 
   /// The eager entry views call. Triggers a network → DB sync; the element
-  /// projection repaints from the live observation.
-  public func fetchAll() async throws {
-    Logger.shared.notice("Fetch all store request")
-    try await sync()
+  /// projection repaints from the live observation. `userInitiated` forwards to
+  /// `sync`: pass `true` for explicit refreshes (pull-to-refresh) so failures
+  /// rethrow and the caller can surface them; automatic triggers (launch,
+  /// foreground) leave it `false` to fail soft into `lastSyncError`.
+  public func fetchAll(userInitiated: Bool = false) async throws {
+    Logger.shared.notice("Fetch all store request (userInitiated: \(userInitiated))")
+    try await sync(userInitiated: userInitiated)
   }
 
   public func document(id: UInt) async throws -> Document? {

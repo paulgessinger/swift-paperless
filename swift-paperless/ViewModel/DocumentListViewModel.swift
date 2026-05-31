@@ -208,10 +208,12 @@ class DocumentListViewModel {
     }
   }
 
-  func refresh(filter: FilterState? = nil, retain: Bool = false) async throws -> [Document] {
+  func refresh(filter: FilterState? = nil, retain: Bool = false, userInitiated: Bool = false)
+    async throws -> [Document]
+  {
     inFlight += 1
     defer { inFlight -= 1 }
-    try await store.fetchAll()
+    try await store.fetchAll(userInitiated: userInitiated)
 
     if let filter {
       filterState = filter
