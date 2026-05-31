@@ -450,7 +450,7 @@ where
 }
 
 private struct FilterViewPreviewHelper<T: Pickable>: View {
-  @State public var store = DocumentStore(repository: PreviewRepository())
+  @State public var store = DocumentStore.preview()
   @State public var filterState = FilterState.Filter.any
   @State public var elements: [(UInt, String)] = []
 

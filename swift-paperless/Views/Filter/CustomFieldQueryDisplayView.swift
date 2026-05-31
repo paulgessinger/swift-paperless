@@ -192,7 +192,7 @@ private let customFields = [
 ]
 
 private struct PreviewHelper<C: View>: View {
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @State var show = false
 
@@ -234,7 +234,7 @@ private struct PreviewHelper<C: View>: View {
     }
     .task {
       do {
-        let repository = store.repository as! TransientRepository
+        let repository = store.previewRepository(as: TransientRepository.self)
         repository.addUser(
           User(id: 1, isSuperUser: false, username: "user", groups: [1]))
         try? repository.login(userId: 1)

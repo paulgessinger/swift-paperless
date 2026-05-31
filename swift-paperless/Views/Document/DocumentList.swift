@@ -16,7 +16,7 @@ import os
 
 struct LoadingDocumentList: View {
   @State private var documents: [Document] = []
-  @State private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore.preview()
 
   var body: some View {
     List {

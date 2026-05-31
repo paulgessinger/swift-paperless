@@ -191,7 +191,7 @@ public struct DocumentCell: View {
 }
 
 #Preview {
-  @Previewable @State var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore.preview(TransientRepository())
   @Previewable @State var documents = [Document]()
 
   List {
@@ -201,7 +201,7 @@ public struct DocumentCell: View {
   }
   .task {
     do {
-      let repository = store.repository as! TransientRepository
+      let repository = store.previewRepository(as: TransientRepository.self)
       repository.addUser(User(id: 1, isSuperUser: false, username: "user1", groups: []))
       try? repository.login(userId: 1)
 

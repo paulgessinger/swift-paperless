@@ -253,7 +253,7 @@ public struct TagFilterView: View {
 }
 
 #Preview {
-  @Previewable @State var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable @State var filterState = FilterState.default
 
