@@ -3,7 +3,7 @@ site_url: https://swift-paperless.gessinger.dev
 
 theme:
   name: material
-  logo: assets/logo.png
+  logo: assets/logo_header.png
   favicon: assets/favicon.png
   palette:
     - media: "(prefers-color-scheme)"
