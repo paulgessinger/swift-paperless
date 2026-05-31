@@ -538,6 +538,16 @@ extension ApiRepository: Repository {
     return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 
+  /// Cheap id-only projection (`fields=id`) in a few very large pages — the
+  /// authoritative ordered id set for the remote-delete reconcile.
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    Logger.networking.notice("Getting document id set for filter")
+    let cursor = try PageCursor<ApiDocumentID>(
+      repository: self,
+      initialURL: url(.documents(page: 1, filter: filter, pageSize: 25000, fields: ["id"])))
+    return try await cursor.collectAll().map(\.id)
+  }
+
   public func download(
     document: Document, original: Bool = false,
     progress: (@Sendable (Double) -> Void)? = nil
