@@ -40,6 +40,14 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements() async throws
 
+  /// Eager full-fill of a document list (Stage 8 v1): await page 1 (so the first
+  /// window + an exact count land synchronously), write it as the query's order,
+  /// then background-page the rest of the query to the cache. The returned
+  /// ``QueryFillHandle`` carries the `QueryKey` the list observes and a cancel
+  /// handle for the in-flight fill. Throws if page 1 fails (offline → the list
+  /// falls back to whatever is already cached).
+  func fillQuery(filter: FilterState) async throws -> QueryFillHandle
+
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
   /// same `(database, serverID)` the writes land in, so the live observation
@@ -132,6 +140,44 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for try await _ in group {}
     }
+  }
+
+  public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
+    let key = QueryKey(serverID: serverID, filter: filter)
+    let source = try wrapped.documents(filter: filter)
+    let pageSize = Endpoint.defaultDocumentPageSize
+
+    // Page 1 awaited: first window on screen + exact scrollbar count.
+    let firstPage = try await source.fetch(limit: pageSize)
+    let total = await source.totalCount
+    try database.writeQueryPage(
+      queryKey: key, serverID: serverID, documents: firstPage,
+      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: .metadata)
+
+    // Background-page the rest to disk (append). When this completes the whole
+    // view is local; scrolling then needs no network (v1).
+    let database = database
+    let serverID = serverID
+    let firstCount = firstPage.count
+    let task = Task.detached(priority: .utility) {
+      var position = firstCount
+      do {
+        while !Task.isCancelled {
+          if await source.isExhausted { break }
+          let batch = try await source.fetch(limit: pageSize)
+          if batch.isEmpty { break }
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: position, totalCount: await source.totalCount,
+            replaceAll: false, projectionLevel: .metadata)
+          position += batch.count
+        }
+      } catch is CancellationError {
+      } catch {
+        Logger.shared.error("Background query fill failed: \(error)")
+      }
+    }
+    return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
 
   private func syncCollection<R: ElementRecord>(
