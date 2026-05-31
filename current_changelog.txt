@@ -1,1 +1,2 @@
 - Fix untranslated strings in document notes
+- Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version

@@ -33,16 +33,23 @@ public class ApiRepository {
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
 
-  nonisolated
-    private let apiVersion: UInt?
+  // Detected API/backend versions. Mutable because detection can be re-run at
+  // runtime: if the backend is unreachable at init we lock in the minimum API
+  // version, and a later 406 (`unsupportedVersion`) triggers a re-probe so the
+  // repository recovers once the backend comes back online.
+  private var apiVersion: UInt?
   nonisolated
     public static let minimumApiVersion: UInt = 3
   nonisolated
     public static let minimumVersion = Version(1, 14, 1)
   nonisolated
     public static let maximumApiVersion: UInt = 10
-  nonisolated
-    public let backendVersion: Version?
+  public private(set) var backendVersion: Version?
+
+  // Single-flight guard for runtime re-probing: when several in-flight requests
+  // 406 at once (e.g. the backend just came back online) they share one probe
+  // rather than each hammering the backend through the full version sweep.
+  private var versionReprobeTask: Task<UInt?, Never>?
 
   public var effectiveApiVersion: UInt {
     min(Self.maximumApiVersion, apiVersion ?? Self.maximumApiVersion)
@@ -183,10 +190,80 @@ public class ApiRepository {
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData
   ) async throws -> (Data, URLResponse) {
-    try await Self.fetchData(
-      for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy,
-      urlSession: urlSession
-    )
+    do {
+      return try await Self.fetchData(
+        for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy,
+        urlSession: urlSession
+      )
+    } catch RequestError.unsupportedVersion(let sentVersion) {
+      // The backend rejected our API version. This is the recovery path for a
+      // version that was locked in against an unreachable backend (app launched
+      // offline → minimum API version). Re-probe the live backend; if a
+      // different version comes back, retry the request once with a corrected
+      // Accept header. The retried call goes straight to the static helper, so a
+      // second 406 propagates instead of looping.
+      Logger.networking.warning(
+        "Request rejected as unsupported API version (sent \(String(describing: sentVersion), privacy: .public)); re-probing backend"
+      )
+
+      guard await reprobeVersion() != nil else {
+        Logger.networking.error(
+          "Re-probe failed to detect a working API version; propagating unsupportedVersion")
+        throw RequestError.unsupportedVersion(sentVersion: sentVersion)
+      }
+
+      let retryVersion = effectiveApiVersion
+      guard retryVersion != sentVersion else {
+        Logger.networking.error(
+          "Re-probe yielded the same API version (\(retryVersion)); propagating unsupportedVersion to avoid a retry loop"
+        )
+        throw RequestError.unsupportedVersion(sentVersion: sentVersion)
+      }
+
+      Logger.networking.notice(
+        "Re-probe selected API version \(retryVersion); retrying request once")
+      var retry = request
+      retry.setValue(
+        "application/json; version=\(retryVersion)", forHTTPHeaderField: "Accept")
+      return try await Self.fetchData(
+        for: retry, expectedStatus: expectedStatus, progress: progress,
+        cachePolicy: cachePolicy, urlSession: urlSession
+      )
+    }
+  }
+
+  // Re-runs API-version detection after the backend rejected a request with 406
+  // (`unsupportedVersion`) — typically because the version was locked in while
+  // the backend was unreachable. Updates `apiVersion`/`backendVersion` in place
+  // and returns the detected API version, or nil if detection failed (e.g. the
+  // backend is still unreachable). Concurrent callers share one in-flight probe.
+  private func reprobeVersion() async -> UInt? {
+    if let versionReprobeTask {
+      return await versionReprobeTask.value
+    }
+
+    let task = Task<UInt?, Never> {
+      if let versions = await Self.loadBackendVersions(
+        urlSession: urlSession, connection: connection)
+      {
+        apiVersion = versions.apiVersion
+        backendVersion = versions.backendVersion
+        return versions.apiVersion
+      }
+      if let detected = await Self.iterateAcceptedApiVersion(
+        urlSession: urlSession, connection: connection)
+      {
+        // The iteration probe can't learn the backend version string; keep any
+        // previously-known value rather than clobbering feature support to nil.
+        apiVersion = detected
+        return detected
+      }
+      return nil
+    }
+
+    versionReprobeTask = task
+    defer { versionReprobeTask = nil }
+    return await task.value
   }
 
   private static func fetchData(
