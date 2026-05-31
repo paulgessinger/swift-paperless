@@ -209,7 +209,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     .refreshable {
       Task {
         do {
-          try await store.fetchAll()
+          try await store.fetchAll(userInitiated: true)
         } catch {
           errorController.push(error: error)
         }
