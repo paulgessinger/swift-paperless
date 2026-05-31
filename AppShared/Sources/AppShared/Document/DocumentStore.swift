@@ -85,6 +85,13 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private nonisolated(unsafe) var taskUpdateTask: Task<Void, Never>?
 
+  // The in-flight element sync, if any. Concurrent `sync` callers join this one
+  // task instead of each firing their own `syncElements` (the launch flurry of
+  // fetchAll / fetchUISettings / scenePhase triggers shares a single network
+  // pass). Only ever touched on the main actor.
+  @ObservationIgnored
+  private var syncTask: Task<Void, Error>?
+
   // MARK: Methods
 
   public init(repository: some Repository) {
@@ -282,37 +289,37 @@ public final class DocumentStore: Sendable {
   // On-demand element refreshers kept for their external callers. Under the
   // source-of-truth model "refresh collection X" means "sync into the DB"; the
   // live observation then repaints the projection. `syncElements` reconciles
-  // every collection at once, so these all delegate to it.
-  public func fetchAllUsers() async throws { try await sync(userInitiated: true) }
-  public func fetchAllGroups() async throws { try await sync(userInitiated: true) }
-  public func fetchAllCustomFields() async throws { try await sync(userInitiated: true) }
+  // every collection at once, so these all delegate to it. They are automatic
+  // on-appear refreshers, not user gestures, so `userInitiated: false` — a
+  // failure fails soft (cached data stays on screen) rather than toasting.
+  public func fetchAllUsers() async throws { try await sync() }
+  public func fetchAllGroups() async throws { try await sync() }
+  public func fetchAllCustomFields() async throws { try await sync() }
 
-  /// Refresh `ui_settings` (permissions/settings) from the network. Syncs into
-  /// the DB, then synchronously pulls the singleton into the projection — the
-  /// one path (`DocumentListViewModel.load`) that reads `permissions`
-  /// immediately afterwards can't wait for the observation's runloop hop.
+  /// Refresh `ui_settings` (permissions/settings) from the network, then
+  /// synchronously pull the singleton into the projection — the one path
+  /// (`DocumentListViewModel.load`) that reads `permissions` immediately
+  /// afterwards can't wait for the observation's runloop hop. Automatic (not
+  /// user-initiated): a sync failure fails soft and we proceed with the cached
+  /// permissions (offline-first) instead of aborting the launch load.
   public func fetchUISettings() async throws {
-    try await sync(userInitiated: true)
+    try await sync()
     if let backend = repository as? any CachingBackend {
       elementStore.refreshUISettings(from: backend.database, serverID: backend.serverID)
     }
   }
 
   /// Network → DB via the caching backend; the live element observation repaints
-  /// the projection. Automatic syncs fail soft into `lastSyncError`;
-  /// user-initiated syncs rethrow so the caller can surface the failure (toast).
+  /// the projection. Concurrent calls coalesce onto a single in-flight
+  /// `syncElements` (see `syncTask`); each caller still applies its own
+  /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
+  /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
+  /// surface the failure (toast). So a user-initiated call joining a background
+  /// sync still sees the error.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
-    guard let backend = repository as? any CachingBackend else {
-      // No DB-backed repository (e.g. NullRepository before login). Nothing to
-      // sync; the projection is empty until a caching repository is set.
-      Logger.shared.info("Sync skipped: repository is not a caching backend")
-      return
-    }
-    isRefreshing = true
-    defer { isRefreshing = false }
     do {
-      try await backend.syncElements()
+      try await runSyncElements()
       lastSyncError = nil
       Logger.shared.info("Sync store complete")
     } catch {
@@ -322,6 +329,31 @@ public final class DocumentStore: Sendable {
         Logger.shared.error("Background sync failed (suppressed): \(error)")
       }
     }
+  }
+
+  /// Run (or join) the single in-flight `syncElements`. Returns when it
+  /// completes; throws its error to every joined caller (who each decide what to
+  /// do with it). A no-op without a caching backend.
+  private func runSyncElements() async throws {
+    if let syncTask {
+      Logger.shared.debug("Joining in-flight element sync")
+      return try await syncTask.value
+    }
+    guard let backend = repository as? any CachingBackend else {
+      // No DB-backed repository (e.g. NullRepository before login). Nothing to
+      // sync; the projection is empty until a caching repository is set.
+      Logger.shared.info("Sync skipped: repository is not a caching backend")
+      return
+    }
+    Logger.shared.debug("Starting element sync")
+    let task = Task { try await backend.syncElements() }
+    syncTask = task
+    isRefreshing = true
+    defer {
+      syncTask = nil
+      isRefreshing = false
+    }
+    try await task.value
   }
 
   /// The eager entry views call. Triggers a network → DB sync; the element
