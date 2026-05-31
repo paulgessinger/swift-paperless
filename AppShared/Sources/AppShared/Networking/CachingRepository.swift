@@ -48,6 +48,13 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// falls back to whatever is already cached).
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
+  /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
+  /// and drop every cached document absent from it — the FK cascade removes them
+  /// from every cached query_order. No-op when nothing is cached. Paperless has
+  /// no deletion feed, so this periodic sweep is how deletes (and trashings)
+  /// disappear locally.
+  func reconcileDocumentDeletions() async throws
+
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
   /// same `(database, serverID)` the writes land in, so the live observation
@@ -459,6 +466,25 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func documents(filter: FilterState) throws -> Wrapped.Documents {
     try wrapped.documents(filter: filter)
+  }
+
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    try await wrapped.documentIDs(filter: filter)
+  }
+
+  public func reconcileDocumentDeletions() async throws {
+    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    // Nothing cached yet → nothing to reconcile (skip the id fetch entirely).
+    guard !localIDs.isEmpty else { return }
+
+    // The unfiltered list is the complete live id set for the server.
+    let serverIDs = Set(try await wrapped.documentIDs(filter: .empty))
+    let removed = localIDs.subtracting(serverIDs)
+    guard !removed.isEmpty else { return }
+
+    Logger.shared.info(
+      "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
+    try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
 
   public func nextAsn() async throws -> UInt {

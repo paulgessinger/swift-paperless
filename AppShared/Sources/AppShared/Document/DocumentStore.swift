@@ -90,6 +90,14 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
 
+  // Last successful (or attempted) remote-delete reconcile. The sweep fetches
+  // the server's whole id set, so it is throttled — `sync()` kicks it
+  // fire-and-forget on launch/foreground/refresh, but it only runs at most once
+  // per `reconcileThrottle` unless user-initiated.
+  @ObservationIgnored
+  private var lastDocumentReconcile: Date?
+  private let reconcileThrottle: TimeInterval = 300
+
   // MARK: Methods
 
   public init(repository: some Repository) {
@@ -319,6 +327,10 @@ public final class DocumentStore: Sendable {
       try await runSyncElements()
       lastSyncError = nil
       Logger.shared.info("Sync store complete")
+      // Reconcile remote deletes alongside the element sync (throttled,
+      // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
+      let userInitiated = userInitiated
+      Task { [weak self] in await self?.reconcileDocuments(userInitiated: userInitiated) }
     } catch {
       if userInitiated { throw error }
       if !error.isCancellationError {
@@ -623,6 +635,24 @@ extension DocumentStore {
   ) -> AsyncThrowingStream<QueryStatus, Error> {
     guard let backend = repository as? any CachingBackend else { return Self.emptyStream() }
     return backend.database.observeQueryStatus(queryKey: queryKey, serverID: backend.serverID)
+  }
+
+  /// Throttled remote-delete reconcile: drop cached documents that no longer
+  /// exist on the server (so they disappear from every offline list). Soft-fail
+  /// (background); kicked from `sync()`. `userInitiated` bypasses the throttle.
+  public func reconcileDocuments(userInitiated: Bool = false) async {
+    guard let backend = repository as? any CachingBackend else { return }
+    if !userInitiated, let last = lastDocumentReconcile,
+      Date().timeIntervalSince(last) < reconcileThrottle
+    {
+      return
+    }
+    lastDocumentReconcile = Date()
+    do {
+      try await backend.reconcileDocumentDeletions()
+    } catch {
+      Logger.shared.info("Document reconcile failed (suppressed): \(error)")
+    }
   }
 
   /// Live single document by id, for detail/preview surfaces that must repaint on

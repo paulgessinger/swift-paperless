@@ -135,6 +135,17 @@ extension Database {
     }
   }
 
+  /// Every cached document id for a server — the local set the remote-delete
+  /// reconcile diffs against the server's authoritative id set.
+  public func allDocumentIDs(serverID: UUID) throws -> Set<UInt> {
+    try writer.read { db in
+      try DocumentRecord
+        .select(Column("id"), as: UInt.self)
+        .filter(Column("server_id") == serverID)
+        .fetchSet(db)
+    }
+  }
+
   /// Server total (scrollbar extent), locally-present count (reflects deletion
   /// gaps), and order-stale flag for a cached query.
   public func queryStatus(queryKey: QueryKey, serverID: UUID) throws -> QueryStatus {
