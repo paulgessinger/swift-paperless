@@ -55,6 +55,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// disappear locally.
   func reconcileDocumentDeletions() async throws
 
+  /// Changed-metadata delta (R3δ): page `ordering=-modified` until older than the
+  /// per-server watermark and refresh the cached rows that changed. Keeps
+  /// already-cached documents fresh without re-opening their list.
+  func reconcileDocumentChanges() async throws
+
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
   /// same `(database, serverID)` the writes land in, so the live observation
@@ -485,6 +490,72 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     Logger.shared.info(
       "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
     try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
+  }
+
+  // The number of changed documents one delta pass will apply before stopping
+  // (a runaway guard; the next pass continues from the advanced watermark).
+  private let deltaCap = 1000
+
+  public func reconcileDocumentChanges() async throws {
+    // Delta only refreshes already-cached metadata; new docs surface via list
+    // fills, not here. Nothing cached ⇒ nothing to refresh.
+    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    guard !localIDs.isEmpty else { return }
+
+    var filter = FilterState.empty
+    filter.sortField = .modified
+    filter.sortOrder = .descending
+    let source = try wrapped.documents(filter: filter)
+
+    guard let watermark = deltaWatermark() else {
+      // First run: establish the baseline from the newest doc; subsequent passes
+      // delta against it. (Avoids re-paging the whole library on cold start.)
+      if let newest = try await source.fetch(limit: 1).first?.modified {
+        setDeltaWatermark(newest)
+      }
+      return
+    }
+
+    var changed: [Document] = []
+    var advanced = watermark
+    pageLoop: while changed.count < deltaCap {
+      let batch = try await source.fetch(limit: Endpoint.defaultDocumentPageSize)
+      if batch.isEmpty { break }
+      for document in batch {
+        guard let modified = document.modified else { continue }
+        // Sorted newest-first: once we reach the watermark, the rest is known.
+        if modified <= watermark { break pageLoop }
+        changed.append(document)
+        if modified > advanced { advanced = modified }
+      }
+      if await source.isExhausted { break }
+    }
+
+    let tracked = changed.filter { localIDs.contains($0.id) }
+    if !tracked.isEmpty {
+      Logger.shared.info(
+        "Reconcile: refreshing \(tracked.count, privacy: .public) changed documents")
+      try database.upsertDocuments(tracked, serverID: serverID, projectionLevel: .metadata)
+    }
+    if advanced > watermark {
+      setDeltaWatermark(advanced)
+    }
+  }
+
+  // Per-server delta watermark (newest `modified` applied). Kept in the app-group
+  // UserDefaults rather than the DB: it is regenerable sync state, not view
+  // state — losing it just re-baselines on the next pass.
+  private var deltaWatermarkKey: String { "documentDeltaWatermark.\(serverID.uuidString)" }
+
+  private func deltaWatermark() -> Date? {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    let stamp = defaults.double(forKey: deltaWatermarkKey)
+    return stamp > 0 ? Date(timeIntervalSinceReferenceDate: stamp) : nil
+  }
+
+  private func setDeltaWatermark(_ date: Date) {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    defaults.set(date.timeIntervalSinceReferenceDate, forKey: deltaWatermarkKey)
   }
 
   public func nextAsn() async throws -> UInt {
