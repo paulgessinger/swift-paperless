@@ -343,9 +343,11 @@ public final class DocumentStore: Sendable {
 
   private func create<E, R>(
     _: R.Type, from element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> R
   ) async throws -> R
   where E: Sendable & PermissionsModel, R: Identifiable & Sendable {
+    try checkPermission(.add, for: resource)
     // `settings` is kept live by the element observation, so its permission
     // defaults are already current — apply them directly. The repository
     // write-throughs the created element to the DB; the observation repaints it
@@ -356,15 +358,19 @@ public final class DocumentStore: Sendable {
 
   private func update<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> E
   ) async throws where E: Identifiable & Sendable {
+    try checkPermission(.change, for: resource)
     _ = try await method(element)
   }
 
   private func delete<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> Void
   ) async throws where E: Identifiable & Sendable {
+    try checkPermission(.delete, for: resource)
     do {
       try await method(element)
     } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
@@ -381,17 +387,18 @@ public final class DocumentStore: Sendable {
     return try await create(
       Tag.self,
       from: tag,
+      resource: .tag,
       method: repository.create(tag:))
   }
 
   public func update(tag: Tag) async throws {
     Logger.api.info("Updating tag with ID \(tag.id)")
-    return try await update(tag, method: repository.update(tag:))
+    return try await update(tag, resource: .tag, method: repository.update(tag:))
   }
 
   public func delete(tag: Tag) async throws {
     Logger.api.info("Deleting tag with ID \(tag.id)")
-    return try await delete(tag, method: repository.delete(tag:))
+    return try await delete(tag, resource: .tag, method: repository.delete(tag:))
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
@@ -399,6 +406,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       Correspondent.self,
       from: correspondent,
+      resource: .correspondent,
       method: repository.create(correspondent:))
   }
 
@@ -406,6 +414,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating correspondent with ID \(correspondent.id)")
     return try await update(
       correspondent,
+      resource: .correspondent,
       method: repository.update(correspondent:))
   }
 
@@ -413,6 +422,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting correspondent with ID \(correspondent.id)")
     return try await delete(
       correspondent,
+      resource: .correspondent,
       method: repository.delete(correspondent:))
   }
 
@@ -421,6 +431,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       DocumentType.self,
       from: documentType,
+      resource: .documentType,
       method: repository.create(documentType:))
   }
 
@@ -428,6 +439,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating document type with ID \(documentType.id)")
     return try await update(
       documentType,
+      resource: .documentType,
       method: repository.update(documentType:))
   }
 
@@ -435,11 +447,13 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting document type with ID \(documentType.id)")
     return try await delete(
       documentType,
+      resource: .documentType,
       method: repository.delete(documentType:))
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     Logger.api.info("Creating saved view with name \(savedView.name)")
+    try checkPermission(.add, for: .savedView)
     let created = try await repository.create(savedView: savedView)
 
     try await handleSavedViewVisibility(created)
@@ -492,6 +506,7 @@ public final class DocumentStore: Sendable {
 
   public func update(savedView: SavedView) async throws {
     Logger.api.info("Updating saved view with ID \(savedView.id)")
+    try checkPermission(.change, for: .savedView)
     _ = try await repository.update(savedView: savedView)
 
     try await handleSavedViewVisibility(savedView)
@@ -499,6 +514,7 @@ public final class DocumentStore: Sendable {
 
   public func delete(savedView: SavedView) async throws {
     Logger.api.info("Deleting saved view with ID \(savedView.id)")
+    try checkPermission(.delete, for: .savedView)
     try await repository.delete(savedView: savedView)
   }
 
@@ -507,6 +523,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       StoragePath.self,
       from: storagePath,
+      resource: .storagePath,
       method: repository.create(storagePath:))
   }
 
@@ -514,6 +531,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating storage path with ID \(storagePath.id)")
     try await update(
       storagePath,
+      resource: .storagePath,
       method: repository.update(storagePath:))
   }
 
@@ -521,6 +539,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting storage path with ID \(storagePath.id)")
     try await delete(
       storagePath,
+      resource: .storagePath,
       method: repository.delete(storagePath:))
   }
 
