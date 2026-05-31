@@ -1,3 +1,4 @@
+<!-- --8<-- [start:overview] -->
 <p align="center" style="margin-bottom:0.25em">
 
 <img src="logo.png" width="128" />
@@ -65,6 +66,9 @@ settings) rather than the generated project, then re-run `just generate`.
 
 If you have any questions or need support create an issue on [GitHub](https://github.com/paulgessinger/swift-paperless/issues/new) or send me a [message](mailto:swift-paperless@paulgessinger.com).
 
+<!-- --8<-- [end:overview] -->
+
+<!-- --8<-- [start:maintenance] -->
 ## Maintenance
 
 Automation lives in the [`scripts/`](scripts/) package (`swpngx`) and
@@ -188,3 +192,4 @@ Concatenate framed screenshots (adjust the glob for your device name):
 montage fastlane/screenshots/framed/en-US/iPhone_17_Pro_Max-01_*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
+<!-- --8<-- [end:maintenance] -->
