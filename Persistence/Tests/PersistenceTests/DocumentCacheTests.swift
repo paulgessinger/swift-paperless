@@ -239,6 +239,22 @@ struct DocumentCacheTests {
     #expect(try database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
 
+  // MARK: - Reconcile support
+
+  @Test("allDocumentIDs returns every cached document id for the server")
+  func allDocumentIDs() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try database.upsertDocuments(
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .metadata)
+
+    #expect(try database.allDocumentIDs(serverID: server) == [1, 2, 3])
+    // The reconcile diff: local − server.
+    let serverIDs: Set<UInt> = [2, 3, 4]
+    let removed = try database.allDocumentIDs(serverID: server).subtracting(serverIDs)
+    #expect(removed == [1])
+  }
+
   // MARK: - Cascade from server delete
 
   @Test("removing a connection tears down its document + query_order rows")
