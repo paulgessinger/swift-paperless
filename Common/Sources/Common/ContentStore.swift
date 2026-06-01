@@ -145,6 +145,14 @@ public struct ContentStore: Sendable {
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
   }
 
+  /// Remove every cached blob (all servers, all kinds) by tearing down the
+  /// store root, then recreate the empty directory. Used by the debug
+  /// "clear local storage" action.
+  public func purge() throws {
+    try? FileManager.default.removeItem(at: canonicalRoot)
+    try createDirectory(canonicalRoot)
+  }
+
   // MARK: - Sidecar
 
   private struct Sidecar: Codable {
