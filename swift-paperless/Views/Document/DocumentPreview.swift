@@ -250,44 +250,52 @@ private struct IntegratedDocumentPreview: View {
 
   var body: some View {
     ZStack {
-      if case .error = downloadState {
+      // Thumbnail acts as a stable underlay while the PDF fades in on top.
+      // Avoids both layers being ~50% transparent mid-animation, which would
+      // bleed the dark background through and look like "fading through black".
+      // Once the PDF is fully opaque, `thumbnailHidden` flips and the
+      // thumbnail unmounts — without animation, since the flip happens
+      // outside the .animation(value: downloadState) scope — so the now-
+      // invisible thumbnail no longer peeks through during page scrolling.
+      //
+      // It also stays put under an `.error`: offline (or any failed PDF
+      // download) we keep the cached thumbnail rather than swapping in a
+      // placeholder symbol.
+      if !thumbnailHidden {
+        image.image?
+          .resizable()
+          .scaledToFit()
+          .blur(radius: 5, opaque: true)
+          .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+          )
+          .padding(.horizontal, PDFPagingPreview.pageInset)
+          .transition(.identity)
+      }
+
+      if case .loaded(url: _, document: let pdfDocument) = downloadState {
+        PDFPagingPreview(
+          document: pdfDocument,
+          currentPage: $currentPage,
+          transitionID: transitionID,
+          transitionNamespace: transitionNamespace,
+          onTap: onTap
+        )
+        .transition(.opacity)
+        .scrollDisabled(!thumbnailHidden)
+      }
+
+      // The "unable to load" placeholder shows only when the PDF failed *and*
+      // there's no thumbnail to fall back on and we're not still fetching one.
+      // Otherwise it would flash over a thumbnail that's about to resolve (the
+      // download can fail-fast offline before the cached thumbnail loads).
+      if case .error = downloadState, image.image == nil, !image.isLoading {
         Label("Unable to load preview", systemImage: "eye.slash")
           .labelStyle(.iconOnly)
           .imageScale(.large)
           .frame(maxWidth: .infinity, alignment: .center)
-      } else {
-        // Thumbnail acts as a stable underlay while the PDF fades in on top.
-        // Avoids both layers being ~50% transparent mid-animation, which would
-        // bleed the dark background through and look like "fading through black".
-        // Once the PDF is fully opaque, `thumbnailHidden` flips and the
-        // thumbnail unmounts — without animation, since the flip happens
-        // outside the .animation(value: downloadState) scope — so the now-
-        // invisible thumbnail no longer peeks through during page scrolling.
-        if !thumbnailHidden {
-          image.image?
-            .resizable()
-            .scaledToFit()
-            .blur(radius: 5, opaque: true)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-              RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
-            )
-            .padding(.horizontal, PDFPagingPreview.pageInset)
-            .transition(.identity)
-        }
-
-        if case .loaded(url: _, document: let pdfDocument) = downloadState {
-          PDFPagingPreview(
-            document: pdfDocument,
-            currentPage: $currentPage,
-            transitionID: transitionID,
-            transitionNamespace: transitionNamespace,
-            onTap: onTap
-          )
-          .transition(.opacity)
-          .scrollDisabled(!thumbnailHidden)
-        }
       }
     }
     .padding(.vertical, 16)
