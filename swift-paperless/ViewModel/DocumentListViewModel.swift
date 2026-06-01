@@ -104,7 +104,13 @@ class DocumentListViewModel {
       return
     }
     subscribe(to: key, resettingWindow: true)
-    await fill(userInitiated: false)
+    do {
+      try await runFill()
+    } catch {
+      // Initial load is silent: offline shows whatever is cached (or nothing),
+      // never a toast. A user-initiated refresh is where errors surface.
+      Logger.shared.error("Document fill failed (offline?): \(error)")
+    }
     ready = true
   }
 
@@ -119,42 +125,68 @@ class DocumentListViewModel {
 
   /// Pull-to-refresh / filter change: re-sync elements, re-point the observation
   /// if the query changed, and re-fill from the network.
+  ///
+  /// The element sync and the document fill are independent network passes that
+  /// both fail when offline. We collect the *first* error and surface a single
+  /// toast at the end, so a pull-to-refresh while offline doesn't stack two
+  /// identical alerts.
   func refresh(filter: FilterState? = nil, userInitiated: Bool = false) async {
     if let filter { filterState = filter }
 
+    var firstError: (any Error)?
     do {
       try await store.fetchAll(userInitiated: userInitiated)
     } catch {
       Logger.shared.error("Element sync during refresh failed: \(error)")
-      if userInitiated { errorController.push(error: error) }
+      firstError = error
     }
 
     guard hasViewPermission() else {
       noPermissions = true
+      surface(firstError, userInitiated: userInitiated)
       return
     }
     noPermissions = false
 
-    guard let key = store.documentQueryKey(filter: filterState) else { return }
+    guard let key = store.documentQueryKey(filter: filterState) else {
+      surface(firstError, userInitiated: userInitiated)
+      return
+    }
     if key != queryKey {
       subscribe(to: key, resettingWindow: true)
     }
-    await fill(userInitiated: userInitiated)
+    do {
+      try await runFill()
+    } catch {
+      Logger.shared.error("Document fill failed (offline?): \(error)")
+      if firstError == nil { firstError = error }
+    }
+
+    surface(firstError, userInitiated: userInitiated)
+  }
+
+  private func surface(_ error: (any Error)?, userInitiated: Bool) {
+    guard userInitiated, let error else { return }
+    errorController.push(error: error)
   }
 
   /// Kick the eager fill: page 1 awaited (DB write → observation repaints), the
-  /// rest paged in the background. Offline → the cached rows already on screen
-  /// stay; only a user-initiated refresh surfaces the error.
-  private func fill(userInitiated: Bool) async {
+  /// rest paged in the background. Throws the underlying error so the caller
+  /// decides whether to surface it (coalesced with the element-sync error).
+  private func runFill() async throws {
     isFetching = true
     defer { isFetching = false }
     fill?.cancel()
-    do {
-      fill = try await store.fillDocumentQuery(filter: filterState)
-    } catch {
-      Logger.shared.error("Document fill failed (offline?): \(error)")
-      if userInitiated { errorController.push(error: error) }
-    }
+    let handle = try await store.fillDocumentQuery(filter: filterState)
+    fill = handle
+    // Adopt the fill's authoritative count immediately. `observeQueryStatus`
+    // would deliver the same number, but only a beat *after* the page-1 write
+    // — and in that beat `documents` is still the pre-emission `[]`. Without
+    // this, switching to a not-yet-cached view momentarily reads as
+    // `documents.isEmpty && !isFetching && totalCount == 0` and flashes
+    // "No documents" before the observation repaints. Setting it here keeps
+    // the empty-state guard on the loading branch until the rows arrive.
+    totalCount = handle.totalCount
   }
 
   // MARK: - Growing-prefix windowing (no network)
