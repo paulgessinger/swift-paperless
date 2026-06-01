@@ -29,6 +29,27 @@ import Persistence
 import SwiftUI
 import os
 
+/// Storage and clearing of the per-server changed-metadata delta watermark.
+///
+/// Non-generic so the keys (and the bulk clear used by "clear local storage")
+/// don't depend on `CachingRepository`'s `Wrapped` type — and so a `static`
+/// constant is even legal (it isn't on the generic type itself).
+enum DocumentDeltaWatermark {
+  static let keyPrefix = "documentDeltaWatermark."
+
+  static func key(serverID: UUID) -> String { "\(keyPrefix)\(serverID.uuidString)" }
+
+  /// Drop every server's watermark so the next reconcile re-baselines. Paired
+  /// with a cache wipe (a stale watermark over an empty cache would skip
+  /// re-fetching the rows the wipe removed).
+  static func clearAll() {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
+      defaults.removeObject(forKey: key)
+    }
+  }
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -545,7 +566,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // Per-server delta watermark (newest `modified` applied). Kept in the app-group
   // UserDefaults rather than the DB: it is regenerable sync state, not view
   // state — losing it just re-baselines on the next pass.
-  private var deltaWatermarkKey: String { "documentDeltaWatermark.\(serverID.uuidString)" }
+  private var deltaWatermarkKey: String { DocumentDeltaWatermark.key(serverID: serverID) }
 
   private func deltaWatermark() -> Date? {
     let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard

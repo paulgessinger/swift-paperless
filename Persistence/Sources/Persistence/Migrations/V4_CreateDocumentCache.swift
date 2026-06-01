@@ -22,6 +22,14 @@ import GRDB
 /// Every table FK-references `server(id)` with `ON DELETE CASCADE`, so removing a
 /// connection tears down its whole document cache too.
 enum V4_CreateDocumentCache {
+  /// All document-cache tables. Listed `query_order`-before-`document` so a
+  /// blanket clear deletes children before parents (the cascade makes order
+  /// immaterial for correctness, but explicit is cheaper than relying on it).
+  /// `server_sync_state` is regenerable sync state (delta watermark + library
+  /// coverage), so a cache clear resets it too — the reconcile re-baselines and
+  /// the proactive fill re-runs over the now-empty cache.
+  static let tables = ["query_order", "query_meta", "document", "server_sync_state"]
+
   static func run(_ db: GRDB.Database) throws {
     try db.create(table: "document", options: [.strict]) { t in
       t.column("server_id", .blob)

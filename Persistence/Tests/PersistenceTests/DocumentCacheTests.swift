@@ -255,6 +255,31 @@ struct DocumentCacheTests {
     #expect(removed == [1])
   }
 
+  // MARK: - Cache wipe (keeps connections)
+
+  @Test("clearCache wipes document + query rows but keeps the server connection")
+  func clearCacheKeepsServer() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    try database.clearCache()
+
+    let counts = try await database.writer.read { db in
+      (
+        try DocumentRecord.fetchCount(db),
+        try QueryOrderRow.fetchCount(db),
+        try QueryMetaRow.fetchCount(db)
+      )
+    }
+    #expect(counts == (0, 0, 0))
+    // The connection survives the wipe.
+    #expect(try database.allConnections().contains { $0.id == server })
+  }
+
   // MARK: - Cascade from server delete
 
   @Test("removing a connection tears down its document + query_order rows")

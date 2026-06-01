@@ -667,6 +667,28 @@ extension DocumentStore {
   private static func emptyStream<T: Sendable>() -> AsyncThrowingStream<T, Error> {
     AsyncThrowingStream { $0.finish() }
   }
+
+  /// Debug / maintenance: wipe *all* locally cached data — the GRDB element +
+  /// document caches, the downloaded PDF/thumbnail blobs, the in-memory and
+  /// on-disk image caches, and the per-server delta watermarks — while keeping
+  /// the configured server connections. The live observations repaint empty
+  /// immediately; the next sync / list open refills from the network.
+  public func wipeLocalCache() throws {
+    if let backend = repository as? any CachingBackend {
+      try backend.database.clearCache()
+    }
+    // Downloaded originals/archives/thumbnails (app-group blob store). Rooted at
+    // the app group, so a fresh handle addresses the same files the repository
+    // wrote — no need to reach into the active repository.
+    if let contentStore = try? ContentStore() {
+      try? contentStore.purge()
+    }
+    // Nuke memory + disk image cache.
+    imagePipeline.cache.removeAll()
+    // Per-server changed-metadata delta watermarks (regenerable sync state):
+    // clear them so the reconcile re-baselines over the now-empty cache.
+    DocumentDeltaWatermark.clearAll()
+  }
 }
 
 //// Permissions checking for resources
