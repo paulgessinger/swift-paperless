@@ -94,6 +94,11 @@ class DocumentDetailModel {
         guard !Task.isCancelled else { return }
         download = .loading
       }
+      // Cancel the delayed `.loading` flip on *every* exit path. Without this
+      // the error path leaves `setLoading` pending, and 0.5s later it overwrites
+      // the just-set `.error` back to `.loading` — pinning the preview's loading
+      // overlay on screen even though the download already failed.
+      defer { setLoading.cancel() }
       do {
         let url = try await store.repository.download(
           document: document,
@@ -110,7 +115,6 @@ class DocumentDetailModel {
         }
 
         download = .loaded(url: url, document: pdfDocument)
-        setLoading.cancel()
 
         // Start downloading the original in the background
         Task { await downloadOriginal() }
@@ -118,7 +122,6 @@ class DocumentDetailModel {
       } catch {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
-        break
       }
 
     default:
