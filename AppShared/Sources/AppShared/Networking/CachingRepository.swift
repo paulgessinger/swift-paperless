@@ -584,21 +584,56 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    try await wrapped.metadata(documentId: documentId)
+    // File-metadata is immutable per file version, so it caches under the
+    // document's current version id (fallback: the document id, which equals the
+    // root version id server-side). The detail view fetches the document first,
+    // so the cached row's versions are usually known by the time we get here.
+    let versionID =
+      (try? database.document(serverID: serverID, id: documentId))?.currentVersionID
+      ?? documentId
+    do {
+      let fetched = try await wrapped.metadata(documentId: documentId)
+      try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
+      return fetched
+    } catch {
+      if let cached = try database.fileMetadata(serverID: serverID, versionID: versionID) {
+        Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    try await wrapped.notes(documentId: documentId)
+    do {
+      let fetched = try await wrapped.notes(documentId: documentId)
+      try database.setNotes(fetched, serverID: serverID, documentID: documentId)
+      return fetched
+    } catch {
+      // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
+      // former propagates the network error.
+      if let cached = try database.notes(serverID: serverID, documentID: documentId) {
+        Logger.shared.info("notes(documentId:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws
     -> [Document.Note]
   {
-    try await wrapped.createNote(documentId: documentId, note: note)
+    // Pessimistic: the server returns the updated full list, which we write
+    // through so the cached notes stay consistent without a re-fetch.
+    let updated = try await wrapped.createNote(documentId: documentId, note: note)
+    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    return updated
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
-    try await wrapped.deleteNote(id: id, documentId: documentId)
+    let updated = try await wrapped.deleteNote(id: id, documentId: documentId)
+    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    return updated
   }
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
