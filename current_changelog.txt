@@ -1,2 +1,3 @@
 - Changing the default sort field, sort order or search mode in Preferences now applies to the document list right away, instead of only after a restart
+- Document notes and file metadata are cached when viewed, so they remain available offline
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
