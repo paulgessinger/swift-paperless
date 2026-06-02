@@ -47,6 +47,10 @@ enum Migrations {
       try V4_CreateDocumentCache.run(db)
     }
 
+    migrator.registerMigration("v5_create_document_detail_cache") { db in
+      try V5_CreateDocumentDetailCache.run(db)
+    }
+
     return migrator
   }
 }
