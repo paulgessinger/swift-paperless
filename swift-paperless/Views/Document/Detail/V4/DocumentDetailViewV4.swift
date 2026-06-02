@@ -665,10 +665,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .refreshable {
       let model = viewModel
-      async let document: () = model.loadDocument()
-      async let metadata: () = model.loadMetadata()
+      async let load: () = model.load()
+      // Only on pull-to-refresh, not inside `load()`: refreshing permissions
+      // means a full element sync, which is not what opening a document should
+      // cost.
       async let permissions: () = model.refreshPermissions()
-      _ = await (document, metadata, permissions)
+      _ = await (load, permissions)
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar
@@ -786,9 +788,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .task {
-      await viewModel.loadDocument()
-      await viewModel.loadMetadata()
-      try? await viewModel.loadSuggestions()
+      await viewModel.load()
     }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
