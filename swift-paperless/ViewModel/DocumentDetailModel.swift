@@ -64,12 +64,60 @@ class DocumentDetailModel {
     self.document = document
   }
 
+  /// Load everything a freshly-opened (or pulled-to-refresh) document needs from
+  /// the server, best-effort.
+  ///
+  /// `loadDocument()` runs first and alone: it resolves the full-perms document
+  /// (and so caches it, which the file-metadata version key depends on) before
+  /// the PDF download validates the on-disk cache against the server's
+  /// `modified`. The three enrichments — file-metadata, notes, edit suggestions —
+  /// only need the document id, so they run concurrently afterwards.
+  ///
+  /// Every step swallows + logs its own failure rather than surfacing a toast:
+  /// these are background enrichments whose job is to warm the offline caches,
+  /// and the one critical failure (the PDF) is already shown via
+  /// `download == .error`. An offline open just serves whatever is cached.
+  func load() async {
+    await loadDocument()
+    async let metadata: Void = loadMetadata()
+    async let notes: Void = loadNotes()
+    async let suggestions: Void = loadSuggestionsQuietly()
+    _ = await (metadata, notes, suggestions)
+  }
+
   func loadMetadata() async {
     do {
       metadata = try await store.repository.metadata(documentId: document.id)
     } catch is CancellationError {
     } catch {
       Logger.shared.error("Error loading document metadata: \(error)")
+    }
+  }
+
+  /// Warm the notes cache on open so they're available offline later. The notes
+  /// view fetches its own (network-first) copy when presented; this just ensures
+  /// a document opened online has its notes written through to the cache even if
+  /// the user never taps the notes button. Routed through `store.notes(for:)` so
+  /// the `.note` view-permission gate is respected.
+  func loadNotes() async {
+    do {
+      _ = try await store.notes(for: document)
+    } catch is CancellationError {
+    } catch {
+      Logger.shared.error("Error loading document notes: \(error)")
+    }
+  }
+
+  /// The quiet (open-path) form of `loadSuggestions()`: suggestions are an
+  /// edit-sheet enrichment, so a failure to load them is logged, not surfaced.
+  /// `updateDocument()` calls the throwing `loadSuggestions()` directly, where
+  /// the error propagates into the edit-save flow.
+  private func loadSuggestionsQuietly() async {
+    do {
+      try await loadSuggestions()
+    } catch is CancellationError {
+    } catch {
+      Logger.shared.error("Error loading document suggestions: \(error)")
     }
   }
 
