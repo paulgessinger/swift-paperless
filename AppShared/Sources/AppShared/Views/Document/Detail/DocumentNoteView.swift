@@ -111,12 +111,18 @@ public struct DocumentNoteView: View {
     }
   }
 
-  private func loadNotes() async {
+  /// Load the document's notes. `userInitiated` controls whether a failure is
+  /// surfaced: a pull-to-refresh (`true`) toasts; the on-appear `.task` (`false`)
+  /// stays silent — it isn't user-initiated, and an offline open falls back to
+  /// whatever the cache holds.
+  private func loadNotes(userInitiated: Bool) async {
     do {
       notes = try await store.notes(for: document)
     } catch let error where error.isCancellationError {} catch {
       Logger.shared.error("Error loading notes for document: \(error)")
-      errorController.push(error: error)
+      if userInitiated {
+        errorController.push(error: error)
+      }
     }
   }
 
@@ -196,7 +202,7 @@ public struct DocumentNoteView: View {
       }
 
       .refreshable {
-        Task { await loadNotes() }
+        await loadNotes(userInitiated: true)
       }
 
       .sheet(isPresented: $adding) {
@@ -206,7 +212,7 @@ public struct DocumentNoteView: View {
 
     .task {
       guard canViewNotes else { return }
-      await loadNotes()
+      await loadNotes(userInitiated: false)
     }
   }
 }

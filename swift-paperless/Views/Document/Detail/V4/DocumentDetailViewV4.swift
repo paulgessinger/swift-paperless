@@ -665,7 +665,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .refreshable {
       let model = viewModel
-      async let load: () = model.load()
+      async let load: () = model.load(onError: { errorController.push(error: $0) })
       // Only on pull-to-refresh, not inside `load()`: refreshing permissions
       // means a full element sync, which is not what opening a document should
       // cost.
