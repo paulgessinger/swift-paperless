@@ -14,7 +14,7 @@ public struct Metadata: Sendable {
 
   // Wire-symmetric value type — round-tripped by `ApiMetadata` and storage
   // alike. Stays `Codable` per the Stage 3 principle.
-  public struct Item: Codable, Sendable {
+  public struct Item: Codable, Sendable, Equatable {
     public var namespace: String
     public var prefix: String
     public var key: String
