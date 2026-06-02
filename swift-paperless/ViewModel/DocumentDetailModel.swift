@@ -73,24 +73,27 @@ class DocumentDetailModel {
   /// `modified`. The three enrichments — file-metadata, notes, edit suggestions —
   /// only need the document id, so they run concurrently afterwards.
   ///
-  /// Every step swallows + logs its own failure rather than surfacing a toast:
-  /// these are background enrichments whose job is to warm the offline caches,
-  /// and the one critical failure (the PDF) is already shown via
-  /// `download == .error`. An offline open just serves whatever is cached.
-  func load() async {
-    await loadDocument()
-    async let metadata: Void = loadMetadata()
-    async let notes: Void = loadNotes()
-    async let suggestions: Void = loadSuggestionsQuietly()
+  /// Each step always logs its failure. Whether it's *surfaced* is the caller's
+  /// choice via `onError`: an on-appear load (`.task`) passes nothing and stays
+  /// silent (the load isn't user-initiated, and the one critical failure — the
+  /// PDF — already shows via `download == .error`); a pull-to-refresh passes a
+  /// handler so failures toast. Offline-connectivity errors are dropped by
+  /// `ErrorController.shouldSuppress`, so a parallel offline refresh won't spam.
+  func load(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
+    await loadDocument(onError: onError)
+    async let metadata: Void = loadMetadata(onError: onError)
+    async let notes: Void = loadNotes(onError: onError)
+    async let suggestions: Void = loadSuggestionsQuietly(onError: onError)
     _ = await (metadata, notes, suggestions)
   }
 
-  func loadMetadata() async {
+  func loadMetadata(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     do {
       metadata = try await store.repository.metadata(documentId: document.id)
     } catch is CancellationError {
     } catch {
       Logger.shared.error("Error loading document metadata: \(error)")
+      onError?(error)
     }
   }
 
@@ -99,29 +102,31 @@ class DocumentDetailModel {
   /// a document opened online has its notes written through to the cache even if
   /// the user never taps the notes button. Routed through `store.notes(for:)` so
   /// the `.note` view-permission gate is respected.
-  func loadNotes() async {
+  func loadNotes(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     do {
       _ = try await store.notes(for: document)
     } catch is CancellationError {
     } catch {
       Logger.shared.error("Error loading document notes: \(error)")
+      onError?(error)
     }
   }
 
   /// The quiet (open-path) form of `loadSuggestions()`: suggestions are an
-  /// edit-sheet enrichment, so a failure to load them is logged, not surfaced.
-  /// `updateDocument()` calls the throwing `loadSuggestions()` directly, where
-  /// the error propagates into the edit-save flow.
-  private func loadSuggestionsQuietly() async {
+  /// edit-sheet enrichment. `updateDocument()` calls the throwing
+  /// `loadSuggestions()` directly, where the error propagates into the edit-save
+  /// flow; here a failure is logged and only surfaced when `onError` is supplied.
+  private func loadSuggestionsQuietly(onError: (@MainActor @Sendable (any Error) -> Void)?) async {
     do {
       try await loadSuggestions()
     } catch is CancellationError {
     } catch {
       Logger.shared.error("Error loading document suggestions: \(error)")
+      onError?(error)
     }
   }
 
-  func loadDocument() async {
+  func loadDocument(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     // Resolve the fresh document FIRST so the download path can validate
     // the ContentStore cache against the server's current `modified`
     // timestamp. If we kicked off both in parallel, a stale `modified`
@@ -131,8 +136,10 @@ class DocumentDetailModel {
       if let updated = try await store.document(id: document.id) {
         document = updated
       }
+    } catch is CancellationError {
     } catch {
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
+      onError?(error)
     }
 
     switch download {

@@ -646,7 +646,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .padding(.bottom)
     }
     .refreshable {
-      await viewModel.load()
+      await viewModel.load(onError: { errorController.push(error: $0) })
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar
