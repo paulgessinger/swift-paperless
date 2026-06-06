@@ -48,6 +48,7 @@ extra_css:
 nav:
   - index.md
   - Release notes:
+      - release_notes/v1.10.0.md
       - release_notes/v1.9.1.md
       - release_notes/v1.9.0.md
       - release_notes/v1.8.0.md
