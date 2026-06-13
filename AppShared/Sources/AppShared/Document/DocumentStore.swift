@@ -677,7 +677,7 @@ extension DocumentStore {
   /// without a caching backend). Read for the Offline & Sync status screen.
   public var libraryCoverageAt: Date? {
     guard let backend = repository as? any CachingBackend else { return nil }
-    return LibraryCoverageMarker.completedAt(serverID: backend.serverID)
+    return try? backend.database.libraryCoverageAt(serverID: backend.serverID)
   }
 
   /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
@@ -709,10 +709,12 @@ extension DocumentStore {
   }
 
   /// Debug / maintenance: wipe *all* locally cached data — the GRDB element +
-  /// document caches, the downloaded PDF/thumbnail blobs, the in-memory and
-  /// on-disk image caches, and the per-server delta watermarks — while keeping
-  /// the configured server connections. The live observations repaint empty
-  /// immediately; the next sync / list open refills from the network.
+  /// document caches (including the per-server sync cursors: delta watermark and
+  /// library-coverage marker, which `clearCache` resets so the reconcile
+  /// re-baselines and the fill re-runs over the now-empty cache), the downloaded
+  /// PDF/thumbnail blobs, and the in-memory and on-disk image caches — while
+  /// keeping the configured server connections. The live observations repaint
+  /// empty immediately; the next sync / list open refills from the network.
   public func wipeLocalCache() throws {
     if let backend = repository as? any CachingBackend {
       try backend.database.clearCache()
@@ -725,12 +727,6 @@ extension DocumentStore {
     }
     // Nuke memory + disk image cache.
     imagePipeline.cache.removeAll()
-    // Per-server changed-metadata delta watermarks (regenerable sync state):
-    // clear them so the reconcile re-baselines over the now-empty cache.
-    DocumentDeltaWatermark.clearAll()
-    // Per-server proactive-fill markers: clear so the next foreground re-fills the
-    // now-empty cache rather than skipping on a stale "already covered" marker.
-    LibraryCoverageMarker.clearAll()
   }
 }
 

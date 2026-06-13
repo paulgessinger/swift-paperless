@@ -29,68 +29,21 @@ import Persistence
 import SwiftUI
 import os
 
-/// Storage and clearing of the per-server changed-metadata delta watermark.
+/// Freshness policy for the per-server proactive full-library fill.
 ///
-/// Non-generic so the keys (and the bulk clear used by "clear local storage")
-/// don't depend on `CachingRepository`'s `Wrapped` type — and so a `static`
-/// constant is even legal (it isn't on the generic type itself).
-enum DocumentDeltaWatermark {
-  static let keyPrefix = "documentDeltaWatermark."
-
-  static func key(serverID: UUID) -> String { "\(keyPrefix)\(serverID.uuidString)" }
-
-  /// Drop every server's watermark so the next reconcile re-baselines. Paired
-  /// with a cache wipe (a stale watermark over an empty cache would skip
-  /// re-fetching the rows the wipe removed).
-  static func clearAll() {
-    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
-    for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
-      defaults.removeObject(forKey: key)
-    }
-  }
-}
-
-/// Storage and freshness of the per-server proactive full-library fill marker.
-///
-/// Stores the completed-at date of the last successful `fillLibrary`. The fill is
-/// skipped while the marker is **fresh** (younger than ``maxAge``) so it runs once
-/// and then re-runs only as a periodic backstop — in particular a cold launch
-/// after a long quiet period (few/no activation sweeps) finds a stale marker and
-/// re-fills. Non-generic for the same reason as ``DocumentDeltaWatermark``.
-enum LibraryCoverageMarker {
-  static let keyPrefix = "libraryCoverageMarker."
-
+/// The fill is skipped while the last-completed timestamp (in `server_sync_state`)
+/// is younger than ``maxAge``, so it runs once and then re-runs only as a periodic
+/// backstop — in particular a cold launch after a long quiet period (few/no
+/// activation sweeps) finds a stale marker and re-fills. Non-generic so the
+/// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
+enum LibraryCoverage {
   /// Re-run the full fill at most this often as a backstop (the cheap activation
   /// sweeps keep things current in between).
   static let maxAge: TimeInterval = 7 * 24 * 60 * 60
 
-  static func key(serverID: UUID) -> String { "\(keyPrefix)\(serverID.uuidString)" }
-
-  private static var defaults: UserDefaults {
-    UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
-  }
-
-  static func completedAt(serverID: UUID) -> Date? {
-    let stamp = defaults.double(forKey: key(serverID: serverID))
-    return stamp > 0 ? Date(timeIntervalSinceReferenceDate: stamp) : nil
-  }
-
-  static func isFresh(serverID: UUID, now: Date = Date()) -> Bool {
-    guard let at = completedAt(serverID: serverID) else { return false }
-    return now.timeIntervalSince(at) < maxAge
-  }
-
-  static func setCompleted(_ date: Date, serverID: UUID) {
-    defaults.set(date.timeIntervalSinceReferenceDate, forKey: key(serverID: serverID))
-  }
-
-  /// Drop every server's marker so the next foreground re-fills. Paired with a
-  /// cache wipe (a fresh marker over an emptied cache would skip the re-fill).
-  static func clearAll() {
-    let defaults = defaults
-    for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
-      defaults.removeObject(forKey: key)
-    }
+  static func isFresh(_ completedAt: Date?, now: Date = Date()) -> Bool {
+    guard let completedAt else { return false }
+    return now.timeIntervalSince(completedAt) < maxAge
   }
 }
 
@@ -305,7 +258,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func fillLibrary(force: Bool) async throws {
-    guard force || !LibraryCoverageMarker.isFresh(serverID: serverID) else { return }
+    guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
+    else { return }
 
     // Default list first, then every cached saved view (synced by `syncElements`
     // just before this in the foreground trigger). Build the *same* FilterState
@@ -333,7 +287,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Advance the marker only on a fully successful pass, so an interrupted or
     // partly-offline run re-attempts on the next foreground.
     if allSucceeded {
-      LibraryCoverageMarker.setCompleted(Date(), serverID: serverID)
+      try? database.setLibraryCoverageAt(Date(), serverID: serverID)
     }
   }
 
@@ -723,20 +677,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  // Per-server delta watermark (newest `modified` applied). Kept in the app-group
-  // UserDefaults rather than the DB: it is regenerable sync state, not view
-  // state — losing it just re-baselines on the next pass.
-  private var deltaWatermarkKey: String { DocumentDeltaWatermark.key(serverID: serverID) }
-
+  // Per-server delta watermark (newest `modified` applied), in `server_sync_state`
+  // keyed by serverID. Regenerable sync state — `clearCache` resets it, and
+  // losing it just re-baselines on the next pass.
   private func deltaWatermark() -> Date? {
-    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
-    let stamp = defaults.double(forKey: deltaWatermarkKey)
-    return stamp > 0 ? Date(timeIntervalSinceReferenceDate: stamp) : nil
+    try? database.deltaWatermark(serverID: serverID)
   }
 
   private func setDeltaWatermark(_ date: Date) {
-    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
-    defaults.set(date.timeIntervalSinceReferenceDate, forKey: deltaWatermarkKey)
+    do {
+      try database.setDeltaWatermark(date, serverID: serverID)
+    } catch {
+      Logger.shared.error("setDeltaWatermark failed: \(error)")
+    }
   }
 
   public func nextAsn() async throws -> UInt {
