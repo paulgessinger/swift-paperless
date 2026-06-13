@@ -102,7 +102,7 @@ struct ApiRepositoryDownloadTest {
   ) -> ContentStore.Key {
     ContentStore.Key(
       serverID: serverID,
-      documentRemoteID: document.id,
+      versionID: document.currentVersionID,
       kind: original ? .original : .archive)
   }
 

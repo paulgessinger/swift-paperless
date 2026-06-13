@@ -217,19 +217,6 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try wrapped.thumbnailRequest(document: document)
   }
 
-  public func download(documentID: UInt) async throws -> URL {
-    try await intercept { try await wrapped.download(documentID: documentID) }
-  }
-
-  public func download(
-    documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?
-  ) async throws -> URL {
-    try await intercept {
-      try await wrapped.download(
-        documentID: documentID, original: original, progress: progress)
-    }
-  }
-
   public func download(
     document: Document, original: Bool,
     progress: (@Sendable (Double) -> Void)?

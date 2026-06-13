@@ -94,10 +94,26 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
+  @Test func testThumbnailWithVersion() {
+    let endpoint = Endpoint.thumbnail(documentId: 16, version: 35)
+    #expect(endpoint.path == "/api/documents/16/thumb")
+    #expect(endpoint.queryItems == [URLQueryItem(name: "version", value: "35")])
+  }
+
   @Test func testDownload() {
     let endpoint = Endpoint.download(documentId: 400)
     #expect(endpoint.path == "/api/documents/400/download")
     #expect(endpoint.queryItems.isEmpty)
+  }
+
+  @Test func testDownloadWithOriginalAndVersion() {
+    let endpoint = Endpoint.download(documentId: 16, original: true, version: 35)
+    #expect(endpoint.path == "/api/documents/16/download")
+    #expect(
+      endpoint.queryItems == [
+        URLQueryItem(name: "original", value: "true"),
+        URLQueryItem(name: "version", value: "35"),
+      ])
   }
 
   @Test func testSuggestions() {
