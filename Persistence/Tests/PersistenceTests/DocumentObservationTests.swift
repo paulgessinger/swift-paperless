@@ -120,7 +120,7 @@ struct DocumentObservationTests {
       try database.upsertDocument(
         self.doc(1, "A-edited"), serverID: server)
     }
-    #expect(updated.first(where: { $0.id == 1 })?.title == "A-edited")
+    #expect(updated.first(where: { $0.id == 1 })?.document?.title == "A-edited")
   }
 
   @Test("observeDocumentPrefix re-emits with the gap invisible after a delete")

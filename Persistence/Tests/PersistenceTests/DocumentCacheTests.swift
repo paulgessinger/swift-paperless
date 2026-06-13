@@ -181,26 +181,27 @@ struct DocumentCacheTests {
 
   // MARK: - Membership sweep (replaceQueryOrder)
 
-  @Test("replaceQueryOrder skips ids without a document row but counts the server total")
-  func replaceQueryOrderSkipsAbsent() async throws {
-    // The Tier-0 membership sweep may report ids not yet cached (their detail
-    // lands via R3δ). Those are skipped (the FK requires a row); the scrollbar
-    // total still reflects the full server count.
+  @Test("replaceQueryOrder writes all ids; absent objects read back as skeletons")
+  func replaceQueryOrderWritesSkeletons() async throws {
+    // The Tier-0 membership sweep may report ids not yet cached (their object
+    // lands via R3δ). They are written to query_order regardless (no FK to
+    // document) and read back as skeleton entries, in order.
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "view")
 
     // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
-    try database.upsertDocuments(
-      [doc(1, "A"), doc(3, "C")], serverID: server)
+    try database.upsertDocuments([doc(1, "A"), doc(3, "C")], serverID: server)
 
     try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
 
     let replayed = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
-    #expect(replayed.map(\.id) == [1, 3])  // 2 skipped, order preserved
+    #expect(replayed.map(\.id) == [1, 2, 3])  // all ids, order preserved
+    #expect(replayed[0].document != nil)  // loaded
+    #expect(replayed[1].document == nil)  // id 2 is a skeleton
+    #expect(replayed[2].document != nil)  // loaded
     let status = try database.queryStatus(queryKey: key, serverID: server)
-    #expect(status.totalCount == 3)  // server total, not local count
-    #expect(status.localCount == 2)
+    #expect(status.totalCount == 3)
   }
 
   @Test("replaceQueryOrder replaces prior membership and preserves the new order")
