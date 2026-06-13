@@ -535,16 +535,12 @@ extension ApiRepository: Repository {
   }
 
   public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
-    try documents(filter: filter, fullPerms: false)
-  }
-
-  public func documents(filter: FilterState, fullPerms: Bool) throws
-    -> ApiPagedSource<ApiDocument, Document>
-  {
-    Logger.networking.notice("Getting document sequence for filter (fullPerms: \(fullPerms))")
+    Logger.networking.notice("Getting document sequence for filter")
+    // The full list shape always carries object detail (`full_perms`), so every
+    // cached row is renderable offline without a per-document round-trip.
     let cursor = try PageCursor<ApiDocument>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter, fullPerms: fullPerms)))
+      initialURL: url(.documents(page: 1, filter: filter)))
     return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 

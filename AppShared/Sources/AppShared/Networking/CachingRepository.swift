@@ -114,8 +114,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
   /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
-  /// default list and every saved view at full object detail (`full_perms`) so the
-  /// whole active-server library browses offline even if never opened. Sequential
+  /// default list and every saved view, stamping rows `.detail`, so the whole
+  /// active-server library browses offline even if never opened. Sequential
   /// (one query's background paging completes before the next starts). Guarded by
   /// a per-server freshness marker so it runs once and re-runs only as a periodic
   /// backstop; `force` ignores the marker (setting just enabled). Soft per-view
@@ -237,18 +237,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
-    // Interactive on-open fill: Tier-1 metadata, no full_perms (cheap first paint).
-    try await fillQuery(filter: filter, projectionLevel: .metadata, fullPerms: false)
+    // Interactive on-open fill: stamp rows `.metadata` (the list payload already
+    // carries object detail, but the detail view still fetches notes on open).
+    try await fillQuery(filter: filter, projectionLevel: .metadata)
   }
 
   /// Core fill shared by the interactive on-open path (`.metadata`) and the
-  /// proactive library fill (`.detail` + `full_perms`). Page 1 is awaited (first
-  /// window + exact count); the rest pages in the background at the same level.
+  /// proactive library fill (`.detail`). The list source always carries object
+  /// detail; `projectionLevel` only governs the DB row's completeness marker.
+  /// Page 1 is awaited (first window + exact count); the rest pages in the
+  /// background at the same level.
   private func fillQuery(
-    filter: FilterState, projectionLevel: DocumentProjection, fullPerms: Bool
+    filter: FilterState, projectionLevel: DocumentProjection
   ) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
-    let source = try wrapped.documents(filter: filter, fullPerms: fullPerms)
+    let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
 
     // Page 1 awaited: first window on screen + exact scrollbar count.
@@ -305,7 +308,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
         let handle = try await fillQuery(
-          filter: filter, projectionLevel: .detail, fullPerms: true)
+          filter: filter, projectionLevel: .detail)
         await handle.awaitCompletion()
       } catch is CancellationError {
         throw CancellationError()
@@ -603,10 +606,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try wrapped.documents(filter: filter)
   }
 
-  public func documents(filter: FilterState, fullPerms: Bool) throws -> Wrapped.Documents {
-    try wrapped.documents(filter: filter, fullPerms: fullPerms)
-  }
-
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     try await wrapped.documentIDs(filter: filter)
   }
@@ -633,18 +632,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func reconcileDocumentChanges() async throws {
     let entireLibrary = AppSettings.shared.offlineBrowsingMode == .entireLibrary
 
-    // Delta refreshes changed metadata via `ordering=-modified`. Under *Recently
+    // Delta refreshes changed rows via `ordering=-modified`. Under *Recently
     // browsed* it only touches already-cached rows (new docs surface via on-open
-    // list fills); under *Entire library* it requests full detail and also keeps
-    // brand-new docs, so the whole library stays current between full fills.
-    // Nothing cached ⇒ the proactive fill (or a list open) seeds first.
+    // list fills); under *Entire library* it also keeps brand-new docs and stamps
+    // them `.detail`, so the whole library stays current between full fills. The
+    // list payload always carries object detail; the setting only governs which
+    // docs are kept and the DB completeness marker. Nothing cached ⇒ the
+    // proactive fill (or a list open) seeds first.
     let localIDs = try database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
     var filter = FilterState.empty
     filter.sortField = .modified
     filter.sortOrder = .descending
-    let source = try wrapped.documents(filter: filter, fullPerms: entireLibrary)
+    let source = try wrapped.documents(filter: filter)
 
     guard let watermark = deltaWatermark() else {
       // First run: establish the baseline from the newest doc; subsequent passes

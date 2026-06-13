@@ -64,16 +64,6 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func documents(filter: FilterState) throws -> Documents
 
-  /// As `documents(filter:)`, but optionally lifts the list projection to Tier-2
-  /// object detail with `full_perms=true` (custom fields, permissions,
-  /// `user_can_change`) — the bulk-detail path for the proactive library fill. A
-  /// default ignores `fullPerms` and pages the plain list; `ApiRepository`
-  /// overrides it to thread the query param. Declared as a requirement (not only
-  /// an extension) so the override is dynamically dispatched through a generic
-  /// `Wrapped` (e.g. inside `CachingRepository`). (Has a default, so existing
-  /// conformers need no change.)
-  func documents(filter: FilterState, fullPerms: Bool) throws -> Documents
-
   /// The complete ordered list of document IDs matching a query — the cheap
   /// `fields=id` projection that backs the remote-delete reconcile. A default
   /// implementation pages the full list and maps ids; `ApiRepository` overrides
@@ -189,16 +179,6 @@ extension Repository {
 
 extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
-
-  /// Page the list, optionally lifting the projection to Tier-2 object detail with
-  /// `full_perms=true` (custom fields, permissions, `user_can_change`) — the bulk
-  /// detail path used by the proactive library fill. Default ignores `fullPerms`
-  /// and pages the plain list; `ApiRepository` overrides it to thread the query
-  /// param, and decorators (`NeedsAuthRepository`) forward it so the fill keeps
-  /// its 401 handling.
-  public func documents(filter: FilterState, fullPerms: Bool) throws -> Documents {
-    try documents(filter: filter)
-  }
 
   /// Default: page the full (Tier-1) list and map ids. Correct everywhere;
   /// `ApiRepository` overrides it with the cheaper `fields=id` projection.
