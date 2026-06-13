@@ -685,8 +685,8 @@ extension DocumentStore {
   /// marker (e.g. the user just enabled the setting). A no-op when the setting is
   /// *Recently browsed*, the link is metered, or there's no caching backend.
   public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
-    guard AppSettings.shared.offlineBrowsingMode == .entireLibrary, unmetered,
-      let backend = repository as? any CachingBackend
+    guard unmetered, let backend = repository as? any CachingBackend,
+      backend.offlineBrowsingMode == .entireLibrary
     else { return }
     isFillingLibrary = true
     defer { isFillingLibrary = false }

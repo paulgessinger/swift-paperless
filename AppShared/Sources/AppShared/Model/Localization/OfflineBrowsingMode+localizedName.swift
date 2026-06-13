@@ -5,7 +5,7 @@
 
 import Foundation
 
-extension AppSettings.OfflineBrowsingMode {
+extension OfflineBrowsingMode {
   public var localizedName: String {
     switch self {
     case .recentlyBrowsed:

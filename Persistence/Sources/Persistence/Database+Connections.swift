@@ -15,6 +15,13 @@ extension Database {
     }
   }
 
+  /// Fetch a single connection row by id, or `nil` if absent.
+  public func connection(id: UUID) throws -> ConnectionRecord? {
+    try writer.read { db in
+      try ConnectionRecord.fetchOne(db, key: id)
+    }
+  }
+
   /// Insert or replace a connection row by primary key.
   public func upsertConnection(_ record: ConnectionRecord) throws {
     try writer.write { db in

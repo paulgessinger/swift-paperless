@@ -21,6 +21,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var user: User
   public var identity: String?
   public var friendlyName: String? = nil
+  public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
 
   public init(
     id: UUID = .init(),
@@ -28,7 +29,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     extraHeaders: [Connection.HeaderValue],
     user: User,
     identity: String? = nil,
-    friendlyName: String? = nil
+    friendlyName: String? = nil,
+    offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
   ) {
     self.id = id
     self.url = url
@@ -36,6 +38,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.user = user
     self.identity = identity
     self.friendlyName = friendlyName
+    self.offlineBrowsingMode = offlineBrowsingMode
   }
 
   public var token: String? {
@@ -486,6 +489,35 @@ public class ConnectionManager {
     }
   }
 
+  /// The active server's offline browsing mode (per-server config). Defaults to
+  /// `.recentlyBrowsed` when there's no active connection.
+  public var activeOfflineBrowsingMode: OfflineBrowsingMode {
+    guard let activeConnectionId, let stored = connections[activeConnectionId] else {
+      return .recentlyBrowsed
+    }
+    return stored.offlineBrowsingMode
+  }
+
+  public func setOfflineBrowsingMode(_ mode: OfflineBrowsingMode) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set offline browsing mode but have no active connection")
+      return
+    }
+    guard stored.offlineBrowsingMode != mode else { return }
+    Logger.api.info("Updating offline browsing mode on connection \(stored.id) to \(mode.rawValue)")
+    stored.offlineBrowsingMode = mode
+    // Write through to the in-memory dict immediately so the UI (and the
+    // CachingRepository's live record read) see it without waiting for the
+    // observeConnections tick.
+    connections[activeConnectionId] = stored
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
+    }
+  }
+
   public func setFriendlyName(_ name: String?) {
     guard let activeConnectionId, var stored = connections[activeConnectionId] else {
       Logger.api.warning("Tried to set friendly name but have no active connection")
@@ -514,6 +546,8 @@ public class ConnectionManager {
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
       clearNeedsAuth(for: activeConnectionId)
       do {
+        // Deleting the server row also drops its offline_browsing_mode and
+        // cascade-clears its document cache + sync state.
         try database.deleteConnection(id: activeConnectionId)
       } catch {
         Logger.api.error("logout DB delete failed: \(error)")

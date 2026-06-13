@@ -148,6 +148,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// sees them.
   var database: Database { get }
   var serverID: UUID { get }
+
+  /// This server's offline browsing mode (per-server; read live from
+  /// ``OfflineBrowsingModeStore``). The reconcile sweeps and the proactive fill
+  /// branch on it.
+  var offlineBrowsingMode: OfflineBrowsingMode { get }
 }
 
 enum CachingRepositoryError: Error {
@@ -166,6 +171,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     wrapped = wrapping
     self.database = database
     self.serverID = serverID
+  }
+
+  public var offlineBrowsingMode: OfflineBrowsingMode {
+    guard let raw = (try? database.connection(id: serverID))?.offlineBrowsingMode,
+      let mode = OfflineBrowsingMode(rawValue: raw)
+    else { return .recentlyBrowsed }
+    return mode
   }
 
   // MARK: - CachingBackend
@@ -630,7 +642,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private let deltaCap = 1000
 
   public func reconcileDocumentChanges() async throws {
-    let entireLibrary = AppSettings.shared.offlineBrowsingMode == .entireLibrary
+    let entireLibrary = offlineBrowsingMode == .entireLibrary
 
     // Delta refreshes changed rows via `ordering=-modified`. Under *Recently
     // browsed* it only touches already-cached rows (new docs surface via on-open
@@ -687,7 +699,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func reconcileSavedViewMembership() async throws {
-    guard AppSettings.shared.offlineBrowsingMode == .entireLibrary else { return }
+    guard offlineBrowsingMode == .entireLibrary else { return }
     // Nothing cached ⇒ the proactive fill seeds membership first.
     guard try !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
 
