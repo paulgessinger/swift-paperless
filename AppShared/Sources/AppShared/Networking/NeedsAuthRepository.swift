@@ -102,13 +102,6 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     return InterceptingDocumentSource(wrapping: source, onUnauthorized: sourceCallback)
   }
 
-  public func documents(filter: FilterState, fullPerms: Bool) throws
-    -> InterceptingDocumentSource<Wrapped.Documents>
-  {
-    let source = try interceptSync { try wrapped.documents(filter: filter, fullPerms: fullPerms) }
-    return InterceptingDocumentSource(wrapping: source, onUnauthorized: sourceCallback)
-  }
-
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     try await intercept { try await wrapped.documentIDs(filter: filter) }
   }
