@@ -6,7 +6,6 @@
 //
 
 import AppShared
-import Combine
 import Common
 import DataModel
 import Networking
@@ -23,9 +22,9 @@ struct MainView: View {
   @State private var initialDisplay = true
   @State private var showSettings = false
 
-  @StateObject private var manager: ConnectionManager
+  @State private var manager: ConnectionManager
 
-  @State private var friendlyNameSubscription: AnyCancellable?
+  @State private var friendlyNameTask: Task<Void, Never>?
 
   @StateObject private var errorController: ErrorController
 
@@ -47,7 +46,7 @@ struct MainView: View {
 
   init(database: Database) {
     _ = AppSettings.shared
-    _manager = StateObject(wrappedValue: ConnectionManager(database: database))
+    _manager = State(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
     // Suppress the noise that the connection-status banner already covers:
@@ -188,7 +187,7 @@ struct MainView: View {
         wrapping: api, serverID: conn.serverID, connectionManager: manager)
       if let store {
         await sleep(.seconds(0.1))
-        store.eventPublisher.send(.repositoryWillChange)
+        store.events.emit(.repositoryWillChange)
         await sleep(.seconds(0.3))
         store.set(repository: repository)
         storeReady = true
@@ -216,15 +215,25 @@ struct MainView: View {
 
   private func observeFriendlyName(on store: DocumentStore) {
     // Forwards the server's PAPERLESS_APP_TITLE (settings.appTitle) to the
-    // active connection. compactMap drops nil values so resets from
-    // store.clear() don't wipe out a previously stored friendly name.
-    friendlyNameSubscription =
-      store.$settings
-      .compactMap(\.appTitle)
-      .removeDuplicates()
-      .sink { [manager] title in
-        manager.setFriendlyName(title)
+    // active connection. The nil-guard drops resets from store.clear() so
+    // they don't wipe out a previously stored friendly name. setFriendlyName
+    // is already idempotent, so no explicit dedup is needed.
+    friendlyNameTask?.cancel()
+    friendlyNameTask = Task { @MainActor [manager] in
+      while !Task.isCancelled {
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        withObservationTracking {
+          _ = store.settings.appTitle
+        } onChange: {
+          continuation.yield()
+          continuation.finish()
+        }
+        if let title = store.settings.appTitle {
+          manager.setFriendlyName(title)
+        }
+        for await _ in stream { break }
       }
+    }
   }
 
   private func setupQuickActions() {
@@ -244,11 +253,11 @@ struct MainView: View {
       ZStack {
         if manager.connection != nil, storeReady {
           DocumentView(showSettings: $showSettings)
-            .environmentObject(store!)
-            .environmentObject(manager)
+            .environment(store!)
+            .environment(manager)
             .safeAreaInset(edge: .bottom, spacing: 0) {
               NeedsAuthBanner()
-                .environmentObject(manager)
+                .environment(manager)
                 .environment(networkMonitor)
             }
             .overlay {
@@ -297,7 +306,7 @@ struct MainView: View {
         let stored = manager.connections[id]
       {
         ReauthSheet(stored: stored)
-          .environmentObject(manager)
+          .environment(manager)
           .environmentObject(errorController)
           .environment(networkMonitor)
       }
@@ -310,8 +319,8 @@ struct MainView: View {
     .sheet(isPresented: $showSettings) {
       if let store {
         SettingsView()
-          .environmentObject(manager)
-          .environmentObject(store)
+          .environment(manager)
+          .environment(store)
           .environmentObject(errorController)
           .environmentObject(biometricLockManager)
       }
@@ -331,7 +340,7 @@ struct MainView: View {
       initialDisplay = false
     }
 
-    .onReceive(manager.eventPublisher) { event in
+    .onEvent(from: manager.events) { event in
       switch event {
       case .connectionChange(let animated):
         Task { await refreshConnection(animated: animated) }

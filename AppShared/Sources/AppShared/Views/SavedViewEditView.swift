@@ -22,7 +22,7 @@ public struct SavedViewEditView<Element>: View where Element: SavedViewProtocol 
     !savedView.name.isEmpty && editable
   }
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(
     element savedView: Element,

@@ -12,7 +12,7 @@ import SwiftUI
 import os
 
 public struct TagFilterView: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
 
@@ -253,13 +253,13 @@ public struct TagFilterView: View {
 }
 
 #Preview {
-  @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore(repository: TransientRepository())
 
   @Previewable @State var filterState = FilterState.default
 
   NavigationStack {
     TagFilterView(selectedTags: $filterState.tags)
-      .environmentObject(store)
+      .environment(store)
 
       .toolbar {
         ToolbarItem {

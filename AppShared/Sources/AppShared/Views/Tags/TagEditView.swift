@@ -13,7 +13,7 @@ import SwiftUI
 import os
 
 public struct TagEditView<Element>: View where Element: TagProtocol & Sendable {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(\.colorScheme) private var colorScheme
 
   public var onSave: ((Element) throws -> Void)?
@@ -162,7 +162,7 @@ extension TagEditView where Element == ProtoTag {
 // MARK: - Parent picker
 
 public struct TagParentPickerView: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(\.dismiss) private var dismiss
 
   @Binding public var selection: UInt?

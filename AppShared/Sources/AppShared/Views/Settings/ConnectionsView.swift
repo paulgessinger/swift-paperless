@@ -18,7 +18,7 @@ extension StoredConnection {
 }
 
 private struct ConnectionSelectionViews: View {
-  @ObservedObject public var connectionManager: ConnectionManager
+  public var connectionManager: ConnectionManager
   public let animated: Bool
 
   public var body: some View {
@@ -49,7 +49,7 @@ private struct ConnectionSelectionViews: View {
 }
 
 public struct ConnectionSelectionMenu: View {
-  @ObservedObject public var connectionManager: ConnectionManager
+  public var connectionManager: ConnectionManager
   public let animated: Bool
 
   public var body: some View {
@@ -90,7 +90,7 @@ public struct ConnectionSelectionMenu: View {
 }
 
 public struct ConnectionsView: View {
-  @ObservedObject private var connectionManager: ConnectionManager
+  private var connectionManager: ConnectionManager
   @Binding public var showLoginSheet: Bool
 
   @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
@@ -104,7 +104,7 @@ public struct ConnectionsView: View {
 
   @State private var showExtraHeader = false
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
     self.connectionManager = connectionManager
@@ -267,7 +267,7 @@ public struct ConnectionsView: View {
 public struct ConnectionQuickChangeMenu: View {
   public init() {}
 
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   public var body: some View {
     if connectionManager.connections.count > 1 {

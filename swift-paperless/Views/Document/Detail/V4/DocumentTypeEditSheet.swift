@@ -13,10 +13,10 @@ import SwiftUI
 struct DocumentTypeEditSheet: View {
   @Bindable var viewModel: DocumentDetailModel
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private struct CreateDocumentTypeView: View {
-    @EnvironmentObject private var store: DocumentStore
+    @Environment(DocumentStore.self) private var store
     @EnvironmentObject private var errorController: ErrorController
     @Environment(\.dismiss) private var dismiss
 

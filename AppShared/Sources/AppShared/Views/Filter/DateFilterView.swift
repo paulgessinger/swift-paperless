@@ -55,7 +55,7 @@ private struct DateFilterModeView: View {
 
   @State private var modeValue: Argument
   @State private var rangeValues: [Range] = []
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(value: Binding<Argument>) {
     _value = value
@@ -143,7 +143,7 @@ public struct DateFilterView: View {
   @State private var query: FilterState.DateFilter
 
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(query: Binding<FilterState.DateFilter>) {
     _queryOut = query

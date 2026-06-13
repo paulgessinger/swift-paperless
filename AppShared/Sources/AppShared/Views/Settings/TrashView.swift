@@ -16,7 +16,7 @@ public struct TrashView: View {
   public init() {}
 
   @State private var documents: [Document] = []
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State public var editMode: EditMode = .inactive
   @EnvironmentObject private var errorController: ErrorController
 
@@ -138,14 +138,14 @@ public struct TrashView: View {
 }
 
 #Preview {
-  @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore(repository: TransientRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @State var ready = false
 
   NavigationStack {
     if ready {
       TrashView()
-        .environmentObject(store)
+        .environment(store)
         .environmentObject(errorController)
     }
   }

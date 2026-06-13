@@ -6,17 +6,17 @@
 //
 
 import AppShared
-import Combine
 import DataModel
 import Foundation
 import Networking
 import Nuke
+import Persistence
 import SwiftUI
 import os
 
 struct LoadingDocumentList: View {
   @State private var documents: [Document] = []
-  @StateObject private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore(repository: PreviewRepository())
 
   var body: some View {
     List {
@@ -186,7 +186,7 @@ struct DocumentList: View {
 
         } preview: {
           PopupDocumentPreview(document: document)
-            .environmentObject(store)
+            .environment(store)
         }
 
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
@@ -334,7 +334,7 @@ struct DocumentList: View {
       viewModel.ready = true
     }
 
-    .onReceive(store.eventPublisher, perform: onReceiveEvent)
+    .onEvent(from: store.events, perform: onReceiveEvent)
 
     // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
     .confirmationDialog(

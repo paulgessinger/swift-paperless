@@ -8,7 +8,7 @@ struct PreferencesView: View {
   @ObservedObject private var appSettings = AppSettings.shared
 
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   var body: some View {
     Form {
