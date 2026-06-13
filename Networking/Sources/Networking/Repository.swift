@@ -64,6 +64,13 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func documents(filter: FilterState) throws -> Documents
 
+  /// The complete ordered list of document IDs matching a query — the cheap
+  /// `fields=id` projection that backs the remote-delete reconcile. A default
+  /// implementation pages the full list and maps ids; `ApiRepository` overrides
+  /// it with the id-only projection. (Has a default, so existing conformers
+  /// need no change.)
+  func documentIDs(filter: FilterState) async throws -> [UInt]
+
   func nextAsn() async throws -> UInt
 
   func metadata(documentId: UInt) async throws -> Metadata
@@ -172,6 +179,20 @@ extension Repository {
 
 extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
+
+  /// Default: page the full (Tier-1) list and map ids. Correct everywhere;
+  /// `ApiRepository` overrides it with the cheaper `fields=id` projection.
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    let source = try documents(filter: filter)
+    var ids: [UInt] = []
+    while true {
+      let batch = try await source.fetch(limit: 1000)
+      if batch.isEmpty { break }
+      ids.append(contentsOf: batch.map(\.id))
+      if await source.isExhausted { break }
+    }
+    return ids
+  }
 }
 
 // - MARK: PagedSource

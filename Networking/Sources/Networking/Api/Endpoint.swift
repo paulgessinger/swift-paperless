@@ -86,9 +86,10 @@ extension Endpoint {
 // MARK: - Document related endpoints
 extension Endpoint {
   public static func documents(
-    page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize
+    page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize,
+    fields: [String]? = nil
   ) -> Endpoint {
-    let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
+    let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize, fields: fields)
 
     var ordering: String = filter.sortField.rawValue
     if filter.sortOrder.reverse {
@@ -100,14 +101,22 @@ extension Endpoint {
     return Endpoint(path: endpoint.path, queryItems: queryItems)
   }
 
+  /// - Parameter fields: optional field projection (paperless-ngx `?fields=`).
+  ///   `["id"]` yields the cheap id-only (Tier-0) response used by the
+  ///   deletion-reconcile sweep; `nil` returns the full list shape.
   public static func documents(
-    page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize
+    page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize,
+    fields: [String]? = nil
   ) -> Endpoint {
     var queryItems = [
       URLQueryItem(name: "page", value: String(page)),
       URLQueryItem(name: "truncate_content", value: "true"),
       URLQueryItem(name: "page_size", value: String(pageSize)),
     ]
+
+    if let fields, !fields.isEmpty {
+      queryItems.append(URLQueryItem(name: "fields", value: fields.joined(separator: ",")))
+    }
 
     queryItems += FilterRule.queryItems(for: rules)
 

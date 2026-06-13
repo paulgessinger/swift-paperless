@@ -19,6 +19,7 @@ extension Database {
     users: [User] = [],
     groups: [UserGroup] = [],
     customFields: [CustomField] = [],
+    documents: [Document] = [],
     uiSettings: UISettings? = nil,
     serverConfiguration: ServerConfiguration? = nil
   ) throws -> Database {
@@ -37,6 +38,10 @@ extension Database {
     try database.replaceElements(users, of: UserRecord.self, serverID: serverID)
     try database.replaceElements(groups, of: UserGroupRecord.self, serverID: serverID)
     try database.replaceElements(customFields, of: CustomFieldRecord.self, serverID: serverID)
+
+    if !documents.isEmpty {
+      try database.upsertDocuments(documents, serverID: serverID, projectionLevel: .metadata)
+    }
 
     if let uiSettings {
       try database.setUISettings(uiSettings, serverID: serverID)

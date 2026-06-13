@@ -195,20 +195,11 @@ struct DocumentList: View {
 
   private func onReceiveEvent(event: DocumentStore.Event) {
     switch event {
-    case .deleted(let document):
-      withAnimation {
-        viewModel.removed(document: document)
-      }
-    case .changed(let document):
-      viewModel.updated(document: document)
-    case .changeReceived:
-      Task {
-        if let documents = try? await viewModel.refresh(retain: true) {
-          withAnimation {
-            viewModel.replace(documents: documents)
-          }
-        }
-      }
+    case .deleted, .changed, .changeReceived:
+      // Source-of-truth: a mutation write-throughs to the DB and the document
+      // observation repaints the list in place (a delete cascades out of every
+      // query_order). Nothing to do here.
+      break
     case .repositoryWillChange:
       filterModel.ready = false
       viewModel.ready = false
@@ -229,15 +220,7 @@ struct DocumentList: View {
   }
 
   func refresh() async {
-    do {
-      let documents = try await viewModel.refresh(userInitiated: true)
-      withAnimation {
-        viewModel.replace(documents: documents)
-      }
-    } catch {
-      Logger.shared.error("Error refreshing documents: \(error)")
-      errorController.push(error: error)
-    }
+    await viewModel.refresh(userInitiated: true)
   }
 
   var body: some View {
@@ -254,7 +237,23 @@ struct DocumentList: View {
           }
       } else {
         let documents = viewModel.documents
-        if !documents.isEmpty {
+        if documents.isEmpty {
+          // No rows yet: distinguish "still filling" (cold cache + a fill in
+          // flight, or the server reports a non-empty count) from a genuinely
+          // empty result, so we don't flash "No documents" during the fill.
+          if viewModel.isFetching || (viewModel.totalCount ?? 0) > 0 {
+            LoadingDocumentList()
+          } else {
+            NoDocumentsView(filtering: filterModel.filterState.filtering)
+              .equatable()
+              .refreshable {
+                await Task {
+                  await refresh()
+                }.value
+              }
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          }
+        } else {
           ScrollViewReader { proxy in
             List {
               Section {
@@ -273,7 +272,8 @@ struct DocumentList: View {
                   .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
 
                   .task {
-                    await viewModel.fetchMoreIfNeeded(currentIndex: idx)
+                    // Pure local windowing: grow the observed prefix. No network.
+                    viewModel.fetchMoreIfNeeded(currentIndex: idx)
                   }
                 }
               }
@@ -294,15 +294,6 @@ struct DocumentList: View {
               }
             }
           }
-        } else {
-          NoDocumentsView(filtering: filterModel.filterState.filtering)
-            .equatable()
-            .refreshable {
-              await Task {
-                await refresh()
-              }.value
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
       }
     }
@@ -311,9 +302,7 @@ struct DocumentList: View {
 
     .onChange(of: filterModel.filterState) { _, filter in
       Task {
-        if let documents = try? await viewModel.refresh(filter: filter) {
-          viewModel.replace(documents: documents)
-        }
+        await viewModel.refresh(filter: filter)
       }
     }
 
@@ -332,7 +321,6 @@ struct DocumentList: View {
 
     .task {
       await viewModel.load()
-      viewModel.ready = true
     }
 
     .onEvent(from: store.events, perform: onReceiveEvent)

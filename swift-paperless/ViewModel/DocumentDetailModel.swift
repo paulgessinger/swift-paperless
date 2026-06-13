@@ -64,16 +64,69 @@ class DocumentDetailModel {
     self.document = document
   }
 
-  func loadMetadata() async {
+  /// Load everything a freshly-opened (or pulled-to-refresh) document needs from
+  /// the server, best-effort.
+  ///
+  /// `loadDocument()` runs first and alone: it resolves the full-perms document
+  /// (and so caches it, which the file-metadata version key depends on) before
+  /// the PDF download validates the on-disk cache against the server's
+  /// `modified`. The three enrichments — file-metadata, notes, edit suggestions —
+  /// only need the document id, so they run concurrently afterwards.
+  ///
+  /// Each step always logs its failure. Whether it's *surfaced* is the caller's
+  /// choice via `onError`: an on-appear load (`.task`) passes nothing and stays
+  /// silent (the load isn't user-initiated, and the one critical failure — the
+  /// PDF — already shows via `download == .error`); a pull-to-refresh passes a
+  /// handler so failures toast. Offline-connectivity errors are dropped by
+  /// `ErrorController.shouldSuppress`, so a parallel offline refresh won't spam.
+  func load(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
+    await loadDocument(onError: onError)
+    async let metadata: Void = loadMetadata(onError: onError)
+    async let notes: Void = loadNotes(onError: onError)
+    async let suggestions: Void = loadSuggestionsQuietly(onError: onError)
+    _ = await (metadata, notes, suggestions)
+  }
+
+  func loadMetadata(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     do {
       metadata = try await store.repository.metadata(documentId: document.id)
     } catch is CancellationError {
     } catch {
       Logger.shared.error("Error loading document metadata: \(error)")
+      onError?(error)
     }
   }
 
-  func loadDocument() async {
+  /// Warm the notes cache on open so they're available offline later. The notes
+  /// view fetches its own (network-first) copy when presented; this just ensures
+  /// a document opened online has its notes written through to the cache even if
+  /// the user never taps the notes button. Routed through `store.notes(for:)` so
+  /// the `.note` view-permission gate is respected.
+  func loadNotes(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
+    do {
+      _ = try await store.notes(for: document)
+    } catch is CancellationError {
+    } catch {
+      Logger.shared.error("Error loading document notes: \(error)")
+      onError?(error)
+    }
+  }
+
+  /// The quiet (open-path) form of `loadSuggestions()`: suggestions are an
+  /// edit-sheet enrichment. `updateDocument()` calls the throwing
+  /// `loadSuggestions()` directly, where the error propagates into the edit-save
+  /// flow; here a failure is logged and only surfaced when `onError` is supplied.
+  private func loadSuggestionsQuietly(onError: (@MainActor @Sendable (any Error) -> Void)?) async {
+    do {
+      try await loadSuggestions()
+    } catch is CancellationError {
+    } catch {
+      Logger.shared.error("Error loading document suggestions: \(error)")
+      onError?(error)
+    }
+  }
+
+  func loadDocument(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     // Resolve the fresh document FIRST so the download path can validate
     // the ContentStore cache against the server's current `modified`
     // timestamp. If we kicked off both in parallel, a stale `modified`
@@ -83,8 +136,10 @@ class DocumentDetailModel {
       if let updated = try await store.document(id: document.id) {
         document = updated
       }
+    } catch is CancellationError {
     } catch {
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
+      onError?(error)
     }
 
     switch download {
@@ -94,6 +149,11 @@ class DocumentDetailModel {
         guard !Task.isCancelled else { return }
         download = .loading
       }
+      // Cancel the delayed `.loading` flip on *every* exit path. Without this
+      // the error path leaves `setLoading` pending, and 0.5s later it overwrites
+      // the just-set `.error` back to `.loading` — pinning the preview's loading
+      // overlay on screen even though the download already failed.
+      defer { setLoading.cancel() }
       do {
         let url = try await store.repository.download(
           document: document,
@@ -110,7 +170,6 @@ class DocumentDetailModel {
         }
 
         download = .loaded(url: url, document: pdfDocument)
-        setLoading.cancel()
 
         // Start downloading the original in the background
         Task { await downloadOriginal() }
@@ -118,7 +177,6 @@ class DocumentDetailModel {
       } catch {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
-        break
       }
 
     default:

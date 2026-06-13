@@ -29,6 +29,27 @@ import Persistence
 import SwiftUI
 import os
 
+/// Storage and clearing of the per-server changed-metadata delta watermark.
+///
+/// Non-generic so the keys (and the bulk clear used by "clear local storage")
+/// don't depend on `CachingRepository`'s `Wrapped` type — and so a `static`
+/// constant is even legal (it isn't on the generic type itself).
+enum DocumentDeltaWatermark {
+  static let keyPrefix = "documentDeltaWatermark."
+
+  static func key(serverID: UUID) -> String { "\(keyPrefix)\(serverID.uuidString)" }
+
+  /// Drop every server's watermark so the next reconcile re-baselines. Paired
+  /// with a cache wipe (a stale watermark over an empty cache would skip
+  /// re-fetching the rows the wipe removed).
+  static func clearAll() {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
+      defaults.removeObject(forKey: key)
+    }
+  }
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -39,6 +60,26 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements() async throws
+
+  /// Eager full-fill of a document list (Stage 8 v1): await page 1 (so the first
+  /// window + an exact count land synchronously), write it as the query's order,
+  /// then background-page the rest of the query to the cache. The returned
+  /// ``QueryFillHandle`` carries the `QueryKey` the list observes and a cancel
+  /// handle for the in-flight fill. Throws if page 1 fails (offline → the list
+  /// falls back to whatever is already cached).
+  func fillQuery(filter: FilterState) async throws -> QueryFillHandle
+
+  /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
+  /// and drop every cached document absent from it — the FK cascade removes them
+  /// from every cached query_order. No-op when nothing is cached. Paperless has
+  /// no deletion feed, so this periodic sweep is how deletes (and trashings)
+  /// disappear locally.
+  func reconcileDocumentDeletions() async throws
+
+  /// Changed-metadata delta (R3δ): page `ordering=-modified` until older than the
+  /// per-server watermark and refresh the cached rows that changed. Keeps
+  /// already-cached documents fresh without re-opening their list.
+  func reconcileDocumentChanges() async throws
 
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
@@ -132,6 +173,44 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for try await _ in group {}
     }
+  }
+
+  public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
+    let key = QueryKey(serverID: serverID, filter: filter)
+    let source = try wrapped.documents(filter: filter)
+    let pageSize = Endpoint.defaultDocumentPageSize
+
+    // Page 1 awaited: first window on screen + exact scrollbar count.
+    let firstPage = try await source.fetch(limit: pageSize)
+    let total = await source.totalCount
+    try database.writeQueryPage(
+      queryKey: key, serverID: serverID, documents: firstPage,
+      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: .metadata)
+
+    // Background-page the rest to disk (append). When this completes the whole
+    // view is local; scrolling then needs no network (v1).
+    let database = database
+    let serverID = serverID
+    let firstCount = firstPage.count
+    let task = Task.detached(priority: .utility) {
+      var position = firstCount
+      do {
+        while !Task.isCancelled {
+          if await source.isExhausted { break }
+          let batch = try await source.fetch(limit: pageSize)
+          if batch.isEmpty { break }
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: position, totalCount: await source.totalCount,
+            replaceAll: false, projectionLevel: .metadata)
+          position += batch.count
+        }
+      } catch is CancellationError {
+      } catch {
+        Logger.shared.error("Background query fill failed: \(error)")
+      }
+    }
+    return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
 
   private func syncCollection<R: ElementRecord>(
@@ -352,14 +431,24 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
   }
 
-  // MARK: - Documents (forwarded — Stage 8)
+  // MARK: - Documents (Stage 8: pessimistic write-through + cache fallback)
 
   public func update(document: Document) async throws -> Document {
-    try await wrapped.update(document: document)
+    let updated = try await wrapped.update(document: document)
+    // Write the confirmed metadata through; the join observation repaints the row
+    // in place. Written at `.metadata` so the non-downgrade guard preserves an
+    // existing Tier-2 row's detail/permissions (a metadata edit doesn't change
+    // them; permissions edits reconcile on the next detail fetch). Ordering under
+    // the active sort isn't recomputed offline — mark affected queries stale.
+    try database.upsertDocument(updated, serverID: serverID, projectionLevel: .metadata)
+    try database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    return updated
   }
 
   public func delete(document: Document) async throws {
     try await wrapped.delete(document: document)
+    // FK cascade removes it from every cached query_order.
+    try database.deleteDocuments(serverID: serverID, removedIDs: [document.id])
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -367,15 +456,127 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func document(id: UInt) async throws -> Document? {
-    try await wrapped.document(id: id)
+    do {
+      guard let fetched = try await wrapped.document(id: id) else {
+        // Gone on the server — drop from cache (cascade clears its query_order).
+        try database.deleteDocuments(serverID: serverID, removedIDs: [id])
+        return nil
+      }
+      // A full-detail fetch — upgrade the row to Tier-2.
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      return fetched
+    } catch {
+      // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
+      // rather than failing the open. Mirrors the element offline-first policy.
+      if let cached = try database.document(serverID: serverID, id: id) {
+        Logger.shared.info("document(id:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func document(asn: UInt) async throws -> Document? {
-    try await wrapped.document(asn: asn)
+    do {
+      guard let fetched = try await wrapped.document(asn: asn) else { return nil }
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      return fetched
+    } catch {
+      if let cached = try database.document(serverID: serverID, asn: asn) {
+        Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func documents(filter: FilterState) throws -> Wrapped.Documents {
     try wrapped.documents(filter: filter)
+  }
+
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    try await wrapped.documentIDs(filter: filter)
+  }
+
+  public func reconcileDocumentDeletions() async throws {
+    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    // Nothing cached yet → nothing to reconcile (skip the id fetch entirely).
+    guard !localIDs.isEmpty else { return }
+
+    // The unfiltered list is the complete live id set for the server.
+    let serverIDs = Set(try await wrapped.documentIDs(filter: .empty))
+    let removed = localIDs.subtracting(serverIDs)
+    guard !removed.isEmpty else { return }
+
+    Logger.shared.info(
+      "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
+    try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
+  }
+
+  // The number of changed documents one delta pass will apply before stopping
+  // (a runaway guard; the next pass continues from the advanced watermark).
+  private let deltaCap = 1000
+
+  public func reconcileDocumentChanges() async throws {
+    // Delta only refreshes already-cached metadata; new docs surface via list
+    // fills, not here. Nothing cached ⇒ nothing to refresh.
+    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    guard !localIDs.isEmpty else { return }
+
+    var filter = FilterState.empty
+    filter.sortField = .modified
+    filter.sortOrder = .descending
+    let source = try wrapped.documents(filter: filter)
+
+    guard let watermark = deltaWatermark() else {
+      // First run: establish the baseline from the newest doc; subsequent passes
+      // delta against it. (Avoids re-paging the whole library on cold start.)
+      if let newest = try await source.fetch(limit: 1).first?.modified {
+        setDeltaWatermark(newest)
+      }
+      return
+    }
+
+    var changed: [Document] = []
+    var advanced = watermark
+    pageLoop: while changed.count < deltaCap {
+      let batch = try await source.fetch(limit: Endpoint.defaultDocumentPageSize)
+      if batch.isEmpty { break }
+      for document in batch {
+        guard let modified = document.modified else { continue }
+        // Sorted newest-first: once we reach the watermark, the rest is known.
+        if modified <= watermark { break pageLoop }
+        changed.append(document)
+        if modified > advanced { advanced = modified }
+      }
+      if await source.isExhausted { break }
+    }
+
+    let tracked = changed.filter { localIDs.contains($0.id) }
+    if !tracked.isEmpty {
+      Logger.shared.info(
+        "Reconcile: refreshing \(tracked.count, privacy: .public) changed documents")
+      try database.upsertDocuments(tracked, serverID: serverID, projectionLevel: .metadata)
+    }
+    if advanced > watermark {
+      setDeltaWatermark(advanced)
+    }
+  }
+
+  // Per-server delta watermark (newest `modified` applied). Kept in the app-group
+  // UserDefaults rather than the DB: it is regenerable sync state, not view
+  // state — losing it just re-baselines on the next pass.
+  private var deltaWatermarkKey: String { DocumentDeltaWatermark.key(serverID: serverID) }
+
+  private func deltaWatermark() -> Date? {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    let stamp = defaults.double(forKey: deltaWatermarkKey)
+    return stamp > 0 ? Date(timeIntervalSinceReferenceDate: stamp) : nil
+  }
+
+  private func setDeltaWatermark(_ date: Date) {
+    let defaults = UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+    defaults.set(date.timeIntervalSinceReferenceDate, forKey: deltaWatermarkKey)
   }
 
   public func nextAsn() async throws -> UInt {
@@ -383,21 +584,56 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    try await wrapped.metadata(documentId: documentId)
+    // File-metadata is immutable per file version, so it caches under the
+    // document's current version id (fallback: the document id, which equals the
+    // root version id server-side). The detail view fetches the document first,
+    // so the cached row's versions are usually known by the time we get here.
+    let versionID =
+      (try? database.document(serverID: serverID, id: documentId))?.currentVersionID
+      ?? documentId
+    do {
+      let fetched = try await wrapped.metadata(documentId: documentId)
+      try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
+      return fetched
+    } catch {
+      if let cached = try database.fileMetadata(serverID: serverID, versionID: versionID) {
+        Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    try await wrapped.notes(documentId: documentId)
+    do {
+      let fetched = try await wrapped.notes(documentId: documentId)
+      try database.setNotes(fetched, serverID: serverID, documentID: documentId)
+      return fetched
+    } catch {
+      // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
+      // former propagates the network error.
+      if let cached = try database.notes(serverID: serverID, documentID: documentId) {
+        Logger.shared.info("notes(documentId:) network failed (\(error)); serving cached")
+        return cached
+      }
+      throw error
+    }
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws
     -> [Document.Note]
   {
-    try await wrapped.createNote(documentId: documentId, note: note)
+    // Pessimistic: the server returns the updated full list, which we write
+    // through so the cached notes stay consistent without a re-fetch.
+    let updated = try await wrapped.createNote(documentId: documentId, note: note)
+    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    return updated
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
-    try await wrapped.deleteNote(id: id, documentId: documentId)
+    let updated = try await wrapped.deleteNote(id: id, documentId: documentId)
+    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    return updated
   }
 
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {

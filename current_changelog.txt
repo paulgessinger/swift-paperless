@@ -1,5 +1,6 @@
 - Fix untranslated strings in document notes
 - Recently-viewed documents now open offline; their files are cached on disk and survive app launches
+- Document notes and file metadata are cached when viewed, so they remain available offline
 - Document thumbnails persist across launches, so the document list shows them instantly without a network round trip
 - Large document downloads no longer buffer the whole file in memory, reducing memory pressure (especially in the Share Extension)
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version

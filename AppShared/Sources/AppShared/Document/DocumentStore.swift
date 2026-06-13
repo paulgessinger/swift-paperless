@@ -20,8 +20,6 @@ import os
 public final class DocumentStore: Sendable {
   // MARK: Observed state
 
-  public private(set) var documents: [UInt: Document] = [:]
-
   public private(set) var tasks: [PaperlessTask] = []
 
   /// The live element projection (DB → typed `ValueObservation`). The store owns
@@ -92,6 +90,14 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
 
+  // Last successful (or attempted) remote-delete reconcile. The sweep fetches
+  // the server's whole id set, so it is throttled — `sync()` kicks it
+  // fire-and-forget on launch/foreground/refresh, but it only runs at most once
+  // per `reconcileThrottle` unless user-initiated.
+  @ObservationIgnored
+  private var lastDocumentReconcile: Date?
+  private let reconcileThrottle: TimeInterval = 300
+
   // MARK: Methods
 
   public init(repository: some Repository) {
@@ -157,16 +163,13 @@ public final class DocumentStore: Sendable {
     taskUpdateTask = Task(operation: taskPoller)
   }
 
-  public func clearDocuments() {
-    documents = [:]
-  }
-
   public func clear() {
-    documents = [:]
     tasks = []
     lastSyncError = nil
-    // The element projection is owned by `elementStore` and (re)wired by
-    // `wireElementStore()` on repository change — nothing to clear here.
+    // Documents are not held in memory under source-of-truth — the list observes
+    // the DB directly (see the document-cache surface below). The element
+    // projection is owned by `elementStore` and (re)wired by `wireElementStore()`
+    // on repository change — nothing to clear here.
   }
 
   public func set(repository: some Repository, reload: Bool = true) {
@@ -227,8 +230,9 @@ public final class DocumentStore: Sendable {
       }
     }
 
+    // The repository write-throughs the confirmed value to the DB; the list/detail
+    // observations repaint it in place (no in-memory dict to update).
     let updated = try await repository.update(document: document)
-    documents[updated.id] = updated
     events.emit(.changeReceived(document: updated))
     return updated
   }
@@ -236,8 +240,9 @@ public final class DocumentStore: Sendable {
   public func deleteDocument(_ document: Document) async throws {
     Logger.shared.info("Deleting document with ID \(document.id, privacy: .public)")
     try checkPermission(.delete, for: .document)
+    // The repository write-throughs the delete to the DB; the FK cascade removes
+    // it from every cached query_order and the observations repaint.
     try await repository.delete(document: document)
-    documents.removeValue(forKey: document.id)
     events.emit(.deleted(document: document))
   }
 
@@ -322,6 +327,10 @@ public final class DocumentStore: Sendable {
       try await runSyncElements()
       lastSyncError = nil
       Logger.shared.info("Sync store complete")
+      // Reconcile remote deletes alongside the element sync (throttled,
+      // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
+      let userInitiated = userInitiated
+      Task { [weak self] in await self?.reconcileDocuments(userInitiated: userInitiated) }
     } catch {
       if userInitiated { throw error }
       if !error.isCancellationError {
@@ -583,6 +592,102 @@ public final class DocumentStore: Sendable {
       Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
       throw PermissionsError(resource: resource, operation: operation)
     }
+  }
+}
+
+// MARK: - Document cache surface (Stage 8)
+
+/// The GRDB-free surface the document list and detail views reach for. Each
+/// method resolves the active `CachingBackend` (the production/preview stack) and
+/// forwards to its `(database, serverID)`; without a caching backend (e.g.
+/// `NullRepository` before login) the observations are empty, finished streams
+/// and `fillDocumentQuery` throws.
+extension DocumentStore {
+  /// The stable key for a list query, computed without touching the network, so
+  /// the list can subscribe to whatever is already cached (offline-first) before
+  /// — or independently of — the network fill. `nil` without a caching backend.
+  public func documentQueryKey(filter: FilterState) -> QueryKey? {
+    guard let backend = repository as? any CachingBackend else { return nil }
+    return QueryKey(serverID: backend.serverID, filter: filter)
+  }
+
+  /// Eager full-fill of a list: await page 1 + count, then background-page the
+  /// rest. The returned handle carries the `QueryKey` the list then observes.
+  public func fillDocumentQuery(filter: FilterState) async throws -> QueryFillHandle {
+    guard let backend = repository as? any CachingBackend else {
+      throw CachingRepositoryError.cacheMiss
+    }
+    return try await backend.fillQuery(filter: filter)
+  }
+
+  /// Live growing-prefix of a cached query's ordered answer (the list's data).
+  public func observeDocumentPrefix(
+    queryKey: QueryKey, limit: Int
+  ) -> AsyncThrowingStream<[Document], Error> {
+    guard let backend = repository as? any CachingBackend else { return Self.emptyStream() }
+    return backend.database.observeDocumentPrefix(
+      queryKey: queryKey, serverID: backend.serverID, limit: limit)
+  }
+
+  /// Live status of a cached query (scrollbar count, order-stale flag).
+  public func observeQueryStatus(
+    queryKey: QueryKey
+  ) -> AsyncThrowingStream<QueryStatus, Error> {
+    guard let backend = repository as? any CachingBackend else { return Self.emptyStream() }
+    return backend.database.observeQueryStatus(queryKey: queryKey, serverID: backend.serverID)
+  }
+
+  /// Throttled remote-delete reconcile: drop cached documents that no longer
+  /// exist on the server (so they disappear from every offline list). Soft-fail
+  /// (background); kicked from `sync()`. `userInitiated` bypasses the throttle.
+  public func reconcileDocuments(userInitiated: Bool = false) async {
+    guard let backend = repository as? any CachingBackend else { return }
+    if !userInitiated, let last = lastDocumentReconcile,
+      Date().timeIntervalSince(last) < reconcileThrottle
+    {
+      return
+    }
+    lastDocumentReconcile = Date()
+    do {
+      // Deletes first (correctness), then the changed-metadata delta (freshness).
+      try await backend.reconcileDocumentDeletions()
+      try await backend.reconcileDocumentChanges()
+    } catch {
+      Logger.shared.info("Document reconcile failed (suppressed): \(error)")
+    }
+  }
+
+  /// Live single document by id, for detail/preview surfaces that must repaint on
+  /// mutation/sync.
+  public func observeDocument(id: UInt) -> AsyncThrowingStream<Document?, Error> {
+    guard let backend = repository as? any CachingBackend else { return Self.emptyStream() }
+    return backend.database.observeDocument(serverID: backend.serverID, id: id)
+  }
+
+  private static func emptyStream<T: Sendable>() -> AsyncThrowingStream<T, Error> {
+    AsyncThrowingStream { $0.finish() }
+  }
+
+  /// Debug / maintenance: wipe *all* locally cached data — the GRDB element +
+  /// document caches, the downloaded PDF/thumbnail blobs, the in-memory and
+  /// on-disk image caches, and the per-server delta watermarks — while keeping
+  /// the configured server connections. The live observations repaint empty
+  /// immediately; the next sync / list open refills from the network.
+  public func wipeLocalCache() throws {
+    if let backend = repository as? any CachingBackend {
+      try backend.database.clearCache()
+    }
+    // Downloaded originals/archives/thumbnails (app-group blob store). Rooted at
+    // the app group, so a fresh handle addresses the same files the repository
+    // wrote — no need to reach into the active repository.
+    if let contentStore = try? ContentStore() {
+      try? contentStore.purge()
+    }
+    // Nuke memory + disk image cache.
+    imagePipeline.cache.removeAll()
+    // Per-server changed-metadata delta watermarks (regenerable sync state):
+    // clear them so the reconcile re-baselines over the now-empty cache.
+    DocumentDeltaWatermark.clearAll()
   }
 }
 

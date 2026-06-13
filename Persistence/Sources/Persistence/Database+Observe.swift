@@ -52,6 +52,57 @@ extension Database {
     return stream(observation)
   }
 
+  /// Live **growing prefix** of a cached query's ordered answer: the
+  /// `query_order ⋈ document` join, `ORDER BY position LIMIT <limit>` (offset is
+  /// always 0 — this is a prefix, not a sliding window, so scroll-back needs no
+  /// re-subscription and deletion gaps in `position` are invisible).
+  ///
+  /// The list view-model grows `limit` monotonically as the user scrolls and
+  /// re-subscribes; per-emission work is bounded by `limit` (what's been scrolled
+  /// to), not the whole filled set — the win over observing the entire array
+  /// during the eager background fill. Re-fires automatically as the fill appends
+  /// rows and as mutations write the joined `document` rows.
+  public func observeDocumentPrefix(
+    queryKey: QueryKey, serverID: UUID, limit: Int
+  ) -> AsyncThrowingStream<[Document], Error> {
+    let key = queryKey.rawValue
+    let observation = ValueObservation.tracking { db -> [Document] in
+      try DocumentRecord.fetchAll(
+        db, sql: Self.queryWindowSQL,
+        arguments: [serverID, key, limit, 0]
+      ).map(\.domain)
+    }
+    return stream(observation)
+  }
+
+  /// Live status of a cached query — server total (scrollbar extent),
+  /// locally-present count (reflects deletion gaps), order-stale flag. Tracks
+  /// both `query_meta` and `query_order`, so a fill, a delete, or a stale-marking
+  /// re-fires it.
+  public func observeQueryStatus(
+    queryKey: QueryKey, serverID: UUID
+  ) -> AsyncThrowingStream<QueryStatus, Error> {
+    let observation = ValueObservation.tracking { db -> QueryStatus in
+      try Self.fetchQueryStatus(db, queryKey: queryKey, serverID: serverID)
+    }
+    return stream(observation)
+  }
+
+  /// Live single document by `(server, id)` (`nil` until cached) — the
+  /// single-row analogue of ``observeDocumentPrefix``, for surfaces that display
+  /// one document and must repaint on mutation/sync (detail, preview).
+  public func observeDocument(
+    serverID: UUID, id: UInt
+  ) -> AsyncThrowingStream<Document?, Error> {
+    let observation = ValueObservation.tracking { db -> Document? in
+      try DocumentRecord
+        .filter(Column("server_id") == serverID && Column("id") == id)
+        .fetchOne(db)?
+        .domain
+    }
+    return stream(observation)
+  }
+
   /// Shared adapter: drive a `ValueObservation` into an `AsyncThrowingStream`,
   /// mirroring ``observeConnections()``. Cancelling the consuming task tears
   /// down the underlying observation.
