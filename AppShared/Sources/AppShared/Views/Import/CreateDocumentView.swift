@@ -466,7 +466,7 @@ public struct CreateDocumentView: View {
 // - MARK: Previews
 
 private struct PreviewHelperView: View {
-  @State private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore.preview()
   @StateObject private var errorController = ErrorController()
   @State private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)

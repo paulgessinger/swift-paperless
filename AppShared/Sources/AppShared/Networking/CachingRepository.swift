@@ -39,6 +39,13 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements() async throws
+
+  /// The shared database and the active server this repository caches into.
+  /// `DocumentStore` reads these to point its `ElementStore` projection at the
+  /// same `(database, serverID)` the writes land in, so the live observation
+  /// sees them.
+  var database: Database { get }
+  var serverID: UUID { get }
 }
 
 enum CachingRepositoryError: Error {
@@ -49,9 +56,9 @@ enum CachingRepositoryError: Error {
 
 @MainActor
 public final class CachingRepository<Wrapped: Repository>: Repository, CachingBackend {
-  private let wrapped: Wrapped
-  private let database: Database
-  private let serverID: UUID
+  let wrapped: Wrapped
+  public let database: Database
+  public let serverID: UUID
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
@@ -62,40 +69,65 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // MARK: - CachingBackend
 
   public func syncElements() async throws {
+    // Sync UI settings *first*: its permission matrix gates the rest, so we
+    // don't ask the server for collections the user can't view (doomed 403s).
+    // When the matrix is unavailable (uiSettings failed and nothing is cached),
+    // `gate` is nil and we fetch everything, relying on the per-resource
+    // 403/401-skip in `syncCollection` as a fallback.
+    let gate = await syncUISettings()
+    func canView(_ resource: UserPermissions.Resource) -> Bool {
+      gate?.test(.view, for: resource) ?? true
+    }
+
     try await withThrowingTaskGroup(of: Void.self) { group in
-      group.addTask { [self] in
-        try await syncCollection(TagRecord.self) { try await wrapped.tags() }
-      }
-      group.addTask { [self] in
-        try await syncCollection(CorrespondentRecord.self) {
-          try await wrapped.correspondents()
+      if canView(.tag) {
+        group.addTask { [self] in
+          try await syncCollection(TagRecord.self) { try await wrapped.tags() }
         }
       }
-      group.addTask { [self] in
-        try await syncCollection(DocumentTypeRecord.self) {
-          try await wrapped.documentTypes()
+      if canView(.correspondent) {
+        group.addTask { [self] in
+          try await syncCollection(CorrespondentRecord.self) {
+            try await wrapped.correspondents()
+          }
         }
       }
-      group.addTask { [self] in
-        try await syncCollection(StoragePathRecord.self) {
-          try await wrapped.storagePaths()
+      if canView(.documentType) {
+        group.addTask { [self] in
+          try await syncCollection(DocumentTypeRecord.self) {
+            try await wrapped.documentTypes()
+          }
         }
       }
-      group.addTask { [self] in
-        try await syncCollection(SavedViewRecord.self) { try await wrapped.savedViews() }
-      }
-      group.addTask { [self] in
-        try await syncCollection(UserRecord.self) { try await wrapped.users() }
-      }
-      group.addTask { [self] in
-        try await syncCollection(UserGroupRecord.self) { try await wrapped.groups() }
-      }
-      group.addTask { [self] in
-        try await syncCollection(CustomFieldRecord.self) {
-          try await wrapped.customFields()
+      if canView(.storagePath) {
+        group.addTask { [self] in
+          try await syncCollection(StoragePathRecord.self) {
+            try await wrapped.storagePaths()
+          }
         }
       }
-      group.addTask { [self] in try await syncUISettings() }
+      if canView(.savedView) {
+        group.addTask { [self] in
+          try await syncCollection(SavedViewRecord.self) { try await wrapped.savedViews() }
+        }
+      }
+      if canView(.user) {
+        group.addTask { [self] in
+          try await syncCollection(UserRecord.self) { try await wrapped.users() }
+        }
+      }
+      if canView(.group) {
+        group.addTask { [self] in
+          try await syncCollection(UserGroupRecord.self) { try await wrapped.groups() }
+        }
+      }
+      if canView(.customField) {
+        group.addTask { [self] in
+          try await syncCollection(CustomFieldRecord.self) {
+            try await wrapped.customFields()
+          }
+        }
+      }
       group.addTask { [self] in try await syncServerConfiguration() }
 
       for try await _ in group {}
@@ -114,12 +146,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  private func syncUISettings() async throws {
+  /// Fetch the UI settings singleton and return its permission matrix to gate
+  /// the rest of the sync. Never throws: on any failure it falls back to the
+  /// last cached matrix, or `nil` if none exists (caller then fetches every
+  /// collection and relies on per-resource 403/401-skip, as before). A
+  /// uiSettings failure therefore degrades gating without aborting the sync.
+  private func syncUISettings() async -> UserPermissions? {
     do {
       let settings = try await wrapped.uiSettings()
       try database.setUISettings(settings, serverID: serverID)
-    } catch let error as RequestError where Self.isSkippable(error) {
-      Logger.shared.info("Skipping uiSettings sync: \(error)")
+      return settings.permissions
+    } catch {
+      Logger.shared.info(
+        "uiSettings sync failed (\(error)); gating sync on cached permissions")
+      return try? database.uiSettings(serverID: serverID)?.permissions
     }
   }
 
@@ -415,6 +455,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(settings: UISettingsSettings) async throws {
     try await wrapped.update(settings: settings)
+    // Write the new settings through to the cached `ui_settings` singleton (the
+    // server returns no body), merging onto the cached user/permissions, so the
+    // live observation repaints `settings` (e.g. saved-view visibility).
+    if let current = try database.uiSettings(serverID: serverID) {
+      let merged = UISettings(
+        user: current.user, settings: settings, permissions: current.permissions)
+      try database.setUISettings(merged, serverID: serverID)
+    }
   }
 
   // MARK: - Tasks (forwarded)

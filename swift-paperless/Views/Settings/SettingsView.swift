@@ -101,7 +101,7 @@ struct SettingsView: View {
       }
     }
     .task {
-      await checked(store.fetchAll)
+      await checked { try await store.fetchAll() }
     }
   }
 
@@ -267,7 +267,7 @@ struct SettingsView: View {
 }
 
 #Preview("SettingsView") {
-  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore.preview()
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())

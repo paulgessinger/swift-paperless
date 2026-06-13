@@ -6497,49 +6497,49 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tryk for detaljer!"
+            "value" : "Detaljer"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Für Details antippen!"
+            "value" : "Details"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap for details!"
+            "value" : "Details"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appuyez pour en savoir plus!"
+            "value" : "Détails"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tocca per maggiori dettagli!"
+            "value" : "Dettagli"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tik voor meer informatie!"
+            "value" : "Details"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dotknij, aby zobaczyć szczegóły!"
+            "value" : "Szczegóły"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detaylar için dokun!"
+            "value" : "Ayrıntılar"
           }
         }
       }
@@ -6550,49 +6550,49 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der opstod en fejl"
+            "value" : "Uventet fejl"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein Fehler ist aufgetreten"
+            "value" : "Unerwarteter Fehler"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An unexpected error occurred"
+            "value" : "Unexpected error"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une erreur est survenue"
+            "value" : "Erreur inattendue"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si è verificato un errore imprevisto"
+            "value" : "Errore imprevisto"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er is een fout opgetreden"
+            "value" : "Onverwachte fout"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wystąpił błąd"
+            "value" : "Nieoczekiwany błąd"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beklenmedik bir hata oluştu"
+            "value" : "Beklenmedik hata"
           }
         }
       }

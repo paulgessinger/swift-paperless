@@ -525,7 +525,7 @@ private struct TaskList: View {
 // MARK: - Previews
 
 private struct PreviewHelperView<Content: View>: View {
-  @State private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore.preview()
 
   @ViewBuilder var content: () -> Content
 
