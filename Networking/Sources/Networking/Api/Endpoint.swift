@@ -88,10 +88,11 @@ extension Endpoint {
   public static func documents(
     page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize,
     searchApi: FilterState.SearchApi = .legacy,
-    fields: [String]? = nil
+    fields: [String]? = nil, fullPerms: Bool = false
   ) -> Endpoint {
     let endpoint = documents(
-      page: page, rules: filter.rules(for: searchApi), pageSize: pageSize, fields: fields)
+      page: page, rules: filter.rules(for: searchApi), pageSize: pageSize, fields: fields,
+      fullPerms: fullPerms)
 
     var ordering: String = filter.sortField.rawValue
     if filter.sortOrder.reverse {
@@ -106,9 +107,13 @@ extension Endpoint {
   /// - Parameter fields: optional field projection (paperless-ngx `?fields=`).
   ///   `["id"]` yields the cheap id-only (Tier-0) response used by the
   ///   deletion-reconcile sweep; `nil` returns the full list shape.
+  /// - Parameter fullPerms: request `full_perms=true` so the list response carries
+  ///   custom fields, permissions and `user_can_change` (Tier-2 object detail in
+  ///   bulk — used by the proactive library fill). Defaults to `false` to keep
+  ///   interactive/reconcile list calls cheap.
   public static func documents(
     page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize,
-    fields: [String]? = nil
+    fields: [String]? = nil, fullPerms: Bool = false
   ) -> Endpoint {
     var queryItems = [
       URLQueryItem(name: "page", value: String(page)),
@@ -118,6 +123,10 @@ extension Endpoint {
 
     if let fields, !fields.isEmpty {
       queryItems.append(URLQueryItem(name: "fields", value: fields.joined(separator: ",")))
+    }
+
+    if fullPerms {
+      queryItems.append(URLQueryItem(name: "full_perms", value: "true"))
     }
 
     queryItems += FilterRule.queryItems(for: rules)
