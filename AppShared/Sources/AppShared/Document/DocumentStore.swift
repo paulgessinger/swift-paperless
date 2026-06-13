@@ -652,9 +652,11 @@ extension DocumentStore {
   }
 
   /// Live growing-prefix of a cached query's ordered answer (the list's data).
+  /// Entries are `.loaded` documents or `.skeleton(id:)` placeholders for members
+  /// whose object isn't cached yet.
   public func observeDocumentPrefix(
     queryKey: QueryKey, limit: Int
-  ) -> AsyncThrowingStream<[Document], Error> {
+  ) -> AsyncThrowingStream<[DocumentEntry], Error> {
     guard let backend = repository as? any CachingBackend else { return Self.emptyStream() }
     return backend.database.observeDocumentPrefix(
       queryKey: queryKey, serverID: backend.serverID, limit: limit)

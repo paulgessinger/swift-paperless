@@ -6,3 +6,4 @@
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
 - New "Offline browsing" setting: choose "Entire library" to keep every saved view and your full document list available offline, downloaded in the background over Wi-Fi
 - New "Offline & Sync" settings screen showing sync status and how much data the app has transferred
+- Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing

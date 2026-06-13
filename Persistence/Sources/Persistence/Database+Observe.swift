@@ -64,13 +64,10 @@ extension Database {
   /// rows and as mutations write the joined `document` rows.
   public func observeDocumentPrefix(
     queryKey: QueryKey, serverID: UUID, limit: Int
-  ) -> AsyncThrowingStream<[Document], Error> {
+  ) -> AsyncThrowingStream<[DocumentEntry], Error> {
     let key = queryKey.rawValue
-    let observation = ValueObservation.tracking { db -> [Document] in
-      try DocumentRecord.fetchAll(
-        db, sql: Self.queryWindowSQL,
-        arguments: [serverID, key, limit, 0]
-      ).map(\.domain)
+    let observation = ValueObservation.tracking { db -> [DocumentEntry] in
+      try Self.fetchEntries(db, serverID: serverID, queryKey: key, limit: limit, offset: 0)
     }
     return stream(observation)
   }

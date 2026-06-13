@@ -3,6 +3,27 @@ import DataModel
 import Foundation
 import GRDB
 
+/// One position in a cached query's ordered answer: either the full object (its
+/// `document` row is cached) or a **skeleton** (the id is in `query_order` but the
+/// object isn't cached yet — rendered as a placeholder). Row existence is the
+/// only "loaded-ness" signal; there is no projection level.
+public enum DocumentEntry: Sendable, Equatable, Identifiable {
+  case loaded(Document)
+  case skeleton(id: UInt)
+
+  public var id: UInt {
+    switch self {
+    case .loaded(let document): document.id
+    case .skeleton(let id): id
+    }
+  }
+
+  /// The object if loaded, else `nil` (a skeleton).
+  public var document: Document? {
+    if case .loaded(let document) = self { document } else { nil }
+  }
+}
+
 /// GRDB record for a cached `Document` (`document` table, keyed `(server_id, id)`).
 ///
 /// Bespoke rather than an `ElementRecord`: documents are ordered through

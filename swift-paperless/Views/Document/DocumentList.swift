@@ -14,6 +14,15 @@ import Persistence
 import SwiftUI
 import os
 
+extension Document {
+  /// A throwaway document used only to render a redacted skeleton row for a
+  /// `DocumentEntry.skeleton` (the real object isn't cached). Never stored; the
+  /// redaction hides the placeholder text.
+  fileprivate static func skeletonPlaceholder(id: UInt) -> Document {
+    Document(id: id, title: "Loading document title", created: .now, tags: [])
+  }
+}
+
 struct LoadingDocumentList: View {
   @State private var documents: [Document] = []
   @State private var store = DocumentStore.preview()
@@ -257,17 +266,30 @@ struct DocumentList: View {
           ScrollViewReader { proxy in
             List {
               Section {
-                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
-                  Cell(
-                    store: store,
-                    document: document,
-                    onSelect: onSelect,
-                    documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                    documentToDelete: $documentToDelete,
-                    viewModel: viewModel,
-                    isSelected: document.id == selectedDocumentID
-                  )
-                  .id(document.id)
+                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, entry in
+                  Group {
+                    switch entry {
+                    case .loaded(let document):
+                      Cell(
+                        store: store,
+                        document: document,
+                        onSelect: onSelect,
+                        documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                        documentToDelete: $documentToDelete,
+                        viewModel: viewModel,
+                        isSelected: document.id == selectedDocumentID
+                      )
+                    case .skeleton(let id):
+                      // Membership is known but the object isn't cached yet
+                      // (offline, or pending the next delta). A non-interactive
+                      // redacted placeholder, matching the loaded-row layout.
+                      DocumentCell(document: .skeletonPlaceholder(id: id), store: store)
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                        .redacted(reason: .placeholder)
+                    }
+                  }
+                  .id(entry.id)
 
                   .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
 

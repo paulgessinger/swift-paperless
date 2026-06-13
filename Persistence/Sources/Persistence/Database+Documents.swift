@@ -63,32 +63,22 @@ extension Database {
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
   /// per-saved-view / default-list membership sweep) **without** creating or
-  /// modifying `document` rows. Only ids that already have a cached document row
-  /// are inserted; ids not yet cached are skipped and surface once R3δ / the next
-  /// fill writes their row. (A later change renders such ids as skeleton rows
-  /// instead of skipping them.) `position` is compacted over the inserted ids
-  /// (gaps from skipped rows are invisible to the ordered window). `totalCount`
-  /// records the server's full count for the scrollbar extent, even when some
-  /// rows aren't yet locally present.
+  /// modifying `document` rows. *All* ids are written, in order — there is no FK
+  /// to `document`, so an id whose object isn't cached yet becomes a skeleton row
+  /// (it gets its object via R3δ / the next fill). `totalCount` records the
+  /// server's full count for the scrollbar extent.
   public func replaceQueryOrder(
     queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
   ) throws {
     try writer.write { db in
-      let present =
-        try DocumentRecord
-        .select(Column("id"), as: UInt.self)
-        .filter(Column("server_id") == serverID)
-        .fetchSet(db)
       try QueryOrderRow
         .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
         .deleteAll(db)
-      var position = 0
-      for id in orderedIDs where present.contains(id) {
+      for (position, id) in orderedIDs.enumerated() {
         try QueryOrderRow(
           serverId: serverID, queryKey: queryKey.rawValue,
           position: position, remoteId: id
         ).upsert(db)
-        position += 1
       }
       try setQueryMeta(
         db, serverID: serverID, queryKey: queryKey,
@@ -154,19 +144,17 @@ extension Database {
     }
   }
 
-  /// A window of a cached query's ordered answer: the `query_order ⋈ document`
-  /// join, `ORDER BY position` with `LIMIT`/`OFFSET`, so deletion gaps in
-  /// `position` are invisible. The observed live form is `observeDocumentPrefix`.
+  /// A window of a cached query's ordered answer: the `query_order ⟕ document`
+  /// left join, `ORDER BY position` with `LIMIT`/`OFFSET`. Membership ids whose
+  /// object isn't cached come back as ``DocumentEntry/skeleton(id:)``; deletion
+  /// gaps in `position` are invisible. The observed live form is
+  /// `observeDocumentPrefix`.
   public func queryDocuments(
     queryKey: QueryKey, serverID: UUID, limit: Int, offset: Int = 0
-  ) throws -> [Document] {
+  ) throws -> [DocumentEntry] {
     try writer.read { db in
-      try DocumentRecord.fetchAll(
-        db, sql: Self.queryWindowSQL,
-        arguments: [
-          serverID, queryKey.rawValue, limit, offset,
-        ]
-      ).map(\.domain)
+      try Self.fetchEntries(
+        db, serverID: serverID, queryKey: queryKey.rawValue, limit: limit, offset: offset)
     }
   }
 
@@ -191,10 +179,29 @@ extension Database {
 
   // MARK: - Internals (shared with Database+Observe)
 
+  /// Map the windowed left-join rows to entries: a present `document` side is
+  /// `.loaded`, an absent one (`d.id IS NULL`) is a `.skeleton`. Shared by the
+  /// one-shot read and the observation.
+  static func fetchEntries(
+    _ db: GRDB.Database, serverID: UUID, queryKey: String, limit: Int, offset: Int
+  ) throws -> [DocumentEntry] {
+    let rows = try Row.fetchAll(
+      db, sql: queryWindowSQL, arguments: [serverID, queryKey, limit, offset])
+    return try rows.map { row in
+      if (row["id"] as UInt?) != nil {
+        return .loaded(try DocumentRecord(row: row).domain)
+      } else {
+        return .skeleton(id: row["remote_id"])
+      }
+    }
+  }
+
   /// The windowed replay join, shared by the one-shot read and the observation.
+  /// LEFT JOIN so a `query_order` id with no `document` row yields a skeleton
+  /// (NULL `document` columns); `q.remote_id` always carries the id.
   static let queryWindowSQL = """
-    SELECT d.* FROM query_order q
-    JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
+    SELECT q.remote_id, d.* FROM query_order q
+    LEFT JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
     WHERE q.server_id = ? AND q.query_key = ?
     ORDER BY q.position
     LIMIT ? OFFSET ?

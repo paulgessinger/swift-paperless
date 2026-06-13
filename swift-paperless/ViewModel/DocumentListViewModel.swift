@@ -32,8 +32,10 @@ class DocumentListViewModel {
   private var filterState: FilterState
   private var errorController: ErrorController
 
-  /// Assigned by the document observation; never a network fetch.
-  var documents: [Document] = []
+  /// Assigned by the document observation; never a network fetch. Entries are
+  /// `.loaded` documents or `.skeleton(id:)` placeholders for members whose
+  /// object isn't cached yet.
+  var documents: [DocumentEntry] = []
   var ready = false
   var noPermissions = false
 
@@ -273,8 +275,9 @@ class DocumentListViewModel {
 
   // MARK: - Thumbnail prefetch
 
-  private func prefetchThumbnails(for documents: [Document]) {
-    let fresh = documents.filter { prefetchedIds.insert($0.id).inserted }
+  private func prefetchThumbnails(for entries: [DocumentEntry]) {
+    // Skeletons have no thumbnail to fetch.
+    let fresh = entries.compactMap(\.document).filter { prefetchedIds.insert($0.id).inserted }
     guard !fresh.isEmpty else { return }
     let requests =
       fresh
