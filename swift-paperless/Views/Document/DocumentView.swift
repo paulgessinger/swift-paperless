@@ -61,6 +61,7 @@ struct DocumentView: View {
   @EnvironmentObject private var connectionManager: ConnectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(NetworkMonitor.self) private var networkMonitor
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var filterModel = FilterModel()
   @State private var isFetching: Bool = false
@@ -362,6 +363,16 @@ struct DocumentView: View {
                 errorController.push(
                   message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
               }
+            }
+
+            if let id = connectionManager.activeConnectionId {
+              Button("Mark connection needs re-auth") {
+                connectionManager.markNeedsAuth(for: id)
+              }
+            }
+
+            Button(networkMonitor.debugForceOffline ? "Stop forcing offline" : "Force offline") {
+              networkMonitor.debugForceOffline.toggle()
             }
           }
         #endif
@@ -744,7 +755,6 @@ struct DocumentView: View {
     return TasksView(navPath: navPath)
       .environmentObject(store)
       .environmentObject(errorController)
-      .errorOverlay(errorController: errorController, offset: 15)
   }
 }
 
@@ -754,6 +764,7 @@ struct DocumentView: View {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
   @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var networkMonitor = NetworkMonitor()
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
@@ -761,4 +772,5 @@ struct DocumentView: View {
     .environmentObject(errorController)
     .environmentObject(connectionManager)
     .environment(RouteManager())
+    .environment(networkMonitor)
 }

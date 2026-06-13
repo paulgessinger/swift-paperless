@@ -27,6 +27,10 @@ let package = Package(
       url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "1.0.0")),
     .package(
       url: "https://github.com/liamnichols/xcstrings-tool-plugin", .upToNextMajor(from: "1.2.0")),
+    .package(url: "https://github.com/sunghyun-k/swiftui-toasts", .upToNextMajor(from: "1.1.0")),
+    .package(
+      url: "https://github.com/sunghyun-k/swiftui-window-overlay",
+      .upToNextMajor(from: "1.0.0")),
   ],
   targets: [
     .target(
@@ -39,6 +43,8 @@ let package = Package(
         .product(name: "NukeUI", package: "Nuke"),
         .product(name: "Semaphore", package: "Semaphore"),
         .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+        .product(name: "Toasts", package: "swiftui-toasts"),
+        .product(name: "WindowOverlay", package: "swiftui-window-overlay"),
       ],
       resources: [
         .process("Resources/Localization")

@@ -28,6 +28,8 @@ struct MainView: View {
 
   @StateObject private var errorController: ErrorController
 
+  @State private var networkMonitor = NetworkMonitor()
+
   @Environment(\.scenePhase) var scenePhase
 
   @ObservedObject private var appSettings = AppSettings.shared
@@ -45,7 +47,37 @@ struct MainView: View {
   init() {
     _ = AppSettings.shared
     let errorController = ErrorController()
+    let networkMonitor = NetworkMonitor()
+    // Suppress the noise that the connection-status banner already covers:
+    // every 401 (the banner offers re-auth), and connectivity-class errors
+    // while the device is offline (the banner says so). Server-unreachable
+    // errors while online still surface — that's a real per-server problem.
+    errorController.shouldSuppress = { [weak networkMonitor] error in
+      if let req = error as? RequestError, case .unauthorized = req {
+        return true
+      }
+      let offline = networkMonitor?.isOnline == false
+      guard offline else { return false }
+      if let url = error as? URLError {
+        switch url.code {
+        case .notConnectedToInternet, .networkConnectionLost,
+          .dataNotAllowed, .timedOut:
+          return true
+        default: break
+        }
+      }
+      if let ns = error as NSError?, ns.domain == NSURLErrorDomain {
+        switch ns.code {
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost,
+          NSURLErrorDataNotAllowed, NSURLErrorTimedOut:
+          return true
+        default: break
+        }
+      }
+      return false
+    }
     _errorController = StateObject(wrappedValue: errorController)
+    _networkMonitor = State(initialValue: networkMonitor)
     _biometricLockManager = StateObject(
       wrappedValue: BiometricLockManager(errorController: errorController))
   }
@@ -149,20 +181,21 @@ struct MainView: View {
       }
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
+      let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
+      let repository = NeedsAuthRepository(
+        wrapping: api, serverID: conn.serverID, connectionManager: manager)
       if let store {
         await sleep(.seconds(0.1))
         store.eventPublisher.send(.repositoryWillChange)
         await sleep(.seconds(0.3))
-        await store.set(
-          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        store.set(repository: repository)
         storeReady = true
         try? await store.fetchAll()
         store.startTaskPolling()
         await sleep(.seconds(0.3))
         showLoadingScreen = false
       } else {
-        let newStore = await DocumentStore(
-          repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
+        let newStore = DocumentStore(repository: repository)
         store = newStore
         observeFriendlyName(on: newStore)
         storeReady = true
@@ -209,10 +242,13 @@ struct MainView: View {
       ZStack {
         if manager.connection != nil, storeReady {
           DocumentView(showSettings: $showSettings)
-            .errorOverlay(errorController: errorController)
             .environmentObject(store!)
             .environmentObject(manager)
-
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+              NeedsAuthBanner()
+                .environmentObject(manager)
+                .environment(networkMonitor)
+            }
             .overlay {
               if AppSettings.shared.enableBiometricAppLock,
                 biometricLockManager.lockState == .locked || scenePhase == .inactive
@@ -240,12 +276,29 @@ struct MainView: View {
 
     .environmentObject(errorController)
     .environmentObject(biometricLockManager)
+    .environment(networkMonitor)
 
     .fullScreenCover(isPresented: $showLoginScreen) {
       LoginView(connectionManager: manager)
-        .errorOverlay(errorController: errorController)
         .environmentObject(errorController)
         .interactiveDismissDisabled()
+    }
+
+    .sheet(
+      isPresented: Binding(
+        get: { manager.reauthRequested != nil },
+        set: { presented in
+          if !presented { manager.cancelReauthRequest() }
+        })
+    ) {
+      if let id = manager.reauthRequested,
+        let stored = manager.connections[id]
+      {
+        ReauthSheet(stored: stored)
+          .environmentObject(manager)
+          .environmentObject(errorController)
+          .environment(networkMonitor)
+      }
     }
 
     .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
@@ -314,6 +367,10 @@ struct MainView: View {
 
     .onOpenURL(perform: handleUrlOpen)
     .environment(routeManager)
+    .appOverlays(
+      errorController: errorController,
+      networkMonitor: networkMonitor
+    )
   }
 }
 
