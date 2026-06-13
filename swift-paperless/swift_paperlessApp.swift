@@ -10,6 +10,7 @@ import Combine
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -22,7 +23,7 @@ struct MainView: View {
   @State private var initialDisplay = true
   @State private var showSettings = false
 
-  @StateObject private var manager = ConnectionManager()
+  @StateObject private var manager: ConnectionManager
 
   @State private var friendlyNameSubscription: AnyCancellable?
 
@@ -44,8 +45,9 @@ struct MainView: View {
   // landed in another.
   @State private var routeManager = RouteManager()
 
-  init() {
+  init(database: Database) {
     _ = AppSettings.shared
+    _manager = StateObject(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
     // Suppress the noise that the connection-status banner already covers:
@@ -327,12 +329,6 @@ struct MainView: View {
       Logger.shared.notice("Checking login status")
       await refreshConnection(animated: initialDisplay)
       initialDisplay = false
-
-      // @TODO: Remove in a few versions
-      Task {
-        try? await Task.sleep(for: .seconds(3))
-        await manager.migrateToMultiServer()
-      }
     }
 
     .onReceive(manager.eventPublisher) { event in
@@ -377,10 +373,11 @@ struct MainView: View {
 @main
 struct swift_paperlessApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+  @State private var bootstrap = DatabaseBootstrap()
 
   var body: some Scene {
     WindowGroup {
-      MainView()
+      DatabaseBootstrapView(bootstrap: bootstrap)
     }
   }
 }

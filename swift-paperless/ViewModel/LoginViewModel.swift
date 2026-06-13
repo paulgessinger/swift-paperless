@@ -658,11 +658,32 @@ class LoginViewModel {
       Logger.api.warning("Username from login and logged in username not the same")
     }
 
+    // Try to grab PAPERLESS_APP_TITLE up front so the connection row lands
+    // with a friendly name on first write rather than waiting for the
+    // post-login DocumentStore settings fetch to round-trip through the
+    // Combine subscription in swift_paperlessApp.swift. Best-effort: a
+    // failure here (server too old, transient error, missing scope) just
+    // leaves friendlyName nil and the existing subscription path will fill
+    // it in later. The server settings are already fetched once during
+    // refreshConnection -> store.fetchAll(); this just front-loads the
+    // request so the DB sees the value immediately.
+    let friendlyName: String? = await {
+      do {
+        let title = try await repository.uiSettings().settings.appTitle?
+          .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (title?.isEmpty ?? true) ? nil : title
+      } catch {
+        Logger.api.info("Could not fetch UI settings during login: \(error)")
+        return nil
+      }
+    }()
+
     let stored = StoredConnection(
       url: baseUrl,
       extraHeaders: extraHeaders,
       user: currentUser,
-      identity: selectedIdentity?.name)
+      identity: selectedIdentity?.name,
+      friendlyName: friendlyName)
     if let token = connection.token {
       Logger.api.info("Have token for connection, storing")
       do throws(Keychain.KeychainError) {
