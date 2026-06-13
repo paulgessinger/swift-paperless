@@ -222,7 +222,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let total = await source.totalCount
     try database.writeQueryPage(
       queryKey: key, serverID: serverID, documents: firstPage,
-      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: .full)
+      startPosition: 0, totalCount: total, replaceAll: true)
 
     // Background-page the rest to disk (append). When this completes the whole
     // view is local; scrolling then needs no network (v1). Detached tasks don't
@@ -241,7 +241,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             try database.writeQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
               startPosition: position, totalCount: await source.totalCount,
-              replaceAll: false, projectionLevel: .full)
+              replaceAll: false)
             position += batch.count
           }
         } catch is CancellationError {
@@ -520,7 +520,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // response carries permissions/custom fields — a `.full` write replaces the
     // row completely without dropping them. Ordering under the active sort isn't
     // recomputed offline — mark affected queries stale.
-    try database.upsertDocument(updated, serverID: serverID, projectionLevel: .full)
+    try database.upsertDocument(updated, serverID: serverID)
     try database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
     return updated
   }
@@ -543,7 +543,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         return nil
       }
       // A full-detail fetch — upgrade the row to Tier-2.
-      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .full)
+      try database.upsertDocument(fetched, serverID: serverID)
       return fetched
     } catch {
       // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
@@ -559,7 +559,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(asn: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
-      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .full)
+      try database.upsertDocument(fetched, serverID: serverID)
       return fetched
     } catch {
       if let cached = try database.document(serverID: serverID, asn: asn) {
@@ -645,7 +645,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     if !toUpsert.isEmpty {
       Logger.shared.info(
         "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
-      try database.upsertDocuments(toUpsert, serverID: serverID, projectionLevel: .full)
+      try database.upsertDocuments(toUpsert, serverID: serverID)
     }
     if advanced > watermark {
       setDeltaWatermark(advanced)

@@ -3,48 +3,17 @@ import DataModel
 import Foundation
 import GRDB
 
-/// Completeness of a cached `document` row.
-///
-/// Two states, because the document list now always requests `full_perms`, so a
-/// list row carries the same object as a single-document fetch — there's no
-/// poorer "metadata" tier to distinguish:
-/// - `idOnly` — an ordering/membership placeholder: the id is known but the
-///   object hasn't been fetched (would render a skeleton cell). Currently
-///   reserved; the membership sweep skips ids without a row rather than writing
-///   these.
-/// - `full` — the complete object (custom fields, permissions, `user_can_change`).
-///
-/// File blobs and OCR content are deliberately *not* tiers here — they're
-/// orthogonal axes (the on-disk `ContentStore`, a future `content` marker).
-/// `Comparable` so the non-downgrade upsert keeps a `full` row when a lesser
-/// (`idOnly`) write would downgrade it.
-public enum DocumentProjection: Int, Codable, Sendable, Comparable {
-  case idOnly = 0
-  case full = 1
-
-  public static func < (lhs: Self, rhs: Self) -> Bool {
-    lhs.rawValue < rhs.rawValue
-  }
-
-  // Tolerant decode so legacy rows written before the collapse (metadata = 1,
-  // detail = 2) read back as `full` instead of failing.
-  public init(from decoder: any Decoder) throws {
-    let raw = try decoder.singleValueContainer().decode(Int.self)
-    self = raw <= 0 ? .idOnly : .full
-  }
-
-  public func encode(to encoder: any Encoder) throws {
-    var container = encoder.singleValueContainer()
-    try container.encode(rawValue)
-  }
-}
-
 /// GRDB record for a cached `Document` (`document` table, keyed `(server_id, id)`).
 ///
 /// Bespoke rather than an `ElementRecord`: documents are ordered through
-/// `query_order` (never by `name`), carry a projection level, and `Document` is
-/// not `Codable` — so the long tail is an explicit storage `Payload`, mapped by
-/// hand (the Stage 3 principle: storage shape ≠ wire shape ≠ domain shape).
+/// `query_order` (never by `name`), and `Document` is not `Codable` — so the long
+/// tail is an explicit storage `Payload`, mapped by hand (the Stage 3 principle:
+/// storage shape ≠ wire shape ≠ domain shape).
+///
+/// There is no projection/completeness level: the list always requests
+/// `full_perms`, so a stored row is always the complete object. "Loaded-ness" is
+/// encoded by **row existence** — a `query_order` id with no `document` row is a
+/// skeleton (rendered as a placeholder).
 public struct DocumentRecord:
   FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable, Equatable
 {
@@ -54,8 +23,6 @@ public struct DocumentRecord:
   public var id: UInt
   public var title: String
   public var asn: UInt?
-  public var projectionLevel: DocumentProjection
-  public var detailFetchedAt: Date?
   public var payload: Payload
 
   /// Storage-local copy of a `DocumentVersion` (decoupled from the domain type
@@ -84,8 +51,7 @@ public struct DocumentRecord:
     public var customFields: CustomFieldRawEntryList
     public var versions: [VersionPayload]
     public var userCanChange: Bool
-    // Carried by `full` rows (the list's `full_perms`); preserved when a lesser
-    // (`idOnly`) upsert would otherwise downgrade the row.
+    // Always populated — the list carries `full_perms`.
     public var permissions: Permissions?
   }
 
@@ -94,8 +60,6 @@ public struct DocumentRecord:
     case id
     case title
     case asn
-    case projectionLevel = "projection_level"
-    case detailFetchedAt = "detail_fetched_at"
     case payload = "data"
   }
 
@@ -111,13 +75,11 @@ public struct DocumentRecord:
 }
 
 extension DocumentRecord {
-  public init(serverId: UUID, domain: Document, projectionLevel: DocumentProjection) {
+  public init(serverId: UUID, domain: Document) {
     self.serverId = serverId
     id = domain.id
     title = domain.title
     asn = domain.asn
-    self.projectionLevel = projectionLevel
-    detailFetchedAt = projectionLevel == .full ? Date() : nil
     payload = Payload(
       documentType: domain.documentType,
       correspondent: domain.correspondent,
