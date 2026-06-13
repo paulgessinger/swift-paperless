@@ -7,21 +7,22 @@
 //  processes have moved (to inform Wi‑Fi gating).
 //
 
-import AppShared
 import Networking
 import SwiftUI
 
-struct OfflineSyncView: View {
+public struct OfflineSyncView: View {
   @ObservedObject private var appSettings = AppSettings.shared
   @Environment(DocumentStore.self) private var store
   @Environment(NetworkMonitor.self) private var networkMonitor
   @State private var stats = TransferStatistics.shared
 
+  public init() {}
+
   private var unmetered: Bool {
     !networkMonitor.isExpensive && !networkMonitor.isConstrained
   }
 
-  var body: some View {
+  public var body: some View {
     Form {
       Section {
         Picker(selection: $appSettings.offlineBrowsingMode) {

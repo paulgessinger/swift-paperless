@@ -186,6 +186,12 @@ public struct ConnectionsView: View {
           Label(localized: .permissions(.title), systemImage: "lock.fill")
         }
 
+        NavigationLink {
+          OfflineSyncView()
+        } label: {
+          Label(String(localized: .settings(.offlineSyncTitle)), systemImage: "arrow.down.circle.fill")
+        }
+
         Button(.login(.extraHeaders), systemImage: "list.bullet.rectangle.fill") {
           showExtraHeader = true
         }
