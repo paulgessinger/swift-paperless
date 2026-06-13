@@ -40,7 +40,7 @@ extension Database {
     try database.replaceElements(customFields, of: CustomFieldRecord.self, serverID: serverID)
 
     if !documents.isEmpty {
-      try database.upsertDocuments(documents, serverID: serverID, projectionLevel: .metadata)
+      try database.upsertDocuments(documents, serverID: serverID, projectionLevel: .full)
     }
 
     if let uiSettings {
