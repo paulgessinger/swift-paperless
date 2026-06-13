@@ -14,8 +14,8 @@ extension Database {
   // MARK: - Writes
 
   /// Upsert a batch of documents at a projection level, never downgrading a
-  /// row that is already richer (a Tier-1 list fill must not clobber a Tier-2
-  /// detail row's level / `detailFetchedAt` / permissions).
+  /// `full` row with a lesser (`idOnly`) write — its level / `detailFetchedAt` /
+  /// permissions are kept.
   public func upsertDocuments(
     _ domains: [Document], serverID: UUID, projectionLevel: DocumentProjection
   ) throws {
@@ -46,7 +46,7 @@ extension Database {
   public func writeQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document],
     startPosition: Int, totalCount: UInt?, replaceAll: Bool,
-    projectionLevel: DocumentProjection = .metadata
+    projectionLevel: DocumentProjection = .full
   ) throws {
     try writer.write { db in
       if replaceAll {
@@ -215,8 +215,10 @@ extension Database {
       orderStale: meta?.orderStale ?? false)
   }
 
-  /// Non-downgrade single-row upsert: keep the richer of the incoming and
-  /// existing projection (level + `detailFetchedAt` + permissions).
+  /// Non-downgrade single-row upsert: a lesser (`idOnly`) write over an existing
+  /// `full` row keeps the row's level + `detailFetchedAt` + permissions. A `full`
+  /// write replaces a `full` row outright — callers must therefore carry
+  /// permissions on every `full` write (the list does, via `full_perms`).
   private func writeDocumentRow(
     _ db: GRDB.Database, _ domain: Document, serverID: UUID,
     projectionLevel: DocumentProjection
