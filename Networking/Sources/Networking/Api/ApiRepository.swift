@@ -363,6 +363,10 @@ public class ApiRepository {
 
     let (data, response) = result
 
+    // Best-effort data-transfer accounting (categorised by the caller's
+    // task-local). Counts JSON/list responses only; downloads/thumbnails differ.
+    NetworkTransfer.record(bytes: data.count)
+
     Logger.networking.trace("Checking response of url \(sanitizedUrl, privacy: .public)")
 
     guard let response = response as? HTTPURLResponse, let status = response.status else {
@@ -531,10 +535,16 @@ extension ApiRepository: Repository {
   }
 
   public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
-    Logger.networking.notice("Getting document sequence for filter")
+    try documents(filter: filter, fullPerms: false)
+  }
+
+  public func documents(filter: FilterState, fullPerms: Bool) throws
+    -> ApiPagedSource<ApiDocument, Document>
+  {
+    Logger.networking.notice("Getting document sequence for filter (fullPerms: \(fullPerms))")
     let cursor = try PageCursor<ApiDocument>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter)))
+      initialURL: url(.documents(page: 1, filter: filter, fullPerms: fullPerms)))
     return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 

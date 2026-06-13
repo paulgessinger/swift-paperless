@@ -54,6 +54,23 @@ import Testing
     #expect(endpoint.queryItems.contains { $0.name == "page_size" })
   }
 
+  @Test func testDocumentsWithoutFullPermsByDefault() {
+    let endpoint = Endpoint.documents(page: 1, rules: [])
+    #expect(!endpoint.queryItems.contains { $0.name == "full_perms" })
+  }
+
+  @Test func testDocumentsWithFullPerms() {
+    let endpoint = Endpoint.documents(page: 1, rules: [], fullPerms: true)
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
+  }
+
+  @Test func testDocumentsFilterWithFullPerms() {
+    let endpoint = Endpoint.documents(page: 1, filter: .empty, fullPerms: true)
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
+    // The R4b projection still carries ordering (the QueryKey-relevant param).
+    #expect(endpoint.queryItems.contains { $0.name == "ordering" })
+  }
+
   @Test func testDocument() {
     let endpoint = Endpoint.document(id: 123)
     #expect(endpoint.path == "/api/documents/123")
