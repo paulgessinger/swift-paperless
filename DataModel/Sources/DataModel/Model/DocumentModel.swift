@@ -122,6 +122,15 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
   @IgnoreEncoding
   public var modified: Date?
 
+  // Server's storage filenames for the original (uploaded) and archived
+  // (paperless-generated PDF) versions. Optional because older paperless
+  // versions or in-progress consumption may omit them.
+  @IgnoreEncoding
+  public var originalFileName: String?
+
+  @IgnoreEncoding
+  public var archivedFileName: String?
+
   @CodedBy(NullCoder<UInt>())
   public var storagePath: UInt?
 
@@ -160,6 +169,18 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 extension Document: Model {}
 extension Document: DocumentProtocol {}
 extension Document: PermissionsModel {}
+
+extension Document {
+  /// User-facing filename for exporting/sharing this document. Prefers the
+  /// server's stored filename for the requested version; falls back to the
+  /// title with a `.pdf` extension, or "document.pdf" if there is no title.
+  public func shareFilename(original: Bool) -> String {
+    let serverName = original ? originalFileName : archivedFileName
+    if let name = serverName, !name.isEmpty { return name }
+    let base = title.isEmpty ? "document" : title
+    return "\(base).pdf"
+  }
+}
 
 public struct ProtoDocument: DocumentProtocol, Equatable, Sendable {
   public var title: String
