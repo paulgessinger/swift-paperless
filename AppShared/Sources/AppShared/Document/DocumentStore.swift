@@ -56,6 +56,10 @@ public final class DocumentStore: Sendable {
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
   public private(set) var lastSyncError: (any DisplayableError)?
 
+  /// True while a proactive full-library fill is running (drives the status UI).
+  /// Only the foreground trigger sets this.
+  public private(set) var isFillingLibrary = false
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -355,7 +359,9 @@ public final class DocumentStore: Sendable {
       return
     }
     Logger.shared.debug("Starting element sync")
-    let task = Task { try await backend.syncElements() }
+    let task = Task {
+      try await NetworkTransfer.$category.withValue(.sync) { try await backend.syncElements() }
+    }
     syncTask = task
     isRefreshing = true
     defer {
@@ -649,11 +655,45 @@ extension DocumentStore {
     }
     lastDocumentReconcile = Date()
     do {
-      // Deletes first (correctness), then the changed-metadata delta (freshness).
-      try await backend.reconcileDocumentDeletions()
-      try await backend.reconcileDocumentChanges()
+      // Deletes first (correctness), then the changed-metadata delta (freshness),
+      // then the saved-view membership sweep (so newly-matched docs — now landed
+      // at detail by the delta — appear in every offline list). The last two are
+      // no-ops unless *Entire library* is enabled.
+      try await NetworkTransfer.$category.withValue(.reconcile) {
+        try await backend.reconcileDocumentDeletions()
+        try await backend.reconcileDocumentChanges()
+        try await backend.reconcileSavedViewMembership()
+      }
     } catch {
       Logger.shared.info("Document reconcile failed (suppressed): \(error)")
+    }
+  }
+
+  /// When the document reconcile sweep (R2/R3δ/membership) last ran, for the
+  /// Offline & Sync status screen. `nil` until the first reconcile this session.
+  public var lastReconcileAt: Date? { lastDocumentReconcile }
+
+  /// When the active server's library was last fully filled (`nil` if never, or
+  /// without a caching backend). Read for the Offline & Sync status screen.
+  public var libraryCoverageAt: Date? {
+    guard let backend = repository as? any CachingBackend else { return nil }
+    return LibraryCoverageMarker.completedAt(serverID: backend.serverID)
+  }
+
+  /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
+  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
+  /// marker (e.g. the user just enabled the setting). A no-op when the setting is
+  /// *Recently browsed*, the link is metered, or there's no caching backend.
+  public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
+    guard AppSettings.shared.offlineBrowsingMode == .entireLibrary, unmetered,
+      let backend = repository as? any CachingBackend
+    else { return }
+    isFillingLibrary = true
+    defer { isFillingLibrary = false }
+    do {
+      try await backend.fillLibrary(force: force)
+    } catch {
+      Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
     }
   }
 
@@ -688,6 +728,9 @@ extension DocumentStore {
     // Per-server changed-metadata delta watermarks (regenerable sync state):
     // clear them so the reconcile re-baselines over the now-empty cache.
     DocumentDeltaWatermark.clearAll()
+    // Per-server proactive-fill markers: clear so the next foreground re-fills the
+    // now-empty cache rather than skipping on a stale "already covered" marker.
+    LibraryCoverageMarker.clearAll()
   }
 }
 

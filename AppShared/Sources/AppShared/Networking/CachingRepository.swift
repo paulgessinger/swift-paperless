@@ -50,6 +50,50 @@ enum DocumentDeltaWatermark {
   }
 }
 
+/// Storage and freshness of the per-server proactive full-library fill marker.
+///
+/// Stores the completed-at date of the last successful `fillLibrary`. The fill is
+/// skipped while the marker is **fresh** (younger than ``maxAge``) so it runs once
+/// and then re-runs only as a periodic backstop — in particular a cold launch
+/// after a long quiet period (few/no activation sweeps) finds a stale marker and
+/// re-fills. Non-generic for the same reason as ``DocumentDeltaWatermark``.
+enum LibraryCoverageMarker {
+  static let keyPrefix = "libraryCoverageMarker."
+
+  /// Re-run the full fill at most this often as a backstop (the cheap activation
+  /// sweeps keep things current in between).
+  static let maxAge: TimeInterval = 7 * 24 * 60 * 60
+
+  static func key(serverID: UUID) -> String { "\(keyPrefix)\(serverID.uuidString)" }
+
+  private static var defaults: UserDefaults {
+    UserDefaults(suiteName: ContentStore.appGroup) ?? .standard
+  }
+
+  static func completedAt(serverID: UUID) -> Date? {
+    let stamp = defaults.double(forKey: key(serverID: serverID))
+    return stamp > 0 ? Date(timeIntervalSinceReferenceDate: stamp) : nil
+  }
+
+  static func isFresh(serverID: UUID, now: Date = Date()) -> Bool {
+    guard let at = completedAt(serverID: serverID) else { return false }
+    return now.timeIntervalSince(at) < maxAge
+  }
+
+  static func setCompleted(_ date: Date, serverID: UUID) {
+    defaults.set(date.timeIntervalSinceReferenceDate, forKey: key(serverID: serverID))
+  }
+
+  /// Drop every server's marker so the next foreground re-fills. Paired with a
+  /// cache wipe (a fresh marker over an emptied cache would skip the re-fill).
+  static func clearAll() {
+    let defaults = defaults
+    for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
+      defaults.removeObject(forKey: key)
+    }
+  }
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -68,6 +112,23 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// handle for the in-flight fill. Throws if page 1 fails (offline → the list
   /// falls back to whatever is already cached).
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
+
+  /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
+  /// default list and every saved view at full object detail (`full_perms`) so the
+  /// whole active-server library browses offline even if never opened. Sequential
+  /// (one query's background paging completes before the next starts). Guarded by
+  /// a per-server freshness marker so it runs once and re-runs only as a periodic
+  /// backstop; `force` ignores the marker (setting just enabled). Soft per-view
+  /// failures don't abort the sweep, but the marker only advances on a fully
+  /// successful pass so an interrupted run retries.
+  func fillLibrary(force: Bool) async throws
+
+  /// Rebuild the cached membership (`query_order`) of the default list and every
+  /// saved view from the cheap Tier-0 id projection, so documents that newly
+  /// entered a view appear offline. Only ids with a cached `document` row are
+  /// added (their detail arrives via R3δ in the same reconcile). No-op unless
+  /// *Entire library* is enabled.
+  func reconcileSavedViewMembership() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
   /// and drop every cached document absent from it — the FK cascade removes them
@@ -176,41 +237,89 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
+    // Interactive on-open fill: Tier-1 metadata, no full_perms (cheap first paint).
+    try await fillQuery(filter: filter, projectionLevel: .metadata, fullPerms: false)
+  }
+
+  /// Core fill shared by the interactive on-open path (`.metadata`) and the
+  /// proactive library fill (`.detail` + `full_perms`). Page 1 is awaited (first
+  /// window + exact count); the rest pages in the background at the same level.
+  private func fillQuery(
+    filter: FilterState, projectionLevel: DocumentProjection, fullPerms: Bool
+  ) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
-    let source = try wrapped.documents(filter: filter)
+    let source = try wrapped.documents(filter: filter, fullPerms: fullPerms)
     let pageSize = Endpoint.defaultDocumentPageSize
 
     // Page 1 awaited: first window on screen + exact scrollbar count.
-    let firstPage = try await source.fetch(limit: pageSize)
+    let firstPage = try await NetworkTransfer.$category.withValue(.fill) {
+      try await source.fetch(limit: pageSize)
+    }
     let total = await source.totalCount
     try database.writeQueryPage(
       queryKey: key, serverID: serverID, documents: firstPage,
-      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: .metadata)
+      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: projectionLevel)
 
     // Background-page the rest to disk (append). When this completes the whole
-    // view is local; scrolling then needs no network (v1).
+    // view is local; scrolling then needs no network (v1). Detached tasks don't
+    // inherit the task-local, so re-establish the `.fill` transfer category here.
     let database = database
     let serverID = serverID
     let firstCount = firstPage.count
     let task = Task.detached(priority: .utility) {
-      var position = firstCount
-      do {
-        while !Task.isCancelled {
-          if await source.isExhausted { break }
-          let batch = try await source.fetch(limit: pageSize)
-          if batch.isEmpty { break }
-          try database.writeQueryPage(
-            queryKey: key, serverID: serverID, documents: batch,
-            startPosition: position, totalCount: await source.totalCount,
-            replaceAll: false, projectionLevel: .metadata)
-          position += batch.count
+      await NetworkTransfer.$category.withValue(.fill) {
+        var position = firstCount
+        do {
+          while !Task.isCancelled {
+            if await source.isExhausted { break }
+            let batch = try await source.fetch(limit: pageSize)
+            if batch.isEmpty { break }
+            try database.writeQueryPage(
+              queryKey: key, serverID: serverID, documents: batch,
+              startPosition: position, totalCount: await source.totalCount,
+              replaceAll: false, projectionLevel: projectionLevel)
+            position += batch.count
+          }
+        } catch is CancellationError {
+        } catch {
+          Logger.shared.error("Background query fill failed: \(error)")
         }
-      } catch is CancellationError {
-      } catch {
-        Logger.shared.error("Background query fill failed: \(error)")
       }
     }
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
+  }
+
+  public func fillLibrary(force: Bool) async throws {
+    guard force || !LibraryCoverageMarker.isFresh(serverID: serverID) else { return }
+
+    // Default list first, then every cached saved view (synced by `syncElements`
+    // just before this in the foreground trigger). Build the *same* FilterState
+    // the UI observes so the filled QueryKeys match its subscriptions.
+    let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
+    let filters: [FilterState] = [.default] + savedViews.map { FilterState(savedView: $0) }
+
+    var allSucceeded = true
+    for filter in filters {
+      try Task.checkCancellation()
+      do {
+        // Sequential: let each query's background paging finish before the next,
+        // so we never run N concurrent paging chains against the server.
+        let handle = try await fillQuery(
+          filter: filter, projectionLevel: .detail, fullPerms: true)
+        await handle.awaitCompletion()
+      } catch is CancellationError {
+        throw CancellationError()
+      } catch {
+        allSucceeded = false
+        Logger.shared.warning("Library fill: a view failed (\(error)); continuing")
+      }
+    }
+
+    // Advance the marker only on a fully successful pass, so an interrupted or
+    // partly-offline run re-attempts on the next foreground.
+    if allSucceeded {
+      LibraryCoverageMarker.setCompleted(Date(), serverID: serverID)
+    }
   }
 
   private func syncCollection<R: ElementRecord>(
@@ -494,6 +603,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try wrapped.documents(filter: filter)
   }
 
+  public func documents(filter: FilterState, fullPerms: Bool) throws -> Wrapped.Documents {
+    try wrapped.documents(filter: filter, fullPerms: fullPerms)
+  }
+
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     try await wrapped.documentIDs(filter: filter)
   }
@@ -518,15 +631,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private let deltaCap = 1000
 
   public func reconcileDocumentChanges() async throws {
-    // Delta only refreshes already-cached metadata; new docs surface via list
-    // fills, not here. Nothing cached ⇒ nothing to refresh.
+    let entireLibrary = AppSettings.shared.offlineBrowsingMode == .entireLibrary
+
+    // Delta refreshes changed metadata via `ordering=-modified`. Under *Recently
+    // browsed* it only touches already-cached rows (new docs surface via on-open
+    // list fills); under *Entire library* it requests full detail and also keeps
+    // brand-new docs, so the whole library stays current between full fills.
+    // Nothing cached ⇒ the proactive fill (or a list open) seeds first.
     let localIDs = try database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
     var filter = FilterState.empty
     filter.sortField = .modified
     filter.sortOrder = .descending
-    let source = try wrapped.documents(filter: filter)
+    let source = try wrapped.documents(filter: filter, fullPerms: entireLibrary)
 
     guard let watermark = deltaWatermark() else {
       // First run: establish the baseline from the newest doc; subsequent passes
@@ -552,14 +670,43 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       if await source.isExhausted { break }
     }
 
-    let tracked = changed.filter { localIDs.contains($0.id) }
-    if !tracked.isEmpty {
+    // *Entire library*: keep every changed/new doc at detail. *Recently browsed*:
+    // only refresh rows already cached, at metadata.
+    let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
+    if !toUpsert.isEmpty {
       Logger.shared.info(
-        "Reconcile: refreshing \(tracked.count, privacy: .public) changed documents")
-      try database.upsertDocuments(tracked, serverID: serverID, projectionLevel: .metadata)
+        "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
+      try database.upsertDocuments(
+        toUpsert, serverID: serverID,
+        projectionLevel: entireLibrary ? .detail : .metadata)
     }
     if advanced > watermark {
       setDeltaWatermark(advanced)
+    }
+  }
+
+  public func reconcileSavedViewMembership() async throws {
+    guard AppSettings.shared.offlineBrowsingMode == .entireLibrary else { return }
+    // Nothing cached ⇒ the proactive fill seeds membership first.
+    guard try !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
+
+    // Rebuild the default list + each saved view's order from the cheap Tier-0 id
+    // projection. Runs *after* the R3δ pass (which lands new docs at detail), so
+    // newly-matched ids already have a `document` row for the FK.
+    let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
+    let filters: [FilterState] = [.default] + savedViews.map { FilterState(savedView: $0) }
+    for filter in filters {
+      try Task.checkCancellation()
+      do {
+        let ids = try await wrapped.documentIDs(filter: filter)
+        try database.replaceQueryOrder(
+          queryKey: QueryKey(serverID: serverID, filter: filter),
+          serverID: serverID, orderedIDs: ids)
+      } catch is CancellationError {
+        throw CancellationError()
+      } catch {
+        Logger.shared.info("Membership sweep: a view failed (\(error)); continuing")
+      }
     }
   }
 

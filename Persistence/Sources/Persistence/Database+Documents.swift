@@ -67,6 +67,40 @@ extension Database {
     }
   }
 
+  /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
+  /// per-saved-view / default-list membership sweep) **without** creating or
+  /// modifying `document` rows. Only ids that already have a cached document row
+  /// are inserted — the composite FK requires it; ids not yet cached are skipped
+  /// and surface once R3δ / the next fill writes their row. `position` is
+  /// compacted over the inserted ids (gaps from skipped rows are invisible to the
+  /// ordered window). `totalCount` records the server's full count for the
+  /// scrollbar extent, even when some rows aren't yet locally present.
+  public func replaceQueryOrder(
+    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
+  ) throws {
+    try writer.write { db in
+      let present =
+        try DocumentRecord
+        .select(Column("id"), as: UInt.self)
+        .filter(Column("server_id") == serverID)
+        .fetchSet(db)
+      try QueryOrderRow
+        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+        .deleteAll(db)
+      var position = 0
+      for id in orderedIDs where present.contains(id) {
+        try QueryOrderRow(
+          serverId: serverID, queryKey: queryKey.rawValue,
+          position: position, remoteId: id
+        ).upsert(db)
+        position += 1
+      }
+      try setQueryMeta(
+        db, serverID: serverID, queryKey: queryKey,
+        totalCount: UInt(orderedIDs.count), orderStale: false)
+    }
+  }
+
   /// Mark every cached query containing `remoteID` order-stale under its active
   /// sort. v1 over-marks (any query the doc is a member of); the ordering
   /// corrects on the next fill / delta.

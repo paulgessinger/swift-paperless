@@ -20,6 +20,8 @@ public enum SettingsKeys: String {
   case filterBarConfiguration
 
   case editingUserInterfaceExperiment
+
+  case offlineBrowsingMode
 }
 
 extension PublishedUserDefaultsBacked {
@@ -108,6 +110,20 @@ public class AppSettings: ObservableObject {
 
   @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
   public var editingUserInterface: EditingUserInterface = .automatic
+
+  /// How aggressively the offline cache fills document metadata.
+  ///
+  /// - `recentlyBrowsed`: only queries the user actually opens are cached
+  ///   (Stage 8 on-open fill).
+  /// - `entireLibrary`: a one-time proactive fill caches every saved view and the
+  ///   default list at full detail, so the whole library browses offline.
+  public enum OfflineBrowsingMode: String, Codable, CaseIterable {
+    case recentlyBrowsed
+    case entireLibrary
+  }
+
+  @PublishedUserDefaultsBacked(.offlineBrowsingMode)
+  public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
 
   public var lastAppVersion: AppVersion?
   @UserDefaultsBacked(appVersionKey)
