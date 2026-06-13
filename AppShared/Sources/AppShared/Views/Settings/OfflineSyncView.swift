@@ -56,6 +56,18 @@ public struct OfflineSyncView: View {
         statusRow(
           String(localized: .settings(.offlineSyncLastRefresh)),
           value: dateText(store.lastReconcileAt))
+
+        Button {
+          Task {
+            // Explicit user action: bypass the reconcile throttle and the
+            // unmetered gate, and force a re-fill ignoring the freshness marker.
+            try? await store.sync(userInitiated: true)
+            await store.fillLibraryIfEnabled(unmetered: true, force: true)
+          }
+        } label: {
+          Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+        }
+        .disabled(store.isFillingLibrary || store.isRefreshing)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }

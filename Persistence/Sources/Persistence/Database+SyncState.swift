@@ -26,6 +26,31 @@ extension Database {
     try update(serverID: serverID) { $0.libraryCoverageAt = date?.timeIntervalSinceReferenceDate }
   }
 
+  /// Observe this server's `library_coverage_at`, emitting the current value
+  /// immediately and again on every write (including a `clearCache` reset to
+  /// `nil`). Backed by GRDB `ValueObservation`; consumers don't see GRDB types.
+  public func observeLibraryCoverageAt(serverID: UUID) -> AsyncThrowingStream<Date?, Error> {
+    let observation = ValueObservation.tracking { db in
+      try ServerSyncStateRecord.fetchOne(db, key: serverID)?.libraryCoverageAt
+    }
+    let writer = writer
+    return AsyncThrowingStream { continuation in
+      let task = Task {
+        do {
+          for try await stamp in observation.values(in: writer) {
+            continuation.yield(stamp.map { Date(timeIntervalSinceReferenceDate: $0) })
+          }
+          continuation.finish()
+        } catch is CancellationError {
+          continuation.finish()
+        } catch {
+          continuation.finish(throwing: error)
+        }
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
+  }
+
   // MARK: - Helpers
 
   private func date(

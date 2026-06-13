@@ -60,6 +60,13 @@ public final class DocumentStore: Sendable {
   /// Only the foreground trigger sets this.
   public private(set) var isFillingLibrary = false
 
+  /// When the active server's library was last fully filled (`nil` if never).
+  /// A stored, observed mirror of `server_sync_state.library_coverage_at` —
+  /// refreshed when the repository changes and after each fill — so the
+  /// Offline & Sync screen repaints instead of staying on "Never". A bare DB
+  /// read wouldn't be tracked by the observation.
+  public private(set) var libraryCoverageAt: Date?
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -94,6 +101,11 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
 
+  // Observes the active server's `library_coverage_at` into `libraryCoverageAt`.
+  // Re-pointed alongside the element projection whenever the repository changes.
+  @ObservationIgnored
+  private var coverageObservationTask: Task<Void, Never>?
+
   // Last successful (or attempted) remote-delete reconcile. The sweep fetches
   // the server's whole id set, so it is throttled — `sync()` kicks it
   // fire-and-forget on launch/foreground/refresh, but it only runs at most once
@@ -112,6 +124,7 @@ public final class DocumentStore: Sendable {
 
   deinit {
     taskUpdateTask?.cancel()
+    coverageObservationTask?.cancel()
   }
 
   /// Point the element projection at the active repository's DB. Under the
@@ -119,10 +132,22 @@ public final class DocumentStore: Sendable {
   /// (`CachingBackend`); a repository that doesn't (e.g. `NullRepository` before
   /// login) detaches the projection.
   private func wireElementStore() {
+    coverageObservationTask?.cancel()
     if let backend = repository as? any CachingBackend {
       elementStore.repoint(database: backend.database, serverID: backend.serverID)
+      // Source-of-truth: observe the coverage timestamp rather than reading it
+      // imperatively, so it tracks fills *and* a cache wipe (which clears it).
+      let stream = backend.database.observeLibraryCoverageAt(serverID: backend.serverID)
+      coverageObservationTask = Task { [weak self] in
+        do {
+          for try await date in stream { self?.libraryCoverageAt = date }
+        } catch {
+          Logger.shared.debug("Coverage observation ended: \(error)")
+        }
+      }
     } else {
       elementStore.reset()
+      libraryCoverageAt = nil
     }
   }
 
@@ -672,13 +697,6 @@ extension DocumentStore {
   /// When the document reconcile sweep (R2/R3δ/membership) last ran, for the
   /// Offline & Sync status screen. `nil` until the first reconcile this session.
   public var lastReconcileAt: Date? { lastDocumentReconcile }
-
-  /// When the active server's library was last fully filled (`nil` if never, or
-  /// without a caching backend). Read for the Offline & Sync status screen.
-  public var libraryCoverageAt: Date? {
-    guard let backend = repository as? any CachingBackend else { return nil }
-    return try? backend.database.libraryCoverageAt(serverID: backend.serverID)
-  }
 
   /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
   /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
