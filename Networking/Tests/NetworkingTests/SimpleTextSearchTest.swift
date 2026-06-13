@@ -79,6 +79,9 @@ struct SimpleTextSearchTest {
 
     #expect(legacy.subtracting(tantivy) == ["title_content"])
     #expect(tantivy.subtracting(legacy) == ["text"])
-    #expect(legacy.intersection(tantivy) == ["page", "page_size", "truncate_content", "ordering"])
+    #expect(
+      legacy.intersection(tantivy) == [
+        "page", "page_size", "truncate_content", "ordering", "full_perms",
+      ])
   }
 }
