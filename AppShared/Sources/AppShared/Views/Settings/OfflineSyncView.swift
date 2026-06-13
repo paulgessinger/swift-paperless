@@ -11,12 +11,16 @@ import Networking
 import SwiftUI
 
 public struct OfflineSyncView: View {
-  @ObservedObject private var appSettings = AppSettings.shared
   @Environment(DocumentStore.self) private var store
+  @Environment(ConnectionManager.self) private var connectionManager
   @Environment(NetworkMonitor.self) private var networkMonitor
   @State private var stats = TransferStatistics.shared
 
   public init() {}
+
+  // The active server's mode, read/written through ConnectionManager (persisted
+  // on the connection record). The setting is per-server.
+  private var mode: OfflineBrowsingMode { connectionManager.activeOfflineBrowsingMode }
 
   private var unmetered: Bool {
     !networkMonitor.isExpensive && !networkMonitor.isConstrained
@@ -25,8 +29,12 @@ public struct OfflineSyncView: View {
   public var body: some View {
     Form {
       Section {
-        Picker(selection: $appSettings.offlineBrowsingMode) {
-          ForEach(AppSettings.OfflineBrowsingMode.allCases, id: \.self) { mode in
+        Picker(
+          selection: Binding(
+            get: { connectionManager.activeOfflineBrowsingMode },
+            set: { connectionManager.setOfflineBrowsingMode($0) })
+        ) {
+          ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
             Text(mode.localizedName).tag(mode)
           }
         } label: {
@@ -40,7 +48,7 @@ public struct OfflineSyncView: View {
 
       Section {
         statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
-        if appSettings.offlineBrowsingMode == .entireLibrary {
+        if mode == .entireLibrary {
           statusRow(
             String(localized: .settings(.offlineSyncLastFullFill)),
             value: dateText(store.libraryCoverageAt))
@@ -73,10 +81,10 @@ public struct OfflineSyncView: View {
     }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
     .navigationBarTitleDisplayMode(.inline)
-    .onChange(of: appSettings.offlineBrowsingMode) { _, mode in
-      // Enabling "Entire library" kicks the proactive fill immediately (force,
-      // bypassing the freshness marker); the unmetered gate still applies.
-      guard mode == .entireLibrary else { return }
+    .onChange(of: mode) { old, new in
+      // A genuine user switch *into* Entire library kicks an immediate (forced)
+      // fill; the unmetered gate still applies.
+      guard new == .entireLibrary, old != .entireLibrary else { return }
       Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
     }
   }

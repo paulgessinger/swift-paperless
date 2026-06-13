@@ -91,20 +91,6 @@ public final class AppSettings: Observable {
   @Setting(.filterBarConfiguration)
   public var filterBarConfiguration: FilterBarConfiguration
 
-  /// How aggressively the offline cache fills document metadata.
-  ///
-  /// - `recentlyBrowsed`: only queries the user actually opens are cached
-  ///   (Stage 8 on-open fill).
-  /// - `entireLibrary`: a one-time proactive fill caches every saved view and the
-  ///   default list at full detail, so the whole library browses offline.
-  public enum OfflineBrowsingMode: String, Codable, CaseIterable, Sendable {
-    case recentlyBrowsed
-    case entireLibrary
-  }
-
-  @Setting(.offlineBrowsingMode)
-  public var offlineBrowsingMode: OfflineBrowsingMode
-
   @Setting(.currentAppVersion)
   public var currentAppVersion: AppVersion?
 
