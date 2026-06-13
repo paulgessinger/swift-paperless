@@ -9,17 +9,17 @@ import Foundation
 // MARK: - Wire types for the /api/ui_settings endpoint
 
 struct ApiUISettings: Decodable, Sendable {
-  var user: User
+  var user: ApiUser
   var settings: ApiUISettingsSettings?
-  var permissions: UserPermissions?
+  var permissions: ApiUserPermissions?
 }
 
 extension ApiUISettings {
   var domain: UISettings {
     UISettings(
-      user: user,
+      user: user.domain,
       settings: settings?.domain ?? UISettingsSettings(),
-      permissions: permissions ?? .empty
+      permissions: permissions?.domain ?? .empty
     )
   }
 }

@@ -6,9 +6,8 @@
 //
 
 import Foundation
-import MetaCodable
 
-public protocol SavedViewProtocol: Codable, PermissionsModel {
+public protocol SavedViewProtocol: PermissionsModel {
   var name: String { get set }
   var showOnDashboard: Bool { get set }
   var showInSidebar: Bool { get set }
@@ -22,44 +21,52 @@ extension SavedViewProtocol {
   public var userCanChange: Bool { true }
 }
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct SavedView:
   Identifiable, Hashable, Model, SavedViewProtocol, Sendable
 {
   public var id: UInt
   public var name: String
-
-  @Default(false)
   public var showOnDashboard: Bool
-
-  @Default(false)
   public var showInSidebar: Bool
-
   public var sortField: SortField?
-
-  @CodedAt("sort_reverse")
   public var sortOrder: DataModel.SortOrder
   public var filterRules: [FilterRule]
-
-  @Default(Owner.unset)
   public var owner: Owner
 
-  // Presence of this depends on the endpoint
-  @IgnoreEncoding
   public var permissions: Permissions? {
     didSet {
       setPermissions = permissions
     }
   }
 
-  // The API wants this extra key for writing perms
   public var setPermissions: Permissions?
-
-  @IgnoreEncoding
-  @Default(true)
   public var userCanChange: Bool
+
+  public init(
+    id: UInt,
+    name: String,
+    showOnDashboard: Bool = false,
+    showInSidebar: Bool = false,
+    sortField: SortField? = nil,
+    sortOrder: DataModel.SortOrder = .descending,
+    filterRules: [FilterRule] = [],
+    owner: Owner = .unset,
+    permissions: Permissions? = nil,
+    setPermissions: Permissions? = nil,
+    userCanChange: Bool = true
+  ) {
+    self.id = id
+    self.name = name
+    self.showOnDashboard = showOnDashboard
+    self.showInSidebar = showInSidebar
+    self.sortField = sortField
+    self.sortOrder = sortOrder
+    self.filterRules = filterRules
+    self.owner = owner
+    self.permissions = permissions
+    self.setPermissions = setPermissions
+    self.userCanChange = userCanChange
+  }
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(id)
@@ -68,43 +75,46 @@ public struct SavedView:
 
 extension SavedView: PermissionsModel {}
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct ProtoSavedView: SavedViewProtocol, Sendable {
-  @Default("")
   public var name: String
-
-  @Default(false)
   public var showOnDashboard: Bool
-
-  @Default(false)
   public var showInSidebar: Bool
-
-  @Default(SortField.created)
   public var sortField: SortField?
-
-  @CodedAt("sort_reverse")
-  @Default(DataModel.SortOrder.descending)
   public var sortOrder: DataModel.SortOrder
-
-  @Default([FilterRule]())
   public var filterRules: [FilterRule]
 
   // For PermissionsModel conformance
-  @Default(Owner.unset)
   public var owner: Owner
 
-  // Presence of this depends on the endpoint
-  @IgnoreEncoding
   public var permissions: Permissions? {
     didSet {
       setPermissions = permissions
     }
   }
 
-  // The API wants this extra key for writing perms
   public var setPermissions: Permissions?
+
+  public init(
+    name: String = "",
+    showOnDashboard: Bool = false,
+    showInSidebar: Bool = false,
+    sortField: SortField? = .created,
+    sortOrder: DataModel.SortOrder = .descending,
+    filterRules: [FilterRule] = [],
+    owner: Owner = .unset,
+    permissions: Permissions? = nil,
+    setPermissions: Permissions? = nil
+  ) {
+    self.name = name
+    self.showOnDashboard = showOnDashboard
+    self.showInSidebar = showInSidebar
+    self.sortField = sortField
+    self.sortOrder = sortOrder
+    self.filterRules = filterRules
+    self.owner = owner
+    self.permissions = permissions
+    self.setPermissions = setPermissions
+  }
 }
 
 extension ProtoSavedView: PermissionsModel {}

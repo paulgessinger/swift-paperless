@@ -19,7 +19,6 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/swiftlang/swift-syntax", exact: "602.0.0"),
     .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.6.4"),
-    .package(url: "https://github.com/SwiftyLab/MetaCodable", exact: "1.6.0"),
   ],
   targets: [
     .macro(
@@ -33,8 +32,7 @@ let package = Package(
     .target(
       name: "Common",
       dependencies: [
-        "CommonMacros",
-        .product(name: "MetaCodable", package: "MetaCodable"),
+        "CommonMacros"
       ],
       swiftSettings: [
         .swiftLanguageMode(.v6),

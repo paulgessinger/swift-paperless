@@ -17,8 +17,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(path: "../Common"),
-    .package(url: "https://github.com/SwiftyLab/MetaCodable", exact: "1.6.0"),
+    .package(path: "../Common")
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -26,8 +25,7 @@ let package = Package(
     .target(
       name: "DataModel",
       dependencies: [
-        .product(name: "Common", package: "Common"),
-        .product(name: "MetaCodable", package: "MetaCodable"),
+        .product(name: "Common", package: "Common")
       ],
       path: "Sources",
       swiftSettings: [

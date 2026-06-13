@@ -1,21 +1,20 @@
 //
-//  MetadataTest.swift
-//  DataModel
-//
-//  Created by Paul Gessinger on 03.01.25.
+//  ApiMetadataTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 @Suite
-struct MetadataTest {
+struct ApiMetadataTest {
   @Test func testDecoding() throws {
     let data = try #require(testData("Data/metadata.json"))
 
-    let metadata = try makeDecoder(tz: .current).decode(Metadata.self, from: data)
+    let metadata = try makeDecoder(tz: .current).decode(ApiMetadata.self, from: data).domain
 
     #expect(metadata.originalChecksum == "8e638f024cd9f14206dc63821f412844")
     #expect(metadata.originalSize == 49036)
