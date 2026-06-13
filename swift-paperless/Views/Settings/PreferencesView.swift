@@ -67,12 +67,6 @@ struct PreferencesView: View {
       } label: {
         Text(.settings(.filterConfiguration))
       }
-
-      NavigationLink {
-        OfflineSyncView()
-      } label: {
-        Text(.settings(.offlineSyncTitle))
-      }
     }
     .navigationTitle(Text(.settings(.preferences)))
     .navigationBarTitleDisplayMode(.inline)
