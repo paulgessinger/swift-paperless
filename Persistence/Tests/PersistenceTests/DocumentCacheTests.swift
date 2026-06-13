@@ -197,6 +197,72 @@ struct DocumentCacheTests {
     #expect(stored?.payload.permissions?.change.groups == [3])
   }
 
+  @Test("a metadata query-page rewrite does not clobber a Tier-2 detail row")
+  func queryPageDoesNotDowngradeDetail() async throws {
+    // Stage 9 interaction: the proactive fill writes a row at .detail; a later
+    // membership/list refresh rewrites that query's order with a .metadata page
+    // containing the same id. The order is refreshed but the detail is retained.
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+
+    var detailed = doc(1, "Detail")
+    detailed.permissions = Permissions { $0.view = .init(users: [9]) }
+    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "Detail")],
+      startPosition: 0, totalCount: 1, replaceAll: true, projectionLevel: .metadata)
+
+    let stored = try record(database, server, 1)
+    #expect(stored?.projectionLevel == .detail)
+    #expect(stored?.payload.permissions?.view.users == [9])
+  }
+
+  // MARK: - Membership sweep (replaceQueryOrder)
+
+  @Test("replaceQueryOrder skips ids without a document row but counts the server total")
+  func replaceQueryOrderSkipsAbsent() async throws {
+    // The Tier-0 membership sweep may report ids not yet cached (their detail
+    // lands via R3δ). Those are skipped (the FK requires a row); the scrollbar
+    // total still reflects the full server count.
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+
+    // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
+    try database.upsertDocuments(
+      [doc(1, "A"), doc(3, "C")], serverID: server, projectionLevel: .detail)
+
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
+
+    let replayed = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(replayed.map(\.id) == [1, 3])  // 2 skipped, order preserved
+    let status = try database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.totalCount == 3)  // server total, not local count
+    #expect(status.localCount == 2)
+  }
+
+  @Test("replaceQueryOrder replaces prior membership and preserves the new order")
+  func replaceQueryOrderReplaces() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+    try database.upsertDocuments(
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .metadata)
+
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
+    #expect(
+      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [3, 1])
+
+    // A subsequent sweep with a different membership/order fully replaces it.
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 3, 1])
+    #expect(
+      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
+        2, 3, 1,
+      ])
+  }
+
   // MARK: - Order staleness
 
   @Test("markQueriesOrderStale flips the flag only for queries containing the doc")
