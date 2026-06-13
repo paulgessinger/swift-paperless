@@ -13,25 +13,21 @@ import GRDB
 extension Database {
   // MARK: - Writes
 
-  /// Upsert a batch of documents at a projection level, never downgrading a
-  /// `full` row with a lesser (`idOnly`) write — its level / `detailFetchedAt` /
-  /// permissions are kept.
-  public func upsertDocuments(
-    _ domains: [Document], serverID: UUID, projectionLevel: DocumentProjection
-  ) throws {
+  /// Upsert a batch of documents. Every stored row is the complete object (the
+  /// list carries `full_perms`), so this is a straight replace — there is no
+  /// projection level to preserve.
+  public func upsertDocuments(_ domains: [Document], serverID: UUID) throws {
     try writer.write { db in
       for domain in domains {
-        try writeDocumentRow(db, domain, serverID: serverID, projectionLevel: projectionLevel)
+        try writeDocumentRow(db, domain, serverID: serverID)
       }
     }
   }
 
-  /// Single-row write-through (pessimistic mutation), same non-downgrade rule.
-  public func upsertDocument(
-    _ domain: Document, serverID: UUID, projectionLevel: DocumentProjection
-  ) throws {
+  /// Single-row write-through (pessimistic mutation).
+  public func upsertDocument(_ domain: Document, serverID: UUID) throws {
     try writer.write { db in
-      try writeDocumentRow(db, domain, serverID: serverID, projectionLevel: projectionLevel)
+      try writeDocumentRow(db, domain, serverID: serverID)
     }
   }
 
@@ -41,12 +37,10 @@ extension Database {
   /// - `replaceAll: true` (first page of a fill) clears the key's existing
   ///   `query_order` first; subsequent pages pass `false` with an increasing
   ///   `startPosition` so the background fill appends without rewriting earlier
-  ///   positions. Document rows go in *before* their `query_order` entries to
-  ///   satisfy the composite FK.
+  ///   positions.
   public func writeQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?, replaceAll: Bool,
-    projectionLevel: DocumentProjection = .full
+    startPosition: Int, totalCount: UInt?, replaceAll: Bool
   ) throws {
     try writer.write { db in
       if replaceAll {
@@ -55,7 +49,7 @@ extension Database {
           .deleteAll(db)
       }
       for (offset, domain) in documents.enumerated() {
-        try writeDocumentRow(db, domain, serverID: serverID, projectionLevel: projectionLevel)
+        try writeDocumentRow(db, domain, serverID: serverID)
         try QueryOrderRow(
           serverId: serverID, queryKey: queryKey.rawValue,
           position: startPosition + offset, remoteId: domain.id
@@ -70,11 +64,12 @@ extension Database {
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
   /// per-saved-view / default-list membership sweep) **without** creating or
   /// modifying `document` rows. Only ids that already have a cached document row
-  /// are inserted — the composite FK requires it; ids not yet cached are skipped
-  /// and surface once R3δ / the next fill writes their row. `position` is
-  /// compacted over the inserted ids (gaps from skipped rows are invisible to the
-  /// ordered window). `totalCount` records the server's full count for the
-  /// scrollbar extent, even when some rows aren't yet locally present.
+  /// are inserted; ids not yet cached are skipped and surface once R3δ / the next
+  /// fill writes their row. (A later change renders such ids as skeleton rows
+  /// instead of skipping them.) `position` is compacted over the inserted ids
+  /// (gaps from skipped rows are invisible to the ordered window). `totalCount`
+  /// records the server's full count for the scrollbar extent, even when some
+  /// rows aren't yet locally present.
   public func replaceQueryOrder(
     queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
   ) throws {
@@ -118,14 +113,20 @@ extension Database {
   }
 
   /// Delete documents absent from the server's authoritative id set (the
-  /// remote-delete reconcile). The composite FK cascade removes their
-  /// `query_order` rows from every cached list at once.
+  /// remote-delete reconcile), and prune their `query_order` rows from every
+  /// cached list. There is no FK from `query_order` to `document` (a row may be a
+  /// skeleton), so the prune is explicit — a removed id must not linger as a
+  /// permanent skeleton.
   public func deleteDocuments(serverID: UUID, removedIDs: [UInt]) throws {
     guard !removedIDs.isEmpty else { return }
     try writer.write { db in
       _ =
         try DocumentRecord
         .filter(Column("server_id") == serverID && removedIDs.contains(Column("id")))
+        .deleteAll(db)
+      _ =
+        try QueryOrderRow
+        .filter(Column("server_id") == serverID && removedIDs.contains(Column("remote_id")))
         .deleteAll(db)
     }
   }
@@ -215,30 +216,12 @@ extension Database {
       orderStale: meta?.orderStale ?? false)
   }
 
-  /// Non-downgrade single-row upsert: a lesser (`idOnly`) write over an existing
-  /// `full` row keeps the row's level + `detailFetchedAt` + permissions. A `full`
-  /// write replaces a `full` row outright — callers must therefore carry
-  /// permissions on every `full` write (the list does, via `full_perms`).
+  /// Upsert one document row. Every write is the complete object (the list
+  /// carries `full_perms`), so this is a straight replace — no merge, no level.
   private func writeDocumentRow(
-    _ db: GRDB.Database, _ domain: Document, serverID: UUID,
-    projectionLevel: DocumentProjection
+    _ db: GRDB.Database, _ domain: Document, serverID: UUID
   ) throws {
-    let incoming = DocumentRecord(
-      serverId: serverID, domain: domain, projectionLevel: projectionLevel)
-    if let existing =
-      try DocumentRecord
-      .filter(Column("server_id") == serverID && Column("id") == domain.id)
-      .fetchOne(db),
-      existing.projectionLevel > projectionLevel
-    {
-      var merged = incoming
-      merged.projectionLevel = existing.projectionLevel
-      merged.detailFetchedAt = existing.detailFetchedAt
-      merged.payload.permissions = existing.payload.permissions
-      try merged.upsert(db)
-    } else {
-      try incoming.upsert(db)
-    }
+    try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
   }
 
   private func setQueryMeta(
