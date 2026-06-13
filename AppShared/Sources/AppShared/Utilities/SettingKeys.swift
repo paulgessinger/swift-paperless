@@ -45,6 +45,10 @@ extension SettingKey {
     .init("filterBarConfiguration", default: .default)
   }
 
+  public static var offlineBrowsingMode: SettingKey<AppSettings.OfflineBrowsingMode> {
+    .init("offlineBrowsingMode", default: .recentlyBrowsed)
+  }
+
   /// The version this install last launched, which drives the release-notes
   /// sheet. Per-install by definition.
   public static var currentAppVersion: SettingKey<AppVersion?> {
