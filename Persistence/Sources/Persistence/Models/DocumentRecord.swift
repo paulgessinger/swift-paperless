@@ -3,19 +3,39 @@ import DataModel
 import Foundation
 import GRDB
 
-/// Completeness of a cached `document` row (the "tier" from the fetch model).
+/// Completeness of a cached `document` row.
 ///
-/// `idOnly` is an ordering/membership placeholder (renders a skeleton cell);
-/// `metadata` is renderable in a list cell; `detail` carries the full object
-/// (custom fields, notes, permissions) fetched when a document is opened.
-/// `Comparable` so the non-downgrade upsert can keep the richer of two writes.
+/// Two states, because the document list now always requests `full_perms`, so a
+/// list row carries the same object as a single-document fetch — there's no
+/// poorer "metadata" tier to distinguish:
+/// - `idOnly` — an ordering/membership placeholder: the id is known but the
+///   object hasn't been fetched (would render a skeleton cell). Currently
+///   reserved; the membership sweep skips ids without a row rather than writing
+///   these.
+/// - `full` — the complete object (custom fields, permissions, `user_can_change`).
+///
+/// File blobs and OCR content are deliberately *not* tiers here — they're
+/// orthogonal axes (the on-disk `ContentStore`, a future `content` marker).
+/// `Comparable` so the non-downgrade upsert keeps a `full` row when a lesser
+/// (`idOnly`) write would downgrade it.
 public enum DocumentProjection: Int, Codable, Sendable, Comparable {
   case idOnly = 0
-  case metadata = 1
-  case detail = 2
+  case full = 1
 
   public static func < (lhs: Self, rhs: Self) -> Bool {
     lhs.rawValue < rhs.rawValue
+  }
+
+  // Tolerant decode so legacy rows written before the collapse (metadata = 1,
+  // detail = 2) read back as `full` instead of failing.
+  public init(from decoder: any Decoder) throws {
+    let raw = try decoder.singleValueContainer().decode(Int.self)
+    self = raw <= 0 ? .idOnly : .full
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(rawValue)
   }
 }
 
@@ -64,7 +84,8 @@ public struct DocumentRecord:
     public var customFields: CustomFieldRawEntryList
     public var versions: [VersionPayload]
     public var userCanChange: Bool
-    // Populated only at `.detail`; preserved across lower-tier upserts.
+    // Carried by `full` rows (the list's `full_perms`); preserved when a lesser
+    // (`idOnly`) upsert would otherwise downgrade the row.
     public var permissions: Permissions?
   }
 
@@ -96,7 +117,7 @@ extension DocumentRecord {
     title = domain.title
     asn = domain.asn
     self.projectionLevel = projectionLevel
-    detailFetchedAt = projectionLevel == .detail ? Date() : nil
+    detailFetchedAt = projectionLevel == .full ? Date() : nil
     payload = Payload(
       documentType: domain.documentType,
       correspondent: domain.correspondent,

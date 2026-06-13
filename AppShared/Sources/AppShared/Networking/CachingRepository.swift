@@ -67,7 +67,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
   /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
-  /// default list and every saved view, stamping rows `.detail`, so the whole
+  /// default list and every saved view, stamping rows `.full`, so the whole
   /// active-server library browses offline even if never opened. Sequential
   /// (one query's background paging completes before the next starts). Guarded by
   /// a per-server freshness marker so it runs once and re-runs only as a periodic
@@ -201,20 +201,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
+  /// Fill a query's membership + document rows from the list source, which always
+  /// carries full object detail (`full_perms`), so every cached row is written at
+  /// `.full`. Page 1 is awaited (first window + exact count); the rest pages in
+  /// the background. Shared by the interactive on-open path and the proactive
+  /// library fill.
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
-    // Interactive on-open fill: stamp rows `.metadata` (the list payload already
-    // carries object detail, but the detail view still fetches notes on open).
-    try await fillQuery(filter: filter, projectionLevel: .metadata)
-  }
-
-  /// Core fill shared by the interactive on-open path (`.metadata`) and the
-  /// proactive library fill (`.detail`). The list source always carries object
-  /// detail; `projectionLevel` only governs the DB row's completeness marker.
-  /// Page 1 is awaited (first window + exact count); the rest pages in the
-  /// background at the same level.
-  private func fillQuery(
-    filter: FilterState, projectionLevel: DocumentProjection
-  ) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
     let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
@@ -226,7 +218,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let total = await source.totalCount
     try database.writeQueryPage(
       queryKey: key, serverID: serverID, documents: firstPage,
-      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: projectionLevel)
+      startPosition: 0, totalCount: total, replaceAll: true, projectionLevel: .full)
 
     // Background-page the rest to disk (append). When this completes the whole
     // view is local; scrolling then needs no network (v1). Detached tasks don't
@@ -245,7 +237,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             try database.writeQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
               startPosition: position, totalCount: await source.totalCount,
-              replaceAll: false, projectionLevel: projectionLevel)
+              replaceAll: false, projectionLevel: .full)
             position += batch.count
           }
         } catch is CancellationError {
@@ -273,8 +265,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       do {
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
-        let handle = try await fillQuery(
-          filter: filter, projectionLevel: .detail)
+        let handle = try await fillQuery(filter: filter)
         await handle.awaitCompletion()
       } catch is CancellationError {
         throw CancellationError()
@@ -513,12 +504,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(document: Document) async throws -> Document {
     let updated = try await wrapped.update(document: document)
-    // Write the confirmed metadata through; the join observation repaints the row
-    // in place. Written at `.metadata` so the non-downgrade guard preserves an
-    // existing Tier-2 row's detail/permissions (a metadata edit doesn't change
-    // them; permissions edits reconcile on the next detail fetch). Ordering under
-    // the active sort isn't recomputed offline — mark affected queries stale.
-    try database.upsertDocument(updated, serverID: serverID, projectionLevel: .metadata)
+    // Write the confirmed object through; the join observation repaints the row
+    // in place. `update` is fetched with `full_perms` (see ApiRepository) so the
+    // response carries permissions/custom fields — a `.full` write replaces the
+    // row completely without dropping them. Ordering under the active sort isn't
+    // recomputed offline — mark affected queries stale.
+    try database.upsertDocument(updated, serverID: serverID, projectionLevel: .full)
     try database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
     return updated
   }
@@ -541,7 +532,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         return nil
       }
       // A full-detail fetch — upgrade the row to Tier-2.
-      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .full)
       return fetched
     } catch {
       // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
@@ -557,7 +548,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(asn: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
-      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .detail)
+      try database.upsertDocument(fetched, serverID: serverID, projectionLevel: .full)
       return fetched
     } catch {
       if let cached = try database.document(serverID: serverID, asn: asn) {
@@ -600,11 +591,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     // Delta refreshes changed rows via `ordering=-modified`. Under *Recently
     // browsed* it only touches already-cached rows (new docs surface via on-open
-    // list fills); under *Entire library* it also keeps brand-new docs and stamps
-    // them `.detail`, so the whole library stays current between full fills. The
-    // list payload always carries object detail; the setting only governs which
-    // docs are kept and the DB completeness marker. Nothing cached ⇒ the
-    // proactive fill (or a list open) seeds first.
+    // list fills); under *Entire library* it also keeps brand-new docs, so the
+    // whole library stays current between full fills. The list payload always
+    // carries full object detail; the setting only governs which docs are kept
+    // (every row is written at `.full`). Nothing cached ⇒ the proactive fill
+    // (or a list open) seeds first.
     let localIDs = try database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
@@ -637,15 +628,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       if await source.isExhausted { break }
     }
 
-    // *Entire library*: keep every changed/new doc at detail. *Recently browsed*:
-    // only refresh rows already cached, at metadata.
+    // *Entire library*: keep every changed/new doc. *Recently browsed*: only
+    // refresh rows already cached. Either way the row is written at `.full`.
     let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
     if !toUpsert.isEmpty {
       Logger.shared.info(
         "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
-      try database.upsertDocuments(
-        toUpsert, serverID: serverID,
-        projectionLevel: entireLibrary ? .detail : .metadata)
+      try database.upsertDocuments(toUpsert, serverID: serverID, projectionLevel: .full)
     }
     if advanced > watermark {
       setDeltaWatermark(advanced)

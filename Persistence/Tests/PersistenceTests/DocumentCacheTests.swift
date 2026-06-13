@@ -52,7 +52,7 @@ struct DocumentCacheTests {
     // which also sets setPermissions via didSet) so equality holds round-trip.
     input.permissions = Permissions { $0.view = .init(users: [1, 2]) }
 
-    try database.upsertDocument(input, serverID: server, projectionLevel: .detail)
+    try database.upsertDocument(input, serverID: server, projectionLevel: .full)
     let output = try database.document(serverID: server, id: 1)
 
     #expect(output == input)
@@ -66,7 +66,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     try database.upsertDocuments(
       [doc(1, "A", asn: 100), doc(2, "B", asn: 200)],
-      serverID: server, projectionLevel: .metadata)
+      serverID: server, projectionLevel: .full)
 
     #expect(try database.document(serverID: server, asn: 200)?.id == 2)
     #expect(try database.document(serverID: server, asn: 999) == nil)
@@ -160,63 +160,60 @@ struct DocumentCacheTests {
 
   // MARK: - Non-downgrade upsert
 
-  @Test("a Tier-1 upsert does not clobber an existing Tier-2 row")
-  func nonDowngradeUpsert() async throws {
+  @Test("an idOnly upsert does not clobber an existing full row")
+  func idOnlyDoesNotDowngradeFull() async throws {
     let server = UUID()
     let database = try database(server)
 
-    var detailed = doc(1, "Detail")
-    detailed.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+    var full = doc(1, "Full")
+    full.permissions = Permissions { $0.view = .init(users: [9]) }
+    try database.upsertDocument(full, serverID: server, projectionLevel: .full)
 
-    // A later list fill arrives at Tier-1 with no permissions.
-    try database.upsertDocuments([doc(1, "Detail")], serverID: server, projectionLevel: .metadata)
+    // A membership-only (idOnly) write of the same id must not strip the object.
+    try database.upsertDocuments([doc(1, "Full")], serverID: server, projectionLevel: .idOnly)
 
     let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .detail)
+    #expect(stored?.projectionLevel == .full)
     #expect(stored?.detailFetchedAt != nil)
     #expect(stored?.payload.permissions?.view.users == [9])
   }
 
-  @Test("a Tier-2 upsert upgrades an existing Tier-1 row")
-  func upgradeToDetail() async throws {
+  @Test("a full upsert upgrades an existing idOnly row")
+  func fullUpgradesIdOnly() async throws {
     let server = UUID()
     let database = try database(server)
 
-    try database.upsertDocuments([doc(1, "Doc")], serverID: server, projectionLevel: .metadata)
-    #expect(try record(database, server, 1)?.projectionLevel == .metadata)
+    try database.upsertDocuments([doc(1, "Doc")], serverID: server, projectionLevel: .idOnly)
+    #expect(try record(database, server, 1)?.projectionLevel == .idOnly)
     #expect(try record(database, server, 1)?.detailFetchedAt == nil)
 
-    var detailed = doc(1, "Doc")
-    detailed.permissions = Permissions { $0.change = .init(groups: [3]) }
-    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+    var full = doc(1, "Doc")
+    full.permissions = Permissions { $0.change = .init(groups: [3]) }
+    try database.upsertDocument(full, serverID: server, projectionLevel: .full)
 
     let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .detail)
+    #expect(stored?.projectionLevel == .full)
     #expect(stored?.detailFetchedAt != nil)
     #expect(stored?.payload.permissions?.change.groups == [3])
   }
 
-  @Test("a metadata query-page rewrite does not clobber a Tier-2 detail row")
-  func queryPageDoesNotDowngradeDetail() async throws {
-    // Stage 9 interaction: the proactive fill writes a row at .detail; a later
-    // membership/list refresh rewrites that query's order with a .metadata page
-    // containing the same id. The order is refreshed but the detail is retained.
+  @Test("a full upsert replaces an existing full row outright")
+  func fullReplacesFull() async throws {
+    // Post-collapse the list always carries full_perms, so a `.full` write is
+    // authoritative and replaces the row (this is why update(document:) fetches
+    // with full_perms — a permission-less response would drop them).
     let server = UUID()
     let database = try database(server)
-    let key = QueryKey(sentinel: "view")
 
-    var detailed = doc(1, "Detail")
-    detailed.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+    var first = doc(1, "Doc")
+    first.permissions = Permissions { $0.view = .init(users: [9]) }
+    try database.upsertDocument(first, serverID: server, projectionLevel: .full)
 
-    try database.writeQueryPage(
-      queryKey: key, serverID: server, documents: [doc(1, "Detail")],
-      startPosition: 0, totalCount: 1, replaceAll: true, projectionLevel: .metadata)
+    var second = doc(1, "Doc")
+    second.permissions = Permissions { $0.view = .init(users: [42]) }
+    try database.upsertDocument(second, serverID: server, projectionLevel: .full)
 
-    let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .detail)
-    #expect(stored?.payload.permissions?.view.users == [9])
+    #expect(try record(database, server, 1)?.payload.permissions?.view.users == [42])
   }
 
   // MARK: - Membership sweep (replaceQueryOrder)
@@ -232,7 +229,7 @@ struct DocumentCacheTests {
 
     // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
     try database.upsertDocuments(
-      [doc(1, "A"), doc(3, "C")], serverID: server, projectionLevel: .detail)
+      [doc(1, "A"), doc(3, "C")], serverID: server, projectionLevel: .full)
 
     try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
 
@@ -249,7 +246,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "view")
     try database.upsertDocuments(
-      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .metadata)
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .full)
 
     try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
     #expect(
@@ -312,7 +309,7 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     try database.upsertDocuments(
-      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .metadata)
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .full)
 
     #expect(try database.allDocumentIDs(serverID: server) == [1, 2, 3])
     // The reconcile diff: local − server.

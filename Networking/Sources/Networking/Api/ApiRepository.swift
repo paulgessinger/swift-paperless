@@ -463,9 +463,12 @@ public class ApiRepository {
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
+    // Request full_perms so the PATCH response carries permissions/custom fields:
+    // the cache writes the result at `.full`, which replaces the row outright, so
+    // a permission-less response would otherwise drop them.
     let api: ApiDocument = try await update(
       element: ApiDocumentUpdate(from: document),
-      endpoint: .document(id: document.id, fullPerms: false),
+      endpoint: .document(id: document.id, fullPerms: true),
       returns: ApiDocument.self)
     return api.domain
   }
