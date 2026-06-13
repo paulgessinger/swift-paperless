@@ -51,6 +51,10 @@ enum Migrations {
       try V5_CreateDocumentDetailCache.run(db)
     }
 
+    migrator.registerMigration("v6_drop_projection_and_query_order_fk") { db in
+      try V6_DropProjectionAndQueryOrderFK.run(db)
+    }
+
     return migrator
   }
 }

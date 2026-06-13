@@ -29,6 +29,23 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v6 drops the document projection columns and the query_order document FK")
+  func v6DropsProjection() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      // V4 created projection_level / detail_fetched_at; V6 dropped them.
+      let docColumns = Set(try db.columns(in: "document").map(\.name))
+      #expect(!docColumns.contains("projection_level"))
+      #expect(!docColumns.contains("detail_fetched_at"))
+      #expect(docColumns == ["server_id", "id", "title", "asn", "data"])
+
+      // query_order no longer FK-references `document` (so it can hold skeletons);
+      // its only remaining foreign key is to `server`.
+      let fkTargets = Set(try db.foreignKeys(on: "query_order").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+    }
+  }
+
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()

@@ -52,7 +52,7 @@ struct DocumentCacheTests {
     // which also sets setPermissions via didSet) so equality holds round-trip.
     input.permissions = Permissions { $0.view = .init(users: [1, 2]) }
 
-    try database.upsertDocument(input, serverID: server, projectionLevel: .full)
+    try database.upsertDocument(input, serverID: server)
     let output = try database.document(serverID: server, id: 1)
 
     #expect(output == input)
@@ -66,7 +66,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     try database.upsertDocuments(
       [doc(1, "A", asn: 100), doc(2, "B", asn: 200)],
-      serverID: server, projectionLevel: .full)
+      serverID: server)
 
     #expect(try database.document(serverID: server, asn: 200)?.id == 2)
     #expect(try database.document(serverID: server, asn: 999) == nil)
@@ -158,60 +158,23 @@ struct DocumentCacheTests {
       try database.queryDocuments(queryKey: keyB, serverID: server, limit: 10).map(\.id) == [3])
   }
 
-  // MARK: - Non-downgrade upsert
+  // MARK: - Upsert
 
-  @Test("an idOnly upsert does not clobber an existing full row")
-  func idOnlyDoesNotDowngradeFull() async throws {
-    let server = UUID()
-    let database = try database(server)
-
-    var full = doc(1, "Full")
-    full.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(full, serverID: server, projectionLevel: .full)
-
-    // A membership-only (idOnly) write of the same id must not strip the object.
-    try database.upsertDocuments([doc(1, "Full")], serverID: server, projectionLevel: .idOnly)
-
-    let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .full)
-    #expect(stored?.detailFetchedAt != nil)
-    #expect(stored?.payload.permissions?.view.users == [9])
-  }
-
-  @Test("a full upsert upgrades an existing idOnly row")
-  func fullUpgradesIdOnly() async throws {
-    let server = UUID()
-    let database = try database(server)
-
-    try database.upsertDocuments([doc(1, "Doc")], serverID: server, projectionLevel: .idOnly)
-    #expect(try record(database, server, 1)?.projectionLevel == .idOnly)
-    #expect(try record(database, server, 1)?.detailFetchedAt == nil)
-
-    var full = doc(1, "Doc")
-    full.permissions = Permissions { $0.change = .init(groups: [3]) }
-    try database.upsertDocument(full, serverID: server, projectionLevel: .full)
-
-    let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .full)
-    #expect(stored?.detailFetchedAt != nil)
-    #expect(stored?.payload.permissions?.change.groups == [3])
-  }
-
-  @Test("a full upsert replaces an existing full row outright")
-  func fullReplacesFull() async throws {
-    // Post-collapse the list always carries full_perms, so a `.full` write is
-    // authoritative and replaces the row (this is why update(document:) fetches
-    // with full_perms — a permission-less response would drop them).
+  @Test("an upsert replaces an existing row outright")
+  func upsertReplaces() async throws {
+    // No projection level: every stored row is the complete object (the list
+    // carries full_perms), so a later upsert just replaces the row, permissions
+    // and all.
     let server = UUID()
     let database = try database(server)
 
     var first = doc(1, "Doc")
     first.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(first, serverID: server, projectionLevel: .full)
+    try database.upsertDocument(first, serverID: server)
 
     var second = doc(1, "Doc")
     second.permissions = Permissions { $0.view = .init(users: [42]) }
-    try database.upsertDocument(second, serverID: server, projectionLevel: .full)
+    try database.upsertDocument(second, serverID: server)
 
     #expect(try record(database, server, 1)?.payload.permissions?.view.users == [42])
   }
@@ -229,7 +192,7 @@ struct DocumentCacheTests {
 
     // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
     try database.upsertDocuments(
-      [doc(1, "A"), doc(3, "C")], serverID: server, projectionLevel: .full)
+      [doc(1, "A"), doc(3, "C")], serverID: server)
 
     try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
 
@@ -246,7 +209,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "view")
     try database.upsertDocuments(
-      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .full)
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
     try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
     #expect(
@@ -309,7 +272,7 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     try database.upsertDocuments(
-      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .full)
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
     #expect(try database.allDocumentIDs(serverID: server) == [1, 2, 3])
     // The reconcile diff: local − server.

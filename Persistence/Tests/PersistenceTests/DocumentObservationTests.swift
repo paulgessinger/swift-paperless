@@ -118,7 +118,7 @@ struct DocumentObservationTests {
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
       try database.upsertDocument(
-        self.doc(1, "A-edited"), serverID: server, projectionLevel: .full)
+        self.doc(1, "A-edited"), serverID: server)
     }
     #expect(updated.first(where: { $0.id == 1 })?.title == "A-edited")
   }
@@ -174,13 +174,13 @@ struct DocumentObservationTests {
     #expect(cold == nil)
 
     let appeared = try await value(from: database.observeDocument(serverID: server, id: 1)) {
-      try database.upsertDocument(self.doc(1, "A"), serverID: server, projectionLevel: .full)
+      try database.upsertDocument(self.doc(1, "A"), serverID: server)
     }
     #expect(appeared?.title == "A")
 
     let edited = try await value(from: database.observeDocument(serverID: server, id: 1)) {
       try database.upsertDocument(
-        self.doc(1, "A-edited"), serverID: server, projectionLevel: .full)
+        self.doc(1, "A-edited"), serverID: server)
     }
     #expect(edited?.title == "A-edited")
   }
