@@ -39,6 +39,10 @@ enum Migrations {
       try V2_ImportLegacyConnections.run(db, userDefaults: userDefaults)
     }
 
+    migrator.registerMigration("v3_create_element_cache") { db in
+      try V3_CreateElementCache.run(db)
+    }
+
     return migrator
   }
 }
