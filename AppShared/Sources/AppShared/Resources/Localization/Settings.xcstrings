@@ -2516,6 +2516,18 @@
         }
       }
     },
+    "offlineSyncNow" : {
+      "comment" : "Button on the Offline & Sync screen that forces an immediate synchronization",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync now"
+          }
+        }
+      }
+    },
     "offlineSyncRefreshing" : {
       "extractionState" : "manual",
       "localizations" : {
