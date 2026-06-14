@@ -18,6 +18,7 @@ extension Database {
       + V3_CreateElementCache.singletonTables
       + V4_CreateDocumentCache.tables
       + V5_CreateDocumentDetailCache.tables
+      + V7_CreateQuerySyncError.tables
     try writer.write { db in
       for table in tables {
         try db.execute(sql: "DELETE FROM \(table)")

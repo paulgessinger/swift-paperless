@@ -46,6 +46,20 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v7 creates the query_sync_error table with expected columns")
+  func v7CreatesQuerySyncError() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(try db.tableExists("query_sync_error"))
+      let columns = Set(try db.columns(in: "query_sync_error").map(\.name))
+      #expect(columns == ["server_id", "query_key", "saved_view_name", "message", "failed_at"])
+
+      // It cascades from `server` so removing a connection tears down its errors.
+      let fkTargets = Set(try db.foreignKeys(on: "query_sync_error").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+    }
+  }
+
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()

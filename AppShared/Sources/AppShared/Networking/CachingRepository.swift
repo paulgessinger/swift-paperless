@@ -255,31 +255,46 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     // Default list first, then every cached saved view (synced by `syncElements`
     // just before this in the foreground trigger). Build the *same* FilterState
-    // the UI observes so the filled QueryKeys match its subscriptions.
+    // the UI observes so the filled QueryKeys match its subscriptions. A `nil`
+    // name denotes the default list (used to label a failure for the UI).
     let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
-    let filters: [FilterState] = [.default] + savedViews.map { FilterState(savedView: $0) }
+    let views: [(name: String?, filter: FilterState)] =
+      [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
-    var allSucceeded = true
-    for filter in filters {
+    for (name, filter) in views {
       try Task.checkCancellation()
+      let key = QueryKey(serverID: serverID, filter: filter)
       do {
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
         let handle = try await fillQuery(filter: filter)
         await handle.awaitCompletion()
+        try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        allSucceeded = false
-        Logger.shared.warning("Library fill: a view failed (\(error)); continuing")
+        // A rejected view (e.g. an advanced full-text query the server won't run)
+        // must not block the *whole* library's coverage. Record it so the
+        // Offline & Sync screen can warn, and carry on.
+        Logger.shared.warning(
+          "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
+        try? database.recordQuerySyncError(
+          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
+          message: Self.syncFailureMessage(error))
       }
     }
 
-    // Advance the marker only on a fully successful pass, so an interrupted or
-    // partly-offline run re-attempts on the next foreground.
-    if allSucceeded {
-      try? database.setLibraryCoverageAt(Date(), serverID: serverID)
-    }
+    // Coverage marks a *completed* pass, not a flawless one: a persistently
+    // failing view (recorded above) would otherwise pin "last full sync" at
+    // Never forever. Only cancellation — an interrupted run — skips the marker,
+    // and that bails out via the `throw` above before reaching here.
+    try? database.setLibraryCoverageAt(Date(), serverID: serverID)
+  }
+
+  /// A short, user-facing reason for a failed view sync — prefers the server's
+  /// own message (carried in `RequestError`) over a generic description.
+  private static func syncFailureMessage(_ error: Error) -> String {
+    (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
   }
 
   private func syncCollection<R: ElementRecord>(
@@ -650,18 +665,23 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // projection. Runs *after* the R3δ pass (which lands new docs at detail), so
     // newly-matched ids already have a `document` row for the FK.
     let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
-    let filters: [FilterState] = [.default] + savedViews.map { FilterState(savedView: $0) }
-    for filter in filters {
+    let views: [(name: String?, filter: FilterState)] =
+      [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
+    for (name, filter) in views {
       try Task.checkCancellation()
+      let key = QueryKey(serverID: serverID, filter: filter)
       do {
         let ids = try await wrapped.documentIDs(filter: filter)
-        try database.replaceQueryOrder(
-          queryKey: QueryKey(serverID: serverID, filter: filter),
-          serverID: serverID, orderedIDs: ids)
+        try database.replaceQueryOrder(queryKey: key, serverID: serverID, orderedIDs: ids)
+        try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        Logger.shared.info("Membership sweep: a view failed (\(error)); continuing")
+        Logger.shared.info(
+          "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing")
+        try? database.recordQuerySyncError(
+          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
+          message: Self.syncFailureMessage(error))
       }
     }
   }

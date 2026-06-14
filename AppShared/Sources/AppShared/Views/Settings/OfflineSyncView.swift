@@ -72,6 +72,25 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineSyncStatusHeader))
       }
 
+      if mode == .entireLibrary, !store.syncErrors.isEmpty {
+        Section {
+          ForEach(store.syncErrors) { error in
+            VStack(alignment: .leading, spacing: 2) {
+              Text(error.savedViewName ?? String(localized: .settings(.offlineSyncDefaultView)))
+              Text(error.message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        } header: {
+          Label(
+            String(localized: .settings(.offlineSyncProblemsHeader)),
+            systemImage: "exclamationmark.triangle")
+        } footer: {
+          Text(.settings(.offlineSyncProblemsDescription))
+        }
+      }
+
       Section {
         statusRow(String(localized: .settings(.offlineSyncTotal)), value: byteText(stats.total))
         ForEach(TransferCategory.allCases, id: \.self) { category in
