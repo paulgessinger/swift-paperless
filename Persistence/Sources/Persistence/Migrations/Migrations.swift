@@ -55,6 +55,10 @@ enum Migrations {
       try V6_DropProjectionAndQueryOrderFK.run(db)
     }
 
+    migrator.registerMigration("v7_create_query_sync_error") { db in
+      try V7_CreateQuerySyncError.run(db)
+    }
+
     return migrator
   }
 }
