@@ -428,59 +428,6 @@
         }
       }
     },
-    "appVersionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gemt app-version"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gespeicherte App-Version"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stored app version"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version de l'application enregistrée"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Versione dell'app memorizzata"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opgeslagen app-versie"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisana wersja aplikacji"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kayıtlı uygulama sürümü"
-          }
-        }
-      }
-    },
     "appVersionResetMessage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -583,6 +530,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sürüm Sıfırlama"
+          }
+        }
+      }
+    },
+    "appVersionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemt app-version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte App-Version"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored app version"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version de l'application enregistrée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione dell'app memorizzata"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opgeslagen app-versie"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisana wersja aplikacji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlı uygulama sürümü"
           }
         }
       }
@@ -2461,6 +2461,18 @@
         }
       }
     },
+    "offlineSyncDefaultView" : {
+      "comment" : "Label for the default document list in the offline sync failure list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default view"
+          }
+        }
+      }
+    },
     "offlineSyncFilling" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2524,6 +2536,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync now"
+          }
+        }
+      }
+    },
+    "offlineSyncProblemsDescription" : {
+      "comment" : "Footer explaining the offline sync problems section",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        }
+      }
+    },
+    "offlineSyncProblemsHeader" : {
+      "comment" : "Header for the section listing views that failed to sync for offline use",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync problems"
           }
         }
       }

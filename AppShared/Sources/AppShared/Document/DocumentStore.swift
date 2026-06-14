@@ -67,6 +67,11 @@ public final class DocumentStore: Sendable {
   /// read wouldn't be tracked by the observation.
   public private(set) var libraryCoverageAt: Date?
 
+  /// Views (saved or default) whose proactive offline fill the server most
+  /// recently rejected — observed from `query_sync_error` for the active server
+  /// so the Offline & Sync screen can warn that they aren't fully cached.
+  public private(set) var syncErrors: [QuerySyncError] = []
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -106,6 +111,10 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var coverageObservationTask: Task<Void, Never>?
 
+  // Observes the active server's recorded per-view sync failures into `syncErrors`.
+  @ObservationIgnored
+  private var syncErrorObservationTask: Task<Void, Never>?
+
   // Last successful (or attempted) remote-delete reconcile. The sweep fetches
   // the server's whole id set, so it is throttled — `sync()` kicks it
   // fire-and-forget on launch/foreground/refresh, but it only runs at most once
@@ -125,6 +134,7 @@ public final class DocumentStore: Sendable {
   deinit {
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
+    syncErrorObservationTask?.cancel()
   }
 
   /// Point the element projection at the active repository's DB. Under the
@@ -133,6 +143,7 @@ public final class DocumentStore: Sendable {
   /// login) detaches the projection.
   private func wireElementStore() {
     coverageObservationTask?.cancel()
+    syncErrorObservationTask?.cancel()
     if let backend = repository as? any CachingBackend {
       elementStore.repoint(database: backend.database, serverID: backend.serverID)
       // Source-of-truth: observe the coverage timestamp rather than reading it
@@ -145,9 +156,18 @@ public final class DocumentStore: Sendable {
           Logger.shared.debug("Coverage observation ended: \(error)")
         }
       }
+      let errors = backend.database.observeQuerySyncErrors(serverID: backend.serverID)
+      syncErrorObservationTask = Task { [weak self] in
+        do {
+          for try await errors in errors { self?.syncErrors = errors }
+        } catch {
+          Logger.shared.debug("Sync-error observation ended: \(error)")
+        }
+      }
     } else {
       elementStore.reset()
       libraryCoverageAt = nil
+      syncErrors = []
     }
   }
 
