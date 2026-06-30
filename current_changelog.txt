@@ -8,3 +8,4 @@
 - New "Offline & Sync" settings screen showing sync status and how much data the app has transferred
 - Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing
 - A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
+- Fix saved views failing to load when a filter rule has a null value (e.g. a "does not have tag" rule)

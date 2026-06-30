@@ -1,0 +1,200 @@
+{
+    "count": 7,
+    "next": null,
+    "previous": null,
+    "all": [
+        4,
+        7,
+        3,
+        6,
+        5,
+        8,
+        1
+    ],
+    "results": [
+        {
+            "id": 4,
+            "name": "Active Car Insurance",
+            "show_on_dashboard": false,
+            "show_in_sidebar": true,
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "284"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "264"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                }
+            ],
+            "page_size": null,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "tag",
+                "correspondent",
+                "documenttype",
+                "storagepath",
+                "note",
+                "owner",
+                "shared",
+                "asn"
+            ],
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 7,
+            "name": "Active Health Insurance",
+            "show_on_dashboard": false,
+            "show_in_sidebar": true,
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 19,
+                    "value": "Membership certificate"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "372"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 3,
+            "name": "Active Home Insurance",
+            "show_on_dashboard": false,
+            "show_in_sidebar": true,
+            "sort_field": "modified",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "323"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "264"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 6,
+            "name": "Active Life Insurance",
+            "show_on_dashboard": false,
+            "show_in_sidebar": true,
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "325"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 5,
+            "name": "Active Rental Insurance",
+            "show_on_dashboard": false,
+            "show_in_sidebar": true,
+            "sort_field": "added",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "129"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "264"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 8,
+            "name": "Active Voice/Data Contract",
+            "show_on_dashboard": false,
+            "show_in_sidebar": false,
+            "sort_field": "created",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 6,
+                    "value": "156"
+                },
+                {
+                    "rule_type": 6,
+                    "value": "407"
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        },
+        {
+            "id": 1,
+            "name": "Inbox",
+            "show_on_dashboard": true,
+            "show_in_sidebar": false,
+            "sort_field": null,
+            "sort_reverse": false,
+            "filter_rules": [
+                {
+                    "rule_type": 17,
+                    "value": null
+                }
+            ],
+            "page_size": null,
+            "display_mode": null,
+            "display_fields": null,
+            "owner": 2,
+            "user_can_change": true
+        }
+    ]
+}
