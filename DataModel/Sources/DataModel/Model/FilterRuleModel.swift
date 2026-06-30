@@ -289,7 +289,13 @@ extension FilterRule: Codable {
         }
       }
     } catch DecodingError.typeMismatch {
-      value = try .invalid(value: container.decodeOrConvert(String.self, forKey: .value))
+      // The typed decode failed (wrong JSON type, or a `null` where the rule
+      // expects a concrete value, e.g. a tag-typed rule with `value: null`).
+      // Fall back to capturing whatever string is there as `.invalid`; a null
+      // value has no string representation, so record it as an empty invalid
+      // value rather than re-throwing and failing the whole response decode.
+      value = try .invalid(
+        value: container.decodeOrConvertOptional(String.self, forKey: .value) ?? "")
     }
   }
 

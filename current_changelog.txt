@@ -1,1 +1,2 @@
 - Fix untranslated strings in document notes
+- Fix saved views failing to load when a filter rule has a null value (e.g. a "does not have tag" rule)
