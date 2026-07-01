@@ -1,15 +1,20 @@
+# Homebrew's Ruby is keg-only (not on PATH by default). fastlane's gems are
+# installed under it, so put it first for every recipe — otherwise `bundle`
+# resolves to the EOL system Ruby 2.6 and fails to find the gems.
+export PATH := '/opt/homebrew/opt/ruby/bin:' + env_var('PATH')
+
 default_port := '8000'
 
 zensical := "uv run --with-requirements docs/requirements.txt zensical"
 
 docs-serve port=default_port:
-    {{zensical}} serve -o -a localhost:{{port}}
+  {{zensical}} serve -o -a localhost:{{port}}
 
 docs:
-    {{zensical}} build
-    rm -f site/requirements.in site/requirements.txt
-    mkdir -p site/release_notes/md
-    cp docs/release_notes/*.md site/release_notes/md
+  {{zensical}} build
+  rm -f site/requirements.in site/requirements.txt
+  mkdir -p site/release_notes/md
+  cp docs/release_notes/*.md site/release_notes/md
 
 version_xcconfig := 'Config/Shared/Version.xcconfig'
 
@@ -38,15 +43,17 @@ get-build:
   @grep -m1 'CURRENT_PROJECT_VERSION' {{version_xcconfig}} | sed 's/.*= //'
 
 tag:
-  #!/bin/bash
+  #!/usr/bin/env bash
   version=$(just get-version)
   number=$(just get-build)
   tag="builds/v$version/$number"
   git tag $tag
   echo $tag
 
+# Prepare a new TestFlight beta and trigger its upload (reimplements fastlane's
+# `beta` lane). See scripts/beta.sh for the details.
 beta:
-  bundle exec fastlane beta
+  scripts/beta.sh
 
 # Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
 deliver:
@@ -82,7 +89,7 @@ deliver-preview:
 default_os := '26.2'
 default_device := 'iPhone 17 Pro'
 build os=default_os device=default_device: generate
-  #!/bin/bash
+  #!/usr/bin/env bash
   xcodebuild -scheme swift-paperless -project ./swift-paperless.xcodeproj -configuration Release -destination "platform=iOS Simulator,OS={{os}},name={{device}}" | xcbeautify
 
 _test_swift package:
