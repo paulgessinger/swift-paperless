@@ -1,3 +1,8 @@
+1.11.0 (200)
+
+- Fix untranslated strings in document notes
+- Fix saved views failing to load when a filter rule has a null value (e.g. a "does not have tag" rule)
+
 1.10.0 (195)
 
 - Fixed the in-document PDF search freezing (and sometimes crashing) on text-heavy documents; search now runs in the background and streams results as they are found
