@@ -3,6 +3,7 @@
 //  AppShared
 //
 
+import DataModel
 import Foundation
 
 /// How aggressively the offline cache fills a given server's documents.
@@ -20,4 +21,14 @@ import Foundation
 public enum OfflineBrowsingMode: String, Codable, CaseIterable, Sendable {
   case recentlyBrowsed
   case entireLibrary
+}
+
+extension OfflineBrowsingMode {
+  /// Size-adaptive default for a newly added connection. The comparison
+  /// itself is `DataModel.OfflineLibrarySize.isSmall(documentCount:)` — kept
+  /// there so it's unit-testable; this is a thin, effectively untested
+  /// adapter (one branch, no logic of its own).
+  public static func `default`(forDocumentCount count: UInt?) -> OfflineBrowsingMode {
+    OfflineLibrarySize.isSmall(documentCount: count) ? .entireLibrary : .recentlyBrowsed
+  }
 }

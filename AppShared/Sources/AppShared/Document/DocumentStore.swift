@@ -95,6 +95,12 @@ public final class DocumentStore: Sendable {
   /// so the Offline & Sync screen can warn that they aren't fully cached.
   public private(set) var syncErrors: [QuerySyncError] = []
 
+  /// Live count of `document` rows cached for the active server — lets the
+  /// Offline & Sync screen show the effect of the proactive fill and the
+  /// downgrade GC (switching *Entire library* → *Recently browsed*) without a
+  /// debugger.
+  public private(set) var cachedDocumentCount: Int = 0
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -138,6 +144,10 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncErrorObservationTask: Task<Void, Never>?
 
+  // Observes the active server's cached document count into `cachedDocumentCount`.
+  @ObservationIgnored
+  private var documentCountObservationTask: Task<Void, Never>?
+
   // Last successful (or attempted) remote-delete reconcile. The sweep fetches
   // the server's whole id set, so it is throttled — `sync()` kicks it
   // fire-and-forget on launch/foreground/refresh, but it only runs at most once
@@ -158,6 +168,7 @@ public final class DocumentStore: Sendable {
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
+    documentCountObservationTask?.cancel()
   }
 
   /// Point the element projection at the active repository's DB. Under the
@@ -167,6 +178,7 @@ public final class DocumentStore: Sendable {
   private func wireElementStore() {
     coverageObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
+    documentCountObservationTask?.cancel()
     if let backend = repository as? any CachingBackend {
       elementStore.repoint(database: backend.database, serverID: backend.serverID)
       // Source-of-truth: observe the coverage timestamp rather than reading it
@@ -187,10 +199,19 @@ public final class DocumentStore: Sendable {
           Logger.shared.debug("Sync-error observation ended: \(error)")
         }
       }
+      let counts = backend.database.observeDocumentCount(serverID: backend.serverID)
+      documentCountObservationTask = Task { [weak self] in
+        do {
+          for try await count in counts { self?.cachedDocumentCount = count }
+        } catch {
+          Logger.shared.debug("Document-count observation ended: \(error)")
+        }
+      }
     } else {
       elementStore.reset()
       libraryCoverageAt = nil
       syncErrors = []
+      cachedDocumentCount = 0
     }
   }
 

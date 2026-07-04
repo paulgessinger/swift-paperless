@@ -2601,6 +2601,18 @@
         }
       }
     },
+    "offlineSyncCachedDocuments" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached documents"
+          }
+        }
+      }
+    },
+
     "offlineSyncNever" : {
       "extractionState" : "manual",
       "localizations" : {

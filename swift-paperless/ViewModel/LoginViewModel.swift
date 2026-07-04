@@ -735,12 +735,26 @@ class LoginViewModel {
       }
     }()
 
+    // Best-effort size probe for the offline-browsing default, mirroring the
+    // friendlyName fetch above. A failure just leaves documentCount nil, and
+    // default(forDocumentCount:) treats nil as "not small" → .recentlyBrowsed.
+    // Must not block or fail login.
+    let documentCount: UInt? = await {
+      do {
+        return try await repository.documentCount()
+      } catch {
+        Logger.api.info("Could not fetch document count during login: \(error)")
+        return nil
+      }
+    }()
+
     let stored = StoredConnection(
       url: baseUrl,
       extraHeaders: extraHeaders,
       user: currentUser,
       identity: selectedIdentity?.name,
-      friendlyName: friendlyName)
+      friendlyName: friendlyName,
+      offlineBrowsingMode: OfflineBrowsingMode.default(forDocumentCount: documentCount))
     if let token = connection.token {
       Logger.api.info("Have token for connection, storing")
       do throws(Keychain.KeychainError) {

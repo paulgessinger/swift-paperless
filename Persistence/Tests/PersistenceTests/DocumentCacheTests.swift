@@ -339,6 +339,22 @@ struct DocumentCacheTests {
     #expect(removed == [1])
   }
 
+  // MARK: - Diagnostics (cached document count)
+
+  @Test("documentCount reflects the number of cached document rows for a server")
+  func documentCountReflectsRows() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    #expect(try database.documentCount(serverID: server) == 0)
+
+    try database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+    #expect(try database.documentCount(serverID: server) == 3)
+
+    try database.deleteDocuments(serverID: server, removedIDs: [2])
+    #expect(try database.documentCount(serverID: server) == 2)
+  }
+
   // MARK: - Cache wipe (keeps connections)
 
   @Test("clearCache wipes document + query rows but keeps the server connection")

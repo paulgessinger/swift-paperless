@@ -56,6 +56,9 @@ public struct OfflineSyncView: View {
         statusRow(
           String(localized: .settings(.offlineSyncLastRefresh)),
           value: dateText(store.lastReconcileAt))
+        statusRow(
+          String(localized: .settings(.offlineSyncCachedDocuments)),
+          value: "\(store.cachedDocumentCount)")
 
         Button {
           Task {

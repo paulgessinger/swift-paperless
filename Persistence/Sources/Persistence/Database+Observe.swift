@@ -99,6 +99,16 @@ extension Database {
     return stream(observation)
   }
 
+  /// Live count of `document` rows cached for a server — a diagnostic surface
+  /// (the Offline & Sync screen) so the proactive fill and the downgrade GC's
+  /// effect are visible without a debugger.
+  public func observeDocumentCount(serverID: UUID) -> AsyncThrowingStream<Int, Error> {
+    let observation = ValueObservation.tracking { db in
+      try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
+    }
+    return stream(observation)
+  }
+
   /// Shared adapter: drive a `ValueObservation` into an `AsyncThrowingStream`,
   /// mirroring ``observeConnections()``. Cancelling the consuming task tears
   /// down the underlying observation.

@@ -532,7 +532,8 @@ public final class ConnectionManager {
       Logger.api.warning("Tried to set offline browsing mode but have no active connection")
       return
     }
-    guard stored.offlineBrowsingMode != mode else { return }
+    let previousMode = stored.offlineBrowsingMode
+    guard previousMode != mode else { return }
     Logger.api.info("Updating offline browsing mode on connection \(stored.id) to \(mode.rawValue)")
     stored.offlineBrowsingMode = mode
     // Write through to the in-memory dict immediately so the UI (and the
@@ -544,6 +545,44 @@ public final class ConnectionManager {
       try database.upsertConnection(record)
     } catch {
       Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
+    }
+
+    if previousMode == .entireLibrary, mode == .recentlyBrowsed {
+      runDowngradeGC(serverID: stored.id)
+    }
+  }
+
+  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`.
+  /// Turning the mode off doesn't by itself orphan anything — `query_order`
+  /// rows persist until something replaces them — so a plain
+  /// `pruneUnreferencedDocuments` alone finds nothing to reclaim (every saved
+  /// view the proactive fill touched, plus the default list, still fully
+  /// references its documents). This does the two steps that make room first:
+  /// drop every tracked query except the default list (saved views eager-fill
+  /// again from scratch if reopened, per Stage 8), then cap the default
+  /// list's own `query_order` to `recentlyBrowsedDefaultListCap`. Only then
+  /// does the orphan-document prune have anything to find.
+  ///
+  /// Fire-and-forget: a server that was filled at `.entireLibrary` may have a
+  /// large number of rows to sweep, and this is called synchronously from a
+  /// Settings picker binding on the main actor. `Database` is `Sendable`, so
+  /// a detached task is sufficient — no signature change needed on
+  /// `setOfflineBrowsingMode`. Silent by design: logged only, no persisted
+  /// "last reclaimed" status.
+  private func runDowngradeGC(serverID: UUID) {
+    let database = database
+    Task.detached(priority: .utility) {
+      do {
+        let defaultKey = QueryKey(serverID: serverID, filter: .default)
+        try database.dropQueryOrder(serverID: serverID, exceptQueryKey: defaultKey)
+        try database.truncateQueryOrder(
+          serverID: serverID, queryKey: defaultKey,
+          keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
+        let removed = try database.pruneUnreferencedDocuments(serverID: serverID)
+        Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
+      } catch {
+        Logger.api.error("Downgrade GC failed: \(error)")
+      }
     }
   }
 
