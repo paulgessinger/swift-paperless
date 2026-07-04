@@ -136,6 +136,25 @@ struct DocumentDetailCacheTests {
     #expect(try database.notes(serverID: serverA, documentID: 42) == [note(1, "a-note")])
   }
 
+  // MARK: - Ordinary delete path (R2 reconcile)
+
+  @Test("deleteDocuments also removes the deleted document's notes and file-metadata")
+  func deleteDocumentsDropsDetailCache() throws {
+    let server = UUID()
+    let database = try database(server)
+
+    try database.upsertDocument(
+      Document(id: 42, title: "A", created: date(1000), tags: [], owner: .user(1)),
+      serverID: server)
+    try database.setNotes([note(1, "a-note")], serverID: server, documentID: 42)
+    try database.setFileMetadata(metadata("sum"), serverID: server, versionID: 42)
+
+    try database.deleteDocuments(serverID: server, removedIDs: [42])
+
+    #expect(try database.notes(serverID: server, documentID: 42) == nil)
+    #expect(try database.fileMetadata(serverID: server, versionID: 42) == nil)
+  }
+
   // MARK: - Cascade
 
   @Test("clearCache drops cached notes and file-metadata")

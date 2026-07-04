@@ -184,4 +184,29 @@ struct DocumentObservationTests {
     }
     #expect(edited?.title == "A-edited")
   }
+
+  // MARK: - observeDocumentCount
+
+  @Test("observeDocumentCount emits the current count, then re-emits on write")
+  func documentCount() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+
+    let cold = try await firstValue(from: database.observeDocumentCount(serverID: server))
+    #expect(cold == 0)
+
+    let afterUpsert = try await value(
+      from: database.observeDocumentCount(serverID: server)
+    ) {
+      try database.upsertDocuments([self.doc(1, "A"), self.doc(2, "B")], serverID: server)
+    }
+    #expect(afterUpsert == 2)
+
+    let afterDelete = try await value(
+      from: database.observeDocumentCount(serverID: server)
+    ) {
+      try database.deleteDocuments(serverID: server, removedIDs: [1])
+    }
+    #expect(afterDelete == 1)
+  }
 }

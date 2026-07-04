@@ -110,6 +110,7 @@ extension Database {
   public func deleteDocuments(serverID: UUID, removedIDs: [UInt]) throws {
     guard !removedIDs.isEmpty else { return }
     try writer.write { db in
+      try Self.pruneDocumentDetail(db, serverID: serverID, documentIDs: removedIDs)
       _ =
         try DocumentRecord
         .filter(Column("server_id") == serverID && removedIDs.contains(Column("id")))
@@ -117,6 +118,88 @@ extension Database {
       _ =
         try QueryOrderRow
         .filter(Column("server_id") == serverID && removedIDs.contains(Column("remote_id")))
+        .deleteAll(db)
+    }
+  }
+
+  /// Deletes every `document` row for `serverID` no longer referenced by any
+  /// `query_order` row for that server (the anti-join mirror of the
+  /// skeleton-read `queryWindowSQL`), plus its detail-cache siblings. Called
+  /// when a server's `OfflineBrowsingMode` transitions `.entireLibrary` →
+  /// `.recentlyBrowsed`, to reclaim documents that were only cached because of
+  /// the proactive fill. "Referenced" today means only `query_order`
+  /// membership — pinning (a second future exemption) doesn't exist yet.
+  /// Returns the number of documents removed (for logging/tests).
+  @discardableResult
+  public func pruneUnreferencedDocuments(serverID: UUID) throws -> Int {
+    try writer.write { db in
+      let orphanIDs = try UInt.fetchAll(
+        db,
+        sql: """
+          SELECT d.id FROM document d
+          LEFT JOIN query_order q
+            ON q.server_id = d.server_id AND q.remote_id = d.id
+          WHERE d.server_id = ? AND q.remote_id IS NULL
+          """,
+        arguments: [serverID])
+      guard !orphanIDs.isEmpty else { return 0 }
+      try Self.pruneDocumentDetail(db, serverID: serverID, documentIDs: orphanIDs)
+      return
+        try DocumentRecord
+        .filter(Column("server_id") == serverID && orphanIDs.contains(Column("id")))
+        .deleteAll(db)
+    }
+  }
+
+  /// Drops every cached query's `query_order` / `query_meta` /
+  /// `query_sync_error` for `serverID` except `exceptQueryKey` (the default
+  /// list). Called ahead of ``pruneUnreferencedDocuments(serverID:)`` on a
+  /// `.entireLibrary` → `.recentlyBrowsed` downgrade: saved views proactively
+  /// filled while `.entireLibrary` was active should no longer be tracked at
+  /// all — they eager-fill again from scratch if reopened (Stage 8), matching
+  /// what `.recentlyBrowsed` already does for any other saved view. Returns
+  /// the number of `query_order` rows removed.
+  @discardableResult
+  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws -> Int {
+    try writer.write { db in
+      let removed =
+        try QueryOrderRow
+        .filter(
+          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
+        )
+        .deleteAll(db)
+      try QueryMetaRow
+        .filter(
+          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
+        )
+        .deleteAll(db)
+      try QuerySyncErrorRecord
+        .filter(
+          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
+        )
+        .deleteAll(db)
+      return removed
+    }
+  }
+
+  /// Deletes the tail of a cached query's ordered membership beyond
+  /// `keepingFirst` positions. Used to cap the default list's `query_order`
+  /// on a `.recentlyBrowsed` downgrade. The remaining prefix (positions
+  /// `0..<keepingFirst`) still reads correctly via the existing growing-prefix
+  /// observation; `query_meta.total_count` is left as the server's true
+  /// count, so `QueryStatus.localCount < totalCount` reports the cap the same
+  /// way it already reports any other partial local presence. Returns the
+  /// number of `query_order` rows removed.
+  @discardableResult
+  public func truncateQueryOrder(
+    serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
+  ) throws -> Int {
+    try writer.write { db in
+      try QueryOrderRow
+        .filter(
+          Column("server_id") == serverID && Column("query_key") == queryKey.rawValue
+            && Column("position") >= limit
+        )
         .deleteAll(db)
     }
   }
@@ -166,6 +249,15 @@ extension Database {
         .select(Column("id"), as: UInt.self)
         .filter(Column("server_id") == serverID)
         .fetchSet(db)
+    }
+  }
+
+  /// Count of `document` rows cached for a server — a diagnostic surface (the
+  /// Offline & Sync screen) so the proactive fill and the downgrade GC's
+  /// effect are visible without a debugger.
+  public func documentCount(serverID: UUID) throws -> Int {
+    try writer.read { db in
+      try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
     }
   }
 
@@ -229,6 +321,37 @@ extension Database {
     _ db: GRDB.Database, _ domain: Document, serverID: UUID
   ) throws {
     try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
+  }
+
+  /// Deletes the per-document detail-cache siblings (`document_note`,
+  /// `file_metadata`) for documents about to be removed from `document`. Must
+  /// run **before** the `document` row is deleted, in the same transaction —
+  /// `file_metadata` cleanup needs the still-live `versions` list. Neither
+  /// detail table has an FK to `document` (only to `server`), so this is
+  /// explicit bookkeeping, not a cascade. Shared by `deleteDocuments` and
+  /// `pruneUnreferencedDocuments`.
+  private static func pruneDocumentDetail(
+    _ db: GRDB.Database, serverID: UUID, documentIDs: [UInt]
+  ) throws {
+    guard !documentIDs.isEmpty else { return }
+    try DocumentNoteRecord
+      .filter(Column("server_id") == serverID && documentIDs.contains(Column("document_id")))
+      .deleteAll(db)
+
+    // Include every recorded version id plus the document's own id (the
+    // fallback `file_metadata` key for legacy/un-versioned documents, mirroring
+    // `Document.currentVersionID`'s `self.id` fallback).
+    let versionIDs =
+      try DocumentRecord
+      .filter(Column("server_id") == serverID && documentIDs.contains(Column("id")))
+      .fetchAll(db)
+      .flatMap { record -> [UInt] in
+        Array(Set(record.payload.versions.map(\.id) + [record.id]))
+      }
+    guard !versionIDs.isEmpty else { return }
+    try FileMetadataRecord
+      .filter(Column("server_id") == serverID && versionIDs.contains(Column("version_id")))
+      .deleteAll(db)
   }
 
   private func setQueryMeta(
