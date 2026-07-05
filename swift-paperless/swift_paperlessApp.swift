@@ -154,7 +154,10 @@ struct MainView: View {
   /// metered, or already covered). Used after the initial-launch sync; the
   /// scenePhase path chains it after `sync()` directly.
   private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
-    Task { await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force) }
+    Task {
+      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
+      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+    }
   }
 
   private func refreshConnection(animated: Bool) async {
@@ -373,6 +376,7 @@ struct MainView: View {
           Task {
             try? await store.sync()
             await store.fillLibraryIfEnabled(unmetered: isUnmetered)
+            await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
           }
         }
 

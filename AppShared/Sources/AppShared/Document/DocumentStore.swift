@@ -766,6 +766,21 @@ extension DocumentStore {
     }
   }
 
+  /// Proactive *Entire library* per-document detail fill (notes + file-metadata),
+  /// gated by the setting and an unmetered link. Run after `fillLibraryIfEnabled`
+  /// so the document rows to walk are already on disk. Idempotent and resumable
+  /// (driven off what's still missing), so it needs no `force`. Soft-fail.
+  public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
+    guard unmetered, let backend = repository as? any CachingBackend,
+      backend.offlineBrowsingMode == .entireLibrary
+    else { return }
+    do {
+      try await backend.fillDocumentDetails()
+    } catch {
+      Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
+    }
+  }
+
   /// Live single document by id, for detail/preview surfaces that must repaint on
   /// mutation/sync.
   public func observeDocument(id: UInt) -> AsyncThrowingStream<Document?, Error> {
