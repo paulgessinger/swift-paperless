@@ -64,6 +64,19 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// ``QueryFillHandle`` carries the `QueryKey` the list observes and a cancel
   /// handle for the in-flight fill. Throws if page 1 fails (offline → the list
   /// falls back to whatever is already cached).
+  ///
+  /// **Deliberately not capped by `OfflineBrowsingMode`.** Scrolling
+  /// (`DocumentListViewModel.fetchMoreIfNeeded`) is a pure local DB read — it
+  /// only widens the observed prefix, no network call — so a size cap here
+  /// wouldn't just bound the offline guarantee, it would become a hard ceiling
+  /// on what's reachable *even online*, since nothing re-triggers a fetch as
+  /// the user scrolls past whatever got cached. Fixing that properly needs the
+  /// deferred v2 on-scroll fill (R3b, a real network trigger from
+  /// `fetchMoreIfNeeded`), not a one-line cap. We keep the list view simple —
+  /// every opened view eager-fills in full, in both modes — and will only
+  /// build R3b if users actually complain about it (large-library fill cost);
+  /// see `local-database-source-of-truth-variant.md` Stage 8, "Why v1 stays
+  /// the shipped behavior."
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
   /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
@@ -84,10 +97,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   func reconcileSavedViewMembership() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
-  /// and drop every cached document absent from it — the FK cascade removes them
-  /// from every cached query_order. No-op when nothing is cached. Paperless has
-  /// no deletion feed, so this periodic sweep is how deletes (and trashings)
-  /// disappear locally.
+  /// and drop every cached document absent from it — `deleteDocuments` explicitly
+  /// prunes it from every cached `query_order` too (there is no FK from `document`
+  /// to `query_order`, dropped in migration V6 so a row can dangle as a skeleton).
+  /// No-op when nothing is cached. Paperless has no deletion feed, so this
+  /// periodic sweep is how deletes (and trashings) disappear locally.
   func reconcileDocumentDeletions() async throws
 
   /// Changed-metadata delta (R3δ): page `ordering=-modified` until older than the
@@ -542,7 +556,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(document: Document) async throws {
     try await wrapped.delete(document: document)
-    // FK cascade removes it from every cached query_order.
+    // Explicitly prunes every cached query_order referencing it too — no FK
+    // cascade does this (dropped in migration V6).
     try database.deleteDocuments(serverID: serverID, removedIDs: [document.id])
   }
 
@@ -553,7 +568,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(id: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(id: id) else {
-        // Gone on the server — drop from cache (cascade clears its query_order).
+        // Gone on the server — drop from cache; deleteDocuments explicitly
+        // clears its query_order too (no FK cascade does this).
         try database.deleteDocuments(serverID: serverID, removedIDs: [id])
         return nil
       }
@@ -689,7 +705,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         throw CancellationError()
       } catch {
         Logger.shared.info(
-          "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing")
+          "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
+        )
         try? database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))

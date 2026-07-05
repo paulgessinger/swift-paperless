@@ -355,8 +355,9 @@ public final class DocumentStore: Sendable {
   public func deleteDocument(_ document: Document) async throws {
     Logger.shared.info("Deleting document with ID \(document.id, privacy: .public)")
     try await performing(.delete, on: .document) {
-      // The repository write-throughs the delete to the DB; the FK cascade removes
-      // it from every cached query_order and the observations repaint.
+      // The repository write-throughs the delete to the DB, explicitly pruning
+      // every cached query_order referencing it (no FK cascade does this — see
+      // CachingRepository.delete(document:)), and the observations repaint.
       try await repository.delete(document: document)
       events.emit(.deleted(document: document))
     }
