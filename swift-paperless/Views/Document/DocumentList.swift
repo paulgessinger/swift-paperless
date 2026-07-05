@@ -205,8 +205,8 @@ struct DocumentList: View {
     switch event {
     case .deleted, .changed, .changeReceived:
       // Source-of-truth: a mutation write-throughs to the DB and the document
-      // observation repaints the list in place (a delete cascades out of every
-      // query_order). Nothing to do here.
+      // observation repaints the list in place (a delete is explicitly pruned
+      // out of every query_order — no FK cascade does this). Nothing to do here.
       break
     case .repositoryWillChange:
       filterModel.ready = false
