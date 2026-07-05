@@ -89,6 +89,16 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// successful pass so an interrupted run retries.
   func fillLibrary(force: Bool) async throws
 
+  /// Proactive per-document detail fill (Stage 9, *Entire library*): give every
+  /// cached document its notes and file-metadata so it's fully renderable
+  /// offline even if never opened. Zero-note documents are seeded from the
+  /// list payload's notes *count* for free (no request); only documents that
+  /// actually have notes, and versions whose `/metadata/` isn't cached, cost a
+  /// request. Driven off "what's still missing" so it's inherently
+  /// checkpointed/resumable and capped per pass. Runs after `fillLibrary` has
+  /// populated the document rows. No-op unless *Entire library* is enabled.
+  func fillDocumentDetails() async throws
+
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
   /// entered a view appear offline. Only ids with a cached `document` row are
@@ -307,6 +317,43 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Never forever. Only cancellation — an interrupted run — skips the marker,
     // and that bails out via the `throw` above before reaching here.
     try? database.setLibraryCoverageAt(Date(), serverID: serverID)
+  }
+
+  // How many notes/metadata requests a single detail-fill pass makes before
+  // yielding, so a cold large library spans several foregrounds (mirroring the
+  // R3δ `deltaCap`) rather than one marathon of per-document round-trips.
+  private let detailFillCap = 500
+
+  public func fillDocumentDetails() async throws {
+    guard offlineBrowsingMode == .entireLibrary else { return }
+
+    // Free step: every zero-note document gets an empty notes row from the list
+    // payload's count — no request — so it renders "no notes" offline and drops
+    // out of the fetch set below.
+    let seeded = (try? database.seedEmptyNotesForZeroCountDocuments(serverID: serverID)) ?? 0
+
+    // Then fetch only what's genuinely missing, capped per pass. `try?` per doc
+    // so one failure (or going offline mid-pass) doesn't abort the rest; the
+    // still-missing set simply shrinks and the next pass resumes.
+    var fetchedMetadata = 0
+    var fetchedNotes = 0
+    try await NetworkTransfer.$category.withValue(.fill) {
+      let missingMetadata = (try? database.documentIDsMissingFileMetadata(serverID: serverID)) ?? []
+      for id in missingMetadata.prefix(detailFillCap) {
+        try Task.checkCancellation()
+        if (try? await metadata(documentId: id)) != nil { fetchedMetadata += 1 }
+      }
+
+      let needsNotes = (try? database.documentIDsNeedingNotesFetch(serverID: serverID)) ?? []
+      for id in needsNotes.prefix(detailFillCap) {
+        try Task.checkCancellation()
+        if (try? await notes(documentId: id)) != nil { fetchedNotes += 1 }
+      }
+    }
+
+    Logger.shared.info(
+      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata"
+    )
   }
 
   /// A short, user-facing reason for a failed view sync — prefers the server's
@@ -689,6 +736,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       Logger.shared.info(
         "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
       try database.upsertDocuments(toUpsert, serverID: serverID)
+      // Note edits bump `modified`, so a changed doc's cached notes may be
+      // stale. Drop them (cheap, local) — the upsert above just refreshed each
+      // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
+      // row for free when the count is 0, or re-fetches when it's > 0. We can't
+      // tell a note change from any other field change, so this may re-fetch a
+      // few docs whose notes didn't actually change; bounded by `deltaCap`.
+      try? database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
     }
     if advanced > watermark {
       setDeltaWatermark(advanced)

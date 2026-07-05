@@ -1,5 +1,6 @@
 - Changing the default sort field, sort order or search mode in Preferences now applies to the document list right away, instead of only after a restart
 - Document notes and file metadata are cached when viewed, so they remain available offline
+- With "Entire library" offline browsing, notes and file metadata are now downloaded for your whole library in the background, so every document's details are available offline even if you never opened it
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
 - Title search and title and content search now use the new search API on Paperless-ngx v3.0 and later, matching what the web interface does. The same search now returns the same documents in both. Older servers are unaffected.
 - The content-only search mode is no longer offered, following the Paperless-ngx web interface, which has dropped it. Existing filters, saved views and links that use it keep working.
