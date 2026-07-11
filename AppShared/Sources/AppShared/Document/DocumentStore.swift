@@ -469,11 +469,11 @@ public final class DocumentStore: Sendable {
   /// sync still sees the error. This is what entry views call eagerly on
   /// appear, and what pull-to-refresh calls with `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
-    Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
+    Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
     do {
       try await runSyncElements()
       lastSyncError = nil
-      Logger.shared.info("Sync store complete")
+      Logger.sync.info("Sync store complete")
       // Reconcile remote deletes alongside the element sync (throttled,
       // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
@@ -484,7 +484,7 @@ public final class DocumentStore: Sendable {
       // connection switch. Drop it before the userInitiated rethrow so neither
       // case toasts.
       if error.isCancellationError {
-        Logger.shared.debug("Element sync cancelled")
+        Logger.sync.debug("Element sync cancelled")
         return
       }
       if userInitiated { throw error }
@@ -494,7 +494,7 @@ public final class DocumentStore: Sendable {
       if let displayable = error as? any DisplayableError {
         lastSyncError = displayable
       }
-      Logger.shared.error("Background sync failed (suppressed): \(error)")
+      Logger.sync.error("Background sync failed (suppressed): \(error)")
     }
   }
 
@@ -503,16 +503,16 @@ public final class DocumentStore: Sendable {
   /// do with it). A no-op without a caching backend.
   private func runSyncElements() async throws {
     if let syncTask {
-      Logger.shared.debug("Joining in-flight element sync")
+      Logger.sync.debug("Joining in-flight element sync")
       return try await syncTask.value
     }
     guard let backend = repository as? any CachingBackend else {
       // No DB-backed repository (e.g. NullRepository before login). Nothing to
       // sync; the projection is empty until a caching repository is set.
-      Logger.shared.info("Sync skipped: repository is not a caching backend")
+      Logger.sync.info("Sync skipped: repository is not a caching backend")
       return
     }
-    Logger.shared.debug("Starting element sync")
+    Logger.sync.debug("Starting element sync")
     let task = Task { [weak self] in
       try await NetworkTransfer.$category.withValue(.sync) {
         try await backend.syncElements { self?.report($0, for: .elementSync) }
@@ -853,7 +853,7 @@ extension DocumentStore {
       // fresh "last refreshed" while nothing is actually being refreshed.
       lastReconcileAt = Date()
     } catch {
-      Logger.shared.info("Document reconcile failed (suppressed): \(error)")
+      Logger.sync.info("Document reconcile failed (suppressed): \(error)")
     }
   }
 
@@ -882,9 +882,9 @@ extension DocumentStore {
           self?.report($0, for: .libraryFill)
         }
       } catch is CancellationError {
-        Logger.shared.info("Proactive library fill cancelled")
+        Logger.sync.info("Proactive library fill cancelled")
       } catch {
-        Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
+        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
       }
     }
     libraryFillTask = task
@@ -907,7 +907,7 @@ extension DocumentStore {
     do {
       try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
     } catch {
-      Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
+      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
     }
   }
 
