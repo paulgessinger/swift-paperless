@@ -14,6 +14,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.macos }}
@@ -27,7 +30,9 @@ jobs:
     name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Read Xcode version
         id: xcode-version
@@ -38,7 +43,7 @@ jobs:
             echo "version=${{ matrix.xcode }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
@@ -72,13 +77,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Read Xcode version
         id: xcode-version
         run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
@@ -93,8 +100,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-      - uses: j178/prek-action@v2
+      - uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
         with:
           prek-version: '0.3.x'

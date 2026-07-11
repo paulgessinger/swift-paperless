@@ -4,11 +4,14 @@ on:
   release:
     types: [prereleased]
 jobs:
-  upload_to_testflight:
+  # fastlane beta_ci pushes the build-number bump back to the repo using the
+  # default GITHUB_TOKEN and its persisted checkout credentials, so this job
+  # legitimately needs write access and persisted credentials.
+  upload_to_testflight: # zizmor: ignore[excessive-permissions]
     runs-on: macos-26
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout # zizmor: ignore[artipacked]
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup git user
         run: |
