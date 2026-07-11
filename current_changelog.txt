@@ -18,3 +18,4 @@
 - Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing
 - A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
 - Opening a document while the server is unreachable no longer removes it from your document list
+- All of your configured servers now stay synced for offline browsing in the background, not just the one you're currently viewing, so switching servers shows your documents right away
