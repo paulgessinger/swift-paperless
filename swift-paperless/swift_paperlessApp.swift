@@ -24,6 +24,10 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
+  // Keeps every *inactive* server's offline cache warm (Stage 10). The active
+  // server stays on the DocumentStore path; the engine skips it.
+  @State private var syncEngine: SyncEngine
+
   // Shared GRDB database, threaded into each connection's CachingRepository.
   private let database: Database
 
@@ -50,9 +54,20 @@ struct MainView: View {
     // Route network byte counts into the persisted transfer meter.
     TransferStatistics.install()
     self.database = database
-    _manager = State(wrappedValue: ConnectionManager(database: database))
+    let manager = ConnectionManager(database: database)
+    _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
+    // Same unmetered semantics as `isUnmetered` below, read live so the engine's
+    // observation-driven initial sync gates on the current link.
+    _syncEngine = State(
+      wrappedValue: SyncEngine(
+        database: database,
+        manager: manager,
+        isUnmetered: { [weak networkMonitor] in
+          guard let networkMonitor else { return false }
+          return !networkMonitor.isExpensive && !networkMonitor.isConstrained
+        }))
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
@@ -175,13 +190,18 @@ struct MainView: View {
       }
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
-      let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
-      let needsAuth = NeedsAuthRepository(
-        wrapping: api, serverID: conn.serverID, connectionManager: manager)
-      // Caching outermost: reads come from the GRDB cache, while sync's network
-      // calls still flow through the needs-auth 401 interception.
-      let repository = CachingRepository(
-        wrapping: needsAuth, database: database, serverID: conn.serverID)
+      // Build the active server's stack through the shared factory (identical to
+      // the per-server stacks the SyncEngine builds for inactive servers).
+      guard let stored = manager.storedConnection,
+        let repository = try? await makeCachingRepository(
+          for: stored, database: database, manager: manager)
+      else {
+        Logger.api.error("Could not build repository for active connection")
+        storeReady = false
+        showLoginScreen = true
+        showLoadingScreen = false
+        return
+      }
       if let store {
         await sleep(.seconds(0.1))
         store.events.emit(.repositoryWillChange)
@@ -342,12 +362,21 @@ struct MainView: View {
       Logger.shared.notice("Checking login status")
       await refreshConnection(animated: initialDisplay)
       initialDisplay = false
+
+      // Begin observing the server table for newly-added servers, and warm every
+      // inactive server's cache (the active server was just synced above).
+      syncEngine.start()
+      Task { await syncEngine.syncInactiveServers(unmetered: isUnmetered) }
     }
 
     .onEvent(from: manager.events) { event in
       switch event {
       case .connectionChange(let animated):
-        Task { await refreshConnection(animated: animated) }
+        Task {
+          await refreshConnection(animated: animated)
+          // The just-deactivated server is now inactive: sweep it (and the rest).
+          await syncEngine.syncInactiveServers(unmetered: isUnmetered)
+        }
       case .logout:
         showLoginScreen = true
       }
@@ -372,12 +401,16 @@ struct MainView: View {
         // (when "Entire library" is on) tops up the proactive fill — a no-op once
         // the coverage marker is fresh. The initial launch sync is handled by
         // refreshConnection.
-        if !initialDisplay, let store {
-          Task {
-            try? await store.sync()
-            await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-            await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+        if !initialDisplay {
+          if let store {
+            Task {
+              try? await store.sync()
+              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
+              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+            }
           }
+          // Warm the inactive servers alongside the active refresh.
+          Task { await syncEngine.syncInactiveServers(unmetered: isUnmetered) }
         }
 
         Task { await biometricLockManager.unlockIfEnabled() }
