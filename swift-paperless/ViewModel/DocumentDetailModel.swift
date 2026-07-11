@@ -73,6 +73,14 @@ class DocumentDetailModel {
   /// `modified`. The three enrichments — file-metadata, notes, edit suggestions —
   /// only need the document id, so they run concurrently afterwards.
   ///
+  /// The PDF itself doesn't wait for that metadata round-trip, though: on a
+  /// fresh open, `loadDocument` fires a provisional download off the
+  /// already-known (possibly stale) `document` in parallel with the metadata
+  /// refresh, so a cached PDF renders immediately on a slow connection instead
+  /// of sitting behind a blurred thumbnail. Once metadata comes back, if the
+  /// version/`modified` actually moved, a second download replaces the
+  /// provisional PDF with the current one.
+  ///
   /// Each step always logs its failure. Whether it's *surfaced* is the caller's
   /// choice via `onError`: an on-appear load (`.task`) passes nothing and stays
   /// silent (the load isn't user-initiated, and the one critical failure — the
@@ -127,11 +135,17 @@ class DocumentDetailModel {
   }
 
   func loadDocument(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
-    // Resolve the fresh document FIRST so the download path can validate
-    // the ContentStore cache against the server's current `modified`
-    // timestamp. If we kicked off both in parallel, a stale `modified`
-    // could validate an out-of-date cached PDF before the metadata refresh
-    // landed — surfacing old content alongside fresh metadata.
+    let priorDocument = document
+    let isFreshOpen = if case .initial = download { true } else { false }
+
+    // Fire the provisional PDF load off the already-known document right away
+    // — its own cache check (ContentStore, keyed on `currentVersionID` +
+    // `modified`) is what decides whether this is an instant hit or a real
+    // download, so starting it here rather than after the metadata round-trip
+    // is what lets a cached PDF appear immediately on a slow connection.
+    let provisionalDownload: Task<Void, Never>? =
+      isFreshOpen ? Task { await runDownload(for: priorDocument) } : nil
+
     do {
       if let updated = try await store.document(id: document.id) {
         document = updated
@@ -142,45 +156,69 @@ class DocumentDetailModel {
       onError?(error)
     }
 
-    switch download {
-    case .initial:
-      let setLoading = Task {
+    guard isFreshOpen else { return }
+    await provisionalDownload?.value
+
+    // Nothing changed server-side since the provisional load — it already
+    // reflects current content, no need to re-fetch.
+    guard
+      document.currentVersionID != priorDocument.currentVersionID
+        || document.modified != priorDocument.modified
+    else { return }
+
+    await runDownload(for: document)
+  }
+
+  private func runDownload(for document: Document) async {
+    let isFreshOpen = if case .initial = download { true } else { false }
+
+    let setLoading =
+      isFreshOpen
+      ? Task {
         try? await Task.sleep(for: .seconds(0.5))
         guard !Task.isCancelled else { return }
         download = .loading
+      } : nil
+    // Cancel the delayed `.loading` flip on *every* exit path. Without this
+    // the error path leaves `setLoading` pending, and 0.5s later it overwrites
+    // the just-set `.error` back to `.loading` — pinning the preview's loading
+    // overlay on screen even though the download already failed.
+    defer { setLoading?.cancel() }
+    do {
+      let url = try await store.repository.download(
+        document: document,
+        original: false,
+        progress: { @Sendable value in
+          Task { @MainActor in
+            self.downloadProgress = value
+          }
+        })
+
+      if case .loaded(let existingURL, _) = download, existingURL == url {
+        // Re-validation after the metadata refresh resolved to the same
+        // cached file the provisional load already rendered — nothing to do.
+        return
       }
-      // Cancel the delayed `.loading` flip on *every* exit path. Without this
-      // the error path leaves `setLoading` pending, and 0.5s later it overwrites
-      // the just-set `.error` back to `.loading` — pinning the preview's loading
-      // overlay on screen even though the download already failed.
-      defer { setLoading.cancel() }
-      do {
-        let url = try await store.repository.download(
-          document: document,
-          original: false,
-          progress: { @Sendable value in
-            Task { @MainActor in
-              self.downloadProgress = value
-            }
-          })
 
-        guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
-          download = .error
-          break
-        }
+      guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
+        if case .loaded = download {} else { download = .error }
+        return
+      }
 
-        download = .loaded(url: url, document: pdfDocument)
+      download = .loaded(url: url, document: pdfDocument)
 
-        // Start downloading the original in the background
-        Task { await downloadOriginal() }
-      } catch is CancellationError {
-      } catch {
+      // Start downloading the original in the background
+      Task { await downloadOriginal() }
+    } catch is CancellationError {
+    } catch {
+      if case .loaded = download {
+        // The provisional PDF is already on screen; keep showing it rather
+        // than clobbering it with an error from the post-metadata re-check.
+        Logger.shared.error("Unable to refresh document preview after metadata update: \(error)")
+      } else {
         download = .error
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
       }
-
-    default:
-      break
     }
   }
 
