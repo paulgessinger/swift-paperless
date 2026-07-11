@@ -395,11 +395,11 @@ public final class DocumentStore: Sendable {
   /// surface the failure (toast). So a user-initiated call joining a background
   /// sync still sees the error.
   public func sync(userInitiated: Bool = false) async throws {
-    Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
+    Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
     do {
       try await runSyncElements()
       lastSyncError = nil
-      Logger.shared.info("Sync store complete")
+      Logger.sync.info("Sync store complete")
       // Reconcile remote deletes alongside the element sync (throttled,
       // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
@@ -413,7 +413,7 @@ public final class DocumentStore: Sendable {
         if let displayable = error as? any DisplayableError {
           lastSyncError = displayable
         }
-        Logger.shared.error("Background sync failed (suppressed): \(error)")
+        Logger.sync.error("Background sync failed (suppressed): \(error)")
       }
     }
   }
@@ -423,16 +423,16 @@ public final class DocumentStore: Sendable {
   /// do with it). A no-op without a caching backend.
   private func runSyncElements() async throws {
     if let syncTask {
-      Logger.shared.debug("Joining in-flight element sync")
+      Logger.sync.debug("Joining in-flight element sync")
       return try await syncTask.value
     }
     guard let backend = repository as? any CachingBackend else {
       // No DB-backed repository (e.g. NullRepository before login). Nothing to
       // sync; the projection is empty until a caching repository is set.
-      Logger.shared.info("Sync skipped: repository is not a caching backend")
+      Logger.sync.info("Sync skipped: repository is not a caching backend")
       return
     }
-    Logger.shared.debug("Starting element sync")
+    Logger.sync.debug("Starting element sync")
     let task = Task {
       try await NetworkTransfer.$category.withValue(.sync) { try await backend.syncElements() }
     }
@@ -741,7 +741,7 @@ extension DocumentStore {
         try await backend.reconcileSavedViewMembership()
       }
     } catch {
-      Logger.shared.info("Document reconcile failed (suppressed): \(error)")
+      Logger.sync.info("Document reconcile failed (suppressed): \(error)")
     }
   }
 
@@ -762,7 +762,7 @@ extension DocumentStore {
     do {
       try await backend.fillLibrary(force: force)
     } catch {
-      Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
+      Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
     }
   }
 
@@ -777,7 +777,7 @@ extension DocumentStore {
     do {
       try await backend.fillDocumentDetails()
     } catch {
-      Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
+      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
     }
   }
 

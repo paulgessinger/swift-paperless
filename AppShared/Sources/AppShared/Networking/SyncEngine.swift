@@ -134,10 +134,14 @@ public final class SyncEngine {
       throttle: inactiveThrottle,
       unmetered: unmetered)
 
+    Logger.sync.info(
+      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (unmetered: \(unmetered), userInitiated: \(userInitiated))"
+    )
     for action in actions {
       guard let stored = manager.connections[action.serverID] else { continue }
       await runAction(action, stored: stored)
     }
+    Logger.sync.info("Inactive sweep complete")
   }
 
   private func handleConnectionsChanged() {
@@ -151,6 +155,9 @@ public final class SyncEngine {
     let added = SyncPlan.newlyAdded(
       current: current, known: knownServerIDs, activeID: manager.activeConnectionId)
     knownServerIDs = current
+    if !added.isEmpty {
+      Logger.sync.info("Observed \(added.count) new server(s); kicking initial sync")
+    }
     for id in added {
       guard let stored = manager.connections[id] else { continue }
       // Throttle-exempt initial sync for a freshly-appeared server.
@@ -169,6 +176,8 @@ public final class SyncEngine {
       // Config-synced-but-uncredentialed: mark per-server needs-auth and make no
       // network call. Deterministic and cheap; when the token later lands, the
       // next sweep picks it up. The 401 path stays a backstop for a rejected token.
+      Logger.sync.info(
+        "Server \(stored.logLabel, privacy: .public) uncredentialed; marking needs-auth (no sync)")
       manager.markNeedsAuth(for: stored.id)
       return
     }
@@ -189,6 +198,9 @@ public final class SyncEngine {
   /// ephemeral per-server backend. The whole body is caught so a per-server
   /// failure (offline, rethrown 401, …) never escapes to sibling servers.
   private func performServerSync(_ stored: StoredConnection, runHeavyFill: Bool) async {
+    let id = stored.id
+    Logger.sync.info(
+      "Syncing inactive server \(stored.logLabel, privacy: .public) (heavyFill: \(runHeavyFill))")
     do {
       let backend = try await makeCachingRepository(
         for: stored, database: database, manager: manager, mode: mode)
@@ -214,10 +226,11 @@ public final class SyncEngine {
 
       // Advance the throttle only on a fully successful pass, so an interrupted
       // sweep retries next trigger.
-      lastSweep[stored.id] = Date()
+      lastSweep[id] = Date()
+      Logger.sync.info("Inactive server \(stored.logLabel, privacy: .public) synced")
     } catch {
-      Logger.shared.info(
-        "Inactive-server sync failed for \(stored.id, privacy: .private(mask: .hash)) (suppressed): \(error)"
+      Logger.sync.info(
+        "Inactive-server sync failed for \(stored.logLabel, privacy: .public) (suppressed): \(error)"
       )
     }
   }
