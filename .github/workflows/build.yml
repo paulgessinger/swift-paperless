@@ -54,6 +54,14 @@ jobs:
       - name: Generate project
         run: xcodegen generate
 
+      - name: Cache SwiftPM sources
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: SourcePackages
+          key: spm-xcode-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-${{ hashFiles('**/Package.swift', 'project.yml') }}
+          restore-keys: |
+            spm-xcode-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-
+
       - name: Build application
         run: |
           set -o pipefail
@@ -61,6 +69,7 @@ jobs:
           xcodebuild build \
             -scheme swift-paperless \
             -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=${{ matrix.ios }}" \
+            -clonedSourcePackagesDirPath SourcePackages \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
             | xcbeautify
@@ -90,6 +99,14 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
+
+      - name: Cache SwiftPM build
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ matrix.package }}/.build
+          key: spm-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-${{ matrix.package }}-${{ hashFiles(format('{0}/Package.swift', matrix.package)) }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-${{ matrix.package }}-
 
       - name: Show resolved dependencies
         run: swift package show-dependencies --package-path ${{ matrix.package }}
