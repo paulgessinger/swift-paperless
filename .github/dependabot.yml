@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Batch all action bumps into a single PR.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    # Wait 7 days after a release before opening a PR for it.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci"
