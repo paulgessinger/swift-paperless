@@ -12,6 +12,7 @@ permissions:
 jobs:
   update_filter_rules:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
       # For gh cli in generate_filterrules.py

@@ -18,6 +18,7 @@ jobs:
   synchronize-with-crowdin:
     name: Crowdin Sync
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
       CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
