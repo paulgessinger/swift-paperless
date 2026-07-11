@@ -55,6 +55,13 @@ tag:
 beta:
   scripts/beta.sh
 
+# Build, sign, and upload the beta to TestFlight without fastlane (reimplements
+# the `beta_ci` lane; runs in CI on release). Pass through args, e.g.
+# `just beta-ci --no-upload` to archive+export locally without uploading, or
+# `just beta-ci --bump --dry-run` for a full local test at the next build number.
+beta-ci *args:
+  scripts/beta_ci.sh {{args}}
+
 # Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
 deliver:
   #!/usr/bin/env bash

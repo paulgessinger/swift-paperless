@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- App Store distribution, but only export the IPA to disk. The actual
+       upload is done separately by `asc builds upload`, so destination is
+       "export" (not "upload"). -->
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>destination</key>
+  <string>export</string>
+
+  <key>teamID</key>
+  <string>ZHKJ4NHK6F</string>
+
+  <!-- Let xcodebuild fetch/create the App Store provisioning profiles from the
+       ASC API key (-allowProvisioningUpdates). Replaces `match`. -->
+  <key>signingStyle</key>
+  <string>automatic</string>
+
+  <!-- The build number is the source of truth in Version.xcconfig; never let
+       Xcode rewrite it. -->
+  <key>manageAppVersionAndBuildNumber</key>
+  <false/>
+
+  <key>uploadSymbols</key>
+  <true/>
+  <key>stripSwiftSymbols</key>
+  <true/>
+</dict>
+</plist>
