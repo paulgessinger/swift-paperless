@@ -182,6 +182,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return mode
   }
 
+  /// Friendly-name + UUID for sync logs (see ``StoredConnection/logLabel``);
+  /// falls back to the bare UUID if the connection row can't be read.
+  private var serverLogLabel: String {
+    guard let record = try? database.connection(id: serverID) else {
+      return "[\(serverID.uuidString)]"
+    }
+    return StoredConnection(record: record).logLabel
+  }
+
   // MARK: - CachingBackend
 
   public func syncElements(progress: SyncProgressReporter?) async throws {
@@ -313,7 +322,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           }
         } catch is CancellationError {
         } catch {
-          Logger.shared.error("Background query fill failed: \(error)")
+          Logger.sync.error("Background query fill failed: \(error)")
         }
       }
     }
@@ -338,6 +347,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
+    Logger.sync.info(
+      "Library fill: \(views.count, privacy: .public) view(s) for server \(self.serverLogLabel, privacy: .public)"
+    )
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
       // A downgrade mid-fill means the rest of these views are no longer wanted,
@@ -345,7 +357,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // write back rows it has just reclaimed. One connection-row read per view,
       // and there are few views.
       guard offlineBrowsingMode == .entireLibrary else {
-        Logger.shared.info("Library fill: mode left Entire library mid-pass; stopping")
+        Logger.sync.info("Library fill: mode left Entire library mid-pass; stopping")
         return
       }
       progress?(
@@ -376,7 +388,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // A rejected view (e.g. an advanced full-text query the server won't run)
         // must not block the *whole* library's coverage. Record it so the
         // Offline & Sync screen can warn, and carry on.
-        Logger.shared.warning(
+        Logger.sync.warning(
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
         try? database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
@@ -391,7 +403,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // empty cache — the ordinary shape of Wi-Fi with the server unreachable,
     // since neither `isExpensive` nor `isConstrained` means reachable.
     guard succeeded > 0 else {
-      Logger.shared.warning(
+      Logger.sync.warning(
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
       return
     }
@@ -485,7 +497,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       }
     }
 
-    Logger.shared.info(
+    Logger.sync.info(
       "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata"
     )
   }
@@ -503,7 +515,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let domains = try await fetch()
       try database.replaceElements(domains, of: type, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
-      Logger.shared.info(
+      Logger.sync.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
     }
   }
@@ -519,7 +531,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try database.setUISettings(settings, serverID: serverID)
       return settings.permissions
     } catch {
-      Logger.shared.info(
+      Logger.sync.info(
         "uiSettings sync failed (\(error)); gating sync on cached permissions")
       return try? database.uiSettings(serverID: serverID)?.permissions
     }
@@ -530,7 +542,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let config = try await wrapped.serverConfiguration()
       try database.setServerConfiguration(config, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
-      Logger.shared.info("Skipping serverConfiguration sync: \(error)")
+      Logger.sync.info("Skipping serverConfiguration sync: \(error)")
     }
   }
 
@@ -811,7 +823,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let removed = localIDs.subtracting(serverIDs)
     guard !removed.isEmpty else { return }
 
-    Logger.shared.info(
+    Logger.sync.info(
       "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
     try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
@@ -891,7 +903,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // refresh rows already cached. Either way the row is written at `.full`.
       let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
       if !toUpsert.isEmpty {
-        Logger.shared.info(
+        Logger.sync.info(
           "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
         try database.upsertDocuments(toUpsert, serverID: serverID)
         // Note edits bump `modified`, so a changed doc's cached notes may be
@@ -936,7 +948,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        Logger.shared.info(
+        Logger.sync.info(
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
         try? database.recordQuerySyncError(
@@ -957,7 +969,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     do {
       try database.setDeltaWatermark(date, serverID: serverID)
     } catch {
-      Logger.shared.error("setDeltaWatermark failed: \(error)")
+      Logger.sync.error("setDeltaWatermark failed: \(error)")
     }
   }
 
