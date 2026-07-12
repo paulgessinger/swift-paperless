@@ -29,6 +29,23 @@ enum DocumentDownloadState: Equatable {
   }
 }
 
+/// Accumulates the errors thrown across one `DocumentDetailModel.load()` pass so
+/// duplicates can be collapsed before they reach the caller's `onError`. Keyed on
+/// `String(describing:)`: connectivity failures against the same host produce
+/// equal `RequestError.other` values (identical description), so a server-wide
+/// outage dedupes to a single entry, while distinct failures keep distinct keys.
+@MainActor
+private final class LoadErrorCollector {
+  private var seen: Set<String> = []
+  private(set) var distinct: [any Error] = []
+
+  func add(_ error: any Error) {
+    if seen.insert(String(describing: error)).inserted {
+      distinct.append(error)
+    }
+  }
+}
+
 @MainActor
 @Observable
 class DocumentDetailModel {
@@ -87,12 +104,33 @@ class DocumentDetailModel {
   /// PDF — already shows via `download == .error`); a pull-to-refresh passes a
   /// handler so failures toast. Offline-connectivity errors are dropped by
   /// `ErrorController.shouldSuppress`, so a parallel offline refresh won't spam.
+  ///
+  /// The four steps each hit the network independently, so a server-wide outage
+  /// would otherwise fire `onError` once per step — three or four identical
+  /// "could not connect" toasts for a single pull. To avoid that, failures are
+  /// collected across the whole pass and each *distinct* error is surfaced once:
+  /// a common outage collapses to one toast, while genuinely different failures
+  /// (e.g. a permission error on a single endpoint) still each show.
   func load(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
-    await loadDocument(onError: onError)
-    async let metadata: Void = loadMetadata(onError: onError)
-    async let notes: Void = loadNotes(onError: onError)
-    async let suggestions: Void = loadSuggestionsQuietly(onError: onError)
+    let collector = onError == nil ? nil : LoadErrorCollector()
+    let collect: (@MainActor @Sendable (any Error) -> Void)?
+    if let collector {
+      collect = { @MainActor @Sendable error in collector.add(error) }
+    } else {
+      collect = nil
+    }
+
+    await loadDocument(onError: collect)
+    async let metadata: Void = loadMetadata(onError: collect)
+    async let notes: Void = loadNotes(onError: collect)
+    async let suggestions: Void = loadSuggestionsQuietly(onError: collect)
     _ = await (metadata, notes, suggestions)
+
+    if let onError, let collector {
+      for error in collector.distinct {
+        onError(error)
+      }
+    }
   }
 
   func loadMetadata(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
