@@ -62,6 +62,13 @@ beta:
 beta-ci *args:
   scripts/beta_ci.sh {{args}}
 
+# Sends header + current_changelog.txt (emoji stripped) as the whatsNew for the
+# given build. Override `version` (default: Version.xcconfig) and/or `notes` file
+# (default: current_changelog.txt). Needs asc logged in or APP_STORE_CONNECT_*.
+# Attach/fix TestFlight "What to Test" notes on an existing build (no rebuild).
+set-test-notes build version='' notes='':
+  scripts/set_test_notes.sh {{build}} {{version}} {{notes}}
+
 # Manually (re)trigger the TestFlight upload workflow (.github/workflows/beta.yml)
 # on GitHub Actions, without cutting a new release — e.g. to re-run a failed
 # upload. Runs against `ref` (default main), whose committed build number is
