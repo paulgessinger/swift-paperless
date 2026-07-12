@@ -55,7 +55,7 @@ public struct OfflineSyncView: View {
         }
         statusRow(
           String(localized: .settings(.offlineSyncLastRefresh)),
-          value: dateText(store.lastReconcileAt))
+          value: dateText(store.lastSyncAt))
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: "\(store.cachedDocumentCount)")
