@@ -13,14 +13,21 @@
 //  own their repositories through `ServerSession`, so a sweep that reaches the
 //  active server coalesces onto the session the store is already using.
 //
-//  Scheduling stays on app-lifecycle triggers (launch / foreground /
-//  active-change); true `BGProcessingTask` execution is Stage 11's.
+//  Foreground app-lifecycle triggers (launch / foreground / active-change)
+//  drive `syncInactiveServers`; Stage 11's background tasks drive
+//  `syncServers(scope:tier:...)` through `BackgroundSyncCoordinator` — either
+//  against this same instance (registered UI graph) or a headless twin on a
+//  cold background launch. The engine deliberately stays `@MainActor` (an
+//  earlier note here suggested moving enumeration off-main for background
+//  execution — superseded): the main thread runs normally during background
+//  execution, and the entire downstream stack (`ConnectionManager`,
+//  `CachingRepository`, `CachingBackend`) is main-actor anyway.
 //
 //  This type is now purely the *scheduler*: it decides which servers to sync and
 //  in what order, and hands each one to its ``ServerSession``, which owns that
-//  server's repository and runs the sequence. The interesting decisions (active
-//  exclusion, throttle, uncredentialed degrade, heavy-fill gating, new-server
-//  diff) live in the pure, unit-tested `DataModel.SyncPlan`.
+//  server's repository and runs the sequence. The interesting decisions (scope,
+//  throttle, uncredentialed degrade, heavy-fill gating, stalest-first ordering,
+//  new-server diff) live in the pure, unit-tested `DataModel.SyncPlan`.
 //
 //  It keeps no per-server state of its own: freshness stamps and in-flight work
 //  live on the sessions, which is what lets a background sweep and the on-screen
@@ -37,6 +44,15 @@ import os
 @MainActor
 @Observable
 public final class SyncEngine {
+  /// How much work a sweep does per server.
+  public enum SyncTier: Sendable {
+    /// Elements + reconcile sweeps only — sized for a `BGAppRefreshTask`
+    /// budget (~30 s).
+    case cheap
+    /// Cheap plus the proactive fills where mode and network allow.
+    case full
+  }
+
   @ObservationIgnored private let manager: ConnectionManager
   /// Live raw path cost read for the observation-driven initial-sync path (the
   /// lifecycle-triggered sweep receives it as a parameter instead). Raw, not a
@@ -80,13 +96,33 @@ public final class SyncEngine {
     registry.start()
   }
 
-  /// Sweep every inactive server once, sequentially (active-first is implicit —
-  /// active is excluded and driven by the store), each isolated so one server's
-  /// failure never affects the others. Coalesces concurrent callers.
+  /// The foreground sweep: every inactive server, full tier (active-first is
+  /// implicit — active is excluded and driven by the store).
   ///
   /// `userInitiated` bypasses the per-server throttle (explicit "sync now").
   public func syncInactiveServers(
     isExpensive: Bool, isConstrained: Bool, userInitiated: Bool = false
+  ) async {
+    await syncServers(
+      scope: .excludingActive(manager.activeConnectionId), tier: .full,
+      isExpensive: isExpensive, isConstrained: isConstrained, userInitiated: userInitiated)
+  }
+
+  /// Sweep the servers selected by `scope` once, sequentially (stalest-first),
+  /// each isolated so one server's failure never affects the others. Coalesces
+  /// concurrent callers: a second caller joins the in-flight sweep whatever its
+  /// scope/tier — the end-of-run reschedule (background) or the next lifecycle
+  /// trigger (foreground) recovers any work the joined sweep didn't cover.
+  ///
+  /// `scope: .all` is for the headless background path, where no `DocumentStore`
+  /// exists (see `BackgroundSyncCoordinator`). It is no longer a *safety*
+  /// distinction — sessions own their repositories, so an in-process sweep that
+  /// reaches the active server coalesces onto the store's session rather than
+  /// racing it — but it stays the honest description of which servers a
+  /// headless run is responsible for.
+  public func syncServers(
+    scope: SyncPlan.SweepScope, tier: SyncTier, isExpensive: Bool, isConstrained: Bool,
+    userInitiated: Bool = false
   ) async {
     if let sweepTask {
       return await sweepTask.value
@@ -94,7 +130,8 @@ public final class SyncEngine {
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
       await runSweep(
-        isExpensive: isExpensive, isConstrained: isConstrained, userInitiated: userInitiated)
+        scope: scope, tier: tier, isExpensive: isExpensive, isConstrained: isConstrained,
+        userInitiated: userInitiated)
     }
     sweepTask = task
     await task.value
@@ -103,7 +140,10 @@ public final class SyncEngine {
 
   // MARK: - Sweep
 
-  private func runSweep(isExpensive: Bool, isConstrained: Bool, userInitiated: Bool) async {
+  private func runSweep(
+    scope: SyncPlan.SweepScope, tier: SyncTier, isExpensive: Bool, isConstrained: Bool,
+    userInitiated: Bool
+  ) async {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
@@ -111,17 +151,22 @@ public final class SyncEngine {
         isEntireLibrary: conn.offlineBrowsingMode == .entireLibrary,
         syncOverCellular: conn.syncOverCellular)
     }
-    let actions = SyncPlan.inactiveActions(
+    // `lastSuccessfulSyncs()` merges the persisted per-server stamps under the
+    // sessions' in-memory ones, so ordering stays stalest-first across a cold
+    // launch (background wake or fresh process) and a server synced moments
+    // before the process died isn't re-swept.
+    let actions = SyncPlan.sweepActions(
       connections: snapshots,
-      activeID: manager.activeConnectionId,
+      scope: scope,
       lastSweep: userInitiated ? [:] : registry.lastSuccessfulSyncs(),
       now: Date(),
       throttle: inactiveThrottle,
       isExpensive: isExpensive,
-      isConstrained: isConstrained)
+      isConstrained: isConstrained,
+      includeHeavy: tier == .full)
 
     Logger.sync.info(
-      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (isExpensive: \(isExpensive), isConstrained: \(isConstrained), userInitiated: \(userInitiated))"
+      "Sweep (\(String(describing: scope), privacy: .public), tier: \(String(describing: tier), privacy: .public)): \(actions.count) of \(snapshots.count) server(s) (isExpensive: \(isExpensive), isConstrained: \(isConstrained), userInitiated: \(userInitiated))"
     )
     for action in actions {
       // No "skip the server that went active mid-sweep" guard any more: sweeping
@@ -132,7 +177,7 @@ public final class SyncEngine {
       guard let stored = manager.connections[action.serverID] else { continue }
       await runAction(action, stored: stored)
     }
-    Logger.sync.info("Inactive sweep complete")
+    Logger.sync.info("Sweep complete")
   }
 
   /// Policy for a server that just appeared. Session creation and teardown

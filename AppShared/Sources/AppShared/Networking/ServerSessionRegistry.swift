@@ -124,9 +124,17 @@ public final class ServerSessionRegistry {
     return session
   }
 
-  /// Every session's last fully-successful sync, for the scheduler's throttle.
+  /// Every server's last fully-successful sync, for the scheduler's throttle.
   /// Servers that have never completed a pass are absent rather than distant-past.
+  ///
+  /// The persisted `last_sync_at` stamps fill in for sessions that have not run
+  /// this process — a cold launch, or a background wake where nothing has been
+  /// on screen — so sweep ordering stays stalest-first instead of treating every
+  /// server as never-synced. Where both exist the live session wins: it is the
+  /// stricter signal, advanced only on a *fully* successful pass, so a server
+  /// whose fill was interrupted still retries.
   public func lastSuccessfulSyncs() -> [UUID: Date] {
-    sessions.compactMapValues(\.lastSuccessfulSync)
+    let persisted = (try? database.lastSyncAts()) ?? [:]
+    return persisted.merging(sessions.compactMapValues(\.lastSuccessfulSync)) { _, live in live }
   }
 }

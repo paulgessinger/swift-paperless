@@ -100,6 +100,12 @@ public final class DocumentStore: Sendable {
   /// read wouldn't be tracked by the observation.
   public private(set) var libraryCoverageAt: Date?
 
+  /// When the active server's element sync last completed successfully (`nil`
+  /// if never) — an observed mirror of `server_sync_state.last_sync_at`, so
+  /// the Offline & Sync screen's freshness row survives restarts and reflects
+  /// background runs, not just this store's in-memory activity.
+  public private(set) var lastSyncAt: Date?
+
   /// Views (saved or default) whose proactive offline fill the server most
   /// recently rejected — observed from `query_sync_error` for the active server
   /// so the Offline & Sync screen can warn that they aren't fully cached.
@@ -166,6 +172,10 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var coverageObservationTask: Task<Void, Never>?
 
+  // Observes the active server's `last_sync_at` into `lastSyncAt`.
+  @ObservationIgnored
+  private var lastSyncObservationTask: Task<Void, Never>?
+
   // Observes the active server's recorded per-view sync failures into `syncErrors`.
   @ObservationIgnored
   private var syncErrorObservationTask: Task<Void, Never>?
@@ -200,6 +210,7 @@ public final class DocumentStore: Sendable {
   deinit {
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
+    lastSyncObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
     documentCountObservationTask?.cancel()
   }
@@ -210,6 +221,7 @@ public final class DocumentStore: Sendable {
   /// login) detaches the projection.
   private func wireElementStore() {
     coverageObservationTask?.cancel()
+    lastSyncObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
     documentCountObservationTask?.cancel()
     if let backend = session?.backend {
@@ -222,6 +234,14 @@ public final class DocumentStore: Sendable {
           for try await date in stream { self?.libraryCoverageAt = date }
         } catch {
           Logger.shared.debug("Coverage observation ended: \(error)")
+        }
+      }
+      let lastSync = backend.database.observeLastSyncAt(serverID: backend.serverID)
+      lastSyncObservationTask = Task { [weak self] in
+        do {
+          for try await date in lastSync { self?.lastSyncAt = date }
+        } catch {
+          Logger.shared.debug("Last-sync observation ended: \(error)")
         }
       }
       let errors = backend.database.observeQuerySyncErrors(serverID: backend.serverID)
@@ -243,6 +263,7 @@ public final class DocumentStore: Sendable {
     } else {
       elementStore.reset()
       libraryCoverageAt = nil
+      lastSyncAt = nil
       syncErrors = []
       cachedDocumentCount = 0
     }
