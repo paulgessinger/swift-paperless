@@ -568,9 +568,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(id: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(id: id) else {
-        // Gone on the server — drop from cache; deleteDocuments explicitly
-        // clears its query_order too (no FK cascade does this).
-        try database.deleteDocuments(serverID: serverID, removedIDs: [id])
+        // A `nil` here means the single-document fetch 404'd — which is *not*
+        // authoritative proof the document was deleted server-side. An
+        // unhealthy or misrouted backend (proxy up / app down, tunnel origin
+        // gone, a reindex, an expired session resolving to a 404) can 404 a
+        // document that still exists. Deleting the cached row — and, via
+        // deleteDocuments, its query_order list-membership — on that weak
+        // signal makes an opened document vanish from the list until a
+        // successful fill re-adds it. Real deletions are reconciled against the
+        // server's full authoritative id set in `reconcileDocumentDeletions`;
+        // here we fall back to the cached row rather than destroying it.
+        if let cached = try database.document(serverID: serverID, id: id) {
+          Logger.shared.info(
+            "document(id:) fetch returned nil (404?); serving cached instead of deleting")
+          return cached
+        }
         return nil
       }
       // A full-detail fetch — upgrade the row to Tier-2.
