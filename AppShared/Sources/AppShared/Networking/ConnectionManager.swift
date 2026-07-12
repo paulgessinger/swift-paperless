@@ -84,7 +84,9 @@ public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
 
   public var connection: Connection {
     get throws {
-      try Connection(url: url, token: token, extraHeaders: extraHeaders, identityName: identity)
+      try Connection(
+        url: url, token: token, extraHeaders: extraHeaders,
+        identityName: identity, serverID: id)
     }
   }
 

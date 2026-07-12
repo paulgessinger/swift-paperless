@@ -84,20 +84,15 @@ private final class IntegratedDocumentPreviewModel {
       hasReceivedProgress = false
       downloadProgress = 0
       do {
-        guard
-          let url = try await store.repository.download(
-            documentID: document.id,
-            original: false,
-            progress: { @Sendable value in
-              Task { @MainActor in
-                self.hasReceivedProgress = true
-                self.downloadProgress = value
-              }
-            })
-        else {
-          download = .error
-          return
-        }
+        let url = try await store.repository.download(
+          document: document,
+          original: false,
+          progress: { @Sendable value in
+            Task { @MainActor in
+              self.hasReceivedProgress = true
+              self.downloadProgress = value
+            }
+          })
 
         guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
           download = .error

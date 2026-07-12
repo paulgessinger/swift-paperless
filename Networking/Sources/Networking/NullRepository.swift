@@ -24,8 +24,8 @@ public class NullRepository: Repository {
   public func download(
     documentID _: UInt, original _: Bool = false, progress _: (@Sendable (Double) -> Void)? = nil
   )
-    async throws -> URL?
-  { nil }
+    async throws -> URL
+  { throw NotImplemented() }
 
   public func tag(id _: UInt) async -> Tag? { nil }
   public func create(tag _: ProtoTag) async throws -> Tag { throw NotImplemented() }
