@@ -3484,7 +3484,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Since %@"
+            "value" : "Across all servers, since %@"
           }
         },
         "fr" : {
