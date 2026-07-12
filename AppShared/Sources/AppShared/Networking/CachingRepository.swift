@@ -286,6 +286,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           SyncActivity(stage: .elementSync, completed: completed, total: total))
       }
     }
+
+    // The persisted "fresh as of last successful sync" stamp — the one choke
+    // point covering both the store path and the engine path. Drives
+    // stalest-first background sweep ordering and the Offline & Sync screen.
+    try? database.setLastSyncAt(Date(), serverID: serverID)
   }
 
   /// Fill a query's membership + document rows from the list source, which always
