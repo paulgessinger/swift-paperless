@@ -242,6 +242,12 @@ struct MainView: View {
       }
 
       storeReady = true
+      // Register (or refresh) the UI graph with the background-sync coordinator
+      // *before* kicking the store's own sync: registration cancels-and-awaits
+      // any in-flight headless background run, so two CachingRepository
+      // instances never execute against the same server.
+      await BackgroundSyncCoordinator.shared.register(
+        database: database, manager: manager, syncEngine: syncEngine, store: target)
       try? await target.sync()
       target.startTaskPolling()
       kickLibraryFill(target)
@@ -253,6 +259,10 @@ struct MainView: View {
     } else {
       storeReady = false
       Logger.shared.trace("App does not have any active connection, show login screen")
+      // Still hand the graph over (store: nil): background runs can keep the
+      // configured-but-inactive servers warm while the user is logged out.
+      await BackgroundSyncCoordinator.shared.register(
+        database: database, manager: manager, syncEngine: syncEngine, store: nil)
       showLoginScreen = true
       showLoadingScreen = false
     }
@@ -421,6 +431,7 @@ struct MainView: View {
         Logger.shared.notice("App goes to background")
         biometricLockManager.lockIfEnabled()
         TransferStatistics.shared.persist()
+        BackgroundTaskManager.scheduleAll()
 
       case .active:
         store?.startTaskPolling()
