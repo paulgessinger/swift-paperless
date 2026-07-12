@@ -66,16 +66,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     return configuration
   }
 
-  //  func application(
-  //          _ application: UIApplication,
-  //          didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-  //      ) -> Bool {
-  //          // Inject coordinator into scene delegate
-  //          if let sceneDelegate = UIApplication.shared.connectedScenes
-  //              .compactMap({ $0.delegate as? SceneDelegate })
-  //              .first {
-  //              sceneDelegate.routeManager = routeManager
-  //          }
-  //          return true
-  //      }
+  func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+  ) -> Bool {
+    // BGTask handlers must be registered before app launch finishes — this
+    // covers cold background launches, where no scene ever connects.
+    BackgroundTaskManager.registerTasks()
+    BackgroundTaskManager.scheduleAll()
+    return true
+  }
 }
