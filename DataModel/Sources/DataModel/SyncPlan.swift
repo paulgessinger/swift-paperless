@@ -36,6 +36,18 @@ public struct SyncServerAction: Equatable, Sendable {
 
 /// Pure planning for the multi-server (inactive-server) sync sweep.
 public enum SyncPlan {
+  /// Which servers a sweep considers.
+  public enum SweepScope: Equatable, Sendable {
+    /// Exclude the given active server. The foreground case: the active server
+    /// is driven by `DocumentStore`, and a second `CachingRepository` instance
+    /// must never race it on the same `query_order` rows.
+    case excludingActive(UUID?)
+    /// Consider every configured server. The headless background case: no
+    /// `DocumentStore` exists in the process, so the engine is provably the
+    /// only writer and may safely include the active server.
+    case all
+  }
+
   /// A dependency-free snapshot of one configured server, as the engine sees it
   /// at sweep time. `isEntireLibrary` is `AppShared.OfflineBrowsingMode ==
   /// .entireLibrary` flattened to a `Bool` so this stays in `DataModel` (which
@@ -56,32 +68,49 @@ public enum SyncPlan {
     }
   }
 
-  /// The ordered set of actions for a sweep of every **inactive** server.
+  /// The ordered set of actions for one sweep.
   ///
-  /// - The active server is excluded (it is driven by `DocumentStore`, never by
-  ///   the engine — this is what prevents a two-instance double-fill race).
+  /// - `scope` decides whether the active server participates (see
+  ///   ``SweepScope``).
   /// - Uncredentialed servers always yield a `needsAuthOnly` action (cheap,
   ///   throttle-exempt, so a freshly-arrived token is picked up on the very next
   ///   sweep).
   /// - Credentialed servers are dropped while their last successful sweep is
   ///   still within `throttle`; otherwise they yield a sync action whose
-  ///   `runHeavyFill` is gated on `isEntireLibrary &&` that server's own
-  ///   ``SyncCondition/allowsProactiveSync`` — each server's own
+  ///   `runHeavyFill` is gated on `includeHeavy && isEntireLibrary &&` that
+  ///   server's own ``SyncCondition/allowsProactiveSync`` — each server's own
   ///   `syncOverCellular` opt-in applies to *that* server only, not the whole
-  ///   sweep.
-  /// - Ordering is stable (by `id`) for deterministic, testable behavior.
-  public static func inactiveActions(
+  ///   sweep (`includeHeavy: false` is the quick-refresh tier: cheap sweep
+  ///   only, no proactive fill, regardless of mode or network).
+  /// - Ordering is **stalest-first** by `lastSweep` (never-synced first), with a
+  ///   stable `id` tie-break — so a time-boxed background run reaches the
+  ///   neediest servers before its budget expires.
+  public static func sweepActions(
     connections: [ServerSnapshot],
-    activeID: UUID?,
+    scope: SweepScope,
     lastSweep: [UUID: Date],
     now: Date,
     throttle: TimeInterval,
     isExpensive: Bool,
-    isConstrained: Bool
+    isConstrained: Bool,
+    includeHeavy: Bool
   ) -> [SyncServerAction] {
-    connections
-      .filter { $0.id != activeID }
-      .sorted { $0.id.uuidString < $1.id.uuidString }
+    let excluded: UUID? =
+      switch scope {
+      case .excludingActive(let id): id
+      case .all: nil
+      }
+    return
+      connections
+      .filter { $0.id != excluded }
+      .sorted { lhs, rhs in
+        switch (lastSweep[lhs.id], lastSweep[rhs.id]) {
+        case (nil, nil): lhs.id.uuidString < rhs.id.uuidString
+        case (nil, .some): true
+        case (.some, nil): false
+        case (.some(let l), .some(let r)): l != r ? l < r : lhs.id.uuidString < rhs.id.uuidString
+        }
+      }
       .compactMap { server in
         guard server.hasToken else {
           // Uncredentialed: mark needs-auth every sweep (no network, no throttle).
@@ -96,8 +125,30 @@ public enum SyncPlan {
         return SyncServerAction(
           serverID: server.id,
           needsAuthOnly: false,
-          runHeavyFill: condition.allowsProactiveSync && server.isEntireLibrary)
+          runHeavyFill: includeHeavy && condition.allowsProactiveSync && server.isEntireLibrary)
       }
+  }
+
+  /// The foreground sweep: every **inactive** server, full tier. Wrapper over
+  /// ``sweepActions(connections:scope:lastSweep:now:throttle:isExpensive:isConstrained:includeHeavy:)``.
+  public static func inactiveActions(
+    connections: [ServerSnapshot],
+    activeID: UUID?,
+    lastSweep: [UUID: Date],
+    now: Date,
+    throttle: TimeInterval,
+    isExpensive: Bool,
+    isConstrained: Bool
+  ) -> [SyncServerAction] {
+    sweepActions(
+      connections: connections,
+      scope: .excludingActive(activeID),
+      lastSweep: lastSweep,
+      now: now,
+      throttle: throttle,
+      isExpensive: isExpensive,
+      isConstrained: isConstrained,
+      includeHeavy: true)
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an
