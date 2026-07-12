@@ -32,6 +32,15 @@ EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/ExportOptions.plist"
 TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
 
+# App Store provisioning profiles referenced (by name) in ExportOptions.plist.
+# Created once via `asc` and bound to the Apple Distribution certs; we install
+# them onto the runner below so export uses manual signing instead of cloud
+# signing. Keep these names in sync with ExportOptions.plist.
+APPSTORE_PROFILE_NAMES=(
+  "swift-paperless AppStore CI"
+  "swift-paperless ShareExtension AppStore CI"
+)
+
 upload=1
 asc_dry_run=0
 bump=0
@@ -145,6 +154,46 @@ if [ -n "${DIST_CERTIFICATE_P12_BASE64:-}" ]; then
   rm -f "$cert_p12"
 fi
 
+# --- App Store provisioning profiles ---------------------------------------
+# Manual signing (ExportOptions.plist) needs the App Store profiles installed on
+# this machine. Resolve each by name via `asc`, download it, and drop it into the
+# provisioning-profile search dirs (named by its UUID, as Xcode expects). This
+# replaces the profiles `match` used to sync from a git repo. Skipped when asc is
+# unavailable — export then relies on whatever profiles are already installed.
+install_appstore_profile() {
+  local name="$1" id uuid tmp plist d
+  id="$(asc profiles list --profile-type IOS_APP_STORE --output json 2>/dev/null \
+    | jq -r --arg n "$name" '.data[] | select(.attributes.name == $n) | .id' | head -1)"
+  [ -n "$id" ] || {
+    echo "error: App Store profile not found on App Store Connect: '$name'" >&2
+    echo "       (re)create it — see scripts/testflight_certificate_renewal.md" >&2
+    exit 1
+  }
+  tmp="$(mktemp -t profile.XXXXXX).mobileprovision"
+  asc profiles download --id "$id" --output "$tmp" >/dev/null
+  plist="$(mktemp)"
+  security cms -D -i "$tmp" > "$plist" 2>/dev/null
+  uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$plist" 2>/dev/null)"
+  rm -f "$plist"
+  [ -n "$uuid" ] || { echo "error: could not read UUID from profile '$name'" >&2; exit 1; }
+  for d in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+           "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+    mkdir -p "$d"
+    cp -f "$tmp" "$d/$uuid.mobileprovision"
+  done
+  rm -f "$tmp"
+  echo "    installed '$name' ($uuid)"
+}
+
+if command -v asc >/dev/null 2>&1; then
+  echo "==> Installing App Store provisioning profiles"
+  for _p in "${APPSTORE_PROFILE_NAMES[@]}"; do
+    install_appstore_profile "$_p"
+  done
+else
+  echo "note: asc not found — skipping profile install; relying on already-installed profiles" >&2
+fi
+
 version="$(version_setting MARKETING_VERSION)"
 current="$(version_setting CURRENT_PROJECT_VERSION)"
 
@@ -207,11 +256,13 @@ run_xcodebuild \
 
 echo "==> Exporting IPA"
 rm -rf "$EXPORT_DIR"
+# No -allowProvisioningUpdates / API key here on purpose: ExportOptions.plist uses
+# manual signing with the App Store profiles installed above. Passing the key
+# makes xcodebuild attempt cloud signing, which the CI key can't authorise.
 run_xcodebuild -exportArchive \
   -archivePath "$ARCHIVE_PATH" \
   -exportPath "$EXPORT_DIR" \
-  -exportOptionsPlist "$EXPORT_OPTIONS" \
-  "${auth_args[@]}"
+  -exportOptionsPlist "$EXPORT_OPTIONS"
 
 ipa="$(find "$EXPORT_DIR" -maxdepth 1 -name '*.ipa' | head -1)"
 [ -n "$ipa" ] || { echo "error: no .ipa produced in $EXPORT_DIR" >&2; exit 1; }

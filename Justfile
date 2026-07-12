@@ -62,6 +62,16 @@ beta:
 beta-ci *args:
   scripts/beta_ci.sh {{args}}
 
+# Manually (re)trigger the TestFlight upload workflow (.github/workflows/beta.yml)
+# on GitHub Actions, without cutting a new release — e.g. to re-run a failed
+# upload. Runs against `ref` (default main), whose committed build number is
+# used. Pass `mismatch=true` to upload even if that build number isn't the next
+# one TestFlight expects. Requires this workflow's workflow_dispatch trigger to
+# already be on the default branch.
+beta-run ref='main' mismatch='false':
+  gh workflow run beta.yml --ref {{ref}} -f allow_build_number_mismatch={{mismatch}}
+  @echo "Triggered — watch it with: gh run watch \$(gh run list --workflow beta.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+
 # Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
 deliver:
   #!/usr/bin/env bash

@@ -3,6 +3,17 @@ name: TestFlight
 on:
   release:
     types: [prereleased]
+  # Manual re-trigger (e.g. to re-run a failed upload) without cutting a new
+  # release. Runs against the selected ref — usually `main`, whose
+  # Version.xcconfig already carries the build number `just beta` committed.
+  # `just beta-run` wraps this. Only appears once this file is on the default
+  # branch.
+  workflow_dispatch:
+    inputs:
+      allow_build_number_mismatch:
+        description: "Upload even if the build number isn't the next one TestFlight expects (re-run a partially-completed beta)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,4 +49,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           DIST_CERTIFICATE_P12_BASE64: ${{ secrets.DIST_CERTIFICATE_P12_BASE64 }}
           DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
+          # Only set by the manual (workflow_dispatch) trigger; empty on release.
+          ALLOW_BUILD_NUMBER_MISMATCH: ${{ inputs.allow_build_number_mismatch && '1' || '0' }}
         run: scripts/beta_ci.sh

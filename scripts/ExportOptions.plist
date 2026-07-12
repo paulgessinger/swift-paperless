@@ -13,10 +13,25 @@
   <key>teamID</key>
   <string>ZHKJ4NHK6F</string>
 
-  <!-- Let xcodebuild fetch/create the App Store provisioning profiles from the
-       ASC API key (-allowProvisioningUpdates). Replaces `match`. -->
+  <!-- Manual signing with explicit App Store profiles. Automatic signing here
+       makes xcodebuild attempt cloud signing at export, which the CI App Store
+       Connect API key is not authorised for ("Cloud signing permission error").
+       Instead beta_ci.sh installs these profiles (created once via `asc`, bound
+       to the Apple Distribution certs) into the runner's provisioning-profile
+       dir, and we reference them by name here. The matching Apple Distribution
+       cert lives in the login keychain (locally) or the imported .p12 (CI).
+       See scripts/testflight_certificate_renewal.md. -->
   <key>signingStyle</key>
-  <string>automatic</string>
+  <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>com.paulgessinger.swift-paperless</key>
+    <string>swift-paperless AppStore CI</string>
+    <key>com.paulgessinger.swift-paperless.ShareExtension</key>
+    <string>swift-paperless ShareExtension AppStore CI</string>
+  </dict>
 
   <!-- The build number is the source of truth in Version.xcconfig; never let
        Xcode rewrite it. -->
