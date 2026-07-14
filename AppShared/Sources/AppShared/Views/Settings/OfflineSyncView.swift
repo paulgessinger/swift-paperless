@@ -24,6 +24,7 @@ public struct OfflineSyncView: View {
   /// The server's total for the default list, read once from the cached query
   /// status. Only used to decide whether to suggest *Entire library*.
   @State private var libraryTotal: UInt?
+  @State private var backgroundSync = BackgroundSyncCoordinator.shared
 
   public init() {}
 
@@ -280,10 +281,15 @@ public struct OfflineSyncView: View {
   }
 
   /// Only reached when nothing is running — the stage rows speak for themselves
-  /// otherwise. Says *why* it's not running where there's a reason to give.
+  /// otherwise. Says *why* it isn't running where there's a reason to give.
+  ///
+  /// The coordinator flag covers the phases the store can't see (engine sweeps
+  /// of other servers), so a task-driven run never reads as "Idle".
   private var activityText: String {
     if waitingForNetwork {
       String(localized: .settings(.offlineSyncWaitingForWifi))
+    } else if backgroundSync.isRunning {
+      String(localized: .settings(.offlineSyncBackgroundRunning))
     } else {
       String(localized: .settings(.offlineSyncIdle))
     }
