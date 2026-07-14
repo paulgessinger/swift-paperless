@@ -370,7 +370,7 @@ public class ApiRepository {
       Logger.networking.error(
         "Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)"
       )
-      throw error
+      throw RequestError.normalizing(error)
     }
 
     let (data, response) = result
@@ -623,8 +623,13 @@ extension ApiRepository: Repository {
 
       let request = try request(
         .download(documentId: document.id, original: original, version: queryVersion))
-      let (tempURL, response) = try await urlSession.getDownload(
-        for: request, progress: progress)
+      let (tempURL, response): (URL, URLResponse)
+      do {
+        (tempURL, response) = try await urlSession.getDownload(
+          for: request, progress: progress)
+      } catch {
+        throw RequestError.normalizing(error)
+      }
 
       try validateDownloadResponse(response, request: request)
 
@@ -641,8 +646,13 @@ extension ApiRepository: Repository {
   ) async throws -> URL {
     let request = try request(
       .download(documentId: documentID, original: original, version: version))
-    let (tempURL, response) = try await urlSession.getDownload(
-      for: request, progress: progress)
+    let (tempURL, response): (URL, URLResponse)
+    do {
+      (tempURL, response) = try await urlSession.getDownload(
+        for: request, progress: progress)
+    } catch {
+      throw RequestError.normalizing(error)
+    }
     try validateDownloadResponse(response, request: request)
 
     let dest = URL(
