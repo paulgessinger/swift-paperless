@@ -35,8 +35,14 @@ import Persistence
 import os
 
 @MainActor
+@Observable
 public final class BackgroundSyncCoordinator {
   public static let shared = BackgroundSyncCoordinator()
+
+  /// Whether a background-task-driven run is currently executing — surfaced on
+  /// the Offline & Sync screen (visible when the user foregrounds the app while
+  /// a run is still in flight).
+  public private(set) var isRunning = false
 
   private struct UIGraph {
     let database: Database
@@ -45,8 +51,8 @@ public final class BackgroundSyncCoordinator {
     let store: DocumentStore?
   }
 
-  private var registered: UIGraph?
-  private var headlessTask: Task<Bool, Never>?
+  @ObservationIgnored private var registered: UIGraph?
+  @ObservationIgnored private var headlessTask: Task<Bool, Never>?
 
   private init() {}
 
@@ -94,6 +100,8 @@ public final class BackgroundSyncCoordinator {
   // MARK: - Execution
 
   private func run(tier: SyncEngine.SyncTier) async -> Bool {
+    isRunning = true
+    defer { isRunning = false }
     let unmetered = await NetworkPathProbe.isUnmetered()
     guard let graph = registered else {
       return await runHeadless(tier: tier, unmetered: unmetered)
