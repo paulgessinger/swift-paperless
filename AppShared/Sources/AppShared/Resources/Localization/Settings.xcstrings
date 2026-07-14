@@ -3249,6 +3249,18 @@
         }
       }
     },
+    "offlineSyncBackgroundRunning" : {
+      "comment" : "Activity status on the Offline & Sync screen while a background task drives the sync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background sync…"
+          }
+        }
+      }
+    },
     "offlineSyncCachedDocuments" : {
       "comment" : "Row label for how many documents are currently stored on the device for offline use",
       "extractionState" : "manual",
