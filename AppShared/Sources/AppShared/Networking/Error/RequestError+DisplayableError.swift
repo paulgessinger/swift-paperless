@@ -69,6 +69,9 @@ extension RequestError: DisplayableError {
     case .certificate(let detail):
       raw = String(localized: .app(.requestErrorCertificate)) + " " + detail
 
+    case .connectivity(_, let detail):
+      raw = detail
+
     case .other(let detail):
       raw = detail
     }
