@@ -29,6 +29,19 @@ extension ErrorController {
 
     guard offline else { return false }
 
+    // Repositories normalize transport failures into `RequestError`, so this is
+    // the case an offline API call actually arrives as. The raw `URLError` /
+    // `NSError` checks below still matter for the paths that don't go through a
+    // repository (image loading, for one).
+    if let request = error as? RequestError, case .connectivity(let code, _) = request {
+      switch code {
+      case .notConnectedToInternet, .networkConnectionLost,
+        .dataNotAllowed, .timedOut:
+        return true
+      default: break
+      }
+    }
+
     if let url = error as? URLError {
       switch url.code {
       case .notConnectedToInternet, .networkConnectionLost,
