@@ -25,3 +25,4 @@
 - A failed cleanup of documents deleted on the server no longer stops the rest of the offline refresh
 - Switching to another server no longer throws away the offline download already running for the one you left; it keeps going in the background instead of starting over next time you switch back
 - Data used by the background library download is now counted under its own category in the Offline & Sync transfer statistics, instead of being lumped into "Other"
+- Refreshing a document while the server is unreachable now shows a single error instead of repeating the same one several times, and the details explain what can cause it: the server being offline, a wrong address, or a VPN that isn't connected
