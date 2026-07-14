@@ -12,3 +12,4 @@
 - Pulling to refresh an open document now picks up a new version added on the server, instead of continuing to show the previous one until you close and reopen it
 - Pulling to refresh a document that has a new version on the server now finishes refreshing its notes, metadata and suggestions, instead of stopping partway and showing an "Unexpected error"
 - On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
+- Refreshing a document while the server is unreachable now shows a single error instead of repeating the same one several times, and the details explain what can cause it: the server being offline, a wrong address, or a VPN that isn't connected
