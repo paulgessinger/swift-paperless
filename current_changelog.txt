@@ -23,3 +23,4 @@
 - Background sync and an open document list downloading at the same time no longer leave gaps in a cached list
 - A document you no longer have permission to view is no longer served from the offline cache as though the server were unreachable
 - A failed cleanup of documents deleted on the server no longer stops the rest of the offline refresh
+- Refreshing a document while the server is unreachable now shows a single error instead of repeating the same one several times, and the details explain what can cause it: the server being offline, a wrong address, or a VPN that isn't connected
