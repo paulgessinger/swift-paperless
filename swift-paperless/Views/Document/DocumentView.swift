@@ -171,6 +171,9 @@ struct DocumentView: View {
             await clear()
             navPath.append(NavigationState.detail(document: document))
           }
+        } catch {
+          Logger.shared.error("Error opening document from route: \(error)")
+          errorController.push(error: error)
         }
       case .setFilter(let filter):
         routeManager.pendingRoute = nil
