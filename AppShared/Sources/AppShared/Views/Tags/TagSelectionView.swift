@@ -42,7 +42,6 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             dismiss()
           } catch {
             errorController.push(error: error)
-            throw error
           }
         }
       })

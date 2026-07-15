@@ -136,7 +136,6 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
             dismiss()
           } catch {
             errorController.push(error: error)
-            throw error
           }
         }
 

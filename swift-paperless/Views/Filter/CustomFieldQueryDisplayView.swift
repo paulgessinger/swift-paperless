@@ -105,10 +105,20 @@ private struct ExprView: View {
   }
 }
 
-extension EnvironmentValues {
-  @Entry fileprivate var getCustomFieldById: (UInt) -> CustomField? = {
-    _ in nil
+// Not a closure: closures in the environment defeat value comparison and
+// invalidate every reader on each update. The store reference compares by
+// identity, so this stays stable across body evaluations.
+private struct CustomFieldLookup {
+  var store: DocumentStore?
+
+  @MainActor
+  func callAsFunction(_ id: UInt) -> CustomField? {
+    store?.customFields[id]
   }
+}
+
+extension EnvironmentValues {
+  @Entry fileprivate var getCustomFieldById = CustomFieldLookup(store: nil)
 }
 
 struct CustomFieldQueryDisplayView: View {
@@ -127,10 +137,6 @@ struct CustomFieldQueryDisplayView: View {
     query = CustomFieldQuery.expr(expr)
   }
 
-  private func customField(_ id: UInt) -> CustomField? {
-    store.customFields[id]
-  }
-
   var body: some View {
     Group {
       switch query {
@@ -142,7 +148,7 @@ struct CustomFieldQueryDisplayView: View {
         Text(.customFields(.anyCustomFieldQuery))
       }
     }
-    .environment(\.getCustomFieldById, customField)
+    .environment(\.getCustomFieldById, CustomFieldLookup(store: store))
   }
 }
 

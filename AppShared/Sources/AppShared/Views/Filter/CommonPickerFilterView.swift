@@ -371,7 +371,6 @@ where
             dismiss()
           } catch {
             errorController.push(error: error)
-            throw error
           }
         }
 
