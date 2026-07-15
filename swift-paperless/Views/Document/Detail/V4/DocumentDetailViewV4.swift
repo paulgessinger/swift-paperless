@@ -42,6 +42,20 @@ private enum FieldEdit: Identifiable, Hashable {
     case .notes: return nil
     }
   }
+
+  var transitionID: TransitionID {
+    switch self {
+    case .title: .title
+    case .tags: .tags
+    case .asn: .asn
+    case .correspondent: .correspondent
+    case .documentType: .documentType
+    case .date: .date
+    case .storagePath: .storagePath
+    case .owner: .owner
+    case .customFields: .customFields
+    }
+  }
 }
 
 /// Auxiliary presentations that always render as sheets regardless of size
@@ -187,10 +201,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         forFieldEdit: .asn,
         active: $activeFieldEdit,
         detents: [.fraction(0.25), .medium],
-        popoverSize: CGSize(width: 380, height: 240)
+        popoverSize: CGSize(width: 380, height: 240),
+        transitionNamespace: namespace
       ) {
         AsnEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.asn, in: namespace)
       }
 
       EditableAspect(
@@ -202,9 +216,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace,
         enabled: canChange
       )
-      .editPopover(forFieldEdit: .correspondent, active: $activeFieldEdit) {
+      .editPopover(
+        forFieldEdit: .correspondent, active: $activeFieldEdit, transitionNamespace: namespace
+      ) {
         CorrespondentEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.correspondent, in: namespace)
       }
 
       EditableAspect(
@@ -216,9 +231,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace,
         enabled: canChange
       )
-      .editPopover(forFieldEdit: .documentType, active: $activeFieldEdit) {
+      .editPopover(
+        forFieldEdit: .documentType, active: $activeFieldEdit, transitionNamespace: namespace
+      ) {
         DocumentTypeEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.documentType, in: namespace)
       }
 
       EditableAspect(
@@ -234,10 +250,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         forFieldEdit: .date,
         active: $activeFieldEdit,
         detents: [.fraction(0.25), .medium],
-        popoverSize: CGSize(width: 380, height: 440)
+        popoverSize: CGSize(width: 380, height: 440),
+        transitionNamespace: namespace
       ) {
         DateEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.date, in: namespace)
       }
 
       EditableAspect(
@@ -249,9 +265,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace,
         enabled: canChange
       )
-      .editPopover(forFieldEdit: .storagePath, active: $activeFieldEdit) {
+      .editPopover(
+        forFieldEdit: .storagePath, active: $activeFieldEdit, transitionNamespace: namespace
+      ) {
         StoragePathEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.storagePath, in: namespace)
       }
 
       EditableAspect(
@@ -269,10 +286,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .editPopover(
         forFieldEdit: .owner,
         active: $activeFieldEdit,
-        detents: [.medium, .large]
+        detents: [.medium, .large],
+        transitionNamespace: namespace
       ) {
         OwnerEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.owner, in: namespace)
       }
 
       EditableAspect(
@@ -283,9 +300,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         namespace: namespace,
         enabled: canChange
       )
-      .editPopover(forFieldEdit: .customFields, active: $activeFieldEdit) {
+      .editPopover(
+        forFieldEdit: .customFields, active: $activeFieldEdit, transitionNamespace: namespace
+      ) {
         CustomFieldsEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.customFields, in: namespace)
       }
     }
   }
@@ -581,10 +599,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .editPopover(
         forFieldEdit: .title,
         active: $activeFieldEdit,
-        popoverSize: CGSize(width: 480, height: 240)
+        popoverSize: CGSize(width: 480, height: 240),
+        transitionNamespace: namespace
       ) {
         TitleEditSheet(viewModel: viewModel)
-          .sheetZoomTransition(sourceID: TransitionID.title, in: namespace)
       }
 
       readOnlyExplanation
@@ -613,10 +631,10 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         .editPopover(
           forFieldEdit: .tags,
           active: $activeFieldEdit,
-          detents: [.medium, .large]
+          detents: [.medium, .large],
+          transitionNamespace: namespace
         ) {
           TagsEditSheet(viewModel: viewModel)
-            .sheetZoomTransition(sourceID: TransitionID.tags, in: namespace)
         }
       }
     }
@@ -837,11 +855,18 @@ extension View {
   ///
   /// `popoverSize` only affects the popover layer — sheets ignore it and
   /// honour the supplied detents instead.
+  ///
+  /// The zoom transition matching the field's pill is applied here, on the
+  /// presented root, rather than inside `content()`: the deferred content is
+  /// not mounted during the first frame, and iOS 27 resolves the presentation
+  /// transition at presentation time — a transition modifier that only
+  /// appears after the deferral tick is ignored.
   fileprivate func editPopover<Content: View>(
     forFieldEdit field: FieldEdit,
     active: Binding<FieldEdit?>,
     detents: Set<PresentationDetent> = [.medium, .large],
     popoverSize: CGSize = CGSize(width: 420, height: 520),
+    transitionNamespace: Namespace.ID,
     @ViewBuilder content: @escaping () -> Content
   ) -> some View {
     let isPresented = Binding(
@@ -861,6 +886,7 @@ extension View {
       // host takes over. Deferring the first render of `content()` past
       // that frame keeps those modifiers from running in the wrong scope.
       DeferredPopoverContent(size: popoverSize, content: content)
+        .sheetZoomTransition(sourceID: field.transitionID, in: transitionNamespace)
         #if !targetEnvironment(macCatalyst)
           .presentationDetents(detents)
           .presentationCompactAdaptation(.sheet)
