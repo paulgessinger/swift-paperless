@@ -8,6 +8,99 @@ import AppShared
 import DataModel
 import Foundation
 
+struct PaperlessServerEntity: AppEntity {
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Server")
+  static let defaultQuery = PaperlessServerQuery()
+
+  let connection: StoredConnection
+  private let title: String
+  private let subtitle: String?
+
+  var id: UUID { connection.id }
+  var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(
+      title: "\(title)",
+      subtitle: subtitle.map { "\($0)" })
+  }
+
+  init(_ connection: StoredConnection, allConnections: [StoredConnection]) {
+    self.connection = connection
+
+    let isUnique = Self.isServerUnique(connection.url, among: allConnections)
+    let urlLabel = isUnique ? connection.shortLabel : connection.label
+    let friendlyName = connection.friendlyName?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if let friendlyName, !friendlyName.isEmpty {
+      title = friendlyName
+      subtitle = urlLabel
+    } else {
+      title = urlLabel
+      subtitle = nil
+    }
+  }
+
+  func matches(_ search: String) -> Bool {
+    title.localizedCaseInsensitiveContains(search)
+      || subtitle?.localizedCaseInsensitiveContains(search) == true
+      || connection.fullLabel.localizedCaseInsensitiveContains(search)
+  }
+
+  private static func isServerUnique(_ url: URL, among connections: [StoredConnection]) -> Bool {
+    connections.filter { $0.url.absoluteString == url.absoluteString }.count == 1
+  }
+}
+
+struct PaperlessServerQuery: EntityStringQuery {
+  func entities(for identifiers: [PaperlessServerEntity.ID]) async throws -> [PaperlessServerEntity] {
+    guard !identifiers.isEmpty else { return [] }
+    let ids = Set(identifiers)
+    return await allEntities().filter { ids.contains($0.id) }
+  }
+
+  func entities(matching string: String) async throws -> [PaperlessServerEntity] {
+    let search = string.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !search.isEmpty else { return try await suggestedEntities() }
+    return await allEntities().filter { $0.matches(search) }
+  }
+
+  func suggestedEntities() async throws -> [PaperlessServerEntity] {
+    await allEntities()
+  }
+
+  func defaultResult() async -> PaperlessServerEntity? {
+    await activeEntity()
+  }
+
+  @MainActor
+  private func allEntities() -> [PaperlessServerEntity] {
+    let connectionManager = ConnectionManager()
+    let allConnections = Array(connectionManager.connections.values)
+    let activeConnectionId = connectionManager.activeConnectionId
+
+    return allConnections
+      .sorted {
+        if $0.id == activeConnectionId { return true }
+        if $1.id == activeConnectionId { return false }
+        return $0.shortLabel.localizedCaseInsensitiveCompare($1.shortLabel) == .orderedAscending
+      }
+      .map { PaperlessServerEntity($0, allConnections: allConnections) }
+  }
+
+  @MainActor
+  private func activeEntity() -> PaperlessServerEntity? {
+    let connectionManager = ConnectionManager()
+    guard let activeConnectionId = connectionManager.activeConnectionId,
+      let connection = connectionManager.connections[activeConnectionId]
+    else {
+      return nil
+    }
+
+    return PaperlessServerEntity(
+      connection,
+      allConnections: Array(connectionManager.connections.values))
+  }
+}
+
 struct PaperlessDocumentTypeEntity: AppEntity {
   static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Document Type")
   static let defaultQuery = PaperlessDocumentTypeQuery()
@@ -25,6 +118,9 @@ struct PaperlessDocumentTypeEntity: AppEntity {
 }
 
 struct PaperlessDocumentTypeQuery: EntityStringQuery {
+  @IntentParameterDependency<UploadDocumentIntent>(\.$server)
+  private var intent
+
   func entities(for identifiers: [PaperlessDocumentTypeEntity.ID]) async throws
     -> [PaperlessDocumentTypeEntity]
   {
@@ -47,7 +143,7 @@ struct PaperlessDocumentTypeQuery: EntityStringQuery {
 
   private func allEntities() async throws -> [PaperlessDocumentTypeEntity] {
     do {
-      let repository = try await PaperlessIntentRepository.repository()
+      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
       return try await repository.documentTypes()
         .sortedByLocalizedName()
         .map(PaperlessDocumentTypeEntity.init)
@@ -76,6 +172,9 @@ struct PaperlessCorrespondentEntity: AppEntity {
 }
 
 struct PaperlessCorrespondentQuery: EntityStringQuery {
+  @IntentParameterDependency<UploadDocumentIntent>(\.$server)
+  private var intent
+
   func entities(for identifiers: [PaperlessCorrespondentEntity.ID]) async throws
     -> [PaperlessCorrespondentEntity]
   {
@@ -98,7 +197,7 @@ struct PaperlessCorrespondentQuery: EntityStringQuery {
 
   private func allEntities() async throws -> [PaperlessCorrespondentEntity] {
     do {
-      let repository = try await PaperlessIntentRepository.repository()
+      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
       return try await repository.correspondents()
         .sortedByLocalizedName()
         .map(PaperlessCorrespondentEntity.init)
@@ -127,6 +226,9 @@ struct PaperlessTagEntity: AppEntity {
 }
 
 struct PaperlessTagQuery: EntityStringQuery {
+  @IntentParameterDependency<UploadDocumentIntent>(\.$server)
+  private var intent
+
   func entities(for identifiers: [PaperlessTagEntity.ID]) async throws -> [PaperlessTagEntity] {
     guard !identifiers.isEmpty else { return [] }
     let ids = Set(identifiers)
@@ -147,7 +249,7 @@ struct PaperlessTagQuery: EntityStringQuery {
 
   private func allEntities() async throws -> [PaperlessTagEntity] {
     do {
-      let repository = try await PaperlessIntentRepository.repository()
+      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
       return try await repository.tags()
         .sortedByLocalizedName()
         .map(PaperlessTagEntity.init)

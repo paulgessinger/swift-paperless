@@ -31,7 +31,12 @@ enum PaperlessIntentError: LocalizedError {
 
 enum PaperlessIntentRepository {
   @MainActor
-  static func repository() async throws -> ApiRepository {
+  static func repository(server: PaperlessServerEntity? = nil) async throws -> ApiRepository {
+    if let server {
+      return try await ApiRepository(
+        connection: server.connection.connection, mode: Bundle.main.appConfiguration.mode)
+    }
+
     let connectionManager = ConnectionManager()
     guard let connection = connectionManager.connection else {
       throw PaperlessIntentError.noConnection
