@@ -45,7 +45,7 @@ struct ReauthSheet: View {
 
     // Kick the URL probe so the OIDC client (if any) is initialised before
     // the credentials stage shows the OIDC button.
-    viewModel.onChangeUrl(immediate: true)
+    viewModel.revalidateUrl(immediate: true)
   }
 
   private func handleSuccess(_ newStored: StoredConnection) {
