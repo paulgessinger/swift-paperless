@@ -1,1 +1,0 @@
-- Fixed uploaded documents being saved with an extra 2 bytes (CRLF), which caused checksum mismatches and failed deduplication in Paperless-ngx
