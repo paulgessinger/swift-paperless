@@ -858,9 +858,9 @@ extension View {
   ///
   /// The zoom transition matching the field's pill is applied here, on the
   /// presented root, rather than inside `content()`: the deferred content is
-  /// not mounted during the first frame, and iOS 27 resolves the presentation
-  /// transition at presentation time — a transition modifier that only
-  /// appears after the deferral tick is ignored.
+  /// not mounted during the first frame, and both iOS 26 and iOS 27 resolve
+  /// the presentation transition at presentation time — a transition
+  /// modifier that only appears after the deferral tick is ignored.
   fileprivate func editPopover<Content: View>(
     forFieldEdit field: FieldEdit,
     active: Binding<FieldEdit?>,
