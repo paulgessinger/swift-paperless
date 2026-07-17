@@ -50,7 +50,9 @@ public class ApiRepository {
     public let backendVersion: Version?
 
   public var effectiveApiVersion: UInt {
-    min(Self.maximumApiVersion, apiVersion ?? Self.maximumApiVersion)
+    // If X-Api-Version can't be read (e.g. 401 before middleware), apiVersion is nil.
+    // Defaulting to minimumApiVersion ensures compatibility and lets the app handle real 401s for user recovery.
+    min(Self.maximumApiVersion, apiVersion ?? Self.minimumApiVersion)
   }
 
   public convenience init(connection: Connection, mode: Mode) async {
@@ -94,6 +96,14 @@ public class ApiRepository {
     {
       apiVersion = versions.apiVersion
       backendVersion = versions.backendVersion
+    } else if let detected = await Self.iterateAcceptedApiVersion(
+      urlSession: urlSession, connection: connection)
+    {
+      // Header probe failed; tried Accept versions until backend responded. No backend version string learned; feature support is conservative until successful header probe.
+      apiVersion = detected
+      backendVersion = nil
+      Logger.networking.notice(
+        "Header probe failed; iteration probe selected API version \(detected)")
     } else {
       apiVersion = nil
       backendVersion = nil
@@ -475,7 +485,7 @@ extension ApiRepository: Repository {
     try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
-  public func documents(filter: FilterState) throws -> any DocumentSource {
+  public func documents(filter: FilterState) throws -> ApiPagedSource<Document, Document> {
     Logger.networking.notice("Getting document sequence for filter")
     let cursor = try PageCursor<Document>(
       repository: self,
@@ -926,13 +936,14 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func tasks() throws -> any TaskSource {
+  public func tasks() throws -> AnyTaskSource {
     if supports(feature: .taskListEnvelope) {
       let initial = try url(.tasks(name: .consumeFile, acknowledged: false, pageSize: 100))
       let cursor = PageCursor<ApiTaskV10>(repository: self, initialURL: initial)
-      return ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain })
+      return AnyTaskSource(
+        ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain }))
     } else {
-      return ApiTaskSourceV9(repository: self)
+      return AnyTaskSource(ApiTaskSourceV9(repository: self))
     }
   }
 
@@ -1020,6 +1031,52 @@ extension ApiRepository: Repository {
         "Unable to get API and backend version, error: \(String(describing: error))")
       return nil
     }
+  }
+
+  // Fallback for when we can't read X-Api-Version off the canonical probe.
+  // Tries GET /api/ui_settings/ with Accept: application/json; version=N, counting down from max to min,
+  // stopping when the backend stops returning 406 (any other status = accepted).
+  // Mirrors but isn't shared with LoginViewModel's pre-auth probe.
+  private static func iterateAcceptedApiVersion(
+    urlSession: URLSession, connection: Connection
+  ) async -> UInt? {
+    guard let url = Endpoint.uiSettings().url(url: connection.url) else {
+      return nil
+    }
+
+    Logger.networking.info(
+      "Header probe failed; iterating API versions to find one the backend accepts")
+
+    for v in stride(
+      from: Int(maximumApiVersion), through: Int(minimumApiVersion), by: -1)
+    {
+      var request = URLRequest(url: url)
+      request.cachePolicy = .reloadIgnoringLocalCacheData
+      addTokenTo(request: &request, token: connection.token)
+      connection.extraHeaders.apply(toRequest: &request)
+      request.setValue(
+        "application/json; version=\(v)", forHTTPHeaderField: "Accept")
+
+      do {
+        let (_, response) = try await urlSession.getData(for: request)
+        guard let response = response as? HTTPURLResponse else { continue }
+        if response.statusCode != 406 {
+          return UInt(v)
+        }
+      } catch {
+        Logger.networking.warning(
+          "Iteration probe network error at version \(v): \(String(describing: error))")
+        // Network errors mean we can't tell whether this version was
+        // accepted; bail out rather than continue iterating with the same
+        // doomed connection.
+        return nil
+      }
+    }
+
+    Logger.networking.error(
+      "Iteration probe: backend rejected every API version in [\(minimumApiVersion), \(maximumApiVersion)]"
+    )
+    return nil
   }
 
   public func supports(feature: BackendFeature) -> Bool {

@@ -34,8 +34,14 @@ private struct ConnectionSelectionViews: View {
       } label: {
         let urlLabel = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
         let text = conn.nonEmptyFriendlyName.map { "\($0) (\(urlLabel))" } ?? urlLabel
-        // Bit of a hack to have by-character line breaks
-        Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+        HStack {
+          // Bit of a hack to have by-character line breaks
+          Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+          if connectionManager.needsAuth(for: conn.id) {
+            Image(systemName: "lock.trianglebadge.exclamationmark")
+              .foregroundStyle(.orange)
+          }
+        }
       }
       .disabled(conn.id == connectionManager.activeConnectionId)
     }
@@ -112,11 +118,18 @@ public struct ConnectionsView: View {
     if existing != extraHeaders {
       Logger.shared.info("Active connection extra headers have changed")
       connectionManager.setExtraHeaders(extraHeaders)
-      if let connection = connectionManager.connection {
+      if let stored = connectionManager.storedConnection,
+        let connection = connectionManager.connection
+      {
         Task {
-          let repository = await ApiRepository(
+          let api = await ApiRepository(
             connection: connection, mode: Bundle.main.appConfiguration.mode)
-          store.set(repository: repository)
+          // Must carry the same needs-auth decoration the app shell installs:
+          // a bare repository 401s without ever flipping the flag, and 401s are
+          // suppressed on the assumption the connection banner covers them.
+          store.set(
+            repository: NeedsAuthRepository(
+              wrapping: api, serverID: stored.id, connectionManager: connectionManager))
         }
       }
     }
@@ -184,6 +197,20 @@ public struct ConnectionsView: View {
           showExtraHeader = true
         }
         .tint(.primary)
+
+        if let activeId = connectionManager.activeConnectionId,
+          connectionManager.needsAuth(for: activeId)
+        {
+          Button {
+            connectionManager.requestReauth(for: activeId)
+          } label: {
+            Label(
+              String(localized: .app(.connectionStatusReauthAction)),
+              systemImage: "lock.trianglebadge.exclamationmark")
+          }
+          .foregroundStyle(.orange)
+          .bold()
+        }
 
         Button(role: .destructive) {
           logoutRequested = true

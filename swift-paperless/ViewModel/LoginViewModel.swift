@@ -124,7 +124,48 @@ class LoginViewModel {
 
   // - MARK: Methods
 
+  /// Load an absolute URL into the pair the login form actually edits: `scheme`
+  /// plus a `url` that carries only host and path, which is what `UrlEntryView`
+  /// binds to. Prefilling from an existing connection goes through here so the
+  /// form ends up in the same state as if the user had typed it.
+  func setUrl(_ absolute: URL) {
+    guard let schemeString = absolute.scheme,
+      let candidate = Scheme(rawValue: schemeString),
+      var components = URLComponents(url: absolute, resolvingAgainstBaseURL: false)
+    else {
+      url = absolute.absoluteString
+      return
+    }
+    scheme = candidate
+    components.scheme = nil
+    // With `scheme` cleared, `components.string` keeps a leading "//" ahead
+    // of host/path/query/fragment (network-path reference per RFC 3986).
+    url = String((components.string ?? "").dropFirst(2))
+  }
+
+  /// Reactive handler for edits to `url` (and `scheme`/`selectedIdentity`) in
+  /// the login form: splits a pasted absolute URL's scheme back out of `url`,
+  /// then re-runs the probe against the current state.
   func onChangeUrl(immediate: Bool = false) {
+    if url.starts(with: "https://") {
+      scheme = .https
+      url.replace(/^https:\/\//, with: "")
+    }
+
+    if url.starts(with: "http://") {
+      scheme = .http
+      url.replace(/^http:\/\//, with: "")
+    }
+
+    revalidateUrl(immediate: immediate)
+  }
+
+  /// Cancel any in-flight probe, reset OIDC discovery, and (re)kick the check
+  /// against the current `url`/`scheme`. This is the part of `onChangeUrl`
+  /// that callers who already have `url`/`scheme` set correctly (e.g.
+  /// `ReauthSheet.prepopulate()`) actually want, without piggybacking on a
+  /// handler named for reacting to a raw text-field edit.
+  func revalidateUrl(immediate: Bool = false) {
     checkUrlTask?.cancel()
     oidcClient = nil
 
@@ -146,16 +187,6 @@ class LoginViewModel {
       if !url.isEmpty {
         await checkUrl(string: fullUrl)
       }
-    }
-
-    if url.starts(with: "https://") {
-      scheme = .https
-      url.replace(/^https:\/\//, with: "")
-    }
-
-    if url.starts(with: "http://") {
-      scheme = .http
-      url.replace(/^http:\/\//, with: "")
     }
   }
 

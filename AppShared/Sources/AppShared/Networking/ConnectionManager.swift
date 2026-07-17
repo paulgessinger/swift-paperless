@@ -293,6 +293,45 @@ public class ConnectionManager: ObservableObject {
     }
   }
 
+  // In-memory only: a per-connection flag set when a request returns 401. Re-auth
+  // clears it. Not persisted in Stage 2; Stage 5 moves this onto the GRDB server
+  // row so it becomes cross-process observable (File Provider foresight).
+  @Published public private(set) var needsAuthIds: Set<UUID> = []
+
+  public func needsAuth(for id: UUID) -> Bool {
+    needsAuthIds.contains(id)
+  }
+
+  public func markNeedsAuth(for id: UUID) {
+    guard !needsAuthIds.contains(id) else { return }
+    Logger.api.info(
+      "Marking connection \(id, privacy: .private(mask: .hash)) as needing re-authentication")
+    needsAuthIds.insert(id)
+  }
+
+  public func clearNeedsAuth(for id: UUID) {
+    guard needsAuthIds.contains(id) else { return }
+    Logger.api.info(
+      "Clearing needs-auth state for connection \(id, privacy: .private(mask: .hash))")
+    needsAuthIds.remove(id)
+  }
+
+  // Set by the connection-status banner when the user taps "re-authenticate";
+  // the app shell observes this and presents `ReauthSheet`. Decoupled from
+  // `needsAuthIds` so the banner can show without auto-presenting a sheet —
+  // user consent stays explicit.
+  @Published public var reauthRequested: UUID? = nil
+
+  public func requestReauth(for id: UUID) {
+    Logger.api.info(
+      "Requesting re-auth UI for connection \(id, privacy: .private(mask: .hash))")
+    reauthRequested = id
+  }
+
+  public func cancelReauthRequest() {
+    reauthRequested = nil
+  }
+
   public func setActiveConnection(id: UUID, animated: Bool = true) {
     activeConnectionId = id
     eventPublisher.send(.connectionChange(animated: animated))
@@ -486,6 +525,7 @@ public class ConnectionManager: ObservableObject {
     if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
       Logger.api.info("Have active connection \(storedConnection.redactedLabel, privacy: .public)")
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
+      clearNeedsAuth(for: activeConnectionId)
       connections.removeValue(forKey: activeConnectionId)
       let count = connections.count
       Logger.api.info("Have \(count)")

@@ -459,7 +459,6 @@ public struct CreateDocumentView: View {
       }
     }
 
-    .errorOverlay(errorController: errorController, offset: 20)
   }
 }
 

@@ -18,6 +18,7 @@ struct SettingsView: View {
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.openURL) private var openURL
   @Environment(\.dismiss) private var dismiss
+  @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
 
   @State private var feedbackMailRequest: FeedbackMailRequest?
   @State private var showLoginSheet: Bool = false
@@ -251,7 +252,27 @@ struct SettingsView: View {
       .sheet(isPresented: $showLoginSheet) {
         LoginView(connectionManager: connectionManager, initial: false)
           .environmentObject(errorController)
-          .errorOverlay(errorController: errorController, offset: 15)
+      }
+
+      // MainView also presents this, but it cannot while the settings sheet is
+      // up — a view presents at most one sheet at a time. Settings is the
+      // active presenter here, so the re-auth request it raises is presented
+      // from here instead (MainView's copy stands down while showSettings).
+      .sheet(
+        isPresented: Binding(
+          get: { connectionManager.reauthRequested != nil },
+          set: { presented in
+            if !presented { connectionManager.cancelReauthRequest() }
+          })
+      ) {
+        if let id = connectionManager.reauthRequested,
+          let stored = connectionManager.connections[id]
+        {
+          ReauthSheet(stored: stored)
+            .environmentObject(connectionManager)
+            .environmentObject(errorController)
+            .environment(networkMonitor)
+        }
       }
 
       .toolbar {
@@ -277,6 +298,5 @@ struct SettingsView: View {
     SettingsView()
       .environmentObject(store)
       .environmentObject(connectionManager)
-      .errorOverlay(errorController: errorController)
   }
 }

@@ -143,7 +143,6 @@ struct ShareLinkView: View {
       .navigationTitle(.shareLink(.title))
       .navigationBarTitleDisplayMode(.inline)
 
-      .errorOverlay(errorController: errorController)
     }
 
     .sheet(isPresented: $showCreate, onDismiss: { Task { await load() } }) {
@@ -241,7 +240,6 @@ private struct CreateShareLinkView: View {
 
       .navigationTitle(.shareLink(.createTitle))
       .navigationBarTitleDisplayMode(.inline)
-      .errorOverlay(errorController: errorController)
     }
   }
 
