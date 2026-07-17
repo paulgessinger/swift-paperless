@@ -104,7 +104,8 @@ public struct DocumentNoteView: View {
         try await store.deleteNote(from: document, id: note.id)
         notes = notes.filter { $0.id != note.id }
         document.notes.count = notes.count
-      } catch let error where !error.isCancellationError {
+      } catch let error where error.isCancellationError {
+      } catch {
         Logger.shared.error("Error deleting note from document: \(error)")
         errorController.push(error: error)
       }

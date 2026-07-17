@@ -433,7 +433,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
           permissions: .full {
             $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
           })
-        try await store.fetchAll()
+        try? await store.fetchAll()
       }
     }
   }

@@ -213,26 +213,22 @@ public struct PermissionsEditView<Object>: View where Object: PermissionsModel {
   }
 
   private func initialize() async {
-    do {
-      // update users and groups just in case
-      try await withThrowingTaskGroup(of: Void.self) { group in
-        // Weird workaround for compiler warning
-        group.addTask { Task { @MainActor in try await store.fetchAllUsers() } }
-        group.addTask { Task { @MainActor in try await store.fetchAllGroups() } }
+    // update users and groups just in case
+    let users = Task { await fetch { try await store.fetchAllUsers() } }
+    let groups = Task { await fetch { try await store.fetchAllGroups() } }
+    await users.value
+    await groups.value
+  }
 
-        while !group.isEmpty {
-          do {
-            try await group.next()
-          } catch is PermissionsError {
-            Logger.shared.debug(
-              "Permissions error fetching users and groups for permissions edit, suppressing")
-          } catch let error where error.isCancellationError {
-            Logger.shared.debug(
-              "Cancellation error fetching users and groups for permissions edit, suppressing")
-            continue
-          }
-        }
-      }
+  private func fetch(_ operation: () async throws -> Void) async {
+    do {
+      try await operation()
+    } catch is PermissionsError {
+      Logger.shared.debug(
+        "Permissions error fetching users and groups for permissions edit, suppressing")
+    } catch let error where error.isCancellationError {
+      Logger.shared.debug(
+        "Cancellation error fetching users and groups for permissions edit, suppressing")
     } catch {
       Logger.shared.error("Error loading users / groups for permissions editing: \(error)")
     }
