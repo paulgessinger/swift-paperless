@@ -1,17 +1,16 @@
 //
-//  DocumentTypeTest.swift
-//  DataModel
-//
-//  Created by Paul Gessinger on 03.01.25.
+//  ApiDocumentTypeTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 @Suite
-struct DocumentTypeTest {
+struct ApiDocumentTypeTest {
   @Test func testDecoding() throws {
     let data = """
       {
@@ -27,7 +26,9 @@ struct DocumentTypeTest {
       }
       """.data(using: .utf8)!
 
-    let documentType = try makeDecoder(tz: .current).decode(DocumentType.self, from: data)
+    let documentType = try makeDecoder(tz: .current).decode(
+      ApiDocumentType.self, from: data
+    ).domain
 
     #expect(documentType.id == 11)
     #expect(documentType.slug == "form")

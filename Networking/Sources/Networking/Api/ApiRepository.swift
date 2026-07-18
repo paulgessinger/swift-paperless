@@ -378,47 +378,15 @@ public class ApiRepository {
     }
   }
 
-  private func get<T: Decodable & Model & Sendable>(_ type: T.Type, id: UInt) async throws -> T? {
-    try await get(type, endpoint: .single(T.self, id: id))
-  }
-
-  private func all<T>(_: T.Type) async throws -> [T]
-  where T: Decodable & Model & Sendable {
-    let endpoint: Endpoint =
-      switch T.self {
-      case is Correspondent.Type:
-        .correspondents()
-      case is DocumentType.Type:
-        .documentTypes()
-      case is Tag.Type:
-        .tags()
-      case is SavedView.Type:
-        .savedViews()
-      case is StoragePath.Type:
-        .storagePaths()
-      case is User.Type:
-        .users()
-      case is UserGroup.Type:
-        .groups()
-      case is CustomField.Type:
-        .customFields()
-      default:
-        fatalError("Invalid type")
-      }
-
-    let cursor = try PageCursor<T>(
-      repository: self,
-      initialURL: url(endpoint))
-    return try await cursor.collectAll()
-  }
-
 }
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
-    try await update(
-      element: document,
-      endpoint: .document(id: document.id, fullPerms: false))
+    let api: ApiDocument = try await update(
+      element: ApiDocumentUpdate(from: document),
+      endpoint: .document(id: document.id, fullPerms: false),
+      returns: ApiDocument.self)
+    return api.domain
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -485,12 +453,12 @@ extension ApiRepository: Repository {
     try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
-  public func documents(filter: FilterState) throws -> ApiPagedSource<Document, Document> {
+  public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
     Logger.networking.notice("Getting document sequence for filter")
-    let cursor = try PageCursor<Document>(
+    let cursor = try PageCursor<ApiDocument>(
       repository: self,
       initialURL: url(.documents(page: 1, filter: filter)))
-    return ApiPagedSource<Document, Document>(cursor: cursor, map: { $0 })
+    return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 
   public func download(
@@ -632,52 +600,70 @@ extension ApiRepository: Repository {
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
-    try await get(Correspondent.self, id: id)
+    try await get(ApiCorrespondent.self, endpoint: .correspondent(id: id))?.domain
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-    try await create(
-      element: correspondent,
+    let api: ApiCorrespondent = try await create(
+      element: ApiCorrespondentCreate(from: correspondent),
       endpoint: .createCorrespondent(),
-      returns: Correspondent.self)
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
-    try await update(
-      element: correspondent,
-      endpoint: .correspondent(id: correspondent.id))
+    let api: ApiCorrespondent = try await update(
+      element: ApiCorrespondentUpdate(from: correspondent),
+      endpoint: .correspondent(id: correspondent.id),
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func delete(correspondent: Correspondent) async throws {
     try await delete(Correspondent.self, endpoint: .correspondent(id: correspondent.id))
   }
 
-  public func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
+  public func correspondents() async throws -> [Correspondent] {
+    let cursor = try PageCursor<ApiCorrespondent>(
+      repository: self,
+      initialURL: url(.correspondents()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func documentType(id: UInt) async throws -> DocumentType? {
-    try await get(DocumentType.self, id: id)
+    try await get(ApiDocumentType.self, endpoint: .documentType(id: id))?.domain
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-    try await create(
-      element: documentType,
+    let api: ApiDocumentType = try await create(
+      element: ApiDocumentTypeCreate(from: documentType),
       endpoint: .createDocumentType(),
-      returns: DocumentType.self)
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
-    try await update(
-      element: documentType,
-      endpoint: .documentType(id: documentType.id))
+    let api: ApiDocumentType = try await update(
+      element: ApiDocumentTypeUpdate(from: documentType),
+      endpoint: .documentType(id: documentType.id),
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func delete(documentType: DocumentType) async throws {
     try await delete(DocumentType.self, endpoint: .documentType(id: documentType.id))
   }
 
-  public func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
+  public func documentTypes() async throws -> [DocumentType] {
+    let cursor = try PageCursor<ApiDocumentType>(
+      repository: self,
+      initialURL: url(.documentTypes()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
-  public func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
+  public func document(id: UInt) async throws -> Document? {
+    try await get(ApiDocument.self, endpoint: .document(id: id))?.domain
+  }
 
   public func document(asn: UInt) async throws -> Document? {
     Logger.networking.notice("Getting document by ASN")
@@ -685,21 +671,22 @@ extension ApiRepository: Repository {
     let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
     let decoded = try await send(
       endpoint: .documents(page: 1, rules: [rule]),
-      returns: ListResponse<Document>.self)
+      returns: ListResponse<ApiDocument>.self)
 
     guard decoded.count > 0, !decoded.results.isEmpty else {
       Logger.networking.notice("Got empty document result (ASN not found)")
       return nil
     }
-    return decoded.results.first
+    return decoded.results.first?.domain
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    try await send(endpoint: .metadata(documentId: documentId), returns: Metadata.self)
+    try await send(endpoint: .metadata(documentId: documentId), returns: ApiMetadata.self).domain
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    try await send(endpoint: .notes(documentId: documentId), returns: [Document.Note].self)
+    try await send(endpoint: .notes(documentId: documentId), returns: [ApiDocumentNote].self)
+      .map(\.domain)
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
@@ -707,22 +694,24 @@ extension ApiRepository: Repository {
     try await send(
       .post,
       endpoint: .notes(documentId: documentId),
-      body: note,
-      returns: [Document.Note].self)
+      body: ApiDocumentNoteCreate(from: note),
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     try await send(
       .delete,
       endpoint: .note(documentId: documentId, noteId: id),
-      returns: [Document.Note].self)
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func trash() async throws -> [Document] {
     Logger.networking.notice("Getting trash documents")
     let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
-    let cursor = try PageCursor<Document>(repository: self, initialURL: url(endpoint))
-    return try await cursor.collectAll()
+    let cursor = try PageCursor<ApiDocument>(repository: self, initialURL: url(endpoint))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   private enum TrashAction: String, Encodable {
@@ -756,8 +745,8 @@ extension ApiRepository: Repository {
 
     let decoded = try await send(
       endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
-      returns: ListResponse<Document>.self)
-    return (decoded.results.first?.asn ?? 0) + 1
+      returns: ListResponse<ApiDocument>.self)
+    return (decoded.results.first?.archive_serial_number ?? 0) + 1
   }
 
   private func nextAsnDirectEndpoint() async throws -> UInt {
@@ -775,9 +764,19 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func users() async throws -> [User] { try await all(User.self) }
+  public func users() async throws -> [User] {
+    let cursor = try PageCursor<ApiUser>(
+      repository: self,
+      initialURL: url(.users()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
-  public func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
+  public func groups() async throws -> [UserGroup] {
+    let cursor = try PageCursor<ApiUserGroup>(
+      repository: self,
+      initialURL: url(.groups()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func thumbnail(document: Document) async throws -> Image? {
     let data = try await thumbnailData(document: document)
@@ -837,21 +836,33 @@ extension ApiRepository: Repository {
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     Logger.networking.notice("Get suggestions")
     return try await send(
-      endpoint: .suggestions(documentId: documentId), returns: Suggestions.self)
+      endpoint: .suggestions(documentId: documentId), returns: ApiSuggestions.self
+    ).domain
   }
 
   // MARK: Saved views
 
   public func savedViews() async throws -> [SavedView] {
-    try await all(SavedView.self)
+    let cursor = try PageCursor<ApiSavedView>(
+      repository: self,
+      initialURL: url(.savedViews()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(savedView view: ProtoSavedView) async throws -> SavedView {
-    try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
+    let api: ApiSavedView = try await create(
+      element: ApiSavedViewCreate(from: view),
+      endpoint: .createSavedView(),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func update(savedView view: SavedView) async throws -> SavedView {
-    try await update(element: view, endpoint: .savedView(id: view.id))
+    let api: ApiSavedView = try await update(
+      element: ApiSavedViewUpdate(from: view),
+      endpoint: .savedView(id: view.id),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func delete(savedView view: SavedView) async throws {
@@ -861,16 +872,26 @@ extension ApiRepository: Repository {
   // MARK: Storage paths
 
   public func storagePaths() async throws -> [StoragePath] {
-    try await all(StoragePath.self)
+    let cursor = try PageCursor<ApiStoragePath>(
+      repository: self,
+      initialURL: url(.storagePaths()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-    try await create(
-      element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
+    let api: ApiStoragePath = try await create(
+      element: ApiStoragePathCreate(from: storagePath),
+      endpoint: .createStoragePath(),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
-    try await update(element: storagePath, endpoint: .storagePath(id: storagePath.id))
+    let api: ApiStoragePath = try await update(
+      element: ApiStoragePathUpdate(from: storagePath),
+      endpoint: .storagePath(id: storagePath.id),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func delete(storagePath: StoragePath) async throws {
@@ -880,25 +901,28 @@ extension ApiRepository: Repository {
   // MARK: Custom fields
 
   public func customFields() async throws -> [CustomField] {
-    try await all(CustomField.self)
+    let cursor = try PageCursor<ApiCustomField>(
+      repository: self,
+      initialURL: url(.customFields()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   // MARK: Server configuration
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     let configurations = try await send(
-      endpoint: .appConfiguration(), returns: [ServerConfiguration].self)
+      endpoint: .appConfiguration(), returns: [ApiServerConfiguration].self)
 
     guard let firstConfig = configurations.first else {
       Logger.networking.error("No server configuration found")
       throw RequestError.invalidResponse
     }
 
-    return firstConfig
+    return firstConfig.domain
   }
 
   public func remoteVersion() async throws -> RemoteVersion {
-    try await send(endpoint: .remoteVersion(), returns: RemoteVersion.self)
+    try await send(endpoint: .remoteVersion(), returns: ApiRemoteVersion.self).domain
   }
 
   // MARK: Others
@@ -1089,12 +1113,16 @@ extension ApiRepository: Repository {
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
     try await send(
       endpoint: .shareLinks(documentId: documentId),
-      returns: [DataModel.ShareLink].self)
+      returns: [ApiShareLink].self
+    ).map(\.domain)
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
-    try await create(
-      element: shareLink, endpoint: .createShareLink(), returns: ShareLink.self)
+    let api: ApiShareLink = try await create(
+      element: ApiShareLinkCreate(from: shareLink),
+      endpoint: .createShareLink(),
+      returns: ApiShareLink.self)
+    return api.domain
   }
 
   public func delete(shareLink: DataModel.ShareLink) async throws {

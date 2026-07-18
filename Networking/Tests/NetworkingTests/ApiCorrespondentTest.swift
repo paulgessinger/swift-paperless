@@ -1,18 +1,17 @@
 //
-//  CorrespondentTest.swift
-//  DataModel
-//
-//  Created by Paul Gessinger on 03.01.25.
+//  ApiCorrespondentTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
 import Foundation
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 @Suite
-struct CorrespondentTest {
+struct ApiCorrespondentTest {
   @Test func testDecoding() throws {
     let data = """
       {
@@ -29,7 +28,9 @@ struct CorrespondentTest {
       }
       """.data(using: .utf8)!
 
-    let correspondent = try makeDecoder(tz: .current).decode(Correspondent.self, from: data)
+    let correspondent = try makeDecoder(tz: .current).decode(
+      ApiCorrespondent.self, from: data
+    ).domain
 
     #expect(correspondent.id == 88)
     #expect(correspondent.slug == "aaaaaa")
@@ -41,38 +42,37 @@ struct CorrespondentTest {
     #expect(correspondent.lastCorrespondence == nil)
   }
 
-  @Test func testEncoding() throws {
+  @Test func testUpdateEncoding() throws {
     let correspondent = Correspondent(
       id: 88, documentCount: 0, lastCorrespondence: nil, name: "Aaaaaa", slug: "aaaaaa",
       matchingAlgorithm: .auto, match: "", isInsensitive: false)
 
     let encoder = JSONEncoder()
-
-    let data = try encoder.encode(correspondent)
+    let data = try encoder.encode(ApiCorrespondentUpdate(from: correspondent))
 
     struct Decoded: Decodable {
       let id: Int
-      let slug: String
       let name: String
       let match: String
       let matching_algorithm: Int
+      let is_insensitive: Bool
     }
 
     let decoded = try JSONDecoder().decode(Decoded.self, from: data)
 
     #expect(decoded.id == 88)
-    #expect(decoded.slug == "aaaaaa")
     #expect(decoded.name == "Aaaaaa")
     #expect(decoded.match == "")
     #expect(decoded.matching_algorithm == 6)
+    #expect(decoded.is_insensitive == false)
   }
 
-  @Test("Test proto correspondent encoding without explicit permissions")
+  @Test("Proto correspondent encoding without explicit permissions")
   func testProtoCorrespondent() throws {
     let correspondent = ProtoCorrespondent(
       name: "Aaaaaa", matchingAlgorithm: .auto, match: "", isInsensitive: false)
 
-    let data = try JSONEncoder().encode(correspondent)
+    let data = try JSONEncoder().encode(ApiCorrespondentCreate(from: correspondent))
 
     struct Decoded: Decodable {
       let name: String
@@ -89,7 +89,7 @@ struct CorrespondentTest {
     #expect(decoded.is_insensitive == false)
   }
 
-  @Test("Test proto correspondent encoding with explicit permissions")
+  @Test("Proto correspondent encoding with explicit permissions")
   func testProtoCorrespondentWithPermissions() throws {
     let perms = Permissions {
       $0.view.users = [2]
@@ -100,9 +100,9 @@ struct CorrespondentTest {
 
     var correspondent = ProtoCorrespondent(
       name: "Aaaaaa", matchingAlgorithm: .auto, match: "", isInsensitive: false, owner: .user(2))
-    correspondent.permissions = perms  // needed to trigger the didSet
+    correspondent.permissions = perms
 
-    let data = try JSONEncoder().encode(correspondent)
+    let data = try JSONEncoder().encode(ApiCorrespondentCreate(from: correspondent))
 
     struct DecodedPermissions: Decodable {
       let view: [String: [Int]]

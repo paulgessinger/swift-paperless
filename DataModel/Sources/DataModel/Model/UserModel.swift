@@ -6,19 +6,24 @@
 //
 
 import Foundation
-import MetaCodable
 
-@Codable
-@CodingKeys(.snake_case)
-@MemberInit
 public struct User: Model, Identifiable, Equatable, Sendable {
   public var id: UInt
-  @CodedAt("is_superuser")
   public var isSuperUser: Bool
   public var username: String
-
-  @Default([UInt]())
   public var groups: [UInt]
+
+  public init(
+    id: UInt,
+    isSuperUser: Bool,
+    username: String,
+    groups: [UInt] = []
+  ) {
+    self.id = id
+    self.isSuperUser = isSuperUser
+    self.username = username
+    self.groups = groups
+  }
 }
 
 extension User: Named {
@@ -94,11 +99,14 @@ extension User {
   }
 }
 
-@Codable
-@MemberInit
 public struct UserGroup: Model, Identifiable, Equatable, Sendable {
   public var id: UInt
   public var name: String
+
+  public init(id: UInt, name: String) {
+    self.id = id
+    self.name = name
+  }
 }
 
 public struct UserPermissions: Sendable {
@@ -111,6 +119,8 @@ public struct UserPermissions: Sendable {
 
   public struct PermissionSet: Sendable, CustomStringConvertible, Equatable {
     public var values = [Bool](repeating: false, count: Operation.allCases.count)
+
+    public init() {}
 
     public func test(_ operation: Operation) -> Bool {
       values[operation.rawValue]
@@ -225,50 +235,6 @@ public struct UserPermissions: Sendable {
     }
 
     return UserPermissions(rules: rules)
-  }
-}
-
-extension UserPermissions: Codable {
-  public init(from decoder: any Decoder) throws {
-    var rules = Resource.allCases.reduce(into: [Resource: PermissionSet]()) {
-      $0[$1] = PermissionSet()
-    }
-
-    let container = try decoder.singleValueContainer()
-    let values = try container.decode([String].self)
-
-    for value in values {
-      let parts = value.split(separator: "_", maxSplits: 1)
-
-      let opString = parts[0]
-      guard let resource = Resource(rawValue: String(parts[1])) else {
-        continue
-      }
-
-      let op: Operation? = Operation(opString)
-
-      if let op {
-        rules[resource]?.set(op, to: true)
-      }
-    }
-
-    self.rules = rules
-  }
-
-  public func encode(to encoder: any Encoder) throws {
-    var container = encoder.singleValueContainer()
-    var values: [String] = []
-
-    for (resource, permissionSet) in rules {
-      for operation in Operation.allCases {
-        if permissionSet.test(operation) {
-          let value = "\(operation.description)_\(resource.rawValue)"
-          values.append(value)
-        }
-      }
-    }
-
-    try container.encode(values)
   }
 }
 

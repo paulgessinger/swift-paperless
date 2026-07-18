@@ -1,17 +1,16 @@
 //
-//  StoragePathTest.swift
-//  DataModel
-//
-//  Created by AI on 14.03.24.
+//  ApiStoragePathTest.swift
+//  Networking
 //
 
 import Common
+import DataModel
 import Testing
 
-@testable import DataModel
+@testable import Networking
 
 @Suite
-struct StoragePathTest {
+struct ApiStoragePathTest {
   @Test func testDecoding() throws {
     let data = """
       {
@@ -28,7 +27,9 @@ struct StoragePathTest {
       }
       """.data(using: .utf8)!
 
-    let storagePath = try makeDecoder(tz: .current).decode(StoragePath.self, from: data)
+    let storagePath = try makeDecoder(tz: .current).decode(
+      ApiStoragePath.self, from: data
+    ).domain
 
     #expect(storagePath.id == 1)
     #expect(storagePath.slug == "haushalt")
