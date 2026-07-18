@@ -301,7 +301,7 @@ struct MainView: View {
 
     .sheet(isPresented: $showSettings) {
       if let store {
-        SettingsView()
+        SettingsView(database: database)
           .environment(manager)
           .environment(store)
           .environmentObject(errorController)
