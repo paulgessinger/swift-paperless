@@ -202,12 +202,13 @@ struct ApiSavedViewTest {
   @Test func testDecodingListWithNullValueTagRule() throws {
     let data = try #require(
       testData("Data/SavedView/saved_view_does_not_have_tag_null.json"))
-    let result = try decoder.decode(ListResponse<SavedView>.self, from: data)
+    let result = try decoder.decode(ListResponse<ApiSavedView>.self, from: data)
+    let results = result.results.map(\.domain)
 
     #expect(result.count == 7)
-    #expect(result.results.count == 7)
+    #expect(results.count == 7)
 
-    let inbox = try #require(result.results.first { $0.id == 1 })
+    let inbox = try #require(results.first { $0.id == 1 })
     #expect(inbox.name == "Inbox")
     #expect(inbox.filterRules.count == 1)
 
