@@ -18,6 +18,8 @@ struct ApiDocumentNote: Decodable, Sendable {
   var created: Date
   var user: DocumentNote.User?
 
+  // Required because of the custom init(from:) below (needed for the polymorphic
+  // `user` field) — that opts out of Codable's auto-synthesized CodingKeys.
   enum CodingKeys: String, CodingKey {
     case id, note, created, user
   }
