@@ -664,7 +664,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .padding(.bottom)
     }
     .refreshable {
-      await viewModel.load(onError: { errorController.push(error: $0) })
+      await viewModel.startLoad(onError: { errorController.push(error: $0) })
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar
@@ -782,7 +782,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .task {
-      await viewModel.load()
+      await viewModel.startLoad()
+    }
+
+    // The load outlives the task that starts it (see `startLoad`), so dismissal
+    // has to end it explicitly — otherwise it keeps running for a view nobody
+    // is looking at, and can toast over the screen that replaced it.
+    .onDisappear {
+      viewModel.cancelLoad()
     }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
