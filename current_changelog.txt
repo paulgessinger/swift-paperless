@@ -28,3 +28,4 @@
 - Switching a server to "Entire library" now starts downloading document notes and file metadata straight away, instead of waiting until the next time you reopen the app
 - Opening a document whose PDF is already cached now shows it immediately, even on a slow connection, instead of waiting behind a loading spinner
 - Pulling to refresh an open document now picks up a new version added on the server, instead of continuing to show the previous one until you close and reopen it
+- Pulling to refresh a document that has a new version on the server now finishes refreshing its notes, metadata and suggestions, instead of stopping partway and showing an "Unexpected error"

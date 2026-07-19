@@ -665,7 +665,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .refreshable {
       let model = viewModel
-      async let load: () = model.load(onError: { errorController.push(error: $0) })
+      async let load: () = model.startLoad(onError: { errorController.push(error: $0) })
       // Only on pull-to-refresh, not inside `load()`: refreshing permissions
       // means a full element sync, which is not what opening a document should
       // cost.
@@ -788,7 +788,14 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .task {
-      await viewModel.load()
+      await viewModel.startLoad()
+    }
+
+    // The load outlives the task that starts it (see `startLoad`), so dismissal
+    // has to end it explicitly — otherwise it keeps running for a view nobody
+    // is looking at, and can toast over the screen that replaced it.
+    .onDisappear {
+      viewModel.cancelLoad()
     }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
