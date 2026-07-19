@@ -90,6 +90,11 @@ class DocumentDetailModel {
 
   var metadata: Metadata?
 
+  /// The in-flight load, owned by the model rather than by whichever view task
+  /// happened to start it. See `startLoad(onError:)`.
+  @ObservationIgnored
+  private var loadTask: Task<Void, Never>?
+
   init(
     store: DocumentStore, connection: Connection?, document: Document
   ) {
@@ -110,6 +115,38 @@ class DocumentDetailModel {
     } catch {
       Logger.shared.error("Error refreshing UI settings from document detail: \(error)")
     }
+  }
+
+  /// Run `load` in a task owned by the model rather than by the caller's.
+  ///
+  /// A load must not be a structured child of the task that starts it, because
+  /// both of the view's entry points have a lifetime shorter than the work:
+  /// `.refreshable`'s task belongs to the pull gesture, and SwiftUI ends it when
+  /// the scroll view's content changes underneath it. A refresh that picks up a
+  /// new document version does exactly that — `loadDocument` swaps in the new
+  /// PDF, the preview inside the scroll view is replaced, the refresh session
+  /// ends, and the still-running metadata/notes/suggestions legs are cancelled
+  /// mid-flight. The refresh cancels itself, and the user gets a "cancelled"
+  /// toast for a refresh that silently didn't finish.
+  ///
+  /// An unstructured `Task` doesn't inherit cancellation (only priority and
+  /// actor isolation), so the legs survive the gesture ending. View *dismissal*
+  /// is still a real cancellation boundary — the view calls `cancelLoad()` on
+  /// disappear — so a load whose result nobody will see still stops promptly,
+  /// rather than surfacing a toast over whatever screen came next.
+  func startLoad(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
+    // Latest wins: a pull-to-refresh supersedes an on-appear load still running.
+    loadTask?.cancel()
+    let task = Task { await self.load(onError: onError) }
+    loadTask = task
+    await task.value
+  }
+
+  /// Stop the in-flight load. The detail view calls this on dismissal — see
+  /// ``startLoad(onError:)`` for why the load outlives the task that started it.
+  func cancelLoad() {
+    loadTask?.cancel()
+    loadTask = nil
   }
 
   /// Load everything a freshly-opened (or pulled-to-refresh) document needs from
