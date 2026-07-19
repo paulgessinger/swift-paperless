@@ -94,9 +94,13 @@ class DocumentDetailModel {
   /// fresh open, `loadDocument` fires a provisional download off the
   /// already-known (possibly stale) `document` in parallel with the metadata
   /// refresh, so a cached PDF renders immediately on a slow connection instead
-  /// of sitting behind a blurred thumbnail. Once metadata comes back, if the
-  /// version/`modified` actually moved, a second download replaces the
-  /// provisional PDF with the current one.
+  /// of sitting behind a blurred thumbnail.
+  ///
+  /// Once metadata comes back — on *every* load, not just a fresh open — the
+  /// resolved document's version/`modified` is compared against what was on
+  /// screen, and a changed one triggers a re-download. That is what makes a
+  /// pull-to-refresh pick up a version added server-side while the detail view
+  /// was open.
   ///
   /// Each step always logs its failure. Whether it's *surfaced* is the caller's
   /// choice via `onError`: an on-appear load (`.task`) passes nothing and stays
@@ -194,11 +198,20 @@ class DocumentDetailModel {
       onError?(error)
     }
 
-    guard isFreshOpen else { return }
+    // Only the *provisional* download is fresh-open-only; on a refresh there
+    // is nothing to wait for (`provisionalDownload` is nil) because the PDF is
+    // already on screen.
     await provisionalDownload?.value
 
-    // Nothing changed server-side since the provisional load — it already
-    // reflects current content, no need to re-fetch.
+    // Nothing changed server-side — the PDF on screen (provisional or from a
+    // previous load) already reflects current content, no need to re-fetch.
+    //
+    // The version check is what makes a server-side version bump visible: it
+    // has to run on every load, not just a fresh open, or a document versioned
+    // while the detail view is open keeps rendering the old file until the view
+    // is closed and reopened. `runDownload` is safe to call here — its delayed
+    // `.loading` flip is itself gated on `isFreshOpen`, so the new PDF swaps in
+    // without blanking the preview.
     guard
       document.currentVersionID != priorDocument.currentVersionID
         || document.modified != priorDocument.modified
