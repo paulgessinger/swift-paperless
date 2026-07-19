@@ -97,8 +97,10 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
   public var notes: NotesPayload = .init()
   public var customFields: CustomFieldRawEntryList
 
-  // Server-side version rows for this document, newest-first or order-undefined
-  // depending on backend. Empty on backends predating multi-version support.
+  // Server-side version rows for this document. The serializer sorts these
+  // id-descending (newest first), but nothing here relies on that — the
+  // accessors below order explicitly. Empty on backends predating
+  // multi-version support, which means anything before v3.0.0-beta.
   // `currentVersionID` and `rootVersionID` resolve the right id even when this
   // is empty by falling back to `self.id` — the document id equals the root
   // version id on the server (versions are sibling rows in the same table).
@@ -179,12 +181,29 @@ extension Document {
   }
 
   /// Id of the version the server returns when no `?version=` query is sent.
-  /// paperless serves the newest version by default; we mirror that by picking
-  /// the latest `added`. Falls back to `self.id` when `versions` is empty
-  /// (older backends, single-file documents) — the document id equals the
-  /// root version id server-side, so this fallback is correct, not a fudge.
+  /// paperless resolves that with `order_by("-id").first()`, so we order by
+  /// id too — *not* by `added`, which can disagree after an import or restore
+  /// preserves original timestamps. Ids are unique primary keys, so this
+  /// ordering is total and the result never depends on array order.
+  ///
+  /// Falls back to `self.id` when `versions` is empty (older backends,
+  /// single-file documents) — the document id equals the root version id
+  /// server-side, so this fallback is correct, not a fudge.
   public var currentVersionID: UInt {
-    versions.max(by: { $0.added < $1.added })?.id ?? id
+    versions.max(by: { $0.id < $1.id })?.id ?? id
+  }
+
+  /// Version id to put in a `?version=` query, or `nil` when the parameter
+  /// should be omitted entirely.
+  ///
+  /// With no versions, `currentVersionID` is `self.id` — the root id, which is
+  /// exactly what the backend picks anyway, so sending it conveys nothing.
+  /// Omitting it keeps request URLs byte-identical to what pre-versions builds
+  /// sent, which matters because Nuke keys its thumbnail data cache on the URL
+  /// string: sending a redundant parameter would invalidate every cached
+  /// thumbnail for every user whose server has no multi-version support.
+  public var versionQueryID: UInt? {
+    versions.isEmpty ? nil : currentVersionID
   }
 
   /// Id of the original/root version. Same fallback rationale as

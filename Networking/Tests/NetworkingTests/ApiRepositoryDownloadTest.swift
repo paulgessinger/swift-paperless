@@ -89,12 +89,14 @@ struct ApiRepositoryDownloadTest {
   }
 
   nonisolated static func makeDocument(
-    id: UInt = 7, modified: Date? = Date(timeIntervalSince1970: 1000)
+    id: UInt = 7, modified: Date? = Date(timeIntervalSince1970: 1000),
+    versions: [DocumentVersion] = []
   ) -> Document {
     Document(
       id: id, title: "doc", asn: nil, documentType: nil, correspondent: nil,
       created: Date(timeIntervalSince1970: 0), tags: [],
-      added: nil, modified: modified, storagePath: nil)
+      added: nil, modified: modified, storagePath: nil,
+      versions: versions)
   }
 
   nonisolated static func canonicalKey(
@@ -270,5 +272,75 @@ struct ApiRepositoryDownloadTest {
 
     #expect(counter.value == 1)
     #expect(urls[0] == urls[1])
+  }
+
+  // Coalescing is keyed on the staleness stamp too. Two callers holding the
+  // same version but different `modified` must not share a task — the winner
+  // would otherwise write its own stamp into the sidecar for both, and a blob
+  // recorded as fresher than it is would then survive `freshAgainst:`.
+  @Test
+  func concurrentDownloadsWithDifferentModifiedNotDeduped() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      Thread.sleep(forTimeInterval: 0.05)
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let older = Self.makeDocument(modified: Date(timeIntervalSince1970: 1000))
+    let newer = Self.makeDocument(modified: Date(timeIntervalSince1970: 2000))
+    async let a = repo.download(document: older)
+    async let b = repo.download(document: newer)
+    _ = try await [a, b]
+
+    #expect(counter.value == 2)
+  }
+
+  // Nuke keys its thumbnail data cache on the URL string, and the ContentStore
+  // path is keyed separately, so a redundant `?version=` on the request URL
+  // buys nothing and would invalidate every cached thumbnail on upgrade.
+  @Test
+  func noVersionQueryWhenServerReportsNoVersions() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let seenURL = LastValue<URL?>(nil)
+    DownloadMockURLProtocol.responder = { req in
+      seenURL.set(req.url)
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(document: Self.makeDocument(versions: []))
+    let query =
+      URLComponents(url: try #require(seenURL.value), resolvingAgainstBaseURL: false)?
+      .queryItems ?? []
+    #expect(!query.contains { $0.name == "version" })
+  }
+
+  @Test
+  func versionQuerySentWhenServerReportsVersions() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let seenURL = LastValue<URL?>(nil)
+    DownloadMockURLProtocol.responder = { req in
+      seenURL.set(req.url)
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let doc = Self.makeDocument(
+      id: 7,
+      versions: [
+        DocumentVersion(id: 7, added: Date(timeIntervalSince1970: 1000), isRoot: true),
+        DocumentVersion(id: 91, added: Date(timeIntervalSince1970: 2000), isRoot: false),
+      ])
+    _ = try await repo.download(document: doc)
+    let query =
+      URLComponents(url: try #require(seenURL.value), resolvingAgainstBaseURL: false)?
+      .queryItems ?? []
+    #expect(query.contains(URLQueryItem(name: "version", value: "91")))
   }
 }

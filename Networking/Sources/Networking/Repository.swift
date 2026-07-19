@@ -151,13 +151,20 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
 extension Repository {
   // Trampoline that supplies defaults for callers that don't need a progress
-  // callback or always want the archive variant. Delegates straight to the
-  // protocol requirement.
+  // callback or always want the archive variant.
+  //
+  // Deliberately `download(document:original:)` and not
+  // `download(document:original:progress:)`: default argument values don't
+  // participate in witness matching, so the three-argument spelling would have
+  // the same signature as the protocol requirement and become its default
+  // witness — a body that calls itself. Conformers omitting the method would
+  // then compile cleanly and infinitely recurse at runtime. Dropping `progress`
+  // here makes the signature distinct, so it cannot satisfy the requirement and
+  // the compiler keeps enforcing that every conformer implements it.
   public func download(
-    document: Document, original: Bool = false,
-    progress: (@Sendable (Double) -> Void)? = nil
+    document: Document, original: Bool = false
   ) async throws -> URL {
-    try await download(document: document, original: original, progress: progress)
+    try await download(document: document, original: original, progress: nil)
   }
 
   // Helper method documents with a title search
