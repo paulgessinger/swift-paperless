@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -156,7 +157,7 @@ class DocumentDetailModel {
   func loadMetadata(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     do {
       metadata = try await store.repository.metadata(documentId: document.id)
-    } catch is CancellationError {
+    } catch let error where error.isCancellationError {
     } catch {
       Logger.shared.error("Error loading document metadata: \(error)")
       onError?(error)
@@ -171,7 +172,7 @@ class DocumentDetailModel {
   func loadNotes(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     do {
       _ = try await store.notes(for: document)
-    } catch is CancellationError {
+    } catch let error where error.isCancellationError {
     } catch {
       Logger.shared.error("Error loading document notes: \(error)")
       onError?(error)
@@ -185,7 +186,7 @@ class DocumentDetailModel {
   private func loadSuggestionsQuietly(onError: (@MainActor @Sendable (any Error) -> Void)?) async {
     do {
       try await loadSuggestions()
-    } catch is CancellationError {
+    } catch let error where error.isCancellationError {
     } catch {
       Logger.shared.error("Error loading document suggestions: \(error)")
       onError?(error)
@@ -208,7 +209,7 @@ class DocumentDetailModel {
       if let updated = try await store.document(id: document.id) {
         document = updated
       }
-    } catch is CancellationError {
+    } catch let error where error.isCancellationError {
     } catch {
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
       onError?(error)
@@ -276,7 +277,7 @@ class DocumentDetailModel {
 
       // Start downloading the original in the background
       Task { await downloadOriginal() }
-    } catch is CancellationError {
+    } catch let error where error.isCancellationError {
     } catch {
       if case .loaded = download {
         // The provisional PDF is already on screen; keep showing it rather
