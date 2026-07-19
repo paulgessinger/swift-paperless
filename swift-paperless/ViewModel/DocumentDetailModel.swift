@@ -19,10 +19,26 @@ enum DocumentDownloadState: Equatable {
   case loaded(url: URL, document: PDFDocument)
   case error
 
+  // `.loaded` compares its payload, not just its case. SwiftUI uses the `==` of
+  // a view's Equatable stored properties when it diffs, and
+  // `IntegratedDocumentPreview` takes this value as a stored property — so
+  // treating every `.loaded` as equal made swapping one document for another (a
+  // re-download after a server-side version bump) invisible: the preview
+  // subtree was never re-evaluated, and the new `PDFDocument` never reached
+  // `PDFKitView`.
+  //
+  // It also silently disabled `.task(id: downloadState)` and
+  // `.animation(value: downloadState)` across a `.loaded` → `.loaded` change.
+  //
+  // `PDFDocument` is a non-Equatable class, which is presumably why this was
+  // hand-rolled; identity is the right comparison for it, since
+  // `loadBackground` constructs a fresh instance per load.
   static func == (lhs: DocumentDownloadState, rhs: DocumentDownloadState) -> Bool {
     switch (lhs, rhs) {
-    case (.initial, .initial), (.loading, .loading), (.loaded, .loaded), (.error, .error):
+    case (.initial, .initial), (.loading, .loading), (.error, .error):
       true
+    case (.loaded(let lURL, let lDocument), .loaded(let rURL, let rDocument)):
+      lURL == rURL && lDocument === rDocument
     default:
       false
     }
