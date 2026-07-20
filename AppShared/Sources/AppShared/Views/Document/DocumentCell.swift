@@ -31,7 +31,13 @@ public struct DocumentPreviewImage: View {
         .scaledToFit()
     }
 
-    .task {
+    // Keyed on the version, not bare: a bare `.task` runs once per view
+    // identity, and a list refresh swaps in a new `Document` at the same row
+    // position without changing that identity — so a version added or deleted
+    // server-side would keep showing the thumbnail from the first load.
+    // `versionQueryID` is exactly what `thumbnailRequest` puts in the URL, so
+    // this re-fires when the URL would change and never otherwise.
+    .task(id: document.versionQueryID) {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       do {
         image.pipeline = store.imagePipeline

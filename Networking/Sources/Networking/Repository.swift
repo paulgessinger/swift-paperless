@@ -85,14 +85,9 @@ public protocol Repository<Documents, Tasks>: Sendable {
   nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest
 
-  func download(documentID: UInt) async throws -> URL
-
-  func download(documentID: UInt, original: Bool, progress: (@Sendable (Double) -> Void)?)
-    async throws -> URL
-
-  // Preferred entry point: callers that already hold a Document supply it so
-  // the cache layer can use Document.modified as a staleness key without an
-  // extra round trip.
+  // Conformers receive a full Document handle so the cache layer can use
+  // Document.modified as a staleness key and Document.currentVersionID to
+  // address the right server-side version row.
   func download(
     document: Document, original: Bool,
     progress: (@Sendable (Double) -> Void)?
@@ -155,24 +150,21 @@ public protocol Repository<Documents, Tasks>: Sendable {
 }
 
 extension Repository {
-  public func download(documentID: UInt) async throws -> URL {
-    try await download(documentID: documentID, original: false, progress: nil)
-  }
-
-  public func download(documentID: UInt, original: Bool) async throws -> URL {
-    try await download(documentID: documentID, original: original, progress: nil)
-  }
-
-  // Default impl for conformers that don't implement the Document-aware path:
-  // fall back to the id-keyed call. ApiRepository overrides this directly to
-  // avoid a redundant document fetch when threading staleness through the
-  // ContentStore.
+  // Trampoline that supplies defaults for callers that don't need a progress
+  // callback or always want the archive variant.
+  //
+  // Deliberately `download(document:original:)` and not
+  // `download(document:original:progress:)`: default argument values don't
+  // participate in witness matching, so the three-argument spelling would have
+  // the same signature as the protocol requirement and become its default
+  // witness — a body that calls itself. Conformers omitting the method would
+  // then compile cleanly and infinitely recurse at runtime. Dropping `progress`
+  // here makes the signature distinct, so it cannot satisfy the requirement and
+  // the compiler keeps enforcing that every conformer implements it.
   public func download(
-    document: Document, original: Bool = false,
-    progress: (@Sendable (Double) -> Void)? = nil
+    document: Document, original: Bool = false
   ) async throws -> URL {
-    try await download(
-      documentID: document.id, original: original, progress: progress)
+    try await download(document: document, original: original, progress: nil)
   }
 
   // Helper method documents with a title search
