@@ -299,14 +299,36 @@ public final class DocumentStore: Sendable {
     lastSyncError = nil
   }
 
-  public func set(repository: some Repository, reload: Bool = true) {
-    // A repository that doesn't front the DB detaches the element projection
-    // (see `wireElementStore()`), which blanks every element read site until the
-    // next relaunch. That is legitimate before login, but only via `init` —
-    // anything *replacing* a live repository is expected to assemble a caching
-    // stack, so a bare one here is a caller bug. Be loud instead of silently
-    // emptying the UI: this exact mistake shipped once already, from
-    // `ConnectionsView.updateExtraHeaders`.
+  /// Point the store at `connection` — the only supported way to put it on a server.
+  ///
+  /// The store assembles the stack itself, through ``makeCachingRepository``, so a
+  /// caller cannot hand it a bare uncached repository. That mistake detaches the
+  /// element projection and blanks every element read site until the next relaunch,
+  /// and it shipped once already from `ConnectionsView.updateExtraHeaders`; keeping
+  /// the assembly in here is what makes it unrepresentable rather than merely
+  /// discouraged.
+  public func activate(
+    connection: StoredConnection,
+    database: Database,
+    manager: ConnectionManager,
+    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
+    reload: Bool = true
+  ) async throws {
+    let repository = try await makeCachingRepository(
+      for: connection, database: database, manager: manager, mode: mode)
+    install(repository: repository, reload: reload)
+  }
+
+  /// The single chokepoint for swapping the live repository. Private on purpose:
+  /// see ``activate(connection:database:manager:mode:reload:)``. Any future path
+  /// that needs to swap repositories should route through here so the invariant
+  /// below keeps covering it.
+  private func install(repository: some Repository, reload: Bool) {
+    // A repository that doesn't front the DB detaches the element projection (see
+    // `wireElementStore()`). That is legitimate before login, but only via `init`;
+    // replacing a *live* repository with a bare one is always a bug. Unreachable
+    // today — `activate` is the only caller — so this is a backstop, not a guard
+    // against anything currently in the tree.
     if !(repository is any CachingBackend) {
       Logger.shared.fault(
         "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
@@ -314,7 +336,7 @@ public final class DocumentStore: Sendable {
     }
     // An element sync in flight belongs to the *outgoing* backend: it writes the
     // old server's rows, and `runSyncElements` would let the caller's follow-up
-    // sync join it (both callers do `set(repository:)` → `sync()`) and return
+    // sync join it (both `activate` callers do `activate` → `sync()`) and return
     // without ever fetching the new server's cache. Nothing here is worth
     // keeping, so cancel rather than detach.
     syncTask?.cancel()
