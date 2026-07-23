@@ -170,6 +170,18 @@ public final class DocumentStore: Sendable {
   }
 
   public func set(repository: some Repository, reload: Bool = true) {
+    // A repository that doesn't front the DB detaches the element projection
+    // (see `wireElementStore()`), which blanks every element read site until the
+    // next relaunch. That is legitimate before login, but only via `init` —
+    // anything *replacing* a live repository is expected to assemble a caching
+    // stack, so a bare one here is a caller bug. Be loud instead of silently
+    // emptying the UI: this exact mistake shipped once already, from
+    // `ConnectionsView.updateExtraHeaders`.
+    if !(repository is any CachingBackend) {
+      Logger.shared.fault(
+        "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
+      )
+    }
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
