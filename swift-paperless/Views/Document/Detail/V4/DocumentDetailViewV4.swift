@@ -86,6 +86,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   // someone opens it on iPad. SceneStorage so the open/closed state
   // persists across app launches per scene.
   @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
+  @State private var isRefreshing = false
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
   @State private var sharedFile: NamedShareItem?
@@ -746,6 +747,30 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         }
       }
       if horizontalSizeClass == .regular {
+        // The regular layout's primary surface is a PDFKit view, not a scroll
+        // view, so `.refreshable` has nothing to bind to and would be a silent
+        // no-op — this button is the iPad's only way to reach the refresh path
+        // (picking up a new server-side version, notes and metadata).
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            Task {
+              isRefreshing = true
+              await viewModel.startLoad(onError: { errorController.push(error: $0) })
+              isRefreshing = false
+            }
+          } label: {
+            if isRefreshing {
+              ProgressView()
+            } else {
+              Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
+                .labelStyle(.iconOnly)
+            }
+          }
+          .disabled(isRefreshing)
+          // Explicit, because the in-progress branch renders no label at all —
+          // without this VoiceOver would announce nothing while refreshing.
+          .accessibilityLabel(Text(.app(.documentDetailRefresh)))
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             showEditInspector.toggle()
