@@ -125,23 +125,21 @@ public struct ConnectionsView: View {
       connectionManager.setExtraHeaders(extraHeaders)
       if let stored = connectionManager.storedConnection {
         Task {
-          // Rebuild the *whole* stack through the shared factory, exactly as the
-          // app shell and the SyncEngine do, so this path cannot drift from
-          // them. Both layers matter here: the needs-auth decoration because a
-          // bare repository 401s without ever flipping the flag (and 401s are
-          // suppressed on the assumption the connection banner covers them), and
-          // the caching wrapper because the store detaches its ElementStore
-          // projection from any repository that fronts no database — installing
-          // an uncached repository here would blank every element read site
-          // until the next relaunch.
-          guard
-            let repository = try? await makeCachingRepository(
-              for: stored, database: database, manager: connectionManager)
-          else {
-            Logger.shared.error("Could not rebuild repository after extra header change")
-            return
+          // Rebuild the *whole* stack, exactly as the app shell and the SyncEngine
+          // do, so this path cannot drift from them. Both layers matter here: the
+          // needs-auth decoration because a bare repository 401s without ever
+          // flipping the flag (and 401s are suppressed on the assumption the
+          // connection banner covers them), and the caching wrapper because the
+          // store detaches its ElementStore projection from any repository that
+          // fronts no database. `activate` owns that assembly, so this call site
+          // can no longer get it wrong.
+          do {
+            try await store.activate(
+              connection: stored, database: database, manager: connectionManager)
+          } catch {
+            Logger.shared.error(
+              "Could not rebuild repository after extra header change: \(error)")
           }
-          store.set(repository: repository)
         }
       }
     }

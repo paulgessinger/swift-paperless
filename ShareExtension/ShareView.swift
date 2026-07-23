@@ -88,18 +88,21 @@ struct ShareView: View {
   private func refreshConnection() {
     Logger.api.info("Connection info changed, reloading!")
 
-    if let conn = connectionManager.connection {
-      Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
+    if let stored = connectionManager.storedConnection {
+      Logger.api.trace("Valid connection from connection manager: \(stored.logLabel)")
       Task {
         store.events.emit(.repositoryWillChange)
         // Caching outermost, over the extension's own DB, so the store's
-        // ElementStore projection observes the writes its sync performs.
-        let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
-        let needsAuth = NeedsAuthRepository(
-          wrapping: api, serverID: conn.serverID, connectionManager: connectionManager)
-        let repository = CachingRepository(
-          wrapping: needsAuth, database: database, serverID: conn.serverID)
-        store.set(repository: repository)
+        // ElementStore projection observes the writes its sync performs. The
+        // store owns that assembly (see `DocumentStore.activate`), so the
+        // extension can't drift from the app's layering.
+        do {
+          try await store.activate(
+            connection: stored, database: database, manager: connectionManager)
+        } catch {
+          Logger.api.error("Could not build repository for active connection: \(error)")
+          return
+        }
         storeReady = true
         try? await store.sync()
       }
