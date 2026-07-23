@@ -71,6 +71,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   // button opens it. SceneStorage so the open/closed state persists across
   // app launches per scene.
   @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = false
+  @State private var isRefreshing = false
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
 
@@ -633,16 +634,18 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
       .padding(.bottom)
     }
-    .refreshable {
-      let model = viewModel
-      async let document: () = model.loadDocument()
-      async let metadata: () = model.loadMetadata()
-      async let permissions: () = model.refreshPermissions()
-      _ = await (document, metadata, permissions)
-    }
+    .refreshable { await refresh() }
     .safeAreaInset(edge: .bottom) {
       metadataBar
     }
+  }
+
+  private func refresh() async {
+    let model = viewModel
+    async let document: () = model.loadDocument()
+    async let metadata: () = model.loadMetadata()
+    async let permissions: () = model.refreshPermissions()
+    _ = await (document, metadata, permissions)
   }
 
   // iPad layout: full SearchablePDFPreview as the primary surface; the
@@ -722,6 +725,34 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         }
       }
       if usesInspectorLayout {
+        // The regular layout's primary surface is a PDFKit view, not a scroll
+        // view, so `.refreshable` has nothing to bind to and would be a silent
+        // no-op — this button is the iPad's only way to reach the refresh path
+        // (picking up a new server-side version, notes and metadata).
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            Task {
+              isRefreshing = true
+              await refresh()
+              isRefreshing = false
+            }
+          } label: {
+            // Spin the icon rather than swapping in a ProgressView: a vertical
+            // toolbar sizes a bare ProgressView to the whole bar for a few frames.
+            if #available(iOS 18.0, *) {
+              Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
+                .labelStyle(.iconOnly)
+                .symbolEffect(.rotate, isActive: isRefreshing)
+            } else if isRefreshing {
+              ProgressView()
+                .accessibilityLabel(Text(.app(.documentDetailRefresh)))
+            } else {
+              Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
+                .labelStyle(.iconOnly)
+            }
+          }
+          .disabled(isRefreshing)
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             showEditInspector.toggle()
