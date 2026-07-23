@@ -161,12 +161,12 @@ class DocumentDetailModel {
     return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
   }
 
-  // @TODO: Extract `private var serverURL: URL?` from `(store.repository as? ApiRepository)?.connection.url`,
-  // use it in both `documentUrl` and `deepLinks`, then drop the `connection` property and propagation through init/protocol/view.
+  // The server URL comes from the injected connection, not from downcasting
+  // `store.repository`: the store holds a wrapper (`NeedsAuthRepository<ApiRepository>`),
+  // so an `as? ApiRepository` cast silently fails and would drop the with-server link.
   var deepLinks: (withServer: Route?, withoutServer: Route?) {
-    let withServer: Route? = (store.repository as? ApiRepository).flatMap {
-      let serverURL = $0.connection.url
-      guard let server = serverURL.stringDroppingScheme else { return nil }
+    let withServer: Route? = connection.flatMap {
+      guard let server = $0.url.stringDroppingScheme else { return nil }
       return Route(action: .document(id: document.id, edit: nil), server: server)
     }
 
