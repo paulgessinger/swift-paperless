@@ -190,39 +190,51 @@ struct MainView: View {
       }
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
-      // Build the active server's stack through the shared factory (identical to
-      // the per-server stacks the SyncEngine builds for inactive servers).
-      guard let stored = manager.storedConnection,
-        let repository = try? await makeCachingRepository(
-          for: stored, database: database, manager: manager)
-      else {
-        Logger.api.error("Could not build repository for active connection")
+      guard let stored = manager.storedConnection else {
+        Logger.api.error("Active connection has no stored connection record")
         storeReady = false
         showLoginScreen = true
         showLoadingScreen = false
         return
       }
-      if let store {
+
+      // The store assembles the active server's stack itself (identical to the
+      // per-server stacks the SyncEngine builds for inactive servers), so both the
+      // reuse and the first-launch path go through one entry point. A fresh store
+      // starts on `NullRepository` and is only published once `activate` succeeds —
+      // otherwise a failed login would leave a detached store installed.
+      let isNewStore = store == nil
+      let target = store ?? DocumentStore(repository: NullRepository())
+
+      if !isNewStore {
         await sleep(.seconds(0.1))
-        store.events.emit(.repositoryWillChange)
+        target.events.emit(.repositoryWillChange)
         await sleep(.seconds(0.3))
-        store.set(repository: repository)
-        storeReady = true
-        try? await store.fetchAll()
-        store.startTaskPolling()
-        kickLibraryFill(store)
-        await sleep(.seconds(0.3))
-        showLoadingScreen = false
-      } else {
-        let newStore = DocumentStore(repository: repository)
-        store = newStore
-        observeFriendlyName(on: newStore)
-        storeReady = true
-        try? await newStore.fetchAll()
-        newStore.startTaskPolling()
-        kickLibraryFill(newStore)
-        showLoadingScreen = false
       }
+
+      do {
+        try await target.activate(connection: stored, database: database, manager: manager)
+      } catch {
+        Logger.api.error("Could not build repository for active connection: \(error)")
+        storeReady = false
+        showLoginScreen = true
+        showLoadingScreen = false
+        return
+      }
+
+      if isNewStore {
+        store = target
+        observeFriendlyName(on: target)
+      }
+
+      storeReady = true
+      try? await target.fetchAll()
+      target.startTaskPolling()
+      kickLibraryFill(target)
+      if !isNewStore {
+        await sleep(.seconds(0.3))
+      }
+      showLoadingScreen = false
       showLoginScreen = false
     } else {
       storeReady = false
