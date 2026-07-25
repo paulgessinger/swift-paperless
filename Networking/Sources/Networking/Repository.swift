@@ -179,6 +179,13 @@ extension Repository {
 
 extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
+
+  /// The document-search encoding this backend understands. Use it both for
+  /// requests and for the rules written into saved views, so the app does not
+  /// store rule types the backend has deprecated.
+  public var searchApi: FilterState.SearchApi {
+    supports(feature: .tantivySimpleSearch) ? .tantivy : .legacy
+  }
 }
 
 // - MARK: PagedSource
