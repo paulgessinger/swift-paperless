@@ -258,17 +258,22 @@ public class ConnectionManager: ObservableObject {
       Logger.shared.fault("Initial connection hydrate failed: \(error)")
     }
 
-    // Observer is the SOLE writer of the in-memory dict from here on.
-    // A failed DB write leaves the dict untouched (correct), and on success
-    // the observer fires within a runloop tick so SwiftUI re-renders.
+    // The observer is the *authoritative* writer of the in-memory dict, but
+    // not the only one: mutators apply their change eagerly so the very next
+    // synchronous read sees it, and the observer reconciles a tick later.
+    // `applyHydrate` is equality-guarded, so the reconcile is a no-op unless
+    // the DB actually disagrees with what the mutator assumed.
+    //
+    // The observation's own first value is consumed like any other rather
+    // than discarded as "already applied by the bootstrap read above": a
+    // write landing between that read and the observation's initial fetch is
+    // baked into the first value, and dropping it would hide that write until
+    // something else touched the table.
     let stream = database.observeConnections()
     observationTask = Task { [weak self] in
       do {
-        // Drop the initial snapshot — already applied above.
-        var iterator = stream.makeAsyncIterator()
-        _ = try await iterator.next()
-        while let records = try await iterator.next() {
-          await MainActor.run { self?.applyHydrate(records: records) }
+        for try await records in stream {
+          self?.applyHydrate(records: records)
         }
       } catch {
         Logger.api.error("Server observation terminated: \(error)")
@@ -280,10 +285,15 @@ public class ConnectionManager: ObservableObject {
     observationTask?.cancel()
   }
 
-  /// In-memory cache of connection rows. Written ONLY by ``applyHydrate(records:)``,
-  /// which is called from the bootstrap read at init and from the
-  /// `ValueObservation` task that follows it. Mutators go through the DB and
-  /// let the observer hydrate this dict.
+  /// In-memory cache of connection rows.
+  ///
+  /// Mutators write the DB first, then apply their own change here eagerly so
+  /// callers that read back synchronously (e.g. `login` → `setActiveConnection`
+  /// → `refreshConnection`) don't race the observer. ``applyHydrate(records:)``
+  /// — driven by the bootstrap read at init and by the `ValueObservation` task
+  /// that follows it — is authoritative and reconciles this dict against the
+  /// table; being equality-guarded, it is a no-op when the eager write already
+  /// matched.
   public private(set) var connections: [UUID: StoredConnection] = [:] {
     willSet {
       objectWillChange.send()
@@ -327,8 +337,17 @@ public class ConnectionManager: ObservableObject {
     // the active pointer still names it, advance to whatever else exists
     // or clear. Cheap Swift check — no FK cascade needed.
     if let activeId = activeConnectionId, dict[activeId] == nil {
-      activeConnectionId = dict.values.first?.id
+      activeConnectionId = Self.successor(in: dict)?.id
     }
+  }
+
+  /// Which connection to fall back to when the active one disappears.
+  ///
+  /// Dictionary iteration order isn't stable, so `values.first` would pick a
+  /// different server run to run once more than one is configured. Order by
+  /// the label the user sees, with the id as a tie-break.
+  private static func successor(in dict: [UUID: StoredConnection]) -> StoredConnection? {
+    dict.values.min { ($0.label, $0.id.uuidString) < ($1.label, $1.id.uuidString) }
   }
 
   public func needsAuth(for id: UUID) -> Bool {
@@ -451,10 +470,9 @@ public class ConnectionManager: ObservableObject {
       Logger.api.error("login DB write failed: \(error)")
       return
     }
-    // Update the in-memory dict eagerly so the upcoming setActiveConnection
-    // → connectionChange → refreshConnection sees the row immediately
-    // (the observer also fires in the next tick; equality-guarded so the
-    // double-update is a no-op).
+    // Eager, so the upcoming setActiveConnection → connectionChange →
+    // refreshConnection sees the row immediately rather than a tick later
+    // when the observer fires.
     connections[connection.id] = connection
     setActiveConnection(id: connection.id, animated: false)
   }
@@ -472,6 +490,9 @@ public class ConnectionManager: ObservableObject {
     } catch {
       Logger.api.error("setExtraHeaders DB write failed: \(error)")
     }
+    // Eager, like every other mutator: the edit takes effect for this session
+    // even if it didn't reach disk, rather than the UI silently reverting.
+    connections[stored.id] = stored
   }
 
   public func setFriendlyName(_ name: String?) {
@@ -492,6 +513,7 @@ public class ConnectionManager: ObservableObject {
     } catch {
       Logger.api.error("setFriendlyName DB write failed: \(error)")
     }
+    connections[stored.id] = stored
   }
 
   public func logout(animated: Bool) {
@@ -500,16 +522,17 @@ public class ConnectionManager: ObservableObject {
     if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
       Logger.api.info("Have active connection \(storedConnection.redactedLabel, privacy: .public)")
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
-      clearNeedsAuth(for: activeConnectionId)
+      // No clearNeedsAuth() here — it would UPDATE a row this DELETE removes.
       do {
         try database.deleteConnection(id: activeConnectionId)
       } catch {
         Logger.api.error("logout DB delete failed: \(error)")
       }
       connections.removeValue(forKey: activeConnectionId)
+      needsAuthIds.remove(activeConnectionId)
       let count = connections.count
       Logger.api.info("Have \(count)")
-      if let newConn = connections.first?.value {
+      if let newConn = Self.successor(in: connections) {
         Logger.api.info("Setting connection to \(newConn.id)")
         setActiveConnection(id: newConn.id, animated: animated)
       } else {
