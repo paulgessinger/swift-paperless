@@ -1,5 +1,7 @@
+import Common
 import Foundation
 import GRDB
+import os
 
 /// Connection-table operations.
 ///
@@ -77,5 +79,52 @@ extension Database {
       }
       continuation.onTermination = { _ in task.cancel() }
     }
+  }
+}
+
+// MARK: - Legacy UserDefaults export (debug seam)
+
+extension Database {
+  /// Write the current `server` table back out as the legacy `Connections`
+  /// `UserDefaults` payload — the exact inverse of the v2 import migration.
+  ///
+  /// This exists to make ``Database/wipe(appGroupIdentifier:)`` testable. Once
+  /// the app stores connections in GRDB, nothing writes the legacy payload any
+  /// more, so a wipe has nothing to re-import and simply drops every server.
+  /// Exporting first turns the wipe into a round trip: export → wipe →
+  /// relaunch → the v2 migration re-imports what was exported.
+  ///
+  /// Tokens are unaffected either way — they live in the keychain keyed by
+  /// URL + username, not in the database or in this payload.
+  ///
+  /// Overwrites any payload already under the key, and does nothing to the
+  /// `needs_auth` flag, which the legacy shape can't express.
+  ///
+  /// - Returns: how many connections were written.
+  @discardableResult
+  public func exportConnectionsToLegacyUserDefaults(
+    _ userDefaults: UserDefaults
+  ) throws -> Int {
+    let records = try allConnections()
+    let legacy = Dictionary(
+      uniqueKeysWithValues: records.map { ($0.id, LegacyStoredConnection(record: $0)) })
+    try wrapping("exportConnectionsToLegacyUserDefaults") {
+      let data = try JSONEncoder().encode(legacy)
+      userDefaults.set(data, forKey: V2_ImportLegacyConnections.userDefaultsKey)
+    }
+    Logger.persistence.notice(
+      "Exported \(records.count, privacy: .public) connection(s) to legacy UserDefaults")
+    return records.count
+  }
+
+  /// App-group convenience for ``exportConnectionsToLegacyUserDefaults(_:)``.
+  @discardableResult
+  public func exportConnectionsToLegacyUserDefaults(
+    appGroupIdentifier: String = ContentStore.appGroup
+  ) throws -> Int {
+    guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
+      throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
+    }
+    return try exportConnectionsToLegacyUserDefaults(defaults)
   }
 }

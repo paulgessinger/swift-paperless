@@ -546,4 +546,23 @@ public class ConnectionManager: ObservableObject {
       eventPublisher.send(.logout)
     }
   }
+
+  /// Debug seam: write the stored connections back out in the pre-database
+  /// `UserDefaults` format the v2 migration imports from.
+  ///
+  /// Without this the database wipe in the corruption-recovery UI can't be
+  /// exercised on a build that has only ever stored connections in GRDB —
+  /// there is no legacy payload left to restore from, so a wipe just drops
+  /// every server. Exporting first makes the wipe a round trip.
+  ///
+  /// Tokens are untouched; they live in the keychain, not in either store.
+  ///
+  /// - Returns: how many connections were written.
+  @discardableResult
+  public func exportConnectionsToLegacyStorage() throws -> Int {
+    let count = try database.exportConnectionsToLegacyUserDefaults()
+    Logger.api.notice(
+      "Exported \(count, privacy: .public) connection(s) to legacy UserDefaults storage")
+    return count
+  }
 }

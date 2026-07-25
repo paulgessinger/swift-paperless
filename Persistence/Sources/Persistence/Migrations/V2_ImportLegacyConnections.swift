@@ -70,7 +70,12 @@ enum V2_ImportLegacyConnections {
 /// (the legacy inline `StoredUser` Codable). Defined here in `Persistence`
 /// rather than reused from `AppShared` so the importer has zero dependency
 /// on AppShared / Networking / the active `StoredConnection` type.
-struct LegacyStoredConnection: Decodable {
+///
+/// `Encodable` as well as `Decodable` only so the debug export
+/// (``Database/exportConnectionsToLegacyUserDefaults(_:)``) can write the
+/// payload this type reads. Keeping both directions on one type is the point:
+/// if the shape drifts, both sides drift together.
+struct LegacyStoredConnection: Codable {
   var id: UUID?
   var url: URL
   var extraHeaders: [LegacyHeader]?
@@ -78,17 +83,37 @@ struct LegacyStoredConnection: Decodable {
   var identity: String?
   var friendlyName: String?
 
-  struct LegacyHeader: Decodable {
+  struct LegacyHeader: Codable {
     var id: UUID?
     var key: String
     var value: String
   }
 
-  struct LegacyUser: Decodable {
+  struct LegacyUser: Codable {
     var id: UInt
     var is_superuser: Bool
     var username: String
     var groups: [UInt]?
+  }
+
+  /// The inverse of ``ConnectionRecord/init(legacy:fallbackId:)``.
+  ///
+  /// `needsAuth` has no legacy counterpart and is dropped; a re-imported
+  /// connection comes back with `needs_auth = false`, which is the same thing
+  /// a genuine pre-Stage-5 payload would produce.
+  init(record: ConnectionRecord) {
+    id = record.id
+    url = record.url
+    extraHeaders = record.extraHeaders.map {
+      LegacyHeader(id: $0.id, key: $0.key, value: $0.value)
+    }
+    user = LegacyUser(
+      id: record.user.id,
+      is_superuser: record.user.isSuperUser,
+      username: record.user.username,
+      groups: record.user.groups)
+    identity = record.identity
+    friendlyName = record.friendlyName
   }
 }
 
