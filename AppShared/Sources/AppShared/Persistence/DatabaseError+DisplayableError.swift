@@ -42,6 +42,8 @@ extension DatabaseError {
       openFailedSummary(path: path)
     case .migrationFailed:
       String(localized: .persistence(.databaseErrorMigrationFailed))
+    case .operationFailed:
+      String(localized: .persistence(.databaseErrorOperationFailed))
     }
   }
 
@@ -49,7 +51,8 @@ extension DatabaseError {
     switch self {
     case .appGroupUnavailable:
       nil
-    case .openFailed(_, let underlying), .migrationFailed(let underlying):
+    case .openFailed(_, let underlying), .migrationFailed(let underlying),
+      .operationFailed(_, let underlying):
       String(describing: underlying)
     }
   }
@@ -63,6 +66,14 @@ extension DatabaseError {
     case .migrationFailed(let underlying):
       return appendUnderlying(
         String(localized: .persistence(.databaseErrorMigrationFailed)), underlying)
+    case .operationFailed(let operation, let underlying):
+      #if DEBUG
+        return appendUnderlying(
+          "Database operation '\(operation)' failed.", underlying)
+      #else
+        return appendUnderlying(
+          String(localized: .persistence(.databaseErrorOperationFailed)), underlying)
+      #endif
     }
   }
 

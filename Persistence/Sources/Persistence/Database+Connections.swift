@@ -10,15 +10,19 @@ import GRDB
 extension Database {
   /// Fetch every connection row currently in the table.
   public func allConnections() throws -> [ConnectionRecord] {
-    try writer.read { db in
-      try ConnectionRecord.fetchAll(db)
+    try wrapping("allConnections") {
+      try writer.read { db in
+        try ConnectionRecord.fetchAll(db)
+      }
     }
   }
 
   /// Insert or replace a connection row by primary key.
   public func upsertConnection(_ record: ConnectionRecord) throws {
-    try writer.write { db in
-      try record.upsert(db)
+    try wrapping("upsertConnection") {
+      try writer.write { db in
+        try record.upsert(db)
+      }
     }
   }
 
@@ -26,8 +30,10 @@ extension Database {
   /// - Returns: `true` if a row was deleted, `false` if no such row existed.
   @discardableResult
   public func deleteConnection(id: UUID) throws -> Bool {
-    try writer.write { db in
-      try ConnectionRecord.deleteOne(db, key: id)
+    try wrapping("deleteConnection") {
+      try writer.write { db in
+        try ConnectionRecord.deleteOne(db, key: id)
+      }
     }
   }
 
@@ -35,10 +41,12 @@ extension Database {
   ///
   /// No-op if the id doesn't match a row.
   public func setNeedsAuth(_ flag: Bool, forConnection id: UUID) throws {
-    try writer.write { db in
-      try db.execute(
-        sql: "UPDATE server SET needs_auth = ? WHERE id = ?",
-        arguments: [flag, id])
+    try wrapping("setNeedsAuth") {
+      try writer.write { db in
+        try db.execute(
+          sql: "UPDATE server SET needs_auth = ? WHERE id = ?",
+          arguments: [flag, id])
+      }
     }
   }
 

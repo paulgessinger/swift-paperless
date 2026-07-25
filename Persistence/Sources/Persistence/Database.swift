@@ -184,4 +184,23 @@ public enum DatabaseError: Error {
   case appGroupUnavailable(identifier: String)
   case openFailed(path: String, underlying: Error)
   case migrationFailed(underlying: Error)
+  /// A read or write against an open database failed. `operation` names the
+  /// call site (not user-facing) so a log or bug report says which one.
+  case operationFailed(operation: String, underlying: Error)
+}
+
+extension Database {
+  /// Run a GRDB access, re-wrapping whatever it throws as a ``DatabaseError``
+  /// so callers outside this package can present it without importing GRDB.
+  func wrapping<T>(_ operation: String, _ body: () throws -> T) throws -> T {
+    do {
+      return try body()
+    } catch let error as DatabaseError {
+      throw error
+    } catch {
+      Logger.persistence.error(
+        "Database operation '\(operation, privacy: .public)' failed: \(error)")
+      throw DatabaseError.operationFailed(operation: operation, underlying: error)
+    }
+  }
 }

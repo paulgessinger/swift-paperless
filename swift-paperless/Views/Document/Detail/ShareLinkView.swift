@@ -300,7 +300,7 @@ private struct CreateShareLinkView: View {
         user: User(id: 1, isSuperUser: true, username: "admin")
       )
 
-      connectionManager.login(connection)
+      try connectionManager.login(connection)
     } catch {
       print("Error: \(error)")
     }

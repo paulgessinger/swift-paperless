@@ -460,16 +460,17 @@ public class ConnectionManager: ObservableObject {
     return stored
   }
 
-  public func login(_ connection: StoredConnection) {
+  /// Store a connection and make it active.
+  ///
+  /// Throws if the row can't be persisted. Unlike the other mutators this one
+  /// can't just log and carry on: a login that doesn't survive to the next
+  /// launch is worse than no login, and the user needs to be told rather than
+  /// left looking at a button that did nothing.
+  public func login(_ connection: StoredConnection) throws {
     Logger.api.info(
       "Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
     let record = connection.toRecord(needsAuth: needsAuthIds.contains(connection.id))
-    do {
-      try database.upsertConnection(record)
-    } catch {
-      Logger.api.error("login DB write failed: \(error)")
-      return
-    }
+    try database.upsertConnection(record)
     // Eager, so the upcoming setActiveConnection → connectionChange →
     // refreshConnection sees the row immediately rather than a tick later
     // when the observer fires.

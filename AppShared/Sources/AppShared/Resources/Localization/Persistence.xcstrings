@@ -325,6 +325,61 @@
         }
       }
     },
+    "databaseErrorOperationFailed" : {
+      "comment" : "Shown when a read or write against the already-open local database fails.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app could not save to its local database."
+          }
+        }
+      }
+    },
+
     "databaseErrorOpenFailed" : {
       "comment" : "Shown when opening the on-disk SQLite database fails. Does not include the file path (release builds).",
       "extractionState" : "manual",

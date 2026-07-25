@@ -112,7 +112,7 @@ public struct MainLoadingView: View {
 
   .overlay(alignment: .bottom) {
     Button("Add login") {
-      manager.login(
+      try? manager.login(
         StoredConnection(
           url: URL(string: "https://example.com")!, extraHeaders: [],
           user: User(id: 1, isSuperUser: false, username: "preview")))
