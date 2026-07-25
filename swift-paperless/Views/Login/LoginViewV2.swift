@@ -7,6 +7,7 @@
 
 import AppShared
 import Foundation
+import Persistence
 import SwiftUI
 import os
 
@@ -87,6 +88,7 @@ struct LoginViewV2: LoginViewProtocol {
   @State private var identityManager = IdentityManager()
 
   @Environment(\.dismiss) private var dismiss
+  @EnvironmentObject private var errorController: ErrorController
 
   @State private var showDetails = false
   @State private var stage = LoginStage.connection
@@ -102,7 +104,15 @@ struct LoginViewV2: LoginViewProtocol {
         dismiss()
         try? await Task.sleep(for: .seconds(0.2))
       }
-      connectionManager.login(stored)
+      do {
+        try connectionManager.login(stored)
+      } catch {
+        // The credentials were valid but the row didn't reach the DB. Say so
+        // rather than dropping the user back to a login screen that looks
+        // like it just ignored them.
+        Logger.shared.error("Storing the logged-in connection failed: \(error)")
+        errorController.push(error: error)
+      }
     }
   }
 
@@ -175,11 +185,15 @@ struct LoginViewV2: LoginViewProtocol {
 // - MARK: Previews
 
 #Preview("Initial") {
-  LoginViewV2(connectionManager: ConnectionManager())
+  LoginViewV2(connectionManager: ConnectionManager(database: try! Database.inMemory()))
+    .environmentObject(ErrorController())
 }
 
 #Preview("Additional") {
-  LoginViewV2(connectionManager: ConnectionManager(), initial: false)
+  LoginViewV2(
+    connectionManager: ConnectionManager(database: try! Database.inMemory()), initial: false
+  )
+  .environmentObject(ErrorController())
 }
 
 #Preview("StageSwitch") {

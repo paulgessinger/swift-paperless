@@ -29,6 +29,8 @@ packages:
     path: DataModel
   Networking:
     path: Networking
+  Persistence:
+    path: Persistence
   AppShared:
     path: AppShared
   Nuke:
@@ -70,6 +72,7 @@ targets:
       - package: Common
       - package: DataModel
       - package: Networking
+      - package: Persistence
 
   ShareExtension:
     type: app-extension
@@ -88,6 +91,7 @@ targets:
     dependencies:
       - package: AppShared
       - package: Networking
+      - package: Persistence
 
   swift-paperlessUITests:
     type: bundle.ui-testing

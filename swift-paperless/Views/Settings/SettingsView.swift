@@ -7,6 +7,7 @@
 
 import AppShared
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -290,7 +291,8 @@ struct SettingsView: View {
 #Preview("SettingsView") {
   @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @StateObject var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
 
   VStack {
   }
