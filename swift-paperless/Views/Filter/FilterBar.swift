@@ -45,7 +45,7 @@ private struct FilterMenu<Content: View>: View {
       return
     }
 
-    updated.filterRules = filterModel.filterState.rules
+    updated.filterRules = filterModel.filterState.rules(for: store.repository.searchApi)
     updated.sortOrder = filterModel.filterState.sortOrder
     updated.sortField = filterModel.filterState.sortField
     Task {
@@ -106,7 +106,7 @@ private struct FilterMenu<Content: View>: View {
                 name: "",
                 sortField: filterModel.filterState.sortField,
                 sortOrder: filterModel.filterState.sortOrder,
-                filterRules: filterModel.filterState.rules
+                filterRules: filterModel.filterState.rules(for: store.repository.searchApi)
               )
 
               savedView = proto

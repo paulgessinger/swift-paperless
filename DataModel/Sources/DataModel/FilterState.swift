@@ -31,25 +31,36 @@ public struct FilterState: Equatable, Codable, Sendable {
     case advanced
 
     public var ruleType: FilterRuleType {
+      ruleType(for: .legacy)
+    }
+
+    public func ruleType(for searchApi: SearchApi) -> FilterRuleType {
       switch self {
       case .title:
         .title
       case .content:
         .content
       case .titleContent:
-        .titleContent
+        // paperless-ngx 3.0 deprecated `title_content` in favour of the
+        // Tantivy-backed `text` parameter.
+        searchApi == .tantivy ? .simpleText : .titleContent
       case .advanced:
         .fulltextQuery
       }
     }
 
+    /// Maps a rule type onto the mode the UI offers.
+    ///
+    /// This is deliberately not injective: `title_content` (pre-3.0) and `text`
+    /// (3.0+) are two encodings of the same "title and content" mode, so a
+    /// saved view written by either the app or the 3.0 web UI round-trips.
     public init?(ruleType: FilterRuleType) {
       switch ruleType {
-      case .title:
+      case .title, .simpleTitle:
         self = .title
       case .content:
         self = .content
-      case .titleContent:
+      case .titleContent, .simpleText:
         self = .titleContent
       case .fulltextQuery:
         self = .advanced
