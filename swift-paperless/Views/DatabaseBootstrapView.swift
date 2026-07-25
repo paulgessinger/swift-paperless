@@ -186,3 +186,60 @@ struct DatabaseFailureView: View {
     }
   }
 }
+
+// - MARK: Previews
+
+// `DatabaseFailureView` is only reachable when the on-disk database can't be
+// opened, so these previews are the practical way to look at it. Each error
+// case renders a different detail block, and the retry/wipe buttons are inert
+// here — `wipeDatabase()` runs for real, so drive that on a simulator instead.
+/// Stands in for the SQLite errors GRDB surfaces as the `underlying` of a
+/// ``DatabaseError``.
+private func previewSQLiteError(
+  _ code: Int = 11,
+  _ message: String = "database disk image is malformed"
+) -> any Error {
+  NSError(domain: "SQLite", code: code, userInfo: [NSLocalizedDescriptionKey: message])
+}
+
+#Preview("Open failed") {
+  DatabaseFailureView(
+    error: DatabaseError.openFailed(
+      path: "/private/var/mobile/Containers/Shared/AppGroup/…/swift-paperless.sqlite",
+      underlying: previewSQLiteError())
+  ) {}
+}
+
+#Preview("Migration failed") {
+  DatabaseFailureView(
+    error: DatabaseError.migrationFailed(underlying: previewSQLiteError())
+  ) {}
+}
+
+#Preview("App group unavailable") {
+  DatabaseFailureView(
+    error: DatabaseError.appGroupUnavailable(identifier: "group.com.paulgessinger.swift-paperless")
+  ) {}
+}
+
+// The detail block is `.textSelection(.enabled)` and unbounded, so a verbose
+// underlying error is the case most likely to push the buttons off-screen.
+#Preview("Long detail") {
+  DatabaseFailureView(
+    error: DatabaseError.operationFailed(
+      operation: "upsertConnection",
+      underlying: previewSQLiteError(
+        19,
+        """
+        FOREIGN KEY constraint failed - while executing `INSERT OR REPLACE \
+        INTO server (id, url, friendly_name, identity, user, extra_headers, \
+        needs_auth) VALUES (?,?,?,?,?,?,?)`
+        """))
+  ) {}
+}
+
+// A non-DatabaseError, to exercise the LocalizedError and plain-Error fallbacks
+// in `detail`.
+#Preview("Unknown error") {
+  DatabaseFailureView(error: CocoaError(.fileNoSuchFile)) {}
+}
