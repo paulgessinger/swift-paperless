@@ -1,3 +1,7 @@
+1.11.0 (207)
+
+- Fix the "Deep link (with backend)" option missing from a document's share menu
+
 1.11.0 (205)
 
 - Fixed uploaded documents being saved with an extra 2 bytes (CRLF), which caused checksum mismatches and failed deduplication in Paperless-ngx
