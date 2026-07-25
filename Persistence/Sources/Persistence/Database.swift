@@ -73,8 +73,13 @@ public final class Database: Sendable {
     }
     self.writer = pool
 
-    // Apply file protection to the directory and to any GRDB sidecar files
-    // that exist (the -wal / -shm files appear on first WAL transaction).
+    // The directory and the database file are what these calls actually set.
+    // On a first launch the -wal / -shm sidecars don't exist yet (WAL creates
+    // them on the first transaction), so those two calls no-op — they only
+    // bite when reopening a database whose files are already on disk. The
+    // sidecars are still covered: iOS's default protection class for files in
+    // an app container is the completeUntilFirstUserAuthentication we want, so
+    // the guarantee holds by default rather than because of this code.
     Self.applyFileProtection(directory)
     Self.applyFileProtection(path)
     Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-wal"))
