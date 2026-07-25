@@ -1,1 +1,1 @@
-- Fix untranslated strings in document notes
+- Title and content search now uses the new search API on Paperless-ngx v3.0 and later, instead of the parameter that server deprecated. Older servers are unaffected.

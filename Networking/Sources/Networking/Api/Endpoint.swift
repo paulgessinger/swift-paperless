@@ -110,9 +110,11 @@ extension Endpoint {
 // MARK: - Document related endpoints
 extension Endpoint {
   public static func documents(
-    page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize
+    page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize,
+    searchApi: FilterState.SearchApi = .legacy
   ) -> Endpoint {
-    let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize)
+    let endpoint = documents(
+      page: page, rules: filter.rules(for: searchApi), pageSize: pageSize)
 
     var ordering: String = filter.sortField.rawValue
     if filter.sortOrder.reverse {

@@ -451,7 +451,7 @@ extension ApiRepository: Repository {
     Logger.networking.notice("Getting document sequence for filter")
     let cursor = try PageCursor<Document>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter)))
+      initialURL: url(.documents(page: 1, filter: filter, searchApi: searchApi)))
     return ApiPagedSource<Document, Document>(cursor: cursor, map: { $0 })
   }
 
