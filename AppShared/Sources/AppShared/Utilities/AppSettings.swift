@@ -18,8 +18,6 @@ public enum SettingsKeys: String {
   case defaultSortField
   case defaultSortOrder
   case filterBarConfiguration
-
-  case editingUserInterfaceExperiment
 }
 
 extension PublishedUserDefaultsBacked {
@@ -93,22 +91,6 @@ public class AppSettings: ObservableObject {
   @PublishedUserDefaultsBacked(.filterBarConfiguration)
   public var filterBarConfiguration = FilterBarConfiguration.default
 
-  public enum EditingUserInterface: String, Codable, CaseIterable {
-    public static var allCases: [AppSettings.EditingUserInterface] {
-      [.automatic, .v3]
-    }
-
-    case automatic
-    case v3
-
-    // deprecated, kept here so decoding works
-    @available(*, deprecated)
-    case v1, v2
-  }
-
-  @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
-  public var editingUserInterface: EditingUserInterface = .automatic
-
   public var lastAppVersion: AppVersion?
   @UserDefaultsBacked(appVersionKey)
   public var currentAppVersion: AppVersion? = nil
@@ -141,68 +123,5 @@ extension AppSettings {
         "AppSettings.value(\(key)): unable to decode, returning default value (\(error))")
       return defaultValue
     }
-  }
-}
-
-@available(*, deprecated)
-@MainActor
-@propertyWrapper
-public class AppSettingsObject: ObservableObject {
-  @ObservedObject private var observed = AppSettings.shared
-
-  private var tasks = Set<AnyCancellable>()
-
-  public var wrappedValue: AppSettings {
-    observed
-  }
-
-  public var projectedValue: ObservedObject<AppSettings>.Wrapper {
-    $observed
-  }
-
-  public init() {
-    observed.objectWillChange
-      .sink { _ in
-        Logger.shared.debug("AppSettings objectwill change from singleton in wrapper")
-        self.objectWillChange.send()
-      }
-      .store(in: &tasks)
-  }
-}
-
-@available(*, deprecated)
-@MainActor
-@propertyWrapper
-public struct AppSetting<Value: Codable>: DynamicProperty {
-  public typealias SettingsKeyPath = KeyPath<AppSettings, PublishedUserDefaultsBacked<Value>>
-  private var keyPath: SettingsKeyPath
-
-  @State private var value: Value
-
-  public var wrappedValue: Value {
-    get {
-      value
-    }
-    nonmutating set {
-      AppSettings.shared.objectWillChange.send()
-      let published = AppSettings.shared[keyPath: self.keyPath]
-      published.$backing.wrappedValue = newValue
-      value = newValue
-      AppSettings.shared.settingsChanged.send()
-    }
-  }
-
-  public var projectedValue: Binding<Value> {
-    Binding<Value>(
-      get: {
-        wrappedValue
-      },
-      set: { wrappedValue = $0 }
-    )
-  }
-
-  public init(_ keyPath: SettingsKeyPath) {
-    self.keyPath = keyPath
-    _value = State(initialValue: AppSettings.shared[keyPath: keyPath].$backing.wrappedValue)
   }
 }
