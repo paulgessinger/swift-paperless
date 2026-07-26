@@ -15,7 +15,7 @@ protocol LoginViewProtocol: View {
 }
 
 struct LoginView: LoginViewProtocol {
-  @ObservedObject var connectionManager: ConnectionManager
+  var connectionManager: ConnectionManager
   var initial = true
 
   @ObservedObject private var appSettings = AppSettings.shared

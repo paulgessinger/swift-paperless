@@ -26,7 +26,7 @@ import os
 struct ReauthSheet: View {
   let stored: StoredConnection
 
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.dismiss) private var dismiss
 
@@ -139,7 +139,7 @@ private struct ReauthPreamble: View {
 // MARK: - Previews
 
 #Preview("Reauth") {
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
   @Previewable @StateObject var errorController = ErrorController()
 
@@ -151,6 +151,6 @@ private struct ReauthPreamble: View {
   )
 
   ReauthSheet(stored: stored)
-    .environmentObject(connectionManager)
+    .environment(connectionManager)
     .environmentObject(errorController)
 }

@@ -21,7 +21,7 @@ struct ShareView: View {
   // If the bootstrap fails (corrupt file, missing app-group), fall back to
   // an in-memory database so the extension still renders the disabled
   // "no active server" state cleanly instead of crashing.
-  @StateObject private var connectionManager: ConnectionManager = {
+  @State private var connectionManager: ConnectionManager = {
     let database: Database
     do {
       database = try Database()
@@ -42,7 +42,7 @@ struct ShareView: View {
     return ConnectionManager(database: database)
   }()
 
-  @StateObject private var store = DocumentStore(repository: NullRepository())
+  @State private var store = DocumentStore(repository: NullRepository())
   @State private var storeReady = false
 
   @StateObject private var errorController = ErrorController()
@@ -72,7 +72,7 @@ struct ShareView: View {
     if let conn = connectionManager.connection {
       Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
       Task {
-        store.eventPublisher.send(.repositoryWillChange)
+        store.events.emit(.repositoryWillChange)
         await store.set(
           repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
         storeReady = true
@@ -144,9 +144,9 @@ struct ShareView: View {
                 .id(url)
                 // @FIXME: Gives a white band at the bottom, not ideal
                 .padding(.bottom, 40)
-                .environmentObject(store)
+                .environment(store)
                 .environmentObject(errorController)
-                .environmentObject(connectionManager)
+                .environment(connectionManager)
                 .accentColor(Color(.accent))
               } else {
                 ProgressView()

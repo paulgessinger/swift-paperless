@@ -6,7 +6,6 @@
 //
 
 import AuthenticationServices
-import Combine
 import Common
 import CryptoKit
 import DataModel
@@ -165,7 +164,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
 }
 
 @MainActor
-public class ConnectionManager: ObservableObject {
+@Observable
+public final class ConnectionManager {
   private struct PreviewLaunchArguments {
     let mode: Bool?
     let url: String?
@@ -223,18 +223,20 @@ public class ConnectionManager: ObservableObject {
     }
   }
 
-  public enum Event {
+  public enum Event: Sendable {
     case connectionChange(animated: Bool)
     case logout
   }
 
-  public var eventPublisher =
-    PassthroughSubject<Event, Never>()
+  public let events = Broadcaster<Event>()
 
+  @ObservationIgnored
   private let previewArguments: PreviewLaunchArguments?
   public let previewMode: Bool
 
+  @ObservationIgnored
   private let database: Database
+  @ObservationIgnored
   private var observationTask: Task<Void, Never>?
 
   public init(database: Database, previewMode: Bool? = nil) {
@@ -294,11 +296,7 @@ public class ConnectionManager: ObservableObject {
   /// that follows it — is authoritative and reconciles this dict against the
   /// table; being equality-guarded, it is a no-op when the eager write already
   /// matched.
-  public private(set) var connections: [UUID: StoredConnection] = [:] {
-    willSet {
-      objectWillChange.send()
-    }
-  }
+  public private(set) var connections: [UUID: StoredConnection] = [:]
 
   /// Active server pointer.
   ///
@@ -306,18 +304,39 @@ public class ConnectionManager: ObservableObject {
   /// Share Extension picks up active-server changes through UserDefaults' free
   /// cross-process syncing. The "dangling pointer after row delete" case is
   /// handled in ``applyHydrate(records:)`` and ``logout(animated:)``.
+  ///
+  /// A property wrapper cannot sit on an `@Observable`-tracked property at all:
+  /// the macro rewrites `x` into computed accessors over generated storage named
+  /// `_x`, which collides with the wrapper's own `_x` and fails to compile with
+  /// *"ambiguous reference to member '_x'"*. So the wrapper keeps the storage,
+  /// `@ObservationIgnored` keeps the macro off it, and the public property is
+  /// hand-written using the same `access` / `withMutation` pair the macro would
+  /// have generated.
+  ///
+  /// Note the key path is the **public** ``activeConnectionId``, not the private
+  /// storage: the registrar has to be keyed on what callers actually read, or
+  /// observers would never be notified.
+  @ObservationIgnored
   @UserDefaultsBacked("ActiveConnectionId", storage: .group)
-  public var activeConnectionId: UUID? = nil {
-    willSet {
-      objectWillChange.send()
+  private var _activeConnectionId: UUID? = nil
+
+  public var activeConnectionId: UUID? {
+    get {
+      access(keyPath: \.activeConnectionId)
+      return _activeConnectionId
+    }
+    set {
+      withMutation(keyPath: \.activeConnectionId) {
+        _activeConnectionId = newValue
+      }
     }
   }
 
   /// Per-connection "needs auth" set. Hydrated from the `needs_auth` column;
-  /// kept as a published Set<UUID> here so the existing banner / lock-badge
+  /// kept as a Set<UUID> here so the existing banner / lock-badge
   /// `.onChange(of: needsAuthIds)` watchers keep firing without touching the
   /// SwiftUI sites in this commit.
-  @Published public private(set) var needsAuthIds: Set<UUID> = []
+  public private(set) var needsAuthIds: Set<UUID> = []
 
   /// Apply a fresh snapshot of records to the in-memory dict and the
   /// needs-auth set. Called by both the bootstrap read and the observer.
@@ -380,7 +399,7 @@ public class ConnectionManager: ObservableObject {
   // the app shell observes this and presents `ReauthSheet`. Decoupled from
   // `needsAuthIds` so the banner can show without auto-presenting a sheet —
   // user consent stays explicit.
-  @Published public var reauthRequested: UUID? = nil
+  public var reauthRequested: UUID? = nil
 
   public func requestReauth(for id: UUID) {
     Logger.api.info(
@@ -394,7 +413,7 @@ public class ConnectionManager: ObservableObject {
 
   public func setActiveConnection(id: UUID, animated: Bool = true) {
     activeConnectionId = id
-    eventPublisher.send(.connectionChange(animated: animated))
+    events.emit(.connectionChange(animated: animated))
   }
 
   public func isServerUnique(_ url: URL) -> Bool {
@@ -539,11 +558,11 @@ public class ConnectionManager: ObservableObject {
       } else {
         Logger.api.info("Setting active connection to nil")
         self.activeConnectionId = nil
-        eventPublisher.send(.logout)
+        events.emit(.logout)
       }
     } else {
       activeConnectionId = nil
-      eventPublisher.send(.logout)
+      events.emit(.logout)
     }
   }
 

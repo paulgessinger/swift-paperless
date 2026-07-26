@@ -18,7 +18,7 @@ import Common
 import SwiftUI
 
 public struct NeedsAuthBanner: View {
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
   @Environment(NetworkMonitor.self) private var networkMonitor
 
   public init() {}

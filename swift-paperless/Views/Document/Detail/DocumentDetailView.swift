@@ -20,8 +20,8 @@ protocol DocumentDetailViewProtocol: View {
 }
 
 struct DocumentDetailView: View {
-  @ObservedObject private var store: DocumentStore
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  private var store: DocumentStore
+  @Environment(ConnectionManager.self) private var connectionManager
   @State var document: Document
   var navPath: Binding<[NavigationState]>?
 

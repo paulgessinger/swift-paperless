@@ -17,7 +17,7 @@ where DocumentType: DocumentProtocol & Equatable {
 
   @State private var checking = false
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.isEnabled) private var isEnabled: Bool
 

@@ -12,7 +12,7 @@ import os
 struct TaskActivityToolbar: View {
   @Binding var navState: NavigationState?
 
-  @EnvironmentObject var store: DocumentStore
+  @Environment(DocumentStore.self) var store
 
   @State private var number: Int = 0
 

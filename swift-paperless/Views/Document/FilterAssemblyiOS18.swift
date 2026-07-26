@@ -95,9 +95,9 @@ struct FilterAssemblyiOS18: View {
 
 #Preview {
   @Previewable @State var filterModel = FilterModel()
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager(
+  @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
 
   NavigationStack {
@@ -109,9 +109,9 @@ struct FilterAssemblyiOS18: View {
 
     .safeAreaInset(edge: .top) {
       FilterAssemblyiOS18(filterModel: filterModel)
-        .environmentObject(store)
+        .environment(store)
         .environmentObject(errorController)
-        .environmentObject(connectionManager)
+        .environment(connectionManager)
         .environment(filterModel)
     }
 

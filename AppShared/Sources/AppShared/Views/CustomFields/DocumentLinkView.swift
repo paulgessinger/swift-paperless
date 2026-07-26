@@ -14,7 +14,7 @@ private struct SearchView: View {
   @Binding public var selected: [Document]
   public let document: Document?
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State private var searchText = ""
   @State private var matchingDocuments: [Document] = []
 
@@ -110,7 +110,7 @@ public struct DocumentSelectionView: View {
     self.document = document
   }
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(\.colorScheme) private var colorScheme
 
   @State private var selected: [Document] = []
@@ -233,7 +233,7 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
 #Preview {
   @Previewable @State var instance = CustomFieldInstance(field: field, value: .documentLink([2]))
   @Previewable
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
   @Previewable @State var document: Document? = nil
 
   NavigationStack {
@@ -247,7 +247,7 @@ private let field = CustomField(id: 9, name: "Custom doc link", dataType: .docum
       }
     }
   }
-  .environmentObject(store)
+  .environment(store)
   .task {
     let documents = [
       ("Invoice #123", "file1.pdf"),
