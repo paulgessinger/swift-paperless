@@ -5,9 +5,10 @@
 //  Created by Paul Gessinger on 26.07.26.
 //
 
-@testable import Common
 import Foundation
 import Testing
+
+@testable import Common
 
 private enum Fixture {
   enum Mode: String, Codable, Sendable, Equatable {

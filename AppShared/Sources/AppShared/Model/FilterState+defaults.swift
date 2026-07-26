@@ -13,16 +13,19 @@ import os
 // MARK: - FilterState
 
 extension FilterState {
+  // Read straight from the store rather than through AppSettings: this is
+  // nonisolated, and the store shares one cache and one set of defaults with
+  // the main-actor settings object.
   private static var defaultSearchMode: SearchMode {
-    AppSettings.value(for: .defaultSearchMode, or: .titleContent)
+    SettingsStore.shared[.defaultSearchMode]
   }
 
   private static var defaultSortField: SortField {
-    AppSettings.value(for: .defaultSortField, or: .added)
+    SettingsStore.shared[.defaultSortField]
   }
 
   private static var defaultSortOrder: DataModel.SortOrder {
-    AppSettings.value(for: .defaultSortOrder, or: .descending)
+    SettingsStore.shared[.defaultSortOrder]
   }
 
   // MARK: Initializers

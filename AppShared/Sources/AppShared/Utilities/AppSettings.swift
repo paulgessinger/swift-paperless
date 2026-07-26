@@ -1,48 +1,41 @@
 //
-//  SettingsKeys.swift
+//  AppSettings.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 13.08.23.
 //
-import Combine
 import Common
 import DataModel
 import Foundation
-import SwiftUI
 import os
 
-public enum SettingsKeys: String {
-  case documentDeleteConfirmation
-  case enableBiometricAppLock
-  case defaultSearchMode
-  case defaultSortField
-  case defaultSortOrder
-  case filterBarConfiguration
-}
-
-extension PublishedUserDefaultsBacked {
-  public convenience init(
-    wrappedValue defaultValue: Value, _ key: SettingsKeys, storage: UserDefaults = .standard
-  ) {
-    self.init(wrappedValue: defaultValue, key.rawValue, storage: storage)
-  }
-}
-
+/// The app's global settings.
+///
+/// Every setting is a computed property over ``SettingsStore``, which owns
+/// encoding, caching and the choice of `UserDefaults` suite. The keys, with
+/// their defaults, are declared in `SettingKeys.swift`.
+///
+/// Settings that belong to a single server connection do not live here — those
+/// are stored with the connection in the database.
 @MainActor
-public class AppSettings: ObservableObject {
-  private static let appVersionKey = "currentAppVersion"
-  private init() {
-    let lastVersion: AppVersion?
-    do {
-      lastVersion = try UserDefaults.standard.load(AppVersion.self, key: Self.appVersionKey)
-    } catch {
-      Logger.shared.error("Last app version could not be read: \(error)")
-      lastVersion = nil
-    }
+@Observable
+public final class AppSettings {
+  public static let shared = AppSettings()
 
-    Logger.shared.info("Last app version was: \(lastVersion?.description ?? "?", privacy: .public)")
+  @ObservationIgnored
+  private let store: SettingsStore
 
-    lastAppVersion = lastVersion
+  /// The version this install ran before the current launch, or `nil` on a
+  /// fresh install. Read once at startup, before the current version is
+  /// recorded.
+  public private(set) var lastAppVersion: AppVersion?
+
+  private init(store: SettingsStore = .shared) {
+    self.store = store
+
+    lastAppVersion = store[.currentAppVersion]
+    Logger.shared.info(
+      "Last app version was: \(self.lastAppVersion?.description ?? "?", privacy: .public)")
 
     var release = Bundle.main.releaseVersionNumber
     if release == nil {
@@ -55,73 +48,106 @@ public class AppSettings: ObservableObject {
       build = "1"
     }
 
-    guard let currentVersion = AppVersion(version: release!, build: build!) else {
+    guard let release, let build, let currentVersion = AppVersion(version: release, build: build)
+    else {
       return
     }
 
     Logger.shared.info("Current app version is: \(currentVersion, privacy: .public)")
+    store[.currentAppVersion] = currentVersion
+  }
 
-    do {
-      try UserDefaults.standard.store(currentVersion, key: Self.appVersionKey)
-    } catch {
-      Logger.shared.error(
-        "Unable to store current version (\(String(describing: currentVersion), privacy: .public): \(error)"
-      )
+  public var documentDeleteConfirmation: Bool {
+    get {
+      access(keyPath: \.documentDeleteConfirmation)
+      return store[.documentDeleteConfirmation]
+    }
+    set {
+      withMutation(keyPath: \.documentDeleteConfirmation) {
+        store[.documentDeleteConfirmation] = newValue
+      }
     }
   }
 
-  public static var shared = AppSettings()
+  public var enableBiometricAppLock: Bool {
+    get {
+      access(keyPath: \.enableBiometricAppLock)
+      return store[.enableBiometricAppLock]
+    }
+    set {
+      withMutation(keyPath: \.enableBiometricAppLock) {
+        store[.enableBiometricAppLock] = newValue
+      }
+    }
+  }
 
-  @PublishedUserDefaultsBacked(.documentDeleteConfirmation)
-  public var documentDeleteConfirmation = true
+  public var defaultSearchMode: FilterState.SearchMode {
+    get {
+      access(keyPath: \.defaultSearchMode)
+      return store[.defaultSearchMode]
+    }
+    set {
+      withMutation(keyPath: \.defaultSearchMode) {
+        store[.defaultSearchMode] = newValue
+      }
+    }
+  }
 
-  @PublishedUserDefaultsBacked(.enableBiometricAppLock)
-  public var enableBiometricAppLock = false
+  public var defaultSortField: SortField {
+    get {
+      access(keyPath: \.defaultSortField)
+      return store[.defaultSortField]
+    }
+    set {
+      withMutation(keyPath: \.defaultSortField) {
+        store[.defaultSortField] = newValue
+      }
+    }
+  }
 
-  @PublishedUserDefaultsBacked(.defaultSearchMode)
-  public var defaultSearchMode = FilterState.SearchMode.titleContent
+  public var defaultSortOrder: DataModel.SortOrder {
+    get {
+      access(keyPath: \.defaultSortOrder)
+      return store[.defaultSortOrder]
+    }
+    set {
+      withMutation(keyPath: \.defaultSortOrder) {
+        store[.defaultSortOrder] = newValue
+      }
+    }
+  }
 
-  @PublishedUserDefaultsBacked(.defaultSortField)
-  public var defaultSortField = SortField.added
+  public var filterBarConfiguration: FilterBarConfiguration {
+    get {
+      access(keyPath: \.filterBarConfiguration)
+      return store[.filterBarConfiguration]
+    }
+    set {
+      withMutation(keyPath: \.filterBarConfiguration) {
+        store[.filterBarConfiguration] = newValue
+      }
+    }
+  }
 
-  @PublishedUserDefaultsBacked(.defaultSortOrder)
-  public var defaultSortOrder = DataModel.SortOrder.descending
+  public var currentAppVersion: AppVersion? {
+    get {
+      access(keyPath: \.currentAppVersion)
+      return store[.currentAppVersion]
+    }
+    set {
+      withMutation(keyPath: \.currentAppVersion) {
+        store[.currentAppVersion] = newValue
+      }
+    }
+  }
 
-  // @TODO: We need a sentinel here that's just "all defaults"
-  @PublishedUserDefaultsBacked(.filterBarConfiguration)
-  public var filterBarConfiguration = FilterBarConfiguration.default
-
-  public var lastAppVersion: AppVersion?
-  @UserDefaultsBacked(appVersionKey)
-  public var currentAppVersion: AppVersion? = nil
-
+  /// Forgets the recorded app version, so the next launch behaves like an
+  /// upgrade from an unknown version. Used by the debug menu to bring the
+  /// release notes back.
   public func resetAppVersion() {
     Logger.shared.info("Resetting stored app version")
-    currentAppVersion = nil
-    UserDefaults.standard.synchronize()
-  }
-
-  public let settingsChanged = PassthroughSubject<Void, Never>()
-}
-
-extension AppSettings {
-  public nonisolated
-    static func value<Value: Codable>(for key: SettingsKeys, or defaultValue: Value) -> Value
-  {
-    let key = key.rawValue
-    guard let obj = UserDefaults.standard.object(forKey: key) as? Data else {
-      return defaultValue
-    }
-    do {
-      let value = try JSONDecoder().decode(Value.self, from: obj)
-      Logger.shared.trace(
-        "AppSettings.value(\(key, privacy: .public)) value read: \(String(describing: value), privacy: .private)"
-      )
-      return value
-    } catch {
-      Logger.shared.error(
-        "AppSettings.value(\(key)): unable to decode, returning default value (\(error))")
-      return defaultValue
+    withMutation(keyPath: \.currentAppVersion) {
+      store.remove(.currentAppVersion)
     }
   }
 }

@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 03.05.23.
 //
 
-import Combine
 import Foundation
 import os
 
@@ -89,48 +88,5 @@ public class UserDefaultsBacked<Value> where Value: Codable {
     self.key = key
     self.storage = storage
     self.defaultValue = defaultValue
-  }
-}
-
-@propertyWrapper
-public class PublishedUserDefaultsBacked<Value> where Value: Codable {
-  public static subscript<T: ObservableObject>(
-    _enclosingInstance instance: T,
-    wrapped _: ReferenceWritableKeyPath<T, Value>,
-    storage storageKeyPath: ReferenceWritableKeyPath<T, PublishedUserDefaultsBacked<Value>>
-  ) -> Value {
-    get {
-      instance[keyPath: storageKeyPath].backing
-    }
-    set {
-      if let publisher = instance.objectWillChange as? ObservableObjectPublisher {
-        publisher.send()
-      } else {
-        logger.warning(
-          "objectWillChange was not ObservableObjectPublisher but \(String(describing: instance.objectWillChange))"
-        )
-      }
-      instance[keyPath: storageKeyPath].backing = newValue
-    }
-  }
-
-  @UserDefaultsBacked
-  public internal(set) var backing: Value
-
-  public var key: String { $backing.key }
-
-  @available(
-    *, unavailable,
-    message: "Can only be applied to classes"
-  )
-  public var wrappedValue: Value {
-    get { fatalError() }
-    set { fatalError() }
-  }
-
-  public var projectedValue: PublishedUserDefaultsBacked<Value> { self }
-
-  public init(wrappedValue defaultValue: Value, _ key: String, storage: UserDefaults = .standard) {
-    _backing = .init(wrappedValue: defaultValue, key, storage: storage)
   }
 }
