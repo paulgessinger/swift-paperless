@@ -1,1 +1,0 @@
-- Fix the "What's New" screen failing to load when a release was published without release notes
