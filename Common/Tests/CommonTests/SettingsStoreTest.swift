@@ -147,23 +147,16 @@ struct SettingsStoreTest {
 
     suites.device.set(Data("not json".utf8), forKey: "mode")
     #expect(suites.store[Fixture.mode] == .titleContent)
-
-    // A non-Data value (e.g. written by an older @AppStorage) is tolerated too
-    suites.device.set("advanced", forKey: "mode")
-    #expect(suites.store[Fixture.mode] == .titleContent)
   }
 
-  @Test("the on-disk format is the JSON the app has always written")
-  func storageFormat() {
+  @Test("values written by the previous UserDefaultsBacked wrapper read back")
+  func legacyStorageFormat() {
     let suites = Suites()
 
-    suites.store[Fixture.mode] = .advanced
-
-    let data = suites.device.object(forKey: "mode") as? Data
-    #expect(data == Data(#""advanced""#.utf8))
-
-    // ...and a value written by the previous UserDefaultsBacked wrapper reads back
     suites.device.set(try! JSONEncoder().encode(true), forKey: "flag")
     #expect(suites.store[Fixture.flag] == true)
+
+    suites.device.set(try! JSONEncoder().encode(Fixture.Mode.advanced), forKey: "mode")
+    #expect(suites.store[Fixture.mode] == .advanced)
   }
 }

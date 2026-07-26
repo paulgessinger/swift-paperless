@@ -96,15 +96,17 @@ public final class SettingsStore: @unchecked Sendable {
   }
 
   private func decode<Value>(_ key: SettingKey<Value>) -> Value {
-    guard let data = suite(for: key.scope).object(forKey: key.name) as? Data else {
+    let suite = suite(for: key.scope)
+    guard let stored = SettingValueCoder.read(from: suite, key: key.name) else {
       return key.defaultValue
     }
 
     do {
-      let value = try JSONDecoder().decode(Value.self, from: data)
+      let value = try SettingValueCoder.decode(Value.self, from: stored)
       Self.logger.trace(
         "Setting \(key.name, privacy: .public) read: \(String(describing: value), privacy: .private)"
       )
+      migrateIfNeeded(value, key: key, stored: stored, in: suite)
       return value
     } catch {
       Self.logger.error(
@@ -113,16 +115,32 @@ public final class SettingsStore: @unchecked Sendable {
     }
   }
 
+  /// Rewrites a legacy JSON value in its native form the first time it is
+  /// read, so the migration costs one write per key rather than needing a
+  /// version stamp or a migration pass at launch.
+  private func migrateIfNeeded<Value>(
+    _ value: Value, key: SettingKey<Value>, stored: SettingValueCoder.Stored, in suite: UserDefaults
+  ) {
+    guard case .json = stored,
+      let native = try? SettingValueCoder.encode(value), native != stored
+    else {
+      return
+    }
+
+    Self.logger.info("Setting \(key.name, privacy: .public) migrated to its native representation")
+    SettingValueCoder.write(native, to: suite, key: key.name)
+  }
+
   public func set<Value>(_ value: Value, for key: SettingKey<Value>) {
     Self.logger.trace(
       "Setting \(key.name, privacy: .public) written: \(String(describing: value), privacy: .private)"
     )
 
     do {
-      let data = try JSONEncoder().encode(value)
+      let stored = try SettingValueCoder.encode(value)
       // Outside the lock: writing posts didChangeNotification synchronously,
       // which invalidates the cache.
-      suite(for: key.scope).set(data, forKey: key.name)
+      SettingValueCoder.write(stored, to: suite(for: key.scope), key: key.name)
     } catch {
       Self.logger.error("Setting \(key.name, privacy: .public) could not be encoded: \(error)")
       return
