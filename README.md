@@ -189,7 +189,14 @@ a UI-test-based path that is separate from the `swpngx` workflow above.
 Concatenate framed screenshots (adjust the glob for your device name):
 
 ```console
-montage fastlane/screenshots/framed/en-US/iPhone_17_Pro_Max-01_*-framed.png \
+montage fastlane/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
+
+If `montage` fails with ``unable to read font `'``, the ImageMagick install has no
+configured fonts; pass one explicitly, e.g.
+`-font /System/Library/Fonts/Supplemental/Arial.ttf`.
+
+`docs/panorama.png` is a symlink to the top-level `panorama.png`, so regenerating
+it updates both the README and the docs site.
 <!-- --8<-- [end:maintenance] -->
