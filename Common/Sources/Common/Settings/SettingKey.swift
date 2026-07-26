@@ -47,3 +47,18 @@ public struct SettingKey<Value: Codable & Sendable>: Sendable {
     self.scope = scope
   }
 }
+
+/// Turns a property into storage-backed, observable access to a ``SettingKey``.
+///
+/// ```swift
+/// @Setting(.documentDeleteConfirmation)
+/// public var documentDeleteConfirmation: Bool
+/// ```
+///
+/// The enclosing type has to provide a `store` (a ``SettingsStore``) and the
+/// `access(keyPath:)` / `withMutation(keyPath:_:)` pair. Note that this cannot
+/// be combined with the `@Observable` macro, which claims the accessors of
+/// every stored property for itself: conform to `Observable` by hand instead.
+@attached(accessor)
+public macro Setting<Value>(_ key: SettingKey<Value>) =
+  #externalMacro(module: "CommonMacros", type: "SettingMacro")

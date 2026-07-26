@@ -7,23 +7,29 @@
 import Common
 import DataModel
 import Foundation
+import Observation
 import os
 
 /// The app's global settings.
 ///
-/// Every setting is a computed property over ``SettingsStore``, which owns
+/// Every setting is `@Setting`-expanded access to ``SettingsStore``, which owns
 /// encoding, caching and the choice of `UserDefaults` suite. The keys, with
 /// their defaults, are declared in `SettingKeys.swift`.
+///
+/// Observation is wired up by hand rather than with `@Observable`: the macro
+/// claims the accessors of every stored property, which collides with
+/// `@Setting`. Conforming directly costs one registrar and the two forwarding
+/// methods below, and nothing is lost — there are no stored settings for
+/// `@Observable` to manage.
 ///
 /// Settings that belong to a single server connection do not live here — those
 /// are stored with the connection in the database.
 @MainActor
-@Observable
-public final class AppSettings {
+public final class AppSettings: Observable {
   public static let shared = AppSettings()
 
-  @ObservationIgnored
   private let store: SettingsStore
+  private let registrar = ObservationRegistrar()
 
   /// The version this install ran before the current launch, or `nil` on a
   /// fresh install. Read once at startup, before the current version is
@@ -57,89 +63,36 @@ public final class AppSettings {
     store[.currentAppVersion] = currentVersion
   }
 
-  public var documentDeleteConfirmation: Bool {
-    get {
-      access(keyPath: \.documentDeleteConfirmation)
-      return store[.documentDeleteConfirmation]
-    }
-    set {
-      withMutation(keyPath: \.documentDeleteConfirmation) {
-        store[.documentDeleteConfirmation] = newValue
-      }
-    }
+  nonisolated func access<Member>(keyPath: KeyPath<AppSettings, Member>) {
+    registrar.access(self, keyPath: keyPath)
   }
 
-  public var enableBiometricAppLock: Bool {
-    get {
-      access(keyPath: \.enableBiometricAppLock)
-      return store[.enableBiometricAppLock]
-    }
-    set {
-      withMutation(keyPath: \.enableBiometricAppLock) {
-        store[.enableBiometricAppLock] = newValue
-      }
-    }
+  nonisolated func withMutation<Member, Result>(
+    keyPath: KeyPath<AppSettings, Member>, _ mutation: () throws -> Result
+  ) rethrows -> Result {
+    try registrar.withMutation(of: self, keyPath: keyPath, mutation)
   }
 
-  public var defaultSearchMode: FilterState.SearchMode {
-    get {
-      access(keyPath: \.defaultSearchMode)
-      return store[.defaultSearchMode]
-    }
-    set {
-      withMutation(keyPath: \.defaultSearchMode) {
-        store[.defaultSearchMode] = newValue
-      }
-    }
-  }
+  @Setting(.documentDeleteConfirmation)
+  public var documentDeleteConfirmation: Bool
 
-  public var defaultSortField: SortField {
-    get {
-      access(keyPath: \.defaultSortField)
-      return store[.defaultSortField]
-    }
-    set {
-      withMutation(keyPath: \.defaultSortField) {
-        store[.defaultSortField] = newValue
-      }
-    }
-  }
+  @Setting(.enableBiometricAppLock)
+  public var enableBiometricAppLock: Bool
 
-  public var defaultSortOrder: DataModel.SortOrder {
-    get {
-      access(keyPath: \.defaultSortOrder)
-      return store[.defaultSortOrder]
-    }
-    set {
-      withMutation(keyPath: \.defaultSortOrder) {
-        store[.defaultSortOrder] = newValue
-      }
-    }
-  }
+  @Setting(.defaultSearchMode)
+  public var defaultSearchMode: FilterState.SearchMode
 
-  public var filterBarConfiguration: FilterBarConfiguration {
-    get {
-      access(keyPath: \.filterBarConfiguration)
-      return store[.filterBarConfiguration]
-    }
-    set {
-      withMutation(keyPath: \.filterBarConfiguration) {
-        store[.filterBarConfiguration] = newValue
-      }
-    }
-  }
+  @Setting(.defaultSortField)
+  public var defaultSortField: SortField
 
-  public var currentAppVersion: AppVersion? {
-    get {
-      access(keyPath: \.currentAppVersion)
-      return store[.currentAppVersion]
-    }
-    set {
-      withMutation(keyPath: \.currentAppVersion) {
-        store[.currentAppVersion] = newValue
-      }
-    }
-  }
+  @Setting(.defaultSortOrder)
+  public var defaultSortOrder: DataModel.SortOrder
+
+  @Setting(.filterBarConfiguration)
+  public var filterBarConfiguration: FilterBarConfiguration
+
+  @Setting(.currentAppVersion)
+  public var currentAppVersion: AppVersion?
 
   /// Forgets the recorded app version, so the next launch behaves like an
   /// upgrade from an unknown version. Used by the debug menu to bring the
