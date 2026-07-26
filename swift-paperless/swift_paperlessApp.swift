@@ -36,7 +36,7 @@ struct MainView: View {
   // Shared GRDB database, threaded into each connection's CachingRepository.
   private let database: Database
 
-  @State private var friendlyNameTask: Task<Void, Never>?
+  @State private var friendlyNameSubscription: Subscription?
 
   @StateObject private var errorController: ErrorController
 
@@ -273,22 +273,27 @@ struct MainView: View {
     // active connection. The nil-guard drops resets from store.clear() so
     // they don't wipe out a previously stored friendly name. setFriendlyName
     // is already idempotent, so no explicit dedup is needed.
-    friendlyNameTask?.cancel()
-    friendlyNameTask = Task { @MainActor [manager] in
-      while !Task.isCancelled {
-        let (stream, continuation) = AsyncStream<Void>.makeStream()
-        withObservationTracking {
-          _ = store.settings.appTitle
-        } onChange: {
-          continuation.yield()
-          continuation.finish()
+    //
+    // Held as a `Subscription` rather than a bare `Task` so it cancels when
+    // this view's `@State` storage is freed, the way the `AnyCancellable` it
+    // replaced did.
+    friendlyNameSubscription?.cancel()
+    friendlyNameSubscription = Subscription(
+      Task { @MainActor [manager] in
+        while !Task.isCancelled {
+          let (stream, continuation) = AsyncStream<Void>.makeStream()
+          withObservationTracking {
+            _ = store.settings.appTitle
+          } onChange: {
+            continuation.yield()
+            continuation.finish()
+          }
+          if let title = store.settings.appTitle {
+            manager.setFriendlyName(title)
+          }
+          for await _ in stream { break }
         }
-        if let title = store.settings.appTitle {
-          manager.setFriendlyName(title)
-        }
-        for await _ in stream { break }
-      }
-    }
+      })
   }
 
   private func setupQuickActions() {
