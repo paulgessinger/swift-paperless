@@ -305,10 +305,17 @@ public final class ConnectionManager {
   /// cross-process syncing. The "dangling pointer after row delete" case is
   /// handled in ``applyHydrate(records:)`` and ``logout(animated:)``.
   ///
-  /// The @UserDefaultsBacked property wrapper is incompatible with the
-  /// @Observable macro's auto-tracking, so observation is wired manually
-  /// via access(keyPath:) / withMutation(keyPath:) around the private
-  /// backing storage.
+  /// A property wrapper cannot sit on an `@Observable`-tracked property at all:
+  /// the macro rewrites `x` into computed accessors over generated storage named
+  /// `_x`, which collides with the wrapper's own `_x` and fails to compile with
+  /// *"ambiguous reference to member '_x'"*. So the wrapper keeps the storage,
+  /// `@ObservationIgnored` keeps the macro off it, and the public property is
+  /// hand-written using the same `access` / `withMutation` pair the macro would
+  /// have generated.
+  ///
+  /// Note the key path is the **public** ``activeConnectionId``, not the private
+  /// storage: the registrar has to be keyed on what callers actually read, or
+  /// observers would never be notified.
   @ObservationIgnored
   @UserDefaultsBacked("ActiveConnectionId", storage: .group)
   private var _activeConnectionId: UUID? = nil
