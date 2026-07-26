@@ -65,15 +65,6 @@ enum CredentialState: Equatable {
 class LoginViewModel {
   var loginState = LoginState.empty
 
-  var loginStateValid: Bool {
-    switch loginState {
-    case .valid, .error:  // Error is technically not valid, but we want to allow retrying
-      true
-    default:
-      false
-    }
-  }
-
   var extraHeaders: [Connection.HeaderValue] = []
 
   var selectedIdentity: TLSIdentity?
