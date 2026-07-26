@@ -165,7 +165,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
 
 @MainActor
 @Observable
-public class ConnectionManager {
+public final class ConnectionManager {
   private struct PreviewLaunchArguments {
     let mode: Bool?
     let url: String?
@@ -237,7 +237,7 @@ public class ConnectionManager {
   @ObservationIgnored
   private let database: Database
   @ObservationIgnored
-  private nonisolated(unsafe) var observationTask: Task<Void, Never>?
+  private var observationTask: Task<Void, Never>?
 
   public init(database: Database, previewMode: Bool? = nil) {
     self.database = database

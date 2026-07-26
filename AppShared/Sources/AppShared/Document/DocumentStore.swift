@@ -66,7 +66,7 @@ public final class DocumentStore: Sendable {
   public private(set) var imagePipeline: ImagePipeline
 
   @ObservationIgnored
-  private nonisolated(unsafe) var taskUpdateTask: Task<Void, Never>?
+  private var taskUpdateTask: Task<Void, Never>?
 
   // MARK: Methods
 
