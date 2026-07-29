@@ -32,6 +32,13 @@ public enum BackendFeature {
   // standard ListResponse envelope; older backends return a top-level array.
   case taskListEnvelope
 
+  // https://github.com/paperless-ngx/paperless-ngx/pull/11884 / API v10, 3.0.0
+  // Tantivy-backed `text` document filter parameter, which supersedes the
+  // deprecated `title_content`. Older backends silently ignore unknown query
+  // parameters, so sending `text` there would return every document instead of
+  // the search results — this must stay gated.
+  case tantivySimpleSearch
+
   func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
     case .nextAsnEndpoint:
@@ -42,7 +49,7 @@ public enum BackendFeature {
       backendVersion >= Version(2, 19, 0)
     case .dateFilterModified, .dateFilterPreviousIntervals:
       backendVersion >= Version(2, 20, 0)
-    case .savedViewNewVisibility, .savedViewPermissions, .taskListEnvelope:
+    case .savedViewNewVisibility, .savedViewPermissions, .taskListEnvelope, .tantivySimpleSearch:
       apiVersion >= 10 || backendVersion >= Version(3, 0, 0)
     }
   }

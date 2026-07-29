@@ -8,10 +8,67 @@
 import Foundation
 
 extension FilterState {
+  /// Which set of document-search query parameters the generated rules target.
+  ///
+  /// Only the ``FilterState/SearchMode/titleContent`` mode differs between the
+  /// two; every other rule this type generates is encoded identically.
+  public enum SearchApi: Sendable, Equatable, CaseIterable {
+    /// Backends before paperless-ngx 3.0. "Title and content" search is the
+    /// ORM filter `title_content` (a SQL `icontains` over title and content).
+    case legacy
+
+    /// paperless-ngx 3.0+ / API v10. "Title and content" search is the
+    /// Tantivy-backed `text` parameter, which supersedes `title_content`.
+    /// The old parameter still works there but makes the backend log
+    /// "Deprecated document filter parameter 'title_content' used".
+    case tantivy
+  }
+
+  /// Rules encoded for pre-3.0 backends.
+  ///
+  /// Callers that know the backend should use ``rules(for:)`` instead — both
+  /// for requests and for the rules stored in saved views, so that no new
+  /// deprecated rule type is written to a backend that has moved on.
   public var rules: [FilterRule] {
-    var result = remaining
-    result += searchRules
-    result += fulltextQueryRules
+    rules(for: .legacy)
+  }
+
+  public func rules(for searchApi: SearchApi) -> [FilterRule] {
+    // The web UI treats "more like this" and a text search as two settings of
+    // one control: its text field is read-only while more-like is selected,
+    // and switching to a text search clears the more-like document
+    // (`changeTextFilterTarget` in filter-editor.component.ts). It therefore
+    // never emits both. Mirror that — a search the user typed supersedes a
+    // `more_like_id` carried in from a saved view built elsewhere.
+    var result =
+      searchText.isEmpty ? remaining : remaining.filter { $0.ruleType != .fulltextMorelike }
+
+    // paperless-ngx 3.0 answers `text` from its search index and rejects any
+    // request carrying more than one index-backed parameter (`text`,
+    // `title_search`, `query`, `more_like_id`) with HTTP 400. `title_content`
+    // is an ORM filter and combines freely, which is why this only matters for
+    // the new encoding.
+    //
+    // No rule reaching `remaining` holds that slot today — `more_like_id` was
+    // the only one, and it is gone by now. This is a safety net: should a
+    // future rule type stop being understood and land here, degrade to the
+    // deprecated-but-working parameter rather than provoke a 400.
+    let passedThroughSearchRule = result.contains { $0.ruleType.isExclusiveSearchRule }
+    let usesSimpleText =
+      searchApi == .tantivy && searchMode == .titleContent && !passedThroughSearchRule
+
+    // Relative date ranges are expressed as a `query`, which does collide. The
+    // web UI resolves this by folding the search text into the query string
+    // rather than emitting two parameters — see the "carry it over" branch in
+    // filter-editor.component.ts — so mirror that. It is also what this app
+    // already produces once such a filter has round-tripped through a saved
+    // view, because `query` rules populate the advanced search mode.
+    let promoteSearchTextIntoQuery = usesSimpleText && hasRelativeDateRange
+
+    if !promoteSearchTextIntoQuery {
+      result += searchRules(for: usesSimpleText ? .tantivy : .legacy)
+    }
+    result += fulltextQueryRules(promotingSearchText: promoteSearchTextIntoQuery)
     result += correspondentRules
     result += documentTypeRules
     result += storagePathRules
@@ -23,16 +80,27 @@ extension FilterState {
     return result
   }
 
-  private var searchRules: [FilterRule] {
+  private func searchRules(for searchApi: SearchApi) -> [FilterRule] {
     guard !searchText.isEmpty else { return [] }
     guard searchMode != .advanced else { return [] }
-    return [FilterRule(ruleType: searchMode.ruleType, value: .string(value: searchText))!]
+    return [
+      FilterRule(ruleType: searchMode.ruleType(for: searchApi), value: .string(value: searchText))!
+    ]
   }
 
-  private var fulltextQueryRules: [FilterRule] {
+  /// Whether the date filters produce a `query` rule, which is the only
+  /// index-backed parameter this type emits outside of advanced search.
+  private var hasRelativeDateRange: Bool {
+    for argument in [date.created, date.added, date.modified] {
+      if case .range = argument { return true }
+    }
+    return false
+  }
+
+  private func fulltextQueryRules(promotingSearchText: Bool) -> [FilterRule] {
     var components: [String] = []
 
-    if searchMode == .advanced, !searchText.isEmpty {
+    if searchMode == .advanced || promotingSearchText, !searchText.isEmpty {
       components.append(searchText)
     }
 
