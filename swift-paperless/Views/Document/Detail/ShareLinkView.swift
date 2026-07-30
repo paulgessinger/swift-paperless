@@ -9,6 +9,7 @@ import AppShared
 import Common
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -27,9 +28,9 @@ extension DataModel.ShareLink.FileVersion {
 struct ShareLinkView: View {
   let document: Document
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   @ScaledMetric(relativeTo: .body) var fontSize = 14
 
@@ -143,7 +144,6 @@ struct ShareLinkView: View {
       .navigationTitle(.shareLink(.title))
       .navigationBarTitleDisplayMode(.inline)
 
-      .errorOverlay(errorController: errorController)
     }
 
     .sheet(isPresented: $showCreate, onDismiss: { Task { await load() } }) {
@@ -169,7 +169,7 @@ extension DataModel.ShareLink.FileVersion {
 
 private struct CreateShareLinkView: View {
   @EnvironmentObject private var errorController: ErrorController
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   @Environment(\.dismiss) private var dismiss
 
@@ -241,7 +241,6 @@ private struct CreateShareLinkView: View {
 
       .navigationTitle(.shareLink(.createTitle))
       .navigationBarTitleDisplayMode(.inline)
-      .errorOverlay(errorController: errorController)
     }
   }
 
@@ -249,13 +248,13 @@ private struct CreateShareLinkView: View {
 
 #Preview {
   @Previewable
-  @StateObject var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore(repository: TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
 
   @Previewable
-  @StateObject var connectionManager = ConnectionManager()
+  @State var connectionManager = ConnectionManager(database: try! Database.inMemory())
 
   @Previewable @State var document: Document? = nil
 
@@ -264,9 +263,9 @@ private struct CreateShareLinkView: View {
       ShareLinkView(document: document)
     }
   }
-  .environmentObject(store)
+  .environment(store)
   .environmentObject(errorController)
-  .environmentObject(connectionManager)
+  .environment(connectionManager)
   .task {
     do {
       let protoDoc = ProtoDocument(
@@ -301,7 +300,7 @@ private struct CreateShareLinkView: View {
         user: User(id: 1, isSuperUser: true, username: "admin")
       )
 
-      connectionManager.login(connection)
+      try connectionManager.login(connection)
     } catch {
       print("Error: \(error)")
     }

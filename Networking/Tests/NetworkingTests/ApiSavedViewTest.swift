@@ -1,0 +1,268 @@
+//
+//  ApiSavedViewTest.swift
+//  Networking
+//
+
+import Common
+import DataModel
+import Foundation
+import Testing
+
+@testable import Networking
+
+private let decoder = JSONDecoder()
+
+@Suite
+struct ApiSavedViewTest {
+  @Test func testDecoding() throws {
+    do {
+      let input = """
+        {
+            "id": 5,
+            "name": "Aktien Kauf",
+            "show_on_dashboard": false,
+            "show_in_sidebar": false,
+            "sort_field": "created",
+            "sort_reverse": true,
+            "filter_rules": [
+                {
+                    "rule_type": 19,
+                    "value": "Abrechnung Kauf"
+                },
+                {
+                    "rule_type": 3,
+                    "value": "37"
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+      let result = try decoder.decode(ApiSavedView.self, from: input).domain
+      #expect(result.id == 5)
+      #expect(result.name == "Aktien Kauf")
+      #expect(result.showOnDashboard == false)
+      #expect(result.showInSidebar == false)
+      #expect(result.sortField == .created)
+      #expect(result.sortOrder == .descending)
+    }
+
+    do {
+      let input = """
+        {
+            "id": 5,
+            "name": "Aktien Kauf",
+            "show_on_dashboard": false,
+            "show_in_sidebar": false,
+            "sort_field": "created",
+            "sort_reverse": false,
+            "filter_rules": [
+                {
+                    "rule_type": 19,
+                    "value": "Abrechnung Kauf"
+                },
+                {
+                    "rule_type": 3,
+                    "value": "37"
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+      let result = try decoder.decode(ApiSavedView.self, from: input).domain
+      #expect(result.id == 5)
+      #expect(result.name == "Aktien Kauf")
+      #expect(result.showOnDashboard == false)
+      #expect(result.showInSidebar == false)
+      #expect(result.sortField == .created)
+      #expect(result.sortOrder == .ascending)
+    }
+  }
+
+  // See https://github.com/paulgessinger/swift-paperless/issues/108
+  @Test func testDecodingNilSortField() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "Inbox",
+        "show_on_dashboard": true,
+        "show_in_sidebar": true,
+        "sort_field": null,
+        "sort_reverse": false,
+        "filter_rules": [
+          {
+            "rule_type": 6,
+            "value": "1"
+          }
+        ],
+        "page_size": null,
+        "display_mode": null,
+        "display_fields": null,
+        "owner": 3,
+        "user_can_change": true
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
+    #expect(result.id == 1)
+    #expect(result.name == "Inbox")
+    #expect(result.showOnDashboard == true)
+    #expect(result.showInSidebar == true)
+    #expect(result.sortField == nil)
+    #expect(result.sortOrder == .ascending)
+  }
+
+  // See https://github.com/paulgessinger/swift-paperless/issues/108
+  @Test func testDecodingWithScoreSortField() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "inbox",
+        "show_on_dashboard": true,
+        "show_in_sidebar": true,
+        "sort_field": "score",
+        "sort_reverse": false,
+        "filter_rules": [
+          {
+            "rule_type": 20,
+            "value": "inbox"
+          }
+        ],
+        "page_size": null,
+        "display_mode": null,
+        "display_fields": null,
+        "owner": 3,
+        "user_can_change": true
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
+    #expect(result.id == 1)
+    #expect(result.name == "inbox")
+    #expect(result.showOnDashboard == true)
+    #expect(result.showInSidebar == true)
+    #expect(result.sortField == .score)
+    #expect(result.sortOrder == .ascending)
+  }
+
+  @Test func testDecodingWithInvalidSortField() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "inbox",
+        "show_on_dashboard": true,
+        "show_in_sidebar": true,
+        "sort_field": "invalid_field",
+        "sort_reverse": false,
+        "filter_rules": [
+          {
+            "rule_type": 20,
+            "value": "inbox"
+          }
+        ]
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
+    #expect(result.id == 1)
+    #expect(result.name == "inbox")
+    #expect(result.showOnDashboard == true)
+    #expect(result.showInSidebar == true)
+    #expect(result.sortField == .other("invalid_field"))
+    #expect(result.sortOrder == .ascending)
+  }
+
+  /// Backend v3+ removed show_on_dashboard and show_in_sidebar; they default to false when absent.
+  @Test func testDecodingV3WithoutShowFields() throws {
+    let data = try #require(testData("Data/SavedView/saved_view_perms_v3.json"))
+    let result = try decoder.decode(ListResponse<ApiSavedView>.self, from: data)
+    let results = result.results.map(\.domain)
+
+    #expect(result.count == 7)
+    #expect(results.count == 7)
+
+    let first = try #require(results.first)
+    #expect(first.id == 7)
+    #expect(first.name == "ASN: 1")
+    #expect(first.showOnDashboard == false)
+    #expect(first.showInSidebar == false)
+    #expect(first.sortField == .other("custom_field_1"))
+    #expect(first.sortOrder == .descending)
+    #expect(first.filterRules.count == 1)
+    #expect(first.owner == .user(4))
+    #expect(first.userCanChange == true)
+  }
+
+  // Regression test for a user-reported failure: a saved view ("Inbox")
+  // carries a `does_not_have_tag` rule (rule_type 17, a tag-typed rule) whose
+  // value is `null`. FilterRule's decoder used to try `.tag` (UInt) first,
+  // hit the null, fall into the `catch DecodingError.typeMismatch` recovery,
+  // try to decode the null as a String again, throw a second uncaught
+  // typeMismatch and fail the whole ListResponse decode. The null value is now
+  // captured as `.invalid` so the response decodes.
+  @Test func testDecodingListWithNullValueTagRule() throws {
+    let data = try #require(
+      testData("Data/SavedView/saved_view_does_not_have_tag_null.json"))
+    let result = try decoder.decode(ListResponse<ApiSavedView>.self, from: data)
+    let results = result.results.map(\.domain)
+
+    #expect(result.count == 7)
+    #expect(results.count == 7)
+
+    let inbox = try #require(results.first { $0.id == 1 })
+    #expect(inbox.name == "Inbox")
+    #expect(inbox.filterRules.count == 1)
+
+    let rule = try #require(inbox.filterRules.first)
+    #expect(rule.ruleType == .doesNotHaveTag)
+    #expect(rule.value == .invalid(value: ""))
+  }
+
+  // Minimal regression test pinpointing the root cause: a tag-typed rule with
+  // a null value decodes as `.invalid` instead of throwing.
+  @Test func testDecodingTagRuleWithNullValue() throws {
+    let input = """
+      {
+          "rule_type": 17,
+          "value": null
+      }
+      """.data(using: .utf8)!
+
+    let rule = try decoder.decode(FilterRule.self, from: input)
+    #expect(rule.ruleType == .doesNotHaveTag)
+    #expect(rule.value == .invalid(value: ""))
+  }
+
+  @Test func testDecodingOwnerNull() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "Inbox",
+        "sort_field": null,
+        "sort_reverse": false,
+        "filter_rules": [],
+        "owner": null,
+        "user_can_change": false
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
+    #expect(result.owner == .unset)
+    #expect(result.userCanChange == false)
+  }
+
+  @Test func testDecodingOwnerAbsent() throws {
+    let input = """
+      {
+        "id": 1,
+        "name": "Inbox",
+        "sort_field": null,
+        "sort_reverse": false,
+        "filter_rules": []
+      }
+      """.data(using: .utf8)!
+
+    let result = try decoder.decode(ApiSavedView.self, from: input).domain
+    #expect(result.owner == .unset)
+    #expect(result.userCanChange == true)
+  }
+}

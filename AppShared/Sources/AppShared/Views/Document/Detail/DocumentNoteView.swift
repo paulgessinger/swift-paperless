@@ -20,7 +20,7 @@ private struct CreateNoteView: View {
   @FocusState private var focused: Bool
 
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   private func saveNote() async {
@@ -74,7 +74,6 @@ private struct CreateNoteView: View {
       .navigationTitle(.documentMetadata(.noteCreate))
       .navigationBarTitleDisplayMode(.inline)
     }
-    .errorOverlay(errorController: errorController, offset: 20)
     .task {
       focused = true
     }
@@ -90,7 +89,7 @@ public struct DocumentNoteView: View {
 
   @State private var notes: [Document.Note] = []
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   @Environment(\.dismiss) private var dismiss
@@ -104,7 +103,8 @@ public struct DocumentNoteView: View {
         try await store.deleteNote(from: document, id: note.id)
         notes = notes.filter { $0.id != note.id }
         document.notes.count = notes.count
-      } catch let error where !error.isCancellationError {
+      } catch let error where error.isCancellationError {
+      } catch {
         Logger.shared.error("Error deleting note from document: \(error)")
         errorController.push(error: error)
       }
@@ -204,8 +204,6 @@ public struct DocumentNoteView: View {
       }
     }
 
-    .errorOverlay(errorController: errorController, offset: 20)
-
     .task {
       guard canViewNotes else { return }
       await loadNotes()
@@ -216,7 +214,7 @@ public struct DocumentNoteView: View {
 // - MARK: Preview
 
 private struct PreviewHelper: View {
-  @StateObject public var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
+  @State public var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
   @StateObject public var errorController = ErrorController()
 
   @State public var document: Document?
@@ -236,7 +234,7 @@ private struct PreviewHelper: View {
         }
       }
     }
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
 
     .task {

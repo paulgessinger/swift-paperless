@@ -6,27 +6,33 @@
 //
 
 import Foundation
-import MetaCodable
 
-/// A helper coder that handles optional values that may be encoded as `null` in JSON.
-/// This is useful when working with APIs that represent optional values as explicit `null`
-/// rather than omitting the field entirely.
-public struct NullCoder<T>: HelperCoder where T: Codable {
-  public init() {}
+/// Encodes and decodes optional values using explicit JSON `null` instead of omitting the key.
+///
+/// Use this when an API treats a missing key as "unchanged" but `null` as cleared.
+@propertyWrapper
+public struct NullCodable<T: Codable & Sendable>: Codable, Sendable {
+  public var wrappedValue: T?
 
-  public func decode(from decoder: any Decoder) throws -> T {
-    let container = try decoder.singleValueContainer()
-    return try container.decode(T.self)
+  public init(wrappedValue: T?) {
+    self.wrappedValue = wrappedValue
   }
 
-  public func encodeIfPresent<EncodingContainer>(
-    _ value: T?, to container: inout EncodingContainer, atKey key: EncodingContainer.Key
-  ) throws where EncodingContainer: KeyedEncodingContainerProtocol {
-    var svc = container.superEncoder(forKey: key).singleValueContainer()
-    if let value {
-      try svc.encode(value)
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    if container.decodeNil() {
+      wrappedValue = nil
     } else {
-      try svc.encodeNil()
+      wrappedValue = try container.decode(T.self)
+    }
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    if let wrappedValue {
+      try container.encode(wrappedValue)
+    } else {
+      try container.encodeNil()
     }
   }
 }

@@ -29,6 +29,8 @@ packages:
     path: DataModel
   Networking:
     path: Networking
+  Persistence:
+    path: Persistence
   AppShared:
     path: AppShared
   Nuke:
@@ -37,9 +39,6 @@ packages:
   swift-markdown-ui:
     url: https://github.com/gonzalezreal/swift-markdown-ui.git
     majorVersion: 2.3.1
-  BezelKit:
-    url: https://github.com/markbattistella/BezelKit
-    majorVersion: 4.1.1
   xcstrings-tool-plugin:
     url: https://github.com/liamnichols/xcstrings-tool-plugin
     majorVersion: 1.2.0
@@ -69,11 +68,11 @@ targets:
         product: NukeUI
       - package: swift-markdown-ui
         product: MarkdownUI
-      - package: BezelKit
       - package: AppShared
       - package: Common
       - package: DataModel
       - package: Networking
+      - package: Persistence
 
   ShareExtension:
     type: app-extension
@@ -92,6 +91,7 @@ targets:
     dependencies:
       - package: AppShared
       - package: Networking
+      - package: Persistence
 
   swift-paperlessUITests:
     type: bundle.ui-testing

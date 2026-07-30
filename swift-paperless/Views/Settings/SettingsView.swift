@@ -7,17 +7,19 @@
 
 import AppShared
 import Networking
+import Persistence
 import SwiftUI
 import os
 
 // MARK: - Settings View
 
 struct SettingsView: View {
-  @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(DocumentStore.self) private var store
+  @Environment(ConnectionManager.self) private var connectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(\.openURL) private var openURL
   @Environment(\.dismiss) private var dismiss
+  @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
 
   @State private var feedbackMailRequest: FeedbackMailRequest?
   @State private var showLoginSheet: Bool = false
@@ -251,7 +253,27 @@ struct SettingsView: View {
       .sheet(isPresented: $showLoginSheet) {
         LoginView(connectionManager: connectionManager, initial: false)
           .environmentObject(errorController)
-          .errorOverlay(errorController: errorController, offset: 15)
+      }
+
+      // MainView also presents this, but it cannot while the settings sheet is
+      // up — a view presents at most one sheet at a time. Settings is the
+      // active presenter here, so the re-auth request it raises is presented
+      // from here instead (MainView's copy stands down while showSettings).
+      .sheet(
+        isPresented: Binding(
+          get: { connectionManager.reauthRequested != nil },
+          set: { presented in
+            if !presented { connectionManager.cancelReauthRequest() }
+          })
+      ) {
+        if let id = connectionManager.reauthRequested,
+          let stored = connectionManager.connections[id]
+        {
+          ReauthSheet(stored: stored)
+            .environment(connectionManager)
+            .environmentObject(errorController)
+            .environment(networkMonitor)
+        }
       }
 
       .toolbar {
@@ -267,16 +289,16 @@ struct SettingsView: View {
 }
 
 #Preview("SettingsView") {
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
 
   VStack {
   }
   .sheet(isPresented: .constant(true)) {
     SettingsView()
-      .environmentObject(store)
-      .environmentObject(connectionManager)
-      .errorOverlay(errorController: errorController)
+      .environment(store)
+      .environment(connectionManager)
   }
 }

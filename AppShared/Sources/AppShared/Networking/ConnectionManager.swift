@@ -6,25 +6,21 @@
 //
 
 import AuthenticationServices
-import Combine
 import Common
 import CryptoKit
 import DataModel
 import Foundation
 import Networking
+import Persistence
 import os
 
-public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
+public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var id: UUID = .init()
   public var url: URL
   public var extraHeaders: [Connection.HeaderValue]
   public var user: User
   public var identity: String?
   public var friendlyName: String? = nil
-
-  private enum CodingKeys: String, CodingKey {
-    case id, url, extraHeaders, user, identity, friendlyName
-  }
 
   public init(
     id: UUID = .init(),
@@ -40,17 +36,6 @@ public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
     self.user = user
     self.identity = identity
     self.friendlyName = friendlyName
-  }
-
-  public init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-    url = try container.decode(URL.self, forKey: .url)
-    extraHeaders =
-      try container.decodeIfPresent([Connection.HeaderValue].self, forKey: .extraHeaders) ?? []
-    user = try container.decode(User.self, forKey: .user)
-    identity = try container.decodeIfPresent(String.self, forKey: .identity)
-    friendlyName = try container.decodeIfPresent(String.self, forKey: .friendlyName)
   }
 
   public var token: String? {
@@ -179,7 +164,8 @@ public struct StoredConnection: Equatable, Codable, Identifiable, Sendable {
 }
 
 @MainActor
-public class ConnectionManager: ObservableObject {
+@Observable
+public final class ConnectionManager {
   private struct PreviewLaunchArguments {
     let mode: Bool?
     let url: String?
@@ -237,18 +223,24 @@ public class ConnectionManager: ObservableObject {
     }
   }
 
-  public enum Event {
+  public enum Event: Sendable {
     case connectionChange(animated: Bool)
     case logout
   }
 
-  public var eventPublisher =
-    PassthroughSubject<Event, Never>()
+  public let events = Broadcaster<Event>()
 
+  @ObservationIgnored
   private let previewArguments: PreviewLaunchArguments?
   public let previewMode: Bool
 
-  public init(previewMode: Bool? = nil) {
+  @ObservationIgnored
+  private let database: Database
+  @ObservationIgnored
+  private var observationTask: Task<Void, Never>?
+
+  public init(database: Database, previewMode: Bool? = nil) {
+    self.database = database
     let previewArguments = PreviewLaunchArguments.parse(ProcessInfo.processInfo.arguments)
     self.previewArguments = previewArguments
     if let previewMode {
@@ -258,92 +250,176 @@ public class ConnectionManager: ObservableObject {
     } else {
       self.previewMode = false
     }
+
+    // Synchronous bootstrap read so SwiftUI body sees the cache populated
+    // before the first frame. Subsequent updates come via the observer.
+    do {
+      let records = try database.allConnections()
+      applyHydrate(records: records)
+    } catch {
+      Logger.shared.fault("Initial connection hydrate failed: \(error)")
+    }
+
+    // The observer is the *authoritative* writer of the in-memory dict, but
+    // not the only one: mutators apply their change eagerly so the very next
+    // synchronous read sees it, and the observer reconciles a tick later.
+    // `applyHydrate` is equality-guarded, so the reconcile is a no-op unless
+    // the DB actually disagrees with what the mutator assumed.
+    //
+    // The observation's own first value is consumed like any other rather
+    // than discarded as "already applied by the bootstrap read above": a
+    // write landing between that read and the observation's initial fetch is
+    // baked into the first value, and dropping it would hide that write until
+    // something else touched the table.
+    let stream = database.observeConnections()
+    observationTask = Task { [weak self] in
+      do {
+        for try await records in stream {
+          self?.applyHydrate(records: records)
+        }
+      } catch {
+        Logger.api.error("Server observation terminated: \(error)")
+      }
+    }
   }
 
-  // @TODO: (multi-server) Remove in a few versions
-  @UserDefaultsBacked("ExtraHeaders", storage: .group)
-  private var extraHeaders: [Connection.HeaderValue] = []
+  deinit {
+    observationTask?.cancel()
+  }
 
-  // @TODO: (multi-server) Remove in a few versions
-  private var apiHost: String? {
+  /// In-memory cache of connection rows.
+  ///
+  /// Mutators write the DB first, then apply their own change here eagerly so
+  /// callers that read back synchronously (e.g. `login` → `setActiveConnection`
+  /// → `refreshConnection`) don't race the observer. ``applyHydrate(records:)``
+  /// — driven by the bootstrap read at init and by the `ValueObservation` task
+  /// that follows it — is authoritative and reconciles this dict against the
+  /// table; being equality-guarded, it is a no-op when the eager write already
+  /// matched.
+  public private(set) var connections: [UUID: StoredConnection] = [:]
+
+  /// Active server pointer.
+  ///
+  /// Stays in app-group `UserDefaults` rather than moving into the DB so the
+  /// Share Extension picks up active-server changes through UserDefaults' free
+  /// cross-process syncing. The "dangling pointer after row delete" case is
+  /// handled in ``applyHydrate(records:)`` and ``logout(animated:)``.
+  ///
+  /// A property wrapper cannot sit on an `@Observable`-tracked property at all:
+  /// the macro rewrites `x` into computed accessors over generated storage named
+  /// `_x`, which collides with the wrapper's own `_x` and fails to compile with
+  /// *"ambiguous reference to member '_x'"*. So the wrapper keeps the storage,
+  /// `@ObservationIgnored` keeps the macro off it, and the public property is
+  /// hand-written using the same `access` / `withMutation` pair the macro would
+  /// have generated.
+  ///
+  /// Note the key path is the **public** ``activeConnectionId``, not the private
+  /// storage: the registrar has to be keyed on what callers actually read, or
+  /// observers would never be notified.
+  @ObservationIgnored
+  @UserDefaultsBacked("ActiveConnectionId", storage: .group)
+  private var _activeConnectionId: UUID? = nil
+
+  public var activeConnectionId: UUID? {
     get {
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.string(forKey: "ApiHost")
+      access(keyPath: \.activeConnectionId)
+      return _activeConnectionId
     }
     set {
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(
-        newValue, forKey: "ApiHost")
+      withMutation(keyPath: \.activeConnectionId) {
+        _activeConnectionId = newValue
+      }
     }
   }
 
-  // @TODO: (multi-server) Remove in a few versions
-  @UserDefaultsBacked("ApiPath", storage: .group)
-  private var apiPath: String? = nil
+  /// Per-connection "needs auth" set. Hydrated from the `needs_auth` column;
+  /// kept as a Set<UUID> here so the existing banner / lock-badge
+  /// `.onChange(of: needsAuthIds)` watchers keep firing without touching the
+  /// SwiftUI sites in this commit.
+  public private(set) var needsAuthIds: Set<UUID> = []
 
-  @UserDefaultsBacked("Connections", storage: .group)
-  public private(set) var connections: [UUID: StoredConnection] = [:] {
-    willSet {
-      objectWillChange.send()
+  /// Apply a fresh snapshot of records to the in-memory dict and the
+  /// needs-auth set. Called by both the bootstrap read and the observer.
+  /// Equality-guarded so `objectWillChange` only fires on real changes.
+  private func applyHydrate(records: [ConnectionRecord]) {
+    var dict: [UUID: StoredConnection] = [:]
+    var needsAuth: Set<UUID> = []
+    for record in records {
+      dict[record.id] = StoredConnection(record: record)
+      if record.needsAuth { needsAuth.insert(record.id) }
+    }
+    if dict != connections { connections = dict }
+    if needsAuth != needsAuthIds { needsAuthIds = needsAuth }
+
+    // Dangling-pointer fixup: if a row was deleted (e.g. by logout, or
+    // eventually by a cross-process delete after foreground refresh) and
+    // the active pointer still names it, advance to whatever else exists
+    // or clear. Cheap Swift check — no FK cascade needed.
+    if let activeId = activeConnectionId, dict[activeId] == nil {
+      activeConnectionId = Self.successor(in: dict)?.id
     }
   }
 
-  @UserDefaultsBacked("ActiveConnectionId", storage: .group)
-  public var activeConnectionId: UUID? = nil {
-    willSet {
-      objectWillChange.send()
+  /// Which connection to fall back to when the active one disappears.
+  ///
+  /// Dictionary iteration order isn't stable, so `values.first` would pick a
+  /// different server run to run once more than one is configured. Order by
+  /// the label the user sees, with the id as a tie-break.
+  private static func successor(in dict: [UUID: StoredConnection]) -> StoredConnection? {
+    dict.values.min { ($0.label, $0.id.uuidString) < ($1.label, $1.id.uuidString) }
+  }
+
+  public func needsAuth(for id: UUID) -> Bool {
+    needsAuthIds.contains(id)
+  }
+
+  public func markNeedsAuth(for id: UUID) {
+    guard !needsAuthIds.contains(id) else { return }
+    Logger.api.info(
+      "Marking connection \(id, privacy: .private(mask: .hash)) as needing re-authentication")
+    do {
+      try database.setNeedsAuth(true, forConnection: id)
+    } catch {
+      Logger.api.error("markNeedsAuth DB write failed: \(error)")
     }
+  }
+
+  public func clearNeedsAuth(for id: UUID) {
+    guard needsAuthIds.contains(id) else { return }
+    Logger.api.info(
+      "Clearing needs-auth state for connection \(id, privacy: .private(mask: .hash))")
+    do {
+      try database.setNeedsAuth(false, forConnection: id)
+    } catch {
+      Logger.api.error("clearNeedsAuth DB write failed: \(error)")
+    }
+  }
+
+  // Set by the connection-status banner when the user taps "re-authenticate";
+  // the app shell observes this and presents `ReauthSheet`. Decoupled from
+  // `needsAuthIds` so the banner can show without auto-presenting a sheet —
+  // user consent stays explicit.
+  public var reauthRequested: UUID? = nil
+
+  public func requestReauth(for id: UUID) {
+    Logger.api.info(
+      "Requesting re-auth UI for connection \(id, privacy: .private(mask: .hash))")
+    reauthRequested = id
+  }
+
+  public func cancelReauthRequest() {
+    reauthRequested = nil
   }
 
   public func setActiveConnection(id: UUID, animated: Bool = true) {
     activeConnectionId = id
-    eventPublisher.send(.connectionChange(animated: animated))
+    events.emit(.connectionChange(animated: animated))
   }
 
   public func isServerUnique(_ url: URL) -> Bool {
     let allUrls = connections.values.map(\.url.absoluteString)
     let url = url.absoluteString
     return allUrls.reduce(0) { $1 == url ? $0 + 1 : $0 } == 1
-  }
-
-  public func migrateToMultiServer() async {
-    Logger.migration.trace("Checking migration status")
-    if activeConnectionId == nil, apiHost != nil {
-      Logger.migration.info(
-        "Connection manager has prior connection: migrating to multi-server scheme")
-
-      guard let connection else {
-        Logger.migration.warning("Existing connection was invalid")
-        return
-      }
-
-      let repository = await ApiRepository(
-        connection: connection, mode: Bundle.main.appConfiguration.mode)
-
-      // Migration runs asynchronously, this should be fine, since the active connection in memory
-      // will stay valid while we're trying.
-      Task {
-        Logger.migration.info("Getting current user to populate newly stored connection")
-        do {
-          let currentUser = try await repository.currentUser()
-          Logger.migration.info("Got current user: \(String(describing: currentUser))")
-
-          let newConnection = StoredConnection(
-            url: connection.url, extraHeaders: connection.extraHeaders, user: currentUser)
-          Logger.migration.info("Connection to store is: \(String(describing: newConnection))")
-
-          if let token = connection.token, token != "" {
-            Logger.migration.debug("Saving token into keychain under new lookup parameters")
-            try newConnection.setToken(token)
-          }
-
-          connections[newConnection.id] = newConnection
-          activeConnectionId = newConnection.id
-        } catch {
-          Logger.migration.error("An error was encountered: \(error)")
-        }
-      }
-    } else {
-      Logger.migration.info("Skipping migration")
-    }
   }
 
   public var connection: Connection? {
@@ -363,52 +439,23 @@ public class ConnectionManager: ObservableObject {
       return Connection(
         url: url,
         token: token,
-        extraHeaders: extraHeaders, identityName: nil)
+        extraHeaders: [], identityName: nil)
     }
 
-    if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
-      Logger.api.info(
-        "Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)"
-      )
-      do {
-        return try storedConnection.connection
-      } catch {
-        Logger.api.error(
-          "Getting connection from stored connection: \(storedConnection.redactedLabel, privacy: .public)"
-        )
-      }
-    }
-
-    // @TODO: (multi-server) Remove in a few versions
-    Logger.api.info("Making compatibility connection from parts (OLD STORAGE FLOW)")
-
-    guard let apiHost, var url = URL(string: apiHost) else {
+    guard let activeConnectionId, let storedConnection = connections[activeConnectionId] else {
       return nil
     }
-
-    if let path = apiPath {
-      url = url.appending(path: path)
-    }
-
-    let token: String?
+    Logger.api.info(
+      "Have valid multi-server connection info: \(storedConnection.redactedLabel, privacy: .public)"
+    )
     do {
-      let keychainAccount = "PaperlessAccount"
-      let data = try Keychain.read(
-        service: apiHost,
-        account: keychainAccount)
-      if let data {
-        token = String(data: data, encoding: .utf8)!
-      } else {
-        token = nil
-      }
+      return try storedConnection.connection
     } catch {
+      Logger.api.error(
+        "Getting connection from stored connection: \(storedConnection.redactedLabel, privacy: .public)"
+      )
       return nil
     }
-
-    return Connection(
-      url: url,
-      token: token,
-      extraHeaders: extraHeaders, identityName: nil)
   }
 
   public var storedConnection: StoredConnection? {
@@ -422,7 +469,7 @@ public class ConnectionManager: ObservableObject {
 
       return StoredConnection(
         url: url,
-        extraHeaders: extraHeaders,
+        extraHeaders: [],
         user: User(id: 1, isSuperUser: true, username: "paperless"))
     }
 
@@ -432,9 +479,20 @@ public class ConnectionManager: ObservableObject {
     return stored
   }
 
-  public func login(_ connection: StoredConnection) {
+  /// Store a connection and make it active.
+  ///
+  /// Throws if the row can't be persisted. Unlike the other mutators this one
+  /// can't just log and carry on: a login that doesn't survive to the next
+  /// launch is worse than no login, and the user needs to be told rather than
+  /// left looking at a button that did nothing.
+  public func login(_ connection: StoredConnection) throws {
     Logger.api.info(
       "Performing login for connection with ID \(connection.id, privacy: .private(mask: .hash))")
+    let record = connection.toRecord(needsAuth: needsAuthIds.contains(connection.id))
+    try database.upsertConnection(record)
+    // Eager, so the upcoming setActiveConnection → connectionChange →
+    // refreshConnection sees the row immediately rather than a tick later
+    // when the observer fires.
     connections[connection.id] = connection
     setActiveConnection(id: connection.id, animated: false)
   }
@@ -446,6 +504,14 @@ public class ConnectionManager: ObservableObject {
     }
     Logger.api.trace("Updating extra headers in \(stored.id) to \(headers)")
     stored.extraHeaders = headers
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("setExtraHeaders DB write failed: \(error)")
+    }
+    // Eager, like every other mutator: the edit takes effect for this session
+    // even if it didn't reach disk, rather than the UI silently reverting.
     connections[stored.id] = stored
   }
 
@@ -461,45 +527,61 @@ public class ConnectionManager: ObservableObject {
     }
     Logger.api.info("Updating friendly name on connection \(stored.id)")
     stored.friendlyName = value
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      Logger.api.error("setFriendlyName DB write failed: \(error)")
+    }
     connections[stored.id] = stored
   }
 
   public func logout(animated: Bool) {
     Logger.api.info("Requested logout from current server")
 
-    // @TODO: (multi-server) Remove in a few versions
-    if let host = apiHost {
-      Logger.api.info("Prior single-server connection present, clearing")
-      do {
-        let keychainAccount = "PaperlessAccount"
-        try Keychain.delete(
-          service: host,
-          account: keychainAccount)
-      } catch {
-        Logger.shared.error("Error logging out: \(error)")
-      }
-
-      apiHost = nil
-      apiPath = nil
-    }
-
     if let activeConnectionId, let storedConnection = connections[activeConnectionId] {
       Logger.api.info("Have active connection \(storedConnection.redactedLabel, privacy: .public)")
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
+      // No clearNeedsAuth() here — it would UPDATE a row this DELETE removes.
+      do {
+        try database.deleteConnection(id: activeConnectionId)
+      } catch {
+        Logger.api.error("logout DB delete failed: \(error)")
+      }
       connections.removeValue(forKey: activeConnectionId)
+      needsAuthIds.remove(activeConnectionId)
       let count = connections.count
       Logger.api.info("Have \(count)")
-      if let newConn = connections.first?.value {
+      if let newConn = Self.successor(in: connections) {
         Logger.api.info("Setting connection to \(newConn.id)")
         setActiveConnection(id: newConn.id, animated: animated)
       } else {
         Logger.api.info("Setting active connection to nil")
         self.activeConnectionId = nil
-        eventPublisher.send(.logout)
+        events.emit(.logout)
       }
     } else {
       activeConnectionId = nil
-      eventPublisher.send(.logout)
+      events.emit(.logout)
     }
+  }
+
+  /// Debug seam: write the stored connections back out in the pre-database
+  /// `UserDefaults` format the v2 migration imports from.
+  ///
+  /// Without this the database wipe in the corruption-recovery UI can't be
+  /// exercised on a build that has only ever stored connections in GRDB —
+  /// there is no legacy payload left to restore from, so a wipe just drops
+  /// every server. Exporting first makes the wipe a round trip.
+  ///
+  /// Tokens are untouched; they live in the keychain, not in either store.
+  ///
+  /// - Returns: how many connections were written.
+  @discardableResult
+  public func exportConnectionsToLegacyStorage() throws -> Int {
+    let count = try database.exportConnectionsToLegacyUserDefaults()
+    Logger.api.notice(
+      "Exported \(count, privacy: .public) connection(s) to legacy UserDefaults storage")
+    return count
   }
 }

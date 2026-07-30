@@ -8,30 +8,16 @@ struct PreferencesView: View {
   @ObservedObject private var appSettings = AppSettings.shared
 
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   var body: some View {
     Form {
-      // We don't consult this setting anymore from V4, so don't show it either
-      if !AppFeatures.enabled(.documentDetailViewV4) {
-        Section {
-          Toggle(
-            String(localized: .settings(.documentDeleteConfirmationLabel)),
-            isOn: $appSettings.documentDeleteConfirmation)
-        } footer: {
-          Text(.settings(.documentDeleteConfirmationLabelDescription))
-        }
-      }
-
-      // Doesn't apply anymore
-      if !AppFeatures.enabled(.documentDetailViewV4) {
-        Section {
-          Toggle(
-            String(localized: .settings(.showDocumentDetailPropertyBar)),
-            isOn: $appSettings.showDocumentDetailPropertyBar)
-        } footer: {
-          Text(.settings(.showDocumentDetailPropertyBarDescription))
-        }
+      Section {
+        Toggle(
+          String(localized: .settings(.documentDeleteConfirmationLabel)),
+          isOn: $appSettings.documentDeleteConfirmation)
+      } footer: {
+        Text(.settings(.documentDeleteConfirmationLabelDescription))
       }
 
       if let biometricName = BiometricLockManager.biometricName {

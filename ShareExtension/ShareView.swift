@@ -7,15 +7,42 @@
 
 import AppShared
 import Networking
+import Persistence
 import SwiftUI
 import os
 
 struct ShareView: View {
   @ObservedObject var attachmentManager: AttachmentManager
 
-  @StateObject private var connectionManager = ConnectionManager()
+  // Build a Database for the extension process. WAL allows concurrent
+  // readers across processes, so opening the same app-group SQLite file
+  // alongside the main app is supported. Cross-process live notification
+  // is not — the extension sees whatever was committed at launch.
+  // If the bootstrap fails (corrupt file, missing app-group), fall back to
+  // an in-memory database so the extension still renders the disabled
+  // "no active server" state cleanly instead of crashing.
+  @State private var connectionManager: ConnectionManager = {
+    let database: Database
+    do {
+      database = try Database()
+    } catch {
+      Logger.shared.fault(
+        "Share Extension database bootstrap failed (\(error)); falling back to in-memory")
+      database =
+        (try? Database.inMemory())
+        ?? {
+          // The in-memory path opens a DatabaseQueue and runs migrations,
+          // both of which are infallible in practice. Force-unwrap so the
+          // closure has a non-optional return; if this ever throws we want
+          // to know immediately, not silently render a broken share sheet.
+          preconditionFailure(
+            "In-memory database fallback also failed; cannot construct ConnectionManager")
+        }()
+    }
+    return ConnectionManager(database: database)
+  }()
 
-  @StateObject private var store = DocumentStore(repository: NullRepository())
+  @State private var store = DocumentStore(repository: NullRepository())
   @State private var storeReady = false
 
   @StateObject private var errorController = ErrorController()
@@ -45,7 +72,7 @@ struct ShareView: View {
     if let conn = connectionManager.connection {
       Logger.api.trace("Valid connection from connection manager: \(String(describing: conn))")
       Task {
-        store.eventPublisher.send(.repositoryWillChange)
+        store.events.emit(.repositoryWillChange)
         await store.set(
           repository: ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode))
         storeReady = true
@@ -117,9 +144,9 @@ struct ShareView: View {
                 .id(url)
                 // @FIXME: Gives a white band at the bottom, not ideal
                 .padding(.bottom, 40)
-                .environmentObject(store)
+                .environment(store)
                 .environmentObject(errorController)
-                .environmentObject(connectionManager)
+                .environment(connectionManager)
                 .accentColor(Color(.accent))
               } else {
                 ProgressView()

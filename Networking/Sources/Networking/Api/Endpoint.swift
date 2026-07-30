@@ -78,30 +78,6 @@ extension Endpoint {
     Endpoint(path: "/api/config")
   }
 
-  public static func single(_ type: (some Model).Type, id: UInt) -> Endpoint {
-    var segment = ""
-    switch type {
-    case is Correspondent.Type:
-      segment = "correspondents"
-    case is DocumentType.Type:
-      segment = "document_types"
-    case is Tag.Type:
-      segment = "tags"
-    case is Document.Type:
-      return document(id: id)
-    case is SavedView.Type:
-      segment = "saved_views"
-    case is StoragePath.Type:
-      segment = "storage_paths"
-    default:
-      fatalError("Invalid type")
-    }
-
-    return Endpoint(
-      path: "/api/\(segment)/\(id)",
-      queryItems: [])
-  }
-
   public static func remoteVersion() -> Endpoint {
     Endpoint(path: "/api/remote_version")
   }
@@ -167,14 +143,23 @@ extension Endpoint {
       queryItems: [URLQueryItem(name: "id", value: String(noteId))])
   }
 
-  public static func thumbnail(documentId: UInt) -> Endpoint {
-    Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: [])
+  public static func thumbnail(documentId: UInt, version: UInt? = nil) -> Endpoint {
+    var queryItems: [URLQueryItem] = []
+    if let version {
+      queryItems.append(URLQueryItem(name: "version", value: String(version)))
+    }
+    return Endpoint(path: "/api/documents/\(documentId)/thumb", queryItems: queryItems)
   }
 
-  public static func download(documentId: UInt, original: Bool = false) -> Endpoint {
+  public static func download(
+    documentId: UInt, original: Bool = false, version: UInt? = nil
+  ) -> Endpoint {
     var queryItems: [URLQueryItem] = []
     if original {
       queryItems.append(URLQueryItem(name: "original", value: "true"))
+    }
+    if let version {
+      queryItems.append(URLQueryItem(name: "version", value: String(version)))
     }
     return Endpoint(path: "/api/documents/\(documentId)/download", queryItems: queryItems)
   }

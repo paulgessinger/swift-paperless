@@ -7,6 +7,7 @@
 
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 import UniformTypeIdentifiers
 import os
@@ -127,9 +128,9 @@ public struct CreateDocumentView: View {
   public let share: Bool
   public let title: String
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   @State private var document = ProtoDocument()
   @State private var status = Status.none
@@ -445,7 +446,7 @@ public struct CreateDocumentView: View {
         }
       }
 
-      .onReceive(store.eventPublisher) { event in
+      .onEvent(from: store.events) { event in
         switch event {
         case .repositoryWillChange:
           resetDocument()
@@ -459,16 +460,16 @@ public struct CreateDocumentView: View {
       }
     }
 
-    .errorOverlay(errorController: errorController, offset: 20)
   }
 }
 
 // - MARK: Previews
 
 private struct PreviewHelperView: View {
-  @StateObject private var store = DocumentStore(repository: PreviewRepository())
+  @State private var store = DocumentStore(repository: PreviewRepository())
   @StateObject private var errorController = ErrorController()
-  @StateObject private var connectionManager = ConnectionManager(previewMode: true)
+  @State private var connectionManager = ConnectionManager(
+    database: try! Database.inMemory(), previewMode: true)
 
   private let url = Bundle.main.url(forResource: "demo2", withExtension: "pdf")!
 
@@ -476,9 +477,9 @@ private struct PreviewHelperView: View {
 
   public var body: some View {
     CreateDocumentView(sourceUrl: url, share: share)
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
-      .environmentObject(connectionManager)
+      .environment(connectionManager)
   }
 }
 

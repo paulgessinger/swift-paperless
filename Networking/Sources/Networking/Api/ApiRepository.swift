@@ -36,7 +36,19 @@ public class ApiRepository {
 
   // Per-key in-flight task map: two concurrent downloads of the same blob
   // share one network request rather than racing into the ContentStore.
-  private var inFlightDownloads: [ContentStore.Key: Task<URL, Error>] = [:]
+  //
+  // Keyed by the staleness stamp as well as the content key. Coalescing on the
+  // content key alone would merge callers holding the same version but
+  // different `modified` timestamps, and whichever won the race would write its
+  // own stamp into the sidecar — recording the blob as fresher than it is if
+  // the loser held the newer stamp, which `read(_:freshAgainst:)` would then
+  // happily serve.
+  private struct DownloadKey: Hashable {
+    let content: ContentStore.Key
+    let modified: Date
+  }
+
+  private var inFlightDownloads: [DownloadKey: Task<URL, Error>] = [:]
 
   nonisolated
     private let apiVersion: UInt?
@@ -50,7 +62,9 @@ public class ApiRepository {
     public let backendVersion: Version?
 
   public var effectiveApiVersion: UInt {
-    min(Self.maximumApiVersion, apiVersion ?? Self.maximumApiVersion)
+    // If X-Api-Version can't be read (e.g. 401 before middleware), apiVersion is nil.
+    // Defaulting to minimumApiVersion ensures compatibility and lets the app handle real 401s for user recovery.
+    min(Self.maximumApiVersion, apiVersion ?? Self.minimumApiVersion)
   }
 
   public convenience init(connection: Connection, mode: Mode) async {
@@ -94,6 +108,14 @@ public class ApiRepository {
     {
       apiVersion = versions.apiVersion
       backendVersion = versions.backendVersion
+    } else if let detected = await Self.iterateAcceptedApiVersion(
+      urlSession: urlSession, connection: connection)
+    {
+      // Header probe failed; tried Accept versions until backend responded. No backend version string learned; feature support is conservative until successful header probe.
+      apiVersion = detected
+      backendVersion = nil
+      Logger.networking.notice(
+        "Header probe failed; iteration probe selected API version \(detected)")
     } else {
       apiVersion = nil
       backendVersion = nil
@@ -368,47 +390,15 @@ public class ApiRepository {
     }
   }
 
-  private func get<T: Decodable & Model & Sendable>(_ type: T.Type, id: UInt) async throws -> T? {
-    try await get(type, endpoint: .single(T.self, id: id))
-  }
-
-  private func all<T>(_: T.Type) async throws -> [T]
-  where T: Decodable & Model & Sendable {
-    let endpoint: Endpoint =
-      switch T.self {
-      case is Correspondent.Type:
-        .correspondents()
-      case is DocumentType.Type:
-        .documentTypes()
-      case is Tag.Type:
-        .tags()
-      case is SavedView.Type:
-        .savedViews()
-      case is StoragePath.Type:
-        .storagePaths()
-      case is User.Type:
-        .users()
-      case is UserGroup.Type:
-        .groups()
-      case is CustomField.Type:
-        .customFields()
-      default:
-        fatalError("Invalid type")
-      }
-
-    let cursor = try PageCursor<T>(
-      repository: self,
-      initialURL: url(endpoint))
-    return try await cursor.collectAll()
-  }
-
 }
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
-    try await update(
-      element: document,
-      endpoint: .document(id: document.id, fullPerms: false))
+    let api: ApiDocument = try await update(
+      element: ApiDocumentUpdate(from: document),
+      endpoint: .document(id: document.id, fullPerms: false),
+      returns: ApiDocument.self)
+    return api.domain
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -477,71 +467,68 @@ extension ApiRepository: Repository {
     try await delete(Document.self, endpoint: .document(id: document.id))
   }
 
-  public func documents(filter: FilterState) throws -> any DocumentSource {
+  public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
     Logger.networking.notice("Getting document sequence for filter")
-    let cursor = try PageCursor<Document>(
+    let cursor = try PageCursor<ApiDocument>(
       repository: self,
       initialURL: url(.documents(page: 1, filter: filter)))
-    return ApiPagedSource<Document, Document>(cursor: cursor, map: { $0 })
-  }
-
-  public func download(
-    documentID: UInt, original: Bool = false, progress: (@Sendable (Double) -> Void)? = nil
-  ) async throws -> URL {
-    // No Document handle → no modified timestamp to validate the cache,
-    // so streamDownload's nil-modified guard bypasses ContentStore and
-    // fetches fresh every call. Callers should prefer download(document:...).
-    try await streamDownload(
-      documentID: documentID, original: original,
-      modified: nil, progress: progress)
+    return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 
   public func download(
     document: Document, original: Bool = false,
     progress: (@Sendable (Double) -> Void)? = nil
   ) async throws -> URL {
-    try await streamDownload(
-      documentID: document.id, original: original,
-      modified: document.modified, progress: progress)
+    try await streamDownload(document: document, original: original, progress: progress)
   }
 
   private func streamDownload(
-    documentID: UInt, original: Bool,
-    modified: Date?, progress: (@Sendable (Double) -> Void)?
+    document: Document, original: Bool,
+    progress: (@Sendable (Double) -> Void)?
   ) async throws -> URL {
     Logger.networking.notice("Downloading document (original: \(original))")
+
+    // Two different notions of "version" here, deliberately kept apart:
+    // `version` always addresses a concrete row and partitions the local cache
+    // path, whereas `queryVersion` is nil unless the server actually reported
+    // versions, so we don't append a redundant `?version=` to the request URL.
+    let version = document.currentVersionID
+    let queryVersion = document.versionQueryID
 
     // Without a staleness signal (modified timestamp) we can't validate a
     // cached blob — and writing one back without `modified` would cache it
     // indefinitely with no way to detect server-side changes. Bypass the
     // ContentStore entirely in that case. Also fall back when the app-group
     // container isn't available (host tests, mis-configured entitlement).
-    guard let contentStore, let modified else {
+    guard let contentStore, let modified = document.modified else {
       return try await fetchToTemp(
-        documentID: documentID, original: original, progress: progress)
+        documentID: document.id, original: original, version: queryVersion,
+        progress: progress)
     }
 
     let key = ContentStore.Key(
       serverID: connection.serverID,
-      documentRemoteID: documentID,
+      versionID: version,
       kind: original ? .original : .archive)
+    let inFlightKey = DownloadKey(content: key, modified: modified)
 
     if let cached = contentStore.read(key, freshAgainst: modified) {
       Logger.networking.info(
-        "ContentStore hit for documentID \(documentID) (original: \(original))")
+        "ContentStore hit for documentID \(document.id) version \(version) (original: \(original))"
+      )
       progress?(1.0)
       return cached
     }
 
-    if let existing = inFlightDownloads[key] {
+    if let existing = inFlightDownloads[inFlightKey] {
       return try await existing.value
     }
 
     let task = Task<URL, Error> { [contentStore] in
-      defer { inFlightDownloads[key] = nil }
+      defer { inFlightDownloads[inFlightKey] = nil }
 
       let request = try request(
-        .download(documentId: documentID, original: original))
+        .download(documentId: document.id, original: original, version: queryVersion))
       let (tempURL, response) = try await urlSession.getDownload(
         for: request, progress: progress)
 
@@ -550,16 +537,16 @@ extension ApiRepository: Repository {
       return try contentStore.store(
         key, movingFrom: tempURL, modified: modified)
     }
-    inFlightDownloads[key] = task
+    inFlightDownloads[inFlightKey] = task
     return try await task.value
   }
 
   private func fetchToTemp(
-    documentID: UInt, original: Bool,
+    documentID: UInt, original: Bool, version: UInt?,
     progress: (@Sendable (Double) -> Void)?
   ) async throws -> URL {
     let request = try request(
-      .download(documentId: documentID, original: original))
+      .download(documentId: documentID, original: original, version: version))
     let (tempURL, response) = try await urlSession.getDownload(
       for: request, progress: progress)
     try validateDownloadResponse(response, request: request)
@@ -624,52 +611,70 @@ extension ApiRepository: Repository {
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
-    try await get(Correspondent.self, id: id)
+    try await get(ApiCorrespondent.self, endpoint: .correspondent(id: id))?.domain
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
-    try await create(
-      element: correspondent,
+    let api: ApiCorrespondent = try await create(
+      element: ApiCorrespondentCreate(from: correspondent),
       endpoint: .createCorrespondent(),
-      returns: Correspondent.self)
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
-    try await update(
-      element: correspondent,
-      endpoint: .correspondent(id: correspondent.id))
+    let api: ApiCorrespondent = try await update(
+      element: ApiCorrespondentUpdate(from: correspondent),
+      endpoint: .correspondent(id: correspondent.id),
+      returns: ApiCorrespondent.self)
+    return api.domain
   }
 
   public func delete(correspondent: Correspondent) async throws {
     try await delete(Correspondent.self, endpoint: .correspondent(id: correspondent.id))
   }
 
-  public func correspondents() async throws -> [Correspondent] { try await all(Correspondent.self) }
+  public func correspondents() async throws -> [Correspondent] {
+    let cursor = try PageCursor<ApiCorrespondent>(
+      repository: self,
+      initialURL: url(.correspondents()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func documentType(id: UInt) async throws -> DocumentType? {
-    try await get(DocumentType.self, id: id)
+    try await get(ApiDocumentType.self, endpoint: .documentType(id: id))?.domain
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
-    try await create(
-      element: documentType,
+    let api: ApiDocumentType = try await create(
+      element: ApiDocumentTypeCreate(from: documentType),
       endpoint: .createDocumentType(),
-      returns: DocumentType.self)
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
-    try await update(
-      element: documentType,
-      endpoint: .documentType(id: documentType.id))
+    let api: ApiDocumentType = try await update(
+      element: ApiDocumentTypeUpdate(from: documentType),
+      endpoint: .documentType(id: documentType.id),
+      returns: ApiDocumentType.self)
+    return api.domain
   }
 
   public func delete(documentType: DocumentType) async throws {
     try await delete(DocumentType.self, endpoint: .documentType(id: documentType.id))
   }
 
-  public func documentTypes() async throws -> [DocumentType] { try await all(DocumentType.self) }
+  public func documentTypes() async throws -> [DocumentType] {
+    let cursor = try PageCursor<ApiDocumentType>(
+      repository: self,
+      initialURL: url(.documentTypes()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
-  public func document(id: UInt) async throws -> Document? { try await get(Document.self, id: id) }
+  public func document(id: UInt) async throws -> Document? {
+    try await get(ApiDocument.self, endpoint: .document(id: id))?.domain
+  }
 
   public func document(asn: UInt) async throws -> Document? {
     Logger.networking.notice("Getting document by ASN")
@@ -677,21 +682,22 @@ extension ApiRepository: Repository {
     let rule = FilterRule(ruleType: .asn, value: .number(value: Int(asn)))!
     let decoded = try await send(
       endpoint: .documents(page: 1, rules: [rule]),
-      returns: ListResponse<Document>.self)
+      returns: ListResponse<ApiDocument>.self)
 
     guard decoded.count > 0, !decoded.results.isEmpty else {
       Logger.networking.notice("Got empty document result (ASN not found)")
       return nil
     }
-    return decoded.results.first
+    return decoded.results.first?.domain
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    try await send(endpoint: .metadata(documentId: documentId), returns: Metadata.self)
+    try await send(endpoint: .metadata(documentId: documentId), returns: ApiMetadata.self).domain
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    try await send(endpoint: .notes(documentId: documentId), returns: [Document.Note].self)
+    try await send(endpoint: .notes(documentId: documentId), returns: [ApiDocumentNote].self)
+      .map(\.domain)
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document.Note]
@@ -699,22 +705,24 @@ extension ApiRepository: Repository {
     try await send(
       .post,
       endpoint: .notes(documentId: documentId),
-      body: note,
-      returns: [Document.Note].self)
+      body: ApiDocumentNoteCreate(from: note),
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     try await send(
       .delete,
       endpoint: .note(documentId: documentId, noteId: id),
-      returns: [Document.Note].self)
+      returns: [ApiDocumentNote].self
+    ).map(\.domain)
   }
 
   public func trash() async throws -> [Document] {
     Logger.networking.notice("Getting trash documents")
     let endpoint = Endpoint.trash(page: 1, pageSize: 100_000)
-    let cursor = try PageCursor<Document>(repository: self, initialURL: url(endpoint))
-    return try await cursor.collectAll()
+    let cursor = try PageCursor<ApiDocument>(repository: self, initialURL: url(endpoint))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   private enum TrashAction: String, Encodable {
@@ -748,8 +756,8 @@ extension ApiRepository: Repository {
 
     let decoded = try await send(
       endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
-      returns: ListResponse<Document>.self)
-    return (decoded.results.first?.asn ?? 0) + 1
+      returns: ListResponse<ApiDocument>.self)
+    return (decoded.results.first?.archive_serial_number ?? 0) + 1
   }
 
   private func nextAsnDirectEndpoint() async throws -> UInt {
@@ -767,9 +775,19 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func users() async throws -> [User] { try await all(User.self) }
+  public func users() async throws -> [User] {
+    let cursor = try PageCursor<ApiUser>(
+      repository: self,
+      initialURL: url(.users()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
-  public func groups() async throws -> [UserGroup] { try await all(UserGroup.self) }
+  public func groups() async throws -> [UserGroup] {
+    let cursor = try PageCursor<ApiUserGroup>(
+      repository: self,
+      initialURL: url(.groups()))
+    return try await cursor.collectAll().map(\.domain)
+  }
 
   public func thumbnail(document: Document) async throws -> Image? {
     let data = try await thumbnailData(document: document)
@@ -817,7 +835,8 @@ extension ApiRepository: Repository {
     func thumbnailRequest(document: Document) throws -> URLRequest
   {
     Logger.networking.debug("Get thumbnail for document \(document.id, privacy: .public)")
-    let url = try url(Endpoint.thumbnail(documentId: document.id))
+    let url = try url(
+      Endpoint.thumbnail(documentId: document.id, version: document.versionQueryID))
 
     var request = URLRequest(url: url)
     addTokenTo(request: &request)
@@ -829,21 +848,33 @@ extension ApiRepository: Repository {
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     Logger.networking.notice("Get suggestions")
     return try await send(
-      endpoint: .suggestions(documentId: documentId), returns: Suggestions.self)
+      endpoint: .suggestions(documentId: documentId), returns: ApiSuggestions.self
+    ).domain
   }
 
   // MARK: Saved views
 
   public func savedViews() async throws -> [SavedView] {
-    try await all(SavedView.self)
+    let cursor = try PageCursor<ApiSavedView>(
+      repository: self,
+      initialURL: url(.savedViews()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(savedView view: ProtoSavedView) async throws -> SavedView {
-    try await create(element: view, endpoint: .createSavedView(), returns: SavedView.self)
+    let api: ApiSavedView = try await create(
+      element: ApiSavedViewCreate(from: view),
+      endpoint: .createSavedView(),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func update(savedView view: SavedView) async throws -> SavedView {
-    try await update(element: view, endpoint: .savedView(id: view.id))
+    let api: ApiSavedView = try await update(
+      element: ApiSavedViewUpdate(from: view),
+      endpoint: .savedView(id: view.id),
+      returns: ApiSavedView.self)
+    return api.domain
   }
 
   public func delete(savedView view: SavedView) async throws {
@@ -853,16 +884,26 @@ extension ApiRepository: Repository {
   // MARK: Storage paths
 
   public func storagePaths() async throws -> [StoragePath] {
-    try await all(StoragePath.self)
+    let cursor = try PageCursor<ApiStoragePath>(
+      repository: self,
+      initialURL: url(.storagePaths()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
-    try await create(
-      element: storagePath, endpoint: .createStoragePath(), returns: StoragePath.self)
+    let api: ApiStoragePath = try await create(
+      element: ApiStoragePathCreate(from: storagePath),
+      endpoint: .createStoragePath(),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
-    try await update(element: storagePath, endpoint: .storagePath(id: storagePath.id))
+    let api: ApiStoragePath = try await update(
+      element: ApiStoragePathUpdate(from: storagePath),
+      endpoint: .storagePath(id: storagePath.id),
+      returns: ApiStoragePath.self)
+    return api.domain
   }
 
   public func delete(storagePath: StoragePath) async throws {
@@ -872,25 +913,28 @@ extension ApiRepository: Repository {
   // MARK: Custom fields
 
   public func customFields() async throws -> [CustomField] {
-    try await all(CustomField.self)
+    let cursor = try PageCursor<ApiCustomField>(
+      repository: self,
+      initialURL: url(.customFields()))
+    return try await cursor.collectAll().map(\.domain)
   }
 
   // MARK: Server configuration
 
   public func serverConfiguration() async throws -> ServerConfiguration {
     let configurations = try await send(
-      endpoint: .appConfiguration(), returns: [ServerConfiguration].self)
+      endpoint: .appConfiguration(), returns: [ApiServerConfiguration].self)
 
     guard let firstConfig = configurations.first else {
       Logger.networking.error("No server configuration found")
       throw RequestError.invalidResponse
     }
 
-    return firstConfig
+    return firstConfig.domain
   }
 
   public func remoteVersion() async throws -> RemoteVersion {
-    try await send(endpoint: .remoteVersion(), returns: RemoteVersion.self)
+    try await send(endpoint: .remoteVersion(), returns: ApiRemoteVersion.self).domain
   }
 
   // MARK: Others
@@ -928,13 +972,14 @@ extension ApiRepository: Repository {
     }
   }
 
-  public func tasks() throws -> any TaskSource {
+  public func tasks() throws -> AnyTaskSource {
     if supports(feature: .taskListEnvelope) {
       let initial = try url(.tasks(name: .consumeFile, acknowledged: false, pageSize: 100))
       let cursor = PageCursor<ApiTaskV10>(repository: self, initialURL: initial)
-      return ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain })
+      return AnyTaskSource(
+        ApiPagedSource<ApiTaskV10, PaperlessTask>(cursor: cursor, map: { $0.domain }))
     } else {
-      return ApiTaskSourceV9(repository: self)
+      return AnyTaskSource(ApiTaskSourceV9(repository: self))
     }
   }
 
@@ -1024,6 +1069,52 @@ extension ApiRepository: Repository {
     }
   }
 
+  // Fallback for when we can't read X-Api-Version off the canonical probe.
+  // Tries GET /api/ui_settings/ with Accept: application/json; version=N, counting down from max to min,
+  // stopping when the backend stops returning 406 (any other status = accepted).
+  // Mirrors but isn't shared with LoginViewModel's pre-auth probe.
+  private static func iterateAcceptedApiVersion(
+    urlSession: URLSession, connection: Connection
+  ) async -> UInt? {
+    guard let url = Endpoint.uiSettings().url(url: connection.url) else {
+      return nil
+    }
+
+    Logger.networking.info(
+      "Header probe failed; iterating API versions to find one the backend accepts")
+
+    for v in stride(
+      from: Int(maximumApiVersion), through: Int(minimumApiVersion), by: -1)
+    {
+      var request = URLRequest(url: url)
+      request.cachePolicy = .reloadIgnoringLocalCacheData
+      addTokenTo(request: &request, token: connection.token)
+      connection.extraHeaders.apply(toRequest: &request)
+      request.setValue(
+        "application/json; version=\(v)", forHTTPHeaderField: "Accept")
+
+      do {
+        let (_, response) = try await urlSession.getData(for: request)
+        guard let response = response as? HTTPURLResponse else { continue }
+        if response.statusCode != 406 {
+          return UInt(v)
+        }
+      } catch {
+        Logger.networking.warning(
+          "Iteration probe network error at version \(v): \(String(describing: error))")
+        // Network errors mean we can't tell whether this version was
+        // accepted; bail out rather than continue iterating with the same
+        // doomed connection.
+        return nil
+      }
+    }
+
+    Logger.networking.error(
+      "Iteration probe: backend rejected every API version in [\(minimumApiVersion), \(maximumApiVersion)]"
+    )
+    return nil
+  }
+
   public func supports(feature: BackendFeature) -> Bool {
     guard let backendVersion, let apiVersion else { return false }
     return feature.isSupported(on: backendVersion, api: apiVersion)
@@ -1034,12 +1125,16 @@ extension ApiRepository: Repository {
   public func shareLinks(documentId: UInt) async throws -> [DataModel.ShareLink] {
     try await send(
       endpoint: .shareLinks(documentId: documentId),
-      returns: [DataModel.ShareLink].self)
+      returns: [ApiShareLink].self
+    ).map(\.domain)
   }
 
   public func create(shareLink: ProtoShareLink) async throws -> DataModel.ShareLink {
-    try await create(
-      element: shareLink, endpoint: .createShareLink(), returns: ShareLink.self)
+    let api: ApiShareLink = try await create(
+      element: ApiShareLinkCreate(from: shareLink),
+      endpoint: .createShareLink(),
+      returns: ApiShareLink.self)
+    return api.domain
   }
 
   public func delete(shareLink: DataModel.ShareLink) async throws {

@@ -15,7 +15,7 @@ struct DocumentMetadataView: View {
   @Binding var document: Document
   @Binding var metadata: Metadata?
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   @Environment(\.dismiss) private var dismiss
@@ -109,14 +109,13 @@ struct DocumentMetadataView: View {
       }
     }
 
-    .errorOverlay(errorController: errorController, offset: 20)
   }
 }
 
 // - MARK: Preview
 
 #Preview {
-  @Previewable @StateObject var store = DocumentStore(
+  @Previewable @State var store = DocumentStore(
     repository: PreviewRepository(downloadDelay: 3.0))
   @Previewable @StateObject var errorController = ErrorController()
 
@@ -137,6 +136,6 @@ struct DocumentMetadataView: View {
       }
     }
   }
-  .environmentObject(store)
+  .environment(store)
   .environmentObject(errorController)
 }

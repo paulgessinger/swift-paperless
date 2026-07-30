@@ -18,7 +18,7 @@ extension StoredConnection {
 }
 
 private struct ConnectionSelectionViews: View {
-  @ObservedObject public var connectionManager: ConnectionManager
+  public var connectionManager: ConnectionManager
   public let animated: Bool
 
   public var body: some View {
@@ -34,8 +34,14 @@ private struct ConnectionSelectionViews: View {
       } label: {
         let urlLabel = connectionManager.isServerUnique(conn.url) ? conn.shortLabel : conn.label
         let text = conn.nonEmptyFriendlyName.map { "\($0) (\(urlLabel))" } ?? urlLabel
-        // Bit of a hack to have by-character line breaks
-        Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+        HStack {
+          // Bit of a hack to have by-character line breaks
+          Text(text.map { String($0) }.joined(separator: "\u{200B}"))
+          if connectionManager.needsAuth(for: conn.id) {
+            Image(systemName: "lock.trianglebadge.exclamationmark")
+              .foregroundStyle(.orange)
+          }
+        }
       }
       .disabled(conn.id == connectionManager.activeConnectionId)
     }
@@ -43,7 +49,7 @@ private struct ConnectionSelectionViews: View {
 }
 
 public struct ConnectionSelectionMenu: View {
-  @ObservedObject public var connectionManager: ConnectionManager
+  public var connectionManager: ConnectionManager
   public let animated: Bool
 
   public var body: some View {
@@ -84,7 +90,7 @@ public struct ConnectionSelectionMenu: View {
 }
 
 public struct ConnectionsView: View {
-  @ObservedObject private var connectionManager: ConnectionManager
+  private var connectionManager: ConnectionManager
   @Binding public var showLoginSheet: Bool
 
   @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
@@ -98,7 +104,7 @@ public struct ConnectionsView: View {
 
   @State private var showExtraHeader = false
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   public init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
     self.connectionManager = connectionManager
@@ -112,11 +118,18 @@ public struct ConnectionsView: View {
     if existing != extraHeaders {
       Logger.shared.info("Active connection extra headers have changed")
       connectionManager.setExtraHeaders(extraHeaders)
-      if let connection = connectionManager.connection {
+      if let stored = connectionManager.storedConnection,
+        let connection = connectionManager.connection
+      {
         Task {
-          let repository = await ApiRepository(
+          let api = await ApiRepository(
             connection: connection, mode: Bundle.main.appConfiguration.mode)
-          store.set(repository: repository)
+          // Must carry the same needs-auth decoration the app shell installs:
+          // a bare repository 401s without ever flipping the flag, and 401s are
+          // suppressed on the assumption the connection banner covers them.
+          store.set(
+            repository: NeedsAuthRepository(
+              wrapping: api, serverID: stored.id, connectionManager: connectionManager))
         }
       }
     }
@@ -185,6 +198,20 @@ public struct ConnectionsView: View {
         }
         .tint(.primary)
 
+        if let activeId = connectionManager.activeConnectionId,
+          connectionManager.needsAuth(for: activeId)
+        {
+          Button {
+            connectionManager.requestReauth(for: activeId)
+          } label: {
+            Label(
+              String(localized: .app(.connectionStatusReauthAction)),
+              systemImage: "lock.trianglebadge.exclamationmark")
+          }
+          .foregroundStyle(.orange)
+          .bold()
+        }
+
         Button(role: .destructive) {
           logoutRequested = true
         } label: {
@@ -204,10 +231,6 @@ public struct ConnectionsView: View {
           }
           Button(String(localized: .app(.cancel)), role: .cancel) {}
         }
-
-      } else if let compat = connectionManager.connection {
-        // @TODO: (multi-server) remove in a few versions
-        Text(compat.url.absoluteString)
       }
     } header: {
       HStack {
@@ -251,7 +274,7 @@ public struct ConnectionsView: View {
 public struct ConnectionQuickChangeMenu: View {
   public init() {}
 
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(ConnectionManager.self) private var connectionManager
 
   public var body: some View {
     if connectionManager.connections.count > 1 {

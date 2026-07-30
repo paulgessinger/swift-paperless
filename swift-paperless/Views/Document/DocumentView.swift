@@ -11,6 +11,7 @@ import Common
 import DataModel
 import Networking
 import Nuke
+import Persistence
 import PhotosUI
 import SwiftUI
 import os
@@ -57,10 +58,11 @@ struct DocumentNotFoundError: DisplayableError {
 
 @MainActor
 struct DocumentView: View {
-  @EnvironmentObject private var store: DocumentStore
-  @EnvironmentObject private var connectionManager: ConnectionManager
+  @Environment(DocumentStore.self) private var store
+  @Environment(ConnectionManager.self) private var connectionManager
   @EnvironmentObject private var errorController: ErrorController
   @Environment(RouteManager.self) private var routeManager
+  @Environment(NetworkMonitor.self) private var networkMonitor
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var filterModel = FilterModel()
   @State private var isFetching: Bool = false
@@ -171,6 +173,9 @@ struct DocumentView: View {
             await clear()
             navPath.append(NavigationState.detail(document: document))
           }
+        } catch {
+          Logger.shared.error("Error opening document from route: \(error)")
+          errorController.push(error: error)
         }
       case .setFilter(let filter):
         routeManager.pendingRoute = nil
@@ -362,6 +367,16 @@ struct DocumentView: View {
                 errorController.push(
                   message: "Error no \(i)", details: i % 2 == 0 ? "Some details" : nil)
               }
+            }
+
+            if let id = connectionManager.activeConnectionId {
+              Button("Mark connection needs re-auth") {
+                connectionManager.markNeedsAuth(for: id)
+              }
+            }
+
+            Button(networkMonitor.debugForceOffline ? "Stop forcing offline" : "Force offline") {
+              networkMonitor.debugForceOffline.toggle()
             }
           }
         #endif
@@ -678,7 +693,7 @@ struct DocumentView: View {
         callback: createCallback,
         title: createDocumentTitle
       )
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
     }
 
@@ -742,23 +757,25 @@ struct DocumentView: View {
       fatalError("Invalid task view navigation state pushed")
     }
     return TasksView(navPath: navPath)
-      .environmentObject(store)
+      .environment(store)
       .environmentObject(errorController)
-      .errorOverlay(errorController: errorController, offset: 15)
   }
 }
 
 // - MARK: Previews
 
 #Preview("DocumentView") {
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
+  @Previewable @State var networkMonitor = NetworkMonitor()
   @Previewable @State var showSettings = false
 
   DocumentView(showSettings: $showSettings)
-    .environmentObject(store)
+    .environment(store)
     .environmentObject(errorController)
-    .environmentObject(connectionManager)
+    .environment(connectionManager)
     .environment(RouteManager())
+    .environment(networkMonitor)
 }

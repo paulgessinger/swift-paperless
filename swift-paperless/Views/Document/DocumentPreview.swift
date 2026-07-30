@@ -232,7 +232,7 @@ private struct PDFPagingPreview: View {
 }
 
 private struct IntegratedDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State private var showLoadingOverlay = false
   @State private var thumbnailHidden = false
   var document: Document
@@ -344,7 +344,10 @@ private struct IntegratedDocumentPreview: View {
     .animation(.easeOut(duration: 0.3), value: showLoadingOverlay)
     .animation(.easeOut(duration: Self.pdfFadeInDuration), value: downloadState)
 
-    .task {
+    // Keyed on the version for the same reason as the list cell: a refresh in
+    // an already-open detail view keeps this view's identity, so a bare
+    // `.task` would leave the placeholder thumbnail on the previous version.
+    .task(id: document.versionQueryID) {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       image.pipeline = store.imagePipeline
       do {
@@ -391,7 +394,7 @@ private struct IntegratedDocumentPreview: View {
 }
 
 struct PopupDocumentPreview: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @State private var viewModel = IntegratedDocumentPreviewModel()
   var document: Document
 

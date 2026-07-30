@@ -32,7 +32,7 @@ private struct SavedViewError: LocalizedError {
 }
 
 private struct FilterMenu<Content: View>: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(FilterModel.self) private var filterModel
   @EnvironmentObject private var errorController: ErrorController
   @Binding var savedView: ProtoSavedView?
@@ -197,7 +197,7 @@ private struct CircleCounter<Value: CustomStringConvertible>: View {
 // MARK: Common Element View
 
 private struct CommonElementLabel<Element: Pickable>: View {
-  @EnvironmentObject var store: DocumentStore
+  @Environment(DocumentStore.self) var store
 
   let state: FilterState.Filter
 
@@ -357,7 +357,7 @@ private struct PilliOS18<Label: View>: View {
 
 private struct SortMenu: View {
   @Environment(FilterModel.self) private var filterModel
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   private var eligibleSortFields: [SortField] {
     let isAdvancedSearch =
@@ -430,7 +430,7 @@ private struct SortMenu: View {
 }
 
 struct FilterBar: View {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(FilterModel.self) private var filterModel
   @Environment(\.dismiss) private var dismiss
   @Environment(RouteManager.self) private var routeManager
@@ -545,7 +545,7 @@ struct FilterBar: View {
     var savedView: ProtoSavedView
 
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var store: DocumentStore
+    @Environment(DocumentStore.self) private var store
     @Environment(FilterModel.self) private var filterModel
 
     var body: some View {
@@ -959,14 +959,14 @@ private let customFields = [
 ]
 
 #Preview {
-  @Previewable @StateObject var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore(repository: TransientRepository())
   @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var errorController = ErrorController()
 
   NavigationStack {
     Form {
       FilterBar()
-        .environmentObject(store)
+        .environment(store)
         .environment(filterModel)
         .environmentObject(errorController)
         .environment(RouteManager())

@@ -8,6 +8,7 @@
 import AppShared
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 
 @available(iOS 26.0, *)
@@ -113,9 +114,10 @@ struct FilterAssembly: View {
 @available(iOS 26.0, *)
 #Preview {
   @Previewable @State var filterModel = FilterModel()
-  @Previewable @StateObject var store = DocumentStore(repository: PreviewRepository())
+  @Previewable @State var store = DocumentStore(repository: PreviewRepository())
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @StateObject var connectionManager = ConnectionManager()
+  @Previewable @State var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
   @Previewable @State var searchText = ""
 
   NavigationStack {
@@ -131,10 +133,10 @@ struct FilterAssembly: View {
 
     .safeAreaInset(edge: .top) {
       FilterAssembly(filterModel: filterModel)
-        .environmentObject(store)
+        .environment(store)
         .environmentObject(errorController)
         // @TODO: Is this needed even?
-        .environmentObject(connectionManager)
+        .environment(connectionManager)
         .environment(filterModel)
     }
 

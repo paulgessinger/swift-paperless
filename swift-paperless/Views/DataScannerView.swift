@@ -45,7 +45,7 @@ struct HighlightView: View {
 
   var haptics = false
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
 
   var patterns: [Regex<AnyRegexOutput>]
 
@@ -351,7 +351,7 @@ struct HighlightView: View {
 private struct DetailView: View {
   var document: Document
 
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -381,7 +381,7 @@ struct TypeAsnView: View {
   }
 
   @State private var text = ""
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @FocusState private var focused: Bool
   @State private var status = Status.none
 
@@ -517,7 +517,7 @@ struct TypeAsnView: View {
 
 struct DataScannerView: View {
   @Environment(\.dismiss) private var dismiss
-  @ObservedObject var store: DocumentStore
+  var store: DocumentStore
 
   @State private var document: Document?
   @State private var showTypeAsn = false

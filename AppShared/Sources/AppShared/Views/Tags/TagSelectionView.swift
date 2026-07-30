@@ -13,7 +13,7 @@ import SwiftUI
 
 // - MARK: TagEditView
 public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
-  @EnvironmentObject private var store: DocumentStore
+  @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
   @Binding public var document: D
@@ -27,7 +27,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
   @Namespace private var animation
 
   private struct CreateTag: View {
-    @EnvironmentObject private var store: DocumentStore
+    @Environment(DocumentStore.self) private var store
     @EnvironmentObject private var errorController: ErrorController
     @Environment(\.dismiss) private var dismiss
 
@@ -42,7 +42,6 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             dismiss()
           } catch {
             errorController.push(error: error)
-            throw error
           }
         }
       })
