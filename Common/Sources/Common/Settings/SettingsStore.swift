@@ -97,7 +97,6 @@ public final class SettingsStore: @unchecked Sendable {
 
   private func decode<Value>(_ key: SettingKey<Value>) -> Value {
     guard let data = suite(for: key.scope).object(forKey: key.name) as? Data else {
-      Self.logger.trace("Setting \(key.name, privacy: .public) not set, using default")
       return key.defaultValue
     }
 
