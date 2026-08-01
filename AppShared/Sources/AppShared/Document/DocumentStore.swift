@@ -298,16 +298,6 @@ public final class DocumentStore: Sendable {
     await fetchTasks()
   }
 
-  // On-demand element refreshers kept for their external callers. Under the
-  // source-of-truth model "refresh collection X" means "sync into the DB"; the
-  // live observation then repaints the projection. `syncElements` reconciles
-  // every collection at once, so these all delegate to it. They are automatic
-  // on-appear refreshers, not user gestures, so `userInitiated: false` — a
-  // failure fails soft (cached data stays on screen) rather than toasting.
-  public func fetchAllUsers() async throws { try await sync() }
-  public func fetchAllGroups() async throws { try await sync() }
-  public func fetchAllCustomFields() async throws { try await sync() }
-
   /// Refresh `ui_settings` (permissions/settings) from the network, then
   /// synchronously pull the singleton into the projection — the one path
   /// (`DocumentListViewModel.load`) that reads `permissions` immediately

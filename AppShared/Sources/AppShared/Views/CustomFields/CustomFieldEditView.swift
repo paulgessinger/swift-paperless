@@ -142,7 +142,7 @@ private struct AddCustomFieldView: View {
 
     .task {
       do {
-        try await store.fetchAllCustomFields()
+        try await store.sync()
       } catch {
         //                Logger.shared.error("Error fetching custom fields: \(error, privacy: .public)")
         errorController.push(error: error)
