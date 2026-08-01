@@ -213,11 +213,9 @@ public struct PermissionsEditView<Object>: View where Object: PermissionsModel {
   }
 
   private func initialize() async {
-    // update users and groups just in case
-    let users = Task { await fetch { try await store.fetchAllUsers() } }
-    let groups = Task { await fetch { try await store.fetchAllGroups() } }
-    await users.value
-    await groups.value
+    // Refresh users and groups just in case. One sync reconciles every
+    // collection, so this is a single call rather than one per collection.
+    await fetch { try await store.sync() }
   }
 
   private func fetch(_ operation: () async throws -> Void) async {
