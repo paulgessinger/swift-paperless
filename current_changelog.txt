@@ -1,0 +1,1 @@
+- Changing the default sort field, sort order or search mode in Preferences now applies to the document list right away, instead of only after a restart

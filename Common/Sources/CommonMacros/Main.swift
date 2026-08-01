@@ -11,6 +11,7 @@ import SwiftSyntaxMacros
 @main
 struct CommonMacrosPlugin: CompilerPlugin {
   let providingMacros: [Macro.Type] = [
-    URLMacro.self
+    URLMacro.self,
+    SettingMacro.self,
   ]
 }

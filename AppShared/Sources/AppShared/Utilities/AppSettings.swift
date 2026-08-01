@@ -1,50 +1,47 @@
 //
-//  SettingsKeys.swift
+//  AppSettings.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 13.08.23.
 //
-import Combine
 import Common
 import DataModel
 import Foundation
-import SwiftUI
+import Observation
 import os
 
-public enum SettingsKeys: String {
-  case documentDeleteConfirmation
-  case enableBiometricAppLock
-  case defaultSearchMode
-  case defaultSortField
-  case defaultSortOrder
-  case filterBarConfiguration
-
-  case editingUserInterfaceExperiment
-}
-
-extension PublishedUserDefaultsBacked {
-  public convenience init(
-    wrappedValue defaultValue: Value, _ key: SettingsKeys, storage: UserDefaults = .standard
-  ) {
-    self.init(wrappedValue: defaultValue, key.rawValue, storage: storage)
-  }
-}
-
+/// The app's global settings.
+///
+/// Every setting is `@Setting`-expanded access to ``SettingsStore``, which owns
+/// encoding, caching and the choice of `UserDefaults` suite. The keys, with
+/// their defaults, are declared in `SettingKeys.swift`.
+///
+/// Observation is wired up by hand rather than with `@Observable`: the macro
+/// claims the accessors of every stored property, which collides with
+/// `@Setting`. Conforming directly costs one registrar and the two forwarding
+/// methods below, and nothing is lost — there are no stored settings for
+/// `@Observable` to manage.
+///
+/// Settings that belong to a single server connection do not live here — those
+/// are stored with the connection in the database.
 @MainActor
-public class AppSettings: ObservableObject {
-  private static let appVersionKey = "currentAppVersion"
-  private init() {
-    let lastVersion: AppVersion?
-    do {
-      lastVersion = try UserDefaults.standard.load(AppVersion.self, key: Self.appVersionKey)
-    } catch {
-      Logger.shared.error("Last app version could not be read: \(error)")
-      lastVersion = nil
-    }
+public final class AppSettings: Observable {
+  public static let shared = AppSettings()
 
-    Logger.shared.info("Last app version was: \(lastVersion?.description ?? "?", privacy: .public)")
+  private let store: SettingsStore
+  private let registrar = ObservationRegistrar()
 
-    lastAppVersion = lastVersion
+  /// The version this install ran before the current launch, or `nil` on a
+  /// fresh install. Read once at startup, before the current version is
+  /// recorded.
+  public private(set) var lastAppVersion: AppVersion?
+
+  private init(store: SettingsStore = .shared) {
+    self.store = store
+
+    lastAppVersion = store[.currentAppVersion]
+    Logger.shared.info(
+      "Last app version was: \(self.lastAppVersion?.description ?? "?", privacy: .public)")
 
     var release = Bundle.main.releaseVersionNumber
     if release == nil {
@@ -57,152 +54,53 @@ public class AppSettings: ObservableObject {
       build = "1"
     }
 
-    guard let currentVersion = AppVersion(version: release!, build: build!) else {
+    guard let release, let build, let currentVersion = AppVersion(version: release, build: build)
+    else {
       return
     }
 
     Logger.shared.info("Current app version is: \(currentVersion, privacy: .public)")
-
-    do {
-      try UserDefaults.standard.store(currentVersion, key: Self.appVersionKey)
-    } catch {
-      Logger.shared.error(
-        "Unable to store current version (\(String(describing: currentVersion), privacy: .public): \(error)"
-      )
-    }
+    store[.currentAppVersion] = currentVersion
   }
 
-  public static var shared = AppSettings()
-
-  @PublishedUserDefaultsBacked(.documentDeleteConfirmation)
-  public var documentDeleteConfirmation = true
-
-  @PublishedUserDefaultsBacked(.enableBiometricAppLock)
-  public var enableBiometricAppLock = false
-
-  @PublishedUserDefaultsBacked(.defaultSearchMode)
-  public var defaultSearchMode = FilterState.SearchMode.titleContent
-
-  @PublishedUserDefaultsBacked(.defaultSortField)
-  public var defaultSortField = SortField.added
-
-  @PublishedUserDefaultsBacked(.defaultSortOrder)
-  public var defaultSortOrder = DataModel.SortOrder.descending
-
-  // @TODO: We need a sentinel here that's just "all defaults"
-  @PublishedUserDefaultsBacked(.filterBarConfiguration)
-  public var filterBarConfiguration = FilterBarConfiguration.default
-
-  public enum EditingUserInterface: String, Codable, CaseIterable {
-    public static var allCases: [AppSettings.EditingUserInterface] {
-      [.automatic, .v3]
-    }
-
-    case automatic
-    case v3
-
-    // deprecated, kept here so decoding works
-    @available(*, deprecated)
-    case v1, v2
+  nonisolated func access<Member>(keyPath: KeyPath<AppSettings, Member>) {
+    registrar.access(self, keyPath: keyPath)
   }
 
-  @PublishedUserDefaultsBacked(.editingUserInterfaceExperiment)
-  public var editingUserInterface: EditingUserInterface = .automatic
+  nonisolated func withMutation<Member, Result>(
+    keyPath: KeyPath<AppSettings, Member>, _ mutation: () throws -> Result
+  ) rethrows -> Result {
+    try registrar.withMutation(of: self, keyPath: keyPath, mutation)
+  }
 
-  public var lastAppVersion: AppVersion?
-  @UserDefaultsBacked(appVersionKey)
-  public var currentAppVersion: AppVersion? = nil
+  @Setting(.documentDeleteConfirmation)
+  public var documentDeleteConfirmation: Bool
 
+  @Setting(.enableBiometricAppLock)
+  public var enableBiometricAppLock: Bool
+
+  @Setting(.defaultSearchMode)
+  public var defaultSearchMode: FilterState.SearchMode
+
+  @Setting(.defaultSortField)
+  public var defaultSortField: SortField
+
+  @Setting(.defaultSortOrder)
+  public var defaultSortOrder: DataModel.SortOrder
+
+  @Setting(.filterBarConfiguration)
+  public var filterBarConfiguration: FilterBarConfiguration
+
+  @Setting(.currentAppVersion)
+  public var currentAppVersion: AppVersion?
+
+  /// Forgets the recorded app version, so the next launch behaves like an
+  /// upgrade from an unknown version. Used by the debug menu to bring the
+  /// release notes back.
   public func resetAppVersion() {
     Logger.shared.info("Resetting stored app version")
-    currentAppVersion = nil
-    UserDefaults.standard.synchronize()
-  }
-
-  public let settingsChanged = PassthroughSubject<Void, Never>()
-}
-
-extension AppSettings {
-  public nonisolated
-    static func value<Value: Codable>(for key: SettingsKeys, or defaultValue: Value) -> Value
-  {
-    let key = key.rawValue
-    guard let obj = UserDefaults.standard.object(forKey: key) as? Data else {
-      return defaultValue
+    withMutation(keyPath: \.currentAppVersion) {
+      store.remove(.currentAppVersion)
     }
-    do {
-      let value = try JSONDecoder().decode(Value.self, from: obj)
-      Logger.shared.trace(
-        "AppSettings.value(\(key, privacy: .public)) value read: \(String(describing: value), privacy: .private)"
-      )
-      return value
-    } catch {
-      Logger.shared.error(
-        "AppSettings.value(\(key)): unable to decode, returning default value (\(error))")
-      return defaultValue
-    }
-  }
-}
-
-@available(*, deprecated)
-@MainActor
-@propertyWrapper
-public class AppSettingsObject: ObservableObject {
-  @ObservedObject private var observed = AppSettings.shared
-
-  private var tasks = Set<AnyCancellable>()
-
-  public var wrappedValue: AppSettings {
-    observed
-  }
-
-  public var projectedValue: ObservedObject<AppSettings>.Wrapper {
-    $observed
-  }
-
-  public init() {
-    observed.objectWillChange
-      .sink { _ in
-        Logger.shared.debug("AppSettings objectwill change from singleton in wrapper")
-        self.objectWillChange.send()
-      }
-      .store(in: &tasks)
-  }
-}
-
-@available(*, deprecated)
-@MainActor
-@propertyWrapper
-public struct AppSetting<Value: Codable>: DynamicProperty {
-  public typealias SettingsKeyPath = KeyPath<AppSettings, PublishedUserDefaultsBacked<Value>>
-  private var keyPath: SettingsKeyPath
-
-  @State private var value: Value
-
-  public var wrappedValue: Value {
-    get {
-      value
-    }
-    nonmutating set {
-      AppSettings.shared.objectWillChange.send()
-      let published = AppSettings.shared[keyPath: self.keyPath]
-      published.$backing.wrappedValue = newValue
-      value = newValue
-      AppSettings.shared.settingsChanged.send()
-    }
-  }
-
-  public var projectedValue: Binding<Value> {
-    Binding<Value>(
-      get: {
-        wrappedValue
-      },
-      set: { wrappedValue = $0 }
-    )
-  }
-
-  public init(_ keyPath: SettingsKeyPath) {
-    self.keyPath = keyPath
-    _value = State(initialValue: AppSettings.shared[keyPath: keyPath].$backing.wrappedValue)
   }
 }

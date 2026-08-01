@@ -53,7 +53,7 @@ struct DocumentList: View {
 
   @EnvironmentObject private var errorController: ErrorController
 
-  @ObservedObject private var appSettings = AppSettings.shared
+  private let appSettings = AppSettings.shared
 
   init(
     store: DocumentStore, onSelect: @escaping (Document) -> Void, filterModel: FilterModel,

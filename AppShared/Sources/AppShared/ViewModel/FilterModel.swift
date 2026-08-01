@@ -5,7 +5,6 @@
 //  Created by Paul Gessinger on 12.08.23.
 //
 
-import Combine
 import DataModel
 import Foundation
 import Observation
@@ -14,8 +13,6 @@ import os
 @MainActor
 @Observable
 public final class FilterModel {
-  @ObservationIgnored private var tasks = Set<AnyCancellable>()
-
   public var ready: Bool = true
 
   public var filterState: FilterState = {
@@ -62,30 +59,50 @@ public final class FilterModel {
   }
 
   public init() {
-    AppSettings.shared.settingsChanged
-      .sink { [weak self] in
+    observeDefaults()
+  }
+
+  /// Applies changes to the filtering defaults (made in Preferences) to the
+  /// filter that is currently in effect.
+  ///
+  /// `withObservationTracking` fires once, so the tracking is re-armed after
+  /// every change. `onChange` runs *before* the new value is in place, hence
+  /// the hop to the next main-actor turn before reading it.
+  private func observeDefaults() {
+    let settings = AppSettings.shared
+    withObservationTracking {
+      _ = settings.defaultSearchMode
+      _ = settings.defaultSortField
+      _ = settings.defaultSortOrder
+    } onChange: { [weak self] in
+      Task { @MainActor in
         guard let self else { return }
-
-        var filterState = filterState
-
-        if self.filterState.searchText.isEmpty {
-          Logger.shared.debug(
-            "Applying search mode default change to: \(String(describing: AppSettings.shared.defaultSearchMode), privacy: .public)"
-          )
-          // User has not typed any search text yet -> we're not changing the mode under them
-          filterState.searchMode = AppSettings.shared.defaultSearchMode
-
-          // Reset modified to what it was before, we're not actually modifying anything
-          filterState.modified = self.filterState.modified
-        }
-
-        if !self.filterState.modified, self.filterState.savedView == nil {
-          filterState.sortField = AppSettings.shared.defaultSortField
-          filterState.sortOrder = AppSettings.shared.defaultSortOrder
-        }
-
-        self.filterState = filterState
+        self.applyDefaults()
+        self.observeDefaults()
       }
-      .store(in: &tasks)
+    }
+  }
+
+  private func applyDefaults() {
+    let settings = AppSettings.shared
+    var filterState = filterState
+
+    if self.filterState.searchText.isEmpty {
+      Logger.shared.debug(
+        "Applying search mode default change to: \(String(describing: settings.defaultSearchMode), privacy: .public)"
+      )
+      // User has not typed any search text yet -> we're not changing the mode under them
+      filterState.searchMode = settings.defaultSearchMode
+
+      // Reset modified to what it was before, we're not actually modifying anything
+      filterState.modified = self.filterState.modified
+    }
+
+    if !self.filterState.modified, self.filterState.savedView == nil {
+      filterState.sortField = settings.defaultSortField
+      filterState.sortOrder = settings.defaultSortOrder
+    }
+
+    self.filterState = filterState
   }
 }

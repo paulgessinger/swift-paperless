@@ -90,7 +90,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var deleted = false
   @State private var sharedFile: NamedShareItem?
 
-  @ObservedObject private var appSettings = AppSettings.shared
+  private let appSettings = AppSettings.shared
 
   var navPath: Binding<[NavigationState]>? = nil
 
