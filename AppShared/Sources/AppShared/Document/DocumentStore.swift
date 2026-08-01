@@ -318,7 +318,13 @@ public final class DocumentStore: Sendable {
     } catch {
       if userInitiated { throw error }
       if !error.isCancellationError {
-        lastSyncError = error as? any DisplayableError
+        // Only overwrite when the failure is actually presentable. Assigning
+        // `error as? any DisplayableError` unconditionally meant a
+        // non-displayable failure (a GRDB `DatabaseError`, a raw `URLError`)
+        // wrote `nil` and cleared a degraded state the UI was already showing.
+        if let displayable = error as? any DisplayableError {
+          lastSyncError = displayable
+        }
         Logger.shared.error("Background sync failed (suppressed): \(error)")
       }
     }

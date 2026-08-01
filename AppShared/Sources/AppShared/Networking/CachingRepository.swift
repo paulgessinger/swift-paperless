@@ -115,7 +115,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     do {
       let domains = try await fetch()
       try database.replaceElements(domains, of: type, serverID: serverID)
-    } catch let error as RequestError where Self.isSkippable(error) {
+    } catch let error where Self.isSkippable(error) {
       Logger.shared.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
     }
@@ -125,7 +125,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     do {
       let settings = try await wrapped.uiSettings()
       try database.setUISettings(settings, serverID: serverID)
-    } catch let error as RequestError where Self.isSkippable(error) {
+    } catch let error where Self.isSkippable(error) {
       Logger.shared.info("Skipping uiSettings sync: \(error)")
     }
   }
@@ -134,15 +134,23 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     do {
       let config = try await wrapped.serverConfiguration()
       try database.setServerConfiguration(config, serverID: serverID)
-    } catch let error as RequestError where Self.isSkippable(error) {
+    } catch let error where Self.isSkippable(error) {
       Logger.shared.info("Skipping serverConfiguration sync: \(error)")
     }
   }
 
   /// 401 already flips needs-auth via the wrapped decorator; 403 means the user
   /// lacks permission for that one resource. Neither should fail the whole sync.
-  private static func isSkippable(_ error: RequestError) -> Bool {
-    switch error {
+  ///
+  /// Takes `any Error` rather than `RequestError` because the two carriers of a
+  /// 403 are not the same type: the singleton fetches surface
+  /// `RequestError.forbidden`, but every paginated collection goes through
+  /// `PageCursor`, which rewrites that into `ResourceForbidden<Element>`. Matching
+  /// only `RequestError` silently let a single forbidden collection abort the
+  /// whole sync task group.
+  private static func isSkippable(_ error: any Error) -> Bool {
+    if error is any ResourceForbiddenError { return true }
+    return switch error as? RequestError {
     case .forbidden, .unauthorized: true
     default: false
     }

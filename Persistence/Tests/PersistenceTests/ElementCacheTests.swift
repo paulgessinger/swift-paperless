@@ -105,6 +105,22 @@ struct ElementCacheTests {
     #expect(fetched.first { $0.id == 3 }?.name == "C-renamed")
   }
 
+  @Test("replaceElements tolerates the same element twice in one batch")
+  func replaceTolerScopesDuplicates() throws {
+    let server = UUID()
+    let database = try makeDatabase(server: server)
+
+    // A paginated fetch can yield one element on two consecutive pages when the
+    // server deletes a row in between, shifting later elements back a page.
+    // `insert` raised a primary-key violation there and rolled the whole
+    // reconcile back, losing every other element in the batch.
+    let duplicated = [tag(1, "A"), tag(2, "B"), tag(2, "B"), tag(3, "C")]
+    try database.replaceElements(duplicated, of: TagRecord.self, serverID: server)
+
+    let fetched = try database.elements(TagRecord.self, serverID: server)
+    #expect(fetched.map(\.id) == [1, 2, 3])
+  }
+
   @Test("upsert and delete single element")
   func upsertAndDelete() throws {
     let server = UUID()
