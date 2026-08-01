@@ -48,13 +48,17 @@ public final class ElementStore {
   /// the cold-cache default. Lets the UI distinguish "loading" from "denied".
   public private(set) var isHydrated = false
 
+  /// The live observation loops, held in a locked box rather than a stored
+  /// property because `deinit` is nonisolated and cannot read main-actor state.
+  /// `Task.cancel()` is safe from any thread, so the box only has to make the
+  /// list itself safe to touch.
   @ObservationIgnored
-  private nonisolated(unsafe) var observationTasks: [Task<Void, Never>] = []
+  private let observationTasks = TaskBox()
 
   public init() {}
 
   deinit {
-    for task in observationTasks { task.cancel() }
+    observationTasks.cancelAll()
   }
 
   // MARK: Lifecycle
@@ -89,7 +93,7 @@ public final class ElementStore {
   // MARK: Observation
 
   private func start(database: Database, serverID: UUID) {
-    observationTasks = [
+    observationTasks.replace(with: [
       observeCollection(
         database.observeElements(TagRecord.self, serverID: serverID), into: \.tags),
       observeCollection(
@@ -113,7 +117,7 @@ public final class ElementStore {
       observeUISettings(database.observeUISettings(serverID: serverID)),
       observeSingleton(
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
-    ]
+    ])
   }
 
   private func observeCollection<E: Identifiable & Sendable>(
@@ -181,8 +185,7 @@ public final class ElementStore {
   // MARK: Helpers
 
   private func cancelObservation() {
-    for task in observationTasks { task.cancel() }
-    observationTasks = []
+    observationTasks.cancelAll()
   }
 
   private func clearProjection() {

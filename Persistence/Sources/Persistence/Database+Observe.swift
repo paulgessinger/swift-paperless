@@ -11,14 +11,13 @@ import GRDB
 /// `for try await` loop is "initial hydrate + live updates" in one), exactly
 /// like the connection observer.
 ///
-/// These replace the cache-aside variant's coarse `CacheChange` signal +
-/// `hydrate()`: the observation *carries the data* (the freshly-mapped domain
-/// result), so the store/projection assigns it directly with no re-read.
+/// Each emission carries the freshly-mapped domain result, so a consumer
+/// assigns it directly and never re-reads the database to find out what
+/// changed.
 ///
-/// Scope: in Stage 7 the active server is singular. The observation tracks the
-/// whole table region, so a write to *another* server's rows re-fires this
-/// stream with an identical array — harmless at one active server; not worth
-/// narrowing.
+/// Scope: the observation tracks the whole table region, so a write to
+/// *another* server's rows re-fires this stream with an identical array. That
+/// is harmless while one server is active and not worth narrowing.
 extension Database {
   /// Live, name-ordered list of one element collection for a server.
   public func observeElements<R: ElementRecord>(

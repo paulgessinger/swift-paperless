@@ -28,6 +28,49 @@ struct ElementCacheTests {
       isInsensitive: true, parent: nil)
   }
 
+  // MARK: - Indexing
+
+  @Test("every multi-row element table is indexed on (server_id, name)")
+  func elementTablesAreIndexedOnServerAndName() throws {
+    let database = try makeDatabase(server: UUID())
+
+    try database.writer.read { db in
+      for table in V3_CreateElementCache.multiRowTables {
+        let columns = try db.indexes(on: table)
+          .first { $0.name == "index_\(table)_on_server_id_name" }?
+          .columns
+        #expect(columns == ["server_id", "name"], "missing or wrong index on \(table)")
+      }
+    }
+  }
+
+  @Test("the name-ordered collection read sorts via the index, not a temp b-tree")
+  func orderedReadUsesTheIndex() throws {
+    let server = UUID()
+    let database = try makeDatabase(server: server)
+    try database.replaceElements(
+      [tag(1, "B"), tag(2, "A")], of: TagRecord.self, serverID: server)
+
+    let plan = try database.writer.read { db in
+      try String.fetchAll(
+        db,
+        sql: """
+          EXPLAIN QUERY PLAN
+          SELECT * FROM tag WHERE server_id = ? ORDER BY name
+          """,
+        arguments: [server],
+        adapter: ColumnMapping(["column": "detail"]))
+    }
+
+    // A temp b-tree here would mean the rows were scanned and then sorted.
+    #expect(
+      !plan.contains { $0.uppercased().contains("USE TEMP B-TREE") },
+      "ordered read fell back to a sort: \(plan)")
+    #expect(
+      plan.contains { $0.contains("index_tag_on_server_id_name") },
+      "ordered read did not use the index: \(plan)")
+  }
+
   // MARK: - Round-trip
 
   @Test("multi-row records round-trip through replace + read")
