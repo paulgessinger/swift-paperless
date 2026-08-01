@@ -1390,13 +1390,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "Forbindelsen kræver godkendelse"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "Für die Verbindung ist eine Authentifizierung erforderlich"
           }
         },
         "en" : {
@@ -1408,31 +1408,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "La connexion nécessite une authentification"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "La connessione richiede l'autenticazione"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "Voor de verbinding is authenticatie vereist"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "Połączenie wymaga uwierzytelnienia"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection needs authentication"
+            "value" : "Bağlantı için kimlik doğrulama gerekiyor"
           }
         }
       }
@@ -1443,13 +1443,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Du er offline. Der vises de senest indlæste data."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Du bist offline. Es werden die zuletzt geladenen Daten angezeigt."
           }
         },
         "en" : {
@@ -1461,31 +1461,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Vous êtes hors ligne. Affichage des dernières données chargées."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Sei offline. Stai visualizzando gli ultimi dati caricati."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Je bent offline. Je bekijkt de laatst geladen gegevens."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Jesteś w trybie offline. Przeglądasz ostatnio załadowane dane."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're offline. Browsing last loaded data."
+            "value" : "Çevrimdışı durumdasınız. En son yüklenen veriler görüntüleniyor."
           }
         }
       }
@@ -1515,13 +1515,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Non connesso"
           }
         },
         "nl" : {
@@ -1533,13 +1533,13 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "W trybie offline"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Çevrimdışı"
           }
         }
       }
@@ -1551,13 +1551,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Tilbage online"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Wieder online"
           }
         },
         "en" : {
@@ -1569,50 +1569,48 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "De nouveau en ligne"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Di nuovo online"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Weer online"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Znowu w sieci"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back online"
+            "value" : "Tekrar çevrimiçi"
           }
         }
       }
     },
-
-
     "connectionStatusReauthAction" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Log ind igen"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Erneut authentifizieren"
           }
         },
         "en" : {
@@ -1624,31 +1622,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Se reconnecter"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Effettua nuovamente l'autenticazione"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Opnieuw inloggen"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Ponowne uwierzytelnienie"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Yeniden kimlik doğrulaması yap"
           }
         }
       }
@@ -9375,13 +9373,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Dette medfører, at der logges ind som en anden bruger — fjern venligst denne server og tilføj den igen i stedet."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Dies authentifiziert dich als anderer Benutzer — bitte entferne und füge diesen Server stattdessen erneut hinzu."
           }
         },
         "en" : {
@@ -9393,31 +9391,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Cette opération s'effectue sous l'identité d'un autre utilisateur — veuillez supprimer ce serveur, puis l'ajouter à nouveau."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Questo comporta l'autenticazione come utente diverso: si prega di rimuovere e aggiungere nuovamente questo server."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Hiermee wordt u als een andere gebruiker aangemeld — verwijder deze server daarom en voeg hem vervolgens opnieuw toe."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Ta operacja powoduje uwierzytelnienie jako inny użytkownik — proszę usunąć ten serwer i dodać go ponownie."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This authenticates as a different user — please remove and re-add this server instead."
+            "value" : "Bu, farklı bir kullanıcı olarak kimlik doğrulaması yapıyor — lütfen bu sunucuyu kaldırıp yeniden ekleyin."
           }
         }
       }
@@ -9428,13 +9426,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Din session er udløbet. Indtast dine loginoplysninger igen for at fortsætte med at bruge denne server."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Deine Sitzung ist abgelaufen. Gib deine Anmeldedaten erneut ein, um diesen Server weiterhin nutzen zu können."
           }
         },
         "en" : {
@@ -9446,31 +9444,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Votre session a expiré. Veuillez saisir à nouveau vos identifiants pour continuer à utiliser ce serveur."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "La tua sessione è scaduta. Inserisci nuovamente le credenziali per continuare a utilizzare questo server."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Uw sessie is verlopen. Voer uw inloggegevens opnieuw in om deze server te kunnen blijven gebruiken."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Twoja sesja wygasła. Wprowadź ponownie dane uwierzytelniające, aby kontynuować korzystanie z tego serwera."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your session has expired. Re-enter credentials to continue using this server."
+            "value" : "Oturumunuzun süresi doldu. Bu sunucuyu kullanmaya devam etmek için kimlik bilgilerinizi yeniden girin."
           }
         }
       }
@@ -9481,13 +9479,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Log ind igen"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Erneut authentifizieren"
           }
         },
         "en" : {
@@ -9499,31 +9497,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Se reconnecter"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Effettua nuovamente l'autenticazione"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Opnieuw inloggen"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Ponowne uwierzytelnienie"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-authenticate"
+            "value" : "Yeniden kimlik doğrulaması yap"
           }
         }
       }
@@ -11250,7 +11248,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selectionnez"
+            "value" : "Sélectionner"
           }
         },
         "it" : {
