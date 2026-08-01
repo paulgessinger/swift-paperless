@@ -142,12 +142,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// 401 already flips needs-auth via the wrapped decorator; 403 means the user
   /// lacks permission for that one resource. Neither should fail the whole sync.
   ///
-  /// Takes `any Error` rather than `RequestError` because the two carriers of a
-  /// 403 are not the same type: the singleton fetches surface
-  /// `RequestError.forbidden`, but every paginated collection goes through
-  /// `PageCursor`, which rewrites that into `ResourceForbidden<Element>`. Matching
-  /// only `RequestError` silently let a single forbidden collection abort the
-  /// whole sync task group.
+  /// Takes `any Error` because a 403 arrives as one of two unrelated types: the
+  /// singleton fetches surface `RequestError.forbidden`, while every paginated
+  /// collection goes through `PageCursor`, which reports it as
+  /// `ResourceForbidden<Element>`. Both must be skippable, or one forbidden
+  /// collection takes the whole sync task group down with it.
   private static func isSkippable(_ error: any Error) -> Bool {
     if error is any ResourceForbiddenError { return true }
     return switch error as? RequestError {
@@ -327,7 +326,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
   }
 
-  // MARK: - Documents (forwarded — Stage 8)
+  // MARK: - Documents (forwarded)
 
   public func update(document: Document) async throws -> Document {
     try await wrapped.update(document: document)

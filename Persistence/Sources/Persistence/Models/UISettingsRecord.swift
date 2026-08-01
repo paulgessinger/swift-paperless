@@ -11,6 +11,12 @@ import GRDB
 /// the payload mirrors their fields. The permission matrix is stored as
 /// `resource.rawValue → [view, add, change, delete]` (indexed by
 /// `Operation.rawValue`) and round-tripped through the public `test`/`set` API.
+///
+/// The operation flags are positional, so a new `Operation` may only be
+/// appended: decoding bounds-checks the array and treats a missing trailing
+/// flag as `false`. Inserting one in the middle shifts every raw value and
+/// makes already-cached rows decode as the wrong permissions, which fails
+/// silently. Such a change needs a migration that clears `ui_settings`.
 public struct UISettingsRecord: Codable, Sendable {
   public var serverId: UUID
   public var payload: Payload

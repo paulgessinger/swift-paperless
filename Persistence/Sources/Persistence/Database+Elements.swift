@@ -12,13 +12,26 @@ import GRDB
 /// used by sync, which also handles server-side deletes) or a single
 /// write-through (`upsertElement` / `deleteElement`, used by pessimistic
 /// mutations).
+///
+/// Reads go through `writer` because `DatabaseWriter` refines `DatabaseReader`;
+/// on the production `DatabasePool` a `read` takes a reader connection and runs
+/// concurrently with writes under WAL.
+///
+/// **Evolving a record's `Payload`.** The payload is JSON in the `data` column,
+/// so the schema does not constrain its shape: optional fields can be added and
+/// fields can be dropped freely. Adding a *required* field cannot be done in
+/// place — old rows fail to decode, and because a read maps the whole
+/// collection, one undecodable row fails every row of that kind. These tables
+/// hold nothing but derived data, so the cheap correct move is a migration that
+/// deletes the affected rows and lets the next sync refill them, rather than
+/// rewriting stored JSON.
 extension Database {
   // MARK: - Multi-row collections
 
   /// All cached rows of one element kind for a server, ordered by name.
   public func elements<R: ElementRecord>(
     _ type: R.Type, serverID: UUID
-  ) throws -> [R.Domain] {
+  ) throws(DatabaseError) -> [R.Domain] {
     try wrapping("elements(\(R.databaseTableName))") {
       try writer.read { db in
         try R
@@ -33,7 +46,7 @@ extension Database {
   /// A single cached element by `(server, id)`, or `nil` if not cached.
   public func element<R: ElementRecord>(
     _ type: R.Type, serverID: UUID, id: UInt
-  ) throws -> R.Domain? {
+  ) throws(DatabaseError) -> R.Domain? {
     try wrapping("element(\(R.databaseTableName))") {
       try writer.read { db in
         try R
@@ -48,13 +61,13 @@ extension Database {
   /// existing rows, insert the new ones. This is how `sync` propagates
   /// server-side deletions (rows absent from `domains` disappear).
   ///
-  /// Uses `upsert` rather than `insert` because the caller's paginated fetch can
-  /// legitimately yield the same element twice — deleting a row server-side
-  /// mid-fetch shifts later elements back a page. `insert` raised a primary-key
-  /// violation there and rolled back the whole reconcile.
+  /// `upsert` rather than `insert`: a paginated fetch can legitimately deliver
+  /// the same element twice, because deleting a row server-side mid-fetch
+  /// shifts later elements back a page. The last write for an id wins, and the
+  /// reconcile survives the duplicate.
   public func replaceElements<R: ElementRecord>(
     _ domains: [R.Domain], of type: R.Type, serverID: UUID
-  ) throws {
+  ) throws(DatabaseError) {
     try wrapping("replaceElements(\(R.databaseTableName))") {
       try writer.write { db in
         try R.filter(Column("server_id") == serverID).deleteAll(db)
@@ -68,7 +81,7 @@ extension Database {
   /// Insert or replace a single cached row (pessimistic mutation write-through).
   public func upsertElement<R: ElementRecord>(
     _ domain: R.Domain, of type: R.Type, serverID: UUID
-  ) throws {
+  ) throws(DatabaseError) {
     try wrapping("upsertElement(\(R.databaseTableName))") {
       try writer.write { db in
         try R(serverId: serverID, domain: domain).upsert(db)
@@ -79,7 +92,7 @@ extension Database {
   /// Delete a single cached row by `(server, id)` (pessimistic delete).
   public func deleteElement<R: ElementRecord>(
     _ type: R.Type, serverID: UUID, id: UInt
-  ) throws {
+  ) throws(DatabaseError) {
     try wrapping("deleteElement(\(R.databaseTableName))") {
       try writer.write { db in
         _ =
@@ -92,7 +105,7 @@ extension Database {
 
   // MARK: - Singletons
 
-  public func uiSettings(serverID: UUID) throws -> UISettings? {
+  public func uiSettings(serverID: UUID) throws(DatabaseError) -> UISettings? {
     try wrapping("uiSettings") {
       try writer.read { db in
         try UISettingsRecord.fetchOne(db, key: serverID)?.domain
@@ -100,7 +113,7 @@ extension Database {
     }
   }
 
-  public func setUISettings(_ value: UISettings, serverID: UUID) throws {
+  public func setUISettings(_ value: UISettings, serverID: UUID) throws(DatabaseError) {
     try wrapping("setUISettings") {
       try writer.write { db in
         try UISettingsRecord(serverId: serverID, domain: value).upsert(db)
@@ -108,7 +121,7 @@ extension Database {
     }
   }
 
-  public func serverConfiguration(serverID: UUID) throws -> ServerConfiguration? {
+  public func serverConfiguration(serverID: UUID) throws(DatabaseError) -> ServerConfiguration? {
     try wrapping("serverConfiguration") {
       try writer.read { db in
         try ServerConfigurationRecord.fetchOne(db, key: serverID)?.domain
@@ -116,7 +129,9 @@ extension Database {
     }
   }
 
-  public func setServerConfiguration(_ value: ServerConfiguration, serverID: UUID) throws {
+  public func setServerConfiguration(
+    _ value: ServerConfiguration, serverID: UUID
+  ) throws(DatabaseError) {
     try wrapping("setServerConfiguration") {
       try writer.write { db in
         try ServerConfigurationRecord(serverId: serverID, domain: value).upsert(db)
