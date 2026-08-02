@@ -85,6 +85,13 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
 
+  // The in-flight element sync, if any. Concurrent `sync` callers join this one
+  // task instead of each firing their own `syncElements` (the launch flurry of
+  // fetchAll / fetchUISettings / scenePhase triggers shares a single network
+  // pass). Only ever touched on the main actor.
+  @ObservationIgnored
+  private var syncTask: Task<Void, Error>?
+
   // MARK: Methods
 
   public init(repository: some Repository) {
@@ -163,6 +170,18 @@ public final class DocumentStore: Sendable {
   }
 
   public func set(repository: some Repository, reload: Bool = true) {
+    // A repository that doesn't front the DB detaches the element projection
+    // (see `wireElementStore()`), which blanks every element read site until the
+    // next relaunch. That is legitimate before login, but only via `init` —
+    // anything *replacing* a live repository is expected to assemble a caching
+    // stack, so a bare one here is a caller bug. Be loud instead of silently
+    // emptying the UI: this exact mistake shipped once already, from
+    // `ConnectionsView.updateExtraHeaders`.
+    if !(repository is any CachingBackend) {
+      Logger.shared.fault(
+        "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
+      )
+    }
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
@@ -279,40 +298,30 @@ public final class DocumentStore: Sendable {
     await fetchTasks()
   }
 
-  // On-demand element refreshers kept for their external callers. Under the
-  // source-of-truth model "refresh collection X" means "sync into the DB"; the
-  // live observation then repaints the projection. `syncElements` reconciles
-  // every collection at once, so these all delegate to it.
-  public func fetchAllUsers() async throws { try await sync(userInitiated: true) }
-  public func fetchAllGroups() async throws { try await sync(userInitiated: true) }
-  public func fetchAllCustomFields() async throws { try await sync(userInitiated: true) }
-
-  /// Refresh `ui_settings` (permissions/settings) from the network. Syncs into
-  /// the DB, then synchronously pulls the singleton into the projection — the
-  /// one path (`DocumentListViewModel.load`) that reads `permissions`
-  /// immediately afterwards can't wait for the observation's runloop hop.
+  /// Refresh `ui_settings` (permissions/settings) from the network, then
+  /// synchronously pull the singleton into the projection — the one path
+  /// (`DocumentListViewModel.load`) that reads `permissions` immediately
+  /// afterwards can't wait for the observation's runloop hop. Automatic (not
+  /// user-initiated): a sync failure fails soft and we proceed with the cached
+  /// permissions (offline-first) instead of aborting the launch load.
   public func fetchUISettings() async throws {
-    try await sync(userInitiated: true)
+    try await sync()
     if let backend = repository as? any CachingBackend {
       elementStore.refreshUISettings(from: backend.database, serverID: backend.serverID)
     }
   }
 
   /// Network → DB via the caching backend; the live element observation repaints
-  /// the projection. Automatic syncs fail soft into `lastSyncError`;
-  /// user-initiated syncs rethrow so the caller can surface the failure (toast).
+  /// the projection. Concurrent calls coalesce onto a single in-flight
+  /// `syncElements` (see `syncTask`); each caller still applies its own
+  /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
+  /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
+  /// surface the failure (toast). So a user-initiated call joining a background
+  /// sync still sees the error.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
-    guard let backend = repository as? any CachingBackend else {
-      // No DB-backed repository (e.g. NullRepository before login). Nothing to
-      // sync; the projection is empty until a caching repository is set.
-      Logger.shared.info("Sync skipped: repository is not a caching backend")
-      return
-    }
-    isRefreshing = true
-    defer { isRefreshing = false }
     do {
-      try await backend.syncElements()
+      try await runSyncElements()
       lastSyncError = nil
       Logger.shared.info("Sync store complete")
     } catch {
@@ -329,11 +338,39 @@ public final class DocumentStore: Sendable {
     }
   }
 
+  /// Run (or join) the single in-flight `syncElements`. Returns when it
+  /// completes; throws its error to every joined caller (who each decide what to
+  /// do with it). A no-op without a caching backend.
+  private func runSyncElements() async throws {
+    if let syncTask {
+      Logger.shared.debug("Joining in-flight element sync")
+      return try await syncTask.value
+    }
+    guard let backend = repository as? any CachingBackend else {
+      // No DB-backed repository (e.g. NullRepository before login). Nothing to
+      // sync; the projection is empty until a caching repository is set.
+      Logger.shared.info("Sync skipped: repository is not a caching backend")
+      return
+    }
+    Logger.shared.debug("Starting element sync")
+    let task = Task { try await backend.syncElements() }
+    syncTask = task
+    isRefreshing = true
+    defer {
+      syncTask = nil
+      isRefreshing = false
+    }
+    try await task.value
+  }
+
   /// The eager entry views call. Triggers a network → DB sync; the element
-  /// projection repaints from the live observation.
-  public func fetchAll() async throws {
-    Logger.shared.notice("Fetch all store request")
-    try await sync()
+  /// projection repaints from the live observation. `userInitiated` forwards to
+  /// `sync`: pass `true` for explicit refreshes (pull-to-refresh) so failures
+  /// rethrow and the caller can surface them; automatic triggers (launch,
+  /// foreground) leave it `false` to fail soft into `lastSyncError`.
+  public func fetchAll(userInitiated: Bool = false) async throws {
+    Logger.shared.notice("Fetch all store request (userInitiated: \(userInitiated))")
+    try await sync(userInitiated: userInitiated)
   }
 
   public func document(id: UInt) async throws -> Document? {
@@ -343,9 +380,11 @@ public final class DocumentStore: Sendable {
 
   private func create<E, R>(
     _: R.Type, from element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> R
   ) async throws -> R
   where E: Sendable & PermissionsModel, R: Identifiable & Sendable {
+    try checkPermission(.add, for: resource)
     // `settings` is kept live by the element observation, so its permission
     // defaults are already current — apply them directly. The repository
     // write-throughs the created element to the DB; the observation repaints it
@@ -356,15 +395,19 @@ public final class DocumentStore: Sendable {
 
   private func update<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> E
   ) async throws where E: Identifiable & Sendable {
+    try checkPermission(.change, for: resource)
     _ = try await method(element)
   }
 
   private func delete<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> Void
   ) async throws where E: Identifiable & Sendable {
+    try checkPermission(.delete, for: resource)
     do {
       try await method(element)
     } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
@@ -381,17 +424,18 @@ public final class DocumentStore: Sendable {
     return try await create(
       Tag.self,
       from: tag,
+      resource: .tag,
       method: repository.create(tag:))
   }
 
   public func update(tag: Tag) async throws {
     Logger.api.info("Updating tag with ID \(tag.id)")
-    return try await update(tag, method: repository.update(tag:))
+    return try await update(tag, resource: .tag, method: repository.update(tag:))
   }
 
   public func delete(tag: Tag) async throws {
     Logger.api.info("Deleting tag with ID \(tag.id)")
-    return try await delete(tag, method: repository.delete(tag:))
+    return try await delete(tag, resource: .tag, method: repository.delete(tag:))
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
@@ -399,6 +443,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       Correspondent.self,
       from: correspondent,
+      resource: .correspondent,
       method: repository.create(correspondent:))
   }
 
@@ -406,6 +451,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating correspondent with ID \(correspondent.id)")
     return try await update(
       correspondent,
+      resource: .correspondent,
       method: repository.update(correspondent:))
   }
 
@@ -413,6 +459,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting correspondent with ID \(correspondent.id)")
     return try await delete(
       correspondent,
+      resource: .correspondent,
       method: repository.delete(correspondent:))
   }
 
@@ -421,6 +468,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       DocumentType.self,
       from: documentType,
+      resource: .documentType,
       method: repository.create(documentType:))
   }
 
@@ -428,6 +476,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating document type with ID \(documentType.id)")
     return try await update(
       documentType,
+      resource: .documentType,
       method: repository.update(documentType:))
   }
 
@@ -435,11 +484,13 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting document type with ID \(documentType.id)")
     return try await delete(
       documentType,
+      resource: .documentType,
       method: repository.delete(documentType:))
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     Logger.api.info("Creating saved view with name \(savedView.name)")
+    try checkPermission(.add, for: .savedView)
     let created = try await repository.create(savedView: savedView)
 
     try await handleSavedViewVisibility(created)
@@ -492,6 +543,7 @@ public final class DocumentStore: Sendable {
 
   public func update(savedView: SavedView) async throws {
     Logger.api.info("Updating saved view with ID \(savedView.id)")
+    try checkPermission(.change, for: .savedView)
     _ = try await repository.update(savedView: savedView)
 
     try await handleSavedViewVisibility(savedView)
@@ -499,6 +551,7 @@ public final class DocumentStore: Sendable {
 
   public func delete(savedView: SavedView) async throws {
     Logger.api.info("Deleting saved view with ID \(savedView.id)")
+    try checkPermission(.delete, for: .savedView)
     try await repository.delete(savedView: savedView)
   }
 
@@ -507,6 +560,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       StoragePath.self,
       from: storagePath,
+      resource: .storagePath,
       method: repository.create(storagePath:))
   }
 
@@ -514,6 +568,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating storage path with ID \(storagePath.id)")
     try await update(
       storagePath,
+      resource: .storagePath,
       method: repository.update(storagePath:))
   }
 
@@ -521,6 +576,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting storage path with ID \(storagePath.id)")
     try await delete(
       storagePath,
+      resource: .storagePath,
       method: repository.delete(storagePath:))
   }
 

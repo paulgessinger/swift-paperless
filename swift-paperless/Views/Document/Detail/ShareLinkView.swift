@@ -248,7 +248,7 @@ private struct CreateShareLinkView: View {
 
 #Preview {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()

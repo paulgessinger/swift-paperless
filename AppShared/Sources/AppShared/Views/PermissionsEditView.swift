@@ -213,11 +213,9 @@ public struct PermissionsEditView<Object>: View where Object: PermissionsModel {
   }
 
   private func initialize() async {
-    // update users and groups just in case
-    let users = Task { await fetch { try await store.fetchAllUsers() } }
-    let groups = Task { await fetch { try await store.fetchAllGroups() } }
-    await users.value
-    await groups.value
+    // Refresh users and groups just in case. One sync reconciles every
+    // collection, so this is a single call rather than one per collection.
+    await fetch { try await store.sync() }
   }
 
   private func fetch(_ operation: () async throws -> Void) async {
@@ -428,7 +426,7 @@ private struct PreviewHelper: View {
     }
     .task {
       do {
-        let repository = store.repository as! TransientRepository
+        let repository = store.previewRepository(as: TransientRepository.self)
         repository.addUser(User(id: 1, isSuperUser: false, username: "user", groups: [1]))
         repository.addUser(User(id: 2, isSuperUser: false, username: "user 2"))
         repository.addGroup(UserGroup(id: 1, name: "group 1"))
@@ -463,7 +461,7 @@ private struct PreviewHelper: View {
 
 #Preview {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
   @Previewable
   @StateObject var errorController = ErrorController()
 
