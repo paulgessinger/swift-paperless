@@ -24,6 +24,24 @@ struct DocumentMetadataView: View {
     metadata != nil
   }
 
+  /// Fetch this document's file-metadata. The on-appear `.task` (`userInitiated:
+  /// false`) skips when the parent detail load already filled `metadata` and
+  /// stays silent on failure; a pull-to-refresh (`true`) always re-fetches and
+  /// toasts failures. Mirrors the notes view's silent-on-appear / visible-on-
+  /// refresh split.
+  private func load(userInitiated: Bool) async {
+    if metadata != nil, !userInitiated { return }
+    do {
+      metadata = try await store.repository.metadata(documentId: document.id)
+    } catch let error where error.isCancellationError {
+    } catch {
+      Logger.shared.error("Error loading document metadata: \(error)")
+      if userInitiated {
+        errorController.push(error: error)
+      }
+    }
+  }
+
   var body: some View {
     NavigationStack {
       Form {
@@ -106,6 +124,14 @@ struct DocumentMetadataView: View {
         ToolbarItem(placement: .cancellationAction) {
           CancelIconButton()
         }
+      }
+
+      .refreshable {
+        await load(userInitiated: true)
+      }
+
+      .task {
+        await load(userInitiated: false)
       }
     }
 

@@ -748,6 +748,17 @@
         }
       }
     },
+    "cacheCleared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached data cleared"
+          }
+        }
+      }
+    },
     "certificateLoadError" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -967,6 +978,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sunucu seç"
+          }
+        }
+      }
+    },
+    "clearCache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Cached Data"
+          }
+        }
+      }
+    },
+    "clearCacheConfirmation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        }
+      }
+    },
+    "clearCacheConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all cached data?"
           }
         }
       }
@@ -2027,6 +2071,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kimlikler, sizi kriptografik olarak doğrulamak için kullanılabilecek sertifika ve özel anahtarlar çiftleridir. Kimlikler, korunan kaynaklara erişmek için [*mTLS*](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) yapılandırmalarında kullanılır.\n\nBu **gelişmiş bir özelliktir**!"
+          }
+        }
+      }
+    },
+    "localStorage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local Storage"
+          }
+        }
+      }
+    },
+    "localStorageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
           }
         }
       }

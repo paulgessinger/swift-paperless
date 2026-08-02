@@ -664,10 +664,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .padding(.bottom)
     }
     .refreshable {
-      let model = viewModel
-      async let document: () = model.loadDocument()
-      async let metadata: () = model.loadMetadata()
-      _ = await (document, metadata)
+      await viewModel.load(onError: { errorController.push(error: $0) })
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar
@@ -785,9 +782,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
 
     .task {
-      await viewModel.loadDocument()
-      await viewModel.loadMetadata()
-      try? await viewModel.loadSuggestions()
+      await viewModel.load()
     }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
