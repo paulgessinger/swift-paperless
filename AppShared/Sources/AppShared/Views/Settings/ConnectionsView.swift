@@ -7,6 +7,7 @@
 
 import Common
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -91,6 +92,7 @@ public struct ConnectionSelectionMenu: View {
 
 public struct ConnectionsView: View {
   private var connectionManager: ConnectionManager
+  private let database: Database
   @Binding public var showLoginSheet: Bool
 
   @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
@@ -106,8 +108,11 @@ public struct ConnectionsView: View {
 
   @Environment(DocumentStore.self) private var store
 
-  public init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
+  public init(
+    connectionManager: ConnectionManager, database: Database, showLoginSheet: Binding<Bool>
+  ) {
     self.connectionManager = connectionManager
+    self.database = database
     _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
     _showLoginSheet = showLoginSheet
   }
@@ -124,12 +129,19 @@ public struct ConnectionsView: View {
         Task {
           let api = await ApiRepository(
             connection: connection, mode: Bundle.main.appConfiguration.mode)
-          // Must carry the same needs-auth decoration the app shell installs:
-          // a bare repository 401s without ever flipping the flag, and 401s are
+          // Rebuild the *whole* stack the app shell installs, not just the API
+          // layer. The needs-auth decoration is required because a bare
+          // repository 401s without ever flipping the flag, and 401s are
           // suppressed on the assumption the connection banner covers them.
+          // The caching wrapper is required because the store detaches its
+          // ElementStore projection from any repository that fronts no
+          // database — installing an uncached repository here would blank every
+          // element read site until the next relaunch.
+          let needsAuth = NeedsAuthRepository(
+            wrapping: api, serverID: stored.id, connectionManager: connectionManager)
           store.set(
-            repository: NeedsAuthRepository(
-              wrapping: api, serverID: stored.id, connectionManager: connectionManager))
+            repository: CachingRepository(
+              wrapping: needsAuth, database: database, serverID: stored.id))
         }
       }
     }
