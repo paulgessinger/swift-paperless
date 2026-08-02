@@ -8,3 +8,7 @@
 - A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
 - Opening a document while the server is unreachable no longer removes it from your document list
 - All of your configured servers now stay synced for offline browsing in the background, not just the one you're currently viewing, so switching servers shows your documents right away
+- Opening a document whose PDF is already cached now shows it immediately, even on a slow connection, instead of waiting behind a loading spinner
+- Pulling to refresh an open document now picks up a new version added on the server, instead of continuing to show the previous one until you close and reopen it
+- Pulling to refresh a document that has a new version on the server now finishes refreshing its notes, metadata and suggestions, instead of stopping partway and showing an "Unexpected error"
+- On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
