@@ -63,13 +63,10 @@ extension Database {
   /// rows and as mutations write the joined `document` rows.
   public func observeDocumentPrefix(
     queryKey: QueryKey, serverID: UUID, limit: Int
-  ) -> AsyncThrowingStream<[Document], Error> {
+  ) -> AsyncThrowingStream<[DocumentEntry], Error> {
     let key = queryKey.rawValue
-    let observation = ValueObservation.tracking { db -> [Document] in
-      try DocumentRecord.fetchAll(
-        db, sql: Self.queryWindowSQL,
-        arguments: [serverID, key, limit, 0]
-      ).map(\.domain)
+    let observation = ValueObservation.tracking { db -> [DocumentEntry] in
+      try Self.fetchEntries(db, serverID: serverID, queryKey: key, limit: limit, offset: 0)
     }
     return stream(observation)
   }
@@ -98,6 +95,16 @@ extension Database {
         .filter(Column("server_id") == serverID && Column("id") == id)
         .fetchOne(db)?
         .domain
+    }
+    return stream(observation)
+  }
+
+  /// Live count of `document` rows cached for a server — a diagnostic surface
+  /// (the Offline & Sync screen) so the proactive fill and the downgrade GC's
+  /// effect are visible without a debugger.
+  public func observeDocumentCount(serverID: UUID) -> AsyncThrowingStream<Int, Error> {
+    let observation = ValueObservation.tracking { db in
+      try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
     }
     return stream(observation)
   }

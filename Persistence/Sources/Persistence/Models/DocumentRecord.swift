@@ -3,28 +3,38 @@ import DataModel
 import Foundation
 import GRDB
 
-/// Completeness of a cached `document` row (the "tier" from the fetch model).
-///
-/// `idOnly` is an ordering/membership placeholder (renders a skeleton cell);
-/// `metadata` is renderable in a list cell; `detail` carries the full object
-/// (custom fields, notes, permissions) fetched when a document is opened.
-/// `Comparable` so the non-downgrade upsert can keep the richer of two writes.
-public enum DocumentProjection: Int, Codable, Sendable, Comparable {
-  case idOnly = 0
-  case metadata = 1
-  case detail = 2
+/// One position in a cached query's ordered answer: either the full object (its
+/// `document` row is cached) or a **skeleton** (the id is in `query_order` but the
+/// object isn't cached yet — rendered as a placeholder). Row existence is the
+/// only "loaded-ness" signal; there is no projection level.
+public enum DocumentEntry: Sendable, Equatable, Identifiable {
+  case loaded(Document)
+  case skeleton(id: UInt)
 
-  public static func < (lhs: Self, rhs: Self) -> Bool {
-    lhs.rawValue < rhs.rawValue
+  public var id: UInt {
+    switch self {
+    case .loaded(let document): document.id
+    case .skeleton(let id): id
+    }
+  }
+
+  /// The object if loaded, else `nil` (a skeleton).
+  public var document: Document? {
+    if case .loaded(let document) = self { document } else { nil }
   }
 }
 
 /// GRDB record for a cached `Document` (`document` table, keyed `(server_id, id)`).
 ///
 /// Bespoke rather than an `ElementRecord`: documents are ordered through
-/// `query_order` (never by `name`), carry a projection level, and `Document` is
-/// not `Codable` — so the long tail is an explicit storage `Payload`, mapped by
-/// hand (the Stage 3 principle: storage shape ≠ wire shape ≠ domain shape).
+/// `query_order` (never by `name`), and `Document` is not `Codable` — so the long
+/// tail is an explicit storage `Payload`, mapped by hand (the Stage 3 principle:
+/// storage shape ≠ wire shape ≠ domain shape).
+///
+/// There is no projection/completeness level: the list always requests
+/// `full_perms`, so a stored row is always the complete object. "Loaded-ness" is
+/// encoded by **row existence** — a `query_order` id with no `document` row is a
+/// skeleton (rendered as a placeholder).
 public struct DocumentRecord:
   FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable, Equatable
 {
@@ -34,8 +44,6 @@ public struct DocumentRecord:
   public var id: UInt
   public var title: String
   public var asn: UInt?
-  public var projectionLevel: DocumentProjection
-  public var detailFetchedAt: Date?
   public var payload: Payload
 
   /// Storage-local copy of a `DocumentVersion` (decoupled from the domain type
@@ -64,7 +72,7 @@ public struct DocumentRecord:
     public var customFields: CustomFieldRawEntryList
     public var versions: [VersionPayload]
     public var userCanChange: Bool
-    // Populated only at `.detail`; preserved across lower-tier upserts.
+    // Always populated — the list carries `full_perms`.
     public var permissions: Permissions?
   }
 
@@ -73,8 +81,6 @@ public struct DocumentRecord:
     case id
     case title
     case asn
-    case projectionLevel = "projection_level"
-    case detailFetchedAt = "detail_fetched_at"
     case payload = "data"
   }
 
@@ -90,13 +96,11 @@ public struct DocumentRecord:
 }
 
 extension DocumentRecord {
-  public init(serverId: UUID, domain: Document, projectionLevel: DocumentProjection) {
+  public init(serverId: UUID, domain: Document) {
     self.serverId = serverId
     id = domain.id
     title = domain.title
     asn = domain.asn
-    self.projectionLevel = projectionLevel
-    detailFetchedAt = projectionLevel == .detail ? Date() : nil
     payload = Payload(
       documentType: domain.documentType,
       correspondent: domain.correspondent,

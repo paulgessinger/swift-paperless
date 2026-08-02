@@ -89,7 +89,8 @@ extension Endpoint {
     page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize,
     fields: [String]? = nil
   ) -> Endpoint {
-    let endpoint = documents(page: page, rules: filter.rules, pageSize: pageSize, fields: fields)
+    let endpoint = documents(
+      page: page, rules: filter.rules, pageSize: pageSize, fields: fields)
 
     var ordering: String = filter.sortField.rawValue
     if filter.sortOrder.reverse {
@@ -104,6 +105,13 @@ extension Endpoint {
   /// - Parameter fields: optional field projection (paperless-ngx `?fields=`).
   ///   `["id"]` yields the cheap id-only (Tier-0) response used by the
   ///   deletion-reconcile sweep; `nil` returns the full list shape.
+  ///
+  /// The full list shape (`fields == nil`) always requests `full_perms=true` so
+  /// every cached row carries custom fields, permissions and `user_can_change`
+  /// (Tier-2 object detail) — this makes the whole library renderable offline
+  /// without a per-document round-trip. The id-only projection stays lean (no
+  /// `full_perms`); asking for `fields=id` and expanded permissions is
+  /// contradictory anyway.
   public static func documents(
     page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize,
     fields: [String]? = nil
@@ -116,6 +124,9 @@ extension Endpoint {
 
     if let fields, !fields.isEmpty {
       queryItems.append(URLQueryItem(name: "fields", value: fields.joined(separator: ",")))
+    } else {
+      // Full list shape ⇒ pull object detail in bulk.
+      queryItems.append(URLQueryItem(name: "full_perms", value: "true"))
     }
 
     queryItems += FilterRule.queryItems(for: rules)

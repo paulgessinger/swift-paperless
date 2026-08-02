@@ -52,7 +52,7 @@ struct DocumentCacheTests {
     // which also sets setPermissions via didSet) so equality holds round-trip.
     input.permissions = Permissions { $0.view = .init(users: [1, 2]) }
 
-    try database.upsertDocument(input, serverID: server, projectionLevel: .detail)
+    try database.upsertDocument(input, serverID: server)
     let output = try database.document(serverID: server, id: 1)
 
     #expect(output == input)
@@ -66,7 +66,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     try database.upsertDocuments(
       [doc(1, "A", asn: 100), doc(2, "B", asn: 200)],
-      serverID: server, projectionLevel: .metadata)
+      serverID: server)
 
     #expect(try database.document(serverID: server, asn: 200)?.id == 2)
     #expect(try database.document(serverID: server, asn: 999) == nil)
@@ -158,43 +158,70 @@ struct DocumentCacheTests {
       try database.queryDocuments(queryKey: keyB, serverID: server, limit: 10).map(\.id) == [3])
   }
 
-  // MARK: - Non-downgrade upsert
+  // MARK: - Upsert
 
-  @Test("a Tier-1 upsert does not clobber an existing Tier-2 row")
-  func nonDowngradeUpsert() async throws {
+  @Test("an upsert replaces an existing row outright")
+  func upsertReplaces() async throws {
+    // No projection level: every stored row is the complete object (the list
+    // carries full_perms), so a later upsert just replaces the row, permissions
+    // and all.
     let server = UUID()
     let database = try database(server)
 
-    var detailed = doc(1, "Detail")
-    detailed.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+    var first = doc(1, "Doc")
+    first.permissions = Permissions { $0.view = .init(users: [9]) }
+    try database.upsertDocument(first, serverID: server)
 
-    // A later list fill arrives at Tier-1 with no permissions.
-    try database.upsertDocuments([doc(1, "Detail")], serverID: server, projectionLevel: .metadata)
+    var second = doc(1, "Doc")
+    second.permissions = Permissions { $0.view = .init(users: [42]) }
+    try database.upsertDocument(second, serverID: server)
 
-    let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .detail)
-    #expect(stored?.detailFetchedAt != nil)
-    #expect(stored?.payload.permissions?.view.users == [9])
+    #expect(try record(database, server, 1)?.payload.permissions?.view.users == [42])
   }
 
-  @Test("a Tier-2 upsert upgrades an existing Tier-1 row")
-  func upgradeToDetail() async throws {
+  // MARK: - Membership sweep (replaceQueryOrder)
+
+  @Test("replaceQueryOrder writes all ids; absent objects read back as skeletons")
+  func replaceQueryOrderWritesSkeletons() async throws {
+    // The Tier-0 membership sweep may report ids not yet cached (their object
+    // lands via R3δ). They are written to query_order regardless (no FK to
+    // document) and read back as skeleton entries, in order.
     let server = UUID()
     let database = try database(server)
+    let key = QueryKey(sentinel: "view")
 
-    try database.upsertDocuments([doc(1, "Doc")], serverID: server, projectionLevel: .metadata)
-    #expect(try record(database, server, 1)?.projectionLevel == .metadata)
-    #expect(try record(database, server, 1)?.detailFetchedAt == nil)
+    // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
+    try database.upsertDocuments([doc(1, "A"), doc(3, "C")], serverID: server)
 
-    var detailed = doc(1, "Doc")
-    detailed.permissions = Permissions { $0.change = .init(groups: [3]) }
-    try database.upsertDocument(detailed, serverID: server, projectionLevel: .detail)
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
 
-    let stored = try record(database, server, 1)
-    #expect(stored?.projectionLevel == .detail)
-    #expect(stored?.detailFetchedAt != nil)
-    #expect(stored?.payload.permissions?.change.groups == [3])
+    let replayed = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(replayed.map(\.id) == [1, 2, 3])  // all ids, order preserved
+    #expect(replayed[0].document != nil)  // loaded
+    #expect(replayed[1].document == nil)  // id 2 is a skeleton
+    #expect(replayed[2].document != nil)  // loaded
+    let status = try database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.totalCount == 3)
+  }
+
+  @Test("replaceQueryOrder replaces prior membership and preserves the new order")
+  func replaceQueryOrderReplaces() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+    try database.upsertDocuments(
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
+    #expect(
+      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [3, 1])
+
+    // A subsequent sweep with a different membership/order fully replaces it.
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 3, 1])
+    #expect(
+      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
+        2, 3, 1,
+      ])
   }
 
   // MARK: - Order staleness
@@ -246,13 +273,29 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     try database.upsertDocuments(
-      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server, projectionLevel: .metadata)
+      [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
     #expect(try database.allDocumentIDs(serverID: server) == [1, 2, 3])
     // The reconcile diff: local − server.
     let serverIDs: Set<UInt> = [2, 3, 4]
     let removed = try database.allDocumentIDs(serverID: server).subtracting(serverIDs)
     #expect(removed == [1])
+  }
+
+  // MARK: - Diagnostics (cached document count)
+
+  @Test("documentCount reflects the number of cached document rows for a server")
+  func documentCountReflectsRows() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    #expect(try database.documentCount(serverID: server) == 0)
+
+    try database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+    #expect(try database.documentCount(serverID: server) == 3)
+
+    try database.deleteDocuments(serverID: server, removedIDs: [2])
+    #expect(try database.documentCount(serverID: server) == 2)
   }
 
   // MARK: - Cache wipe (keeps connections)

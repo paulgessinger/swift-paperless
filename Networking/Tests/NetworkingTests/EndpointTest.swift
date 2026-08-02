@@ -43,15 +43,38 @@ import Testing
   @Test func testDocumentsWithPageAndRules() {
     let endpoint = Endpoint.documents(page: 2, rules: [], pageSize: 50)
     #expect(endpoint.path == "/api/documents")
-    #expect(endpoint.queryItems.count == 3)
+    // page, truncate_content, page_size, full_perms (the full list always pulls detail).
+    #expect(endpoint.queryItems.count == 4)
     #expect(endpoint.queryItems.contains { $0.name == "page" && $0.value == "2" })
     #expect(endpoint.queryItems.contains { $0.name == "truncate_content" && $0.value == "true" })
     #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "50" })
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
   }
 
   @Test func testDocumentsDefaultPageSize() {
     let endpoint = Endpoint.documents(page: 1, rules: [])
     #expect(endpoint.queryItems.contains { $0.name == "page_size" })
+  }
+
+  @Test func testDocumentsFullListCarriesFullPerms() {
+    // The full list shape always pulls object detail in bulk.
+    let endpoint = Endpoint.documents(page: 1, rules: [])
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
+  }
+
+  @Test func testDocumentsFilterCarriesFullPerms() {
+    let endpoint = Endpoint.documents(page: 1, filter: .empty)
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
+    // Still carries ordering (the QueryKey-relevant param).
+    #expect(endpoint.queryItems.contains { $0.name == "ordering" })
+  }
+
+  @Test func testDocumentsIdOnlyOmitsFullPerms() {
+    // The id-only (Tier-0) projection stays lean — `fields=id` + expanded
+    // permissions would be contradictory anyway.
+    let endpoint = Endpoint.documents(page: 1, rules: [], fields: ["id"])
+    #expect(endpoint.queryItems.contains { $0.name == "fields" && $0.value == "id" })
+    #expect(!endpoint.queryItems.contains { $0.name == "full_perms" })
   }
 
   @Test func testDocument() {

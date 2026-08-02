@@ -375,6 +375,10 @@ public class ApiRepository {
 
     let (data, response) = result
 
+    // Best-effort data-transfer accounting (categorised by the caller's
+    // task-local). Counts JSON/list responses only; downloads/thumbnails differ.
+    NetworkTransfer.record(bytes: data.count)
+
     Logger.networking.trace("Checking response of url \(sanitizedUrl, privacy: .public)")
 
     guard let response = response as? HTTPURLResponse, let status = response.status else {
@@ -471,9 +475,12 @@ public class ApiRepository {
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
+    // Request full_perms so the PATCH response carries permissions/custom fields:
+    // the cache writes the result at `.full`, which replaces the row outright, so
+    // a permission-less response would otherwise drop them.
     let api: ApiDocument = try await update(
       element: ApiDocumentUpdate(from: document),
-      endpoint: .document(id: document.id, fullPerms: false),
+      endpoint: .document(id: document.id, fullPerms: true),
       returns: ApiDocument.self)
     return api.domain
   }
@@ -544,6 +551,8 @@ extension ApiRepository: Repository {
 
   public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
     Logger.networking.notice("Getting document sequence for filter")
+    // The full list shape always carries object detail (`full_perms`), so every
+    // cached row is renderable offline without a per-document round-trip.
     let cursor = try PageCursor<ApiDocument>(
       repository: self,
       initialURL: url(.documents(page: 1, filter: filter)))
@@ -858,6 +867,18 @@ extension ApiRepository: Repository {
     } else {
       try await nextAsnCompatibility()
     }
+  }
+
+  /// Cheap probe for the server's total document count — page 1, page size 1,
+  /// unfiltered. The list envelope's `count` is accurate regardless of
+  /// `page_size` (same trick as `nextAsnCompatibility()`), so this is one
+  /// small request, not a full page walk. Used only to pick a size-adaptive
+  /// default for `OfflineBrowsingMode` right after login.
+  public func documentCount() async throws -> UInt {
+    let decoded = try await send(
+      endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
+      returns: ListResponse<ApiDocument>.self)
+    return decoded.count
   }
 
   public func users() async throws -> [User] {
