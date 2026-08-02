@@ -78,4 +78,15 @@ struct DatabaseSchemaTests {
     }
     #expect(serverExists)
   }
+
+  @Test("v4 indexes document.asn for the ASN-scanner lookup")
+  func v4IndexesDocumentAsn() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      let indexed = try db.indexes(on: "document").contains { index in
+        index.columns == ["server_id", "asn"]
+      }
+      #expect(indexed)
+    }
+  }
 }

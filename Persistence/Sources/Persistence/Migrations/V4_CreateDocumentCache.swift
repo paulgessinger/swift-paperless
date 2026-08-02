@@ -41,6 +41,13 @@ enum V4_CreateDocumentCache {
       t.primaryKey(["server_id", "id"])
     }
 
+    // Serves `document(serverID:asn:)` (the ASN-scanner lookup). Partial: most
+    // documents have no ASN, so rows with `asn IS NULL` don't bloat the index.
+    try db.create(
+      index: "idx_document_asn", on: "document",
+      columns: ["server_id", "asn"],
+      condition: Column("asn") != nil)
+
     try db.create(table: "query_order", options: [.strict]) { t in
       t.column("server_id", .blob).notNull()
       t.column("query_key", .text).notNull()
