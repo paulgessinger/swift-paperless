@@ -164,6 +164,15 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
       return result.absoluteString
     #endif
   }
+
+  /// A log-friendly identifier: the server's friendly name (falling back to the
+  /// privacy-aware ``redactedLabel`` when it has none) alongside its UUID, so
+  /// multi-server sync logs say *which* server without a lookup. Safe to log
+  /// `.public` — ``redactedLabel`` self-redacts in release.
+  public var logLabel: String {
+    let name = friendlyName.flatMap { $0.isEmpty ? nil : $0 } ?? redactedLabel
+    return "\(name) [\(id.uuidString)]"
+  }
 }
 
 @MainActor
