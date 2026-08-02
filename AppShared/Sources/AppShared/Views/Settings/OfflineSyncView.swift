@@ -15,6 +15,7 @@ public struct OfflineSyncView: View {
   @Environment(ConnectionManager.self) private var connectionManager
   @Environment(NetworkMonitor.self) private var networkMonitor
   @State private var stats = TransferStatistics.shared
+  @State private var backgroundSync = BackgroundSyncCoordinator.shared
 
   public init() {}
 
@@ -55,7 +56,7 @@ public struct OfflineSyncView: View {
         }
         statusRow(
           String(localized: .settings(.offlineSyncLastRefresh)),
-          value: dateText(store.lastReconcileAt))
+          value: dateText(store.lastSyncAt))
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: "\(store.cachedDocumentCount)")
@@ -133,10 +134,15 @@ public struct OfflineSyncView: View {
   }
 
   private var activityText: String {
+    // The store's specific states win (a background run drives them too); the
+    // coordinator flag covers the phases the store can't see (engine sweeps of
+    // other servers), so a task-driven run never reads as "Idle".
     if store.isFillingLibrary {
       String(localized: .settings(.offlineSyncFilling))
     } else if store.isRefreshing {
       String(localized: .settings(.offlineSyncRefreshing))
+    } else if backgroundSync.isRunning {
+      String(localized: .settings(.offlineSyncBackgroundRunning))
     } else {
       String(localized: .settings(.offlineSyncIdle))
     }

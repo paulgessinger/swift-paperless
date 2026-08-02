@@ -96,6 +96,75 @@ struct SyncPlanTests {
     #expect(actions.first?.runHeavyFill == false)
   }
 
+  @Test("Scope .all includes the active server in the sweep")
+  func scopeAllIncludesActive() {
+    let actions = SyncPlan.sweepActions(
+      connections: [snapshot(Self.a), snapshot(Self.b)],
+      scope: .all, lastSweep: [:], now: now, throttle: throttle, unmetered: true,
+      includeHeavy: true)
+    #expect(actions.map(\.serverID) == [Self.a, Self.b])
+  }
+
+  @Test("Scope .excludingActive matches the inactiveActions wrapper")
+  func wrapperEquivalence() {
+    let connections = [snapshot(Self.a), snapshot(Self.b, hasToken: false), snapshot(Self.c)]
+    let direct = SyncPlan.sweepActions(
+      connections: connections, scope: .excludingActive(Self.a), lastSweep: [:],
+      now: now, throttle: throttle, unmetered: true, includeHeavy: true)
+    let wrapped = SyncPlan.inactiveActions(
+      connections: connections, activeID: Self.a, lastSweep: [:],
+      now: now, throttle: throttle, unmetered: true)
+    #expect(direct == wrapped)
+  }
+
+  @Test("includeHeavy: false suppresses the heavy fill even when unmetered + entireLibrary")
+  func cheapTierSuppressesHeavy() {
+    let actions = SyncPlan.sweepActions(
+      connections: [snapshot(Self.a, isEntireLibrary: true)],
+      scope: .all, lastSweep: [:], now: now, throttle: throttle, unmetered: true,
+      includeHeavy: false)
+    #expect(
+      actions == [
+        SyncServerAction(serverID: Self.a, needsAuthOnly: false, runHeavyFill: false)
+      ])
+  }
+
+  @Test("needsAuthOnly degrade is unaffected by scope and tier")
+  func needsAuthUnaffectedByScopeAndTier() {
+    for includeHeavy in [true, false] {
+      let actions = SyncPlan.sweepActions(
+        connections: [snapshot(Self.a, hasToken: false)],
+        scope: .all, lastSweep: [Self.a: now], now: now, throttle: throttle,
+        unmetered: true, includeHeavy: includeHeavy)
+      #expect(
+        actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, runHeavyFill: false)])
+    }
+  }
+
+  @Test("Ordering is stalest-first: never-synced first, then oldest, id tie-break")
+  func stalestFirstOrdering() {
+    let old = now.addingTimeInterval(-(throttle * 3))
+    let older = now.addingTimeInterval(-(throttle * 4))
+    let actions = SyncPlan.sweepActions(
+      connections: [snapshot(Self.a), snapshot(Self.b), snapshot(Self.c)],
+      scope: .all,
+      lastSweep: [Self.a: old, Self.b: older],
+      now: now, throttle: throttle, unmetered: true, includeHeavy: true)
+    // c never synced → first; then b (older) before a (old).
+    #expect(actions.map(\.serverID) == [Self.c, Self.b, Self.a])
+  }
+
+  @Test("Equal staleness falls back to deterministic id order")
+  func stalestTieBreak() {
+    let same = now.addingTimeInterval(-(throttle * 2))
+    let actions = SyncPlan.sweepActions(
+      connections: [snapshot(Self.c), snapshot(Self.a), snapshot(Self.b)],
+      scope: .all,
+      lastSweep: [Self.a: same, Self.b: same, Self.c: same],
+      now: now, throttle: throttle, unmetered: true, includeHeavy: true)
+    #expect(actions.map(\.serverID) == [Self.a, Self.b, Self.c])
+  }
+
   @Test("newlyAdded returns only genuinely new, non-active ids")
   func newlyAddedDiff() {
     let added = SyncPlan.newlyAdded(

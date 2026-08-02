@@ -59,6 +59,10 @@ enum Migrations {
       try V7_CreateQuerySyncError.run(db)
     }
 
+    migrator.registerMigration("v8_add_last_sync_at") { db in
+      try V8_AddLastSyncAt.run(db)
+    }
+
     return migrator
   }
 }

@@ -69,12 +69,25 @@ extension RequestError: DisplayableError {
     case .certificate(let detail):
       raw = String(localized: .app(.requestErrorCertificate)) + " " + detail
 
+    case .connectivity(let code, let detail):
+      // The system's message ("Could not connect to the server.") says what
+      // happened but not what to do about it, and the causes are wildly
+      // different — a stopped server, a typo in the URL, a VPN that dropped.
+      // Spell them out.
+      raw = detail + "\n\n" + Self.connectivityHint(for: code)
+
     case .other(let detail):
       raw = detail
     }
 
-    // Single source strings that might contain markdown markup: use AttributedString to remove them
-    if let str = try? AttributedString(markdown: raw) {
+    // Single source strings that might contain markdown markup: use AttributedString to remove them.
+    // `inlineOnlyPreservingWhitespace` because the default block parse discards
+    // line breaks, which would run a multi-paragraph detail together into one
+    // sentence ("...the server.The server could not be reached...").
+    if let str = try? AttributedString(
+      markdown: raw,
+      options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+    {
       return String(str.characters)
     }
     return raw
@@ -95,6 +108,27 @@ extension RequestError: DisplayableError {
       DocumentationLinks.certificate
     default:
       nil
+    }
+  }
+
+  /// What a transport failure is likely to mean, in terms the user can act on.
+  ///
+  /// The `NSURLError` code is the only thing that distinguishes these cases —
+  /// which is why the repository carries it through rather than flattening the
+  /// failure into a message.
+  public static func connectivityHint(for code: NSURLError) -> String {
+    switch code {
+    case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff, .callIsActive:
+      String(localized: .app(.requestErrorConnectivityHintOffline))
+
+    case .cannotFindHost, .dnsLookupFailed, .badURL, .unsupportedURL,
+      .redirectToNonExistentLocation:
+      String(localized: .app(.requestErrorConnectivityHintHostNotFound))
+
+    // Connection refused, timed out, dropped mid-flight, ...: we reached the
+    // network but not a working server at the other end.
+    default:
+      String(localized: .app(.requestErrorConnectivityHintUnreachable))
     }
   }
 

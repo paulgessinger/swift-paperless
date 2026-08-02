@@ -9699,6 +9699,42 @@
         }
       }
     },
+    "requestErrorConnectivityHintHostNotFound" : {
+      "comment" : "Shown in the error details when the server's hostname could not be resolved (DNS failure, bad URL).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server's address could not be resolved. Check that the URL in the connection settings is spelled correctly. If the server uses a local-only hostname, you may need to be on its network, or connected to a VPN."
+          }
+        }
+      }
+    },
+    "requestErrorConnectivityHintOffline" : {
+      "comment" : "Shown in the error details when a request failed because the device itself is offline.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your device does not appear to have an internet connection. Check Wi-Fi or cellular data, then try again."
+          }
+        }
+      }
+    },
+    "requestErrorConnectivityHintUnreachable" : {
+      "comment" : "Shown in the error details when the server could not be reached (connection refused, timeout, connection lost).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server could not be reached. It may be offline or restarting, the address or port in the connection settings may be wrong, or the server may only be reachable from its own network or through a VPN that is not currently connected."
+          }
+        }
+      }
+    },
     "requestErrorDetailLabel" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -2439,6 +2439,18 @@
         }
       }
     },
+    "offlineSyncBackgroundRunning" : {
+      "comment" : "Activity status on the Offline & Sync screen while a background task drives the sync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background sync…"
+          }
+        }
+      }
+    },
     "offlineSyncDataHeader" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2456,7 +2468,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Since %@"
+            "value" : "Across all servers, since %@"
           }
         }
       }

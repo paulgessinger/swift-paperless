@@ -34,6 +34,22 @@ public enum RequestError: Error, Equatable {
 
   case certificate(detail: String)
 
+  // A transport-level failure: the request never produced a response (host
+  // unreachable, DNS failure, timeout, device offline, ...).
+  //
+  // `code` is carried through rather than being flattened into a message so
+  // policy code downstream can still tell these apart — `ErrorSuppression`
+  // needs to distinguish "the device is offline" (a banner already says so)
+  // from "this server is unreachable" (nothing else reports it).
+  //
+  // `detail` is the localized system message, which is identical for every
+  // request that fails the same way. That makes two failures against the same
+  // host `==`, whereas the underlying `URLError`s are not: their bridged
+  // `NSError.userInfo` carries the failing URL and a per-request task id, so
+  // no two are ever equal. Collapsing a fan-out of requests into one error
+  // (and so one toast) depends on this.
+  case connectivity(code: NSURLError, detail: String)
+
   // Can split this up into additional cases for customized error messages
   case other(_: String)
 
@@ -113,6 +129,12 @@ private func string(for error: any Error) -> String {
 }
 
 extension RequestError {
+  /// Map a `URLSession` transport failure onto the request-error vocabulary.
+  ///
+  /// Returns `nil` for anything that isn't a transport failure we want to
+  /// reinterpret: errors from another domain, cancellation (callers handle that
+  /// separately, and it must never be shown), and the file-I/O codes a download
+  /// can hit — those are about the local filesystem, not reachability.
   public init?(from error: NSError) {
     guard error.domain == NSURLErrorDomain else {
       return nil
@@ -122,19 +144,28 @@ extension RequestError {
       return nil
     }
 
-    if code.category == .ssl {
-      self = .certificate(detail: string(for: error))
-      return
-    }
-
-    switch code {
-    case .badURL, .unsupportedURL, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost,
-      .dnsLookupFailed, .httpTooManyRedirects, .resourceUnavailable, .notConnectedToInternet,
-      .redirectToNonExistentLocation, .badServerResponse:
-      self = .other(string(for: error))
-    default:
+    guard code != .cancelled else {
       return nil
     }
+
+    switch code.category {
+    case .ssl:
+      self = .certificate(detail: string(for: error))
+    case .fileio:
+      return nil
+    case .other:
+      self = .connectivity(code: code, detail: string(for: error))
+    }
+  }
+
+  /// Normalize an error thrown by a `URLSession` transport call.
+  ///
+  /// Applied at the repository's transport boundary so that everything leaving
+  /// a repository speaks `RequestError`, rather than the raw `URLError` that
+  /// `URLSession` throws. Anything that isn't a recognized transport failure —
+  /// including cancellation — is passed through untouched.
+  public static func normalizing(_ error: any Error) -> any Error {
+    RequestError(from: error as NSError) ?? error
   }
 }
 
