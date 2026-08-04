@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum FilterBarComponent: String, CaseIterable, Codable {
+public enum FilterBarComponent: String, CaseIterable, Codable, Sendable {
   case tags
   case documentType
   case correspondent
@@ -31,7 +31,7 @@ public enum FilterBarComponent: String, CaseIterable, Codable {
   }
 }
 
-public enum FilterBarConfiguration: Equatable, Codable {
+public enum FilterBarConfiguration: Equatable, Codable, Sendable {
   case `default`
   case configured([FilterBarComponent])
 }

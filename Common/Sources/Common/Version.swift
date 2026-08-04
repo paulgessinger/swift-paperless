@@ -55,7 +55,7 @@ public
 }
 
 public
-  struct AppVersion: CustomStringConvertible, Codable, Equatable
+  struct AppVersion: CustomStringConvertible, Codable, Equatable, Sendable
 {
   public let version: Version
   public let build: UInt

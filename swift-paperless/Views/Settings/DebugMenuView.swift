@@ -14,7 +14,7 @@ import os
 
 struct DebugMenuView: View {
   @Environment(ConnectionManager.self) private var connectionManager
-  @ObservedObject private var appSettings = AppSettings.shared
+  private let appSettings = AppSettings.shared
   @State private var showResetConfirmation = false
   @State private var exportResult: ExportResult?
 

@@ -5,7 +5,7 @@ import SwiftUI
 import os
 
 struct PreferencesView: View {
-  @ObservedObject private var appSettings = AppSettings.shared
+  @Bindable private var appSettings = AppSettings.shared
 
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
   @Environment(DocumentStore.self) private var store

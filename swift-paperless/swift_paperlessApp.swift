@@ -32,8 +32,6 @@ struct MainView: View {
 
   @Environment(\.scenePhase) var scenePhase
 
-  @ObservedObject private var appSettings = AppSettings.shared
-
   @State private var releaseNotesModel = ReleaseNotesViewModel()
 
   @StateObject private var biometricLockManager: BiometricLockManager
