@@ -1,6 +1,15 @@
-// Single source of truth for the app version and build number.
-// Edited by bump.py / `just set-version` / `just set-build` / fastlane.
-// Included by every target's xcconfig so all targets stay in lockstep.
+// The app version, included by every target's xcconfig so all targets stay in
+// lockstep.
+//
+// MARKETING_VERSION is the source of truth — bump it with `just set-version`
+// when starting work on a new release.
+//
+// CURRENT_PROJECT_VERSION is only a placeholder for local builds. TestFlight
+// builds get their number from App Store Connect at build time (see
+// scripts/beta_ci.sh), which writes it here for that build alone and never
+// commits it; the resulting `builds/<version>/<build>` tag is the record of what
+// shipped. Refresh the placeholder with `just set-build N` if you want a local
+// build to line up with a particular TestFlight one.
 
 MARKETING_VERSION = 1.11.0
 CURRENT_PROJECT_VERSION = 208

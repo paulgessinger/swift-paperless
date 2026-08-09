@@ -8,7 +8,12 @@
 # The notes mirror what scripts/beta_ci.sh sends: the fixed header
 # (scripts/testflight_test_notes_header.txt) followed by the notes body, with
 # emoji / pictographic characters stripped (App Store Connect's whatsNew field
-# rejects them). The body defaults to current_changelog.txt (this build's notes).
+# rejects them). The body defaults to current_changelog.txt — every note for the
+# current marketing version, which is exactly what beta_ci.sh uploads.
+#
+# This only fixes the TestFlight side. The notes users see in the app's "What's
+# New" screen come from the build's GitHub prerelease, so fix those by editing
+# the `builds/<version>/<build>` release body on GitHub.
 #
 # Usage:
 #   scripts/set_test_notes.sh <build-number> [version] [notes-file]
@@ -35,7 +40,9 @@ esac
 # Run from the repo root regardless of where we were invoked.
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-version_setting() { grep -m1 "$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
+# Anchored so the comments above the settings — which name them — cannot be
+# picked up instead.
+version_setting() { grep -m1 "^$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
 version="${2:-$(version_setting MARKETING_VERSION)}"
 notes_file="${3:-current_changelog.txt}"
 [ -s "$notes_file" ] || { echo "error: notes body is empty or missing: $notes_file" >&2; exit 1; }

@@ -4,9 +4,10 @@ A runbook/checklist for when the **Apple Distribution certificate** used to sign
 TestFlight builds expires (or is about to). Apple distribution certificates are
 valid for **1 year**, so this comes up roughly annually.
 
-For context on the rest of the pipeline, see `scripts/beta.sh` (prepares the
-build + cuts the prerelease) and `scripts/beta_ci.sh` (archives, signs, and
-uploads via `asc`), which runs from `.github/workflows/beta.yml`.
+For context on the rest of the pipeline, see `scripts/beta.sh` (previews the
+notes + dispatches the workflow) and `scripts/beta_ci.sh` (assigns the build
+number, archives, signs, uploads via `asc`, and tags the result), which runs from
+`.github/workflows/beta.yml`.
 
 ## What expires and what doesn't
 
@@ -187,14 +188,17 @@ rebound profiles and exercises the manual-signing export path):
 
 ```bash
 # from the repo root
-ALLOW_BUILD_NUMBER_MISMATCH=1 just beta-ci --no-upload   # archive + export with the new cert
+just beta-ci --no-upload   # archive + export with the new cert
 # or, to also exercise the ASC upload reservation without publishing:
-just beta-ci --bump --dry-run
+just beta-ci --dry-run
 ```
 
-CI: re-run the failed **TestFlight** workflow, or trigger a fresh beta with
-`scripts/beta.sh` (`just beta`). Watch the *Build & upload to TestFlight* step
-sign and upload cleanly.
+Neither uploads or tags anything; both take the build number from App Store
+Connect and restore `Config/Shared/Version.xcconfig` on exit.
+
+CI: trigger a beta with `just beta --dry-run` (builds and exports on the runner,
+no upload), then a real one with `just beta`. Watch the *Build & upload to
+TestFlight* step sign and upload cleanly.
 
 ### 8. Revoke the old certificate (cleanup)
 
