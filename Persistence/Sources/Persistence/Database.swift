@@ -197,7 +197,11 @@ public enum DatabaseError: Error {
 extension Database {
   /// Run a GRDB access, re-wrapping whatever it throws as a ``DatabaseError``
   /// so callers outside this package can present it without importing GRDB.
-  func wrapping<T>(_ operation: String, _ body: () throws -> T) throws -> T {
+  ///
+  /// The `throws(DatabaseError)` is what lets accessors declare the same, which
+  /// in turn means an accessor cannot reach GRDB except through here: a direct
+  /// `try writer.read { }` throws an untyped error and fails to compile.
+  func wrapping<T>(_ operation: String, _ body: () throws -> T) throws(DatabaseError) -> T {
     do {
       return try body()
     } catch let error as DatabaseError {

@@ -138,7 +138,14 @@ extension RequestError {
   }
 }
 
-public struct ResourceForbidden<Resource>: Error {
+/// Non-generic view of ``ResourceForbidden`` so callers can recognise "this one
+/// resource was forbidden" without knowing the resource type. `ResourceForbidden`
+/// is generic, so `error is ResourceForbidden` is not expressible; this is.
+public protocol ResourceForbiddenError: Error {
+  var response: String? { get }
+}
+
+public struct ResourceForbidden<Resource>: ResourceForbiddenError {
   public let response: String?
 
   public init(_: Resource.Type, response: String?) {
