@@ -56,6 +56,10 @@ enum CachingRepositoryError: Error {
 
 @MainActor
 public final class CachingRepository<Wrapped: Repository>: Repository, CachingBackend {
+  /// Module-internal rather than `private` only so
+  /// ``DocumentStore/previewRepository(as:)`` can recover the underlying
+  /// repository for its preview-only helpers. It stays read-only to everyone
+  /// (including this module) by being a `let`.
   let wrapped: Wrapped
   public let database: Database
   public let serverID: UUID
