@@ -197,9 +197,10 @@ import Testing
     #expect(endpoint.queryItems.isEmpty)
   }
 
-  @Test func testDocumentUrl() {
-    let endpoint = Endpoint.documentUrl(documentId: 456)
-    #expect(endpoint.path == "/api/documents/456")
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/647", id: 647))
+  func testDocumentPage() {
+    let endpoint = Endpoint.documentPage(documentId: 456)
+    #expect(endpoint.path == "/documents/456")
     #expect(endpoint.queryItems.isEmpty)
   }
 
