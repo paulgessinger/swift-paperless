@@ -5,13 +5,19 @@
 # signing via `-allowProvisioningUpdates` + an App Store Connect API key, so no
 # `match`) and `asc` (App Store Connect CLI, `brew install asc`) for the upload.
 #
+# The build number is assigned here, not committed: it comes from App Store
+# Connect (`asc builds next-build-number`) and is written into Version.xcconfig
+# for the duration of the build only, then restored. Nothing in the repo has to
+# change to cut a beta. After a successful upload, `--publish` records what
+# shipped by creating the `builds/<version>/<build>` tag and its GitHub
+# prerelease at the built commit — the tag is the receipt, not the trigger.
+#
 # Runs the same locally and in CI:
-#   scripts/beta_ci.sh                # archive -> export -> upload + What to Test
-#   scripts/beta_ci.sh --no-upload    # archive -> export only (safe local test)
-#   scripts/beta_ci.sh --dry-run      # export + `asc builds upload --dry-run`
-#   scripts/beta_ci.sh --bump ...     # override build number to the next free one
-#                                     # (local testing only; restored on exit, never
-#                                     # committed — the real bump is scripts/beta.sh)
+#   scripts/beta_ci.sh                  # archive -> export -> upload + What to Test
+#   scripts/beta_ci.sh --no-upload      # archive -> export only (safe local test)
+#   scripts/beta_ci.sh --dry-run        # export + `asc builds upload --dry-run`
+#   scripts/beta_ci.sh --build-number N # use N instead of asking App Store Connect
+#   scripts/beta_ci.sh --publish        # tag + GitHub prerelease after uploading
 #
 # Signing: locally the "Apple Distribution" certificate already in your login
 # keychain is used. In CI, set DIST_CERTIFICATE_P12_BASE64 (+ optional
@@ -30,7 +36,7 @@ BUILD_DIR="build"
 ARCHIVE_PATH="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/ExportOptions.plist"
-TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
+CHANGELOG="scripts/changelog.py"
 
 # App Store provisioning profiles referenced (by name) in ExportOptions.plist.
 # Created once via `asc` and bound to the Apple Distribution certs; we install
@@ -43,24 +49,46 @@ APPSTORE_PROFILE_NAMES=(
 
 upload=1
 asc_dry_run=0
-bump=0
-for arg in "$@"; do
-  case "$arg" in
+publish=0
+build_number=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --no-upload) upload=0 ;;
     --dry-run)   asc_dry_run=1 ;;
-    --bump)      bump=1 ;;
-    -h|--help)   sed -n '2,24p' "$0"; exit 0 ;;
-    *) echo "error: unknown argument '$arg'" >&2; exit 2 ;;
+    --publish)   publish=1 ;;
+    --build-number)
+      build_number="${2:-}"
+      case "$build_number" in
+        "" | *[!0-9]*) echo "error: --build-number needs a number" >&2; exit 2 ;;
+      esac
+      shift
+      ;;
+    -h|--help)   sed -n '2,30p' "$0"; exit 0 ;;
+    *) echo "error: unknown argument '$1'" >&2; exit 2 ;;
   esac
+  shift
 done
+
+# Fail on a nonsensical combination now rather than after a 20-minute archive.
+if [ "$publish" -eq 1 ]; then
+  [ "$upload" -eq 1 ] && [ "$asc_dry_run" -eq 0 ] || {
+    echo "error: --publish tags what was uploaded, so it cannot be combined with --no-upload/--dry-run" >&2
+    exit 2
+  }
+  command -v gh >/dev/null 2>&1 || {
+    echo "error: --publish needs gh to create the release" >&2
+    exit 1
+  }
+fi
 
 # Remember where we were invoked (to resolve relative paths given on the CLI/env),
 # then run from the repo root regardless of where we were invoked.
 invocation_dir="$PWD"
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Read a setting from Version.xcconfig (the source of truth for version/build).
-version_setting() { grep -m1 "$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
+# Read a setting from Version.xcconfig. Anchored so the comments above the
+# settings — which name them — cannot be picked up instead.
+version_setting() { grep -m1 "^$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
 
 # Pipe xcodebuild through xcbeautify when available; keep raw output otherwise.
 run_xcodebuild() {
@@ -74,10 +102,12 @@ run_xcodebuild() {
 _tmp_key=""
 _tmp_keychain=""
 _version_backup=""
+_notes_file=""
 cleanup() {
   [ -n "$_tmp_key" ] && rm -f "$_tmp_key"
+  [ -n "$_notes_file" ] && rm -f "$_notes_file"
   [ -n "$_tmp_keychain" ] && security delete-keychain "$_tmp_keychain" 2>/dev/null
-  # Restore Version.xcconfig if --bump temporarily rewrote it.
+  # Restore Version.xcconfig if the assigned build number was written into it.
   [ -n "$_version_backup" ] && [ -f "$_version_backup" ] && mv -f "$_version_backup" "$VERSION_XCCONFIG"
   return 0
 }
@@ -208,37 +238,44 @@ if command -v asc >/dev/null 2>&1; then
     | jq -r '.data[0].id // empty' 2>/dev/null || true)"
 fi
 
-if [ "$bump" -eq 1 ]; then
-  # --bump (local testing): rewrite the build number to the next free one and
-  # restore Version.xcconfig on exit. Never committed — the real bump lives in
-  # scripts/beta.sh. Replaces the guard below, since we're setting it directly.
-  [ -n "$app_id" ] || {
-    echo "error: --bump needs asc logged in (asc auth login) or APP_STORE_CONNECT_* env to read the next build number" >&2
-    exit 1
-  }
+# --- build number ----------------------------------------------------------
+# App Store Connect decides it (accounting for processed *and* in-flight
+# uploads), unless --build-number overrides it to re-run a failed upload at a
+# known number. The value in Version.xcconfig is only a placeholder for local
+# builds; rewrite it for this run and restore it on exit so a beta never needs a
+# commit. Without ASC credentials (a local --no-upload smoke test) the
+# placeholder is used as-is.
+if [ -z "$build_number" ] && [ -n "$app_id" ]; then
+  build_number="$(asc builds next-build-number --app "$app_id" --platform IOS --output json \
+    | jq -r '.nextBuildNumber')"
+elif [ -n "$build_number" ] && [ -n "$app_id" ]; then
   next="$(asc builds next-build-number --app "$app_id" --platform IOS --output json \
     | jq -r '.nextBuildNumber')"
-  echo "==> --bump: setting build number $current -> $next (restored on exit)"
-  _version_backup="$(mktemp)"
-  cp "$VERSION_XCCONFIG" "$_version_backup"
-  uv run bump.py build "$VERSION_XCCONFIG" "$next"
-  current="$next"
-# --- build-number guard ----------------------------------------------------
-# Same invariant the fastlane lane enforced: the checked-out build number must
-# be exactly the next one TestFlight expects. scripts/beta.sh sets this before
-# cutting the release that triggers CI. Override with ALLOW_BUILD_NUMBER_MISMATCH=1
-# (e.g. to re-run a failed upload). Skipped when we have no ASC credentials.
-elif [ -n "$app_id" ]; then
-  next="$(asc builds next-build-number --app "$app_id" --platform IOS --output json \
-    | jq -r '.nextBuildNumber')"
-  echo "Current build number: $current"
-  echo "Next build number:    $next"
-  if [ "$current" != "$next" ] && [ "${ALLOW_BUILD_NUMBER_MISMATCH:-0}" != "1" ]; then
-    echo "error: build number is $current, expected $next" >&2
-    echo "       set ALLOW_BUILD_NUMBER_MISMATCH=1 to override" >&2
+  if [ "$build_number" -lt "$next" ] && [ "${ALLOW_BUILD_NUMBER_MISMATCH:-0}" != "1" ]; then
+    echo "error: --build-number $build_number is below the next free number ($next)" >&2
+    echo "       App Store Connect will reject it; set ALLOW_BUILD_NUMBER_MISMATCH=1 to try anyway" >&2
     exit 1
   fi
 fi
+
+case "$build_number" in
+  "") ;;
+  *[!0-9]*)
+    echo "error: App Store Connect returned no usable build number ('$build_number')" >&2
+    exit 1
+    ;;
+esac
+
+if [ -z "$build_number" ]; then
+  echo "note: no ASC credentials — building at the placeholder build number $current" >&2
+  build_number="$current"
+elif [ "$build_number" != "$current" ]; then
+  echo "==> Build number: $current (placeholder) -> $build_number (restored on exit)"
+  _version_backup="$(mktemp)"
+  cp "$VERSION_XCCONFIG" "$_version_backup"
+  uv run bump.py build "$VERSION_XCCONFIG" "$build_number"
+fi
+current="$build_number"
 
 echo "==> Generating Xcode project"
 xcodegen generate
@@ -284,9 +321,9 @@ if [ "$asc_dry_run" -eq 1 ]; then
   exit 0
 fi
 
-# TestFlight "What to Test" text: a fixed header (scripts/testflight_test_notes_header.txt)
-# followed by changelog.txt.
-test_notes="$(printf '%s\n\n%s' "$(cat "$TEST_NOTES_HEADER")" "$(cat changelog.txt)")"
+# TestFlight "What to Test": the fixed header, then one section per build of this
+# marketing version, newest first, trimmed to App Store Connect's limit.
+test_notes="$("$CHANGELOG" test-notes HEAD --build "$current")"
 
 echo "==> Uploading to TestFlight (+ What to Test notes)"
 asc builds upload \
@@ -295,3 +332,36 @@ asc builds upload \
   --test-notes "$test_notes" \
   --locale en-US \
   --wait
+
+if [ "$publish" -eq 0 ]; then
+  exit 0
+fi
+
+# --- record what shipped ----------------------------------------------------
+# The upload succeeded, so create the tag and its prerelease at the built commit.
+# The body is just this build's notes (what the file gained since the previous
+# build tag); the in-app "What's New" screen reads exactly this. Creating the tag
+# last means it can only ever name a build that actually reached TestFlight.
+tag="builds/$version/$current"
+sha="$(git rev-parse HEAD)"
+_notes_file="$(mktemp)"
+"$CHANGELOG" delta HEAD > "$_notes_file"
+
+if [ -s "$_notes_file" ]; then
+  echo "==> Publishing $tag at ${sha:0:9}"
+else
+  # No new bullets (a rebuild, or a change with nothing user-facing). Tag it
+  # anyway so the build number stays traceable; an empty body is skipped by the
+  # in-app "What's New" screen.
+  echo "==> Publishing $tag at ${sha:0:9} (no new notes)"
+fi
+
+gh release create "$tag" \
+  --title "v$version ($current)" \
+  --notes-file "$_notes_file" \
+  --prerelease \
+  --target "$sha" || {
+  echo "error: the build is on TestFlight but tagging failed — create it by hand with:" >&2
+  echo "       gh release create $tag --title 'v$version ($current)' --prerelease --target $sha --notes '…'" >&2
+  exit 1
+}

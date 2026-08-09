@@ -36,48 +36,42 @@ alias sb := set_build
 set_build number:
   uv run bump.py build {{version_xcconfig}} {{number}}
 
+# Anchored at the line start so the comments naming these settings are skipped.
 get-version:
-  @grep -m1 'MARKETING_VERSION' {{version_xcconfig}} | sed 's/.*= //'
+  @grep -m1 '^MARKETING_VERSION' {{version_xcconfig}} | sed 's/.*= //'
 
 get-build:
-  @grep -m1 'CURRENT_PROJECT_VERSION' {{version_xcconfig}} | sed 's/.*= //'
+  @grep -m1 '^CURRENT_PROJECT_VERSION' {{version_xcconfig}} | sed 's/.*= //'
 
-tag:
-  #!/usr/bin/env bash
-  version=$(just get-version)
-  number=$(just get-build)
-  tag="builds/v$version/$number"
-  git tag $tag
-  echo $tag
+# Cut a TestFlight beta: previews the notes it will publish, then dispatches
+# .github/workflows/beta.yml. Nothing is committed, pushed, or built locally —
+# CI takes the build number from App Store Connect and tags the result. Args are
+# passed to scripts/beta.sh, e.g. `just beta --ref develop/v1.12 --dry-run`.
+beta *args:
+  scripts/beta.sh {{args}}
 
-# Prepare a new TestFlight beta and trigger its upload (reimplements fastlane's
-# `beta` lane). See scripts/beta.sh for the details.
-beta:
-  scripts/beta.sh
-
-# Build, sign, and upload the beta to TestFlight without fastlane (reimplements
-# the `beta_ci` lane; runs in CI on release). Pass through args, e.g.
-# `just beta-ci --no-upload` to archive+export locally without uploading, or
-# `just beta-ci --bump --dry-run` for a full local test at the next build number.
+# The build+sign+upload half of `just beta`, as run by CI. Locally useful for
+# `just beta-ci --no-upload` (archive+export only) or `just beta-ci --dry-run`
+# (adds `asc builds upload --dry-run`). Neither uploads or tags anything.
 beta-ci *args:
   scripts/beta_ci.sh {{args}}
 
+# The notes the next beta from `ref` would publish (bullets added to
+# current_changelog.txt since the last build tag).
+beta-notes ref='HEAD':
+  scripts/changelog.py delta {{ref}}
+
+# Regenerate changelog.txt — the offline copy of the per-build TestFlight notes —
+# from the build prereleases on GitHub.
+changelog-archive:
+  scripts/changelog.py archive
+
+# Attach/fix TestFlight "What to Test" notes on an existing build (no rebuild).
 # Sends header + current_changelog.txt (emoji stripped) as the whatsNew for the
 # given build. Override `version` (default: Version.xcconfig) and/or `notes` file
 # (default: current_changelog.txt). Needs asc logged in or APP_STORE_CONNECT_*.
-# Attach/fix TestFlight "What to Test" notes on an existing build (no rebuild).
 set-test-notes build version='' notes='':
   scripts/set_test_notes.sh {{build}} {{version}} {{notes}}
-
-# Manually (re)trigger the TestFlight upload workflow (.github/workflows/beta.yml)
-# on GitHub Actions, without cutting a new release — e.g. to re-run a failed
-# upload. Runs against `ref` (default main), whose committed build number is
-# used. Pass `mismatch=true` to upload even if that build number isn't the next
-# one TestFlight expects. Requires this workflow's workflow_dispatch trigger to
-# already be on the default branch.
-beta-run ref='main' mismatch='false':
-  gh workflow run beta.yml --ref {{ref}} -f allow_build_number_mismatch={{mismatch}}
-  @echo "Triggered — watch it with: gh run watch \$(gh run list --workflow beta.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 
 # Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
 deliver:

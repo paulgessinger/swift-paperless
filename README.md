@@ -85,6 +85,48 @@ phones). Check alignment with:
 uv run --project scripts swpngx devices check
 ```
 
+### TestFlight betas
+
+A beta is cut entirely on CI — no commit, no tag, no local build:
+
+```console
+just beta                      # from origin/main
+just beta --ref develop/v1.12  # from another branch
+just beta --dry-run            # CI builds and exports, uploads nothing
+```
+
+This previews the notes the build will publish, then dispatches
+[`.github/workflows/beta.yml`](.github/workflows/beta.yml) (which you can also
+start straight from the Actions tab). CI asks App Store Connect for the build
+number, writes it into `Config/Shared/Version.xcconfig` **for that build only**,
+archives, signs, uploads, and — after the upload succeeds — creates the
+`builds/<version>/<build>` tag and its GitHub prerelease at the built commit. The
+tag is the record of what shipped, not the trigger, so it can never name a build
+that failed to upload.
+
+Notes come from [`current_changelog.txt`](current_changelog.txt), which
+accumulates the user-facing bullets for the *current* marketing version. Nothing
+clears it at build time:
+
+- **a build's notes** are the bullets added since the previous build tag; they
+  become the prerelease body, which is what the in-app *What's New* screen shows
+  (`just beta-notes` previews them)
+- **TestFlight "What to Test"** is one `1.11.0 (209)` section per build of the
+  current version, newest first — the same shape as `changelog.txt`, scoped to
+  the version in flight. App Store Connect caps that field at 4000 characters
+  and a version's notes routinely run past it, so whole builds are dropped off
+  the oldest end until it fits and a link to the releases takes their place. A
+  build is either there in full or not at all; only a single build whose own
+  notes exceed the budget falls back to trimming by line. No more clearing the
+  changelog by hand to fit
+- when the version ships, empty the file in the same commit that bumps
+  `MARKETING_VERSION` with `just set-version`
+
+To fix notes after the fact, edit the release body on GitHub (the copy users
+read) and, for TestFlight, run `just set-test-notes <build>`.
+[`changelog.txt`](changelog.txt) is an offline copy of the per-build notes,
+regenerated from the releases with `just changelog-archive`.
+
 ### App Store screenshots
 
 **1. Capture** raw simulator PNGs (config: [`screenshots.toml`](screenshots.toml)):
@@ -170,8 +212,7 @@ The Deliverfile reads that once and applies it to every metadata locale (includi
 Before uploading:
 - Edit `fastlane/metadata/default/release_notes.txt` for the new version.
 `skip_binary_upload` is enabled in the Deliverfile, so this uploads **metadata and
-screenshots only** (no IPA). TestFlight builds use `just beta` / `fastlane beta`
-separately.
+screenshots only** (no IPA). TestFlight builds go through `just beta` separately.
 
 Authentication uses the same App Store Connect API key as TestFlight
 (`APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and

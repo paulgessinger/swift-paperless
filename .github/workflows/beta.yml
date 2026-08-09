@@ -1,17 +1,19 @@
 name: TestFlight
 
+# Cutting a beta needs no commit and no tag: dispatch this workflow against a ref
+# that is already on GitHub (from the Actions tab, or `just beta`). CI asks App
+# Store Connect for the build number, builds, signs, uploads, and only then
+# records what shipped by creating the `builds/<version>/<build>` tag and its
+# prerelease at the built commit. A failed upload therefore leaves no tag.
 on:
-  release:
-    types: [prereleased]
-  # Manual re-trigger (e.g. to re-run a failed upload) without cutting a new
-  # release. Runs against the selected ref — usually `main`, whose
-  # Version.xcconfig already carries the build number `just beta` committed.
-  # `just beta-run` wraps this. Only appears once this file is on the default
-  # branch.
   workflow_dispatch:
     inputs:
-      allow_build_number_mismatch:
-        description: "Upload even if the build number isn't the next one TestFlight expects (re-run a partially-completed beta)"
+      build_number:
+        description: "Build number to use (default: the next one App Store Connect expects). Set to re-run a failed upload at a known number."
+        type: string
+        default: ""
+      dry_run:
+        description: "Build and export only — no upload to TestFlight, no tag"
         type: boolean
         default: false
 
@@ -19,17 +21,21 @@ permissions:
   contents: read
 
 jobs:
-  # Builds and uploads to TestFlight via the App Store Connect API. It does not
-  # push anything back to the repo (the build-number bump is done by `just beta`
-  # before the release is cut), so read-only, credential-less checkout is enough.
   upload_to_testflight:
     runs-on: macos-26
     timeout-minutes: 45
+    permissions:
+      # Needed to create the build tag and its prerelease after a successful
+      # upload. The checkout stays credential-less; `gh` uses the job token.
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history and tags: the release notes for this build are the
+          # bullets current_changelog.txt gained since the previous build tag.
+          fetch-depth: 0
 
       - name: Read Xcode version
         id: xcode-version
@@ -40,7 +46,9 @@ jobs:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
       - name: Install tools
-        run: brew install xcodegen xcbeautify asc
+        # uv runs bump.py (writes the assigned build number) and changelog.py
+        # (composes the release notes), both of which every beta goes through.
+        run: brew install xcodegen xcbeautify asc uv
 
       - name: Build & upload to TestFlight
         env:
@@ -49,6 +57,18 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           DIST_CERTIFICATE_P12_BASE64: ${{ secrets.DIST_CERTIFICATE_P12_BASE64 }}
           DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
-          # Only set by the manual (workflow_dispatch) trigger; empty on release.
-          ALLOW_BUILD_NUMBER_MISMATCH: ${{ inputs.allow_build_number_mismatch && '1' || '0' }}
-        run: scripts/beta_ci.sh
+          GH_TOKEN: ${{ github.token }}
+          # Read into the environment rather than interpolated into the script.
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          if [ -n "$BUILD_NUMBER" ]; then
+            args+=(--build-number "$BUILD_NUMBER")
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          else
+            args+=(--publish)
+          fi
+          scripts/beta_ci.sh "${args[@]}"

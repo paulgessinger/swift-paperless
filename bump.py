@@ -29,10 +29,12 @@ def version(
     else:
         raise ValueError(f"Invalid version: {version}")
 
+    # Anchored: the comments in Version.xcconfig name the settings too.
     bumped = re.sub(
-        r"MARKETING_VERSION ?= ?\d+\.\d+\.\d+",
+        r"^MARKETING_VERSION ?= ?\d+\.\d+\.\d+",
         f"MARKETING_VERSION = {version}",
         raw,
+        flags=re.MULTILINE,
     )
 
     file.write_text(bumped)
@@ -45,10 +47,12 @@ def build(
 ):
     raw = file.read_text()
 
+    # Anchored: the comments in Version.xcconfig name the settings too.
     bumped = re.sub(
-        r"CURRENT_PROJECT_VERSION ?= ?\d+",
+        r"^CURRENT_PROJECT_VERSION ?= ?\d+",
         f"CURRENT_PROJECT_VERSION = {number}",
         raw,
+        flags=re.MULTILINE,
     )
 
     file.write_text(bumped)

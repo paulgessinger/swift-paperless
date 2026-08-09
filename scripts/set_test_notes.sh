@@ -5,16 +5,20 @@
 # uploaded without notes (e.g. the `asc builds upload` whatsNew step failed on an
 # invalid character), or to tweak notes after the fact.
 #
-# The notes mirror what scripts/beta_ci.sh sends: the fixed header
-# (scripts/testflight_test_notes_header.txt) followed by the notes body, with
-# emoji / pictographic characters stripped (App Store Connect's whatsNew field
-# rejects them). The body defaults to current_changelog.txt (this build's notes).
+# By default it sends exactly what scripts/beta_ci.sh would have sent for the
+# checked-out commit (`scripts/changelog.py test-notes`). Give a notes file to
+# override the body; either way the text is stripped of emoji and trimmed to App
+# Store Connect's limit.
+#
+# This only fixes the TestFlight side. The notes users see in the app's "What's
+# New" screen come from the build's GitHub prerelease, so fix those by editing
+# the `builds/<version>/<build>` release body on GitHub.
 #
 # Usage:
 #   scripts/set_test_notes.sh <build-number> [version] [notes-file]
 #     build-number  required — the TestFlight build to set notes on
 #     version       optional — marketing version (default: Version.xcconfig)
-#     notes-file    optional — notes body source (default: current_changelog.txt)
+#     notes-file    optional — override the notes body
 #
 # Credentials: same as scripts/beta.sh — APP_STORE_CONNECT_* env, or an `asc`
 # keychain login (asc auth login).
@@ -24,6 +28,7 @@ set -euo pipefail
 ASC_APP="com.paulgessinger.swift-paperless"
 VERSION_XCCONFIG="Config/Shared/Version.xcconfig"
 TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
+CHANGELOG="scripts/changelog.py"
 LOCALE="en-US"
 
 build="${1:-}"
@@ -35,10 +40,15 @@ esac
 # Run from the repo root regardless of where we were invoked.
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-version_setting() { grep -m1 "$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
+# Anchored so the comments above the settings — which name them — cannot be
+# picked up instead.
+version_setting() { grep -m1 "^$1" "$VERSION_XCCONFIG" | sed 's/.*= //'; }
 version="${2:-$(version_setting MARKETING_VERSION)}"
-notes_file="${3:-current_changelog.txt}"
-[ -s "$notes_file" ] || { echo "error: notes body is empty or missing: $notes_file" >&2; exit 1; }
+notes_file="${3:-}"
+[ -z "$notes_file" ] || [ -s "$notes_file" ] || {
+  echo "error: notes body is empty or missing: $notes_file" >&2
+  exit 1
+}
 
 # Bridge fastlane's credential names to the ASC_* env vars `asc` reads (mirrors
 # scripts/beta.sh), so the same secrets work here. asc also falls back to its
@@ -50,19 +60,15 @@ notes_file="${3:-current_changelog.txt}"
 
 command -v asc >/dev/null 2>&1 || { echo "error: asc not found (brew install asc)" >&2; exit 1; }
 
-# App Store Connect's whatsNew field rejects emoji / pictographic characters —
-# strip them so a stray emoji can't fail the call. Same filter as beta_ci.sh.
-strip_invalid_notes_chars() {
-  if command -v perl >/dev/null 2>&1; then
-    perl -CSD -pe 's/[\p{Extended_Pictographic}\x{FE0F}\x{200D}\x{20E3}\x{1F1E6}-\x{1F1FF}]//g'
-  else
-    echo "note: perl not found — cannot strip emoji from test notes" >&2
-    cat
-  fi
-}
-
-notes="$(printf '%s\n\n%s' "$(cat "$TEST_NOTES_HEADER")" "$(cat "$notes_file")" \
-  | strip_invalid_notes_chars)"
+if [ -n "$notes_file" ]; then
+  # Explicit body: still goes through `fit`, which strips emoji and trims to App
+  # Store Connect's limit.
+  notes="$(printf '%s\n\n%s' "$(cat "$TEST_NOTES_HEADER")" "$(cat "$notes_file")" \
+    | "$CHANGELOG" fit)"
+else
+  # Default: exactly what scripts/beta_ci.sh would have sent for this commit.
+  notes="$("$CHANGELOG" test-notes HEAD)"
+fi
 
 app_id="$(asc apps list --bundle-id "$ASC_APP" --output json 2>/dev/null \
   | jq -r '.data[0].id // empty' 2>/dev/null || true)"
