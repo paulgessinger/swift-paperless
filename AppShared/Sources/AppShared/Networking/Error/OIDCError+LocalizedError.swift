@@ -43,6 +43,12 @@ extension OIDCError: @retroactive LocalizedError {
         let base = String(localized: .login(.oidcErrorPaperlessRejected("\(statusCode)")))
         return body.isEmpty ? base : "\(base) \(body)"
       }()
+    case .invalidCode:
+      String(localized: .login(.oidcErrorInvalidCode))
+    case .mfaSessionMissing:
+      String(localized: .login(.oidcErrorMfaSessionMissing))
+    case .mfaSessionExpired:
+      String(localized: .login(.oidcErrorMfaSessionExpired))
     }
   }
 }

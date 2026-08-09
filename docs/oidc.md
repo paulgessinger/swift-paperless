@@ -28,3 +28,13 @@ x-paperless://oidc-callback
 
 The app listens for this callback to capture the authorization code and
 complete the token exchange.
+
+## Second Factor (TOTP)
+
+If the Paperless-ngx account the OIDC login maps to has TOTP (two-factor
+authentication) enabled, the app detects the pending second-factor step after
+the provider exchange and asks for the authenticator code. The code is then
+confirmed against the pending login session before the app stores the API
+token. Both 6-digit TOTP codes and 8-digit recovery codes are accepted. This
+works for both the initial login and re-authentication of an existing
+connection.

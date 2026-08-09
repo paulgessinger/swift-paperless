@@ -43,6 +43,11 @@ struct CredentialsStageView<Preamble: View>: View {
     case .token:
       return !viewModel.token.isEmpty
     case .oidc:
+      if viewModel.otpEnabled {
+        // A second factor is pending; only allow submission once the code
+        // looks valid.
+        return otpValid
+      }
       return true
     case .none:
       return true
@@ -121,18 +126,7 @@ struct CredentialsStageView<Preamble: View>: View {
   }
 
   private var otpValid: Bool {
-    let ex = /^[0-9]*$/
-    let isDigits: Bool = (try? ex.wholeMatch(in: viewModel.otp)) != nil
-    return isDigits && viewModel.otp.count == 6
-  }
-
-  private func checkOtp(_ old: String, _ new: String) {
-    let ex = /^[0-9]*$/
-    let isDigits: Bool = (try? ex.wholeMatch(in: new)) != nil
-    if (!isDigits && !new.isEmpty) || new.count > 6 {
-      viewModel.otp = old
-      return
-    }
+    OTPCode.isWellFormed(viewModel.otp)
   }
 
   private var availableCredentialModes: [CredentialMode] {
@@ -208,19 +202,7 @@ struct CredentialsStageView<Preamble: View>: View {
               }
 
               if viewModel.otpEnabled {
-                Section {
-                  TextField(String("123456"), text: $viewModel.otp)
-                    .textContentType(.oneTimeCode)
-                    .keyboardType(.numberPad)
-                    .submitLabel(.go)
-                    .onChange(of: viewModel.otp) { old, new in checkOtp(old, new) }
-                } header: {
-                  Text(.login(.otp))
-                } footer: {
-                  LoginFooterView(systemImage: "numbers.rectangle") {
-                    Text(.login(.otpDescription))
-                  }
-                }
+                OtpSection(code: $viewModel.otp, onSubmit: validate)
               }
 
             case .token:
@@ -236,7 +218,14 @@ struct CredentialsStageView<Preamble: View>: View {
               }
 
             case .oidc:
-              OIDCView(onSuccess: onSuccess)
+              if viewModel.otpEnabled {
+                // A second factor (TOTP) is pending from the OIDC login; the
+                // provider buttons are replaced by the code input until the
+                // code is confirmed.
+                OtpSection(code: $viewModel.otp, onSubmit: validate)
+              } else {
+                OIDCView(onSuccess: onSuccess)
+              }
 
             case .none:
               EmptyView()
@@ -250,7 +239,10 @@ struct CredentialsStageView<Preamble: View>: View {
                 button
                 errorView(error)
               default:
-                if viewModel.credentialMode != .oidc {
+                // The OIDC provider buttons are the login trigger there, except
+                // while a second factor is pending, where the regular button
+                // submits the code.
+                if viewModel.credentialMode != .oidc || viewModel.otpEnabled {
                   button
                 }
               }
@@ -268,6 +260,10 @@ struct CredentialsStageView<Preamble: View>: View {
     }
     .onChange(of: viewModel.credentialMode) {
       viewModel.credentialState = .none
+      // A pending second factor only makes sense for the credential mode that
+      // requested it.
+      viewModel.otpEnabled = false
+      viewModel.otp = ""
     }
   }
 }
@@ -275,6 +271,49 @@ struct CredentialsStageView<Preamble: View>: View {
 extension CredentialsStageView where Preamble == EmptyView {
   init(onSuccess: @escaping (StoredConnection) -> Void) {
     self.init(onSuccess: onSuccess, preamble: { EmptyView() })
+  }
+}
+
+/// Validation shared by the credential-login and OIDC second-factor flows.
+/// TOTP codes are 6 digits; allauth recovery codes are 8 digits.
+private enum OTPCode {
+  static func isWellFormed(_ code: String) -> Bool {
+    let isDigits = (try? /^[0-9]*$/.wholeMatch(in: code)) != nil
+    return isDigits && (code.count == 6 || code.count == 8)
+  }
+
+  /// Returns `new` if it is plausible OTP input (digits, at most 8), otherwise
+  /// the previous value, so the text field only ever holds usable input.
+  static func sanitized(_ new: String, fallback old: String) -> String {
+    let isDigits = (try? /^[0-9]*$/.wholeMatch(in: new)) != nil
+    if (!isDigits && !new.isEmpty) || new.count > 8 {
+      return old
+    }
+    return new
+  }
+}
+
+private struct OtpSection: View {
+  @Binding var code: String
+  var onSubmit: () -> Void
+
+  var body: some View {
+    Section {
+      TextField(String("123456"), text: $code)
+        .textContentType(.oneTimeCode)
+        .keyboardType(.numberPad)
+        .submitLabel(.go)
+        .onChange(of: code) { old, new in
+          code = OTPCode.sanitized(new, fallback: old)
+        }
+        .onSubmit(of: .text) { onSubmit() }
+    } header: {
+      Text(.login(.otp))
+    } footer: {
+      LoginFooterView(systemImage: "numbers.rectangle") {
+        Text(.login(.otpDescription))
+      }
+    }
   }
 }
 

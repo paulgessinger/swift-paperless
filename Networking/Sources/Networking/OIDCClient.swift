@@ -23,6 +23,11 @@ public final class OIDCClient {
 
   public private(set) var token: String? = nil
 
+  /// Session token captured when Paperless required a second factor (TOTP) to
+  /// finish the OIDC login. It is sent back as the `x-session-token` header when
+  /// confirming the code via `confirmMFA(code:)`.
+  var pendingMFASessionToken: String?
+
   public private(set) var providers: [OIDCProvider] = []
 
   private let logger = Logger(subsystem: "com.paulgessinger.swift-paperless", category: "OIDC")
@@ -50,9 +55,12 @@ public final class OIDCClient {
     }
   }
 
-  public func login(provider: OIDCProvider, auth: WebAuthenticationSession) async throws -> String {
+  public func login(
+    provider: OIDCProvider, auth: WebAuthenticationSession
+  ) async throws -> OIDCLoginResult {
     logger.info("Initiating OIDC flow with provider \(provider.id, privacy: .public)")
     self.token = nil
+    self.pendingMFASessionToken = nil
 
     // Paperless-ngx requires us to go through CSRF protection to talk to the allauth headless endpoints
     let csrf = try await fetchCSRF()
@@ -115,17 +123,104 @@ public final class OIDCClient {
 
     logger.debug("Have received OIDC token from provider: \(token.id_token)")
 
-    let apiToken = try await exchangeIdTokenWithPaperless(
+    let result = try await exchangeIdTokenWithPaperless(
       providerId: provider.id,
       clientId: provider.clientId,
       idToken: token.id_token,
       csrf: csrf
     )
 
-    logger.debug("Have received Paperless api token: \(apiToken)")
+    switch result {
+    case .success(let apiToken):
+      logger.debug("Have received Paperless api token: \(apiToken)")
+      self.token = apiToken
+      return .success(token: apiToken)
 
-    self.token = apiToken
-    return apiToken
+    case .mfaRequired(let sessionToken):
+      logger.info(
+        "Paperless requires a second factor (TOTP) to complete the OIDC login")
+      self.pendingMFASessionToken = sessionToken
+      return .mfaRequired
+    }
+  }
+
+  /// Confirm a second factor (TOTP) code for an OIDC login that was suspended
+  /// with `.mfaRequired`. Posts the code to allauth's `2fa/authenticate`
+  /// endpoint using the pending session token captured during the login, and
+  /// returns the Paperless API token once the code is accepted.
+  public func confirmMFA(code: String) async throws -> String {
+    logger.info("Confirming MFA code with Paperless")
+    guard let sessionToken = pendingMFASessionToken else {
+      logger.error("No pending MFA session to confirm against")
+      throw OIDCError.mfaSessionMissing
+    }
+
+    guard
+      let url = URL(
+        string: "\(Self.urlFragment)/app/v1/auth/2fa/authenticate", relativeTo: baseURL)
+    else {
+      logger.error("Failed to build 2fa/authenticate url")
+      throw OIDCError.invalidURL
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue(sessionToken, forHTTPHeaderField: "x-session-token")
+    request.httpBody = try JSONSerialization.data(withJSONObject: ["code": code])
+
+    let (data, response) = try await session.data(for: request)
+
+    guard let http = response as? HTTPURLResponse else {
+      logger.error("2fa/authenticate response was not an HTTP response")
+      throw OIDCError.paperlessTokenExchangeFailed(
+        statusCode: 0, body: String(data: data, encoding: .utf8) ?? "")
+    }
+
+    guard let status = http.status else {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error(
+        "2fa/authenticate returned unknown status \(http.statusCode): \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
+    }
+
+    switch status {
+    case .ok:
+      let decoded = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
+      guard let apiToken = decoded.meta?.access_token else {
+        logger.error("2fa/authenticate succeeded but no access_token in meta")
+        throw OIDCError.paperlessTokenExchangeFailed(
+          statusCode: http.statusCode,
+          body: String(data: data, encoding: .utf8) ?? "")
+      }
+      logger.debug("Have received Paperless api token after MFA: \(apiToken)")
+      self.token = apiToken
+      return apiToken
+
+    case .badRequest:
+      if let errorResponse = try? JSONDecoder().decode(OIDCErrorResponse.self, from: data),
+        errorResponse.errors?.contains(where: { $0.code == "incorrect_code" }) == true
+      {
+        logger.info("Paperless rejected the MFA code")
+        throw OIDCError.invalidCode
+      }
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error("MFA code confirm returned 400: \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: 400, body: body)
+
+    case .unauthorized:
+      // The pending login session is gone (expired or already consumed). Clear
+      // it so a retry does not reuse the stale session.
+      logger.error("Pending MFA session is no longer valid (401)")
+      self.pendingMFASessionToken = nil
+      throw OIDCError.mfaSessionExpired
+
+    default:
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error(
+        "MFA code confirm returned \(status): \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
+    }
   }
 
   private func fetchCSRF() async throws -> String {
@@ -256,7 +351,7 @@ public final class OIDCClient {
     clientId: String,
     idToken: String,
     csrf: String
-  ) async throws -> String {
+  ) async throws -> PaperlessTokenExchangeResult {
     guard
       let url = URL(string: "\(Self.urlFragment)/app/v1/auth/provider/token", relativeTo: baseURL)
     else {
@@ -277,7 +372,27 @@ public final class OIDCClient {
     request.httpBody = try JSONSerialization.data(withJSONObject: payload)
     let (data, response) = try await session.data(for: request)
 
-    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+    guard let http = response as? HTTPURLResponse else {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error("Token exchange response was not an HTTP response: \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: 0, body: body)
+    }
+
+    guard (200..<300).contains(http.statusCode) else {
+      // A 401 carrying a pending `mfa_authenticate` flow means the login was
+      // accepted but a second factor (TOTP) is required to finish it. The
+      // session token lets us continue via `confirmMFA(code:)`.
+      if http.statusCode == 401,
+        let decoded = try? JSONDecoder().decode(PaperlessTokenResponse.self, from: data),
+        decoded.data?.flows?.contains(where: {
+          $0.id == "mfa_authenticate" && $0.is_pending == true
+        }) == true,
+        let sessionToken = decoded.meta?.session_token
+      {
+        logger.info("Paperless token exchange requires MFA (TOTP) to continue")
+        return .mfaRequired(sessionToken: sessionToken)
+      }
+
       let body = String(data: data, encoding: .utf8) ?? ""
       logger.error(
         "Paperless token exchange returned status \(http.statusCode): \(body, privacy: .private)"
@@ -286,7 +401,12 @@ public final class OIDCClient {
     }
 
     let decoded = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
-    return decoded.meta.access_token
+    guard let apiToken = decoded.meta?.access_token else {
+      logger.error("Token response did not contain an access token")
+      throw OIDCError.paperlessTokenExchangeFailed(
+        statusCode: http.statusCode, body: String(data: data, encoding: .utf8) ?? "")
+    }
+    return .success(token: apiToken)
   }
 
   private func buildAuthorizationURL(
@@ -427,8 +547,30 @@ struct OAuth2ErrorResponse: Decodable, Equatable {
 }
 
 struct PaperlessTokenResponse: Decodable, Equatable {
-  struct Meta: Decodable, Equatable { let access_token: String }
-  let meta: Meta
+  struct Meta: Decodable, Equatable {
+    let access_token: String?
+    let session_token: String?
+  }
+  // Named `Payload` rather than `Data` to not shadow `Foundation.Data`.
+  struct Payload: Decodable, Equatable {
+    struct Flow: Decodable, Equatable {
+      let id: String
+      let is_pending: Bool?
+    }
+    let flows: [Flow]?
+  }
+  let meta: Meta?
+  let data: Payload?
+}
+
+/// Error envelope used by allauth headless responses (e.g. the 400 returned
+/// when an MFA code is rejected).
+struct OIDCErrorResponse: Decodable, Equatable {
+  struct Item: Decodable, Equatable {
+    let code: String
+    let message: String?
+  }
+  let errors: [Item]?
 }
 
 private
@@ -459,4 +601,23 @@ public enum OIDCError: Error, Equatable {
   case formBodyEncodingFailed
   case tokenExchangeFailed(error: String, description: String?)
   case paperlessTokenExchangeFailed(statusCode: Int, body: String)
+  /// The submitted MFA (TOTP) code was rejected by Paperless.
+  case invalidCode
+  /// An MFA step was expected but no pending login session was available.
+  case mfaSessionMissing
+  /// The pending MFA login session expired before the code was confirmed.
+  case mfaSessionExpired
+}
+
+/// Result of an OIDC login attempt. `.mfaRequired` means the login was
+/// accepted by Paperless but a second factor (TOTP) still needs to be
+/// confirmed via `OIDCClient.confirmMFA(code:)`.
+public enum OIDCLoginResult: Equatable, Sendable {
+  case success(token: String)
+  case mfaRequired
+}
+
+enum PaperlessTokenExchangeResult: Equatable {
+  case success(token: String)
+  case mfaRequired(sessionToken: String)
 }
