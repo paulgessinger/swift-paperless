@@ -1,3 +1,7 @@
+# Offline copy of the per-build TestFlight notes, newest first.
+# Regenerate with `just changelog-archive`; the GitHub build
+# prereleases (tag `builds/<version>/<build>`) are the source of truth.
+
 1.11.0 (208)
 
 - Fix the "What's New" screen failing to load when a release was published without release notes
@@ -5,12 +9,13 @@
 1.11.0 (207)
 
 - Fix the "Deep link (with backend)" option missing from a document's share menu
+- Server connections move to a local database. Everything should automatically be migrated, but please let me know if something doesn’t work cleanly
 
 1.11.0 (205)
 
 - Fixed uploaded documents being saved with an extra 2 bytes (CRLF), which caused checksum mismatches and failed deduplication in Paperless-ngx
 
-1.11.0 (203)
+1.11.0 (204)
 
 - Recently-viewed documents now open offline; their files are cached on disk and survive app launches
 - Document thumbnails persist across launches, so the document list shows them instantly without a network round trip
@@ -20,3 +25,690 @@
 
 - Fix untranslated strings in document notes
 - Fix saved views failing to load when a filter rule has a null value (e.g. a "does not have tag" rule)
+
+1.10.0 (198)
+
+- Fix missing notes translation strings
+
+1.10.0 (197)
+
+- Fix: tag deletion in the tag management screen when tags are nested (swipe-to-delete was silently disabled in the hierarchy view)
+
+v1.10.0 (196)
+
+- Fix another case where authentication problems were incorrectly reported as API version compatibility problems
+
+1.10.0 (195)
+
+- Fixed the in-document PDF search freezing (and sometimes crashing) on text-heavy documents; search now runs in the background and streams results as they are found
+- The PDF viewer now scrolls to and highlights the active search result, and the page indicator follows along
+
+1.10.0 (194)
+
+Preparation for App Store submission
+
+1.10.0 (193)
+
+- Fix loading indicator occasionally remaining visible after PDF preview finishes loading
+- Surface the actual OAuth2 error (e.g. invalid_client) from the IdP during OIDC login instead of the cryptic "data couldn't be read because it's missing" message
+- Fix OIDC login failing with a "missing scope" error on HTTPS servers behind a reverse proxy by sending a Referer header that satisfies Django's CSRF checks
+
+1.10.0 (192)
+
+- Fix task view showing "no elements" while loading
+- Tune visuals for document preview thumbnail fade-in and page indicator
+- Deep links can now open a specific document field for editing, e.g. x-paperless://v1/document/123?edit=tags
+- Drop primary action for the "add document" button in the document list: this didn't work properly
+- Use popovers for filter bar aspects
+- Optimize document detail v4 screen for iPad
+- Additional work on the detail screen UI
+- Full-on multi-column iPad layout for the document list and detail screen 🚀
+
+1.10.0 (191)
+
+- Renamed "Log out" to "Disconnect" in the connection management UI to better reflect what the action does
+- Updated visuals: document count pill moves down, detail list attribute select becomes plain button, tags get a new look
+- Show the server's configured PAPERLESS_APP_TITLE as a friendly name in the server picker and connection settings
+- Quick add: when searching in the tag, correspondent, or document type picker, a "Add '<name>'" row appears at the end and creates the entry on-the-fly
+- Success haptic feedback when an attribute change saves successfully on the document detail edit sheets
+- Document cells in the list now show the number of notes when a document has any
+
+1.10.0 (190)
+
+- Try another visual arrangement for the document detail screen with peeking neighboring pages
+
+1.10.0 (189)
+
+- Move JSON decoding to a background branch to not block the UI
+- Fix filter rule count display not taking sorting into account
+- Add loading indicator to search bar when loading
+- Add support for the new task API endpoint coming in v3.0.0 / APIv10
+- Add support for nested tags, both for managing and adding and removing them from documents
+- Fix freeze when polling tasks on installations with many unacknowledged tasks; the task list now scroll-loads additional pages on demand
+- Hide the remove inbox tag action for documents that do not have inbox tags
+
+1.10.0 (188)
+
+- Attempt to fix performance issue with PDF detail display
+
+1.10.0 (187)
+
+- Internal refactor of the networking data model. This should be transparent but please let me know if you see any unexpected errors.
+
+1.10.0 (186)
+
+- Fix performance issues with large lists of attributes in detail v4
+
+1.10.0 (185)
+
+- Auto-focus the attribute search bars in the edit sheets when no value is set yet
+
+1.10.0 (184)
+
+- Ready for saved view permissions in the upcoming Paperless-ngx v3
+- Document detail v4 (https://github.com/paulgessinger/swift-paperless/pull/485): redesigned detail screen with clearer metadata and sheet-based editing for tags, correspondent, document type, storage path, dates, ASN, custom fields, and owner, including attribute suggestions and trimmed titles when saving.
+    - PDF on the detail screen: horizontal paging between pages with a page indicator; full-screen preview adds in-document search and smoother scrolling.
+    - Delete documents from detail; clearer explanation when a document cannot be edited; share-link and permission handling aligned with what the server allows.
+    - Notes entry shows how many notes a document has; sharing can include the original document file.
+    - Faster hops into a document from the list by preloading thumbnails on tap and from the context menu.
+
+1.10.0 (181)
+
+- Add ability to configure the filter bar
+- Fix bug where filter state would be reset when closing filter sheet
+
+1.10.0 (180)
+
+First beta release in th v1.10.0 series
+
+1.9.0 (177)
+
+- Enable sharing a deep link to the app from a document
+- Disable drag gesture on the document detail view (some users are reporting issues)
+
+1.9.0 (176)
+
+- Fix bug parsing monetary custom field value like `0.0` (single digit after decimal point).
+- Disable plus button in the toolbar when the user does not have document add permissions
+
+1.9.0 (175)
+
+- Another attempt at fixing date decoding issues https://github.com/paulgessinger/swift-paperless/issues/360
+- Fix updated allauth headless url https://github.com/paulgessinger/swift-paperless/issues/50, [upstream PR](https://github.com/paperless-ngx/paperless-ngx/pull/11756)
+
+1.9.0 (174)
+
+- Add trashed document management
+- Add support for OIDC login using social account providers. Please see the [documentation](https://swift-paperless.gessinger.dev/oidc/). Thanks to [@hendrik1120](https://github.com/hendrik1120) for the help with this! Let me know if you run into any issues with this.
+
+1.9.0 (173)
+
+- Fix crash on settings > preferences view
+
+1.9.0 (172)
+
+- Fix issue with the home screen app icon scan shortcut
+
+1.9.0 (171)
+
+- Add ability to share link to the web UI for a document
+- Add deep link support (open scanner, open document, set / clear filters). [Documentation](https://swift-paperless.gessinger.dev/deeplinks/)
+- Add a home screen quick action to open the scanner
+
+1.9.0 (170)
+
+- Fix incorrect display of option ids instead of labels in custom field filter view for "select" custom field type (#404)
+- Add support for share links in documents (#57)
+
+1.9.0 (169)
+
+- Add ability to filter documents by ASN (#397)
+- Fix issue with search text not being cleared properly
+- Add ability to filter documents by date (#104)
+
+1.9.0 (168)
+
+- Add liquid glass interface refresh for iOS 26.
+  Please let me now if anything looks wrong, on iOS 26 or on earlier versions (#379)
+
+1.9.0 (167)
+
+- Dropped the unused `appConfig` and `history` permission resources from the app so the permissions UI only reflects values Paperless actually supplies (fixes #366).
+- Improve legibility of document link UI
+- Prevent document from being linked to itself
+- Clarify interaction for linking a document in custom field
+- Tune no-permissions display on custom fields when editing documents
+- Support long-text custom field type
+- Allow setting custom fields when uploading new documents
+
+1.8.0 (158)
+
+- Remember setting for using the original filename as the title
+- Add integration with server-side ASN prefix to data scanner
+
+1.8.0 (157)
+
+- Added a view for showing and exporting logs. This should hopefully circumvent issues with log file export
+- Correctly handle view and edit permissions going away while editing a document
+
+1.8.0 (154)
+
+- Add information on why you can't add custom fields when creating a new document
+- Don't show swipe-to-delete action on documents if the user does not have permission to delete documents
+- Fix issue with note users in API version 7
+- Show note authors in notes view
+
+1.8.0 (153)
+
+- Add ability to filter by custom fields. This also includes creating / editing saved views that use custom fields.
+- Enable Turkish language support
+
+1.8.0 (152)
+
+- Allow opening document edit view even without edit permissions. Editing is disabled inside of the view instead.
+- Show owner in document list and detail view
+
+1.8.0 (151)
+
+- Add more logging to default permissions to help with debugging
+- Explicitly ignore caches for data fetches (keep for thumbnail requests)
+- Fix new elements not being shown immediately in manage view
+
+1.8.0 (150)
+
+# Limited permissions support
+
+This build introduces the support for limited permissions in the app. Previously, the app would simply throw errors that resulted from API errors on operations that the currently logged in user lacked permissions for.
+
+For example, editing a document without the document edit permissions would simply throw an error that the operation could not be completed. For viewing, this resulted in very frequent errors, as the app periodically refreshes some information.
+
+Now, the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown.
+
+Here comes the important bit: I need your help to ensure this doesn't break some workflow or some scenario which I didn't test. For example, if anything is not accessible, a button is greyed out or anything does not behave correctly, even though from you permissions situation you would expect that it does, **please report an issue**, either via E-Mail or on GitHub on [this issue](https://github.com/paulgessinger/swift-paperless/issues/115).
+
+# Custom fields edit support
+Custom fields can now be edited on documents. I put in a validation layer to prevent saving of incorrect values.
+
+## Other changes
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+- Fixed bug that produced an error after creating a document. The document would still be created, but the app would show an error, even though the process was successful.
+- Skip local network denied detection on iOS 26. This leads to a crash during login
+
+1.8.0 (149)
+
+# IMPORTANT: Limited permissions support and testing!
+This build introduces the support for limited permissions in the app. Previously, the app would simply throw errors that resulted from API errors on operations that the currently logged in user lacked permissions for.
+
+For example, editing a document without the document edit permissions would simply throw an error that the operation could not be completed. For viewing, this resulted in very frequent errors, as the app periodically refreshes some information.
+
+Now, the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown.
+
+Here comes the important bit: I need your help to ensure this doesn't break some workflow or some scenario which I didn't test. For example, if anything is not accessible, a button is greyed out or anything does not behave correctly, even though from you permissions situation you would expect that it does, **please report an issue**, either via E-Mail or on GitHub on [this issue](https://github.com/paulgessinger/swift-paperless/issues/115).
+
+## Other changes
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+- Fixed bug that produced an error after creating a document. The document would still be created, but the app would show an error, even though the process was successful.
+- Skip local network denied detection on iOS 26. This leads to a crash during login
+
+1.8.0 (148)
+
+# IMPORTANT: Limited permissions support and testing!
+This build introduces the support for limited permissions in the app. Previously, the app would simply throw errors that resulted from API errors on operations that the currently logged in user lacked permissions for.
+
+For example, editing a document without the document edit permissions would simply throw an error that the operation could not be completed. For viewing, this resulted in very frequent errors, as the app periodically refreshes some information.
+
+Now, the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown.
+
+Here comes the important bit: I need your help to ensure this doesn't break some workflow or some scenario which I didn't test. For example, if anything is not accessible, a button is greyed out or anything does not behave correctly, even though from you permissions situation you would expect that it does, **please report an issue**, either via E-Mail or on GitHub on [this issue](https://github.com/paulgessinger/swift-paperless/issues/115).
+
+## Other changes
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+- Fixed bug that produced an error after creating a document. The document would still be created, but the app would show an error, even though the process was successful.
+
+1.8.0 (147)
+
+# IMPORTANT: Limited permissions support and testing!
+This build introduces the support for limited permissions in the app. Previously, the app would simply throw errors that resulted from API errors on operations that the currently logged in user lacked permissions for.
+
+For example, editing a document without the document edit permissions would simply throw an error that the operation could not be completed. For viewing, this resulted in very frequent errors, as the app periodically refreshes some information.
+
+Now, the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown.
+
+Here comes the important bit: I need your help to ensure this doesn't break some workflow or some scenario which I didn't test. For example, if anything is not accessible, a button is greyed out or anything does not behave correctly, even though from you permissions situation you would expect that it does, **please report an issue**, either via E-Mail or on GitHub on [this issue](https://github.com/paulgessinger/swift-paperless/issues/115).
+
+## Other changes
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+
+1.8.0 (146)
+
+# IMPORTANT: Limited permissions support and testing!
+This build introduces the support for limited permissions in the app. Previously, the app would simply throw errors that resulted from API errors on operations that the currently logged in user lacked permissions for.
+
+For example, editing a document without the document edit permissions would simply throw an error that the operation could not be completed. For viewing, this resulted in very frequent errors, as the app periodically refreshes some information.
+
+Now, the app can now work with a minimal set of permissions and will present missing permissions in the UI before errors are being thrown.
+
+Here comes the important bit: I need your help to ensure this doesn't break some workflow or some scenario which I didn't test. For example, if anything is not accessible, a button is greyed out or anything does not behave correctly, even though from you permissions situation you would expect that it does, **please report an issue**, either via E-Mail or on GitHub on [this issue](https://github.com/paulgessinger/swift-paperless/issues/115).
+
+## Other changes
+
+- Tasks: Only load tasks related to document consumption
+- Tasks: Explicitly request only tasks which have not been acknowledged yet.
+
+1.8.0 (144)
+
+- Fix timezone conversion in document created date: on versions below 2.16.0 of Paperless-ngx, the timezone was incorrectly set and resulted in the date shifting when saving.
+
+1.8.0 (142)
+
+- Adjust to updated API document data: created is date-only now
+
+![](https://github.com/user-attachments/assets/a9c533d3-68ee-45fb-a1fc-5871b9037327)
+
+It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.
+
+Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+
+1.7.0 (140)
+
+- Fix background color of splash screen
+- Increase debounce delay in ASN type search to fix concurrency issue
+- Allow uploading documents with the title as their filename
+
+1.7.0 (138)
+
+- Yet another round of decoding error debug outputs
+
+1.7.0 (137)
+
+- Display objects (correspondents, document types etc) sorted by name case-insensitively
+- Additional debug output for decoding error debugging
+- Display loading screen also on initial app launch
+
+1.7.0 (136)
+
+- Fix after change to tasks API
+- Support sorting by page count
+- Fix error when sort field has unexpected value in saved view
+
+1.7.0 (135)
+
+- Fix error logging out of the last server connection
+
+1.6.1 (134)
+
+- Fix issue with display of new login screen
+
+1.6.0 (133)
+
+- Fix issue editing storage paths
+- Improve accuracy of storage path format description
+
+1.6.0 (132)
+
+- Adapt to new API versions and recent Paperless-ngx releases
+- Fix acknowledgement of tasks after the API endpoint changed
+
+1.6.0 (131)
+
+- Updated translations
+
+1.6.0 (129)
+
+- Add support for 2FA/MFA/OTP codes during login with credentials
+
+1.6.0 (128)
+
+- Fixed crash on macOS
+- Fixed display name of share extension on macOS
+
+1.6.0 (127)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+
+---
+
+# What's new?
+
+- All new login screen with a new design
+  - Improved error handling with more detailed error messages in many scenarios
+  - Added the ability to log in with a token or without credentials (auto-auth,
+    mTLS, etc)
+- Added the ability to change servers when the currently active server is not responding.
+- Added shortcut to create a bug report on GitHub from the settings
+- Recover from invalid filter rule contents (set manually in the admin backend)
+in certain cases
+- Explicit handling and detection of unsupported server API versions
+  - The server details in the settings now report if the server is running an
+    unsupported version
+- Added warning when using the `Authorization` header as a custom header
+- Improved error output when API response parsing fails
+- Add option to log out or switch servers on the loading screen. This is shown
+  after a short timeout
+- Clarify what the top toolbar dropdown menu means if now saved views exist
+- Fix an issue when sharing exported logs via share sheet
+- Add ability to swipe down to hide the bottom bar in the document detail view.
+  Added a setting to control if this bar is shown by default or not
+- Improve error handling of general HTTP errors with the same messages as
+  during the login process
+- Fix layout issue on iPad that prevented display of the login menu on the home
+  document screen
+- Attempted fixes for a number of concurrency issues in the document edit
+  screen and during photo import
+- Fix bug that prevented returning to the start screen after deleting a document
+- Improvements to the animation during server switching
+- Prepare for granular handling of user permissions
+- Improved layout of the document detail screen for larger dynamic text sizes
+- Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts
+- Reintroduce delay when typing search text
+- If configured, remove inbox tags from documents automatically when saving
+- Fix a bug during migration from single-server (v1.1.1 and before) to
+  multi-server: the login token was not correctly persisted. This led to a
+  connection error the next time the app was launched.
+
+1.6.0 (126)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+
+---
+
+# What's new?
+
+- All new login screen with a new design
+  - Improved error handling with more detailed error messages in many scenarios
+  - Added the ability to log in with a token or without credentials (auto-auth,
+    mTLS, etc)
+- Added the ability to change servers when the currently active server is not responding.
+- Added shortcut to create a bug report on GitHub from the settings
+- Recover from invalid filter rule contents (set manually in the admin backend)
+in certain cases
+- Explicit handling and detection of unsupported server API versions
+  - The server details in the settings now report if the server is running an
+    unsupported version
+- Added warning when using the `Authorization` header as a custom header
+- Improved error output when API response parsing fails
+- Add option to log out or switch servers on the loading screen. This is shown
+  after a short timeout
+- Clarify what the top toolbar dropdown menu means if now saved views exist
+- Fix an issue when sharing exported logs via share sheet
+- Add ability to swipe down to hide the bottom bar in the document detail view.
+  Added a setting to control if this bar is shown by default or not
+- Improve error handling of general HTTP errors with the same messages as
+  during the login process
+- Fix layout issue on iPad that prevented display of the login menu on the home
+  document screen
+- Attempted fixes for a number of concurrency issues in the document edit
+  screen and during photo import
+- Fix bug that prevented returning to the start screen after deleting a document
+- Improvements to the animation during server switching
+- Prepare for granular handling of user permissions
+- Improved layout of the document detail screen for larger dynamic text sizes
+- Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts
+- Reintroduce delay when typing search text
+- If configured, remove inbox tags from documents automatically when saving
+- Fix a bug during migration from single-server (v1.1.1 and before) to
+  multi-server: the login token was not correctly persisted. This led to a
+  connection error the next time the app was launched.
+
+1.6.0 (125)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+
+---
+
+# What's new?
+
+- All new login screen with a new design
+  - Improved error handling with more detailed error messages in many scenarios
+  - Added the ability to log in with a token or without credentials (auto-auth,
+    mTLS, etc)
+- Added the ability to change servers when the currently active server is not responding.
+- Added shortcut to create a bug report on GitHub from the settings
+- Recover from invalid filter rule contents (set manually in the admin backend)
+in certain cases
+- Explicit handling and detection of unsupported server API versions
+  - The server details in the settings now report if the server is running an
+    unsupported version
+- Added warning when using the `Authorization` header as a custom header
+- Improved error output when API response parsing fails
+- Add option to log out or switch servers on the loading screen. This is shown
+  after a short timeout
+- Clarify what the top toolbar dropdown menu means if now saved views exist
+- Fix an issue when sharing exported logs via share sheet
+- Add ability to swipe down to hide the bottom bar in the document detail view.
+  Added a setting to control if this bar is shown by default or not
+- Improve error handling of general HTTP errors with the same messages as
+  during the login process
+- Fix layout issue on iPad that prevented display of the login menu on the home
+  document screen
+- Attempted fixes for a number of concurrency issues in the document edit
+  screen and during photo import
+- Fix bug that prevented returning to the start screen after deleting a document
+- Improvements to the animation during server switching
+- Prepare for granular handling of user permissions
+- Improved layout of the document detail screen for larger dynamic text sizes
+- Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts
+- Reintroduce delay when typing search text
+
+1.6.0 (124)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+
+---
+
+# What's new?
+
+- All new login screen with a new design
+  - Improved error handling with more detailed error messages in many scenarios
+  - Added the ability to log in with a token or without credentials (auto-auth,
+    mTLS, etc)
+- Added the ability to change servers when the currently active server is not responding.
+- Added shortcut to create a bug report on GitHub from the settings
+- Recover from invalid filter rule contents (set manually in the admin backend)
+in certain cases
+- Explicit handling and detection of unsupported server API versions
+  - The server details in the settings now report if the server is running an
+    unsupported version
+- Added warning when using the `Authorization` header as a custom header
+- Improved error output when API response parsing fails
+- Add option to log out or switch servers on the loading screen. This is shown
+  after a short timeout
+- Clarify what the top toolbar dropdown menu means if now saved views exist
+- Fix an issue when sharing exported logs via share sheet
+- Add ability to swipe down to hide the bottom bar in the document detail view.
+  Added a setting to control if this bar is shown by default or not
+- Improve error handling of general HTTP errors with the same messages as
+  during the login process
+- Fix layout issue on iPad that prevented display of the login menu on the home
+  document screen
+- Attempted fixes for a number of concurrency issues in the document edit
+  screen and during photo import
+- Fix bug that prevented returning to the start screen after deleting a document
+- Improvements to the animation during server switching
+- Prepare for granular handling of user permissions
+- Improved layout of the document detail screen for larger dynamic text sizes
+- Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts
+
+1.6.0 (123)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+- PLEASE LET ME KNOW IF YOU STILL SEE ISSUES WITH PHOTO IMPORTS!
+
+---
+
+# What's new?
+
+- All new login screen with a new design
+  - Improved error handling with more detailed error messages in many scenarios
+  - Added the ability to log in with a token or without credentials (auto-auth,
+    mTLS, etc)
+- Added the ability to change servers when the currently active server is not responding.
+- Added shortcut to create a bug report on GitHub from the settings
+- Recover from invalid filter rule contents (set manually in the admin backend)
+in certain cases
+- Explicit handling and detection of unsupported server API versions
+  - The server details in the settings now report if the server is running an
+    unsupported version
+- Added warning when using the `Authorization` header as a custom header
+- Improved error output when API response parsing fails
+- Add option to log out or switch servers on the loading screen. This is shown
+  after a short timeout
+- Clarify what the top toolbar dropdown menu means if now saved views exist
+- Fix an issue when sharing exported logs via share sheet
+- Add ability to swipe down to hide the bottom bar in the document detail view.
+  Added a setting to control if this bar is shown by default or not
+- Improve error handling of general HTTP errors with the same messages as
+  during the login process
+- Fix layout issue on iPad that prevented display of the login menu on the home
+  document screen
+- Attempted fixes for a number of concurrency issues in the document edit
+  screen and during photo import
+- Fix bug that prevented returning to the start screen after deleting a document
+- Improvements to the animation during server switching
+- Prepare for granular handling of user permissions
+- Improved layout of the document detail screen for larger dynamic text sizes
+- Fix for storage path not being added to newly created documents
+- Fix ASN not being saved when uploading documents with restricted user accounts
+
+1.6.0 (122)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+
+1. Test if the updated login screen is correctly translated! Please let me know if it's not!
+2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
+   I've been getting reports of people being logged out after updating
+
+In both cases, logs would be extremely helpful!
+
+---
+
+
+
+### Refactor
+
+
+- 184
+
+- Added the ability to change servers when the currently active server is not responding.
+
+
+
+- Added the ability to change servers when the currently active server is not responding.
+
+1.6.0 (121)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+
+1. Test if the updated login screen is correctly translated! Please let me know if it's not!
+2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
+   I've been getting reports of people being logged out after updating
+
+In both cases, logs would be extremely helpful!
+
+---
+
+
+
+### Refactor
+
+
+- 184
+
+- Added the ability to change servers when the currently active server is not responding.
+
+
+
+- Added the ability to change servers when the currently active server is not responding.
+
+1.6.0 (120)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+
+1. Test if the updated login screen is correctly translated! Please let me know if it's not!
+2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
+   I've been getting reports of people being logged out after updating
+
+In both cases, logs would be extremely helpful!
+
+---
+
+- Potentially fix issue with photo import
+- Improved concurrency handling for receiving shared files
+
+1.6.0 (119)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+1. Test if the updated login screen is correctly translated! Please let me know if it's not!
+2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
+I've been getting reports of people being logged out after updating
+
+In both cases, logs would be extremely helpful!
+
+---
+
+1.6.0 (118)
+
+PLEASE DO NOT SEND ME SCREENSHOTS WITH CONFIDENTIAL DOCUMENTS!
+Redact screenshots to not include information that you do not wish to expose.
+
+---
+
+1. Test if the updated login screen is correctly translated! Please let me know if it's not!
+2. If you have a minute, could you downgrade to the App Store version, log in to your server, and then update to TestFlight?
+I've been getting reports of people being logged out after updating
+
+In both cases, logs would be extremely helpful!
+
+---

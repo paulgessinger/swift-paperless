@@ -89,7 +89,10 @@ archive() {
     | while IFS="$(printf '\t')" read -r version build body; do
       # Builds published without notes (a rebuild, say) carry no entry, matching
       # what the in-app "What's New" screen shows.
-      decoded="$(printf '%s' "$body" | base64 -d | tr -d '\r' | trim_blank_lines)"
+      # Release bodies are typed in a browser, so normalise CRLF and trailing
+      # spaces — the repo lints for both.
+      decoded="$(printf '%s' "$body" | base64 -d | tr -d '\r' \
+        | sed 's/[[:space:]]*$//' | trim_blank_lines)"
       [ -n "$decoded" ] || continue
       printf '%s (%s)\n\n%s\n\n' "$version" "$build" "$decoded"
     done > "$tmp"
