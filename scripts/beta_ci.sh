@@ -36,7 +36,6 @@ BUILD_DIR="build"
 ARCHIVE_PATH="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/ExportOptions.plist"
-TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
 CHANGELOG="scripts/changelog.sh"
 
 # App Store provisioning profiles referenced (by name) in ExportOptions.plist.
@@ -322,22 +321,9 @@ if [ "$asc_dry_run" -eq 1 ]; then
   exit 0
 fi
 
-# App Store Connect's whatsNew field rejects emoji / pictographic characters —
-# strip them so a stray emoji can't fail the upload. Same filter as
-# scripts/set_test_notes.sh.
-strip_invalid_notes_chars() {
-  if command -v perl >/dev/null 2>&1; then
-    perl -CSD -pe 's/[\p{Extended_Pictographic}\x{FE0F}\x{200D}\x{20E3}\x{1F1E6}-\x{1F1FF}]//g'
-  else
-    echo "note: perl not found — cannot strip emoji from test notes" >&2
-    cat
-  fi
-}
-
-# TestFlight "What to Test": a fixed header (scripts/testflight_test_notes_header.txt)
-# followed by every note accumulated for this marketing version.
-test_notes="$(printf '%s\n\n%s' "$(cat "$TEST_NOTES_HEADER")" "$("$CHANGELOG" current HEAD)" \
-  | strip_invalid_notes_chars)"
+# TestFlight "What to Test": the fixed header, this build's notes, then the rest
+# of the version's, newest-first and trimmed to App Store Connect's limit.
+test_notes="$("$CHANGELOG" test-notes HEAD)"
 
 echo "==> Uploading to TestFlight (+ What to Test notes)"
 asc builds upload \

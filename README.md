@@ -111,7 +111,11 @@ clears it at build time:
 - **a build's notes** are the bullets added since the previous build tag; they
   become the prerelease body, which is what the in-app *What's New* screen shows
   (`just beta-notes` previews them)
-- **TestFlight "What to Test"** is every note for the version so far
+- **TestFlight "What to Test"** is this build's notes followed by the rest of
+  the version's, newest first. App Store Connect caps that field at 4000
+  characters and a version's notes routinely run past it, so the text is trimmed
+  at a bullet boundary from the oldest end and a link to the releases takes the
+  place of what was dropped — no more clearing the changelog by hand to fit
 - when the version ships, empty the file in the same commit that bumps
   `MARKETING_VERSION` with `just set-version`
 

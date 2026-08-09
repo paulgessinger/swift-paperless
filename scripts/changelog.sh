@@ -13,21 +13,31 @@
 # it exists *at that ref*, not in the working tree, so a preview always shows
 # what a build of that commit would actually publish:
 #
-#   base [<ref>]     the build tag a delta at <ref> is measured against
-#   delta [<ref>]    bullets added since that tag — one build's notes, published
-#                    as the GitHub prerelease body
-#   current [<ref>]  every note for the current version — the TestFlight
-#                    "What to Test" body
-#   archive          regenerate changelog.txt from the GitHub prereleases (the
-#                    offline record of what each build shipped; needs `gh`)
+#   base [<ref>]        the build tag a delta at <ref> is measured against
+#   delta [<ref>]       bullets added since that tag — one build's notes,
+#                       published as the GitHub prerelease body
+#   current [<ref>]     every note for the current version
+#   test-notes [<ref>]  the complete TestFlight "What to Test" text: header, this
+#                       build's notes, then earlier ones newest-first, trimmed to
+#                       App Store Connect's limit
+#   fit                 stdin, made safe for App Store Connect (see `fit` below)
+#   archive             regenerate changelog.txt from the GitHub prereleases (the
+#                       offline record of what each build shipped; needs `gh`)
 
 set -euo pipefail
 
 NOTES_FILE="current_changelog.txt"
 ARCHIVE_FILE="changelog.txt"
+VERSION_XCCONFIG="Config/Shared/Version.xcconfig"
+TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
 # Build tags are `builds/<version>/<build>`. The glob deliberately requires both
 # components so the pre-1.9 `builds/v90` style tags never match.
 TAG_GLOB="builds/*/*"
+# App Store Connect rejects a `whatsNew` longer than this many characters. A
+# version's notes routinely run past it over a release cycle — 1.6.0 accumulated
+# ~14.6k — so the text is trimmed to fit rather than being cleared by hand.
+NOTES_MAX_CHARS=4000
+RELEASES_URL="https://github.com/paulgessinger/swift-paperless/releases"
 
 # Run from the repo root regardless of where we were invoked.
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -40,8 +50,17 @@ trim_blank_lines() {
   '
 }
 
+# Newest line first.
+reverse_lines() { awk '{ l[NR] = $0 } END { for (i = NR; i >= 1; i--) print l[i] }'; }
+
 # The notes file as of <ref>; empty when it does not exist there.
 notes_at() { git show "$1:$NOTES_FILE" 2>/dev/null || true; }
+
+# MARKETING_VERSION as of <ref>. Anchored: the comments in Version.xcconfig name
+# the setting too.
+version_at() {
+  git show "$1:$VERSION_XCCONFIG" 2>/dev/null | grep -m1 '^MARKETING_VERSION' | sed 's/.*= //' || true
+}
 
 # Most recent build tag reachable from <ref>. Empty if there is none (the first
 # build after this flow was introduced, or a branch with no build history).
@@ -64,6 +83,58 @@ delta() {
   git diff --no-color --unified=0 "$base" "$ref" -- "$NOTES_FILE" \
     | awk '/^\+\+\+/ { next } /^\+/ { print substr($0, 2) }' \
     | trim_blank_lines
+}
+
+# Make stdin safe to send as a `whatsNew`: drop emoji / pictographic characters
+# (App Store Connect rejects them) and trim to NOTES_MAX_CHARS. Callers put the
+# text they care most about first, because trimming drops whole lines off the
+# end; when anything is dropped, a pointer to the full notes takes its place.
+fit() {
+  perl -CSD -e '
+    my ($limit, $pointer) = @ARGV;
+    local $/;
+    my $text = <STDIN> // "";
+    $text =~ s/[\p{Extended_Pictographic}\x{FE0F}\x{200D}\x{20E3}\x{1F1E6}-\x{1F1FF}]//g;
+    $text =~ s/\s+\z//;
+    if (length($text) <= $limit) { print $text, "\n"; exit 0 }
+
+    my $budget = $limit - length($pointer);
+    my $out = "";
+    for my $line (split /\n/, $text, -1) {
+      last if length($out) + length($line) + 1 > $budget;
+      $out .= $line . "\n";
+    }
+    $out =~ s/\s+\z//;
+    print $out, $pointer, "\n";
+  ' "$NOTES_MAX_CHARS" "$(printf '\n\nOlder notes for this version: %s' "$RELEASES_URL")"
+}
+
+# The complete TestFlight "What to Test" text for a build of <ref>: the fixed
+# header, then this build's new bullets, then the rest of the version's notes
+# newest-first. Ordered that way so that trimming to App Store Connect's limit
+# only ever costs the oldest notes.
+test_notes() {
+  local ref="$1" base version earlier
+  base="$(base_tag "$ref")"
+  version="$(version_at "$ref")"
+
+  {
+    cat "$TEST_NOTES_HEADER"
+    echo
+
+    delta "$ref"
+
+    # Everything already published for this version is exactly the notes file as
+    # of the previous build tag — but only when that tag belongs to the same
+    # version. Right after a MARKETING_VERSION bump it does not, and the new
+    # version starts from an empty slate.
+    if [ -n "$base" ] && [ "$(version_at "$base")" = "$version" ]; then
+      earlier="$(notes_at "$base" | trim_blank_lines | reverse_lines)"
+      if [ -n "$earlier" ]; then
+        printf '\nEarlier in %s:\n\n%s\n' "$version" "$earlier"
+      fi
+    fi
+  } | fit
 }
 
 # Rebuild changelog.txt from the build prereleases on GitHub. The releases are
@@ -120,10 +191,13 @@ case "$cmd" in
   base) base_tag "$ref" ;;
   delta) delta "$ref" ;;
   current) notes_at "$ref" | trim_blank_lines ;;
+  test-notes) test_notes "$ref" ;;
+  fit) fit ;;
   archive) archive ;;
-  -h | --help) sed -n '2,23p' "$0" ;;
+  -h | --help) sed -n '2,28p' "$0" ;;
   *)
-    echo "usage: $0 {base|delta|current} [<ref>]" >&2
+    echo "usage: $0 {base|delta|current|test-notes} [<ref>]" >&2
+    echo "       $0 fit < text" >&2
     echo "       $0 archive" >&2
     exit 2
     ;;
