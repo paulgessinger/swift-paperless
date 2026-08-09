@@ -13,7 +13,7 @@ extension FilterState {
   internal mutating func populateWith(rules: [FilterRule]) {
     for rule in rules {
       switch rule.ruleType {
-      case .title, .content, .titleContent, .fulltextQuery:
+      case .title, .simpleTitle, .content, .titleContent, .simpleText, .fulltextQuery:
         handleSearchRule(rule)
       case .createdFrom, .createdTo, .addedFrom, .addedTo, .modifiedBefore, .modifiedAfter:
         handleDateBetweenRule(rule)

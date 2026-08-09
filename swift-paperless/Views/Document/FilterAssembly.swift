@@ -27,7 +27,10 @@ struct FilterAssembly: View {
 
   private var searchModeMenu: some View {
     Menu {
-      ForEach(FilterState.SearchMode.allCases, id: \.self) { searchMode in
+      ForEach(
+        FilterState.SearchMode.selectableCases(
+          including: filterModel.filterState.searchMode), id: \.self
+      ) { searchMode in
         if filterModel.filterState.searchMode == searchMode {
           Label(searchMode.localizedName, systemImage: "checkmark")
         } else {

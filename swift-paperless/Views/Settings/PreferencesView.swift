@@ -47,7 +47,10 @@ struct PreferencesView: View {
         }
 
         Picker(selection: $appSettings.defaultSearchMode) {
-          ForEach(FilterState.SearchMode.allCases, id: \.self) { mode in
+          ForEach(
+            FilterState.SearchMode.selectableCases(
+              including: appSettings.defaultSearchMode), id: \.self
+          ) { mode in
             Text(mode.localizedName).tag(mode)
           }
         } label: {

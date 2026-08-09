@@ -26,30 +26,94 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public enum SearchMode: Equatable, Codable, CaseIterable, Sendable {
     case title
+
+    /// Retired: the paperless-ngx web UI no longer offers a content-only
+    /// search, so neither does this app. The case stays because the mode is
+    /// still *representable* — persisted filter states, `search_mode=content`
+    /// deeplinks and saved views carrying rule type 21 all decode into it, and
+    /// dropping it would reset those rather than migrate them.
+    ///
+    /// Use ``selectableCases`` to populate a picker, not `allCases`.
     case content
+
     case titleContent
     case advanced
 
-    public var ruleType: FilterRuleType {
+    /// The modes offered in the UI, mirroring the text-filter targets the web
+    /// UI exposes.
+    ///
+    /// A mode absent here can still be arrived at from a deeplink, a saved view
+    /// or a state persisted by an older build, so use
+    /// ``selectableCases(including:)`` where a current selection has to stay
+    /// representable.
+    public static let selectableCases: [SearchMode] = [.title, .titleContent, .advanced]
+
+    /// ``selectableCases``, plus `mode` when that is a retired one.
+    ///
+    /// The web UI does the same for its own retired targets — see the
+    /// `textFilterTargets` getter in filter-editor.component.ts, which appends
+    /// the deprecated option only while it is the active one. Without this a
+    /// picker bound to a retired mode would show no selection at all.
+    public static func selectableCases(including mode: SearchMode) -> [SearchMode] {
+      selectableCases.contains(mode) ? selectableCases : selectableCases + [mode]
+    }
+
+    public func ruleType(for searchApi: SearchApi) -> FilterRuleType {
       switch self {
       case .title:
-        .title
+        // The 3.0 web UI searches titles with the Tantivy-backed
+        // `title_search`. `title__icontains` is not deprecated, but using it
+        // would make the same search return different documents in this app
+        // than in the web UI.
+        searchApi == .tantivy ? .simpleTitle : .title
       case .content:
+        // The web UI has no content-only search, so there is nothing to
+        // mirror and no Tantivy equivalent to switch to.
         .content
       case .titleContent:
-        .titleContent
+        // paperless-ngx 3.0 deprecated `title_content` in favour of the
+        // Tantivy-backed `text` parameter.
+        searchApi == .tantivy ? .simpleText : .titleContent
       case .advanced:
         .fulltextQuery
       }
     }
 
+    /// Whether this mode's rule for `searchApi` is answered from the search
+    /// index, and therefore cannot be combined with another such parameter.
+    ///
+    /// ``FilterState/SearchMode/advanced`` is excluded: it *is* the `query`
+    /// parameter, so it has nothing to collide with and nothing to fold into.
+    func isIndexBacked(for searchApi: SearchApi) -> Bool {
+      self != .advanced && ruleType(for: searchApi).isExclusiveSearchRule
+    }
+
+    /// Recovers the search mode from a rule stored in a saved view.
+    ///
+    /// Saved views live on the server, so a rule may have been written by any
+    /// client against any backend version. Several rule types therefore denote
+    /// the same mode:
+    ///
+    ///     19 `title_content`  this app pre-3.0, and other pre-3.0 clients
+    ///     49 `text`           the 3.0 web UI, and this app on a 3.0 backend
+    ///     20 `title`          any client
+    ///     48 `title_search`   the 3.0 web UI
+    ///
+    /// Both encodings have to load into the mode the UI offers; otherwise a
+    /// view saved in the 3.0 web UI would fall through to `remaining` and
+    /// present an empty search field with an invisible filter attached.
+    ///
+    /// The mapping is many-to-one, and the inverse ``ruleType(for:)`` picks a
+    /// single encoding per backend. Nothing is lost, but note the consequence:
+    /// a view stored as 19 and saved again against a 3.0 backend comes back
+    /// as 49.
     public init?(ruleType: FilterRuleType) {
       switch ruleType {
-      case .title:
+      case .title, .simpleTitle:
         self = .title
       case .content:
         self = .content
-      case .titleContent:
+      case .titleContent, .simpleText:
         self = .titleContent
       case .fulltextQuery:
         self = .advanced

@@ -50,9 +50,10 @@ struct FilterStateTest {
 
   @Test("Search mode conversion between FilterRuleType and FilterState.SearchMode")
   func testSearchModeConversion() {
-    #expect(FilterRuleType.title == FilterState.SearchMode.title.ruleType)
-    #expect(FilterRuleType.content == FilterState.SearchMode.content.ruleType)
-    #expect(FilterRuleType.titleContent == FilterState.SearchMode.titleContent.ruleType)
+    #expect(FilterRuleType.title == FilterState.SearchMode.title.ruleType(for: .legacy))
+    #expect(FilterRuleType.content == FilterState.SearchMode.content.ruleType(for: .legacy))
+    #expect(
+      FilterRuleType.titleContent == FilterState.SearchMode.titleContent.ruleType(for: .legacy))
 
     #expect(FilterState.SearchMode(ruleType: .title) == FilterState.SearchMode.title)
     #expect(FilterState.SearchMode(ruleType: .content) == FilterState.SearchMode.content)
@@ -259,9 +260,9 @@ struct FilterStateTest {
       $0.date.modified = .between(start: nil, end: nil)
     }
 
-    #expect(state.rules.isEmpty)
+    #expect(state.rules(for: .legacy).isEmpty)
 
-    let roundTrip = FilterState(rules: state.rules)
+    let roundTrip = FilterState(rules: state.rules(for: .legacy))
     #expect(roundTrip.date.created == .any)
     #expect(roundTrip.date.added == .any)
     #expect(roundTrip.date.modified == .any)
@@ -695,8 +696,9 @@ struct FilterStateTest {
       }
 
       #expect(
-        try state.rules == [
-          #require(FilterRule(ruleType: mode.ruleType, value: .string(value: "hallo")))
+        try state.rules(for: .legacy) == [
+          #require(
+            FilterRule(ruleType: mode.ruleType(for: .legacy), value: .string(value: "hallo")))
         ])
     }
   }
@@ -731,7 +733,9 @@ struct FilterStateTest {
       #require(FilterRule(ruleType: .modifiedBefore, value: .date(value: modifiedEndBackend))),
     ])
 
-    let sortedRules = state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let sortedRules = state.rules(for: .legacy).sorted(by: {
+      $0.ruleType.rawValue < $1.ruleType.rawValue
+    })
     let sortedExpected = expected.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
     #expect(sortedRules == sortedExpected)
 
@@ -747,7 +751,7 @@ struct FilterStateTest {
       #require(FilterRule(ruleType: .modifiedBefore, value: .date(value: modifiedEndBackend))),
     ])
 
-    let sortedOpenEndedRules = openEndedState.rules.sorted(
+    let sortedOpenEndedRules = openEndedState.rules(for: .legacy).sorted(
       by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
     let sortedOpenEndedExpected = openEndedExpected.sorted(
       by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
@@ -764,7 +768,7 @@ struct FilterStateTest {
       $0.date.modified = .range(.within(num: -3, interval: .year))
     }
 
-    let components = state.rules
+    let components = state.rules(for: .legacy)
       .filter { $0.ruleType == .fulltextQuery }
       .compactMap { stringValue(from: $0) }
       .flatMap { queryComponents(from: $0) }
@@ -784,7 +788,7 @@ struct FilterStateTest {
       $0.date.modified = .range(.yesterday)
     }
 
-    let noSearchComponents = noSearchState.rules
+    let noSearchComponents = noSearchState.rules(for: .legacy)
       .filter { $0.ruleType == .fulltextQuery }
       .compactMap { stringValue(from: $0) }
       .flatMap { queryComponents(from: $0) }
@@ -798,7 +802,7 @@ struct FilterStateTest {
 
   @Test("Empty FilterState produces no rules")
   func testFilterStateToRuleEmpty() {
-    #expect(FilterState.empty.rules == [])
+    #expect(FilterState.empty.rules(for: .legacy) == [])
   }
 
   @Test("Convert FilterState correspondent to rules")
@@ -806,33 +810,33 @@ struct FilterStateTest {
     // Old single rule
     #expect(
       [FilterRule(ruleType: .correspondent, value: .correspondent(id: nil))]
-        == FilterState.empty.with { $0.correspondent = .notAssigned }.rules
+        == FilterState.empty.with { $0.correspondent = .notAssigned }.rules(for: .legacy)
     )
 
     // New anyOf rule
     #expect(
       [FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8))]
-        == FilterState.empty.with { $0.correspondent = .anyOf(ids: [8]) }.rules
+        == FilterState.empty.with { $0.correspondent = .anyOf(ids: [8]) }.rules(for: .legacy)
     )
 
     #expect(
       [
         FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 8)),
         FilterRule(ruleType: .hasCorrespondentAny, value: .correspondent(id: 99)),
-      ] == FilterState.empty.with { $0.correspondent = .anyOf(ids: [8, 99]) }.rules
+      ] == FilterState.empty.with { $0.correspondent = .anyOf(ids: [8, 99]) }.rules(for: .legacy)
     )
 
     // New noneOf rule
     #expect(
       [FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8))]
-        == FilterState.empty.with { $0.correspondent = .noneOf(ids: [8]) }.rules
+        == FilterState.empty.with { $0.correspondent = .noneOf(ids: [8]) }.rules(for: .legacy)
     )
 
     #expect(
       [
         FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 8)),
         FilterRule(ruleType: .doesNotHaveCorrespondent, value: .correspondent(id: 99)),
-      ] == FilterState.empty.with { $0.correspondent = .noneOf(ids: [8, 99]) }.rules
+      ] == FilterState.empty.with { $0.correspondent = .noneOf(ids: [8, 99]) }.rules(for: .legacy)
     )
   }
 
@@ -841,32 +845,32 @@ struct FilterStateTest {
     // Old single rule
     #expect(
       [FilterRule(ruleType: .documentType, value: .documentType(id: nil))]
-        == FilterState.empty.with { $0.documentType = .notAssigned }.rules
+        == FilterState.empty.with { $0.documentType = .notAssigned }.rules(for: .legacy)
     )
 
     // New anyOf rule
     #expect(
       [FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8))]
-        == FilterState.empty.with { $0.documentType = .anyOf(ids: [8]) }.rules
+        == FilterState.empty.with { $0.documentType = .anyOf(ids: [8]) }.rules(for: .legacy)
     )
 
     #expect(
       [
         FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 8)),
         FilterRule(ruleType: .hasDocumentTypeAny, value: .documentType(id: 99)),
-      ] == FilterState.empty.with { $0.documentType = .anyOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.documentType = .anyOf(ids: [8, 99]) }.rules(for: .legacy))
 
     // New noneOf rule
     #expect(
       [
         FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8))
-      ] == FilterState.empty.with { $0.documentType = .noneOf(ids: [8]) }.rules)
+      ] == FilterState.empty.with { $0.documentType = .noneOf(ids: [8]) }.rules(for: .legacy))
 
     #expect(
       [
         FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 8)),
         FilterRule(ruleType: .doesNotHaveDocumentType, value: .documentType(id: 99)),
-      ] == FilterState.empty.with { $0.documentType = .noneOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.documentType = .noneOf(ids: [8, 99]) }.rules(for: .legacy))
   }
 
   @Test("Remaining rules are preserved in round-trip conversion")
@@ -876,7 +880,7 @@ struct FilterStateTest {
       FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1)))
     )
     #expect(
-      FilterState(rules: [addedAfter]).rules == [addedAfter]
+      FilterState(rules: [addedAfter]).rules(for: .legacy) == [addedAfter]
     )
   }
 
@@ -889,7 +893,9 @@ struct FilterStateTest {
     ])
 
     #expect(
-      tagAll == FilterState.empty.with { $0.tags = .allOf(include: [66, 71], exclude: [75]) }.rules
+      tagAll
+        == FilterState.empty.with { $0.tags = .allOf(include: [66, 71], exclude: [75]) }.rules(
+          for: .legacy)
     )
 
     let tagAny = try [FilterRule]([
@@ -898,12 +904,12 @@ struct FilterStateTest {
     ])
 
     #expect(
-      tagAny == FilterState.empty.with { $0.tags = .anyOf(ids: [66, 71]) }.rules
+      tagAny == FilterState.empty.with { $0.tags = .anyOf(ids: [66, 71]) }.rules(for: .legacy)
     )
 
     #expect(
       [FilterRule(ruleType: .hasAnyTag, value: .boolean(value: false))]
-        == FilterState.empty.with { $0.tags = .notAssigned }.rules
+        == FilterState.empty.with { $0.tags = .notAssigned }.rules(for: .legacy)
     )
   }
 
@@ -912,17 +918,17 @@ struct FilterStateTest {
     #expect(
       [
         FilterRule(ruleType: .ownerIsnull, value: .boolean(value: true))
-      ] == FilterState.empty.with { $0.owner = .notAssigned }.rules)
+      ] == FilterState.empty.with { $0.owner = .notAssigned }.rules(for: .legacy))
 
     // This could theoretically be expressed as:
     // FilterRule(ruleType: .ownerIsnull, value: .boolean(value: false))
     // But this is redundant to just not having a rule, so let's not create one.
-    #expect(FilterState.empty.with { $0.owner = .any }.rules == [])  // we could the
+    #expect(FilterState.empty.with { $0.owner = .any }.rules(for: .legacy) == [])  // we could the
 
     #expect(
       try [
         #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8)))
-      ] == FilterState.empty.with { $0.owner = .anyOf(ids: [8]) }.rules)
+      ] == FilterState.empty.with { $0.owner = .anyOf(ids: [8]) }.rules(for: .legacy))
 
     // Technically, this could also be expressed as a rule .owner with value 8,
     // but that's equivalent
@@ -931,18 +937,18 @@ struct FilterStateTest {
       try [
         #require(FilterRule(ruleType: .ownerAny, value: .number(value: 8))),
         #require(FilterRule(ruleType: .ownerAny, value: .number(value: 99))),
-      ] == FilterState.empty.with { $0.owner = .anyOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.owner = .anyOf(ids: [8, 99]) }.rules(for: .legacy))
 
     #expect(
       try [
         #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8)))
-      ] == FilterState.empty.with { $0.owner = .noneOf(ids: [8]) }.rules)
+      ] == FilterState.empty.with { $0.owner = .noneOf(ids: [8]) }.rules(for: .legacy))
 
     #expect(
       try [
         #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 8))),
         #require(FilterRule(ruleType: .ownerDoesNotInclude, value: .number(value: 99))),
-      ] == FilterState.empty.with { $0.owner = .noneOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.owner = .noneOf(ids: [8, 99]) }.rules(for: .legacy))
   }
 
   @Test("Convert FilterState storage path to rules")
@@ -950,32 +956,32 @@ struct FilterStateTest {
     // Old single rule
     #expect(
       try [#require(FilterRule(ruleType: .storagePath, value: .storagePath(id: nil)))]
-        == FilterState.empty.with { $0.storagePath = .notAssigned }.rules
+        == FilterState.empty.with { $0.storagePath = .notAssigned }.rules(for: .legacy)
     )
 
     // New anyOf rule
     #expect(
       try [#require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8)))]
-        == FilterState.empty.with { $0.storagePath = .anyOf(ids: [8]) }.rules
+        == FilterState.empty.with { $0.storagePath = .anyOf(ids: [8]) }.rules(for: .legacy)
     )
 
     #expect(
       try [
         #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 8))),
         #require(FilterRule(ruleType: .hasStoragePathAny, value: .storagePath(id: 99))),
-      ] == FilterState.empty.with { $0.storagePath = .anyOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.storagePath = .anyOf(ids: [8, 99]) }.rules(for: .legacy))
 
     // New noneOf rule
     #expect(
       try [
         #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8)))
-      ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8]) }.rules)
+      ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8]) }.rules(for: .legacy))
 
     #expect(
       try [
         #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 8))),
         #require(FilterRule(ruleType: .doesNotHaveStoragePath, value: .storagePath(id: 99))),
-      ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8, 99]) }.rules)
+      ] == FilterState.empty.with { $0.storagePath = .noneOf(ids: [8, 99]) }.rules(for: .legacy))
   }
 
   // - MARK: ASN Filtering Tests
@@ -1022,37 +1028,37 @@ struct FilterStateTest {
   func testFilterStateToRuleAsn() throws {
     // Test .any - should produce no rules
     #expect(
-      FilterState.empty.with { $0.asn = .any }.rules == []
+      FilterState.empty.with { $0.asn = .any }.rules(for: .legacy) == []
     )
 
     // Test .isNull
     #expect(
       [FilterRule(ruleType: .asnIsnull, value: .boolean(value: true))]
-        == FilterState.empty.with { $0.asn = .isNull }.rules
+        == FilterState.empty.with { $0.asn = .isNull }.rules(for: .legacy)
     )
 
     // Test .isNotNull
     #expect(
       [FilterRule(ruleType: .asnIsnull, value: .boolean(value: false))]
-        == FilterState.empty.with { $0.asn = .isNotNull }.rules
+        == FilterState.empty.with { $0.asn = .isNotNull }.rules(for: .legacy)
     )
 
     // Test .equalTo
     #expect(
       try [#require(FilterRule(ruleType: .asn, value: .number(value: 42)))]
-        == FilterState.empty.with { $0.asn = .equalTo(42) }.rules
+        == FilterState.empty.with { $0.asn = .equalTo(42) }.rules(for: .legacy)
     )
 
     // Test .greaterThan
     #expect(
       try [#require(FilterRule(ruleType: .asnGt, value: .number(value: 100)))]
-        == FilterState.empty.with { $0.asn = .greaterThan(100) }.rules
+        == FilterState.empty.with { $0.asn = .greaterThan(100) }.rules(for: .legacy)
     )
 
     // Test .lessThan
     #expect(
       try [#require(FilterRule(ruleType: .asnLt, value: .number(value: 50)))]
-        == FilterState.empty.with { $0.asn = .lessThan(50) }.rules
+        == FilterState.empty.with { $0.asn = .lessThan(50) }.rules(for: .legacy)
     )
   }
 
@@ -1062,32 +1068,32 @@ struct FilterStateTest {
 
     // equalTo case
     let equalToState = FilterState.empty.with { $0.asn = .equalTo(42) }
-    let equalToRules = equalToState.rules
+    let equalToRules = equalToState.rules(for: .legacy)
     #expect(FilterState(rules: equalToRules).asn == .equalTo(42))
 
     // isNull case
     let isNullState = FilterState.empty.with { $0.asn = .isNull }
-    let isNullRules = isNullState.rules
+    let isNullRules = isNullState.rules(for: .legacy)
     #expect(FilterState(rules: isNullRules).asn == .isNull)
 
     // isNotNull case
     let isNotNullState = FilterState.empty.with { $0.asn = .isNotNull }
-    let isNotNullRules = isNotNullState.rules
+    let isNotNullRules = isNotNullState.rules(for: .legacy)
     #expect(FilterState(rules: isNotNullRules).asn == .isNotNull)
 
     // greaterThan case
     let greaterThanState = FilterState.empty.with { $0.asn = .greaterThan(100) }
-    let greaterThanRules = greaterThanState.rules
+    let greaterThanRules = greaterThanState.rules(for: .legacy)
     #expect(FilterState(rules: greaterThanRules).asn == .greaterThan(100))
 
     // lessThan case
     let lessThanState = FilterState.empty.with { $0.asn = .lessThan(50) }
-    let lessThanRules = lessThanState.rules
+    let lessThanRules = lessThanState.rules(for: .legacy)
     #expect(FilterState(rules: lessThanRules).asn == .lessThan(50))
 
     // any case (default, produces no rules)
     let anyState = FilterState.empty.with { $0.asn = .any }
-    let anyRules = anyState.rules
+    let anyRules = anyState.rules(for: .legacy)
     #expect(FilterState(rules: anyRules).asn == .any)
   }
 
@@ -1107,7 +1113,9 @@ struct FilterStateTest {
     #expect(state.tags == .allOf(include: [5], exclude: []))
 
     // Verify round-trip preserves all filters
-    let regeneratedRules = state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+    let regeneratedRules = state.rules(for: .legacy).sorted(by: {
+      $0.ruleType.rawValue < $1.ruleType.rawValue
+    })
     let originalRules = rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
     #expect(regeneratedRules == originalRules)
   }
@@ -1344,7 +1352,7 @@ struct FilterStateTest {
     #expect(state.asn == .lessThan(50))
 
     // Encode back to JSON
-    let encodedRules = state.rules
+    let encodedRules = state.rules(for: .legacy)
     let encodedJson = try JSONEncoder().encode(encodedRules)
 
     struct Payload: Decodable {
@@ -1380,7 +1388,7 @@ struct FilterStateTest {
     let customQuery = CustomFieldQuery.expr(8, .exists, .string("true"))
     let state = FilterState.empty.with { $0.customField = customQuery }
 
-    let rules = state.rules
+    let rules = state.rules(for: .legacy)
     #expect(rules.count == 1)
     #expect(rules[0].ruleType == .customFieldsQuery)
     #expect(rules[0].value == .customFieldQuery(customQuery))
@@ -1415,7 +1423,7 @@ struct FilterStateTest {
     #expect(state.remaining == input.suffix(1))
 
     #expect(
-      state.rules.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
+      state.rules(for: .legacy).sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
         == input.sorted(by: { $0.ruleType.rawValue < $1.ruleType.rawValue })
     )
   }
@@ -1496,7 +1504,7 @@ struct FilterStateTest {
       $0.date.modified = .between(start: userStart, end: userEnd)
     }
 
-    let generatedRules = stateToRuleState.rules
+    let generatedRules = stateToRuleState.rules(for: .legacy)
     #expect(generatedRules.count == 2)
 
     // Backend should get Jan 14 and Jan 26 for exclusive bounds
