@@ -44,18 +44,24 @@ struct ShareView: View {
   // missing app-group), fall back to an in-memory database so the extension
   // still renders the disabled "no active server" state cleanly instead of
   // crashing. The in-memory path (DatabaseQueue + migrations) is infallible in
-  // practice; if it ever throws we want to know immediately.
+  // practice; if it ever throws we want to know immediately — but log the
+  // fallback's own error first, since `preconditionFailure` only carries its
+  // message into the crash report and the underlying error is the only thing
+  // that would make such a report diagnosable.
   private static func bootstrapDatabase() -> Database {
     do {
       return try Database()
     } catch {
       Logger.shared.fault(
         "Share Extension database bootstrap failed (\(error)); falling back to in-memory")
-      if let inMemory = try? Database.inMemory() {
-        return inMemory
+      do {
+        return try Database.inMemory()
+      } catch {
+        Logger.shared.fault(
+          "Share Extension in-memory database fallback also failed: \(error)")
+        preconditionFailure(
+          "In-memory database fallback also failed (\(error)); cannot construct ConnectionManager")
       }
-      preconditionFailure(
-        "In-memory database fallback also failed; cannot construct ConnectionManager")
     }
   }
 
