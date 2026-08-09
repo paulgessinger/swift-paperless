@@ -126,10 +126,7 @@ struct CredentialsStageView<Preamble: View>: View {
   }
 
   private var otpValid: Bool {
-    let ex = /^[0-9]*$/
-    let isDigits: Bool = (try? ex.wholeMatch(in: viewModel.otp)) != nil
-    // TOTP codes are 6 digits; allauth recovery codes are 8 digits.
-    return isDigits && (viewModel.otp.count == 6 || viewModel.otp.count == 8)
+    OTPCode.isWellFormed(viewModel.otp)
   }
 
   private var availableCredentialModes: [CredentialMode] {
@@ -277,6 +274,25 @@ extension CredentialsStageView where Preamble == EmptyView {
   }
 }
 
+/// Validation shared by the credential-login and OIDC second-factor flows.
+/// TOTP codes are 6 digits; allauth recovery codes are 8 digits.
+private enum OTPCode {
+  static func isWellFormed(_ code: String) -> Bool {
+    let isDigits = (try? /^[0-9]*$/.wholeMatch(in: code)) != nil
+    return isDigits && (code.count == 6 || code.count == 8)
+  }
+
+  /// Returns `new` if it is plausible OTP input (digits, at most 8), otherwise
+  /// the previous value, so the text field only ever holds usable input.
+  static func sanitized(_ new: String, fallback old: String) -> String {
+    let isDigits = (try? /^[0-9]*$/.wholeMatch(in: new)) != nil
+    if (!isDigits && !new.isEmpty) || new.count > 8 {
+      return old
+    }
+    return new
+  }
+}
+
 private struct OtpSection: View {
   @Binding var code: String
   var onSubmit: () -> Void
@@ -288,12 +304,7 @@ private struct OtpSection: View {
         .keyboardType(.numberPad)
         .submitLabel(.go)
         .onChange(of: code) { old, new in
-          let ex = /^[0-9]*$/
-          let isDigits: Bool = (try? ex.wholeMatch(in: new)) != nil
-          // TOTP codes are 6 digits; allauth recovery codes are 8 digits.
-          if (!isDigits && !new.isEmpty) || new.count > 8 {
-            code = old
-          }
+          code = OTPCode.sanitized(new, fallback: old)
         }
         .onSubmit(of: .text) { onSubmit() }
     } header: {

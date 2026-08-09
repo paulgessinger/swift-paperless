@@ -177,8 +177,15 @@ public final class OIDCClient {
         statusCode: 0, body: String(data: data, encoding: .utf8) ?? "")
     }
 
-    switch http.statusCode {
-    case 200..<300:
+    guard let status = http.status else {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error(
+        "2fa/authenticate returned unknown status \(http.statusCode): \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
+    }
+
+    switch status {
+    case .ok:
       let decoded = try JSONDecoder().decode(PaperlessTokenResponse.self, from: data)
       guard let apiToken = decoded.meta?.access_token else {
         logger.error("2fa/authenticate succeeded but no access_token in meta")
@@ -190,7 +197,7 @@ public final class OIDCClient {
       self.token = apiToken
       return apiToken
 
-    case 400:
+    case .badRequest:
       if let errorResponse = try? JSONDecoder().decode(OIDCErrorResponse.self, from: data),
         errorResponse.errors?.contains(where: { $0.code == "incorrect_code" }) == true
       {
@@ -201,7 +208,7 @@ public final class OIDCClient {
       logger.error("MFA code confirm returned 400: \(body, privacy: .private)")
       throw OIDCError.paperlessTokenExchangeFailed(statusCode: 400, body: body)
 
-    case 401:
+    case .unauthorized:
       // The pending login session is gone (expired or already consumed).
       logger.error("Pending MFA session is no longer valid (401)")
       throw OIDCError.mfaSessionExpired
@@ -209,7 +216,7 @@ public final class OIDCClient {
     default:
       let body = String(data: data, encoding: .utf8) ?? ""
       logger.error(
-        "MFA code confirm returned \(http.statusCode): \(body, privacy: .private)")
+        "MFA code confirm returned \(status): \(body, privacy: .private)")
       throw OIDCError.paperlessTokenExchangeFailed(statusCode: http.statusCode, body: body)
     }
   }
