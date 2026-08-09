@@ -627,23 +627,48 @@ class LoginViewModel {
       connection = makeConnection(token)
 
     case .oidc:
-      guard let client = oidcClient, let auth, let provider else {
+      guard let client = oidcClient else {
         Logger.shared.warning(
-          "Somehow ended up in validateCredentials with OIDC mode, but no auth and no provider (internal error)"
+          "Somehow ended up in validateCredentials with OIDC mode, but no OIDC client (internal error)"
         )
         credentialState = .none
         return nil
       }
 
       do {
-        let token = try await client.login(provider: provider, auth: auth)
+        let token: String
+        if otpEnabled {
+          // A second factor (TOTP) was requested during the OIDC login; confirm
+          // the code against the pending session instead of re-running the
+          // browser flow.
+          token = try await client.confirmMFA(code: otp)
+        } else {
+          guard let auth, let provider else {
+            Logger.shared.warning(
+              "Somehow ended up in validateCredentials with OIDC mode, but no auth and no provider (internal error)"
+            )
+            credentialState = .none
+            return nil
+          }
+
+          switch try await client.login(provider: provider, auth: auth) {
+          case .success(let apiToken):
+            token = apiToken
+          case .mfaRequired:
+            Logger.shared.info("OIDC login requires a second factor (TOTP)")
+            otpEnabled = true
+            otp = ""
+            credentialState = .none
+            return nil
+          }
+        }
         connection = makeConnection(token)
       } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
         Logger.shared.debug("User canceled login")
         credentialState = .none
         return nil
       } catch {
-        Logger.shared.error("Error when executing OIDC flow with provider \(provider.id): \(error)")
+        Logger.shared.error("Error when executing OIDC flow: \(error)")
         // @TODO: Handle cancel separately as that's not really an error
         //        https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsessionerror/canceledlogin
         credentialState = .error(LoginError(other: error))

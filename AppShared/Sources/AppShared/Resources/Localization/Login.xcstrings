@@ -3460,6 +3460,168 @@
           }
         }
       }
+    },
+    "oidcErrorInvalidCode" : {
+      "comment" : "OIDC login error: the entered second factor (TOTP) code was rejected by Paperless.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den indtastede kode er ikke gyldig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der eingegebene Code ist nicht gültig."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The entered code is not valid."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le code saisi n'est pas valide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il codice inserito non è valido."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De ingevoerde code is niet geldig."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wprowadzony kod jest nieprawidłowy."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Girilen kod geçerli değil."
+          }
+        }
+      }
+    },
+    "oidcErrorMfaSessionMissing" : {
+      "comment" : "OIDC login error: a second factor was required but no pending login session was available.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der kræves en anden faktor, men der er ingen aktiv loginsession. Prøv venligst igen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein zweiter Faktor ist erforderlich, aber es ist keine aktive Anmeldesitzung vorhanden. Bitte versuchen Sie es erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A second factor is required, but no active login session is available. Please try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un second facteur est requis, mais aucune session de connexion active n'est disponible. Veuillez réessayer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È richiesto un secondo fattore, ma non è disponibile alcuna sessione di accesso attiva. Riprova."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een tweede factor is vereist, maar er is geen actieve loginsessie beschikbaar. Probeer het opnieuw."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagany jest drugi czynnik, ale nie ma aktywnej sesji logowania. Spróbuj ponownie."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İkinci bir doğrulama faktörü gerekli, ancak aktif oturum yok. Lütfen tekrar deneyin."
+          }
+        }
+      }
+    },
+    "oidcErrorMfaSessionExpired" : {
+      "comment" : "OIDC login error: the pending second factor login session expired before the code was confirmed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessionslogningen for den anden faktor er udløbet. Log venligst ind igen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldesitzung für den zweiten Faktor ist abgelaufen. Bitte melden Sie sich erneut an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The second factor login session has expired. Please log in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La session de connexion du second facteur a expiré. Veuillez vous reconnecter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sessione di accesso del secondo fattore è scaduta. Accedi di nuovo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De loginsessie voor de tweede factor is verlopen. Log opnieuw in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesja logowania drugim czynnikiem wygasła. Zaloguj się ponownie."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İkinci faktör oturumu süresi doldu. Lütfen tekrar giriş yapın."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

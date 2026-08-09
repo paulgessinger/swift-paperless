@@ -2,3 +2,4 @@
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
 - Title search and title and content search now use the new search API on Paperless-ngx v3.0 and later, matching what the web interface does. The same search now returns the same documents in both. Older servers are unaffected.
 - The content-only search mode is no longer offered, following the Paperless-ngx web interface, which has dropped it. Existing filters, saved views and links that use it keep working.
+- OIDC logins now support TOTP (two-factor authentication) codes from Paperless-ngx
