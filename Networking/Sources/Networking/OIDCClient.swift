@@ -209,8 +209,10 @@ public final class OIDCClient {
       throw OIDCError.paperlessTokenExchangeFailed(statusCode: 400, body: body)
 
     case .unauthorized:
-      // The pending login session is gone (expired or already consumed).
+      // The pending login session is gone (expired or already consumed). Clear
+      // it so a retry does not reuse the stale session.
       logger.error("Pending MFA session is no longer valid (401)")
+      self.pendingMFASessionToken = nil
       throw OIDCError.mfaSessionExpired
 
     default:
@@ -370,7 +372,13 @@ public final class OIDCClient {
     request.httpBody = try JSONSerialization.data(withJSONObject: payload)
     let (data, response) = try await session.data(for: request)
 
-    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+    guard let http = response as? HTTPURLResponse else {
+      let body = String(data: data, encoding: .utf8) ?? ""
+      logger.error("Token exchange response was not an HTTP response: \(body, privacy: .private)")
+      throw OIDCError.paperlessTokenExchangeFailed(statusCode: 0, body: body)
+    }
+
+    guard (200..<300).contains(http.statusCode) else {
       // A 401 carrying a pending `mfa_authenticate` flow means the login was
       // accepted but a second factor (TOTP) is required to finish it. The
       // session token lets us continue via `confirmMFA(code:)`.
@@ -396,7 +404,7 @@ public final class OIDCClient {
     guard let apiToken = decoded.meta?.access_token else {
       logger.error("Token response did not contain an access token")
       throw OIDCError.paperlessTokenExchangeFailed(
-        statusCode: 200, body: String(data: data, encoding: .utf8) ?? "")
+        statusCode: http.statusCode, body: String(data: data, encoding: .utf8) ?? "")
     }
     return .success(token: apiToken)
   }
@@ -543,7 +551,8 @@ struct PaperlessTokenResponse: Decodable, Equatable {
     let access_token: String?
     let session_token: String?
   }
-  struct Data: Decodable, Equatable {
+  // Named `Payload` rather than `Data` to not shadow `Foundation.Data`.
+  struct Payload: Decodable, Equatable {
     struct Flow: Decodable, Equatable {
       let id: String
       let is_pending: Bool?
@@ -551,7 +560,7 @@ struct PaperlessTokenResponse: Decodable, Equatable {
     let flows: [Flow]?
   }
   let meta: Meta?
-  let data: Data?
+  let data: Payload?
 }
 
 /// Error envelope used by allauth headless responses (e.g. the 400 returned

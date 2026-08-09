@@ -439,6 +439,33 @@ struct OIDCClientTest {
     }
   }
 
+  // The stale pending session must not be reused for a retry once the session
+  // is reported as expired.
+  @Test func confirmMFA_clearsSessionTokenOnExpired() async throws {
+    let expectedURL = Self.baseURL.appendingPathComponent(
+      "api/auth/headless/app/v1/auth/2fa/authenticate")
+    MockURLProtocol.responder = { _ in
+      (
+        HTTPURLResponse(
+          url: expectedURL, statusCode: 401, httpVersion: "HTTP/1.1",
+          headerFields: ["Content-Type": "application/json"])!,
+        Data()
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClient()
+    client.pendingMFASessionToken = "pending-session-token"
+
+    do {
+      _ = try await client.confirmMFA(code: "123456")
+    } catch {
+      // expected
+    }
+
+    #expect(client.pendingMFASessionToken == nil)
+  }
+
   @Test func confirmMFA_throwsWithoutPendingSession() async {
     let url = URL(string: "https://example.com")!
     MockURLProtocol.responder = { _ in

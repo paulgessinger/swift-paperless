@@ -669,6 +669,16 @@ class LoginViewModel {
         return nil
       } catch {
         Logger.shared.error("Error when executing OIDC flow: \(error)")
+        // A wrong code is retryable, but if the pending second-factor session
+        // is gone (e.g. expired) the code can no longer be confirmed: reset
+        // the OTP state so the provider list is shown again and the OIDC login
+        // can be started over.
+        if let oidcError = error as? OIDCError,
+          oidcError == .mfaSessionExpired || oidcError == .mfaSessionMissing
+        {
+          otpEnabled = false
+          otp = ""
+        }
         // @TODO: Handle cancel separately as that's not really an error
         //        https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsessionerror/canceledlogin
         credentialState = .error(LoginError(other: error))
