@@ -129,7 +129,7 @@ struct DocumentMetadataView: View {
       }
     }
     .task {
-      try? await store.fetchAll()
+      try? await store.sync()
       document = try? await store.document(id: 1)
       if let document {
         metadata = try? await store.repository.metadata(documentId: document.id)

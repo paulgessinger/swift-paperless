@@ -178,7 +178,7 @@ public struct TrashView: View {
         )
       }
 
-      try await store.fetchAll()
+      try await store.sync()
       let seq = try store.repository.documents(filter: .default)
       let allDocuments = try await seq.fetch(limit: 1000)
 

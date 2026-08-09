@@ -991,7 +991,7 @@ private let customFields = [
       _ = try await store.create(documentType: ProtoDocumentType(name: "Test Document Type"))
       _ = try await store.create(storagePath: ProtoStoragePath(name: "Test Storage Path"))
 
-      try await store.fetchAll()
+      try await store.sync()
       try await store.repository.create(
         document: ProtoDocument(title: "blubb"),
         file: #URL("http://example.com"), filename: "blubb.pdf"

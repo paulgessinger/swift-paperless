@@ -85,7 +85,7 @@ struct ShareView: View {
           wrapping: needsAuth, database: database, serverID: conn.serverID)
         store.set(repository: repository)
         storeReady = true
-        try? await store.fetchAll()
+        try? await store.sync()
       }
     } else {
       Logger.shared.trace("App does not have any active connection")

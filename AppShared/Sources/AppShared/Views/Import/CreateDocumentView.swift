@@ -440,7 +440,7 @@ public struct CreateDocumentView: View {
       }
       .task {
         do {
-          try await store.fetchAll()
+          try await store.sync()
         } catch {
           errorController.push(error: error)
         }

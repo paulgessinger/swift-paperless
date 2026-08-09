@@ -1034,7 +1034,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
           )
         )
 
-        try await store.fetchAll()
+        try await store.sync()
         let documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
         let firstDocument = documents.first
         if var firstDocument {

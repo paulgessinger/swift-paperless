@@ -155,7 +155,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
   private func refresh() async {
     do {
-      try await store.fetchAll(userInitiated: true)
+      try await store.sync(userInitiated: true)
       if let model {
         withAnimation {
           elements = model.load()
@@ -338,7 +338,7 @@ private struct Container<M: ManagerProtocol>: View {
     }
     .environment(store)
     .task {
-      try? await store.fetchAll()
+      try? await store.sync()
     }
   }
 }

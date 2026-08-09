@@ -371,7 +371,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
   for field in customFields {
     _ = try await repository.add(customField: field)
   }
-  try await store.fetchAll()
+  try await store.sync()
   try await store.repository.create(
     document: ProtoDocument(title: "blubb"),
     file: #URL("http://example.com"), filename: "blubb.pdf"
@@ -433,7 +433,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
           permissions: .full {
             $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
           })
-        try? await store.fetchAll()
+        try? await store.sync()
       }
     }
   }

@@ -425,7 +425,7 @@ where
     .refreshable {
       await Task {
         do {
-          try await store.fetchAll(userInitiated: true)
+          try await store.sync(userInitiated: true)
         } catch {
           errorController.push(error: error)
         }

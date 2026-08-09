@@ -17,7 +17,7 @@ extension DocumentStore {
   /// write-through mutations behave exactly as in production.
   ///
   /// The wrapped repository's element data is copied into the DB by a one-shot
-  /// `fetchAll()` (previews are live, so it lands a beat after first render);
+  /// `sync()` (previews are live, so it lands a beat after first render);
   /// `PreviewRepository`'s built-in fixtures appear this way. Previews using a
   /// `TransientRepository` seed through `store.repository` (writes flow to the
   /// DB) and recover the underlying repository for its non-`Repository` helpers
@@ -35,7 +35,7 @@ extension DocumentStore {
     }
     let caching = CachingRepository(wrapping: wrapped, database: database, serverID: serverID)
     let store = DocumentStore(repository: caching)
-    Task { try? await store.fetchAll() }
+    Task { try? await store.sync() }
     return store
   }
 

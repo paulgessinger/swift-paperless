@@ -722,7 +722,7 @@ class LoginViewModel {
     // failure here (server too old, transient error, missing scope) just
     // leaves friendlyName nil and the existing subscription path will fill
     // it in later. The server settings are already fetched once during
-    // refreshConnection -> store.fetchAll(); this just front-loads the
+    // refreshConnection -> store.sync(); this just front-loads the
     // request so the DB sees the value immediately.
     let friendlyName: String? = await {
       do {

@@ -213,7 +213,7 @@ class DocumentListViewModel {
   {
     inFlight += 1
     defer { inFlight -= 1 }
-    try await store.fetchAll(userInitiated: userInitiated)
+    try await store.sync(userInitiated: userInitiated)
 
     if let filter {
       filterState = filter

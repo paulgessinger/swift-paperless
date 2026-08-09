@@ -241,7 +241,7 @@ public struct DocumentCell: View {
 
       documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
 
-      try await store.fetchAll()
+      try await store.sync()
     } catch { print(error) }
   }
 }

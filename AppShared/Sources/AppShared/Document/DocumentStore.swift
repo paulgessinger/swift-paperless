@@ -87,7 +87,7 @@ public final class DocumentStore: Sendable {
 
   // The in-flight element sync, if any. Concurrent `sync` callers join this one
   // task instead of each firing their own `syncElements` (the launch flurry of
-  // fetchAll / fetchUISettings / scenePhase triggers shares a single network
+  // sync / fetchUISettings / scenePhase triggers shares a single network
   // pass). Only ever touched on the main actor.
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
@@ -317,7 +317,8 @@ public final class DocumentStore: Sendable {
   /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
   /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
   /// surface the failure (toast). So a user-initiated call joining a background
-  /// sync still sees the error.
+  /// sync still sees the error. This is what entry views call eagerly on
+  /// appear, and what pull-to-refresh calls with `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
     do {
@@ -361,16 +362,6 @@ public final class DocumentStore: Sendable {
       isRefreshing = false
     }
     try await task.value
-  }
-
-  /// The eager entry views call. Triggers a network → DB sync; the element
-  /// projection repaints from the live observation. `userInitiated` forwards to
-  /// `sync`: pass `true` for explicit refreshes (pull-to-refresh) so failures
-  /// rethrow and the caller can surface them; automatic triggers (launch,
-  /// foreground) leave it `false` to fail soft into `lastSyncError`.
-  public func fetchAll(userInitiated: Bool = false) async throws {
-    Logger.shared.notice("Fetch all store request (userInitiated: \(userInitiated))")
-    try await sync(userInitiated: userInitiated)
   }
 
   public func document(id: UInt) async throws -> Document? {

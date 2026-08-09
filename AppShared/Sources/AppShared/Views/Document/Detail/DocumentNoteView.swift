@@ -238,7 +238,7 @@ private struct PreviewHelper: View {
     .environmentObject(errorController)
 
     .task {
-      try? await store.fetchAll()
+      try? await store.sync()
     }
   }
 }

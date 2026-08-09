@@ -731,7 +731,7 @@ struct DocumentView: View {
 
     .task {
       do {
-        async let fetch: Void = store.fetchAll()
+        async let fetch: Void = store.sync()
 
         (isDataScannerAvailable, isDocumentScannerAvailable) = await (
           DataScannerView.isAvailable, DocumentScannerView.isAvailable

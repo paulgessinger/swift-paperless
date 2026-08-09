@@ -247,7 +247,7 @@ private struct PreviewHelper<C: View>: View {
         for field in customFields {
           _ = try await repository.add(customField: field)
         }
-        try await store.fetchAll()
+        try await store.sync()
         await addDocuments()
 
         show = true

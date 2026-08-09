@@ -110,7 +110,7 @@ struct SettingsView: View {
       }
     }
     .task {
-      await checked { try await store.fetchAll() }
+      await checked { try await store.sync() }
     }
   }
 

@@ -437,7 +437,7 @@ private struct PreviewHelper: View {
             $0.set(.view, to: true, for: .user)
             $0.set(.view, to: true, for: .group)
           })
-        try await store.fetchAll()
+        try await store.sync()
         print(store.users)
         try await store.repository.create(
           document: ProtoDocument(title: "blubb"),
