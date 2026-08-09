@@ -321,9 +321,9 @@ if [ "$asc_dry_run" -eq 1 ]; then
   exit 0
 fi
 
-# TestFlight "What to Test": the fixed header, this build's notes, then the rest
-# of the version's, newest-first and trimmed to App Store Connect's limit.
-test_notes="$("$CHANGELOG" test-notes HEAD)"
+# TestFlight "What to Test": the fixed header, then one section per build of this
+# marketing version, newest first, trimmed to App Store Connect's limit.
+test_notes="$("$CHANGELOG" test-notes HEAD --build "$current")"
 
 echo "==> Uploading to TestFlight (+ What to Test notes)"
 asc builds upload \

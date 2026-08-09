@@ -130,6 +130,17 @@ def base_tag(ref: str) -> str:
     return git("describe", "--tags", "--match", TAG_GLOB, "--abbrev=0", ref).strip()
 
 
+def added_between(from_ref: str, to_ref: str) -> str:
+    """Lines the notes file gained between two refs."""
+    diff = git("diff", "--no-color", "--unified=0", from_ref, to_ref, "--", NOTES_FILE)
+    added = [
+        line[1:]
+        for line in diff.splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    ]
+    return trim_blank_lines("\n".join(added))
+
+
 def delta(ref: str) -> str:
     """Lines added to the notes file between the last build tag and `ref`.
 
@@ -142,14 +153,84 @@ def delta(ref: str) -> str:
     if not base:
         # No build tag to diff against: everything currently in the file is new.
         return trim_blank_lines(notes_at(ref))
+    return added_between(base, ref)
 
-    diff = git("diff", "--no-color", "--unified=0", base, ref, "--", NOTES_FILE)
-    added = [
-        line[1:]
-        for line in diff.splitlines()
-        if line.startswith("+") and not line.startswith("+++")
-    ]
-    return trim_blank_lines("\n".join(added))
+
+def version_build_tags(ref: str, version: str) -> list[tuple[int, str]]:
+    """Build tags of `version` reachable from `ref`, oldest build first.
+
+    Both the current `builds/1.11.0/208` spelling and the handful of legacy
+    `builds/v1.10.0/196` tags are matched.
+    """
+    listed = git(
+        "tag",
+        "--list",
+        f"builds/{version}/*",
+        f"builds/v{version}/*",
+        "--merged",
+        ref,
+    )
+    tags = []
+    for name in listed.split():
+        match = BUILD_TAG_RE.match(name)
+        if match:
+            tags.append((int(match.group("build")), name))
+    return sorted(tags)
+
+
+def build_sections(ref: str, version: str, build: int | None) -> list[str]:
+    """One section per build of `version`, newest first, as in changelog.txt.
+
+    Each section is `<version> (<build>)` followed by the bullets that build
+    added, so trimming can drop whole builds rather than cutting one in half.
+    The first section is the build being cut right now, which has no tag yet.
+    """
+    tags = version_build_tags(ref, version)
+    sections: list[str] = []
+
+    # Builds already tagged: what each one added is the diff against the tag
+    # before it — for the oldest, whatever tag preceded the version bump.
+    for index, (tag_build, tag) in enumerate(tags):
+        previous = tags[index - 1][1] if index else base_tag(f"{tag}^")
+        notes = (
+            added_between(previous, tag)
+            if previous
+            else trim_blank_lines(notes_at(tag))
+        )
+        if notes:
+            sections.append(f"{version} ({tag_build})\n\n{notes}")
+
+    # The build being cut now, on top.
+    pending = delta(ref)
+    if pending:
+        heading = f"{version} ({build})" if build is not None else version
+        sections.append(f"{heading}\n\n{pending}")
+
+    sections.reverse()
+    return sections
+
+
+def fit_sections(header: str, sections: list[str]) -> str:
+    """Assemble the What to Test text, dropping whole builds until it fits.
+
+    Sections arrive newest first, so what gets dropped is always the oldest
+    builds — and a build is either present in full or absent, never cut in half.
+    The one exception is a single build whose own notes exceed the budget, which
+    falls back to trimming by line.
+    """
+    text = header
+    for index, section in enumerate(sections):
+        candidate = f"{text}\n\n{section}"
+        if len(PICTOGRAPHIC_RE.sub("", candidate)) > NOTES_MAX_CHARS - len(
+            TRUNCATION_POINTER
+        ):
+            if index == 0:
+                # Even the newest build alone does not fit; keep as much of it as
+                # the budget allows rather than dropping it entirely.
+                return fit_text(candidate)
+            return fit_text(text) + TRUNCATION_POINTER
+        text = candidate
+    return fit_text(text)
 
 
 def fit_text(text: str) -> str:
@@ -193,32 +274,26 @@ def current(ref: RefArgument = "HEAD") -> None:
 
 
 @app.command("test-notes")
-def test_notes(ref: RefArgument = "HEAD") -> None:
+def test_notes(
+    ref: RefArgument = "HEAD",
+    build: Annotated[
+        int | None,
+        typer.Option(help="Build number to head this build's section with."),
+    ] = None,
+) -> None:
     """Print the complete TestFlight "What to Test" text for a build of REF.
 
-    The fixed header, then this build's new bullets, then the rest of the
-    version's notes newest-first. Ordered that way so that trimming to App Store
-    Connect's limit only ever costs the oldest notes.
+    The fixed header, then one `<version> (<build>)` section per build of the
+    current marketing version, newest first — the same shape as changelog.txt,
+    scoped to the version in flight. Trimming to App Store Connect's limit drops
+    whole builds off the oldest end.
     """
-    sections = [(REPO_ROOT / TEST_NOTES_HEADER).read_text().strip()]
-
-    new_notes = delta(ref)
-    if new_notes:
-        sections.append(new_notes)
-
-    # Everything already published for this version is exactly the notes file as
-    # of the previous build tag — but only when that tag belongs to the same
-    # version. Right after a MARKETING_VERSION bump it does not, and the new
-    # version starts from an empty slate.
+    header = (REPO_ROOT / TEST_NOTES_HEADER).read_text().strip()
     version = version_at(ref)
-    tag = base_tag(ref)
-    if tag and version and version_at(tag) == version:
-        earlier = trim_blank_lines(notes_at(tag))
-        if earlier:
-            newest_first = "\n".join(reversed(earlier.splitlines()))
-            sections.append(f"Earlier in {version}:\n\n{newest_first}")
-
-    print(fit_text("\n\n".join(sections)))
+    if not version:
+        print(fit_text(header))
+        return
+    print(fit_sections(header, build_sections(ref, version, build)))
 
 
 @app.command("fit")
