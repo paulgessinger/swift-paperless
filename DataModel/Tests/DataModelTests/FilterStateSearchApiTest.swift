@@ -425,6 +425,43 @@ struct FilterStateSearchApiTest {
     }
   }
 
+  // - MARK: Retired modes
+
+  /// The web UI has no content-only text-filter target, so the app offers none
+  /// either — but the mode stays representable, because persisted states,
+  /// deeplinks and saved views can all still name it.
+  @Test("Content-only search is retired from the UI but still representable")
+  func contentModeIsRetiredNotRemoved() {
+    #expect(FilterState.SearchMode.selectableCases == [.title, .titleContent, .advanced])
+    #expect(!FilterState.SearchMode.selectableCases.contains(.content))
+
+    // A picker bound to it still has a selection to show, the way the web UI
+    // keeps its own retired targets visible while active.
+    #expect(
+      FilterState.SearchMode.selectableCases(including: .content)
+        == [.title, .titleContent, .advanced, .content])
+
+    // A selectable mode is not duplicated.
+    for mode in FilterState.SearchMode.selectableCases {
+      #expect(
+        FilterState.SearchMode.selectableCases(including: mode) == [
+          .title, .titleContent, .advanced,
+        ])
+    }
+
+    // Still round-trips through a saved view and still encodes on both
+    // backends, so nothing already stored breaks.
+    let state = FilterState.create(
+      using: \.empty,
+      withRules: [FilterRule(ruleType: .content, value: .string(value: searchText))!])
+    #expect(state.searchMode == .content)
+    #expect(state.remaining.isEmpty)
+    #expect(encoded(state, for: .legacy)["content__icontains"] == [searchText])
+    #expect(encoded(state, for: .tantivy)["content__icontains"] == [searchText])
+  }
+
+  // - MARK: Saved views
+
   /// Saved views are stored server-side, so writing rule type 19 to a 3.0
   /// backend would leave a deprecated rule behind for every client that reads
   /// it back. The web UI writes 49 there, and so must we.
