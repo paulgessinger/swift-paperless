@@ -2,8 +2,8 @@
 //  FilterStateSearchApiTest.swift
 //  DataModel
 //
-//  Covers the pre-3.0 (`title_content`) vs 3.0+ (`text`) encodings of the
-//  "title and content" search mode.
+//  Covers the pre-3.0 (`title_content`, `title__icontains`) vs 3.0+ (`text`,
+//  `title_search`) encodings of the text-search modes.
 //
 
 import Foundation
@@ -11,15 +11,35 @@ import Testing
 
 @testable import DataModel
 
-/// The two parameter names that carry a "title and content" search.
-private let legacySearchParameter = "title_content"
-private let tantivySearchParameter = "text"
+/// The parameter names carrying a "title and content" search.
+private let legacyTitleContentParameter = "title_content"
+private let tantivyTitleContentParameter = "text"
+
+/// The parameter names carrying a title-only search.
+private let legacyTitleParameter = "title__icontains"
+private let tantivyTitleParameter = "title_search"
 
 /// Parameters paperless-ngx 3.0 answers through its search index. It rejects
 /// requests carrying more than one of them with HTTP 400.
 private let exclusiveSearchParameters: Set<String> = [
   "text", "title_search", "query", "more_like_id",
 ]
+
+/// The ORM parameters the 3.0 encoding replaces. Neither may appear in a
+/// request generated for a 3.0 backend.
+///
+/// `content__icontains` is deliberately absent: the web UI has no content-only
+/// search, so there is no Tantivy parameter to swap it for and it stays put on
+/// both backends.
+private let supersededSearchParameters: Set<String> = [
+  legacyTitleContentParameter, legacyTitleParameter,
+]
+
+/// Every parameter that can carry the search text under either encoding.
+private let searchTextParameters =
+  exclusiveSearchParameters
+  .union(supersededSearchParameters)
+  .union(["content__icontains"])
 
 /// Encodes a state the way `Endpoint.documents` does, grouped by parameter name
 /// so the comparison does not depend on the (dictionary-derived) rule order.
@@ -31,7 +51,7 @@ private func encoded(_ state: FilterState, for searchApi: FilterState.SearchApi)
 }
 
 private func withoutSearchParameters(_ items: [String: [String]]) -> [String: [String]] {
-  items.filter { $0.key != legacySearchParameter && !exclusiveSearchParameters.contains($0.key) }
+  items.filter { !searchTextParameters.contains($0.key) }
 }
 
 private let searchText = "invoice 2024"
@@ -69,22 +89,53 @@ private func fullyPopulated(_ factory: (inout FilterState) -> Void) -> FilterSta
   }
 }
 
-/// States where the two encodings are expected to differ only in the name of
-/// the search parameter.
-private let divergingStates: [(String, FilterState)] = [
-  (
-    "bare title-and-content search",
-    FilterState.empty.with {
+/// A state whose two encodings differ only in the name of the parameter
+/// carrying the search text.
+private struct DivergingState: Sendable {
+  let name: String
+  let state: FilterState
+  /// Where the pre-3.0 encoding puts the search text.
+  let legacyParameter: String
+  /// Where the 3.0 encoding puts it instead.
+  let tantivyParameter: String
+}
+
+private let divergingStates: [DivergingState] = [
+  DivergingState(
+    name: "bare title-and-content search",
+    state: FilterState.empty.with {
       $0.searchMode = .titleContent
       $0.searchText = searchText
-    }
+    },
+    legacyParameter: legacyTitleContentParameter,
+    tantivyParameter: tantivyTitleContentParameter
   ),
-  (
-    "title-and-content search alongside every other filter",
-    fullyPopulated {
+  DivergingState(
+    name: "title-and-content search alongside every other filter",
+    state: fullyPopulated {
       $0.searchMode = .titleContent
       $0.searchText = searchText
-    }
+    },
+    legacyParameter: legacyTitleContentParameter,
+    tantivyParameter: tantivyTitleContentParameter
+  ),
+  DivergingState(
+    name: "bare title-only search",
+    state: FilterState.empty.with {
+      $0.searchMode = .title
+      $0.searchText = searchText
+    },
+    legacyParameter: legacyTitleParameter,
+    tantivyParameter: tantivyTitleParameter
+  ),
+  DivergingState(
+    name: "title-only search alongside every other filter",
+    state: fullyPopulated {
+      $0.searchMode = .title
+      $0.searchText = searchText
+    },
+    legacyParameter: legacyTitleParameter,
+    tantivyParameter: tantivyTitleParameter
   ),
 ]
 
@@ -94,13 +145,7 @@ private let divergingStates: [(String, FilterState)] = [
 private let identicalStates: [(String, FilterState)] = [
   ("empty state", FilterState.empty),
   (
-    "title-only search",
-    fullyPopulated {
-      $0.searchMode = .title
-      $0.searchText = searchText
-    }
-  ),
-  (
+    // The web UI has no content-only search, so nothing is mirrored here.
     "content-only search",
     fullyPopulated {
       $0.searchMode = .content
@@ -129,47 +174,63 @@ private let identicalStates: [(String, FilterState)] = [
       $0.remaining = [FilterRule(ruleType: .fulltextMorelike, value: .number(value: 17))!]
     }
   ),
-  (
-    "title-only search with a relative created range",
-    fullyPopulated {
-      $0.searchMode = .title
-      $0.searchText = searchText
-      $0.date.created = .range(.previousYear)
-    }
-  ),
 ]
 
-/// States where the 3.0 encoding folds the search text into the `query` rule
+/// A state where the 3.0 encoding folds the search text into the `query` rule
 /// instead of emitting a second, colliding search parameter.
-private let promotedStates: [(String, FilterState)] = [
-  (
-    "relative created range",
-    fullyPopulated {
+private struct PromotedState: Sendable {
+  let name: String
+  let state: FilterState
+  /// Where the pre-3.0 encoding still puts the search text. The 3.0 encoding
+  /// has no separate parameter at all.
+  let legacyParameter: String
+}
+
+private let promotedStates: [PromotedState] = [
+  PromotedState(
+    name: "relative created range",
+    state: fullyPopulated {
       $0.searchMode = .titleContent
       $0.searchText = searchText
       $0.date.created = .range(.within(num: -3, interval: .month))
-    }
+    },
+    legacyParameter: legacyTitleContentParameter
   ),
-  (
-    "relative added range",
-    fullyPopulated {
+  PromotedState(
+    name: "relative added range",
+    state: fullyPopulated {
       $0.searchMode = .titleContent
       $0.searchText = searchText
       $0.date.added = .range(.previousQuarter)
-    }
+    },
+    legacyParameter: legacyTitleContentParameter
   ),
-  (
-    "relative created and added ranges",
-    fullyPopulated {
+  PromotedState(
+    name: "relative created and added ranges",
+    state: fullyPopulated {
       $0.searchMode = .titleContent
       $0.searchText = searchText
       $0.date.created = .range(.within(num: -1, interval: .week))
       $0.date.added = .range(.today)
-    }
+    },
+    legacyParameter: legacyTitleContentParameter
+  ),
+  // Title-only search is index-backed on 3.0 too, so it folds identically.
+  PromotedState(
+    name: "title-only search with a relative created range",
+    state: fullyPopulated {
+      $0.searchMode = .title
+      $0.searchText = searchText
+      $0.date.created = .range(.previousYear)
+    },
+    legacyParameter: legacyTitleParameter
   ),
 ]
 
-private let allStates = divergingStates + identicalStates + promotedStates
+private let allStates =
+  divergingStates.map { ($0.name, $0.state) }
+  + identicalStates
+  + promotedStates.map { ($0.name, $0.state) }
 
 @Suite("Legacy vs Tantivy search parameter encoding")
 struct FilterStateSearchApiTest {
@@ -215,30 +276,30 @@ struct FilterStateSearchApiTest {
     "The search text itself survives both encodings unchanged",
     .bug(id: "642"),
     arguments: divergingStates)
-  func searchTextIsPreserved(name: String, state: FilterState) {
-    let legacy = encoded(state, for: .legacy)
-    let tantivy = encoded(state, for: .tantivy)
+  fileprivate func searchTextIsPreserved(fixture: DivergingState) {
+    let legacy = encoded(fixture.state, for: .legacy)
+    let tantivy = encoded(fixture.state, for: .tantivy)
 
-    #expect(legacy[legacySearchParameter] == [state.searchText], "\(name)")
-    #expect(legacy[tantivySearchParameter] == nil, "\(name)")
+    #expect(legacy[fixture.legacyParameter] == [fixture.state.searchText], "\(fixture.name)")
+    #expect(legacy[fixture.tantivyParameter] == nil, "\(fixture.name)")
 
-    #expect(tantivy[tantivySearchParameter] == [state.searchText], "\(name)")
-    #expect(tantivy[legacySearchParameter] == nil, "\(name)")
+    #expect(tantivy[fixture.tantivyParameter] == [fixture.state.searchText], "\(fixture.name)")
+    #expect(tantivy[fixture.legacyParameter] == nil, "\(fixture.name)")
   }
 
   @Test(
     "Renaming the search parameter is the only difference between the encodings",
     .bug(id: "642"),
     arguments: divergingStates)
-  func encodingsDifferOnlyInTheParameterName(name: String, state: FilterState) {
-    var renamed = encoded(state, for: .legacy)
-    renamed[tantivySearchParameter] = renamed.removeValue(forKey: legacySearchParameter)
+  fileprivate func encodingsDifferOnlyInTheParameterName(fixture: DivergingState) {
+    var renamed = encoded(fixture.state, for: .legacy)
+    renamed[fixture.tantivyParameter] = renamed.removeValue(forKey: fixture.legacyParameter)
 
-    #expect(renamed == encoded(state, for: .tantivy), "\(name)")
+    #expect(renamed == encoded(fixture.state, for: .tantivy), "\(fixture.name)")
   }
 
   @Test(
-    "Modes that do not use `title_content` encode identically on both backends",
+    "Modes with no Tantivy counterpart encode identically on both backends",
     .bug(id: "642"),
     arguments: identicalStates)
   func unaffectedStatesAreUnchanged(name: String, state: FilterState) {
@@ -247,42 +308,42 @@ struct FilterStateSearchApiTest {
 
   // - MARK: Where equivalence stops
   //
-  // `text` is answered from the search index and cannot be combined with the
-  // other index-backed parameters, so a full one-to-one translation of every
-  // filter state is not possible.
+  // `text` and `title_search` are answered from the search index and cannot be
+  // combined with the other index-backed parameters, so a full one-to-one
+  // translation of every filter state is not possible.
   //
   // Where a relative date range would collide, the search text is folded into
   // the `query` string instead — the same thing the web UI does in the "carry
   // it over" branch of filter-editor.component.ts, and the same rules this app
-  // produces once the filter has round-tripped through a saved view. Matching
-  // then goes through the advanced query parser rather than a substring scan.
+  // produces once the filter has round-tripped through a saved view.
   //
   // Where a passed-through rule already holds the one search slot, there is
-  // nothing to fold into and the deprecated parameter stays.
+  // nothing to fold into and the ORM parameter stays.
   //
   // The remaining, deliberately untested, difference is server-side: on 3.0
-  // `text` matches per-token substrings against the search index, whereas
-  // `title_content` runs a SQL `icontains` over the live rows. Result sets can
-  // therefore differ for the same query; the app cannot assert that here.
+  // `text`/`title_search` run a regex against the indexed fields, whereas the
+  // ORM filters run a SQL `icontains` over the live rows and the folded `query`
+  // is parsed into whole terms. Result sets therefore differ for the same
+  // query — a partial word matches under `text` but not once folded — and the
+  // app cannot assert any of that here. The web UI has the same behaviour.
 
   @Test(
     "A relative date range folds the search text into `query`",
     .bug(id: "642"),
     arguments: promotedStates)
-  func relativeDateRangePromotesSearchText(name: String, state: FilterState) throws {
-    let tantivy = encoded(state, for: .tantivy)
-    let legacy = encoded(state, for: .legacy)
+  fileprivate func relativeDateRangePromotesSearchText(fixture: PromotedState) throws {
+    let tantivy = encoded(fixture.state, for: .tantivy)
+    let legacy = encoded(fixture.state, for: .legacy)
 
     // No separate search parameter survives — the query carries the text.
-    #expect(tantivy[legacySearchParameter] == nil, "\(name)")
-    #expect(tantivy[tantivySearchParameter] == nil, "\(name)")
+    #expect(Set(tantivy.keys).intersection(searchTextParameters) == ["query"], "\(fixture.name)")
 
     // The legacy encoding is untouched: search parameter plus a query holding
     // only the date terms. Prepending the text to it yields the 3.0 query, so
     // no date term is lost or reordered by the fold.
     let dateTerms = try #require(legacy["query"]?.first)
-    #expect(legacy[legacySearchParameter] == [state.searchText], "\(name)")
-    #expect(tantivy["query"] == ["\(state.searchText),\(dateTerms)"], "\(name)")
+    #expect(legacy[fixture.legacyParameter] == [fixture.state.searchText], "\(fixture.name)")
+    #expect(tantivy["query"] == ["\(fixture.state.searchText),\(dateTerms)"], "\(fixture.name)")
   }
 
   @Test("The folded query matches what a saved-view round trip produces", .bug(id: "642"))
@@ -295,7 +356,7 @@ struct FilterStateSearchApiTest {
 
     // Storing this filter as a saved view and reading it back turns it into an
     // advanced search, because the `query` rule populates that mode.
-    let roundTripped = FilterState.create(using: \.empty, withRules: state.rules)
+    let roundTripped = FilterState.create(using: \.empty, withRules: state.rules(for: .legacy))
     #expect(roundTripped.searchMode == .advanced)
 
     #expect(encoded(state, for: .tantivy) == encoded(roundTripped, for: .tantivy))
@@ -320,7 +381,8 @@ struct FilterStateSearchApiTest {
     let encodedSearch = encoded(searched, for: searchApi)
     #expect(encodedSearch["more_like_id"] == nil)
     #expect(
-      encodedSearch[searchApi == .tantivy ? tantivySearchParameter : legacySearchParameter]
+      encodedSearch[
+        searchApi == .tantivy ? tantivyTitleContentParameter : legacyTitleContentParameter]
         == [searchText])
   }
 
@@ -344,23 +406,23 @@ struct FilterStateSearchApiTest {
     #expect(FilterState.SearchMode.titleContent.ruleType(for: .legacy) == .titleContent)
     #expect(FilterState.SearchMode.titleContent.ruleType(for: .tantivy) == .simpleText)
 
-    // Only the title-and-content mode changed in 3.0.
-    for mode in [FilterState.SearchMode.title, .content, .advanced] {
+    #expect(FilterState.SearchMode.title.ruleType(for: .legacy) == .title)
+    #expect(FilterState.SearchMode.title.ruleType(for: .tantivy) == .simpleTitle)
+
+    // The web UI has no content-only search, and advanced search is the `query`
+    // parameter on both backends, so neither mode has anything to switch to.
+    for mode in [FilterState.SearchMode.content, .advanced] {
       #expect(mode.ruleType(for: .legacy) == mode.ruleType(for: .tantivy))
     }
 
-    // The default stays on the encoding every backend understands.
+    // Only the modes routed through the index need the collision handling.
+    #expect(FilterState.SearchMode.titleContent.isIndexBacked(for: .tantivy))
+    #expect(FilterState.SearchMode.title.isIndexBacked(for: .tantivy))
+    #expect(!FilterState.SearchMode.content.isIndexBacked(for: .tantivy))
+    #expect(!FilterState.SearchMode.advanced.isIndexBacked(for: .tantivy))
     for mode in FilterState.SearchMode.allCases {
-      #expect(mode.ruleType == mode.ruleType(for: .legacy))
+      #expect(!mode.isIndexBacked(for: .legacy))
     }
-  }
-
-  @Test(
-    "The bare `rules` property is the legacy encoding",
-    .bug(id: "642"),
-    arguments: allStates)
-  func bareRulesPropertyIsLegacy(name: String, state: FilterState) {
-    #expect(state.rules == state.rules(for: .legacy), "\(name)")
   }
 
   /// Saved views are stored server-side, so writing rule type 19 to a 3.0
@@ -405,8 +467,8 @@ struct FilterStateSearchApiTest {
     // Not parked in `remaining`, which would have re-sent it verbatim.
     #expect(state.remaining.isEmpty)
 
-    #expect(encoded(state, for: .legacy)[legacySearchParameter] == [searchText])
-    #expect(encoded(state, for: .tantivy)[tantivySearchParameter] == [searchText])
+    #expect(encoded(state, for: .legacy)[legacyTitleContentParameter] == [searchText])
+    #expect(encoded(state, for: .tantivy)[tantivyTitleContentParameter] == [searchText])
   }
 
   @Test(
@@ -420,14 +482,18 @@ struct FilterStateSearchApiTest {
     #expect(state.searchMode == .title)
     #expect(state.searchText == searchText)
     #expect(state.remaining.isEmpty)
+
+    #expect(encoded(state, for: .legacy)[legacyTitleParameter] == [searchText])
+    #expect(encoded(state, for: .tantivy)[tantivyTitleParameter] == [searchText])
   }
 
-  /// On a 3.0 backend the app must never generate the deprecated parameter.
+  /// On a 3.0 backend the app must never generate the superseded parameters.
   /// Sweeping every rule type against every search mode keeps that honest: if a
   /// future rule type stops being handled by `populateWith` and lands in
   /// `remaining`, or a new index-backed one appears, this fails rather than
-  /// quietly reintroducing requests that log a deprecation warning.
-  @Test("`title_content` is never generated for a 3.0 backend", .bug(id: "642"))
+  /// quietly reintroducing requests that log a deprecation warning or diverge
+  /// from the web UI.
+  @Test("The superseded parameters are never generated for a 3.0 backend", .bug(id: "642"))
   func neverGeneratesLegacyParameterForTantivy() {
     var residual: [String] = []
 
@@ -447,8 +513,10 @@ struct FilterStateSearchApiTest {
           $0.searchMode = mode
           $0.searchText = searchText
         }
-        if encoded(state, for: .tantivy)[legacySearchParameter] != nil {
-          residual.append("\(ruleType) + \(mode)")
+        let emitted = Set(encoded(state, for: .tantivy).keys)
+          .intersection(supersededSearchParameters)
+        if !emitted.isEmpty {
+          residual.append("\(ruleType) + \(mode) -> \(emitted.sorted())")
         }
       }
     }
