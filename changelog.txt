@@ -34,7 +34,7 @@
 
 - Fix: tag deletion in the tag management screen when tags are nested (swipe-to-delete was silently disabled in the hierarchy view)
 
-v1.10.0 (196)
+1.10.0 (196)
 
 - Fix another case where authentication problems were incorrectly reported as API version compatibility problems
 

@@ -6,7 +6,7 @@
 # invalid character), or to tweak notes after the fact.
 #
 # By default it sends exactly what scripts/beta_ci.sh would have sent for the
-# checked-out commit (`scripts/changelog.sh test-notes`). Give a notes file to
+# checked-out commit (`scripts/changelog.py test-notes`). Give a notes file to
 # override the body; either way the text is stripped of emoji and trimmed to App
 # Store Connect's limit.
 #
@@ -28,7 +28,7 @@ set -euo pipefail
 ASC_APP="com.paulgessinger.swift-paperless"
 VERSION_XCCONFIG="Config/Shared/Version.xcconfig"
 TEST_NOTES_HEADER="scripts/testflight_test_notes_header.txt"
-CHANGELOG="scripts/changelog.sh"
+CHANGELOG="scripts/changelog.py"
 LOCALE="en-US"
 
 build="${1:-}"

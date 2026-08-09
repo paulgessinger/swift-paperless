@@ -21,7 +21,7 @@
 set -euo pipefail
 
 WORKFLOW="beta.yml"
-CHANGELOG="scripts/changelog.sh"
+CHANGELOG="scripts/changelog.py"
 VERSION_XCCONFIG="Config/Shared/Version.xcconfig"
 
 ref="main"

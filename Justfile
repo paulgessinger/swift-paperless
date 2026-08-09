@@ -59,12 +59,12 @@ beta-ci *args:
 # The notes the next beta from `ref` would publish (bullets added to
 # current_changelog.txt since the last build tag).
 beta-notes ref='HEAD':
-  scripts/changelog.sh delta {{ref}}
+  scripts/changelog.py delta {{ref}}
 
 # Regenerate changelog.txt — the offline copy of the per-build TestFlight notes —
 # from the build prereleases on GitHub.
 changelog-archive:
-  scripts/changelog.sh archive
+  scripts/changelog.py archive
 
 # Attach/fix TestFlight "What to Test" notes on an existing build (no rebuild).
 # Sends header + current_changelog.txt (emoji stripped) as the whatsNew for the

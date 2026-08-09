@@ -46,7 +46,9 @@ jobs:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
       - name: Install tools
-        run: brew install xcodegen xcbeautify asc
+        # uv runs bump.py (writes the assigned build number) and changelog.py
+        # (composes the release notes), both of which every beta goes through.
+        run: brew install xcodegen xcbeautify asc uv
 
       - name: Build & upload to TestFlight
         env:

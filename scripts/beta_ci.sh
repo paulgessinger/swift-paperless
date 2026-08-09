@@ -36,7 +36,7 @@ BUILD_DIR="build"
 ARCHIVE_PATH="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/ExportOptions.plist"
-CHANGELOG="scripts/changelog.sh"
+CHANGELOG="scripts/changelog.py"
 
 # App Store provisioning profiles referenced (by name) in ExportOptions.plist.
 # Created once via `asc` and bound to the Apple Distribution certs; we install
@@ -107,7 +107,7 @@ cleanup() {
   [ -n "$_tmp_key" ] && rm -f "$_tmp_key"
   [ -n "$_notes_file" ] && rm -f "$_notes_file"
   [ -n "$_tmp_keychain" ] && security delete-keychain "$_tmp_keychain" 2>/dev/null
-  # Restore Version.xcconfig if --bump temporarily rewrote it.
+  # Restore Version.xcconfig if the assigned build number was written into it.
   [ -n "$_version_backup" ] && [ -f "$_version_backup" ] && mv -f "$_version_backup" "$VERSION_XCCONFIG"
   return 0
 }
