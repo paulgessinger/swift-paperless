@@ -1396,7 +1396,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verbindung erfordert Authentifizierung"
+            "value" : "Für die Verbindung ist eine Authentifizierung erforderlich"
           }
         },
         "en" : {
@@ -1521,7 +1521,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Non connesso"
           }
         },
         "nl" : {
@@ -1533,7 +1533,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "W trybie offline"
           }
         },
         "tr" : {
@@ -9379,7 +9379,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Damit meldest du dich als anderer Benutzer an — bitte entferne diesen Server stattdessen und füge ihn erneut hinzu."
+            "value" : "Dies authentifiziert dich als anderer Benutzer — bitte entferne und füge diesen Server stattdessen erneut hinzu."
           }
         },
         "en" : {
