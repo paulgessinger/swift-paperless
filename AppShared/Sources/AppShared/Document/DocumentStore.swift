@@ -182,6 +182,13 @@ public final class DocumentStore: Sendable {
         "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
       )
     }
+    // An element sync in flight belongs to the *outgoing* backend: it writes the
+    // old server's rows, and `runSyncElements` would let the caller's follow-up
+    // sync join it (both callers do `set(repository:)` → `sync()`) and return
+    // without ever fetching the new server's cache. Nothing here is worth
+    // keeping, so cancel rather than detach.
+    syncTask?.cancel()
+    syncTask = nil
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
@@ -326,16 +333,22 @@ public final class DocumentStore: Sendable {
       lastSyncError = nil
       Logger.shared.info("Sync store complete")
     } catch {
-      if userInitiated { throw error }
-      if !error.isCancellationError {
-        // Only presentable failures are recorded. A non-displayable one (a GRDB
-        // `DatabaseError`, a raw `URLError`) leaves any degraded state already
-        // on screen intact rather than clearing it.
-        if let displayable = error as? any DisplayableError {
-          lastSyncError = displayable
-        }
-        Logger.shared.error("Background sync failed (suppressed): \(error)")
+      // A cancellation is never the user's problem to see: either the caller's
+      // own task went away, or `set(repository:)` retired this sync on a
+      // connection switch. Drop it before the userInitiated rethrow so neither
+      // case toasts.
+      if error.isCancellationError {
+        Logger.shared.debug("Element sync cancelled")
+        return
       }
+      if userInitiated { throw error }
+      // Only presentable failures are recorded. A non-displayable one (a GRDB
+      // `DatabaseError`, a raw `URLError`) leaves any degraded state already
+      // on screen intact rather than clearing it.
+      if let displayable = error as? any DisplayableError {
+        lastSyncError = displayable
+      }
+      Logger.shared.error("Background sync failed (suppressed): \(error)")
     }
   }
 
@@ -358,8 +371,14 @@ public final class DocumentStore: Sendable {
     syncTask = task
     isRefreshing = true
     defer {
-      syncTask = nil
-      isRefreshing = false
+      // Retract only what we installed. `set(repository:)` can retire this sync
+      // mid-flight and a replacement can already own `syncTask` by the time we
+      // resume; clearing it blindly would break the replacement's coalescing and
+      // drop `isRefreshing` while it is still running.
+      if syncTask == task {
+        syncTask = nil
+        isRefreshing = false
+      }
     }
     try await task.value
   }
