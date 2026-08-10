@@ -913,7 +913,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kontrol af version"
+            "value" : "Kontrollerer version"
           }
         },
         "de" : {
@@ -955,7 +955,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sürüm kontrolü"
+            "value" : "Sürüm kontrol ediliyor"
           }
         }
       }

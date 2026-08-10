@@ -1396,7 +1396,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Für die Verbindung ist eine Authentifizierung erforderlich"
+            "value" : "Verbindung erfordert Authentifizierung"
           }
         },
         "en" : {
@@ -1420,7 +1420,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voor de verbinding is authenticatie vereist"
+            "value" : "Verbinding vereist authenticatie"
           }
         },
         "pl" : {
@@ -1521,7 +1521,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non connesso"
+            "value" : "Offline"
           }
         },
         "nl" : {
@@ -1533,7 +1533,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "W trybie offline"
+            "value" : "Offline"
           }
         },
         "tr" : {
@@ -1587,7 +1587,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znowu w sieci"
+            "value" : "Znowu online"
           }
         },
         "tr" : {
@@ -1628,7 +1628,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effettua nuovamente l'autenticazione"
+            "value" : "Autenticati di nuovo"
           }
         },
         "nl" : {
@@ -1640,7 +1640,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ponowne uwierzytelnienie"
+            "value" : "Uwierzytelnij ponownie"
           }
         },
         "tr" : {
@@ -9379,7 +9379,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dies authentifiziert dich als anderer Benutzer — bitte entferne und füge diesen Server stattdessen erneut hinzu."
+            "value" : "Damit meldest du dich als anderer Benutzer an — bitte entferne diesen Server stattdessen und füge ihn erneut hinzu."
           }
         },
         "en" : {
@@ -9403,7 +9403,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hiermee wordt u als een andere gebruiker aangemeld — verwijder deze server daarom en voeg hem vervolgens opnieuw toe."
+            "value" : "Hiermee word je als een andere gebruiker aangemeld — verwijder deze server daarom en voeg hem vervolgens opnieuw toe."
           }
         },
         "pl" : {
@@ -9456,7 +9456,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uw sessie is verlopen. Voer uw inloggegevens opnieuw in om deze server te kunnen blijven gebruiken."
+            "value" : "Je sessie is verlopen. Voer je inloggegevens opnieuw in om deze server te kunnen blijven gebruiken."
           }
         },
         "pl" : {
@@ -9503,7 +9503,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effettua nuovamente l'autenticazione"
+            "value" : "Nuova autenticazione"
           }
         },
         "nl" : {
