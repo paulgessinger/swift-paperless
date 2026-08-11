@@ -667,7 +667,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       let model = viewModel
       async let document: () = model.loadDocument()
       async let metadata: () = model.loadMetadata()
-      _ = await (document, metadata)
+      async let permissions: () = model.refreshPermissions()
+      _ = await (document, metadata, permissions)
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar

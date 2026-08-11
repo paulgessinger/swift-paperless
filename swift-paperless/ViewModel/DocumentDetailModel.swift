@@ -64,6 +64,20 @@ class DocumentDetailModel {
     self.document = document
   }
 
+  /// Permissions live in `ui_settings`, which the detail view never fetches on
+  /// its own: without this, a permission change on the server doesn't reach the
+  /// edit/delete affordances on this screen until the next launch or list
+  /// refresh. Pulled in on refresh alongside the document itself. Fails soft
+  /// like the other loads here — a stale permission set is better than a toast
+  /// over the document.
+  func refreshPermissions() async {
+    do {
+      try await store.fetchUISettings()
+    } catch {
+      Logger.shared.error("Error refreshing UI settings from document detail: \(error)")
+    }
+  }
+
   func loadMetadata() async {
     do {
       metadata = try await store.repository.metadata(documentId: document.id)

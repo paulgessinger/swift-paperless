@@ -5,3 +5,4 @@
 - OIDC logins now support TOTP (two-factor authentication) codes from Paperless-ngx
 - Sharing a document link now shares the web interface URL, which opens in a browser, instead of the API URL that did not
 - Permission errors now say which operation was refused, e.g. "Delete not permitted" instead of a generic access error, and name the affected item in the error details
+- Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
