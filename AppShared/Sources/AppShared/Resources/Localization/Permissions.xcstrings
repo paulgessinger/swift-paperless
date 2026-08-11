@@ -1647,6 +1647,18 @@
         }
       }
     },
+    "resourceMailAccounts" : {
+      "comment" : "Plural resource name, used in permission error details",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mail accounts"
+          }
+        }
+      }
+    },
     "resourceMailRule" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1696,6 +1708,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E-posta kuralı"
+          }
+        }
+      }
+    },
+    "resourceMailRules" : {
+      "comment" : "Plural resource name, used in permission error details",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mail rules"
           }
         }
       }
@@ -1753,6 +1777,18 @@
         }
       }
     },
+    "resourceShareLinks" : {
+      "comment" : "Plural resource name, used in permission error details",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share links"
+          }
+        }
+      }
+    },
     "resourceWorkflow" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1802,6 +1838,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İş akışı"
+          }
+        }
+      }
+    },
+    "resourceWorkflows" : {
+      "comment" : "Plural resource name, used in permission error details",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workflows"
           }
         }
       }

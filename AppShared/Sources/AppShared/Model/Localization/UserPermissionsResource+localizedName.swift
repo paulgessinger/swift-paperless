@@ -26,7 +26,30 @@ extension UserPermissions.Resource {
     case .mailRule: String(localized: .permissions(.resourceMailRule))
     case .shareLink: String(localized: .permissions(.resourceShareLink))
     case .workflow: String(localized: .permissions(.resourceWorkflow))
-    case .customField: String(localized: .permissions(.resourceCustomField))
+    case .customField: CustomField.localizedName
+    }
+  }
+
+  /// Permissions are granted per resource *type*, so prose about them reads as a
+  /// class ("not allowed to delete Storage paths"), not as one instance.
+  public var localizedNamePlural: String {
+    switch self {
+    case .document: Document.localizedNamePlural
+    case .note: Document.Note.localizedNamePlural
+    case .tag: Tag.localizedNamePlural
+    case .correspondent: Correspondent.localizedNamePlural
+    case .documentType: DocumentType.localizedNamePlural
+    case .storagePath: StoragePath.localizedNamePlural
+    case .savedView: SavedView.localizedNamePlural
+    case .paperlessTask: PaperlessTask.localizedNamePlural
+    case .uiSettings: UISettings.localizedNamePlural
+    case .user: User.localizedNamePlural
+    case .group: UserGroup.localizedNamePlural
+    case .mailAccount: String(localized: .permissions(.resourceMailAccounts))
+    case .mailRule: String(localized: .permissions(.resourceMailRules))
+    case .shareLink: String(localized: .permissions(.resourceShareLinks))
+    case .workflow: String(localized: .permissions(.resourceWorkflows))
+    case .customField: CustomField.localizedNamePlural
     }
   }
 }

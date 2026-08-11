@@ -233,50 +233,54 @@ public final class DocumentStore: Sendable {
 
   public func updateDocument(_ document: Document) async throws -> Document {
     Logger.shared.info("Updating document with ID \(document.id, privacy: .public)")
-    try checkPermission(.change, for: .document)
-    events.emit(.changed(document: document))
+    return try await performing(.change, on: .document) {
+      events.emit(.changed(document: document))
 
-    var document = document
+      var document = document
 
-    if settings.documentEditing.removeInboxTags {
-      Logger.shared.debug("Removing inbox tags from document as per setting")
-      let inboxTags = tags.values.filter(\.isInboxTag)
-      for tag in inboxTags {
-        document.tags.removeAll(where: { $0 == tag.id })
+      if settings.documentEditing.removeInboxTags {
+        Logger.shared.debug("Removing inbox tags from document as per setting")
+        let inboxTags = tags.values.filter(\.isInboxTag)
+        for tag in inboxTags {
+          document.tags.removeAll(where: { $0 == tag.id })
+        }
       }
-    }
 
-    let updated = try await repository.update(document: document)
-    documents[updated.id] = updated
-    events.emit(.changeReceived(document: updated))
-    return updated
+      let updated = try await repository.update(document: document)
+      documents[updated.id] = updated
+      events.emit(.changeReceived(document: updated))
+      return updated
+    }
   }
 
   public func deleteDocument(_ document: Document) async throws {
     Logger.shared.info("Deleting document with ID \(document.id, privacy: .public)")
-    try checkPermission(.delete, for: .document)
-    try await repository.delete(document: document)
-    documents.removeValue(forKey: document.id)
-    events.emit(.deleted(document: document))
+    try await performing(.delete, on: .document) {
+      try await repository.delete(document: document)
+      documents.removeValue(forKey: document.id)
+      events.emit(.deleted(document: document))
+    }
   }
 
   public func deleteNote(from document: Document, id: UInt) async throws {
     Logger.shared.info("Deleting note with ID \(id, privacy: .public)")
-    try checkPermission(.delete, for: .note)
-    events.emit(.changed(document: document))
-    _ = try await repository.deleteNote(id: id, documentId: document.id)
+    try await performing(.delete, on: .note) {
+      events.emit(.changed(document: document))
+      _ = try await repository.deleteNote(id: id, documentId: document.id)
 
-    events.emit(.changeReceived(document: document))
+      events.emit(.changeReceived(document: document))
+    }
   }
 
   public func addNote(to document: Document, note: ProtoDocument.Note) async throws {
     Logger.shared.info("Adding note to document \(document.id, privacy: .public)")
-    try checkPermission(.add, for: .note)
-    events.emit(.changed(document: document))
+    try await performing(.add, on: .note) {
+      events.emit(.changed(document: document))
 
-    _ = try await repository.createNote(documentId: document.id, note: note)
+      _ = try await repository.createNote(documentId: document.id, note: note)
 
-    events.emit(.changeReceived(document: document))
+      events.emit(.changeReceived(document: document))
+    }
   }
 
   public func notes(for document: Document) async throws -> [Document.Note] {
@@ -394,13 +398,14 @@ public final class DocumentStore: Sendable {
     method: (E) async throws -> R
   ) async throws -> R
   where E: Sendable & PermissionsModel, R: Identifiable & Sendable {
-    try checkPermission(.add, for: resource)
-    // `settings` is kept live by the element observation, so its permission
-    // defaults are already current — apply them directly. The repository
-    // write-throughs the created element to the DB; the observation repaints it
-    // into the projection.
-    let updated = settings.permissions.appliedAsDefaults(to: element)
-    return try await method(updated)
+    try await performing(.add, on: resource) {
+      // `settings` is kept live by the element observation, so its permission
+      // defaults are already current — apply them directly. The repository
+      // write-throughs the created element to the DB; the observation repaints
+      // it into the projection.
+      let updated = settings.permissions.appliedAsDefaults(to: element)
+      return try await method(updated)
+    }
   }
 
   private func update<E>(
@@ -408,8 +413,9 @@ public final class DocumentStore: Sendable {
     resource: UserPermissions.Resource,
     method: (E) async throws -> E
   ) async throws where E: Identifiable & Sendable {
-    try checkPermission(.change, for: resource)
-    _ = try await method(element)
+    try await performing(.change, on: resource) {
+      _ = try await method(element)
+    }
   }
 
   private func delete<E>(
@@ -417,16 +423,17 @@ public final class DocumentStore: Sendable {
     resource: UserPermissions.Resource,
     method: (E) async throws -> Void
   ) async throws where E: Identifiable & Sendable {
-    try checkPermission(.delete, for: resource)
-    do {
-      try await method(element)
-    } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
-      let id = "\(element.id)"
-      Logger.api.debug(
-        "Element with ID \(id) not found (probably already deleted)")
+    try await performing(.delete, on: resource) {
+      do {
+        try await method(element)
+      } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
+        let id = "\(element.id)"
+        Logger.api.debug(
+          "Element with ID \(id) not found (probably already deleted)")
+      }
+      // The repository write-throughs the delete to the DB; the observation
+      // removes it from the projection.
     }
-    // The repository write-throughs the delete to the DB; the observation
-    // removes it from the projection.
   }
 
   public func create(tag: ProtoTag) async throws -> Tag {
@@ -588,6 +595,27 @@ public final class DocumentStore: Sendable {
       storagePath,
       resource: .storagePath,
       method: repository.delete(storagePath:))
+  }
+
+  /// Runs `body` behind its permission check and gives whatever comes back the
+  /// operation context the user needs. The local permission matrix and the
+  /// server can disagree (object-level permissions aren't in the matrix, and it
+  /// can be stale), so a refusal arrives either as our own check failing or as a
+  /// 403 from the request — both surface as a `PermissionsError` that names the
+  /// operation that was attempted rather than a bare "request was denied".
+  private func performing<T>(
+    _ operation: UserPermissions.Operation, on resource: UserPermissions.Resource,
+    _ body: () async throws -> T
+  ) async throws -> T {
+    try checkPermission(operation, for: resource)
+    do {
+      return try await body()
+    } catch let RequestError.forbidden(detail) {
+      Logger.api.debug(
+        "Server refused \(operation.description, privacy: .public) on \(resource.rawValue, privacy: .public)"
+      )
+      throw PermissionsError(resource: resource, operation: operation, detail: detail)
+    }
   }
 
   private func checkPermission(
