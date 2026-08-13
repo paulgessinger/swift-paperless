@@ -46,8 +46,31 @@ public final class DocumentStore: Sendable {
   public var customFields: [UInt: CustomField] { elementStore.customFields }
   public var currentUser: User? { elementStore.currentUser }
   public var serverConfiguration: ServerConfiguration? { elementStore.serverConfiguration }
-  public var permissions: UserPermissions { elementStore.permissions }
+  /// The permission matrix to *gate on* — and, until `ui_settings` has landed
+  /// for the active server, a deliberate optimistic lie.
+  ///
+  /// The stored value starts `.empty`, which tests `false` for everything and is
+  /// therefore indistinguishable from a genuine denial: on a cold start (first
+  /// launch, or any launch while offline before the first successful sync) every
+  /// gate in the app read as "you have no permissions". Handing out `.full`
+  /// instead means the UI stays usable and the *server* answers, which is the
+  /// same bet `CachingRepository.syncElements` already makes (its gate is a
+  /// `UserPermissions?`, and `nil` → fetch everything, let the 403 decide).
+  ///
+  /// Anything that *displays* this matrix, rather than gating on it, must check
+  /// ``permissionsKnown`` first — otherwise it reports access the server never
+  /// granted. `PermissionsView` does.
+  public var permissions: UserPermissions {
+    permissionsKnown ? elementStore.permissions : .full
+  }
+
   public var settings: UISettingsSettings { elementStore.settings }
+
+  /// Whether ``permissions`` reflects the server's answer yet, or is the
+  /// optimistic `.full` stand-in. Gates don't need this; anything that shows the
+  /// matrix, or that would otherwise assert *why* something is unavailable,
+  /// does.
+  public var permissionsKnown: Bool { elementStore.isHydrated }
 
   /// True while a network `sync` is in flight. Distinct from data-presence so a
   /// cold cache shows loading rather than emptiness.
@@ -624,6 +647,10 @@ public final class DocumentStore: Sendable {
     Logger.api.info(
       "Checking permission for \(operation.description, privacy: .public) on \(resource.rawValue, privacy: .public)"
     )
+    // No hydration check needed: `permissions` is `.full` until the real matrix
+    // lands, so a cold start falls through to the request and lets the server
+    // answer instead of refusing with a permission error the user can do
+    // nothing about.
     if !permissions.test(operation, for: resource) {
       Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
       throw PermissionsError(resource: resource, operation: operation)
@@ -633,7 +660,14 @@ public final class DocumentStore: Sendable {
 
 //// Permissions checking for resources
 extension DocumentStore {
+  /// The optimistic ``permissions`` default isn't enough for these three: they
+  /// also consult `currentUser`, which is nil until `ui_settings` lands, so
+  /// `currentUser?.canView(document) ?? false` would still deny every document
+  /// on a cold start. Answer optimistically until we know — the server still
+  /// refuses anything the user may not do, and a wrong "you don't have
+  /// permission" banner is worse than an edit that fails.
   public func userCanView(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.view, for: .document) {
       return false
     }
@@ -642,6 +676,7 @@ extension DocumentStore {
   }
 
   public func userCanChange(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.change, for: .document) {
       return false
     }
@@ -650,6 +685,7 @@ extension DocumentStore {
   }
 
   public func userCanDelete(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.delete, for: .document) {
       return false
     }

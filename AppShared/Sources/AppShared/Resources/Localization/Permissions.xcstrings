@@ -1276,6 +1276,18 @@
         }
       }
     },
+    "permissionsNotLoaded" : {
+      "comment" : "Shown on the permissions matrix screen when ui_settings hasn't been fetched yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+          }
+        }
+      }
+    },
     "private" : {
       "extractionState" : "manual",
       "localizations" : {
